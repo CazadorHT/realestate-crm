@@ -1,0 +1,144 @@
+"use client";
+
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
+import { updateProfileAction } from "./actions";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+const profileSchema = z.object({
+  full_name: z.string().min(1, "กรุณากรอกชื่อ-นามสกุล"),
+  phone: z.string().optional(),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
+
+interface ProfileInfoFormProps {
+  fullName: string | null;
+  phone: string | null;
+  email: string | null;
+  role: string | null;
+}
+
+export function ProfileInfoForm({ fullName, phone, email, role }: ProfileInfoFormProps) {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      full_name: fullName || "",
+      phone: phone || "",
+    },
+  });
+
+  const onSubmit = async (values: ProfileFormValues) => {
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("full_name", values.full_name);
+      if (values.phone) {
+        formData.append("phone", values.phone);
+      }
+
+      const result = await updateProfileAction(formData);
+
+      if (result.success) {
+        toast.success("บันทึกข้อมูลโปรไฟล์สำเร็จ");
+        router.refresh();
+      } else {
+        toast.error(result.message || "เกิดข้อผิดพลาด");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="full_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>ชื่อ-นามสกุล</FormLabel>
+              <FormControl>
+                <Input placeholder="กรอกชื่อ-นามสกุล" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>เบอร์โทรศัพท์</FormLabel>
+              <FormControl>
+                <Input placeholder="0xx-xxx-xxxx" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-muted-foreground">อีเมล</Label>
+          <Input
+            id="email"
+            value={email || ""}
+            disabled
+            className="bg-muted cursor-not-allowed"
+          />
+          <p className="text-xs text-muted-foreground">
+            ไม่สามารถแก้ไขอีเมลได้
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="role" className="text-muted-foreground">บทบาท</Label>
+          <Input
+            id="role"
+            value={role || "AGENT"}
+            disabled
+            className="bg-muted cursor-not-allowed uppercase"
+          />
+          <p className="text-xs text-muted-foreground">
+            ติดต่อผู้ดูแลระบบเพื่อเปลี่ยนบทบาท
+          </p>
+        </div>
+
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              กำลังบันทึก...
+            </>
+          ) : (
+            "บันทึกการเปลี่ยนแปลง"
+          )}
+        </Button>
+      </form>
+    </Form>
+  );
+}
