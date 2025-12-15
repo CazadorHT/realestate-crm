@@ -65,8 +65,184 @@ export type Database = {
           },
         ]
       }
+      deals: {
+        Row: {
+          closed_at: string | null
+          co_agent_contact: string | null
+          co_agent_name: string | null
+          commission_amount: number | null
+          commission_percent: number | null
+          created_at: string
+          created_by: string | null
+          deal_type: Database["public"]["Enums"]["deal_type"]
+          id: string
+          lead_id: string
+          property_id: string
+          source: string | null
+          status: Database["public"]["Enums"]["deal_status"]
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          co_agent_contact?: string | null
+          co_agent_name?: string | null
+          commission_amount?: number | null
+          commission_percent?: number | null
+          created_at?: string
+          created_by?: string | null
+          deal_type: Database["public"]["Enums"]["deal_type"]
+          id?: string
+          lead_id: string
+          property_id: string
+          source?: string | null
+          status?: Database["public"]["Enums"]["deal_status"]
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          co_agent_contact?: string | null
+          co_agent_name?: string | null
+          commission_amount?: number | null
+          commission_percent?: number | null
+          created_at?: string
+          created_by?: string | null
+          deal_type?: Database["public"]["Enums"]["deal_type"]
+          id?: string
+          lead_id?: string
+          property_id?: string
+          source?: string | null
+          status?: Database["public"]["Enums"]["deal_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          id: string
+          is_encrypted: boolean
+          mime_type: string | null
+          owner_id: string
+          owner_type: Database["public"]["Enums"]["document_owner_type"]
+          size_bytes: number | null
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          id?: string
+          is_encrypted?: boolean
+          mime_type?: string | null
+          owner_id: string
+          owner_type: Database["public"]["Enums"]["document_owner_type"]
+          size_bytes?: number | null
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document_type?: Database["public"]["Enums"]["document_type"]
+          file_name?: string
+          id?: string
+          is_encrypted?: boolean
+          mime_type?: string | null
+          owner_id?: string
+          owner_type?: Database["public"]["Enums"]["document_owner_type"]
+          size_bytes?: number | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_activities: {
+        Row: {
+          activity_type: Database["public"]["Enums"]["lead_activity_type"]
+          created_at: string
+          created_by: string | null
+          id: string
+          lead_id: string
+          note: string | null
+          property_id: string | null
+        }
+        Insert: {
+          activity_type: Database["public"]["Enums"]["lead_activity_type"]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_id: string
+          note?: string | null
+          property_id?: string | null
+        }
+        Update: {
+          activity_type?: Database["public"]["Enums"]["lead_activity_type"]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_id?: string
+          note?: string | null
+          property_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_activities_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
+          allow_airbnb: boolean | null
           assigned_to: string | null
           budget_max: number | null
           budget_min: number | null
@@ -74,15 +250,31 @@ export type Database = {
           created_by: string | null
           email: string | null
           full_name: string
+          has_pets: boolean | null
           id: string
+          is_foreigner: boolean
+          lead_type: Database["public"]["Enums"]["lead_type"]
+          max_size_sqm: number | null
+          min_bathrooms: number | null
+          min_bedrooms: number | null
+          min_size_sqm: number | null
+          nationality: string | null
+          need_company_registration: boolean | null
           note: string | null
+          num_occupants: number | null
           phone: string | null
+          preferences: Json | null
+          preferred_locations: string[] | null
+          preferred_property_types:
+            | Database["public"]["Enums"]["property_type"][]
+            | null
           property_id: string | null
           source: Database["public"]["Enums"]["lead_source"] | null
           stage: Database["public"]["Enums"]["lead_stage"]
           updated_at: string
         }
         Insert: {
+          allow_airbnb?: boolean | null
           assigned_to?: string | null
           budget_max?: number | null
           budget_min?: number | null
@@ -90,15 +282,31 @@ export type Database = {
           created_by?: string | null
           email?: string | null
           full_name: string
+          has_pets?: boolean | null
           id?: string
+          is_foreigner?: boolean
+          lead_type?: Database["public"]["Enums"]["lead_type"]
+          max_size_sqm?: number | null
+          min_bathrooms?: number | null
+          min_bedrooms?: number | null
+          min_size_sqm?: number | null
+          nationality?: string | null
+          need_company_registration?: boolean | null
           note?: string | null
+          num_occupants?: number | null
           phone?: string | null
+          preferences?: Json | null
+          preferred_locations?: string[] | null
+          preferred_property_types?:
+            | Database["public"]["Enums"]["property_type"][]
+            | null
           property_id?: string | null
           source?: Database["public"]["Enums"]["lead_source"] | null
           stage?: Database["public"]["Enums"]["lead_stage"]
           updated_at?: string
         }
         Update: {
+          allow_airbnb?: boolean | null
           assigned_to?: string | null
           budget_max?: number | null
           budget_min?: number | null
@@ -106,9 +314,24 @@ export type Database = {
           created_by?: string | null
           email?: string | null
           full_name?: string
+          has_pets?: boolean | null
           id?: string
+          is_foreigner?: boolean
+          lead_type?: Database["public"]["Enums"]["lead_type"]
+          max_size_sqm?: number | null
+          min_bathrooms?: number | null
+          min_bedrooms?: number | null
+          min_size_sqm?: number | null
+          nationality?: string | null
+          need_company_registration?: boolean | null
           note?: string | null
+          num_occupants?: number | null
           phone?: string | null
+          preferences?: Json | null
+          preferred_locations?: string[] | null
+          preferred_property_types?:
+            | Database["public"]["Enums"]["property_type"][]
+            | null
           property_id?: string | null
           source?: Database["public"]["Enums"]["lead_source"] | null
           stage?: Database["public"]["Enums"]["lead_stage"]
@@ -126,32 +349,38 @@ export type Database = {
       }
       owners: {
         Row: {
+          company_name: string | null
           created_at: string
           facebook_url: string | null
           full_name: string
           id: string
           line_id: string | null
           other_contact: string | null
+          owner_type: string | null
           phone: string | null
           updated_at: string
         }
         Insert: {
+          company_name?: string | null
           created_at?: string
           facebook_url?: string | null
           full_name: string
           id?: string
           line_id?: string | null
           other_contact?: string | null
+          owner_type?: string | null
           phone?: string | null
           updated_at?: string
         }
         Update: {
+          company_name?: string | null
           created_at?: string
           facebook_url?: string | null
           full_name?: string
           id?: string
           line_id?: string | null
           other_contact?: string | null
+          owner_type?: string | null
           phone?: string | null
           updated_at?: string
         }
@@ -210,16 +439,19 @@ export type Database = {
           currency: string | null
           description: string | null
           district: string | null
+          floor: number | null
           id: string
           images: Json | null
           land_size_sqwah: number | null
           latitude: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           longitude: number | null
+          maintenance_fee: number | null
           meta_description: string | null
           meta_keywords: string[] | null
           meta_title: string | null
           owner_id: string | null
+          parking_slots: number | null
           postal_code: string | null
           price: number | null
           property_source: string | null
@@ -233,6 +465,7 @@ export type Database = {
           subdistrict: string | null
           title: string
           updated_at: string
+          zoning: string | null
         }
         Insert: {
           address_line1?: string | null
@@ -244,16 +477,19 @@ export type Database = {
           currency?: string | null
           description?: string | null
           district?: string | null
+          floor?: number | null
           id?: string
           images?: Json | null
           land_size_sqwah?: number | null
           latitude?: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           longitude?: number | null
+          maintenance_fee?: number | null
           meta_description?: string | null
           meta_keywords?: string[] | null
           meta_title?: string | null
           owner_id?: string | null
+          parking_slots?: number | null
           postal_code?: string | null
           price?: number | null
           property_source?: string | null
@@ -267,6 +503,7 @@ export type Database = {
           subdistrict?: string | null
           title: string
           updated_at?: string
+          zoning?: string | null
         }
         Update: {
           address_line1?: string | null
@@ -278,16 +515,19 @@ export type Database = {
           currency?: string | null
           description?: string | null
           district?: string | null
+          floor?: number | null
           id?: string
           images?: Json | null
           land_size_sqwah?: number | null
           latitude?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           longitude?: number | null
+          maintenance_fee?: number | null
           meta_description?: string | null
           meta_keywords?: string[] | null
           meta_title?: string | null
           owner_id?: string | null
+          parking_slots?: number | null
           postal_code?: string | null
           price?: number | null
           property_source?: string | null
@@ -301,6 +541,7 @@ export type Database = {
           subdistrict?: string | null
           title?: string
           updated_at?: string
+          zoning?: string | null
         }
         Relationships: [
           {
@@ -357,6 +598,59 @@ export type Database = {
           },
         ]
       }
+      rental_contracts: {
+        Row: {
+          check_in_date: string | null
+          check_out_date: string | null
+          deal_id: string
+          deposit_amount: number | null
+          end_date: string
+          id: string
+          lease_term_months: number
+          notice_period_days: number | null
+          other_terms: string | null
+          payment_cycle: string | null
+          rent_price: number
+          start_date: string
+        }
+        Insert: {
+          check_in_date?: string | null
+          check_out_date?: string | null
+          deal_id: string
+          deposit_amount?: number | null
+          end_date: string
+          id?: string
+          lease_term_months: number
+          notice_period_days?: number | null
+          other_terms?: string | null
+          payment_cycle?: string | null
+          rent_price: number
+          start_date: string
+        }
+        Update: {
+          check_in_date?: string | null
+          check_out_date?: string | null
+          deal_id?: string
+          deposit_amount?: number | null
+          end_date?: string
+          id?: string
+          lease_term_months?: number
+          notice_period_days?: number | null
+          other_terms?: string | null
+          payment_cycle?: string | null
+          rent_price?: number
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_contracts_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -366,6 +660,30 @@ export type Database = {
     }
     Enums: {
       activity_type: "NOTE" | "CALL" | "MEETING" | "MESSAGE" | "STATUS_CHANGE"
+      deal_status:
+        | "NEGOTIATING"
+        | "SIGNED"
+        | "CANCELLED"
+        | "CLOSED_WIN"
+        | "CLOSED_LOSS"
+      deal_type: "RENT" | "SALE"
+      document_owner_type: "LEAD" | "PROPERTY" | "DEAL"
+      document_type:
+        | "ID_CARD"
+        | "PASSPORT"
+        | "COMPANY_REGISTRATION"
+        | "LEASE_CONTRACT"
+        | "SALE_CONTRACT"
+        | "TITLE_DEED"
+        | "OTHER"
+      lead_activity_type:
+        | "CALL"
+        | "LINE_CHAT"
+        | "EMAIL"
+        | "VIEWING"
+        | "FOLLOW_UP"
+        | "NOTE"
+        | "SYSTEM"
       lead_source:
         | "PORTAL"
         | "FACEBOOK"
@@ -374,6 +692,7 @@ export type Database = {
         | "REFERRAL"
         | "OTHER"
       lead_stage: "NEW" | "CONTACTED" | "VIEWED" | "NEGOTIATING" | "CLOSED"
+      lead_type: "INDIVIDUAL" | "COMPANY" | "JURISTIC_PERSON"
       listing_type: "SALE" | "RENT" | "SALE_AND_RENT"
       property_status:
         | "DRAFT"
@@ -521,6 +840,33 @@ export const Constants = {
   public: {
     Enums: {
       activity_type: ["NOTE", "CALL", "MEETING", "MESSAGE", "STATUS_CHANGE"],
+      deal_status: [
+        "NEGOTIATING",
+        "SIGNED",
+        "CANCELLED",
+        "CLOSED_WIN",
+        "CLOSED_LOSS",
+      ],
+      deal_type: ["RENT", "SALE"],
+      document_owner_type: ["LEAD", "PROPERTY", "DEAL"],
+      document_type: [
+        "ID_CARD",
+        "PASSPORT",
+        "COMPANY_REGISTRATION",
+        "LEASE_CONTRACT",
+        "SALE_CONTRACT",
+        "TITLE_DEED",
+        "OTHER",
+      ],
+      lead_activity_type: [
+        "CALL",
+        "LINE_CHAT",
+        "EMAIL",
+        "VIEWING",
+        "FOLLOW_UP",
+        "NOTE",
+        "SYSTEM",
+      ],
       lead_source: [
         "PORTAL",
         "FACEBOOK",
@@ -530,6 +876,7 @@ export const Constants = {
         "OTHER",
       ],
       lead_stage: ["NEW", "CONTACTED", "VIEWED", "NEGOTIATING", "CLOSED"],
+      lead_type: ["INDIVIDUAL", "COMPANY", "JURISTIC_PERSON"],
       listing_type: ["SALE", "RENT", "SALE_AND_RENT"],
       property_status: [
         "DRAFT",

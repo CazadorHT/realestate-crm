@@ -8,11 +8,11 @@ export function MorphingLoader() {
   const [index, setIndex] = useState(0);
 
   const icons = [
-    { icon: Home,  },
-    { icon: Building,  },
-    { icon: Building2,  },
-    { icon: Warehouse,  },
-    { icon: Map,  },
+    { icon: Home },
+    { icon: Building },
+    { icon: Building2 },
+    { icon: Warehouse },
+    { icon: Map },
   ];
 
   useEffect(() => {
@@ -31,10 +31,9 @@ export function MorphingLoader() {
         <CurrentIcon className="h-10 w-10 text-primary transition-all duration-300 animate-bounce" />
       </div>
       <div className="flex flex-col items-center gap-1">
-         <p className="text-sm font-medium text-muted-foreground animate-pulse">
-            Loading...
-         </p>
-
+        <p className="text-sm font-medium text-muted-foreground animate-pulse">
+          Loading...
+        </p>
       </div>
     </div>
   );
