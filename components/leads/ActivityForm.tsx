@@ -9,6 +9,7 @@ import { leadActivitySchema, type LeadActivityValues } from "@/lib/validations/l
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { PropertyCombobox } from "../PropertyCombobox";
 
 export function ActivityForm({
   action,
@@ -38,8 +39,15 @@ export function ActivityForm({
 
       <Input placeholder="property_id (ถ้าผูกทรัพย์)" {...form.register("property_id")} />
 
-      <Textarea placeholder="รายละเอียดกิจกรรม..." {...form.register("note")} />
+      <div className="space-y-2 md:col-span-2">
+      <div className="text-sm font-medium">Property (optional)</div>
 
+      <PropertyCombobox
+        value={(form.watch("property_id") as any) ?? null}
+        onChange={(val) => form.setValue("property_id", val as any)}
+      />
+    </div>
+      <Textarea placeholder="รายละเอียดกิจกรรม..." {...form.register("note")} />
       <Button type="submit" disabled={pending}>
         {pending ? "กำลังบันทึก..." : "บันทึกกิจกรรม"}
       </Button>

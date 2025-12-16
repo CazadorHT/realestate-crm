@@ -10,8 +10,11 @@ export type OwnerUpdate = Database["public"]["Tables"]["owners"]["Update"];
 
 export interface OwnerFormValues {
   full_name: string;
-  phone?: string;
-  line_id?: string;
-  facebook_url?: string;
-  other_contact?: string;
+  phone?: string | null;
+  line_id?: string | null;
+  facebook_url?: string | null;
+  other_contact?: string | null;
+
+  company_name?: string | null;
+  owner_type?: string | null;
 }

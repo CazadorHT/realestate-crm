@@ -2,16 +2,16 @@
 
 # Step 4 งานที่เราจะโค้ด 
 A) DB layer (lib/db)
-- [ ] getAllLeads()
-- [ ] getLeadById(id)
-- [ ] updateLead(id, values)
-- [ ] getLeadActivities(leadId)
-- [ ] createLeadActivity(leadId, values)
+- [x] getAllLeads()
+- [x] getLeadById(id)
+- [x] updateLead(id, values)
+- [x] getLeadActivities(leadId)
+- [x] createLeadActivity(leadId, values)
 
 B) UI (components)
-- [ ] LeadForm (แก้ไข Lead)
-- [ ] LeadTimeline + ActivityForm (เพิ่มกิจกรรม)
+- [x] LeadForm (แก้ไข Lead)
+- [x] LeadTimeline + ActivityForm (เพิ่มกิจกรรม)
 
 C) Pages (app router)
-- [ ] /protected/leads (ตาราง leads)
-- [ ] /protected/leads/[id] (รายละเอียด lead + timeline + ฟอร์ม)
+- [x] /protected/leads (ตาราง leads)
+- [x] /protected/leads/[id] (รายละเอียด lead + timeline + ฟอร์ม)

@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, SlidersHorizontal, X, ArrowUpDown } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -21,13 +21,51 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
+import {
+  PROPERTY_TYPE_ORDER,
+  PROPERTY_TYPE_LABELS,
+  LISTING_TYPE_ORDER,
+  LISTING_TYPE_LABELS,
+  PROPERTY_STATUS_ORDER,
+  PROPERTY_STATUS_LABELS,
+} from "@/features/properties/labels";
+
+type Filters = {
+  q: string;
+  status: string;   // "ALL" | PropertyStatus
+  type: string;     // "ALL" | PropertyType
+  listing: string;  // "ALL" | ListingType
+  bedrooms: string;
+  bathrooms: string;
+  province: string;
+  district: string;
+  minPrice: string;
+  maxPrice: string;
+  sortBy: string;
+  sortOrder: string;
+};
+
+const DEFAULT_FILTERS: Filters = {
+  q: "",
+  status: "ALL",
+  type: "ALL",
+  listing: "ALL",
+  bedrooms: "",
+  bathrooms: "",
+  province: "",
+  district: "",
+  minPrice: "",
+  maxPrice: "",
+  sortBy: "created_at",
+  sortOrder: "desc",
+};
 
 export function PropertyFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
 
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     q: searchParams.get("q") || "",
     status: searchParams.get("status") || "ALL",
     type: searchParams.get("type") || "ALL",
@@ -45,45 +83,39 @@ export function PropertyFilters() {
   const applyFilters = () => {
     const params = new URLSearchParams();
 
-    Object.entries(filters).forEach(([key, value]) => {
-      // Skip empty values and "ALL" (which means no filter)
-      if (!value || value === "ALL" || (value.trim && value.trim() === "")) {
-        return; // Skip this filter
-      }
-      params.set(key, value);
+    (Object.entries(filters) as [keyof Filters, string][]).forEach(([key, value]) => {
+      const v = String(value ?? "").trim();
+      if (!v) return;
+      if (v === "ALL") return;
+      params.set(String(key), v);
     });
 
-    router.push(`/protected/properties?${params.toString()}`);
+    const qs = params.toString();
+    router.push(qs ? `/protected/properties?${qs}` : "/protected/properties");
     setOpen(false);
   };
 
   const clearFilters = () => {
-    setFilters({
-      q: "",
-      status: "ALL",
-      type: "ALL",
-      listing: "ALL",
-      bedrooms: "",
-      bathrooms: "",
-      province: "",
-      district: "",
-      minPrice: "",
-      maxPrice: "",
-      sortBy: "created_at",
-      sortOrder: "desc",
-    });
+    setFilters(DEFAULT_FILTERS);
     router.push("/protected/properties");
     setOpen(false);
   };
 
-  const hasActiveFilters = Object.values(filters).some(
-    (v, i) =>
-      v &&
-      !(
-        (i === Object.keys(filters).indexOf("sortBy") && v === "created_at") ||
-        (i === Object.keys(filters).indexOf("sortOrder") && v === "desc")
-      )
-  );
+  const hasActiveFilters = useMemo(() => {
+    return Object.entries(filters).some(([k, v]) => {
+      const val = String(v ?? "").trim();
+      if (!val) return false;
+
+      // default ที่ไม่ถือว่าเป็น filter
+      if (k === "sortBy" && val === DEFAULT_FILTERS.sortBy) return false;
+      if (k === "sortOrder" && val === DEFAULT_FILTERS.sortOrder) return false;
+
+      // ค่า ALL ไม่ถือว่า filter
+      if (val === "ALL") return false;
+
+      return true;
+    });
+  }, [filters]);
 
   return (
     <div className="flex items-center gap-2">
@@ -105,6 +137,7 @@ export function PropertyFilters() {
         onValueChange={(value) => {
           const [sortBy, sortOrder] = value.split("-");
           setFilters({ ...filters, sortBy, sortOrder });
+
           const params = new URLSearchParams(searchParams.toString());
           params.set("sortBy", sortBy);
           params.set("sortOrder", sortOrder);
@@ -115,7 +148,7 @@ export function PropertyFilters() {
           <ArrowUpDown className="h-4 w-4 mr-2" />
           <SelectValue placeholder="เรียงตาม" />
         </SelectTrigger>
-        <SelectContent className="overflow-y-auto bg-white ">
+        <SelectContent className="overflow-y-auto bg-white">
           <SelectItem value="created_at-desc">ใหม่ล่าสุด</SelectItem>
           <SelectItem value="created_at-asc">เก่าสุด</SelectItem>
           <SelectItem value="price-desc">ราคาสูงสุด</SelectItem>
@@ -140,6 +173,7 @@ export function PropertyFilters() {
             )}
           </Button>
         </SheetTrigger>
+
         <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto bg-white">
           <SheetHeader>
             <SheetTitle>ตัวกรองขั้นสูง</SheetTitle>
@@ -152,9 +186,7 @@ export function PropertyFilters() {
               <Label>ประเภททรัพย์</Label>
               <Select
                 value={filters.type}
-                onValueChange={(value) =>
-                  setFilters({ ...filters, type: value })
-                }
+                onValueChange={(value) => setFilters({ ...filters, type: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="เลือกประเภท" />
@@ -163,28 +195,21 @@ export function PropertyFilters() {
                   <SelectItem className="border-b" value="ALL">
                     ทั้งหมด
                   </SelectItem>
-                  <SelectItem value="HOUSE">บ้าน</SelectItem>
-                  <SelectItem value="CONDO">คอนโด</SelectItem>
-                  <SelectItem value="TOWNHOME">ทาวน์เฮาส์</SelectItem>
-                  <SelectItem value="LAND">ที่ดิน</SelectItem>
-                  <SelectItem value="OFFICE_BUILDING">อาคารสำนักงาน</SelectItem>
-                  <SelectItem value="WAREHOUSE">โกดัง</SelectItem>
-                  <SelectItem value="COMMERCIAL_BUILDING">
-                    อาคารพาณิชย์
-                  </SelectItem>
-                  <SelectItem value="OTHER">อื่นๆ</SelectItem>
+                  {PROPERTY_TYPE_ORDER.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {PROPERTY_TYPE_LABELS[t]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             {/* Listing Type */}
-            <div className="space-y-2 max-h-[300px] overflow-y-auto bg-white">
+            <div className="space-y-2">
               <Label>รูปแบบ</Label>
               <Select
                 value={filters.listing}
-                onValueChange={(value) =>
-                  setFilters({ ...filters, listing: value })
-                }
+                onValueChange={(value) => setFilters({ ...filters, listing: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="เลือกรูปแบบ" />
@@ -193,36 +218,34 @@ export function PropertyFilters() {
                   <SelectItem className="border-b" value="ALL">
                     ทั้งหมด
                   </SelectItem>
-                  <SelectItem value="SALE">ขาย</SelectItem>
-                  <SelectItem value="RENT">เช่า</SelectItem>
-                  <SelectItem value="SALE_AND_RENT">ขาย/เช่า</SelectItem>
+                  {LISTING_TYPE_ORDER.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {LISTING_TYPE_LABELS[t]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Status */}
+            {/* Status (แก้ให้ใช้ labels กลาง) */}
             <div className="space-y-2">
               <Label>สถานะ</Label>
               <Select
                 value={filters.status}
-                onValueChange={(value) =>
-                  setFilters({ ...filters, status: value })
-                }
+                onValueChange={(value) => setFilters({ ...filters, status: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="เลือกสถานะ" />
                 </SelectTrigger>
-                <SelectContent className=" max-h-[300px] overflow-y-auto bg-white ">
+                <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
                   <SelectItem className="border-b" value="ALL">
                     ทั้งหมด
                   </SelectItem>
-                  <SelectItem value="DRAFT">แบบร่าง</SelectItem>
-                  <SelectItem value="ACTIVE">เปิดขาย</SelectItem>
-                  <SelectItem value="UNDER_OFFER">ต่อรองอยู่</SelectItem>
-                  <SelectItem value="RESERVED">จองแล้ว</SelectItem>
-                  <SelectItem value="SOLD">ขายแล้ว</SelectItem>
-                  <SelectItem value="RENTED">เช่าแล้ว</SelectItem>
-                  <SelectItem value="ARCHIVED">เก็บถาวร</SelectItem>
+                  {PROPERTY_STATUS_ORDER.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {PROPERTY_STATUS_LABELS[s]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -301,7 +324,7 @@ export function PropertyFilters() {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2 pt-4 ">
+            <div className="flex gap-2 pt-4">
               <Button onClick={applyFilters} className="flex-1 text-white">
                 ค้นหา
               </Button>

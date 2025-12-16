@@ -34,7 +34,12 @@ interface ProfileInfoFormProps {
   role: string | null;
 }
 
-export function ProfileInfoForm({ fullName, phone, email, role }: ProfileInfoFormProps) {
+export function ProfileInfoForm({
+  fullName,
+  phone,
+  email,
+  role,
+}: ProfileInfoFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -103,7 +108,9 @@ export function ProfileInfoForm({ fullName, phone, email, role }: ProfileInfoFor
         />
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-muted-foreground">อีเมล</Label>
+          <Label htmlFor="email" className="text-muted-foreground">
+            อีเมล
+          </Label>
           <Input
             id="email"
             value={email || ""}
@@ -116,7 +123,9 @@ export function ProfileInfoForm({ fullName, phone, email, role }: ProfileInfoFor
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="role" className="text-muted-foreground">บทบาท</Label>
+          <Label htmlFor="role" className="text-muted-foreground">
+            บทบาท
+          </Label>
           <Input
             id="role"
             value={role || "AGENT"}

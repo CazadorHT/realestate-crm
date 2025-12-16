@@ -9,20 +9,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, User } from "lucide-react";
+import { User } from "lucide-react";
 import Link from "next/link";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { deleteOwnerAction } from "@/features/owners/actions";
+import { OwnerRowActions } from "@/components/owners/OwnerRowActions";
 import type { Owner } from "@/features/owners/types";
 
 interface OwnersTableProps {
@@ -30,10 +19,6 @@ interface OwnersTableProps {
 }
 
 export function OwnersTable({ owners }: OwnersTableProps) {
-  const handleDelete = async (id: string) => {
-    await deleteOwnerAction(id);
-  };
-
   if (owners.length === 0) {
     return (
       <div className="text-center py-12 border rounded-lg bg-muted/20">
@@ -62,7 +47,9 @@ export function OwnersTable({ owners }: OwnersTableProps) {
         <TableBody>
           {owners.map((owner) => (
             <TableRow key={owner.id}>
+              {/* ชื่อ Owner */}
               <TableCell className="font-medium">{owner.full_name}</TableCell>
+              {/* เบอร์โทร */}
               <TableCell>
                 {owner.phone ? (
                   <a href={`tel:${owner.phone}`} className="hover:underline">
@@ -72,11 +59,13 @@ export function OwnersTable({ owners }: OwnersTableProps) {
                   <span className="text-muted-foreground">-</span>
                 )}
               </TableCell>
+              {/* LINE */}
               <TableCell>
                 {owner.line_id || (
                   <span className="text-muted-foreground">-</span>
                 )}
               </TableCell>
+              {/* Facebook */}
               <TableCell>
                 {owner.facebook_url ? (
                   <a
@@ -91,48 +80,16 @@ export function OwnersTable({ owners }: OwnersTableProps) {
                   <span className="text-muted-foreground">-</span>
                 )}
               </TableCell>
+              {/* จำนวนทรัพย์ */}
               <TableCell className="text-right">
                 <span className="font-semibold">
                   {owner.property_count || 0}
                 </span>{" "}
                 <span className="text-muted-foreground text-sm">ทรัพย์</span>
               </TableCell>
+              {/* จัดการ */}
               <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/protected/owners/${owner.id}/edit`}>
-                      <Edit className="h-4 w-4" />
-                    </Link>
-                  </Button>
-
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>ยืนยันการลบ</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          คุณแน่ใจหรือไม่ว่าต้องการลบ "{owner.full_name}"?
-                          <br />
-                          ทรัพย์ที่เชื่อมโยงกับเจ้าของท่านนี้จะไม่ถูกลบ
-                          แต่จะไม่มีเจ้าของแล้ว
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(owner.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          ลบ
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+                <OwnerRowActions id={owner.id} fullName={owner.full_name} />
               </TableCell>
             </TableRow>
           ))}
