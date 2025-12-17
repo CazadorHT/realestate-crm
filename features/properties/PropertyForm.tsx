@@ -242,32 +242,36 @@ export function PropertyForm({
 
     return true; // No duplicates, proceed
   };
-
+  
+// Handle form submission
   const onSubmit = async (values: PropertyFormValues) => {
     // Check duplicates first
-    const canProceed = await checkDuplicates(values);
-    if (!canProceed) return; // Wait for user confirmation
+    try {
+      const canProceed = await checkDuplicates(values);
+      if (!canProceed) return; // Wait for user confirmation
+      // No duplicates or in edit mode, proceed to create/update
+      if (mode === "create") {
+        const result: CreatePropertyResult = await createPropertyAction(
+          values
+        );
 
-    // if (mode === "create") {
-    //   const result: CreatePropertyResult = await createPropertyAction(
-    //     cleanedValues
-    //   );
-
-    //   if (result.success) {
-    //     form.reset(EMPTY_VALUES);
-    //     router.push("/protected/properties");
-    //     // ✅ บอก uploader ว่าอย่าลบรูปตอน unmount
-    //     setPersistImages(true);
-    //   } else {
-    //     console.error(result.message);
-    //     // TODO: จะขึ้น toast/error message ตรงนี้ก็ได้
-    //   }
-    // } else if (mode === "edit" && defaultValues?.id) {
-    //   await updatePropertyAction(defaultValues.id, cleanedValues);
-    //   // แก้ไขสำเร็จแล้ว ก็ไม่ควรลบรูปเช่นกัน
-    //   setPersistImages(true);
-    //   router.push("/protected/properties");
-    // }
+        if (result.success) {
+          form.reset(EMPTY_VALUES);
+          router.push("/protected/properties");
+          setPersistImages(true);
+          // กลับไปที่หน้ารายการทรัพย์
+        } else {
+          
+          console.error(result.message);
+        }
+      } else if (mode === "edit" && defaultValues?.id) {
+        await updatePropertyAction(defaultValues.id, values);
+        setPersistImages(true);
+        router.push("/protected/properties");
+      }
+    } catch (error) {
+      console.error("Error submitting property form:", error);
+    }
   };
 
   // Handle confirmed duplicate submit
