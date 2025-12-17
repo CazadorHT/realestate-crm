@@ -15,9 +15,9 @@ import {
   PROPERTY_TYPE_ORDER,
   LISTING_TYPE_ORDER,
   PROPERTY_STATUS_ORDER,
-  // PROPERTY_TYPE_ENUM,
-  // LISTING_TYPE_ENUM,
-  // PROPERTY_STATUS_ENUM,
+  PROPERTY_TYPE_ENUM,
+  LISTING_TYPE_ENUM,
+  PROPERTY_STATUS_ENUM,
 } from "@/features/properties/labels";
 import {
   createPropertyAction,
@@ -43,9 +43,6 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
-
-
-
 const EMPTY_VALUES: PropertyFormValues = {
   title: "",
   description: "",
@@ -62,9 +59,9 @@ const EMPTY_VALUES: PropertyFormValues = {
   currency: "THB",
 
   // New fields
-  owner_id: undefined,
   property_source: "",
-  assigned_to: undefined,
+  owner_id: null,
+  assigned_to: null,
 
   images: [],
 };
@@ -74,14 +71,10 @@ const FormSchema = z.object({
 
   description: z.string().optional(), // ✅ ไม่รองรับ null แล้ว
 
-  // // Cast readonly arrays to mutable tuples for Zod
-  // property_type: z.enum([...PROPERTY_TYPE_ENUM] as [string, ...string[]]),
-  // listing_type: z.enum([...LISTING_TYPE_ENUM] as [string, ...string[]]),
-  // status: z.enum([...PROPERTY_STATUS_ENUM] as [string, ...string[]]).default("DRAFT"),
-  property_type: z.enum(PROPERTY_TYPE_ORDER),
-listing_type: z.enum(LISTING_TYPE_ORDER),
-status: z.enum(PROPERTY_STATUS_ORDER).default("DRAFT"),
-
+  // Cast readonly arrays to mutable tuples for Zod
+  property_type: z.enum(PROPERTY_TYPE_ENUM),
+  listing_type: z.enum(LISTING_TYPE_ENUM),
+  status: z.enum(PROPERTY_STATUS_ENUM).default("DRAFT"),
 
   price: z.coerce.number().optional(),
   rental_price: z.coerce.number().optional(),
@@ -104,14 +97,11 @@ status: z.enum(PROPERTY_STATUS_ORDER).default("DRAFT"),
 
   // New fields
 
-
-owner_id: z.string().uuid().nullable().optional(),
-assigned_to: z.string().uuid().nullable().optional(),
+  owner_id: z.string().uuid().nullable().optional(),
+  assigned_to: z.string().uuid().nullable().optional(),
 
   property_source: z.string().optional().nullable(),
   images: z.array(z.string()).optional(),
-
-
 });
 
 export type PropertyFormValues = z.infer<typeof FormSchema>;
@@ -134,9 +124,9 @@ function mapRowToFormValues(
   return {
     title: row.title ?? "",
     description: row.description ?? undefined, // ✅ null → undefined
-    property_type: row.property_type as PropertyFormValues["property_type"],
-    listing_type: row.listing_type as PropertyFormValues["listing_type"],
-    status: (row.status ?? "DRAFT") as PropertyFormValues["status"],
+    property_type: row.property_type ?? "HOUSE",
+    listing_type: row.listing_type ?? "SALE",
+    status: row.status ?? "DRAFT",
     price: row.price ?? undefined,
     rental_price: row.rental_price ?? undefined,
     bedrooms: row.bedrooms ?? undefined,
@@ -257,13 +247,6 @@ export function PropertyForm({
     // Check duplicates first
     const canProceed = await checkDuplicates(values);
     if (!canProceed) return; // Wait for user confirmation
-
-    // Convert "NONE" to null for owner_id and assigned_to
-    // const cleanedValues = {
-    //   ...values,
-    //   owner_id: values.owner_id === "NONE" ? null : values.owner_id,
-    //   assigned_to: values.assigned_to === "NONE" ? null : values.assigned_to,
-    // };
 
     // if (mode === "create") {
     //   const result: CreatePropertyResult = await createPropertyAction(
@@ -386,9 +369,9 @@ export function PropertyForm({
                     <SelectTrigger>
                       <SelectValue placeholder="เลือกประเภท" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white">
                       {PROPERTY_TYPE_ORDER.map((t) => (
-                        <SelectItem key={t} value={t} className="bg-white">
+                        <SelectItem key={t} value={t}>
                           {PROPERTY_TYPE_LABELS[t]}
                         </SelectItem>
                       ))}
@@ -414,9 +397,9 @@ export function PropertyForm({
                     <SelectTrigger>
                       <SelectValue placeholder="ขาย/เช่า" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white">
                       {LISTING_TYPE_ORDER.map((t) => (
-                        <SelectItem key={t} value={t} className="bg-white">
+                        <SelectItem key={t} value={t}>
                           {LISTING_TYPE_LABELS[t]}
                         </SelectItem>
                       ))}
@@ -442,9 +425,9 @@ export function PropertyForm({
                     <SelectTrigger>
                       <SelectValue placeholder="สถานะ" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white">
                       {PROPERTY_STATUS_ORDER.map((t) => (
-                        <SelectItem key={t} value={t} className="bg-white">
+                        <SelectItem key={t} value={t}>
                           {PROPERTY_STATUS_LABELS[t]}
                         </SelectItem>
                       ))}
@@ -471,7 +454,9 @@ export function PropertyForm({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? undefined : Number(e.target.value)
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
                       )
                     }
                   />
@@ -492,7 +477,11 @@ export function PropertyForm({
                     type="number"
                     value={field.value ?? ""}
                     onChange={(e) =>
-                      field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                      field.onChange(
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
+                      )
                     }
                   />
                 </FormControl>
@@ -513,7 +502,9 @@ export function PropertyForm({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? undefined : Number(e.target.value)
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
                       )
                     }
                   />
@@ -535,7 +526,9 @@ export function PropertyForm({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? undefined : Number(e.target.value)
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
                       )
                     }
                   />
@@ -560,7 +553,9 @@ export function PropertyForm({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? undefined : Number(e.target.value)
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
                       )
                     }
                   />
@@ -581,7 +576,9 @@ export function PropertyForm({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? undefined : Number(e.target.value)
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
                       )
                     }
                   />
@@ -742,7 +739,7 @@ export function PropertyForm({
                   <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
                     <SelectItem value="NONE">ไม่ระบุ</SelectItem>
                     {owners.map((owner) => (
-                      <SelectItem key={owner.id} value={owner.id} >
+                      <SelectItem key={owner.id} value={owner.id}>
                         {owner.full_name}
                         {owner.phone && ` (${owner.phone})`}
                       </SelectItem>
@@ -800,12 +797,12 @@ export function PropertyForm({
                       <SelectValue placeholder="เลือก Agent" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="max-h-[300px] overflow-y-auto bg-white" >
+                  <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
                     <SelectItem value="NONE">ไม่ระบุ</SelectItem>
                     {agents.map((agent) => (
-                      <SelectItem key={agent.id} value={agent.id} >
+                      <SelectItem key={agent.id} value={agent.id}>
                         {agent.full_name || "(No name)"}
-                        {agent.phone && ` (${agent.phone})`|| " (No phone)"}
+                        {(agent.phone && ` (${agent.phone})`) || " (No phone)"}
                       </SelectItem>
                     ))}
                   </SelectContent>
