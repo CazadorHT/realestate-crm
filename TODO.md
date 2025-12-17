@@ -15,3 +15,28 @@ B) UI (components)
 C) Pages (app router)
 - [x] /protected/leads (ตาราง leads)
 - [x] /protected/leads/[id] (รายละเอียด lead + timeline + ฟอร์ม)
+
+# new 
+
+- [x] หน้า labels แก้ *_ORDER ให้เป็น “tuple literal” จริง (ห้ามใส่ : PropertyType[]) กำลังทำ as const satisfies readonly PropertyStatus[] 
+
+- [x] แก้ property form ให้ดึง select option จาก db แต่ติด error อยู่
+แต่ตอนนี้ ดึงออกมาแสดงได้แล้ว แต่ยังไม่เรียบร้อย
+
+- [ ] อยากลบ latitude, longitude ออกจาก form และ db เพราะไม่จำเป็น แต่อยากได้ Col: เก็บ link google map แทน แล้วแสดงตำแหน่งที่ตั้งของ property ที่หน้าเว็บ (property detail / public web )
+
+- [ ] เจอ Console Error แจ้ง error ของ dialog
+        `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+        If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+        For more information, see https://radix-ui.com/primitives/docs/components/dialog
+        omponents/ui/dialog.tsx (60:7) @ DialogContent
+
+
+        58 |     <DialogPortal data-slot="dialog-portal">
+        59 |       <DialogOverlay />
+        > 60 |       <DialogPrimitive.Content
+            |       ^
+        61 |         data-slot="dialog-content"
+        62 |         className={cn(

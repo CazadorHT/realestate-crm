@@ -1,20 +1,20 @@
 import type { Database } from "@/lib/database.types";
 
 /** === ENUM TYPES จาก DB === */
+export type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 export type PropertyType = Database["public"]["Enums"]["property_type"];
 export type ListingType = Database["public"]["Enums"]["listing_type"];
 export type PropertyStatus = Database["public"]["Enums"]["property_status"];
-
 /** === THAI LABELS (Type-safe: บังคับให้ครบทุกค่า) === */
 export const PROPERTY_TYPE_LABELS = {
   HOUSE: "บ้านเดี่ยว",
   CONDO: "คอนโด",
   TOWNHOME: "ทาวน์โฮม",
   LAND: "ที่ดิน",
-  OTHER: "อื่น ๆ",
   OFFICE_BUILDING: "อาคารสำนักงาน",
   WAREHOUSE: "โกดัง",
   COMMERCIAL_BUILDING: "อาคารพาณิชย์",
+  OTHER: "อื่น ๆ",
 } satisfies Record<PropertyType, string>;
 
 export const LISTING_TYPE_LABELS = {
@@ -34,24 +34,24 @@ export const PROPERTY_STATUS_LABELS = {
 } satisfies Record<PropertyStatus, string>;
 
 /** === ORDER (ตาม sort_order ที่คุณกำหนด) === */
-export const PROPERTY_TYPE_ORDER: PropertyType[] = [
+export const PROPERTY_TYPE_ORDER = [
   "HOUSE",
   "CONDO",
   "TOWNHOME",
   "LAND",
-  "OTHER",
   "OFFICE_BUILDING",
   "WAREHOUSE",
   "COMMERCIAL_BUILDING",
-];
+  "OTHER", 
+]as const satisfies  PropertyType[];
 
-export const LISTING_TYPE_ORDER: ListingType[] = [
+export const LISTING_TYPE_ORDER = [
   "SALE",
   "RENT",
   "SALE_AND_RENT",
-];
+]as const satisfies  ListingType[];
 
-export const PROPERTY_STATUS_ORDER: PropertyStatus[] = [
+export const PROPERTY_STATUS_ORDER = [
   "DRAFT",
   "ACTIVE",
   "ARCHIVED",
@@ -59,7 +59,12 @@ export const PROPERTY_STATUS_ORDER: PropertyStatus[] = [
   "RESERVED",
   "SOLD",
   "RENTED",
-];
+] as const satisfies  PropertyStatus[];
+
+// /** ✅ ใช้กับ z.enum ได้ทันที */
+// export const PROPERTY_TYPE_ENUM = PROPERTY_TYPE_ORDER;
+// export const LISTING_TYPE_ENUM = LISTING_TYPE_ORDER;
+// export const PROPERTY_STATUS_ENUM = PROPERTY_STATUS_ORDER;
 
 /** helpers (ใช้สะดวก + type-safe) */
 export function propertyTypeLabel(v: PropertyType) {
@@ -77,3 +82,4 @@ export function safeEnumLabel(map: Record<string, string>, v: any) {
   if (!v) return "-";
   return map[v] ?? String(v);
 }
+

@@ -7,8 +7,18 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PropertyImageUploader } from "@/components/property-image-uploader";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
-import { PROPERTY_TYPES, LISTING_TYPES, PROPERTY_STATUS } from "./constants";
-import type { Database } from "@/lib/database.types";
+import type { PropertyRow } from "@/features/properties/types";
+import {
+  PROPERTY_TYPE_LABELS,
+  LISTING_TYPE_LABELS,
+  PROPERTY_STATUS_LABELS,
+  PROPERTY_TYPE_ORDER,
+  LISTING_TYPE_ORDER,
+  PROPERTY_STATUS_ORDER,
+  // PROPERTY_TYPE_ENUM,
+  // LISTING_TYPE_ENUM,
+  // PROPERTY_STATUS_ENUM,
+} from "@/features/properties/labels";
 import {
   createPropertyAction,
   updatePropertyAction,
@@ -33,7 +43,9 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
-type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
+
+
+
 const EMPTY_VALUES: PropertyFormValues = {
   title: "",
   description: "",
@@ -62,9 +74,14 @@ const FormSchema = z.object({
 
   description: z.string().optional(), // ✅ ไม่รองรับ null แล้ว
 
-  property_type: z.enum(PROPERTY_TYPES),
-  listing_type: z.enum(LISTING_TYPES),
-  status: z.enum(PROPERTY_STATUS).default("DRAFT"),
+  // // Cast readonly arrays to mutable tuples for Zod
+  // property_type: z.enum([...PROPERTY_TYPE_ENUM] as [string, ...string[]]),
+  // listing_type: z.enum([...LISTING_TYPE_ENUM] as [string, ...string[]]),
+  // status: z.enum([...PROPERTY_STATUS_ENUM] as [string, ...string[]]).default("DRAFT"),
+  property_type: z.enum(PROPERTY_TYPE_ORDER),
+listing_type: z.enum(LISTING_TYPE_ORDER),
+status: z.enum(PROPERTY_STATUS_ORDER).default("DRAFT"),
+
 
   price: z.coerce.number().optional(),
   rental_price: z.coerce.number().optional(),
@@ -86,11 +103,15 @@ const FormSchema = z.object({
   longitude: z.coerce.number().optional(),
 
   // New fields
-  owner_id: z.string().uuid().optional().nullable(),
-  property_source: z.string().optional().nullable(),
-  assigned_to: z.string().uuid().optional().nullable(),
 
+
+owner_id: z.string().uuid().nullable().optional(),
+assigned_to: z.string().uuid().nullable().optional(),
+
+  property_source: z.string().optional().nullable(),
   images: z.array(z.string()).optional(),
+
+
 });
 
 export type PropertyFormValues = z.infer<typeof FormSchema>;
@@ -238,32 +259,32 @@ export function PropertyForm({
     if (!canProceed) return; // Wait for user confirmation
 
     // Convert "NONE" to null for owner_id and assigned_to
-    const cleanedValues = {
-      ...values,
-      owner_id: values.owner_id === "NONE" ? null : values.owner_id,
-      assigned_to: values.assigned_to === "NONE" ? null : values.assigned_to,
-    };
+    // const cleanedValues = {
+    //   ...values,
+    //   owner_id: values.owner_id === "NONE" ? null : values.owner_id,
+    //   assigned_to: values.assigned_to === "NONE" ? null : values.assigned_to,
+    // };
 
-    if (mode === "create") {
-      const result: CreatePropertyResult = await createPropertyAction(
-        cleanedValues
-      );
+    // if (mode === "create") {
+    //   const result: CreatePropertyResult = await createPropertyAction(
+    //     cleanedValues
+    //   );
 
-      if (result.success) {
-        form.reset(EMPTY_VALUES);
-        router.push("/protected/properties");
-        // ✅ บอก uploader ว่าอย่าลบรูปตอน unmount
-        setPersistImages(true);
-      } else {
-        console.error(result.message);
-        // TODO: จะขึ้น toast/error message ตรงนี้ก็ได้
-      }
-    } else if (mode === "edit" && defaultValues?.id) {
-      await updatePropertyAction(defaultValues.id, cleanedValues);
-      // แก้ไขสำเร็จแล้ว ก็ไม่ควรลบรูปเช่นกัน
-      setPersistImages(true);
-      router.push("/protected/properties");
-    }
+    //   if (result.success) {
+    //     form.reset(EMPTY_VALUES);
+    //     router.push("/protected/properties");
+    //     // ✅ บอก uploader ว่าอย่าลบรูปตอน unmount
+    //     setPersistImages(true);
+    //   } else {
+    //     console.error(result.message);
+    //     // TODO: จะขึ้น toast/error message ตรงนี้ก็ได้
+    //   }
+    // } else if (mode === "edit" && defaultValues?.id) {
+    //   await updatePropertyAction(defaultValues.id, cleanedValues);
+    //   // แก้ไขสำเร็จแล้ว ก็ไม่ควรลบรูปเช่นกัน
+    //   setPersistImages(true);
+    //   router.push("/protected/properties");
+    // }
   };
 
   // Handle confirmed duplicate submit
@@ -366,9 +387,9 @@ export function PropertyForm({
                       <SelectValue placeholder="เลือกประเภท" />
                     </SelectTrigger>
                     <SelectContent>
-                      {PROPERTY_TYPES.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
+                      {PROPERTY_TYPE_ORDER.map((t) => (
+                        <SelectItem key={t} value={t} className="bg-white">
+                          {PROPERTY_TYPE_LABELS[t]}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -394,9 +415,9 @@ export function PropertyForm({
                       <SelectValue placeholder="ขาย/เช่า" />
                     </SelectTrigger>
                     <SelectContent>
-                      {LISTING_TYPES.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
+                      {LISTING_TYPE_ORDER.map((t) => (
+                        <SelectItem key={t} value={t} className="bg-white">
+                          {LISTING_TYPE_LABELS[t]}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -422,9 +443,9 @@ export function PropertyForm({
                       <SelectValue placeholder="สถานะ" />
                     </SelectTrigger>
                     <SelectContent>
-                      {PROPERTY_STATUS.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
+                      {PROPERTY_STATUS_ORDER.map((t) => (
+                        <SelectItem key={t} value={t} className="bg-white">
+                          {PROPERTY_STATUS_LABELS[t]}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -450,7 +471,7 @@ export function PropertyForm({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? null : Number(e.target.value)
+                        e.target.value === "" ? undefined : Number(e.target.value)
                       )
                     }
                   />
@@ -471,9 +492,7 @@ export function PropertyForm({
                     type="number"
                     value={field.value ?? ""}
                     onChange={(e) =>
-                      field.onChange(
-                        e.target.value === "" ? null : Number(e.target.value)
-                      )
+                      field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
                     }
                   />
                 </FormControl>
@@ -494,7 +513,7 @@ export function PropertyForm({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? null : Number(e.target.value)
+                        e.target.value === "" ? undefined : Number(e.target.value)
                       )
                     }
                   />
@@ -516,7 +535,7 @@ export function PropertyForm({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? null : Number(e.target.value)
+                        e.target.value === "" ? undefined : Number(e.target.value)
                       )
                     }
                   />
@@ -541,7 +560,7 @@ export function PropertyForm({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? null : Number(e.target.value)
+                        e.target.value === "" ? undefined : Number(e.target.value)
                       )
                     }
                   />
@@ -562,7 +581,7 @@ export function PropertyForm({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? null : Number(e.target.value)
+                        e.target.value === "" ? undefined : Number(e.target.value)
                       )
                     }
                   />
@@ -712,18 +731,18 @@ export function PropertyForm({
                   </span>
                 </FormLabel>
                 <Select
-                  onValueChange={field.onChange}
-                  value={field.value || undefined}
+                  value={field.value ?? "NONE"}
+                  onValueChange={(v) => field.onChange(v === "NONE" ? null : v)}
                 >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="เลือกเจ้าของ (ถ้ามี)" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="max-h-[300px] overflow-y-auto">
+                  <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
                     <SelectItem value="NONE">ไม่ระบุ</SelectItem>
                     {owners.map((owner) => (
-                      <SelectItem key={owner.id} value={owner.id}>
+                      <SelectItem key={owner.id} value={owner.id} >
                         {owner.full_name}
                         {owner.phone && ` (${owner.phone})`}
                       </SelectItem>
@@ -773,20 +792,20 @@ export function PropertyForm({
                   </span>
                 </FormLabel>
                 <Select
-                  onValueChange={field.onChange}
-                  value={field.value || undefined}
+                  value={field.value ?? "NONE"}
+                  onValueChange={(v) => field.onChange(v === "NONE" ? null : v)}
                 >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="เลือก Agent" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="max-h-[300px] overflow-y-auto">
+                  <SelectContent className="max-h-[300px] overflow-y-auto bg-white" >
                     <SelectItem value="NONE">ไม่ระบุ</SelectItem>
                     {agents.map((agent) => (
-                      <SelectItem key={agent.id} value={agent.id}>
+                      <SelectItem key={agent.id} value={agent.id} >
                         {agent.full_name || "(No name)"}
-                        {agent.phone && ` (${agent.phone})`}
+                        {agent.phone && ` (${agent.phone})`|| " (No phone)"}
                       </SelectItem>
                     ))}
                   </SelectContent>

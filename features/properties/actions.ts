@@ -42,6 +42,11 @@ export type PropertyFormValues = {
   latitude?: number;
   longitude?: number;
 
+  // Owner & Agent
+  owner_id?: string | null;
+  assigned_to?: string | null;
+  property_source?: string | null;
+
   // Currency
   currency?: string;
 
@@ -93,8 +98,8 @@ export async function uploadPropertyImageAction(formData: FormData) {
   console.log("uploadPropertyImageAction → PUBLIC URL:", publicUrl);
 
   return {
-    path,       // เก็บลง property_images.storage_path
-    publicUrl,  // ใช้เป็น preview_url / image_url
+    path, // เก็บลง property_images.storage_path
+    publicUrl, // ใช้เป็น preview_url / image_url
   };
 }
 
