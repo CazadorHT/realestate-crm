@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface ImageLightboxProps {
   images: { image_url: string; is_cover?: boolean }[];
@@ -75,20 +76,26 @@ export function ImageLightbox({ images, propertyTitle }: ImageLightboxProps) {
       {/* Lightbox Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
+          showCloseButton={false}
           className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none"
           onKeyDown={handleKeyDown}
-           tabIndex={0} // เพิ่มบรรทัดนี้
+          tabIndex={0} // เพิ่มบรรทัดนี้
         >
+          <VisuallyHidden>
+            <DialogTitle>{`${propertyTitle} — รูปที่ ${currentIndex + 1} จาก ${images.length}`}</DialogTitle>
+          </VisuallyHidden>
           <div className="relative w-full h-[90vh] flex items-center justify-center">
             {/* Close Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setOpen(false)}
-              className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full"
-            >
-              <X className="h-6 w-6" />
-            </Button>
+            <DialogClose asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full"
+              >
+                <X className="h-6 w-6" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </DialogClose>
 
             {/* Previous Button */}
             {images.length > 1 && (
