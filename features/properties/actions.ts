@@ -8,6 +8,7 @@ import type { Database } from "@/lib/database.types";
 import { randomUUID } from "crypto";
 import { getPublicImageUrl } from "./image-utils";
 import type { PropertyRow, PropertyWithImages, PropertyImage } from "./types";
+import type { PropertyFormValues } from "./schema";
 
 export type CreatePropertyResult = {
   success: boolean;
@@ -18,40 +19,6 @@ export type CreatePropertyResult = {
 export type UploadedImageResult = {
   path: string; // storage_path เช่น "properties/xxxx.jpg"
   publicUrl: string; // public URL สำหรับแสดงผล
-};
-
-export type PropertyFormValues = {
-  title: string;
-  description?: string;
-  property_type: Database["public"]["Enums"]["property_type"];
-  listing_type: Database["public"]["Enums"]["listing_type"];
-  status: Database["public"]["Enums"]["property_status"];
-  price?: number;
-  rental_price?: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  size_sqm?: number;
-  land_size_sqwah?: number;
-
-  // Location
-  address_line1?: string;
-  province?: string;
-  district?: string;
-  subdistrict?: string;
-  postal_code?: string;
-  latitude?: number;
-  longitude?: number;
-
-  // Owner & Agent
-  owner_id?: string | null;
-  assigned_to?: string | null;
-  property_source?: string | null;
-
-  // Currency
-  currency?: string;
-
-  // Images - array of storage paths
-  images?: string[]; // ["properties/xxx.jpg", "properties/yyy.jpg"]
 };
 
 /**
@@ -72,7 +39,7 @@ export async function uploadPropertyImageAction(formData: FormData) {
   const ext = file.name.split(".").pop() || "jpg";
 
   // ตั้งชื่อไฟล์ใหม่ให้เป็น uuid เพื่อกันชนกัน
-  const fileName = `${crypto.randomUUID()}.${ext}`;
+  const fileName = `${randomUUID()}.${ext}`;
 
   // path ภายใน bucket (โฟลเดอร์ properties/ ที่ Hunter มีอยู่แล้ว)
   const path = `properties/${fileName}`;

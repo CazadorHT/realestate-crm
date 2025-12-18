@@ -1,13 +1,13 @@
 "use client";
-
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PropertyImageUploader } from "@/components/property-image-uploader";
+import { FormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
 import type { PropertyRow } from "@/features/properties/types";
+import type { FieldErrors } from "react-hook-form";
 import {
   PROPERTY_TYPE_LABELS,
   LISTING_TYPE_LABELS,
@@ -65,46 +65,8 @@ const EMPTY_VALUES: PropertyFormValues = {
 
   images: [],
 };
-// 1) สร้าง Zod schema ให้รองรับ null จาก DB ด้วย
-const FormSchema = z.object({
-  title: z.string().min(1, "กรุณากรอกชื่อทรัพย์"),
-
-  description: z.string().optional(), // ✅ ไม่รองรับ null แล้ว
-
-  // Cast readonly arrays to mutable tuples for Zod
-  property_type: z.enum(PROPERTY_TYPE_ENUM),
-  listing_type: z.enum(LISTING_TYPE_ENUM),
-  status: z.enum(PROPERTY_STATUS_ENUM).default("DRAFT"),
-
-  price: z.coerce.number().optional(),
-  rental_price: z.coerce.number().optional(),
-
-  bedrooms: z.coerce.number().optional(),
-  bathrooms: z.coerce.number().optional(),
-
-  size_sqm: z.coerce.number().optional(),
-  land_size_sqwah: z.coerce.number().optional(),
-
-  currency: z.string().default("THB"),
-
-  address_line1: z.string().optional(),
-  province: z.string().optional(),
-  district: z.string().optional(),
-  subdistrict: z.string().optional(),
-  postal_code: z.string().optional(),
-  latitude: z.coerce.number().optional(),
-  longitude: z.coerce.number().optional(),
-
-  // New fields
-
-  owner_id: z.string().uuid().nullable().optional(),
-  assigned_to: z.string().uuid().nullable().optional(),
-
-  property_source: z.string().optional().nullable(),
-  images: z.array(z.string()).optional(),
-});
-
-export type PropertyFormValues = z.infer<typeof FormSchema>;
+// Form schema moved to `features/properties/schema.ts` for shared type-safety
+// หน้าอื่นๆ สามารถ import FormSchema และ PropertyFormValues จากที่นั่นได้
 
 type Props = {
   mode: "create" | "edit";
@@ -242,8 +204,13 @@ export function PropertyForm({
 
     return true; // No duplicates, proceed
   };
-  
-// Handle form submission
+
+  // การจัดการกรณีข้อมูลไม่ถูกต้อง
+  const onInvalid = (errors: FieldErrors<PropertyFormValues>) => {
+    const firstKey = Object.keys(errors)[0];
+    if (firstKey) scrollToField(firstKey);
+  };
+  // Handle form submission หรือ การสร้าง/แก้ไขทรัพย์โดยการใช้ onSubmit
   const onSubmit = async (values: PropertyFormValues) => {
     // Check duplicates first
     try {
@@ -251,9 +218,7 @@ export function PropertyForm({
       if (!canProceed) return; // Wait for user confirmation
       // No duplicates or in edit mode, proceed to create/update
       if (mode === "create") {
-        const result: CreatePropertyResult = await createPropertyAction(
-          values
-        );
+        const result: CreatePropertyResult = await createPropertyAction(values);
 
         if (result.success) {
           form.reset(EMPTY_VALUES);
@@ -261,7 +226,6 @@ export function PropertyForm({
           setPersistImages(true);
           // กลับไปที่หน้ารายการทรัพย์
         } else {
-          
           console.error(result.message);
         }
       } else if (mode === "edit" && defaultValues?.id) {
@@ -274,7 +238,7 @@ export function PropertyForm({
     }
   };
 
-  // Handle confirmed duplicate submit
+  // Handle confirmed duplicate submit หรือ คืองการยืนยันการส่งข้อมูลที่ซ้ำกัน
   const handleConfirmDuplicateSubmit = async () => {
     setShowDuplicateDialog(false);
 
@@ -295,12 +259,74 @@ export function PropertyForm({
     setPendingSubmit(null);
   };
 
+  // Inline watches for friendly warnings (not only on submit) หรือ คือการตรวจสอบค่าต่างๆ ในฟอร์มแบบเรียลไทม์
+  const listingType = form.watch("listing_type");
+  const priceVal = form.watch("price");
+  const rentalVal = form.watch("rental_price");
+
+  // Helper scroll to field with data-field attribute หรือ คือฟังก์ชันช่วยเลื่อนหน้าจอไปยังฟิลด์ที่มีข้อผิดพลาด
+  function scrollToField(name: string) {
+    const el = document.querySelector(`[data-field="${name}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  //กรณีสรุปข้อผิดพลาดของฟอร์ม และให้ผู้ใช้คลิกเพื่อเลื่อนไปยังฟิลด์ที่มีข้อผิดพลาด
+  function ErrorSummary({
+    errors,
+  }: {
+    errors: FieldErrors<PropertyFormValues>;
+  }) {
+    const items = React.useMemo(() => {
+      const labelMap: Record<string, string> = {
+        title: "ชื่อทรัพย์",
+        property_type: "ประเภททรัพย์",
+        listing_type: "รูปแบบประกาศ",
+        status: "สถานะ",
+        price: "ราคาขาย",
+        rental_price: "ราคาเช่า",
+      };
+
+      return Object.entries(errors)
+        .map(([name, err]) => ({
+          name,
+          label: labelMap[name] ?? name,
+          message: (err as any)?.message as string | undefined,
+        }))
+        .filter((x) => !!x.message);
+    }, [errors]);
+
+    if (items.length === 0) return null;
+
+    return (
+      <div
+        role="alert"
+        className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-900"
+      >
+        <div className="font-semibold">คุณยังกรอกข้อมูลไม่ครบ</div>
+        <ul className="mt-2 list-disc pl-5 space-y-1 text-sm">
+          {items.map((it) => (
+            <li key={it.name}>
+              <button
+                type="button"
+                className="underline underline-offset-2"
+                onClick={() => scrollToField(it.name)}
+              >
+                {it.label}
+              </button>
+              {it.message ? `: ${it.message}` : null}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
   return (
     <Form {...form}>
       <form
         className="space-y-6 max-w-2xl"
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(onSubmit, onInvalid)}
       >
+        {/* Error Summary หรือ สรุปข้อผิดพลาดของฟอร์ม */}
+        <ErrorSummary errors={form.formState.errors} />
         {/* Img */}
         <FormField
           control={form.control}
@@ -327,11 +353,11 @@ export function PropertyForm({
         <FormField
           control={form.control}
           name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>ชื่อทรัพย์</FormLabel>
+          render={({ field}) => (
+            <FormItem data-field="title">
+              <FormLabel>ชื่อทรัพย์ <span className="text-red-400">*</span> </FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} placeholder="เช่น เศรษฐสิริ บางนา กม.10" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -343,7 +369,7 @@ export function PropertyForm({
           control={form.control}
           name="description"
           render={({ field }) => (
-            <FormItem>
+            <FormItem data-field="description">
               <FormLabel>รายละเอียด</FormLabel>
               <FormControl>
                 <Textarea
@@ -363,7 +389,7 @@ export function PropertyForm({
             control={form.control}
             name="property_type"
             render={({ field }) => (
-              <FormItem>
+              <FormItem data-field="property_type">
                 <FormLabel>ประเภททรัพย์</FormLabel>
                 <FormControl>
                   <Select
@@ -371,7 +397,7 @@ export function PropertyForm({
                     defaultValue={field.value}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="เลือกประเภท" />
+                      <SelectValue placeholder="-- เลือกประเภท --" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
                       {PROPERTY_TYPE_ORDER.map((t) => (
@@ -391,7 +417,7 @@ export function PropertyForm({
             control={form.control}
             name="listing_type"
             render={({ field }) => (
-              <FormItem>
+              <FormItem data-field="listing_type">
                 <FormLabel>รูปแบบประกาศ</FormLabel>
                 <FormControl>
                   <Select
@@ -419,7 +445,7 @@ export function PropertyForm({
             control={form.control}
             name="status"
             render={({ field }) => (
-              <FormItem>
+              <FormItem data-field="status">
                 <FormLabel>สถานะ</FormLabel>
                 <FormControl>
                   <Select
@@ -449,36 +475,46 @@ export function PropertyForm({
           <FormField
             control={form.control}
             name="price"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
+              
               <FormItem>
-                <FormLabel>ราคาขาย</FormLabel>
-                <FormControl>
+                
+                <FormLabel >ราคาขาย</FormLabel>
+                 
+                <FormControl >
                   <Input
+                  aria-invalid={!!fieldState.error}
                     type="number"
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
                         e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
+                        ? undefined
+                        : Number(e.target.value)
                       )
                     }
+                    placeholder="กรุณาใส่ราคาขาย"
                   />
+                  
                 </FormControl>
-                <FormMessage />
+                <FormMessage/>
+              
               </FormItem>
+              
             )}
           />
 
           <FormField
             control={form.control}
             name="rental_price"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem>
                 <FormLabel>ราคาเช่า</FormLabel>
                 <FormControl>
                   <Input
+                  aria-invalid={!!fieldState.error}
                     type="number"
+                    
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
@@ -489,7 +525,7 @@ export function PropertyForm({
                     }
                   />
                 </FormControl>
-                <FormMessage />
+                {/* <FormMessage /> */}
               </FormItem>
             )}
           />
