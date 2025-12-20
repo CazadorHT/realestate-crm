@@ -8,7 +8,7 @@ import { randomUUID } from "crypto";
 import { getPublicImageUrl } from "./image-utils";
 import type { PropertyRow, PropertyWithImages, PropertyImage } from "./types";
 import { FormSchema, type PropertyFormValues } from "./schema";
-// Authorization utilities คือการตรวจสอบสิทธิ์ผู้ใช้ 
+// Authorization utilities คือการตรวจสอบสิทธิ์ผู้ใช้
 import { requireAuthContext, assertOwnerOrAdmin, authzFail } from "@/lib/authz";
 
 export type CreatePropertyResult = {
@@ -34,14 +34,16 @@ function validatePropertyImagePaths(paths: string[]) {
     (p) =>
       typeof p !== "string" ||
       !p.startsWith("properties/") || // บังคับต้องอยู่ใต้โฟลเดอร์นี้
-      p.includes("..") ||             // กัน path traversal
-      p.startsWith("/")               // กัน absolute-ish
+      p.includes("..") || // กัน path traversal
+      p.startsWith("/") // กัน absolute-ish
   );
 
   if (invalid.length > 0) {
     return {
       ok: false as const,
-      message: `Invalid image path(s): ${invalid.slice(0, 3).join(", ")}${invalid.length > 3 ? "..." : ""}`,
+      message: `Invalid image path(s): ${invalid.slice(0, 3).join(", ")}${
+        invalid.length > 3 ? "..." : ""
+      }`,
     };
   }
 
@@ -63,41 +65,110 @@ async function ensureStorageObjectsExist(
 
   return missing;
 }
+// ✅ สำเร็จแล้ว ลบ session ที่ไม่ใช้ คือ session ที่ไม่มีไฟล์ที่ใช้
+async function finalizeUploadSession(params: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
+  sessionId: string;
+  propertyId: string;
+  usedPaths: string[];
+}) {
+  const { supabase, userId, sessionId, propertyId, usedPaths } = params;
+ const used = (usedPaths ?? []).filter(Boolean);
+  // 1) mark used paths เป็น ATTACHED + ผูก property_id
+  if (used.length > 0) {
+    const { error: markErr } = await supabase
+      .from("property_image_uploads")
+      .update({ status: "ATTACHED", property_id: propertyId })
+      .eq("user_id", userId)
+      .eq("session_id", sessionId)
+      .in("storage_path", used);
+
+    if (markErr) throw markErr;
+  }
+
+  // 2) หา TEMP ที่เหลือใน session นี้ (ไม่ได้ใช้) → ลบจาก storage + ลบ tracking row
+  const { data: leftovers, error: leftErr } = await supabase
+    .from("property_image_uploads")
+    .select("storage_path")
+    .eq("user_id", userId)
+    .eq("session_id", sessionId)
+    .eq("status", "TEMP");
+
+  if (leftErr) throw leftErr;
+
+  const toRemove = (leftovers ?? [])
+    .map((x) => x.storage_path)
+    .filter((p): p is string => !!p && !used.includes(p));
+
+  if (toRemove.length > 0) {
+    await supabase.storage.from(PROPERTY_IMAGES_BUCKET).remove(toRemove);
+
+    await supabase
+      .from("property_image_uploads")
+      .delete()
+      .eq("user_id", userId)
+      .eq("session_id", sessionId)
+      .eq("status", "TEMP")
+  }
+}
+
+
 export async function uploadPropertyImageAction(formData: FormData) {
   try {
-    // ✅ Step 1.2: require auth context
     const { supabase, user } = await requireAuthContext();
-  
+
+    const sessionId = formData.get("sessionId") as string | null;
+    if (!sessionId) throw new Error("Missing sessionId");
+
     const file = formData.get("file") as File | null;
     if (!file) throw new Error("No file provided");
-  
+
     const extRaw = file.name.split(".").pop() || "jpg";
     const ext = extRaw.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-  
+
     const fileName = `${randomUUID()}.${ext}`;
-  
-    // ✅ ผูก path กับ user เพื่อกันคนอื่นเดา/ยัด path
-    const path = `properties/${user.id}/${fileName}`;
-  
+
+    // ✅ เพิ่ม session folder เพื่อให้ cleanup เป็นกลุ่มได้
+    const path = `properties/${user.id}/${sessionId}/${fileName}`;
+
     const { error: uploadError } = await supabase.storage
       .from(PROPERTY_IMAGES_BUCKET)
       .upload(path, file, {
         cacheControl: "3600",
         upsert: false,
       });
-  
+
     if (uploadError) {
       console.error("uploadPropertyImageAction → uploadError:", uploadError);
       throw uploadError;
     }
-  
-    const { data } = supabase.storage.from(PROPERTY_IMAGES_BUCKET).getPublicUrl(path);
-  
+
+    // ✅ Insert TEMP tracking row
+    const { error: trackErr } = await supabase
+      .from("property_image_uploads")
+      .insert({
+        user_id: user.id,
+        session_id: sessionId,
+        storage_path: path,
+        status: "TEMP",
+      });
+
+    if (trackErr) {
+      // ถ้า track ไม่ได้ -> ลบไฟล์ทิ้งกัน orphan
+      await supabase.storage.from(PROPERTY_IMAGES_BUCKET).remove([path]);
+      console.error("uploadPropertyImageAction → trackErr:", trackErr);
+      throw trackErr;
+    }
+
+    const { data } = supabase.storage
+      .from(PROPERTY_IMAGES_BUCKET)
+      .getPublicUrl(path);
+
     return {
       path,
       publicUrl: data.publicUrl,
     };
-    
   } catch (error) {
     console.error("uploadPropertyImageAction → error:", error);
     throw error;
@@ -108,31 +179,38 @@ export async function uploadPropertyImageAction(formData: FormData) {
  * Create property with images
  */
 export async function createPropertyAction(
-  values: PropertyFormValues
+  values: PropertyFormValues,
+  sessionId: string
 ): Promise<CreatePropertyResult> {
- 
   try {
     // ✅ Step 1.2: require auth context (แทน getUser แบบเดิม)
-    const { supabase, user } = await requireAuthContext();
+    const { supabase, user, role } = await requireAuthContext();
+    if (!sessionId) return { success: false, message: "Missing upload session" };
+
     // 1) Validate form data คือ การตรวจสอบความถูกต้องของข้อมูลฟอร์ม
     const parsed = FormSchema.safeParse(values);
-      if (!parsed.success) {
-        return {
-          success: false,
-          message: "Validation failed",
-          errors: parsed.error.format(),
-        };
-      }
-      const safeValues = parsed.data;
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: "Validation failed",
+        errors: parsed.error.format(),
+        
+      };
+    }
+    const safeValues = parsed.data;
 
     const { images, ...propertyData } = safeValues;
 
     // ✅ Step 1.2: image paths ต้องเป็นของ user เท่านั้น (กันยัด path ปลอม)
     if (images?.length) {
-      const mustStartWith = `properties/${user.id}/`;
+      const mustStartWith =
+        role === "ADMIN" ? "properties/" : `properties/${user.id}/`;
       const invalid = images.find((p) => !p.startsWith(mustStartWith));
       if (invalid) {
-        return { success: false, message: "Invalid image path (ownership mismatch)" };
+        return {
+          success: false,
+          message: "Invalid image path (ownership mismatch)",
+        };
       }
     }
 
@@ -173,8 +251,8 @@ export async function createPropertyAction(
     }
 
     if (images && images.length > 0) {
-    // 1) Validate path format (defense-in-depth) 
-    // ถ้าผ่าน ให้ทำขั้นตอนถัดไป ยืนยันว่า path ถูกต้อง 
+      // 1) Validate path format (defense-in-depth)
+      // ถ้าผ่าน ให้ทำขั้นตอนถัดไป ยืนยันว่า path ถูกต้อง
       const valid = validatePropertyImagePaths(images);
       if (!valid.ok) {
         await supabase.from("properties").delete().eq("id", property.id);
@@ -193,9 +271,9 @@ export async function createPropertyAction(
         await supabase.from("properties").delete().eq("id", property.id);
         return {
           success: false,
-          message: `Some images are missing in storage: ${missing.slice(0, 3).join(", ")}${
-            missing.length > 3 ? "..." : ""
-          }`,
+          message: `Some images are missing in storage: ${missing
+            .slice(0, 3)
+            .join(", ")}${missing.length > 3 ? "..." : ""}`,
         };
       }
 
@@ -221,7 +299,13 @@ export async function createPropertyAction(
         return { success: false, message: "Failed to attach images" };
       }
     }
-
+    await finalizeUploadSession({
+      supabase,
+      userId: user.id,
+      sessionId,
+      propertyId: property.id,
+      usedPaths: images ?? [],
+    });
     revalidatePath("/protected/properties");
     return { success: true, propertyId: property.id };
   } catch (err) {
@@ -235,7 +319,8 @@ export async function createPropertyAction(
  */
 export async function updatePropertyAction(
   id: string,
-  values: PropertyFormValues
+  values: PropertyFormValues,
+  sessionId: string
 ): Promise<CreatePropertyResult> {
   try {
     const { supabase, user, role } = await requireAuthContext();
@@ -266,11 +351,16 @@ export async function updatePropertyAction(
     assertOwnerOrAdmin({ ownerId: existing.created_by, userId: user.id, role });
 
     // 3) กันยัด path รูปปลอม (ownership)
+ 
     if (images?.length) {
-      const mustStartWith = `properties/${user.id}/`;
+      const mustStartWith =
+        role === "ADMIN" ? "properties/" : `properties/${user.id}/`;
       const invalid = images.find((p) => !p.startsWith(mustStartWith));
       if (invalid) {
-        return { success: false, message: "Invalid image path (ownership mismatch)" };
+        return {
+          success: false,
+          message: "Invalid image path (ownership mismatch)",
+        };
       }
     }
 
@@ -335,9 +425,9 @@ export async function updatePropertyAction(
       if (missing.length > 0) {
         return {
           success: false,
-          message: `Some images are missing in storage: ${missing.slice(0, 3).join(", ")}${
-            missing.length > 3 ? "..." : ""
-          }`,
+          message: `Some images are missing in storage: ${missing
+            .slice(0, 3)
+            .join(", ")}${missing.length > 3 ? "..." : ""}`,
         };
       }
     }
@@ -386,7 +476,13 @@ export async function updatePropertyAction(
         return { success: false, message: "Failed to attach images" };
       }
     }
-
+    await finalizeUploadSession({
+      supabase,
+      userId: user.id,
+      sessionId,
+      propertyId: id,
+      usedPaths: images ?? [],
+    });
     revalidatePath("/protected/properties");
     revalidatePath(`/protected/properties/${id}`);
     return { success: true, propertyId: id };
@@ -400,8 +496,8 @@ export async function updatePropertyAction(
  */
 export async function getPropertyById(id: string): Promise<PropertyRow> {
   try {
-    const {supabase,user,role} = await requireAuthContext();
-  
+    const { supabase, user, role } = await requireAuthContext();
+
     const { data: property, error: propErr } = await supabase
       .from("properties")
       .select("*")
@@ -416,7 +512,7 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
       userId: user.id,
       role,
     });
-    
+
     return property;
   } catch (error) {
     console.error("getPropertyById → error:", error);
@@ -430,7 +526,7 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
 export async function getPropertyWithImages(
   id: string
 ): Promise<PropertyWithImages> {
-   const { supabase, user, role } = await requireAuthContext();
+  const { supabase, user, role } = await requireAuthContext();
 
   const { data, error } = await supabase
     .from("properties")
@@ -454,7 +550,11 @@ export async function getPropertyWithImages(
   if (error || !data) throw error;
 
   // ✅ เพิ่ม authorization check
-  assertOwnerOrAdmin({ ownerId: (data as any).created_by, userId: user.id, role });
+  assertOwnerOrAdmin({
+    ownerId: (data as any).created_by,
+    userId: user.id,
+    role,
+  });
 
   if (data.property_images) {
     data.property_images.sort((a, b) => a.sort_order - b.sort_order);
@@ -465,57 +565,60 @@ export async function getPropertyWithImages(
 
 /**
  * Delete property and cleanup storage
- * ใช้กับ server action ที่รับ FormData จากฟอร์มลบทรัพย์ 
- * ลบได้เฉพาะเจ้าของทรัพย์หรือแอดมินเท่านั้น 
+ * ใช้กับ server action ที่รับ FormData จากฟอร์มลบทรัพย์
+ * ลบได้เฉพาะเจ้าของทรัพย์หรือแอดมินเท่านั้น
  */
 export async function deletePropertyAction(formData: FormData) {
   try {
     const { supabase, user, role } = await requireAuthContext();
-  
+
     const id = formData.get("id") as string | null;
     if (!id) throw new Error("Missing property id");
-  
+
     // 0) โหลดเจ้าของทรัพย์เพื่อเช็คสิทธิ (owner/admin)
     const { data: property, error: propErr } = await supabase
       .from("properties")
       .select("id, created_by")
       .eq("id", id)
       .single();
-  
+    
     if (propErr || !property) throw new Error("Property not found");
-  
+
     // 0.1) Authorization
     assertOwnerOrAdmin({ ownerId: property.created_by, userId: user.id, role });
-  
+
     // 1) Get all images to delete from storage
     const { data: images } = await supabase
       .from("property_images")
       .select("storage_path")
       .eq("property_id", id);
-  
+
     // 2) Delete from storage
     if (images && images.length > 0) {
       const pathsToRemove = images
         .map((img) => img.storage_path)
         .filter((path): path is string => !!path);
-  
+
       if (pathsToRemove.length > 0) {
         const { error: storageError } = await supabase.storage
           .from(PROPERTY_IMAGES_BUCKET) // แนะนำให้ใช้ constant เดียวกัน
           .remove(pathsToRemove);
-  
+
         if (storageError) {
           console.error("Failed to cleanup images from storage", storageError);
         }
       }
     }
-  
+
     // 3) Delete property (cascade will delete property_images records)
     const { error } = await supabase.from("properties").delete().eq("id", id);
     if (error) throw error;
-  
+    await supabase
+    .from("property_image_uploads")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("status", "TEMP");
     revalidatePath("/protected/properties");
-    
   } catch (error) {
     console.error("deletePropertyAction → error:", error);
     throw error;
@@ -531,24 +634,80 @@ export async function deletePropertyAction(formData: FormData) {
  */
 
 export async function deletePropertyImageFromStorage(storagePath: string) {
- const { supabase, user, role } = await requireAuthContext();
+  const { supabase, user, role } = await requireAuthContext();
 
-  const mustStartWith = `properties/${user.id}/`;
+  const mustStartWith =
+    role === "ADMIN" ? "properties/" : `properties/${user.id}/`;
 
-  // ✅ owner ลบได้เฉพาะไฟล์ตัวเอง, admin ลบได้ทั้งหมดใน properties/
   const ok =
-    storagePath?.startsWith(mustStartWith) ||
-    (role === "ADMIN" && storagePath?.startsWith("properties/"));
+      storagePath?.startsWith(mustStartWith) ||
+      (role === "ADMIN" && storagePath?.startsWith("properties/"));
 
   if (!ok) throw new Error("Invalid storage path (ownership mismatch)");
 
-  const { error } = await supabase.storage
+  const { error: storageErr } = await supabase.storage
     .from(PROPERTY_IMAGES_BUCKET)
     .remove([storagePath]);
 
-  if (error) {
-    console.error("deletePropertyImageFromStorage → error:", error);
-    throw error;
+  if (storageErr) {
+    console.error(
+      "deletePropertyImageFromStorage → storage error:",
+      storageErr
+    );
+    throw storageErr;
+  }
+
+  // ✅ ลบ tracking row TEMP
+  let del = supabase
+    .from("property_image_uploads")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("storage_path", storagePath)
+    .eq("status", "TEMP");
+
+  if (role !== "ADMIN") {
+    del = del.eq("user_id", user.id);
+  }
+
+  const { error: trackErr } = await del;
+  if (trackErr) {
+    console.error(
+      "deletePropertyImageFromStorage → tracking delete error:",
+      trackErr
+    );
+    // จะ throw หรือไม่ throw ก็ได้; แนะนำไม่ throw เพราะ storage ลบไปแล้ว
+  }
+
+  return { success: true };
+}
+
+export async function cleanupUploadSessionAction(sessionId: string) {
+  const { supabase, user } = await requireAuthContext();
+
+  if (!sessionId) return { success: true };
+
+  const { data, error } = await supabase
+    .from("property_image_uploads")
+    .select("storage_path")
+    .eq("user_id", user.id)
+    .eq("session_id", sessionId)
+    .eq("status", "TEMP");
+
+  if (error) throw error;
+
+  const paths = (data ?? [])
+    .map((x) => x.storage_path)
+    .filter((p): p is string => !!p);
+
+  if (paths.length > 0) {
+    await supabase.storage.from(PROPERTY_IMAGES_BUCKET).remove(paths);
+
+    await supabase
+      .from("property_image_uploads")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("session_id", sessionId)
+      .eq("status", "TEMP");
   }
 
   return { success: true };

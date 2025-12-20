@@ -45,4 +45,23 @@ C) Pages (app router)
 - [x] Step 1 : Auth + Authorization ให้เป็นมาตรฐานเดียว /สร้างไฟล์กลางสำหรับ AuthZ [lib/authz.ts] / แยก Public vs Protected อ่านทรัพย์ + รูป
 - [x] Step 2 : Server-side validation ด้วย Zod safeParse
 - [x] Step 3 : “เรียกใช้” validate/existence/rollback ใน createPropertyAction (ตอนนี้ insert images แล้ว error ก็แค่ log)
-- [ ] Step 4 : cleanup storage ให้ไม่เกิดไฟล์ orphan (กรณีอัปโหลดแล้วกดยกเลิก/ลบก่อนเซฟ)
+- [x] Step 4 : cleanup storage ให้ไม่เกิดไฟล์ orphan (กรณีอัปโหลดแล้วกดยกเลิก/ลบก่อนเซฟ) สรุป Step 4.0–4.4 (สั้น กระชับ)
+- [4.0] เป้าหมาย: กันไฟล์รูป “ค้างใน Storage (orphan)” จากการอัปโหลดแล้วไม่กดบันทึก/ลบรูป/ยกเลิก
+- [4.1] เพิ่มตาราง property_image_uploads: เก็บ tracking รูปที่อัปโหลดแบบ TEMP/ATTACHED พร้อม RLS (owner/admin)
+- [4.2] ตอนอัปโหลดรูป: uploadPropertyImageAction รับ sessionId แล้ว
+- [4.2.1] อัปโหลดเข้า bucket property-images
+- [4.2.2] insert row เป็น TEMP ทันที (ก่อน submit)
+- [4.2.3] ถ้า insert ไม่ผ่าน → ลบไฟล์ใน storage ทิ้ง (กัน orphan ตั้งแต่ต้น)
+- [4.3] ตอน submit สำเร็จ (create/update): finalizeUploadSession
+- [4.3.1] รูปที่ใช้จริง → เปลี่ยนเป็น ATTACHED + ใส่ property_id
+- [4.3.2] รูป TEMP ที่ไม่ใช้ → ลบจาก Storage + ลบ row TEMP
+- [4.4] ตอนกดยกเลิก: cleanupUploadSessionAction(sessionId)
+- [4.4.1] ลบ TEMP ทั้ง session จาก Storage + ลบ row TEMP แล้วค่อยออกหน้า (ทำแบบไม่ block UX ได้)
+- [4.5] เก็บกวาด TEMP ที่ค้างจาก “ปิดแท็บ/ไม่ submit/ไม่กดยกเลิก” ด้วย scheduled cleanup.
+- [ ] Step 5 : 
+- [ ] Step 6 : 
+- [ ] Step 7 : 
+- [ ] Step 8 : 
+- [ ] Step 9 : 
+- [ ] Step 10 : 
+

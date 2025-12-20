@@ -1,6 +1,8 @@
+//property-image-uploader.tsx
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+
 import { useDropzone } from "react-dropzone";
 import {
   DragDropContext,
@@ -36,6 +38,7 @@ interface ImageItem {
 }
 
 interface PropertyImageUploaderProps {
+  sessionId: string;
   value: string[]; // storage paths จาก react-hook-form
   onChange: (paths: string[]) => void;
   initialImages?: {
@@ -50,6 +53,7 @@ interface PropertyImageUploaderProps {
 }
 
 export function PropertyImageUploader({
+  sessionId,
   value,
   onChange,
   initialImages = [],
@@ -75,11 +79,16 @@ export function PropertyImageUploader({
       is_cover: index === 0,
     }));
   });
+  // คือการเก็บค่า images ไว้ใน ref เพื่อไม่ให้เกิด setState during render
+  const imagesRef = useRef<ImageItem[]>(images);
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
 
-  // Sync images state to parent (react-hook-form) via useEffect
+    // Sync images state to parent (react-hook-form) via useEffect
   // เพื่อไม่ให้เกิด setState during render
   useEffect(() => {
-    const paths = images
+    const paths = imagesRef.current
       .filter((img) => img.storage_path) // เอาแค่ที่อัปโหลดเสร็จแล้ว
       .map((img) => img.storage_path);
     onChange(paths);
@@ -92,8 +101,8 @@ export function PropertyImageUploader({
         // ฟอร์ม submit สำเร็จแล้ว → ไม่ต้องลบ
         return;
       }
-
-      const pathsToDelete = images
+      // ลบรูปที่ไม่เคยอัปโหลด
+      const pathsToDelete = imagesRef.current
         .filter((img) => img.storage_path && !img.is_uploading)
         .map((img) => img.storage_path);
 
@@ -195,7 +204,7 @@ export function PropertyImageUploader({
         try {
           const formData = new FormData();
           formData.append("file", item.file!);
-
+          formData.append("sessionId", sessionId);
           const result = await uploadPropertyImageAction(formData);
 
           // อัปเดต state ด้วย public URL (useEffect จะ sync ไป form เอง)

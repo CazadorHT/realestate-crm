@@ -6,7 +6,7 @@ import { Camera, Loader2 } from "lucide-react";
 import { uploadAvatarAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-
+import { uploadPropertyImageAction } from "@/features/properties/actions";
 interface ProfileAvatarProps {
   avatarUrl: string | null;
   fullName: string | null;

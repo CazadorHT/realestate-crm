@@ -1,5 +1,8 @@
+// property form.tsx
+
 "use client";
 import * as React from "react";
+import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,6 +11,7 @@ import { FormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
 import type { PropertyRow } from "@/features/properties/types";
 import type { FieldErrors } from "react-hook-form";
+import { CancelButton } from "./btn-cancel";
 import {
   PROPERTY_TYPE_LABELS,
   LISTING_TYPE_LABELS,
@@ -150,6 +154,10 @@ export function PropertyForm({
     { id: string; full_name: string | null; phone: string | null }[]
   >([]);
 
+  // Session ID for image uploads
+  const uploadSessionId = useRef<string>(
+    typeof crypto !== "undefined" ? crypto.randomUUID() : "fallback"
+  ).current;
   // Load owners and agents on mount
   React.useEffect(() => {
     async function loadData() {
@@ -210,6 +218,7 @@ export function PropertyForm({
     const firstKey = Object.keys(errors)[0];
     if (firstKey) scrollToField(firstKey);
   };
+
   // Handle form submission หรือ การสร้าง/แก้ไขทรัพย์โดยการใช้ onSubmit
   const onSubmit = async (values: PropertyFormValues) => {
     // Check duplicates first
@@ -218,26 +227,27 @@ export function PropertyForm({
       if (!canProceed) return; // Wait for user confirmation
       // No duplicates or in edit mode, proceed to create/update
       if (mode === "create") {
-        const result: CreatePropertyResult = await createPropertyAction(values);
+        const result = await createPropertyAction(values, uploadSessionId);
 
         if (result.success) {
+          setPersistImages(true);
           form.reset(EMPTY_VALUES);
           router.push("/protected/properties");
-          setPersistImages(true);
           // กลับไปที่หน้ารายการทรัพย์
         } else {
           console.error(result.message);
         }
       } else if (mode === "edit" && defaultValues?.id) {
-        await updatePropertyAction(defaultValues.id, values);
         setPersistImages(true);
+        await updatePropertyAction(defaultValues.id, values, uploadSessionId);
+
         router.push("/protected/properties");
       }
     } catch (error) {
       console.error("Error submitting property form:", error);
     }
   };
-
+  
   // Handle confirmed duplicate submit หรือ คืองการยืนยันการส่งข้อมูลที่ซ้ำกัน
   const handleConfirmDuplicateSubmit = async () => {
     setShowDuplicateDialog(false);
@@ -245,13 +255,14 @@ export function PropertyForm({
     if (!pendingSubmit) return;
 
     const result: CreatePropertyResult = await createPropertyAction(
-      pendingSubmit
+      pendingSubmit,
+      uploadSessionId 
     );
 
     if (result.success) {
+      setPersistImages(true);
       form.reset(EMPTY_VALUES);
       router.push("/protected/properties");
-      setPersistImages(true);
     } else {
       console.error(result.message);
     }
@@ -336,6 +347,7 @@ export function PropertyForm({
               <FormLabel>รูปภาพทรัพย์</FormLabel>
               <FormControl>
                 <PropertyImageUploader
+                sessionId={uploadSessionId} 
                   value={field.value ?? []}
                   onChange={field.onChange}
                   initialImages={initialImages}
@@ -856,6 +868,8 @@ export function PropertyForm({
         <Button type="submit">
           {mode === "create" ? "สร้างทรัพย์" : "บันทึกการแก้ไข"}
         </Button>
+        <CancelButton sessionId={uploadSessionId} />
+
       </form>
 
       {/* Duplicate Warning Dialog */}
