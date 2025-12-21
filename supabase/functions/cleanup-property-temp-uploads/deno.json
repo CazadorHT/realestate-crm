@@ -1,0 +1,7 @@
+{
+  "imports": {},
+  "compilerOptions": {
+    "lib": ["deno.ns", "dom", "deno.unstable"],
+    "strict": true
+  }
+}
