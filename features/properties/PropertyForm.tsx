@@ -6,7 +6,7 @@ import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PropertyImageUploader } from "@/components/property-image-uploader";
+import { IMAGE_UPLOAD_POLICY, PropertyImageUploader } from "@/components/property-image-uploader";
 import { FormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
 import type { PropertyRow } from "@/features/properties/types";
@@ -351,8 +351,8 @@ export function PropertyForm({
                   value={field.value ?? []}
                   onChange={field.onChange}
                   initialImages={initialImages}
-                  maxFiles={20}
-                  maxFileSizeMB={5}
+                  maxFiles={IMAGE_UPLOAD_POLICY.maxFiles}
+                  maxFileSizeMB={IMAGE_UPLOAD_POLICY.maxBytes / (1024 * 1024)}
                   // 🔥 ถ้า persistImages = true → ไม่ต้อง cleanup
                   cleanupOnUnmount={!persistImages}
                 />

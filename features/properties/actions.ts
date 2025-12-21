@@ -10,6 +10,8 @@ import type { PropertyRow, PropertyWithImages, PropertyImage } from "./types";
 import { FormSchema, type PropertyFormValues } from "./schema";
 // Authorization utilities คือการตรวจสอบสิทธิ์ผู้ใช้
 import { requireAuthContext, assertOwnerOrAdmin, authzFail } from "@/lib/authz";
+import { validateImageFile } from "@/lib/file-validation"; // สำหรับตรวจสอบไฟล์รูปภาพ
+import { IMAGE_UPLOAD_POLICY } from "@/components/property-image-uploader";
 
 export type CreatePropertyResult = {
   success: boolean;
@@ -28,6 +30,17 @@ export type UploadedImageResult = {
  * Used by PropertyImageUploader component
  */
 const PROPERTY_IMAGES_BUCKET = "property-images";
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
+const UPLOAD_RATE_WINDOW_MS = 60_000; // 1 minute
+const UPLOAD_RATE_MAX = 10; // uploads per window per user
+const SESSION_ID_RE = /^[a-zA-Z0-9_-]{8,128}$/;
+
+const MIME_TO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+
 // ตรวจสอบความถูกต้องของ path ที่ส่งมา
 function validatePropertyImagePaths(paths: string[]) {
   const invalid = paths.filter(
@@ -74,7 +87,7 @@ async function finalizeUploadSession(params: {
   usedPaths: string[];
 }) {
   const { supabase, userId, sessionId, propertyId, usedPaths } = params;
- const used = (usedPaths ?? []).filter(Boolean);
+  const used = (usedPaths ?? []).filter(Boolean);
   // 1) mark used paths เป็น ATTACHED + ผูก property_id
   if (used.length > 0) {
     const { error: markErr } = await supabase
@@ -109,10 +122,9 @@ async function finalizeUploadSession(params: {
       .delete()
       .eq("user_id", userId)
       .eq("session_id", sessionId)
-      .eq("status", "TEMP")
+      .eq("status", "TEMP");
   }
 }
-
 
 export async function uploadPropertyImageAction(formData: FormData) {
   try {
@@ -120,31 +132,48 @@ export async function uploadPropertyImageAction(formData: FormData) {
 
     const sessionId = formData.get("sessionId") as string | null;
     if (!sessionId) throw new Error("Missing sessionId");
+    if (!SESSION_ID_RE.test(sessionId)) {
+      throw new Error("Invalid sessionId");
+    }
 
     const file = formData.get("file") as File | null;
     if (!file) throw new Error("No file provided");
 
-    const extRaw = file.name.split(".").pop() || "jpg";
-    const ext = extRaw.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    // 1) Size limit
+    if (file.size > IMAGE_UPLOAD_POLICY.maxBytes) {
+      throw new Error("File too large (max 8MB)");
+    }
 
+    // 2) Validate (MIME + extension + magic bytes, block SVG)
+    const validation = await validateImageFile(file);
+    if (!validation.valid) {
+      throw new Error(validation.error || "Invalid image file");
+    }
+
+    // 3) Simple per-user rate limit based on property_image_uploads
+    const cutoffIso = new Date(Date.now() - UPLOAD_RATE_WINDOW_MS).toISOString();
+    const { count: recentCount, error: rateErr } = await supabase
+      .from("property_image_uploads")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", cutoffIso);
+
+    // ถ้า query rate-limit พัง ไม่ควรทำให้ upload พัง (แต่กันได้เมื่อ query สำเร็จ)
+    if (!rateErr && (recentCount ?? 0) >= UPLOAD_RATE_MAX) {
+      throw new Error("Too many uploads. Please wait a moment and try again.");
+    }
+
+    const ext = MIME_TO_EXT[file.type] ?? "jpg";
     const fileName = `${randomUUID()}.${ext}`;
-
-    // ✅ เพิ่ม session folder เพื่อให้ cleanup เป็นกลุ่มได้
     const path = `properties/${user.id}/${sessionId}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from(PROPERTY_IMAGES_BUCKET)
-      .upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
+      .upload(path, file, { cacheControl: "3600", upsert: false });
 
-    if (uploadError) {
-      console.error("uploadPropertyImageAction → uploadError:", uploadError);
-      throw uploadError;
-    }
+    if (uploadError) throw uploadError;
 
-    // ✅ Insert TEMP tracking row
+    // Insert TEMP tracking row
     const { error: trackErr } = await supabase
       .from("property_image_uploads")
       .insert({
@@ -157,23 +186,18 @@ export async function uploadPropertyImageAction(formData: FormData) {
     if (trackErr) {
       // ถ้า track ไม่ได้ -> ลบไฟล์ทิ้งกัน orphan
       await supabase.storage.from(PROPERTY_IMAGES_BUCKET).remove([path]);
-      console.error("uploadPropertyImageAction → trackErr:", trackErr);
       throw trackErr;
     }
 
-    const { data } = supabase.storage
-      .from(PROPERTY_IMAGES_BUCKET)
-      .getPublicUrl(path);
+    const { data } = supabase.storage.from(PROPERTY_IMAGES_BUCKET).getPublicUrl(path);
 
-    return {
-      path,
-      publicUrl: data.publicUrl,
-    };
+    return { path, publicUrl: data.publicUrl };
   } catch (error) {
     console.error("uploadPropertyImageAction → error:", error);
     throw error;
   }
 }
+
 
 /**
  * Create property with images
@@ -185,7 +209,8 @@ export async function createPropertyAction(
   try {
     // ✅ Step 1.2: require auth context (แทน getUser แบบเดิม)
     const { supabase, user, role } = await requireAuthContext();
-    if (!sessionId) return { success: false, message: "Missing upload session" };
+    if (!sessionId)
+      return { success: false, message: "Missing upload session" };
 
     // 1) Validate form data คือ การตรวจสอบความถูกต้องของข้อมูลฟอร์ม
     const parsed = FormSchema.safeParse(values);
@@ -194,7 +219,6 @@ export async function createPropertyAction(
         success: false,
         message: "Validation failed",
         errors: parsed.error.format(),
-        
       };
     }
     const safeValues = parsed.data;
@@ -351,7 +375,7 @@ export async function updatePropertyAction(
     assertOwnerOrAdmin({ ownerId: existing.created_by, userId: user.id, role });
 
     // 3) กันยัด path รูปปลอม (ownership)
- 
+
     if (images?.length) {
       const mustStartWith =
         role === "ADMIN" ? "properties/" : `properties/${user.id}/`;
@@ -581,7 +605,7 @@ export async function deletePropertyAction(formData: FormData) {
       .select("id, created_by")
       .eq("id", id)
       .single();
-    
+
     if (propErr || !property) throw new Error("Property not found");
 
     // 0.1) Authorization
@@ -614,10 +638,10 @@ export async function deletePropertyAction(formData: FormData) {
     const { error } = await supabase.from("properties").delete().eq("id", id);
     if (error) throw error;
     await supabase
-    .from("property_image_uploads")
-    .delete()
-    .eq("user_id", user.id)
-    .eq("status", "TEMP");
+      .from("property_image_uploads")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("status", "TEMP");
     revalidatePath("/protected/properties");
   } catch (error) {
     console.error("deletePropertyAction → error:", error);
@@ -640,8 +664,8 @@ export async function deletePropertyImageFromStorage(storagePath: string) {
     role === "ADMIN" ? "properties/" : `properties/${user.id}/`;
 
   const ok =
-      storagePath?.startsWith(mustStartWith) ||
-      (role === "ADMIN" && storagePath?.startsWith("properties/"));
+    storagePath?.startsWith(mustStartWith) ||
+    (role === "ADMIN" && storagePath?.startsWith("properties/"));
 
   if (!ok) throw new Error("Invalid storage path (ownership mismatch)");
 

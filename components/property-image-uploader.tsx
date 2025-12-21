@@ -1,8 +1,7 @@
-//property-image-uploader.tsx
+// property-image-uploader.tsx
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-
 import { useDropzone } from "react-dropzone";
 import {
   DragDropContext,
@@ -19,14 +18,7 @@ import {
 } from "@/features/properties/actions";
 import { toast } from "sonner";
 
-const MAX_FILES = 20;
-const MAX_FILE_SIZE_MB = 5;
-const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-const ACCEPTED_IMAGE_TYPES = {
-  "image/jpeg": [".jpg", ".jpeg"],
-  "image/png": [".png"],
-  "image/webp": [".webp"],
-};
+
 
 interface ImageItem {
   id: string;
@@ -51,57 +43,100 @@ interface PropertyImageUploaderProps {
   disabled?: boolean;
   cleanupOnUnmount?: boolean; // ถ้า true → ออกจากหน้านี้โดยไม่ submit ให้ลบรูปทิ้ง
 }
+export const IMAGE_UPLOAD_POLICY = {
+  maxBytes: 40 * 1024 * 1024, // ปรับตรงนี้ครั้งเดียว
+  maxFiles: 20,
+  allowedMime: ["image/jpeg", "image/jpg", "image/png", "image/webp"] as const,
+  // allowedExt ให้ถือจาก file-validation เป็นหลัก
+};
+
+// ✅ ทำให้ไฟล์หลังบีบอัด “มีชื่อ+นามสกุลที่ถูกต้อง” เสมอ (กัน server reject เพราะชื่อไฟล์เป็น "blob")
+function normalizeImageFileName(file: File, originalName?: string): File {
+  const type = file.type || "image/webp";
+
+  const extByType: Record<string, string> = {
+    "image/jpg": "jpg",
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+
+  const ext = extByType[type] ?? "webp";
+ 
+
+  const baseFromOriginal = (originalName || file.name || "image")
+    .trim()
+    .replace(/\.[a-z0-9]+$/i, ""); // ตัด extension เดิม
+
+  const safeBase =
+    baseFromOriginal.replace(/[^\w\- ]+/g, "").trim() || "image";
+
+  const outName = `${safeBase}.${ext}`;
+
+  // ถ้าชื่อเดิมโอเคอยู่แล้ว และมี extension ที่ถูกต้อง ก็คืนตัวเดิม
+  if (file.name?.trim() && /\.([a-z0-9]+)\s*$/i.test(file.name)) {
+    const currentExt = file.name.trim().match(/\.([a-z0-9]+)\s*$/i)?.[1];
+    if (currentExt && currentExt.toLowerCase() === ext) return file;
+  }
+
+  return new File([file], outName, { type, lastModified: Date.now() });
+}
 
 export function PropertyImageUploader({
   sessionId,
   value,
   onChange,
   initialImages = [],
-  maxFiles = MAX_FILES,
-  maxFileSizeMB = MAX_FILE_SIZE_MB,
+  maxFiles = IMAGE_UPLOAD_POLICY.maxFiles,
+  maxFileSizeMB = IMAGE_UPLOAD_POLICY.maxBytes / (1024 * 1024),
   disabled = false,
-  cleanupOnUnmount = true, // ค่าเริ่มต้น
+  cleanupOnUnmount = true,
 }: PropertyImageUploaderProps) {
-  // Initialize images from initialImages or value
   const [images, setImages] = useState<ImageItem[]>(() => {
     if (initialImages.length > 0) {
       return initialImages.map((img, index) => ({
         id: `initial-${index}`,
         storage_path: img.storage_path,
-        preview_url: img.image_url, // ใช้ public URL ที่มาจาก DB
+        preview_url: img.image_url,
         is_cover: img.is_cover ?? index === 0,
       }));
     }
     return value.map((path, index) => ({
       id: `value-${index}`,
       storage_path: path,
-      preview_url: "", // ถ้าไม่มี initialImages จะไม่มี preview (ไม่น่าเกิด)
+      preview_url: "",
       is_cover: index === 0,
     }));
   });
-  // คือการเก็บค่า images ไว้ใน ref เพื่อไม่ให้เกิด setState during render
+
+  // keep latest snapshot for cleanup without triggering setState during render
   const imagesRef = useRef<ImageItem[]>(images);
   useEffect(() => {
     imagesRef.current = images;
   }, [images]);
 
-    // Sync images state to parent (react-hook-form) via useEffect
-  // เพื่อไม่ให้เกิด setState during render
+  // Sync images state to parent (react-hook-form)
   useEffect(() => {
     const paths = imagesRef.current
-      .filter((img) => img.storage_path) // เอาแค่ที่อัปโหลดเสร็จแล้ว
+      .filter((img) => img.storage_path)
       .map((img) => img.storage_path);
     onChange(paths);
   }, [images, onChange]);
 
-  // 🔥 Cleanup ตอน component ถูก unmount
+  // Cleanup on unmount: revoke blob + delete temp uploaded images if not submitted
   useEffect(() => {
     return () => {
-      if (!cleanupOnUnmount) {
-        // ฟอร์ม submit สำเร็จแล้ว → ไม่ต้องลบ
-        return;
+      // revoke blob urls (กัน memory leak)
+      for (const img of imagesRef.current) {
+        if (img.preview_url?.startsWith("blob:")) {
+          try {
+            URL.revokeObjectURL(img.preview_url);
+          } catch {}
+        }
       }
-      // ลบรูปที่ไม่เคยอัปโหลด
+
+      if (!cleanupOnUnmount) return;
+
       const pathsToDelete = imagesRef.current
         .filter((img) => img.storage_path && !img.is_uploading)
         .map((img) => img.storage_path);
@@ -123,14 +158,19 @@ export function PropertyImageUploader({
         }
       })();
     };
-    // ใช้ snapshot ล่าสุดของ images เมื่อ unmount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cleanupOnUnmount]);
-  // Handle file drop
+
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (disabled) return;
-
+    
+      console.log("Dropped files:", acceptedFiles);
+      console.log("Current images count:", images.length);
+      console.log("Max files allowed:", maxFiles);
+      console.log("Max file size (MB):", maxFileSizeMB);
+      console.log(acceptedFiles.map(f => ({ name: f.name, sizeMB: (f.size / (1024*1024)).toFixed(2), type: f.type })));
+      console.log(acceptedFiles[0]?.name, acceptedFiles[0]?.size, acceptedFiles[0]?.type);
       // Validate file count
       const remainingSlots = maxFiles - images.length;
       if (acceptedFiles.length > remainingSlots) {
@@ -138,19 +178,17 @@ export function PropertyImageUploader({
         acceptedFiles = acceptedFiles.slice(0, remainingSlots);
       }
 
-      // 🔥 Step 1: Validate files (MIME type + magic bytes)
+      // Step 1: Validate files (magic bytes + MIME)
+      const { validateImageFile } = await import("@/lib/file-validation");
+
       const validatedFiles: File[] = [];
       for (const file of acceptedFiles) {
-        // Basic size check
         if (file.size > maxFileSizeMB * 1024 * 1024) {
           toast.error(`${file.name} ใหญ่เกิน ${maxFileSizeMB}MB`);
           continue;
         }
 
-        // Advanced validation (magic bytes + MIME check)
-        const { validateImageFile } = await import("@/lib/file-validation");
         const validation = await validateImageFile(file);
-
         if (!validation.valid) {
           toast.error(`${file.name}: ${validation.error}`);
           continue;
@@ -164,17 +202,28 @@ export function PropertyImageUploader({
         return;
       }
 
-      // 🔥 Step 2: Compress images
-      toast.info("กำลังบีบอัดรูปภาพ...");
+      // Step 2: Compress images
+      const { compressImage } = await import("@/lib/image-compression");
+
+      let didShowCompressToast = false;
       const compressedFiles: File[] = [];
 
-      for (let i = 0; i < validatedFiles.length; i++) {
-        const file = validatedFiles[i];
-        const { compressImage } = await import("@/lib/image-compression");
-
+      for (const file of validatedFiles) {
         try {
+          if (!didShowCompressToast && file.size > 1.5 * 1024 * 1024) {
+            didShowCompressToast = true;
+            toast.info("กำลังบีบอัดรูปภาพ...");
+          }
+
           const result = await compressImage(file);
-          compressedFiles.push(result.compressedFile);
+
+          // ✅ สำคัญ: normalize ชื่อไฟล์หลังบีบอัด ให้ไม่กลายเป็น "blob" ไม่มี extension
+          const normalized = normalizeImageFileName(
+            result.compressedFile,
+            file.name
+          );
+
+          compressedFiles.push(normalized);
 
           if (result.compressionRatio > 10) {
             console.log(
@@ -183,15 +232,16 @@ export function PropertyImageUploader({
           }
         } catch (error) {
           console.error(`Compression failed for ${file.name}:`, error);
-          compressedFiles.push(file); // Use original if compression fails
+          // fallback: ใช้ไฟล์เดิม (ชื่อถูกแน่นอน)
+          compressedFiles.push(file);
         }
       }
 
-      // 🔥 Step 3: Create preview items
+      // Step 3: Create preview items
       const newItems: ImageItem[] = compressedFiles.map((file, index) => ({
         id: `new-${Date.now()}-${index}`,
-        storage_path: "", // Will be set after upload
-        preview_url: URL.createObjectURL(file), // blob URL ใช้กับ <img> ได้
+        storage_path: "",
+        preview_url: URL.createObjectURL(file),
         is_cover: images.length === 0 && index === 0,
         is_uploading: true,
         file,
@@ -199,15 +249,15 @@ export function PropertyImageUploader({
 
       setImages((prev) => [...prev, ...newItems]);
 
-      // Upload files
+      // Step 4: Upload files (sequential)
       for (const item of newItems) {
         try {
           const formData = new FormData();
           formData.append("file", item.file!);
           formData.append("sessionId", sessionId);
+
           const result = await uploadPropertyImageAction(formData);
 
-          // อัปเดต state ด้วย public URL (useEffect จะ sync ไป form เอง)
           setImages((prev) =>
             prev.map((img) =>
               img.id === item.id
@@ -224,27 +274,35 @@ export function PropertyImageUploader({
           toast.success(`อัปโหลด ${item.file!.name} สำเร็จ`);
         } catch (error) {
           console.error("Upload error:", error);
-          toast.error(`อัปโหลด ${item.file!.name} ล้มเหลว`);
-          // Remove failed upload (useEffect จะ sync)
+          const msg = error instanceof Error ? error.message : "อัปโหลดล้มเหลว";
+          toast.error(`${item.file!.name}: ${msg}`);
+
+          // revoke preview blob before removing
+          if (item.preview_url?.startsWith("blob:")) {
+            try {
+              URL.revokeObjectURL(item.preview_url);
+            } catch {}
+          }
+
           setImages((prev) => prev.filter((img) => img.id !== item.id));
         }
       }
     },
-    [disabled, images.length, maxFiles, maxFileSizeMB]
+    [disabled, images.length, maxFiles, maxFileSizeMB, sessionId]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: ACCEPTED_IMAGE_TYPES,
+    // ✅ รับรูปทั้งหมดก่อน แล้วคุมเข้มด้วย validateImageFile (กันเคสชื่อไฟล์เพี้ยน)
+    accept: { "image/*": [] },
     disabled,
-    maxSize: MAX_FILE_SIZE_BYTES,
+    maxSize: maxFileSizeMB * 1024 * 1024,
+    maxFiles,
   });
 
-  // Remove image
   const handleRemove = async (index: number) => {
     const imageToRemove = images[index];
 
-    // Delete from storage if already uploaded
     if (imageToRemove.storage_path && !imageToRemove.is_uploading) {
       try {
         await deletePropertyImageFromStorage(imageToRemove.storage_path);
@@ -255,14 +313,11 @@ export function PropertyImageUploader({
       }
     }
 
-    // Revoke object URL if it's a blob
     if (imageToRemove.preview_url.startsWith("blob:")) {
       URL.revokeObjectURL(imageToRemove.preview_url);
     }
 
     const newImages = images.filter((_, i) => i !== index);
-
-    // If removed image was cover, make first image the new cover
     if (imageToRemove.is_cover && newImages.length > 0) {
       newImages[0].is_cover = true;
     }
@@ -271,7 +326,6 @@ export function PropertyImageUploader({
     toast.success("ลบรูปสำเร็จ");
   };
 
-  // Set cover image
   const handleSetCover = (index: number) => {
     const newImages = images.map((img, i) => ({
       ...img,
@@ -281,7 +335,6 @@ export function PropertyImageUploader({
     toast.success("ตั้งรูปปกสำเร็จ");
   };
 
-  // Handle drag end
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
@@ -295,7 +348,6 @@ export function PropertyImageUploader({
 
   return (
     <div className="space-y-4">
-      {/* Upload Zone */}
       {images.length < maxFiles && (
         <div
           {...getRootProps()}
@@ -321,16 +373,13 @@ export function PropertyImageUploader({
         </div>
       )}
 
-      {/* Images Grid with Drag & Drop */}
       {images.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium">
               รูปภาพทั้งหมด ({images.length}/{maxFiles})
             </p>
-            <p className="text-xs text-muted-foreground">
-              ลากเพื่อจัดเรียง • ⭐ = รูปปก
-            </p>
+            <p className="text-xs text-muted-foreground">ลากเพื่อจัดเรียง • ⭐ = รูปปก</p>
           </div>
 
           <DragDropContext onDragEnd={handleDragEnd}>
@@ -355,11 +404,9 @@ export function PropertyImageUploader({
                           className={cn(
                             "relative group aspect-square bg-muted rounded-lg overflow-hidden border-2",
                             snapshot.isDragging && "border-primary shadow-lg",
-                            image.is_cover &&
-                              "border-primary ring-2 ring-primary/20"
+                            image.is_cover && "border-primary ring-2 ring-primary/20"
                           )}
                         >
-                          {/* Image */}
                           <div className="relative w-full h-full">
                             {image.preview_url && (
                               <img
@@ -370,14 +417,12 @@ export function PropertyImageUploader({
                             )}
                           </div>
 
-                          {/* Uploading Overlay */}
                           {image.is_uploading && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                               <Loader2 className="h-8 w-8 text-white animate-spin" />
                             </div>
                           )}
 
-                          {/* Cover Badge */}
                           {image.is_cover && (
                             <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
                               <Star className="h-3 w-3 fill-current" />
@@ -385,11 +430,9 @@ export function PropertyImageUploader({
                             </div>
                           )}
 
-                          {/* Controls */}
                           {!image.is_uploading && (
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center gap-2">
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                {/* Drag Handle */}
                                 <div
                                   {...provided.dragHandleProps}
                                   className="bg-white/90 hover:bg-white p-1.5 rounded cursor-move"
@@ -397,7 +440,6 @@ export function PropertyImageUploader({
                                   <GripVertical className="h-4 w-4" />
                                 </div>
 
-                                {/* Set Cover Button */}
                                 <Button
                                   size="icon"
                                   variant="secondary"
@@ -412,7 +454,6 @@ export function PropertyImageUploader({
                                   )}
                                 </Button>
 
-                                {/* Remove Button */}
                                 <Button
                                   size="icon"
                                   variant="destructive"
@@ -426,7 +467,6 @@ export function PropertyImageUploader({
                             </div>
                           )}
 
-                          {/* Index Badge */}
                           <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
                             #{index + 1}
                           </div>
@@ -442,7 +482,6 @@ export function PropertyImageUploader({
         </div>
       )}
 
-      {/* Empty State */}
       {images.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <Upload className="mx-auto h-12 w-12 mb-2" />

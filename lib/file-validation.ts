@@ -5,6 +5,7 @@
  */
 
 const ALLOWED_MIME_TYPES = [
+  'image/jpg',
   'image/jpeg',
   'image/png',
   'image/webp',
@@ -12,6 +13,9 @@ const ALLOWED_MIME_TYPES = [
 
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'] as const;
 
+function normalizeMime(mime: string) {
+  return mime === "image/jpg" ? "image/jpeg" : mime;
+}
 /**
  * Validate file type by MIME type
  */
@@ -23,10 +27,13 @@ export function isValidMimeType(mimeType: string): boolean {
  * Validate file extension
  */
 export function isValidFileExtension(filename: string): boolean {
-  const ext = filename.toLowerCase().split('.').pop();
-  return ALLOWED_EXTENSIONS.includes(`.${ext}` as any);
-}
+  const trimmed = (filename ?? "").trim();
+  const m = trimmed.match(/\.([a-z0-9]+)\s*$/i);
+  if (!m) return true;
 
+  const ext = `.${m[1].toLowerCase()}` as any;
+  return ALLOWED_EXTENSIONS.includes(ext);
+}
 /**
  * Check magic bytes (file signature) to verify actual file type
  * Prevents malicious files with fake extensions
@@ -90,40 +97,46 @@ export async function validateImageFile(file: File): Promise<{
   valid: boolean;
   error?: string;
 }> {
-  // Check MIME type
-  if (!isValidMimeType(file.type)) {
-    return {
-      valid: false,
-      error: `ไฟล์ประเภท ${file.type} ไม่ได้รับอนุญาต (อนุญาตเฉพาะ JPG, PNG, WebP)`,
-    };
+  if (!file || file.size === 0) {
+    return { valid: false, error: "ไฟล์ว่างหรือไม่ถูกต้อง" };
   }
 
-  // Check file extension
-  if (!isValidFileExtension(file.name)) {
-    return {
-      valid: false,
-      error: 'นามสกุลไฟล์ไม่ถูกต้อง',
-    };
-  }
-
-  // Check magic bytes
+  // 1) Magic bytes check ก่อน (กัน SVG / กันไฟล์ปลอม)
   const signatureCheck = await validateFileSignature(file);
-  if (!signatureCheck.isValid) {
+
+  if (signatureCheck.detectedType === "image/svg+xml") {
     return {
       valid: false,
-      error: signatureCheck.detectedType === 'image/svg+xml'
-        ? 'ไม่อนุญาตให้อัปโหลดไฟล์ SVG (เหตุผลด้านความปลอดภัย)'
-        : 'ไฟล์ไม่ใช่รูปภาพที่ถูกต้อง',
+      error: "ไม่อนุญาตให้อัปโหลดไฟล์ SVG (เหตุผลด้านความปลอดภัย)",
     };
   }
 
-  // Verify detected type matches declared MIME type
-  if (signatureCheck.detectedType && signatureCheck.detectedType !== file.type) {
-    return {
-      valid: false,
-      error: 'ประเภทไฟล์ไม่ตรงกับเนื้อหาจริง',
-    };
+  if (!signatureCheck.isValid) {
+    return { valid: false, error: "ไฟล์ไม่ใช่รูปภาพที่ถูกต้อง" };
+  }
+
+  // 2) MIME type: อนุญาตให้ว่างได้ (บาง browser ส่งค่าว่าง) แล้วพึ่ง signature เป็นหลัก
+  if (file.type) {
+    const declared = normalizeMime(file.type);
+    if (!isValidMimeType(declared)) {
+      return {
+        valid: false,
+        error: `ไฟล์ประเภท ${file.type} ไม่ได้รับอนุญาต (อนุญาตเฉพาะ JPG, PNG, WebP)`,
+      };
+    }
+
+    // 3) ถ้ามีทั้ง declared + detected แล้วไม่ตรงกัน ให้ reject
+    const detected = signatureCheck.detectedType ? normalizeMime(signatureCheck.detectedType) : null;
+    if (detected && detected !== declared) {
+      return { valid: false, error: "ประเภทไฟล์ไม่ตรงกับเนื้อหาจริง" };
+    }
+  }
+
+  // 4) Extension: ตรวจแบบยืดหยุ่น (ชื่อไฟล์แปลก ๆ จะไม่โดน block เกินเหตุ)
+  if (!isValidFileExtension(file.name)) {
+    return { valid: false, error: "นามสกุลไฟล์ไม่ถูกต้อง" };
   }
 
   return { valid: true };
 }
+
