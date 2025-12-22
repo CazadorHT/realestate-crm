@@ -2,23 +2,52 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   darkMode: "class", // ใช้ class="dark" บน <html> หรือ <body>
-  content: [
-    "./app/**/*.{ts,tsx,js,jsx}",
-    "./components/**/*.{ts,tsx,js,jsx}",
-  ],
+  content: ["./app/**/*.{ts,tsx,js,jsx}", "./components/**/*.{ts,tsx,js,jsx}"],
   theme: {
     extend: {
       colors: {
-        // สีหลักจาก CSS variables (กำหนดใน globals.css)
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+
+        // Legacy compatibility (remains for old bg-bg, bg-surface calls)
         bg: "rgb(var(--color-bg) / <alpha-value>)",
         surface: "rgb(var(--color-surface) / <alpha-value>)",
-        primary: "rgb(var(--color-primary) / <alpha-value>)",
         "primary-soft": "rgb(var(--color-primary-soft) / <alpha-value>)",
-        accent: "rgb(var(--color-accent) / <alpha-value>)",
         text: "rgb(var(--color-text) / <alpha-value>)",
         "text-muted": "rgb(var(--color-text-muted) / <alpha-value>)",
 
-        // state
+        // state colors
         success: "#22C55E",
         warning: "#F59E0B",
         danger: "#EF4444",
@@ -51,26 +80,20 @@ const config: Config = {
 
       backgroundImage: {
         // Landing page hero ปกติ (ฟ้า-กรม)
-        "gradient-hero":
-          "linear-gradient(135deg, #0F2A44, #1F4ED8)",
+        "gradient-hero": "linear-gradient(135deg, #0F2A44, #1F4ED8)",
 
         // Section เบาๆ
-        "gradient-soft":
-          "linear-gradient(135deg, #DBEAFE, #F8FAFC)",
+        "gradient-soft": "linear-gradient(135deg, #DBEAFE, #F8FAFC)",
 
         // CTA ปุ่ม
-        "gradient-cta":
-          "linear-gradient(135deg, #1F4ED8, #3B82F6)",
+        "gradient-cta": "linear-gradient(135deg, #1F4ED8, #3B82F6)",
 
         // BG CRM มืดๆ
-        "gradient-crm":
-          "linear-gradient(135deg, #020617, #0F172A)",
+        "gradient-crm": "linear-gradient(135deg, #020617, #0F172A)",
 
         // Investor Theme (ทอง)
-        "gradient-investor-hero":
-          "linear-gradient(135deg, #3B2A1A, #A26B2A)",
-        "gradient-investor-soft":
-          "linear-gradient(135deg, #FFF7E7, #F3DDB9)",
+        "gradient-investor-hero": "linear-gradient(135deg, #3B2A1A, #A26B2A)",
+        "gradient-investor-soft": "linear-gradient(135deg, #FFF7E7, #F3DDB9)",
       },
 
       boxShadow: {

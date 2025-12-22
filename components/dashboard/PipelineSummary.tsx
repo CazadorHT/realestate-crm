@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PIPELINE_COUNTS } from "@/lib/dashboard-data";
+import type { PipelineData } from "@/features/dashboard/queries";
 
-export function PipelineSummary() {
-  const stages = PIPELINE_COUNTS;
-  const total = stages.reduce((acc, curr) => acc + curr.count, 0);
+interface PipelineSummaryProps {
+  data: PipelineData[];
+}
+
+export function PipelineSummary({ data }: PipelineSummaryProps) {
+  const total = data.reduce((acc, curr) => acc + curr.count, 0);
 
   return (
     <Card className="shadow-sm h-full">
@@ -12,8 +15,10 @@ export function PipelineSummary() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {stages.map((stage) => {
-            const percentage = Math.round((stage.count / total) * 100) || 0;
+          {data.map((stage) => {
+            // Avoid NaN if total is 0
+            const percentage =
+              total > 0 ? Math.round((stage.count / total) * 100) : 0;
             return (
               <div key={stage.stage} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">

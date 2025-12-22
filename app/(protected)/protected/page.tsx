@@ -2,12 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +26,14 @@ import { MissingDataAlert } from "@/components/dashboard/MissingDataAlert";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { GlobalSearch } from "@/components/dashboard/GlobalSearch";
 
+// Queries
+import {
+  getDashboardStats,
+  getRevenueChartData,
+  getFunnelStats,
+  getPipelineStats,
+} from "@/features/dashboard/queries";
+
 import type { Database } from "@/lib/database.types";
 type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 
@@ -41,14 +44,31 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch Recent Properties (Limit 5) 🟢 ดึงทรัพย์มาแสดง 5 ตัวล่าสุด
-  const { data: recentProperties } = await supabase
-    .from("properties")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(5);
+  // Fetch Dashboard Data in Parallel
+  const [
+    recentPropertiesResult,
+    dashboardStats,
+    revenueData,
+    funnelData,
+    pipelineData,
+  ] = await Promise.all([
+    // 1. Recent Properties
+    supabase
+      .from("properties")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(5),
+    // 2. Stats Overview
+    getDashboardStats(),
+    // 3. Revenue Chart
+    getRevenueChartData(),
+    // 4. Funnel Chart
+    getFunnelStats(),
+    // 5. Pipeline Summary
+    getPipelineStats(),
+  ]);
 
-  const properties = (recentProperties ?? []) as PropertyRow[];
+  const properties = (recentPropertiesResult.data ?? []) as PropertyRow[];
 
   return (
     <div className="flex flex-col gap-6 p-2 pb-20">
@@ -62,30 +82,29 @@ export default async function DashboardPage() {
             Sales Cockpit Update: ศูนย์บริหารงานขายอสังหาฯ ของคุณ
           </p>
         </div>
-        <GlobalSearch /> {/* Global Search ค้นหา (ชื่อทรัพย์, ลูกค้า, เบอร์โทร, รหัส... 🔴 */}
+        <GlobalSearch />{" "}
+        {/* Global Search ค้นหา (ชื่อทรัพย์, ลูกค้า, เบอร์โทร, รหัส... 🔴 */}
       </div>
 
       {/* 2. SMART SUMMARY สรุปประจำวัน 🔴   */}
       <SmartSummary />
 
-      {/* 3. KPI CARDS  การ์ด 🔴 ยังไม่ได้ต่อ database*/}
-      <StatsOverview />
+      {/* 3. KPI CARDS  การ์ด 🔴 Connected to DB */}
+      <StatsOverview stats={dashboardStats} />
 
       {/* 4. MAIN ANALYTICS & OPERATIONS GRID */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        
         {/* LEFT COLUMN (2/3 width on large screens) */}
         <div className="xl:col-span-2 flex flex-col gap-6">
-          
           {/* PIPELINE & FUNNEL ROW */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PipelineSummary />
-            <FunnelChart />
+            <PipelineSummary data={pipelineData} />
+            <FunnelChart data={funnelData} />
           </div>
 
           {/* REVENUE CHART */}
           <div className="h-[350px]">
-            <RevenueChart />
+            <RevenueChart data={revenueData} />
           </div>
 
           {/* ACTION ALERTS ROW */}
@@ -107,9 +126,11 @@ export default async function DashboardPage() {
       {/* 5. RECENT PROPERTIES TABLE */}
       <div className="mt-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">ทรัพย์มาใหม่ (Recent Listings)</h3>
+          <h3 className="text-lg font-semibold">
+            ทรัพย์มาใหม่ (Recent Listings)
+          </h3>
           <Button variant="outline" size="sm" asChild>
-             <Link href="/protected/properties">ดูทั้งหมด</Link>
+            <Link href="/protected/properties">ดูทั้งหมด</Link>
           </Button>
         </div>
         {/* Table Property 🟢🟡🟠  */}
@@ -127,24 +148,31 @@ export default async function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-border bg-card">
                 {properties.map((property) => (
-                  <tr key={property.id} className="hover:bg-muted/50 transition-colors">
+                  <tr
+                    key={property.id}
+                    className="hover:bg-muted/50 transition-colors"
+                  >
                     <td className="px-6 py-4 font-medium">
                       <div className="flex flex-col">
-                        <span className="text-foreground font-semibold">{property.title || "ไม่ระบุชื่อ"}</span>
+                        <span className="text-foreground font-semibold">
+                          {property.title || "ไม่ระบุชื่อ"}
+                        </span>
                         <span className="text-xs text-muted-foreground truncate max-w-[200px]">
                           {property.description || "-"}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                        {property.price
+                      {property.price
                         ? property.price.toLocaleString("th-TH", {
                             maximumFractionDigits: 0,
                           })
                         : "-"}
                     </td>
                     <td className="px-6 py-4 text-xs">
-                        <Badge variant="secondary" className="uppercase">{property.property_type}</Badge>
+                      <Badge variant="secondary" className="uppercase">
+                        {property.property_type}
+                      </Badge>
                     </td>
                     <td className="px-6 py-4">
                       <Badge
@@ -172,14 +200,20 @@ export default async function DashboardPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                             <Link href={`/protected/properties/${property.id}`} className="cursor-pointer">
-                                <Eye className="mr-2 h-4 w-4" /> View Details
-                             </Link>
+                            <Link
+                              href={`/protected/properties/${property.id}`}
+                              className="cursor-pointer"
+                            >
+                              <Eye className="mr-2 h-4 w-4" /> View Details
+                            </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                             <Link href={`/protected/properties/${property.id}/edit`} className="cursor-pointer">
-                                <Edit className="mr-2 h-4 w-4" /> Edit Property
-                             </Link>
+                            <Link
+                              href={`/protected/properties/${property.id}/edit`}
+                              className="cursor-pointer"
+                            >
+                              <Edit className="mr-2 h-4 w-4" /> Edit Property
+                            </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem className="cursor-pointer">
                             <Share2 className="mr-2 h-4 w-4" /> Share Listing
@@ -195,7 +229,10 @@ export default async function DashboardPage() {
                 ))}
                 {properties.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <td
+                      colSpan={5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
                       ไม่พบข้อมูลทรัพย์ล่าสุด
                     </td>
                   </tr>

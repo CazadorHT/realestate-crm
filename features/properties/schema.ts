@@ -49,6 +49,9 @@ export const FormSchema = z
 
     property_source: z.string().optional().nullable(),
     images: z.array(z.string()).optional(),
+
+    commission_sale_percentage: z.coerce.number().optional().nullable(),
+    commission_rent_months: z.coerce.number().optional().nullable(),
   })
   .superRefine((data, ctx) => {
     const priceMissing = data.price === undefined || Number.isNaN(data.price);

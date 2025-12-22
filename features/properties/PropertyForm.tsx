@@ -72,6 +72,9 @@ const EMPTY_VALUES: PropertyFormValues = {
   assigned_to: null,
 
   images: [],
+
+  commission_sale_percentage: 3,
+  commission_rent_months: 1,
 };
 // Form schema moved to `features/properties/schema.ts` for shared type-safety
 // หน้าอื่นๆ สามารถ import FormSchema และ PropertyFormValues จากที่นั่นได้
@@ -118,6 +121,9 @@ function mapRowToFormValues(
     assigned_to: row.assigned_to ?? undefined,
 
     images: images ?? [],
+
+    commission_sale_percentage: row.commission_sale_percentage ?? 3,
+    commission_rent_months: row.commission_rent_months ?? 1,
   };
 }
 
@@ -603,6 +609,138 @@ export function PropertyForm({
               </FormItem>
             )}
           />
+        </div>
+
+        {/* COMMISSION SETTINGS */}
+        <div className="space-y-4 border-t pt-6">
+          <h3 className="text-lg font-semibold">
+            ค่าคอมมิชชั่น (Commission) 💰
+          </h3>
+
+          {(listingType === "SALE" || listingType === "SALE_AND_RENT") && (
+            <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 space-y-4">
+              <FormField
+                control={form.control}
+                name="commission_sale_percentage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-blue-700">
+                      ค่าคอมมิชชั่นการขาย (%)
+                    </FormLabel>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {[3, 4, 5].map((val) => (
+                        <Button
+                          key={val}
+                          type="button"
+                          variant={field.value === val ? "default" : "outline"}
+                          size="sm"
+                          className="h-8"
+                          onClick={() => field.onChange(val)}
+                        >
+                          {val}%
+                        </Button>
+                      ))}
+                    </div>
+                    <FormControl>
+                      <div className="relative max-w-[180px]">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value === ""
+                                ? undefined
+                                : Number(e.target.value)
+                            )
+                          }
+                          placeholder="เปอร์เซ็นต์"
+                          className="pr-8"
+                        />
+                       
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                    {priceVal && field.value && (
+                      <div className="mt-2 p-2 bg-white rounded border border-blue-100 text-sm flex justify-between">
+                        <span className="text-muted-foreground">
+                          ยอดเงินที่คาดว่าจะได้รับ:
+                        </span>
+                        <span className="font-bold text-blue-600">
+                          ฿{((priceVal * field.value) / 100).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+
+          {(listingType === "RENT" || listingType === "SALE_AND_RENT") && (
+            <div className="bg-green-50/50 p-4 rounded-xl border border-green-100 space-y-4">
+              <FormField
+                control={form.control}
+                name="commission_rent_months"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-green-700">
+                      ค่าคอมมิชชั่นการเช่า (จำนวนเดือน)
+                    </FormLabel>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {[0.5, 1, 1.5, 2].map((val) => (
+                        <Button
+                          key={val}
+                          type="button"
+                          variant={field.value === val ? "default" : "outline"}
+                          size="sm"
+                          className="h-8"
+                          onClick={() => field.onChange(val)}
+                        >
+                          {val}
+                        </Button>
+                      ))}
+                      <span className="text-xs text-muted-foreground self-center ml-1">
+                        เดือน
+                      </span>
+                    </div>
+                    <FormControl>
+                      <div className="relative max-w-[180px]">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value === ""
+                                ? undefined
+                                : Number(e.target.value)
+                            )
+                          }
+                          placeholder="จำนวนเดือน"
+                          className="pr-12"
+                        />
+                       
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                    {rentalVal && field.value && (
+                      <div className="mt-2 p-2 bg-white rounded border border-green-100 text-sm flex justify-between">
+                        <span className="text-muted-foreground">
+                          ยอดเงินที่คาดว่าจะได้รับ:
+                        </span>
+                        <span className="font-bold text-green-600">
+                          ฿{(rentalVal * field.value).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
         </div>
 
         {/* AREA SPECIFICATIONS */}

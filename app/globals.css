@@ -4,30 +4,89 @@
 
 @layer base {
   :root {
-    /* LIGHT MODE (ปกติ) */
-    --color-bg: 248 250 252; /* #F8FAFC */
-    --color-surface: 255 255 255; /* #FFFFFF */
-    --color-primary: 31 78 216; /* #1F4ED8 */
-    --color-primary-soft: 219 234 254; /* #DBEAFE */
-    --color-accent: 59 130 246; /* #3B82F6 */
-    --color-text: 15 23 42; /* #0F172A */
-    --color-text-muted: 100 116 139; /* #64748B */
+    /* Base Background & Foreground */
+    --background: 210 40% 98%; /* #F8FAFC */
+    --foreground: 222 47% 11%; /* #0F172A */
+
+    /* Surfaces */
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%; /* #FFFFFF */
+    --popover-foreground: 222 47% 11%;
+
+    /* Branding */
+    --primary: 226 75% 48%; /* #1F4ED8 */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    /* Status */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* UI Elements */
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+
+    /* Legacy compatibility (keeping for old bg-bg, bg-surface calls) */
+    --color-bg: 248 250 252;
+    --color-surface: 255 255 255;
+    --color-primary: 31 78 216;
+    --color-primary-soft: 219 234 254;
+    --color-accent: 59 130 246;
+    --color-text: 15 23 42;
+    --color-text-muted: 100 116 139;
   }
 
   .dark {
-    /* DARK MODE */
-    --color-bg: 2 6 23; /* #020617 */
-    --color-surface: 15 23 42; /* #0F172A */
-    --color-primary: 59 130 246; /* #3B82F6 */
-    --color-primary-soft: 30 64 175; /* #1D4ED8-ish */
-    --color-accent: 96 165 250; /* #60A5FA */ 
-    --color-text: 226 232 240; /* #E2E8F0 */
-    --color-text-muted: 148 163 184; /* #94A3B8 */
+    /* Base Background & Foreground */
+    --background: 222 47% 4%; /* #020617 (approx) */
+    --foreground: 210 40% 98%;
+
+    /* Surfaces */
+    --card: 222 47% 11%; /* #0F172A */
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%; /* #0F172A */
+    --popover-foreground: 210 40% 98%;
+
+    /* Branding */
+    --primary: 217.2 91.2% 59.8%; /* #3B82F6 */
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    /* Status */
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* UI Elements */
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+
+    /* Legacy compatibility */
+    --color-bg: 2 6 23;
+    --color-surface: 15 23 42;
+    --color-primary: 59 130 246;
+    --color-primary-soft: 30 64 175;
+    --color-accent: 96 165 250;
+    --color-text: 226 232 240;
+    --color-text-muted: 148 163 184;
   }
 }
 
 @layer base {
   body {
-    @apply bg-bg text-text;
+    @apply bg-background text-foreground;
   }
 }

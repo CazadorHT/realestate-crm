@@ -199,6 +199,51 @@ export async function createLeadActivityAction(
   }
 }
 
+export async function updateLeadStageAction(
+  id: string,
+  stage: string
+): Promise<{ success: true } | { success: false; message: string }> {
+  try {
+    const ctx = await requireAuthContext();
+
+    const { data: lead, error: findErr } = await ctx.supabase
+      .from("leads")
+      .select("id, created_by")
+      .eq("id", id)
+      .single();
+
+    if (findErr || !lead) return { success: false, message: "Lead not found" };
+
+    assertOwnerOrAdmin({
+      ownerId: lead.created_by,
+      userId: ctx.user.id,
+      role: ctx.role,
+    });
+
+    const { error } = await ctx.supabase
+      .from("leads")
+      .update({
+        stage: stage as any,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) return { success: false, message: error.message };
+
+    await logAudit(ctx, {
+      action: "lead.update",
+      entity: "leads",
+      entityId: id,
+      metadata: { stage_update: true, new_stage: stage },
+    });
+
+    revalidatePath("/protected/leads");
+    return { success: true };
+  } catch (err) {
+    return authzFail(err);
+  }
+}
+
 export type PropertyPickItem = { id: string; title: string };
 export async function searchPropertiesAction(
   q?: string

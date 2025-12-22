@@ -5,7 +5,6 @@ import type { Database } from "@/lib/database.types";
 type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 type PropertyImageRow = Database["public"]["Tables"]["property_images"]["Row"];
 
-
 export type PropertySummary = Pick<
   PropertyRow,
   | "id"
@@ -43,7 +42,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   if (q) {
     // ค้นชื่อ/เบอร์/อีเมล (ปรับ field ได้)
     query = query.or(
-      `full_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`,
+      `full_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`
     );
   }
   if (stage && stage !== "ALL") {
@@ -64,6 +63,23 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     pageSize,
   };
 }
+
+/**
+ * Optimized query for Kanban view, fetching all active/recent leads (limited)
+ */
+export async function getLeadsForKanbanQuery() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .order("updated_at", { ascending: false })
+    .limit(200);
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []) as LeadRow[];
+}
 // ใช้สำหรับแสดง leads รายเดียว
 export async function getLeadByIdQuery(id: string): Promise<LeadRow | null> {
   const supabase = await createClient();
@@ -81,39 +97,40 @@ export async function getLeadByIdQuery(id: string): Promise<LeadRow | null> {
 }
 // ใช้สำหรับแสดง leads พร้อมกับ activities
 export async function getLeadWithActivitiesQuery(
-  id: string,
+  id: string
 ): Promise<LeadWithActivities | null> {
-    try {
-        const supabase = await createClient();
-      
-        const { data, error } = await supabase
-          .from("leads")
-            .select(`
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("leads")
+      .select(
+        `
                 *,
                 lead_activities (
                 id, lead_id, property_id, activity_type, note, created_by, created_at,
                 properties ( id, title )
                 )
-            `)
-          .eq("id", id)
-          .single();
-      
-        if (error) {
-          if ((error as any)?.code === "PGRST116") return null;
-          throw new Error(error.message);
-        }
-      
-        (data as any).lead_activities?.sort(
-          (a: any, b: any) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        );
-      
-        return data as any;
-        
-    } catch (error) {
-        console.log(error);
-        return null;
+            `
+      )
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      if ((error as any)?.code === "PGRST116") return null;
+      throw new Error(error.message);
     }
+
+    (data as any).lead_activities?.sort(
+      (a: any, b: any) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    return data as any;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
 }
 // ใช้สำหรับแสดง summary ของ property ที่มีใน leads
 export async function getPropertySummariesByIdsQuery(ids: string[]) {
@@ -123,7 +140,9 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
 
   const { data: props, error: propsErr } = await supabase
     .from("properties")
-    .select("id,title,property_type,listing_type,status,price,rental_price,currency")
+    .select(
+      "id,title,property_type,listing_type,status,price,rental_price,currency"
+    )
     .in("id", uniq);
 
   if (propsErr) throw new Error(propsErr.message);

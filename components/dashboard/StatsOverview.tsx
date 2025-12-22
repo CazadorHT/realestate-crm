@@ -1,35 +1,39 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Briefcase, TrendingUp, CheckCircle2 } from "lucide-react";
-import { KPIS_SUMMARY } from "@/lib/dashboard-data";
+import type { DashboardStats } from "@/features/dashboard/queries";
 
-export function StatsOverview() {
-  const stats = [
+interface StatsOverviewProps {
+  stats: DashboardStats;
+}
+
+export function StatsOverview({ stats }: StatsOverviewProps) {
+  const statItems = [
     {
       title: "รายได้เดือนนี้",
-      value: `฿${KPIS_SUMMARY.revenueThisMonth.toLocaleString()}`,
-      change: KPIS_SUMMARY.revenueChange,
-      context: "เป้า: ฿1.5M",
+      value: `฿${stats.revenueThisMonth.toLocaleString()}`,
+      change: stats.revenueChange,
+      context: "ยอดขาย + เช่า (Sold/Rented)",
       icon: DollarSign,
     },
     {
       title: "Leads ทั้งหมด",
-      value: KPIS_SUMMARY.leadsThisMonth.toString(),
-      change: KPIS_SUMMARY.leadsChange,
-      context: `รวม ${KPIS_SUMMARY.leadsTotal} ราย`,
+      value: stats.leadsThisMonth.toString(),
+      change: stats.leadsChange,
+      context: `รวม ${stats.leadsTotal} ราย`,
       icon: Briefcase,
     },
     {
       title: "Conversion Rate",
-      value: `${KPIS_SUMMARY.conversionRate}%`,
-      change: KPIS_SUMMARY.conversionChange,
-      context: KPIS_SUMMARY.conversionBase,
+      value: `${stats.conversionRate}%`,
+      change: stats.conversionChange,
+      context: stats.conversionBase,
       icon: TrendingUp,
     },
     {
       title: "ปิดการขาย (Won)",
-      value: "8",
-      change: "+2 จากเดือนก่อน",
-      context: "เป้าหมาย: 10",
+      value: stats.dealsWon.toString(),
+      change: stats.dealsWonChange,
+      context: `เป้าหมาย: ${stats.dealsTarget}`,
       icon: CheckCircle2,
       color: "text-green-600",
     },
@@ -37,20 +41,30 @@ export function StatsOverview() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat, index) => (
+      {statItems.map((stat, index) => (
         <Card key={index} className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {stat.title}
             </CardTitle>
-            <stat.icon className={`h-4 w-4 ${stat.color || "text-muted-foreground"}`} />
+            <stat.icon
+              className={`h-4 w-4 ${stat.color || "text-muted-foreground"}`}
+            />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stat.value}</div>
             <div className="flex items-center gap-2 mt-1">
-               <p className="text-xs text-green-600 font-medium">{stat.change}</p>
-               <span className="text-muted-foreground text-[10px]">•</span>
-               <p className="text-xs text-muted-foreground">{stat.context}</p>
+              <p
+                className={`text-xs font-medium ${
+                  stat.change.startsWith("+")
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {stat.change}
+              </p>
+              <span className="text-muted-foreground text-[10px]">•</span>
+              <p className="text-xs text-muted-foreground">{stat.context}</p>
             </div>
           </CardContent>
         </Card>
