@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { requireAuthContext, authzFail } from "@/lib/authz";
+import { requireAuthContext, assertOwnerOrAdmin, authzFail } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 
 import type { OwnerFormValues } from "./types";
@@ -12,10 +12,14 @@ export async function getOwnersAction() {
   try {
     const ctx = await requireAuthContext();
 
-    const { data: owners, error } = await ctx.supabase
-      .from("owners")
-      .select("*")
-      .order("full_name");
+    let query = ctx.supabase.from("owners").select("*").order("full_name");
+
+    // Filter by owner if not admin
+    if (ctx.role !== "ADMIN") {
+      query = query.eq("created_by", ctx.user.id);
+    }
+
+    const { data: owners, error } = await query;
 
     if (error) {
       console.error("Error fetching owners:", error);
@@ -44,6 +48,12 @@ export async function getOwnerByIdAction(id: string) {
     throw new Error("Owner not found");
   }
 
+  assertOwnerOrAdmin({
+    ownerId: owner.created_by,
+    userId: ctx.user.id,
+    role: ctx.role,
+  });
+
   return owner;
 }
 
@@ -61,14 +71,21 @@ export async function createOwnerAction(values: OwnerFormValues) {
         other_contact: values.other_contact || null,
         owner_type: (values as any).owner_type ?? null, // ถ้าใน form มีจริงค่อยปรับ type ให้ตรง
         company_name: (values as any).company_name ?? null,
+        created_by: ctx.user.id,
+        updated_at: new Date().toISOString(),
       })
       .select("id")
       .single();
 
-    if (error || !owner) return { success: false, message: error?.message ?? "Create owner failed" };
+    if (error || !owner)
+      return {
+        success: false,
+        message: error?.message ?? "Create owner failed",
+      };
 
     await logAudit(ctx, {
       action: "owner.create",
+
       entity: "owners",
       entityId: owner.id,
       metadata: {},
@@ -84,6 +101,23 @@ export async function createOwnerAction(values: OwnerFormValues) {
 export async function updateOwnerAction(id: string, values: OwnerFormValues) {
   try {
     const ctx = await requireAuthContext();
+
+    // 1) Verify ownership
+    const { data: existing, error: findError } = await ctx.supabase
+      .from("owners")
+      .select("created_by")
+      .eq("id", id)
+      .single();
+
+    if (findError || !existing) {
+      return { success: false, message: "Owner not found" };
+    }
+
+    assertOwnerOrAdmin({
+      ownerId: existing.created_by,
+      userId: ctx.user.id,
+      role: ctx.role,
+    });
 
     const { error } = await ctx.supabase
       .from("owners")
@@ -120,6 +154,23 @@ export async function deleteOwnerAction(id: string) {
   try {
     const ctx = await requireAuthContext();
 
+    // 1) Verify ownership
+    const { data: existing, error: findError } = await ctx.supabase
+      .from("owners")
+      .select("created_by")
+      .eq("id", id)
+      .single();
+
+    if (findError || !existing) {
+      return { success: false, message: "Owner not found" };
+    }
+
+    assertOwnerOrAdmin({
+      ownerId: existing.created_by,
+      userId: ctx.user.id,
+      role: ctx.role,
+    });
+
     const { error } = await ctx.supabase.from("owners").delete().eq("id", id);
     if (error) return { success: false, message: error.message };
 
@@ -141,10 +192,13 @@ export async function deleteOwnerAction(id: string) {
 export async function getOwnersWithPropertyCountAction() {
   const ctx = await requireAuthContext();
 
-  const { data: owners, error: ownersError } = await ctx.supabase
-    .from("owners")
-    .select("*")
-    .order("full_name");
+  let query = ctx.supabase.from("owners").select("*").order("full_name");
+
+  if (ctx.role !== "ADMIN") {
+    query = query.eq("created_by", ctx.user.id);
+  }
+
+  const { data: owners, error: ownersError } = await query;
 
   if (ownersError || !owners) {
     console.error("Error fetching owners:", ownersError);
@@ -162,7 +216,8 @@ export async function getOwnersWithPropertyCountAction() {
 
   const countMap = new Map<string, number>();
   (propertyCounts ?? []).forEach((p) => {
-    if (p.owner_id) countMap.set(p.owner_id, (countMap.get(p.owner_id) || 0) + 1);
+    if (p.owner_id)
+      countMap.set(p.owner_id, (countMap.get(p.owner_id) || 0) + 1);
   });
 
   return owners.map((owner) => ({

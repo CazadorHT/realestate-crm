@@ -23,7 +23,7 @@ C) Pages (app router)
 - [x] แก้ property form ให้ดึง select option จาก db แต่ติด error อยู่
 แต่ตอนนี้ ดึงออกมาแสดงได้แล้ว แต่ยังไม่เรียบร้อย
 
-- [ ] อยากลบ latitude, longitude ออกจาก form และ db เพราะไม่จำเป็น แต่อยากได้ Col: เก็บ link google map แทน แล้วแสดงตำแหน่งที่ตั้งของ property ที่หน้าเว็บ (property detail / public web )
+- [ ] อยากลบ latitude, longitude ออกจาก form และ db เพราะไม่จำเป็น แต่อยากได้ Col: เก็บ link google map แทน แล้วแสดงตำแหน่งที่ตั้งของ property ที่หน้าเว็บ (property detail(crm) / public web)
 
 - [x] เจอ Console Error แจ้ง error ของ dialog
         `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
@@ -58,6 +58,11 @@ C) Pages (app router)
 - [x] [4.4] ตอนกดยกเลิก: cleanupUploadSessionAction(sessionId)
 - [x] [4.4.1] ลบ TEMP ทั้ง session จาก Storage + ลบ row TEMP แล้วค่อยออกหน้า (ทำแบบไม่ block UX ได้)
 - [x] [4.5] เก็บกวาด TEMP ที่ค้างจาก “ปิดแท็บ/ไม่ submit/ไม่กดยกเลิก” ด้วย scheduled cleanup.
+- [x] ปรับปรุงโค้ดในส่วน Owners, Profiles, และ Users ให้เป็นไปตาม "Global Standard" (มาตรฐานเดียว)
+- [x] Owners: ฟอร์มสร้าง/แก้ไข, ปุ่มลบในตาราง
+- [x] Leads: ฟอร์มสร้าง/แก้ไข, ปุ่มลบในตาราง
+- [x] Properties: ฟอร์มสร้าง/แก้ไข, ปุ่มลบ, ปุ่มยกเลิก
+- [x] Users: ปุ่มลบผู้ใช้ (เปลี่ยนมาใช้ Standard Dialog)
 - [ ] Step 5 : 
 - [ ] Step 6 : 
 - [ ] Step 7 : 

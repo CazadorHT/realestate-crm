@@ -31,7 +31,15 @@ type Props = {
   onSubmitAction: (values: LeadFormValues) => Promise<void>;
 };
 
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+function isNextRedirectError(e: any) {
+  return typeof e?.digest === "string" && e.digest.startsWith("NEXT_REDIRECT");
+}
+
 export function LeadForm({ initialValues, onSubmitAction }: Props) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -50,7 +58,13 @@ export function LeadForm({ initialValues, onSubmitAction }: Props) {
     startTransition(async () => {
       try {
         await onSubmitAction(values);
+        toast.success("บันทึกข้อมูลสำเร็จ");
       } catch (e: any) {
+        if (isNextRedirectError(e)) {
+          toast.success("บันทึกข้อมูลสำเร็จ");
+          throw e;
+        }
+        toast.error(e?.message ?? "เกิดข้อผิดพลาด");
         setError(e?.message ?? "เกิดข้อผิดพลาด");
       }
     });
@@ -119,9 +133,17 @@ export function LeadForm({ initialValues, onSubmitAction }: Props) {
         </div>
       </div>
 
-      <div className="pt-2">
+      <div className="pt-2 flex items-center gap-2">
         <Button type="submit" disabled={isPending}>
           {isPending ? "กำลังบันทึก..." : "บันทึก"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isPending}
+          onClick={() => router.back()}
+        >
+          ยกเลิก
         </Button>
       </div>
     </form>

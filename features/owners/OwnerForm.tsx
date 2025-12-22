@@ -5,13 +5,17 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Owner, OwnerFormValues } from "@/features/owners/types";
 
-import { createOwnerAction, updateOwnerAction } from "@/features/owners/actions";
+import {
+  createOwnerAction,
+  updateOwnerAction,
+} from "@/features/owners/actions";
 
 const ownerSchema = z.object({
   full_name: z.string().min(1, "กรุณากรอกชื่อเจ้าของ"),
@@ -20,12 +24,12 @@ const ownerSchema = z.object({
   facebook_url: z.string().nullable().optional(),
   other_contact: z.string().nullable().optional(),
   company_name: z.string().nullable().optional(),
+  created_by: z.string().nullable().optional(),
+  updated_at: z.string().nullable().optional(),
   owner_type: z.string().nullable().optional(),
 });
 
 type FormShape = z.infer<typeof ownerSchema>;
-
-
 
 type Props =
   | { mode: "create"; initialValues?: Partial<OwnerFormValues> }
@@ -68,26 +72,43 @@ export function OwnerForm(props: Props) {
       line_id: toNull(values.line_id),
       facebook_url: toNull(values.facebook_url),
       other_contact: toNull(values.other_contact),
+      created_by: toNull(values.created_by),
+      updated_at: toNull(values.updated_at),
       company_name: toNull(values.company_name),
       owner_type: toNull(values.owner_type),
     };
 
     startTransition(async () => {
       try {
+        let res: any;
         if (props.mode === "create") {
-          // ถ้า action redirect สำเร็จ จะ throw NEXT_REDIRECT -> ต้องปล่อยให้มันเด้งออกไป
-          const res: any = await createOwnerAction(payload);
-          if (res?.success === false) throw new Error(res.message);
+          res = await createOwnerAction(payload);
         } else {
-          const res: any = await updateOwnerAction(props.id, payload);
-          if (res?.success === false) throw new Error(res.message);
+          res = await updateOwnerAction(props.id, payload);
         }
+
+        if (res?.success === false) {
+          toast.error(res.message);
+          return;
+        }
+
+        // Success
+        toast.success(
+          props.mode === "create" ? "เพิ่มเจ้าของสำเร็จ" : "บันทึกข้อมูลสำเร็จ"
+        );
 
         // เผื่อกรณี action “ไม่ redirect”
         router.refresh();
       } catch (e: any) {
-        if (isNextRedirectError(e)) throw e; // สำคัญ: อย่าจับ redirect เป็น error
-        setError(e?.message ?? "เกิดข้อผิดพลาด");
+        if (isNextRedirectError(e)) {
+          toast.success(
+            props.mode === "create"
+              ? "เพิ่มเจ้าของสำเร็จ"
+              : "บันทึกข้อมูลสำเร็จ"
+          );
+          throw e;
+        }
+        toast.error(e?.message ?? "เกิดข้อผิดพลาด");
       }
     });
   };
@@ -117,12 +138,20 @@ export function OwnerForm(props: Props) {
 
         <div className="space-y-2">
           <Label htmlFor="phone">เบอร์โทร</Label>
-          <Input id="phone" placeholder="เช่น 089xxxxxxx" {...form.register("phone")} />
+          <Input
+            id="phone"
+            placeholder="เช่น 089xxxxxxx"
+            {...form.register("phone")}
+          />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="line_id">Line ID</Label>
-          <Input id="line_id" placeholder="เช่น @ownerline" {...form.register("line_id")} />
+          <Input
+            id="line_id"
+            placeholder="เช่น @ownerline"
+            {...form.register("line_id")}
+          />
         </div>
 
         <div className="space-y-2 md:col-span-2">
@@ -151,10 +180,19 @@ export function OwnerForm(props: Props) {
 
       <div className="flex items-center gap-2">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Saving..." : props.mode === "create" ? "Create owner" : "Save changes"}
+          {isPending
+            ? "Saving..."
+            : props.mode === "create"
+            ? "Create owner"
+            : "Save changes"}
         </Button>
 
-        <Button type="button" variant="outline" disabled={isPending} onClick={() => router.back()}>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isPending}
+          onClick={() => router.back()}
+        >
           Cancel
         </Button>
       </div>

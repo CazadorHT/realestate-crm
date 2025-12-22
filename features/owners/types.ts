@@ -14,7 +14,8 @@ export interface OwnerFormValues {
   line_id?: string | null;
   facebook_url?: string | null;
   other_contact?: string | null;
-
+  created_by: string | null;
+  updated_at: string | null;
   company_name?: string | null;
   owner_type?: string | null;
 }

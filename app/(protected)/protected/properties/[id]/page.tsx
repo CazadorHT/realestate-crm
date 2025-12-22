@@ -47,12 +47,14 @@ export default async function PropertyDetailsPage({
 
   if (error || !property) {
     return (
-      <div className="p-8 text-center text-red-500">ไม่พบข้อมูลทรัพย์  หรือเกิดข้อผิดพลาดในการโหลดข้อมูล</div>
+      <div className="p-8 text-center text-red-500">
+        ไม่พบข้อมูลทรัพย์ หรือเกิดข้อผิดพลาดในการโหลดข้อมูล
+      </div>
     );
   }
 
   // 2. Fetch creator profile and images
-    const [creatorResult, imagesResult] = await Promise.all([
+  const [creatorResult, imagesResult] = await Promise.all([
     property.created_by
       ? supabase
           .from("profiles")
@@ -70,11 +72,14 @@ export default async function PropertyDetailsPage({
   const creatorName = creatorResult.data?.full_name || property.created_by;
 
   const images =
-    (imagesResult.data as { image_url: string; is_cover: boolean; sort_order: number }[]) ??
-    [];
+    (imagesResult.data as {
+      image_url: string;
+      is_cover: boolean;
+      sort_order: number;
+    }[]) ?? [];
 
   const sortedImages = images.sort(
-    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
   );
 
   const imagesForLightbox = sortedImages.map((img) => ({
@@ -86,7 +91,6 @@ export default async function PropertyDetailsPage({
     imagesForLightbox.find((i) => i.is_cover)?.image_url ||
     imagesForLightbox[0]?.image_url ||
     null;
-
 
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
@@ -240,11 +244,11 @@ export default async function PropertyDetailsPage({
             <div className="space-y-4">
               <div className="">
                 {imagesForLightbox.length > 0 && (
-                    <ImageLightbox 
-                      images={imagesForLightbox}
-                      propertyTitle={property.title ?? ""}
-                    />
-                  )}
+                  <ImageLightbox
+                    images={imagesForLightbox}
+                    propertyTitle={property.title ?? ""}
+                  />
+                )}
 
                 {/* {images.map((image, index) => (
                   <div
@@ -305,11 +309,21 @@ export default async function PropertyDetailsPage({
                   </span>
                 </div>
                 <div className="grid grid-cols-3">
-                  <span className="text-muted-foreground">พิกัด GPS:</span>
-                  <span className="col-span-2 font-mono text-xs">
-                    {property.latitude && property.longitude
-                      ? `${property.latitude}, ${property.longitude}`
-                      : "-"}
+                  <span className="text-muted-foreground">ตำแหน่ง:</span>
+                  <span className="col-span-2 font-medium">
+                    {property.google_maps_link ? (
+                      <a
+                        href={property.google_maps_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                      >
+                        <MapPin className="h-3 w-3" />
+                        ดูบน Google Maps
+                      </a>
+                    ) : (
+                      "-"
+                    )}
                   </span>
                 </div>
               </div>

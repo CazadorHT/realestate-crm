@@ -12,7 +12,11 @@ export type AuditAction =
   | "lead_activity.create"
   | "owner.create"
   | "owner.update"
-  | "owner.delete";
+  | "owner.delete"
+  | "profile.update"
+  | "profile.avatar.upload"
+  | "user.delete"
+  | "user.role.update";
 
 type AuditInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];
 
@@ -23,7 +27,7 @@ export async function logAudit(
     entity: string;
     entityId?: string | null;
     metadata?: Record<string, unknown>;
-  },
+  }
 ) {
   const row: AuditInsert = {
     user_id: ctx.user.id,

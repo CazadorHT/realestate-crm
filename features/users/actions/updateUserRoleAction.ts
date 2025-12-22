@@ -1,7 +1,8 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAuthContext } from "@/lib/authz";
+import { logAudit } from "@/lib/audit";
 
 export type UpdateUserRoleResult = {
   success: boolean;
@@ -10,49 +11,45 @@ export type UpdateUserRoleResult = {
 
 /**
  * อัปเดตบทบาทของผู้ใช้ (ADMIN <-> AGENT)
- * TODO: ตรวจสอบให้แน่ใจว่าเฉพาะ ADMIN เท่านั้นที่เรียก action นี้ได้
  */
 export async function updateUserRoleAction(
   userId: string,
   newRole: "ADMIN" | "AGENT"
 ): Promise<UpdateUserRoleResult> {
-  const supabase = await createClient();
+  try {
+    const ctx = await requireAuthContext();
 
-  // ตรวจสอบว่าผู้ใช้ที่เรียกใช้เป็น ADMIN หรือไม่
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
-  if (authError || !user) {
-    return { success: false, message: "ไม่พบข้อมูลผู้ใช้" };
+    // 1) Check Admin Role
+    if (ctx.role !== "ADMIN") {
+      return { success: false, message: "ไม่มีสิทธิ์ในการดำเนินการนี้" };
+    }
+
+    // 2) Prevent self-role change
+    if (userId === ctx.user.id) {
+      return { success: false, message: "ไม่สามารถเปลี่ยนบทบาทของตัวเองได้" };
+    }
+
+    // 3) Update role
+    const { error } = await ctx.supabase
+      .from("profiles")
+      .update({ role: newRole })
+      .eq("id", userId);
+
+    if (error) {
+      console.error("Update role error:", error);
+      return { success: false, message: "เกิดข้อผิดพลาดในการอัปเดตบทบาท" };
+    }
+
+    await logAudit(ctx, {
+      action: "user.role.update",
+      entity: "profiles",
+      entityId: userId,
+      metadata: { newRole },
+    });
+
+    revalidatePath("/protected/settings/users");
+    return { success: true };
+  } catch (err) {
+    return { success: false, message: "Unauthorized" };
   }
-
-  // ดึงข้อมูลโปรไฟล์เพื่อเช็ค role
-  const { data: currentUserProfile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (currentUserProfile?.role !== "ADMIN") {
-    return { success: false, message: "ไม่มีสิทธิ์ในการดำเนินการนี้" };
-  }
-
-  // ป้องกันการเปลี่ยน role ของตัวเอง
-  if (userId === user.id) {
-    return { success: false, message: "ไม่สามารถเปลี่ยนบทบาทของตัวเองได้" };
-  }
-
-  // อัปเดต role
-  // หมายเหตุ RLS: ต้องมี policy อนุญาต ADMIN จัดการ profiles ทั้งหมด
-  const { error } = await supabase
-    .from("profiles")
-    .update({ role: newRole })
-    .eq("id", userId);
-
-  if (error) {
-    console.error("Update role error:", error);
-    return { success: false, message: "เกิดข้อผิดพลาดในการอัปเดตบทบาท" };
-  }
-
-  revalidatePath("/protected/settings/users");
-  return { success: true };
 }

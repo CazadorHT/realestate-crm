@@ -6,7 +6,11 @@ import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IMAGE_UPLOAD_POLICY, PropertyImageUploader } from "@/components/property-image-uploader";
+import { toast } from "sonner";
+import {
+  IMAGE_UPLOAD_POLICY,
+  PropertyImageUploader,
+} from "@/components/property-image-uploader";
 import { FormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
 import type { PropertyRow } from "@/features/properties/types";
@@ -106,8 +110,7 @@ function mapRowToFormValues(
     district: row.district ?? "",
     subdistrict: row.subdistrict ?? "",
     postal_code: row.postal_code ?? "",
-    latitude: row.latitude ?? undefined,
-    longitude: row.longitude ?? undefined,
+    google_maps_link: row.google_maps_link ?? undefined,
 
     // New fields
     owner_id: row.owner_id ?? undefined,
@@ -226,45 +229,60 @@ export function PropertyForm({
       const canProceed = await checkDuplicates(values);
       if (!canProceed) return; // Wait for user confirmation
       // No duplicates or in edit mode, proceed to create/update
+      let result: CreatePropertyResult | { success: boolean; message?: string };
+
       if (mode === "create") {
-        const result = await createPropertyAction(values, uploadSessionId);
-
-        if (result.success) {
-          setPersistImages(true);
-          form.reset(EMPTY_VALUES);
-          router.push("/protected/properties");
-          // กลับไปที่หน้ารายการทรัพย์
-        } else {
-          console.error(result.message);
-        }
-      } else if (mode === "edit" && defaultValues?.id) {
-        setPersistImages(true);
-        await updatePropertyAction(defaultValues.id, values, uploadSessionId);
-
-        router.push("/protected/properties");
+        result = await createPropertyAction(values, uploadSessionId);
+      } else {
+        result = await updatePropertyAction(
+          defaultValues!.id,
+          values,
+          uploadSessionId
+        );
       }
-    } catch (error) {
-      console.error("Error submitting property form:", error);
+
+      if (result.success) {
+        toast.success(
+          mode === "create" ? "เพิ่มทรัพย์ใหม่สำเร็จ" : "บันทึกข้อมูลสำเร็จ"
+        );
+        setPersistImages(true);
+        form.reset(EMPTY_VALUES);
+        router.push("/protected/properties");
+      } else {
+        toast.error(result.message || "เกิดข้อผิดพลาด");
+        console.error(result.message);
+      }
+    } catch (e: any) {
+      // router.push might throw error? usually only from Server Actions redirect, but here router.push is client side.
+      // But acts might throw.
+      console.error("Error submitting property form:", e);
+      toast.error(e.message || "เกิดข้อผิดพลาดไม่ทราบสาเหตุ");
     }
   };
-  
+
   // Handle confirmed duplicate submit หรือ คืองการยืนยันการส่งข้อมูลที่ซ้ำกัน
   const handleConfirmDuplicateSubmit = async () => {
     setShowDuplicateDialog(false);
 
     if (!pendingSubmit) return;
 
-    const result: CreatePropertyResult = await createPropertyAction(
-      pendingSubmit,
-      uploadSessionId 
-    );
+    try {
+      const result: CreatePropertyResult = await createPropertyAction(
+        pendingSubmit,
+        uploadSessionId
+      );
 
-    if (result.success) {
-      setPersistImages(true);
-      form.reset(EMPTY_VALUES);
-      router.push("/protected/properties");
-    } else {
-      console.error(result.message);
+      if (result.success) {
+        toast.success("เพิ่มทรัพย์ใหม่สำเร็จ (ยืนยันข้อมูลซ้ำ)");
+        setPersistImages(true);
+        form.reset(EMPTY_VALUES);
+        router.push("/protected/properties");
+      } else {
+        toast.error(result.message || "เกิดข้อผิดพลาด");
+        console.error(result.message);
+      }
+    } catch (e: any) {
+      toast.error(e.message);
     }
 
     setPendingSubmit(null);
@@ -347,7 +365,7 @@ export function PropertyForm({
               <FormLabel>รูปภาพทรัพย์</FormLabel>
               <FormControl>
                 <PropertyImageUploader
-                sessionId={uploadSessionId} 
+                  sessionId={uploadSessionId}
                   value={field.value ?? []}
                   onChange={field.onChange}
                   initialImages={initialImages}
@@ -365,9 +383,11 @@ export function PropertyForm({
         <FormField
           control={form.control}
           name="title"
-          render={({ field}) => (
+          render={({ field }) => (
             <FormItem data-field="title">
-              <FormLabel>ชื่อทรัพย์ <span className="text-red-400">*</span> </FormLabel>
+              <FormLabel>
+                ชื่อทรัพย์ <span className="text-red-400">*</span>{" "}
+              </FormLabel>
               <FormControl>
                 <Input {...field} placeholder="เช่น เศรษฐสิริ บางนา กม.10" />
               </FormControl>
@@ -488,31 +508,26 @@ export function PropertyForm({
             control={form.control}
             name="price"
             render={({ field, fieldState }) => (
-              
               <FormItem>
-                
-                <FormLabel >ราคาขาย</FormLabel>
-                 
-                <FormControl >
+                <FormLabel>ราคาขาย</FormLabel>
+
+                <FormControl>
                   <Input
-                  aria-invalid={!!fieldState.error}
+                    aria-invalid={!!fieldState.error}
                     type="number"
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
                         e.target.value === ""
-                        ? undefined
-                        : Number(e.target.value)
+                          ? undefined
+                          : Number(e.target.value)
                       )
                     }
                     placeholder="กรุณาใส่ราคาขาย"
                   />
-                  
                 </FormControl>
-                <FormMessage/>
-              
+                <FormMessage />
               </FormItem>
-              
             )}
           />
 
@@ -524,9 +539,8 @@ export function PropertyForm({
                 <FormLabel>ราคาเช่า</FormLabel>
                 <FormControl>
                   <Input
-                  aria-invalid={!!fieldState.error}
+                    aria-invalid={!!fieldState.error}
                     type="number"
-                    
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
@@ -715,45 +729,18 @@ export function PropertyForm({
               )}
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1">
             <FormField
               control={form.control}
-              name="latitude"
+              name="google_maps_link"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Latitude</FormLabel>
+                  <FormLabel>ลิงก์ Google Map</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
                       {...field}
                       value={field.value ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value ? Number(e.target.value) : undefined
-                        )
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="longitude"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Longitude</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      value={field.value ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value ? Number(e.target.value) : undefined
-                        )
-                      }
+                      placeholder="เช่น https://maps.app.goo.gl/..."
                     />
                   </FormControl>
                   <FormMessage />
@@ -869,7 +856,6 @@ export function PropertyForm({
           {mode === "create" ? "สร้างทรัพย์" : "บันทึกการแก้ไข"}
         </Button>
         <CancelButton sessionId={uploadSessionId} />
-
       </form>
 
       {/* Duplicate Warning Dialog */}

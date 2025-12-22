@@ -432,6 +432,7 @@ export async function updatePropertyAction(
         meta_description: seoData.metaDescription,
         meta_keywords: seoData.metaKeywords,
         structured_data: seoData.structuredData as any,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", id);
 
@@ -665,7 +666,7 @@ export async function deletePropertyAction(formData: FormData) {
     // 3) Delete property (cascade will delete property_images records)
     const { error } = await supabase.from("properties").delete().eq("id", id);
     if (error) throw error;
-    // 4) Audit log delete 
+    // 4) Audit log delete
     await logAudit(
       { supabase, user, role },
       {
