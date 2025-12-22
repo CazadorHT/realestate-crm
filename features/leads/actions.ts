@@ -1,139 +1,219 @@
+// actions leads
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthContext, assertOwnerOrAdmin, authzFail } from "@/lib/authz";
+import { logAudit } from "@/lib/audit";
+
 import { leadFormSchema, leadActivitySchema } from "./types";
+import type {
+  LeadActionResult,
+  LeadInsert,
+  LeadUpdate,
+  LeadActivityInsert,
+} from "./types";
 
-import type { LeadActionResult } from "./types";
-import type { LeadActivityFormValues } from "@/lib/types/leads";
-import { LEAD_STAGE_ORDER } from "@/features/leads/labels"; // ใช้เป็น whitelist
-import { LEAD_ACTIVITY_TYPE_ORDER } from "@/features/leads/labels";
+export async function createLeadAction(
+  values: unknown
+): Promise<LeadActionResult> {
+  try {
+    const parsed = leadFormSchema.safeParse(values);
+    if (!parsed.success)
+      return { success: false, message: "ข้อมูล Lead ไม่ถูกต้อง" };
+    const ctx = await requireAuthContext();
 
-export async function createLeadAction(values: unknown): Promise<LeadActionResult> {
-  const parsed = leadFormSchema.safeParse(values);
-  if (!parsed.success) return { success: false, message: "ข้อมูล Lead ไม่ถูกต้อง" };
-
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return { success: false, message: "Unauthorized" };
-
-  const { data, error } = await supabase
-    .from("leads")
-    .insert({
+    const payload: LeadInsert = {
       ...parsed.data,
-      created_by: auth.user.id,
+      lead_type: parsed.data.lead_type ?? undefined,
+      created_by: ctx.user.id,
       updated_at: new Date().toISOString(),
-    } as any)
-    .select("id")
-    .single();
+    };
 
-  if (error) return { success: false, message: error.message };
+    const { data, error } = await ctx.supabase
+      .from("leads")
+      .insert(payload)
+      .select("id")
+      .single();
 
-  revalidatePath("/protected/leads");
-  return { success: true, leadId: data.id };
+    if (error) return { success: false, message: error.message };
+
+    await logAudit(ctx, {
+      action: "lead.create",
+      entity: "leads",
+      entityId: data.id,
+      metadata: {},
+    });
+
+    revalidatePath("/protected/leads");
+    return { success: true, leadId: data.id };
+  } catch (err) {
+    return authzFail(err);
+  }
 }
 
 export async function updateLeadAction(
   id: string,
-  values: unknown,
+  values: unknown
 ): Promise<{ success: true } | { success: false; message: string }> {
-  const parsed = leadFormSchema.safeParse(values);
-  if (!parsed.success) return { success: false, message: "ข้อมูล Lead ไม่ถูกต้อง" };
+  try {
+    const parsed = leadFormSchema.safeParse(values);
+    if (!parsed.success)
+      return { success: false, message: "ข้อมูล Lead ไม่ถูกต้อง" };
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("leads")
-    .update({ ...parsed.data, updated_at: new Date().toISOString() } as any)
-    .eq("id", id);
+    const ctx = await requireAuthContext();
 
-  if (error) return { success: false, message: error.message };
+    // 1) โหลด lead เพื่อเช็ค owner/admin
+    const { data: lead, error: findErr } = await ctx.supabase
+      .from("leads")
+      .select("id, created_by")
+      .eq("id", id)
+      .single();
 
-  revalidatePath("/protected/leads");
-  revalidatePath(`/protected/leads/${id}`);
-  return { success: true };
+    if (findErr || !lead) return { success: false, message: "Lead not found" };
+
+    assertOwnerOrAdmin({
+      ownerId: lead.created_by,
+      userId: ctx.user.id,
+      role: ctx.role,
+    });
+
+    // 2) update
+    const payload: LeadUpdate = {
+      ...parsed.data,
+      lead_type: parsed.data.lead_type ?? undefined,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await ctx.supabase
+      .from("leads")
+      .update(payload)
+      .eq("id", id);
+    if (error) return { success: false, message: error.message };
+
+    await logAudit(ctx, {
+      action: "lead.update",
+      entity: "leads",
+      entityId: id,
+      metadata: {},
+    });
+
+    revalidatePath("/protected/leads");
+    revalidatePath(`/protected/leads/${id}`);
+    return { success: true };
+  } catch (err) {
+    return authzFail(err);
+  }
 }
 
 export async function deleteLeadAction(
-  id: string,
+  id: string
 ): Promise<{ success: true } | { success: false; message: string }> {
-  const supabase = await createClient();
-  const { error } = await supabase.from("leads").delete().eq("id", id);
-  if (error) return { success: false, message: error.message };
+  try {
+    const ctx = await requireAuthContext();
 
-  revalidatePath("/protected/leads");
-  return { success: true };
+    // 1) โหลด lead เพื่อเช็ค owner/admin
+    const { data: lead, error: findErr } = await ctx.supabase
+      .from("leads")
+      .select("id, created_by")
+      .eq("id", id)
+      .single();
+
+    if (findErr || !lead) return { success: false, message: "Lead not found" };
+
+    assertOwnerOrAdmin({
+      ownerId: lead.created_by,
+      userId: ctx.user.id,
+      role: ctx.role,
+    });
+
+    // 2) delete
+    const { error } = await ctx.supabase.from("leads").delete().eq("id", id);
+    if (error) return { success: false, message: error.message };
+
+    await logAudit(ctx, {
+      action: "lead.delete",
+      entity: "leads",
+      entityId: id,
+      metadata: {},
+    });
+
+    revalidatePath("/protected/leads");
+    return { success: true };
+  } catch (err) {
+    return authzFail(err);
+  }
 }
 
 export async function createLeadActivityAction(
   leadId: string,
-  values: unknown,
+  values: unknown
 ): Promise<{ success: true } | { success: false; message: string }> {
+  try {
+    const parsed = leadActivitySchema.safeParse(values);
+    if (!parsed.success)
+      return { success: false, message: "ข้อมูล Activity ไม่ถูกต้อง" };
 
+    const ctx = await requireAuthContext();
 
-   // 1) validate เบื้องต้นแบบ manual
-  if (!values || typeof values !== "object") {
-    return { success: false, message: "ข้อมูล Activity ไม่ถูกต้อง" };
+    // 1) owner/admin ของ lead เท่านั้นที่เพิ่ม activity ได้
+    const { data: lead, error: leadErr } = await ctx.supabase
+      .from("leads")
+      .select("id, created_by")
+      .eq("id", leadId)
+      .single();
+
+    if (leadErr || !lead) return { success: false, message: "Lead not found" };
+
+    assertOwnerOrAdmin({
+      ownerId: lead.created_by,
+      userId: ctx.user.id,
+      role: ctx.role,
+    });
+
+    // 2) insert activity
+    const payload: LeadActivityInsert = {
+      lead_id: leadId,
+      property_id: parsed.data.property_id ?? null,
+      activity_type: parsed.data.activity_type,
+      note: parsed.data.note.trim(),
+      created_by: ctx.user.id,
+    };
+
+    const { error } = await ctx.supabase
+      .from("lead_activities")
+      .insert(payload);
+    if (error) return { success: false, message: error.message };
+
+    // (optional) ถ้าคุณอยาก log activity ด้วยจริง ๆ แนะนำเพิ่ม action ใหม่ใน lib/audit.ts
+    // await logAudit(ctx, { action: "lead_activity.create", entity: "lead_activities", entityId: null, metadata: { leadId } });
+    await logAudit(ctx, {
+      action: "lead_activity.create",
+      entity: "lead_activities",
+      entityId: null,
+      metadata: { leadId },
+    });
+    revalidatePath(`/protected/leads/${leadId}`);
+    return { success: true };
+  } catch (err) {
+    return authzFail(err);
   }
-
-  const v = values as any;
-  const activity_type = v.activity_type;
-  const note = v.note;
-  const property_id = v.property_id;
-
-  // 
-  if (!LEAD_ACTIVITY_TYPE_ORDER.includes(activity_type)) {
-    return { success: false, message: "ข้อมูล Activity ไม่ถูกต้อง (activity_type)" };
-  }
-  // note ต้องเป็น string (ให้ว่างได้)
-  if (note !== undefined && note !== null && typeof note !== "string") {
-    return { success: false, message: "ข้อมูล Activity ไม่ถูกต้อง (note)" };
-  }
-  // property_id ต้องเป็น string หรือ null/undefined
-  if (
-    property_id !== undefined &&
-    property_id !== null &&
-    typeof property_id !== "string"
-  ) {
-    return { success: false, message: "ข้อมูล Activity ไม่ถูกต้อง (property_id)" };
-  }
-  // 2) ทำงานจริง
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return { success: false, message: "Unauthorized" };
-
-  const { error } = await supabase.from("lead_activities").insert({
-    lead_id: leadId,
-    property_id: property_id ?? null,
-    activity_type,
-    note: (note ?? "").trim(),
-    created_by: auth.user.id,
-  });
-
-  if (error) return { success: false, message: error.message };
-
-  revalidatePath(`/protected/leads/${leadId}`);
-  return { success: true };
 }
 
 export type PropertyPickItem = { id: string; title: string };
 export async function searchPropertiesAction(
-  q?: string,
+  q?: string
 ): Promise<PropertyPickItem[]> {
-  "use server";
-
-  const supabase = await createClient();
+  const ctx = await requireAuthContext();
 
   const query = (q ?? "").trim();
 
-  let sb = supabase
+  let sb = ctx.supabase
     .from("properties")
     .select("id,title")
     .order("updated_at", { ascending: false })
     .limit(10);
 
-  if (query) {
-    sb = sb.ilike("title", `%${query}%`);
-  }
+  if (query) sb = sb.ilike("title", `%${query}%`);
 
   const { data, error } = await sb;
   if (error) throw new Error(error.message);

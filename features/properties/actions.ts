@@ -10,6 +10,7 @@ import type { PropertyRow, PropertyWithImages, PropertyImage } from "./types";
 import { FormSchema, type PropertyFormValues } from "./schema";
 // Authorization utilities คือการตรวจสอบสิทธิ์ผู้ใช้
 import { requireAuthContext, assertOwnerOrAdmin, authzFail } from "@/lib/authz";
+import { logAudit } from "@/lib/audit";
 import { validateImageFile } from "@/lib/file-validation"; // สำหรับตรวจสอบไฟล์รูปภาพ
 import { IMAGE_UPLOAD_POLICY } from "@/components/property-image-uploader";
 
@@ -151,7 +152,9 @@ export async function uploadPropertyImageAction(formData: FormData) {
     }
 
     // 3) Simple per-user rate limit based on property_image_uploads
-    const cutoffIso = new Date(Date.now() - UPLOAD_RATE_WINDOW_MS).toISOString();
+    const cutoffIso = new Date(
+      Date.now() - UPLOAD_RATE_WINDOW_MS
+    ).toISOString();
     const { count: recentCount, error: rateErr } = await supabase
       .from("property_image_uploads")
       .select("id", { count: "exact", head: true })
@@ -189,7 +192,9 @@ export async function uploadPropertyImageAction(formData: FormData) {
       throw trackErr;
     }
 
-    const { data } = supabase.storage.from(PROPERTY_IMAGES_BUCKET).getPublicUrl(path);
+    const { data } = supabase.storage
+      .from(PROPERTY_IMAGES_BUCKET)
+      .getPublicUrl(path);
 
     return { path, publicUrl: data.publicUrl };
   } catch (error) {
@@ -197,7 +202,6 @@ export async function uploadPropertyImageAction(formData: FormData) {
     throw error;
   }
 }
-
 
 /**
  * Create property with images
@@ -330,6 +334,18 @@ export async function createPropertyAction(
       propertyId: property.id,
       usedPaths: images ?? [],
     });
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "property.create",
+        entity: "properties",
+        entityId: property.id,
+        metadata: {
+          imagesCount: images?.length ?? 0,
+          sessionId,
+        },
+      }
+    );
     revalidatePath("/protected/properties");
     return { success: true, propertyId: property.id };
   } catch (err) {
@@ -507,6 +523,18 @@ export async function updatePropertyAction(
       propertyId: id,
       usedPaths: images ?? [],
     });
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "property.update",
+        entity: "properties",
+        entityId: id,
+        metadata: {
+          imagesCount: images?.length ?? 0,
+          sessionId,
+        },
+      }
+    );
     revalidatePath("/protected/properties");
     revalidatePath(`/protected/properties/${id}`);
     return { success: true, propertyId: id };
@@ -637,6 +665,19 @@ export async function deletePropertyAction(formData: FormData) {
     // 3) Delete property (cascade will delete property_images records)
     const { error } = await supabase.from("properties").delete().eq("id", id);
     if (error) throw error;
+    // 4) Audit log delete 
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "property.delete",
+        entity: "properties",
+        entityId: id,
+        metadata: {
+          // ใส่ได้ตามต้องการ เช่นจำนวนรูปที่ลบจริง (ถ้าคำนวณไว้)
+        },
+      }
+    );
+
     await supabase
       .from("property_image_uploads")
       .delete()

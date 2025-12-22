@@ -17,7 +17,7 @@ const ownerSchema = z.object({
   full_name: z.string().min(1, "กรุณากรอกชื่อเจ้าของ"),
   phone: z.string().nullable().optional(),
   line_id: z.string().nullable().optional(),
-  facebook_url: z.string().url("URL ไม่ถูกต้อง").nullable().optional(),
+  facebook_url: z.string().nullable().optional(),
   other_contact: z.string().nullable().optional(),
   company_name: z.string().nullable().optional(),
   owner_type: z.string().nullable().optional(),

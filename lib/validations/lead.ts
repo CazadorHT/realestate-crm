@@ -23,7 +23,6 @@ export const LEAD_SOURCES = [
 export const LEAD_STAGES = [
   "NEW",
   "CONTACTED",
-  "QUALIFIED",
   "VIEWED",
   "NEGOTIATING",
   "CLOSED",
