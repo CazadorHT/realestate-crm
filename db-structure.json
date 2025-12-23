@@ -127,6 +127,7 @@
             "schema": "public",
             "values": [
                 "ADMIN",
+                "USER",
                 "AGENT"
             ]
         }
@@ -326,6 +327,22 @@
                 {
                     "pos": 14,
                     "name": "closed_at",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "timestamptz",
+                    "data_type": "timestamp with time zone"
+                },
+                {
+                    "pos": 15,
+                    "name": "transaction_date",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "timestamptz",
+                    "data_type": "timestamp with time zone"
+                },
+                {
+                    "pos": 16,
+                    "name": "transaction_end_date",
                     "default": null,
                     "nullable": "YES",
                     "udt_name": "timestamptz",
@@ -897,7 +914,7 @@
                 {
                     "pos": 2,
                     "name": "role",
-                    "default": "'AGENT'::user_role",
+                    "default": "'USER'::user_role",
                     "nullable": "NO",
                     "udt_name": "user_role",
                     "data_type": "USER-DEFINED"
@@ -1777,5 +1794,5 @@
             ]
         }
     ],
-    "generated_at": "2025-12-23T09:09:53.202133+00:00"
-}
+    "generated_at": "2025-12-23T11:26:10.154724+00:00"
+} 
