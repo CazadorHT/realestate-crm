@@ -16,12 +16,13 @@ import { UserDeleteDialog } from "./UserDeleteDialog";
 import { UsersFilters } from "./UsersFilters";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
+import { type UserRole } from "@/lib/auth-shared";
 
 interface Profile {
   id: string;
   full_name: string | null;
   phone: string | null;
-  role: "ADMIN" | "AGENT";
+  role: UserRole;
   created_at: string;
 }
 
@@ -45,8 +46,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
         user.phone?.toLowerCase().includes(searchLower);
 
       // Role filter
-      const matchesRole =
-        roleFilter === "ALL" || user.role === roleFilter;
+      const matchesRole = roleFilter === "ALL" || user.role === roleFilter;
 
       return matchesSearch && matchesRole;
     });
@@ -84,21 +84,28 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-8 text-muted-foreground"
+                  >
                     ไม่พบผู้ใช้ที่ตรงกับการค้นหา
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredUsers.map((user) => {
                   const isCurrentUser = user.id === currentUserId;
-                  const canDelete = user.role === "AGENT" && !isCurrentUser;
+                  const canDelete =
+                    (user.role === "AGENT" || user.role === "USER") &&
+                    !isCurrentUser;
 
                   return (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">
                         {user.full_name || "-"}
                         {isCurrentUser && (
-                          <span className="ml-2 text-xs text-muted-foreground">(คุณ)</span>
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            (คุณ)
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>{user.phone || "-"}</TableCell>
@@ -106,7 +113,9 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                         <UserRoleBadge role={user.role} />
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {format(new Date(user.created_at), "d MMM yyyy", { locale: th })}
+                        {format(new Date(user.created_at), "d MMM yyyy", {
+                          locale: th,
+                        })}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">

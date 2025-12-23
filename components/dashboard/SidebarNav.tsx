@@ -9,9 +9,10 @@ import {
   UserCircle,
   User,
 } from "lucide-react";
+import { isStaff, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
 
-export function SidebarNav() {
+export function SidebarNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
 
   const navItems = [
@@ -47,10 +48,24 @@ export function SidebarNav() {
     },
   ];
 
+  const filteredItems = navItems.filter((item) => {
+    // Only staff can see these items
+    const staffOnlyItems = [
+      "Dashboard",
+      "Properties",
+      "เจ้าของทรัพย์",
+      "Leads",
+    ];
+    if (staffOnlyItems.includes(item.title)) {
+      return isStaff(role);
+    }
+    return true; // "โปรไฟล์" is visible to everyone
+  });
+
   return (
     <aside className="hidden w-64 flex-col border-r border-border/10 bg-surface sm:flex shadow-soft">
       <nav className="flex flex-col gap-2 p-4">
-        {navItems.map((item) => (
+        {filteredItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}

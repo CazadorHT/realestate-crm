@@ -1,13 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Shield, UserCheck } from "lucide-react";
+import { Users, Shield, UserCheck, Clock } from "lucide-react";
 
 interface UsersStatsSummaryProps {
   totalUsers: number;
   totalAdmins: number;
   totalAgents: number;
+  totalUsersWaiting: number;
 }
 
-export function UsersStatsSummary({ totalUsers, totalAdmins, totalAgents }: UsersStatsSummaryProps) {
+export function UsersStatsSummary({
+  totalUsers,
+  totalAdmins,
+  totalAgents,
+  totalUsersWaiting,
+}: UsersStatsSummaryProps) {
   const stats = [
     {
       title: "ผู้ใช้ทั้งหมด",
@@ -30,10 +36,17 @@ export function UsersStatsSummary({ totalUsers, totalAdmins, totalAgents }: User
       color: "text-green-500",
       bgColor: "bg-green-500/10",
     },
+    {
+      title: "รออนุมัติ",
+      value: totalUsersWaiting,
+      icon: Clock,
+      color: "text-orange-500",
+      bgColor: "bg-orange-500/10",
+    },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       {stats.map((stat) => (
         <Card key={stat.title}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">

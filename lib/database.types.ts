@@ -713,6 +713,7 @@ export type Database = {
     }
     Functions: {
       is_admin: { Args: never; Returns: boolean }
+      is_staff: { Args: never; Returns: boolean }
     }
     Enums: {
       deal_status:
@@ -766,7 +767,7 @@ export type Database = {
         | "OFFICE_BUILDING"
         | "WAREHOUSE"
         | "COMMERCIAL_BUILDING"
-      user_role: "ADMIN" | "AGENT"
+      user_role: "ADMIN" | "USER" | "AGENT"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -951,7 +952,7 @@ export const Constants = {
         "WAREHOUSE",
         "COMMERCIAL_BUILDING",
       ],
-      user_role: ["ADMIN", "AGENT"],
+      user_role: ["ADMIN", "USER", "AGENT"],
     },
   },
 } as const

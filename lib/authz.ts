@@ -3,7 +3,8 @@ import type { User } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
 
-export type UserRole = Database["public"]["Enums"]["user_role"];
+import { type UserRole, isAdmin, isStaff } from "./auth-shared";
+export { type UserRole, isAdmin, isStaff };
 
 export type AuthContext = {
   supabase: Awaited<ReturnType<typeof createClient>>;
@@ -12,31 +13,27 @@ export type AuthContext = {
 };
 
 export class AuthzError extends Error {
-  constructor(
-    public code: "UNAUTHORIZED" | "FORBIDDEN",
-    message?: string,
-  ) {
+  constructor(public code: "UNAUTHORIZED" | "FORBIDDEN", message?: string) {
     super(message ?? code);
     this.name = "AuthzError";
   }
-}
-
-export function isAdmin(role: UserRole) {
-  return role === "ADMIN";
 }
 
 /**
  * ดึง role จากตาราง profiles เท่านั้น (ห้ามเดาจาก metadata เพื่อไม่เผลอยกระดับสิทธิ)
  * ถ้าไม่พบ profile ให้ fallback เป็น AGENT (never elevate).
  */
-async function getRole(supabase: AuthContext["supabase"], userId: string): Promise<UserRole> {
+async function getRole(
+  supabase: AuthContext["supabase"],
+  userId: string
+): Promise<UserRole> {
   const { data } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", userId)
     .maybeSingle();
 
-  return (data?.role ?? "AGENT") as UserRole;
+  return (data?.role ?? "USER") as UserRole;
 }
 
 export async function getAuthContextOrNull(): Promise<AuthContext | null> {
@@ -58,15 +55,16 @@ export async function requireAuthContext(): Promise<AuthContext> {
  * ใช้กับ resource ที่มีฟิลด์ created_by / owner_id (เช่น properties/leads)
  */
 
-
-export function assertAuthenticated(input: {
-  userId: string;
-  role: UserRole;
-}) {
+export function assertAuthenticated(input: { userId: string; role: UserRole }) {
   if (!input.userId) {
     throw new AuthzError("UNAUTHORIZED", "Unauthorized");
   }
-  // role จะเป็น ADMIN/AGENT ก็ผ่านหมด
+}
+
+export function assertStaff(role: UserRole) {
+  if (!isStaff(role)) {
+    throw new AuthzError("FORBIDDEN", "Forbidden: Staff access only");
+  }
 }
 
 /**

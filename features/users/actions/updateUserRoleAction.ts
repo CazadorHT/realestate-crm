@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAuthContext } from "@/lib/authz";
+import { type UserRole } from "@/lib/auth-shared";
 import { logAudit } from "@/lib/audit";
 
 export type UpdateUserRoleResult = {
@@ -14,7 +15,7 @@ export type UpdateUserRoleResult = {
  */
 export async function updateUserRoleAction(
   userId: string,
-  newRole: "ADMIN" | "AGENT"
+  newRole: UserRole
 ): Promise<UpdateUserRoleResult> {
   try {
     const ctx = await requireAuthContext();

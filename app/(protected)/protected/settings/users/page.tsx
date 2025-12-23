@@ -46,6 +46,8 @@ export default async function UsersManagementPage() {
   const totalUsers = users?.length || 0;
   const totalAdmins = users?.filter((u) => u.role === "ADMIN").length || 0;
   const totalAgents = users?.filter((u) => u.role === "AGENT").length || 0;
+  const totalUsersWaiting =
+    users?.filter((u) => u.role === "USER" || !u.role).length || 0;
 
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
@@ -59,6 +61,7 @@ export default async function UsersManagementPage() {
         totalUsers={totalUsers}
         totalAdmins={totalAdmins}
         totalAgents={totalAgents}
+        totalUsersWaiting={totalUsersWaiting}
       />
 
       {/* Users Table */}

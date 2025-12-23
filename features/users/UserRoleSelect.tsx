@@ -1,25 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { updateUserRoleAction } from "./actions/updateUserRoleAction";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { type UserRole } from "@/lib/auth-shared";
 
 interface UserRoleSelectProps {
   userId: string;
-  currentRole: "ADMIN" | "AGENT";
+  currentRole: UserRole;
   disabled?: boolean;
 }
 
-export function UserRoleSelect({ userId, currentRole, disabled }: UserRoleSelectProps) {
+export function UserRoleSelect({
+  userId,
+  currentRole,
+  disabled,
+}: UserRoleSelectProps) {
   const router = useRouter();
-  const [selectedRole, setSelectedRole] = useState<"ADMIN" | "AGENT">(currentRole);
+  const [selectedRole, setSelectedRole] = useState<UserRole>(currentRole);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleRoleChange = async (newRole: "ADMIN" | "AGENT") => {
+  const handleRoleChange = async (newRole: UserRole) => {
     if (newRole === currentRole) return;
 
     setSelectedRole(newRole);
@@ -48,7 +59,7 @@ export function UserRoleSelect({ userId, currentRole, disabled }: UserRoleSelect
     <div className="flex items-center gap-2">
       <Select
         value={selectedRole}
-        onValueChange={(value) => handleRoleChange(value as "ADMIN" | "AGENT")}
+        onValueChange={(value) => handleRoleChange(value as UserRole)}
         disabled={disabled || isLoading}
       >
         <SelectTrigger className="w-32">
@@ -57,9 +68,10 @@ export function UserRoleSelect({ userId, currentRole, disabled }: UserRoleSelect
         <SelectContent>
           <SelectItem value="ADMIN">ADMIN</SelectItem>
           <SelectItem value="AGENT">AGENT</SelectItem>
+          <SelectItem value="USER">USER</SelectItem>
         </SelectContent>
       </Select>
-      
+
       {isLoading && (
         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
       )}
