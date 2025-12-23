@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { requireAuthContext, assertOwnerOrAdmin, authzFail } from "@/lib/authz";
+import {
+  requireAuthContext,
+  assertAuthenticated,
+  authzFail,
+} from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 
 import type { OwnerFormValues } from "./types";
@@ -14,10 +18,10 @@ export async function getOwnersAction() {
 
     let query = ctx.supabase.from("owners").select("*").order("full_name");
 
-    // Filter by owner if not admin
-    if (ctx.role !== "ADMIN") {
-      query = query.eq("created_by", ctx.user.id);
-    }
+    // Allow all authenticated users (Agents/Admins) to see all owners
+    // if (ctx.role !== "ADMIN") {
+    //   query = query.eq("created_by", ctx.user.id);
+    // }
 
     const { data: owners, error } = await query;
 
@@ -48,8 +52,7 @@ export async function getOwnerByIdAction(id: string) {
     throw new Error("Owner not found");
   }
 
-  assertOwnerOrAdmin({
-    ownerId: owner.created_by,
+  assertAuthenticated({
     userId: ctx.user.id,
     role: ctx.role,
   });
@@ -92,10 +95,10 @@ export async function createOwnerAction(values: OwnerFormValues) {
     });
 
     revalidatePath("/protected/owners");
-    redirect("/protected/owners");
   } catch (err) {
     return authzFail(err);
   }
+  redirect("/protected/owners");
 }
 
 export async function updateOwnerAction(id: string, values: OwnerFormValues) {
@@ -113,8 +116,7 @@ export async function updateOwnerAction(id: string, values: OwnerFormValues) {
       return { success: false, message: "Owner not found" };
     }
 
-    assertOwnerOrAdmin({
-      ownerId: existing.created_by,
+    assertAuthenticated({
       userId: ctx.user.id,
       role: ctx.role,
     });
@@ -144,10 +146,10 @@ export async function updateOwnerAction(id: string, values: OwnerFormValues) {
 
     revalidatePath("/protected/owners");
     revalidatePath("/protected/properties");
-    redirect("/protected/owners");
   } catch (err) {
     return authzFail(err);
   }
+  redirect("/protected/owners");
 }
 
 export async function deleteOwnerAction(id: string) {
@@ -165,8 +167,7 @@ export async function deleteOwnerAction(id: string) {
       return { success: false, message: "Owner not found" };
     }
 
-    assertOwnerOrAdmin({
-      ownerId: existing.created_by,
+    assertAuthenticated({
       userId: ctx.user.id,
       role: ctx.role,
     });
@@ -194,9 +195,10 @@ export async function getOwnersWithPropertyCountAction() {
 
   let query = ctx.supabase.from("owners").select("*").order("full_name");
 
-  if (ctx.role !== "ADMIN") {
-    query = query.eq("created_by", ctx.user.id);
-  }
+  // Allow all authenticated users (Agents/Admins) to see all owners
+  // if (ctx.role !== "ADMIN") {
+  //   query = query.eq("created_by", ctx.user.id);
+  // }
 
   const { data: owners, error: ownersError } = await query;
 

@@ -31,7 +31,12 @@ export const LEAD_STAGES = [
 export const leadFormSchema = z.object({
   full_name: z.string().min(1, "กรุณากรอกชื่อ"),
   phone: z.string().optional().nullable(),
-  email: z.string().email("อีเมลไม่ถูกต้อง").optional().nullable(),
+  email: z
+    .string()
+    .email("อีเมลไม่ถูกต้อง")
+    .optional()
+    .or(z.literal(""))
+    .nullable(),
 
   // ✅ รับ PORTAL + รับ null
   source: z.enum(LEAD_SOURCES).nullable().optional(),
@@ -63,7 +68,7 @@ export const leadFormSchema = z.object({
     .array(z.enum(PROPERTY_TYPES))
     .optional()
     .nullable(),
-  preferred_locations: z.array(z.string()).optional().nullable(),
+  preferred_locations: z.string().optional().nullable(),
 
   min_bedrooms: z.coerce.number().int().optional().nullable(),
   min_bathrooms: z.coerce.number().int().optional().nullable(),

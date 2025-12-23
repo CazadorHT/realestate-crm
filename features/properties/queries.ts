@@ -7,21 +7,25 @@
     ✅ฝั่ง Protected pages (เช่น /protected/properties/[id]/page.tsx)
     import { getProtectedPropertyWithImagesById } from "@/features/properties/queries";
     const data = await getProtectedPropertyWithImagesById(id);
-*/ 
+*/
 
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
-import { requireAuthContext, assertOwnerOrAdmin } from "@/lib/authz";
+import { requireAuthContext, assertAuthenticated } from "@/lib/authz";
 
 export type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
-export type PropertyImageRow = Database["public"]["Tables"]["property_images"]["Row"];
+export type PropertyImageRow =
+  Database["public"]["Tables"]["property_images"]["Row"];
 
 export type PropertyWithImages = PropertyRow & {
   property_images: PropertyImageRow[];
 };
 
 // ✅ Public: ไม่คืน storage_path (ลดความเสี่ยงข้อมูลภายในรั่ว)
-export type PublicPropertyImage = Pick<PropertyImageRow, "id" | "property_id" | "image_url" | "is_cover" | "sort_order" | "created_at">;
+export type PublicPropertyImage = Pick<
+  PropertyImageRow,
+  "id" | "property_id" | "image_url" | "is_cover" | "sort_order" | "created_at"
+>;
 export type PublicPropertyWithImages = PropertyRow & {
   property_images: PublicPropertyImage[];
 };
@@ -60,7 +64,9 @@ export async function getPublicPropertyWithImagesBySlug(
   if (!data) return null;
 
   if (data.property_images) {
-    data.property_images.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    data.property_images.sort(
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    );
   }
 
   return data as unknown as PublicPropertyWithImages;
@@ -68,7 +74,7 @@ export async function getPublicPropertyWithImagesBySlug(
 /**
  * ✅ PROTECTED: ใช้ใน CRM เท่านั้น
  * - require auth
- * - owner/admin เท่านั้น
+ * - authenticated user (Agent/Admin)
  * - query ด้วย id
  */
 export async function getProtectedPropertyWithImagesById(
@@ -97,11 +103,13 @@ export async function getProtectedPropertyWithImagesById(
 
   if (error || !data) throw error;
 
-  // ✅ Authorization check (owner/admin)
-  assertOwnerOrAdmin({ ownerId: (data as any).created_by, userId: user.id, role });
+  // ✅ Authorization check (authenticated)
+  assertAuthenticated({ userId: user.id, role });
 
   if (data.property_images) {
-    data.property_images.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    data.property_images.sort(
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    );
   }
 
   return data as unknown as PropertyWithImages;

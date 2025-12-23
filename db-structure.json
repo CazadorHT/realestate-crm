@@ -1,16 +1,5 @@
-{
+ {
     "enums": [
-        {
-            "name": "activity_type",
-            "schema": "public",
-            "values": [
-                "NOTE",
-                "CALL",
-                "MEETING",
-                "MESSAGE",
-                "STATUS_CHANGE"
-            ]
-        },
         {
             "name": "deal_status",
             "schema": "public",
@@ -1788,5 +1777,5 @@
             ]
         }
     ],
-    "generated_at": "2025-12-23T07:51:28.188739+00:00"
-} 
+    "generated_at": "2025-12-23T09:09:53.202133+00:00"
+}

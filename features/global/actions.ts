@@ -5,7 +5,7 @@ import { requireAuthContext } from "@/lib/authz";
 
 export interface SearchResult {
   id: string;
-  type: "property" | "lead" | "owner";
+  type: "property" | "lead" | "owner" | "agent";
   title: string;
   subtitle?: string;
   url: string;
@@ -23,20 +23,15 @@ export async function searchGlobalAction(
   const results: SearchResult[] = [];
 
   try {
-    // 1. Search Properties
+    // Search Properties
     // Search in title, address_line1, district, province
-    let propertiesQuery = supabase
+    const propertiesQuery = supabase
       .from("properties")
       .select("id, title, address_line1, district, created_by")
       .or(
         `title.ilike.%${query}%,address_line1.ilike.%${query}%,district.ilike.%${query}%`
       )
       .limit(5);
-
-    // If not admin, only search own properties
-    if (role !== "ADMIN") {
-      propertiesQuery = propertiesQuery.eq("created_by", user.id);
-    }
 
     const { data: properties } = await propertiesQuery;
 
@@ -53,17 +48,13 @@ export async function searchGlobalAction(
     }
 
     // 2. Search Leads
-    let leadsQuery = supabase
+    const leadsQuery = supabase
       .from("leads")
       .select("id, full_name, phone, email, created_by")
       .or(
         `full_name.ilike.%${query}%,phone.ilike.%${query}%,email.ilike.%${query}%`
       )
       .limit(5);
-
-    if (role !== "ADMIN") {
-      leadsQuery = leadsQuery.eq("created_by", user.id);
-    }
 
     const { data: leads } = await leadsQuery;
 
@@ -80,15 +71,11 @@ export async function searchGlobalAction(
     }
 
     // 3. Search Owners
-    let ownersQuery = supabase
+    const ownersQuery = supabase
       .from("owners")
       .select("id, full_name, phone, created_by")
       .or(`full_name.ilike.%${query}%,phone.ilike.%${query}%`)
       .limit(5);
-
-    if (role !== "ADMIN") {
-      ownersQuery = ownersQuery.eq("created_by", user.id);
-    }
 
     const { data: owners } = await ownersQuery;
 
@@ -100,6 +87,29 @@ export async function searchGlobalAction(
           title: o.full_name,
           subtitle: o.phone || undefined,
           url: `/protected/owners/${o.id}`,
+        });
+      });
+    }
+
+    // 4. Search Agents (Profiles)
+    const agentsQuery = supabase
+      .from("profiles")
+      .select("id, full_name, phone, role")
+      .or(`full_name.ilike.%${query}%,phone.ilike.%${query}%`)
+      .limit(5);
+
+    const { data: agents } = await agentsQuery;
+
+    if (agents) {
+      agents.forEach((a) => {
+        results.push({
+          id: a.id,
+          type: "agent",
+          title: a.full_name || "(No name)",
+          subtitle: `${a.role === "ADMIN" ? "Admin" : "Agent"}${
+            a.phone ? ` • ${a.phone}` : ""
+          }`,
+          url: `/protected/settings/users`, // Currently no individual agent view, link to list
         });
       });
     }

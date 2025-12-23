@@ -2,7 +2,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAuthContext, assertOwnerOrAdmin, authzFail } from "@/lib/authz";
+import {
+  requireAuthContext,
+  assertAuthenticated,
+  authzFail,
+} from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 
 import { leadFormSchema, leadActivitySchema } from "./types";
@@ -24,10 +28,13 @@ export async function createLeadAction(
 
     const payload: LeadInsert = {
       ...parsed.data,
-      lead_type: parsed.data.lead_type ?? undefined,
+      preferred_locations: parsed.data.preferred_locations
+        ? [parsed.data.preferred_locations]
+        : null,
+      lead_type: (parsed.data as any).lead_type ?? undefined,
       created_by: ctx.user.id,
       updated_at: new Date().toISOString(),
-    };
+    } as LeadInsert;
 
     const { data, error } = await ctx.supabase
       .from("leads")
@@ -71,8 +78,7 @@ export async function updateLeadAction(
 
     if (findErr || !lead) return { success: false, message: "Lead not found" };
 
-    assertOwnerOrAdmin({
-      ownerId: lead.created_by,
+    assertAuthenticated({
       userId: ctx.user.id,
       role: ctx.role,
     });
@@ -80,9 +86,12 @@ export async function updateLeadAction(
     // 2) update
     const payload: LeadUpdate = {
       ...parsed.data,
-      lead_type: parsed.data.lead_type ?? undefined,
+      preferred_locations: parsed.data.preferred_locations
+        ? [parsed.data.preferred_locations]
+        : null,
+      lead_type: (parsed.data as any).lead_type ?? undefined,
       updated_at: new Date().toISOString(),
-    };
+    } as LeadUpdate;
 
     const { error } = await ctx.supabase
       .from("leads")
@@ -120,8 +129,7 @@ export async function deleteLeadAction(
 
     if (findErr || !lead) return { success: false, message: "Lead not found" };
 
-    assertOwnerOrAdmin({
-      ownerId: lead.created_by,
+    assertAuthenticated({
       userId: ctx.user.id,
       role: ctx.role,
     });
@@ -164,8 +172,7 @@ export async function createLeadActivityAction(
 
     if (leadErr || !lead) return { success: false, message: "Lead not found" };
 
-    assertOwnerOrAdmin({
-      ownerId: lead.created_by,
+    assertAuthenticated({
       userId: ctx.user.id,
       role: ctx.role,
     });
@@ -214,8 +221,7 @@ export async function updateLeadStageAction(
 
     if (findErr || !lead) return { success: false, message: "Lead not found" };
 
-    assertOwnerOrAdmin({
-      ownerId: lead.created_by,
+    assertAuthenticated({
       userId: ctx.user.id,
       role: ctx.role,
     });

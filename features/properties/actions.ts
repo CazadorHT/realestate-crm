@@ -9,7 +9,11 @@ import { getPublicImageUrl } from "./image-utils";
 import type { PropertyRow, PropertyWithImages, PropertyImage } from "./types";
 import { FormSchema, type PropertyFormValues } from "./schema";
 // Authorization utilities คือการตรวจสอบสิทธิ์ผู้ใช้
-import { requireAuthContext, assertOwnerOrAdmin, authzFail } from "@/lib/authz";
+import {
+  requireAuthContext,
+  assertAuthenticated,
+  authzFail,
+} from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { validateImageFile } from "@/lib/file-validation"; // สำหรับตรวจสอบไฟล์รูปภาพ
 import { IMAGE_UPLOAD_POLICY } from "@/components/property-image-uploader";
@@ -229,10 +233,9 @@ export async function createPropertyAction(
 
     const { images, agent_ids, ...propertyData } = safeValues;
 
-    // ✅ Step 1.2: image paths ต้องเป็นของ user เท่านั้น (กันยัด path ปลอม)
+    // ✅ image paths ต้องอยู่ภายใต้ properties/
     if (images?.length) {
-      const mustStartWith =
-        role === "ADMIN" ? "properties/" : `properties/${user.id}/`;
+      const mustStartWith = "properties/";
       const invalid = images.find((p) => !p.startsWith(mustStartWith));
       if (invalid) {
         return {
@@ -404,13 +407,11 @@ export async function updatePropertyAction(
       return { success: false, message: "Property not found" };
     }
 
-    assertOwnerOrAdmin({ ownerId: existing.created_by, userId: user.id, role });
+    assertAuthenticated({ userId: user.id, role });
 
-    // 3) กันยัด path รูปปลอม (ownership)
-
+    // 3) กันยัด path รูปปลอม
     if (images?.length) {
-      const mustStartWith =
-        role === "ADMIN" ? "properties/" : `properties/${user.id}/`;
+      const mustStartWith = "properties/";
       const invalid = images.find((p) => !p.startsWith(mustStartWith));
       if (invalid) {
         return {
@@ -597,8 +598,7 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
     if (propErr) throw propErr;
 
     // ✅ กันอ่านของคนอื่น
-    assertOwnerOrAdmin({
-      ownerId: (property as any).created_by,
+    assertAuthenticated({
       userId: user.id,
       role,
     });
@@ -640,8 +640,7 @@ export async function getPropertyWithImages(
   if (error || !data) throw error;
 
   // ✅ เพิ่ม authorization check
-  assertOwnerOrAdmin({
-    ownerId: (data as any).created_by,
+  assertAuthenticated({
     userId: user.id,
     role,
   });
@@ -675,7 +674,7 @@ export async function deletePropertyAction(formData: FormData) {
     if (propErr || !property) throw new Error("Property not found");
 
     // 0.1) Authorization
-    assertOwnerOrAdmin({ ownerId: property.created_by, userId: user.id, role });
+    assertAuthenticated({ userId: user.id, role });
 
     // 1) Get all images to delete from storage
     const { data: images } = await supabase
@@ -739,8 +738,7 @@ export async function deletePropertyAction(formData: FormData) {
 export async function deletePropertyImageFromStorage(storagePath: string) {
   const { supabase, user, role } = await requireAuthContext();
 
-  const mustStartWith =
-    role === "ADMIN" ? "properties/" : `properties/${user.id}/`;
+  const mustStartWith = "properties/";
 
   const ok =
     storagePath?.startsWith(mustStartWith) ||

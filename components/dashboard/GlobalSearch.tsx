@@ -1,5 +1,5 @@
 "use client";
-
+// global search component
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Search, Building2, UserCircle, Briefcase } from "lucide-react";
@@ -66,6 +66,7 @@ export function GlobalSearch() {
   const properties = results.filter((r) => r.type === "property");
   const leads = results.filter((r) => r.type === "lead");
   const owners = results.filter((r) => r.type === "owner");
+  const agents = results.filter((r) => r.type === "agent");
 
   return (
     <>
@@ -84,7 +85,7 @@ export function GlobalSearch() {
         </kbd>
       </Button>
 
-      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false} >
+      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
         <CommandInput
           placeholder="พิมพ์เพื่อค้นหา..."
           value={query}
@@ -151,6 +152,28 @@ export function GlobalSearch() {
                   className="cursor-pointer"
                 >
                   <Briefcase className="mr-2 h-4 w-4" />
+                  <div className="flex flex-col">
+                    <span>{item.title}</span>
+                    {item.subtitle && (
+                      <span className="text-xs text-muted-foreground">
+                        {item.subtitle}
+                      </span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {agents.length > 0 && (
+            <CommandGroup heading="ทีมงาน / เอเจนท์ (Agents)">
+              {agents.map((item) => (
+                <CommandItem
+                  key={item.id}
+                  onSelect={() => onSelect(item.url)}
+                  className="cursor-pointer"
+                >
+                  <UserCircle className="mr-2 h-4 w-4" />
                   <div className="flex flex-col">
                     <span>{item.title}</span>
                     {item.subtitle && (

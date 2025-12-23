@@ -715,7 +715,6 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      activity_type: "NOTE" | "CALL" | "MEETING" | "MESSAGE" | "STATUS_CHANGE"
       deal_status:
         | "NEGOTIATING"
         | "SIGNED"
@@ -895,7 +894,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      activity_type: ["NOTE", "CALL", "MEETING", "MESSAGE", "STATUS_CHANGE"],
       deal_status: [
         "NEGOTIATING",
         "SIGNED",

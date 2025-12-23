@@ -57,15 +57,16 @@ export async function requireAuthContext(): Promise<AuthContext> {
 /**
  * ใช้กับ resource ที่มีฟิลด์ created_by / owner_id (เช่น properties/leads)
  */
-export function assertOwnerOrAdmin(input: {
-  ownerId?: string | null;
+
+
+export function assertAuthenticated(input: {
   userId: string;
   role: UserRole;
 }) {
-  if (isAdmin(input.role)) return;
-  if (!input.ownerId || input.ownerId !== input.userId) {
-    throw new AuthzError("FORBIDDEN", "Forbidden");
+  if (!input.userId) {
+    throw new AuthzError("UNAUTHORIZED", "Unauthorized");
   }
+  // role จะเป็น ADMIN/AGENT ก็ผ่านหมด
 }
 
 /**
@@ -75,5 +76,5 @@ export function authzFail(err: unknown): { success: false; message: string } {
   if (err instanceof AuthzError) {
     return { success: false, message: err.message };
   }
-  return { success: false, message: "Unexpected error" };
+  return { success: false, message: "Unexpected error GG" };
 }
