@@ -45,7 +45,8 @@ export const FormSchema = z
     google_maps_link: z.string().optional().nullable(),
 
     owner_id: z.string().uuid().nullable().optional(),
-    assigned_to: z.string().uuid().nullable().optional(),
+    assigned_to: z.string().uuid().nullable().optional(), // For primary agent / backward compatibility
+    agent_ids: z.array(z.string()).optional(), // For multiple agents
 
     property_source: z.string().optional().nullable(),
     images: z.array(z.string()).optional(),

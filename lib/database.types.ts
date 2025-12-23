@@ -14,57 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      activities: {
-        Row: {
-          activity_type: Database["public"]["Enums"]["activity_type"]
-          content: string | null
-          created_at: string
-          created_by: string | null
-          id: string
-          lead_id: string
-          metadata: Json | null
-          next_action_at: string | null
-          property_id: string | null
-        }
-        Insert: {
-          activity_type?: Database["public"]["Enums"]["activity_type"]
-          content?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          lead_id: string
-          metadata?: Json | null
-          next_action_at?: string | null
-          property_id?: string | null
-        }
-        Update: {
-          activity_type?: Database["public"]["Enums"]["activity_type"]
-          content?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          lead_id?: string
-          metadata?: Json | null
-          next_action_at?: string | null
-          property_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "activities_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "activities_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       audit_logs: {
         Row: {
           action: string
@@ -596,6 +545,39 @@ export type Database = {
           },
         ]
       }
+      property_agents: {
+        Row: {
+          agent_id: string
+          created_at: string
+          property_id: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          property_id: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_agents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_agents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_image_uploads: {
         Row: {
           created_at: string
@@ -730,7 +712,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       activity_type: "NOTE" | "CALL" | "MEETING" | "MESSAGE" | "STATUS_CHANGE"

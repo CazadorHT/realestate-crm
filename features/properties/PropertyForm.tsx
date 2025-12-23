@@ -3,6 +3,7 @@
 "use client";
 import * as React from "react";
 import { useRef } from "react";
+import { Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -70,6 +71,7 @@ const EMPTY_VALUES: PropertyFormValues = {
   property_source: "",
   owner_id: null,
   assigned_to: null,
+  agent_ids: [],
 
   images: [],
 
@@ -119,6 +121,7 @@ function mapRowToFormValues(
     owner_id: row.owner_id ?? undefined,
     property_source: row.property_source ?? undefined,
     assigned_to: row.assigned_to ?? undefined,
+    agent_ids: [],
 
     images: images ?? [],
 
@@ -186,6 +189,21 @@ export function PropertyForm({
 
         if (agentsData) {
           setAgents(agentsData);
+        }
+
+        // If edit mode, load assigned agents
+        if (mode === "edit" && defaultValues?.id) {
+          const { data: rels } = await supabase
+            .from("property_agents")
+            .select("agent_id")
+            .eq("property_id", defaultValues.id);
+
+          if (rels && rels.length > 0) {
+            const ids = rels.map((r) => r.agent_id);
+            form.setValue("agent_ids", ids);
+            // Optional: Sync assigned_to for backward compatibility if needed,
+            // but assigned_to is likely already set by mapRowToFormValues from defaultValues
+          }
         }
       } catch (error) {
         console.error("Error loading owners/agents:", error);
@@ -658,7 +676,6 @@ export function PropertyForm({
                           placeholder="เปอร์เซ็นต์"
                           className="pr-8"
                         />
-                       
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -722,7 +739,6 @@ export function PropertyForm({
                           placeholder="จำนวนเดือน"
                           className="pr-12"
                         />
-                       
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -954,40 +970,67 @@ export function PropertyForm({
           />
 
           {/* Agent Assignment */}
-          <FormField
-            control={form.control}
-            name="assigned_to"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Agent ของเรา 🌐
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    (แสดงบนเว็บสาธารณะ)
-                  </span>
-                </FormLabel>
-                <Select
-                  value={field.value ?? "NONE"}
-                  onValueChange={(v) => field.onChange(v === "NONE" ? null : v)}
-                >
-                  <FormControl>
-                    <SelectTrigger>
+          {/* Agent Assignment - Multiple */}
+          <div className="space-y-4">
+            <FormLabel>
+              Agent ของเรา 🌐
+              <span className="ml-2 text-xs text-muted-foreground">
+                (แสดงบนเว็บสาธารณะ)
+              </span>
+            </FormLabel>
+            <div className="space-y-2">
+              {form.watch("agent_ids")?.map((agentId, index) => (
+                <div key={index} className="flex gap-2">
+                  <Select
+                    value={agentId}
+                    onValueChange={(val) => {
+                      const current = form.getValues("agent_ids") || [];
+                      current[index] = val;
+                      // If first one, also set assigned_to
+                      if (index === 0) form.setValue("assigned_to", val);
+                      form.setValue("agent_ids", [...current]);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="เลือก Agent" />
                     </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
-                    <SelectItem value="NONE">ไม่ระบุ</SelectItem>
-                    {agents.map((agent) => (
-                      <SelectItem key={agent.id} value={agent.id}>
-                        {agent.full_name || "(No name)"}
-                        {(agent.phone && ` (${agent.phone})`) || " (No phone)"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                    <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
+                      {agents.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.full_name || "(No name)"}
+                          {(a.phone && ` (${a.phone})`) || " (No phone)"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => {
+                      const current = form.getValues("agent_ids") || [];
+                      const newIds = current.filter((_, i) => i !== index);
+                      form.setValue("agent_ids", newIds);
+                      if (index === 0)
+                        form.setValue("assigned_to", newIds[0] || null);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const current = form.getValues("agent_ids") || [];
+                  form.setValue("agent_ids", [...current, ""]);
+                }}
+              >
+                + เพิ่ม Agent
+              </Button>
+            </div>
+          </div>
         </div>
 
         <Button type="submit">

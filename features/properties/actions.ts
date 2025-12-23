@@ -227,7 +227,7 @@ export async function createPropertyAction(
     }
     const safeValues = parsed.data;
 
-    const { images, ...propertyData } = safeValues;
+    const { images, agent_ids, ...propertyData } = safeValues;
 
     // ✅ Step 1.2: image paths ต้องเป็นของ user เท่านั้น (กันยัด path ปลอม)
     if (images?.length) {
@@ -334,6 +334,22 @@ export async function createPropertyAction(
       propertyId: property.id,
       usedPaths: images ?? [],
     });
+
+    // 4) Insert agents
+    if (agent_ids && agent_ids.length > 0) {
+      const agentRows = agent_ids.map((agentId) => ({
+        property_id: property.id,
+        agent_id: agentId,
+      }));
+
+      const { error: agentsError } = await supabase
+        .from("property_agents")
+        .insert(agentRows);
+
+      if (agentsError) {
+        console.error("Agents insertion error:", agentsError);
+      }
+    }
     await logAudit(
       { supabase, user, role },
       {
@@ -375,7 +391,7 @@ export async function updatePropertyAction(
       };
     }
     const safeValues = parsed.data;
-    const { images, ...propertyData } = safeValues;
+    const { images, agent_ids, ...propertyData } = safeValues;
 
     // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ
     const { data: existing, error: findErr } = await supabase
@@ -524,6 +540,27 @@ export async function updatePropertyAction(
       propertyId: id,
       usedPaths: images ?? [],
     });
+
+    // --- Step 4: Agents update ---
+    if (agent_ids !== undefined) {
+      // Delete existing
+      await supabase.from("property_agents").delete().eq("property_id", id);
+
+      // Insert new
+      if (agent_ids.length > 0) {
+        const agentRows = agent_ids.map((agentId) => ({
+          property_id: id,
+          agent_id: agentId,
+        }));
+        const { error: agentsError } = await supabase
+          .from("property_agents")
+          .insert(agentRows);
+
+        if (agentsError) {
+          console.error("Agents update error:", agentsError);
+        }
+      }
+    }
     await logAudit(
       { supabase, user, role },
       {
