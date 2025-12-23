@@ -23,11 +23,12 @@ export function StatsOverview({ stats }: StatsOverviewProps) {
       icon: Briefcase,
     },
     {
-      title: "Conversion Rate",
-      value: `${stats.conversionRate}%`,
-      change: stats.conversionChange,
-      context: stats.conversionBase,
-      icon: TrendingUp,
+      title: "ค่าคอมมิชชั่น",
+      value: `฿${stats.totalCommission.toLocaleString()}`,
+      change: stats.revenueChange, // Using revenue change as proxy for now, or add specific commission change later
+      context: "รายได้ค่าคอมมิชชั่นรวม",
+      icon: DollarSign,
+      color: "text-yellow-600",
     },
     {
       title: "ปิดการขาย (Won)",

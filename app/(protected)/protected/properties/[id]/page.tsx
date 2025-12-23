@@ -241,40 +241,10 @@ export default async function PropertyDetailsPage({
 
           {/* IMAGE GALLERY */}
           {images.length > 0 && (
-            <div className="space-y-4">
-              <div className="">
-                {imagesForLightbox.length > 0 && (
-                  <ImageLightbox
-                    images={imagesForLightbox}
-                    propertyTitle={property.title ?? ""}
-                  />
-                )}
-
-                {/* {images.map((image, index) => (
-                  <div
-                    key={index}
-                    className={cn(
-                      "relative aspect-square bg-muted rounded-lg overflow-hidden group cursor-pointer border-2",
-                      image.is_cover && "border-primary ring-2 ring-primary/20"
-                    )}
-                  >
-                    <img
-                      src={image.image_url}
-                      alt={`${property.title} - รูปที่ ${index + 1}`}
-                      className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                    />
-                    {image.is_cover && (
-                      <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                        <span>⭐</span> รูปปก
-                      </div>
-                    )}
-                    <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                      {index + 1}/{images.length}
-                    </div>
-                  </div>
-                ))} */}
-              </div>
-            </div>
+            <ImageLightbox
+              images={imagesForLightbox}
+              propertyTitle={property.title ?? ""}
+            />
           )}
 
           {/* ADDITIONAL INFO (Location & Meta) */}

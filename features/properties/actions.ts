@@ -17,6 +17,7 @@ import {
 import { logAudit } from "@/lib/audit";
 import { validateImageFile } from "@/lib/file-validation"; // สำหรับตรวจสอบไฟล์รูปภาพ
 import { IMAGE_UPLOAD_POLICY } from "@/components/property-image-uploader";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type CreatePropertyResult = {
   success: boolean;
@@ -68,17 +69,71 @@ function validatePropertyImagePaths(paths: string[]) {
   return { ok: true as const };
 }
 // ตรวจสอบว่าไฟล์ใน storage มีอยู่จริง
+// ตรวจสอบว่าไฟล์ใน storage มีอยู่จริง (Optimized using list instead of download)
 async function ensureStorageObjectsExist(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  _supabase: any, // Unused now, we use admin
   bucket: string,
   paths: string[]
 ) {
+  if (paths.length === 0) return [];
   const missing: string[] = [];
 
-  // ตรวจทีละไฟล์ (ปลอดภัยกว่า Promise.all สำหรับไฟล์จำนวนมาก)
-  for (const p of paths) {
-    const { error } = await supabase.storage.from(bucket).download(p);
-    if (error) missing.push(p);
+  // Use Admin Client to bypass RLS for existence check, fallback to user client if not configured
+  // Use Admin Client to bypass RLS for existence check, fallback to user client if not configured
+  let storageClient = _supabase;
+  let usingAdmin = false;
+  try {
+    storageClient = createAdminClient();
+    usingAdmin = true;
+  } catch (err) {
+    console.warn(
+      "createAdminClient failed (missing SUPABASE_SERVICE_ROLE_KEY?), using user client:",
+      err
+    );
+  }
+
+  // Group by folder (properties/uid/sessionId)
+  const folders = new Set(paths.map((p) => p.substring(0, p.lastIndexOf("/"))));
+
+  for (const folder of folders) {
+    const { data, error } = await storageClient.storage
+      .from(bucket)
+      .list(folder, {
+        limit: 100,
+        offset: 0,
+        sortBy: { column: "name", order: "asc" },
+      });
+
+    if (error) {
+      console.error(
+        `[ensureStorageObjectsExist] List failed. Folder: ${folder}, Admin: ${usingAdmin}`,
+        error
+      );
+    } else {
+      console.log(
+        `[ensureStorageObjectsExist] Checked folder: ${folder}, Found: ${data?.length} files, Admin: ${usingAdmin}`
+      );
+    }
+
+    if (error || !data) {
+      console.warn(
+        `ensureStorageObjectsExist: Failed to list folder ${folder} - skipping existence check (Fail Open)`,
+        error
+      );
+      // Fail-safe: If list fails (e.g. Auth/Network error), DO NOT mark as missing.
+      // Assume files exist to unblock the user.
+      continue;
+    } else {
+      const existingNames = new Set(data.map((f: any) => f.name));
+      const pathsInFolder = paths.filter((p) => p.startsWith(folder + "/"));
+
+      for (const p of pathsInFolder) {
+        const fileName = p.split("/").pop();
+        if (!fileName || !existingNames.has(fileName)) {
+          missing.push(p);
+        }
+      }
+    }
   }
 
   return missing;
@@ -541,6 +596,28 @@ export async function updatePropertyAction(
       propertyId: id,
       usedPaths: images ?? [],
     });
+
+    // E) ลบไฟล์จริงออกจาก Storage (เฉพาะไฟล์ที่ถูกถอดออก)
+    if (oldImages && oldImages.length > 0) {
+      const oldPaths = new Set(
+        oldImages.map((x) => x.storage_path).filter(Boolean)
+      );
+      const newPaths = new Set((images ?? []).filter(Boolean));
+
+      const removed = [...oldPaths].filter(
+        (p): p is string => typeof p === "string" && !newPaths.has(p)
+      );
+
+      if (removed.length > 0) {
+        const { error: removeErr } = await supabase.storage
+          .from(PROPERTY_IMAGES_BUCKET)
+          .remove(removed);
+
+        if (removeErr) {
+          console.error("Failed to remove orphaned images:", removeErr);
+        }
+      }
+    }
 
     // --- Step 4: Agents update ---
     if (agent_ids !== undefined) {

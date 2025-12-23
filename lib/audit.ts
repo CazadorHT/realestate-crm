@@ -16,7 +16,10 @@ export type AuditAction =
   | "profile.update"
   | "profile.avatar.upload"
   | "user.delete"
-  | "user.role.update";
+  | "user.role.update"
+  | "deal.create"
+  | "deal.update"
+  | "deal.delete";
 
 type AuditInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];
 

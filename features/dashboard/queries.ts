@@ -13,6 +13,15 @@ export type DashboardStats = {
   dealsWon: number;
   dealsWonChange: string;
   dealsTarget: number;
+  totalCommission: number;
+};
+
+export type TopAgent = {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  deals_count: number;
+  total_commission: number;
 };
 
 export type RevenueChartData = {
@@ -116,13 +125,30 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     leadsTotal && leadsTotal > 0 ? ((totalSold || 0) / leadsTotal) * 100 : 0;
 
   // 4. Closed Won (Sold this month)
-  const dealsWon = (revenueCurrent || []).filter(
-    (p) => p.status === "SOLD"
-  ).length;
-  const dealsWonLast = (revenueLast || []).filter(
-    (p) => p.status === "SOLD"
-  ).length;
-  const dealsChange = dealsWon - dealsWonLast;
+  // 4. Closed Won (Sold this month)
+  // Re-using commissionDeals query below which fetches CLOSED_WIN deals for this month
+  const { data: commissionDeals } = await supabase
+    .from("deals")
+    .select("commission_amount")
+    .eq("status", "CLOSED_WIN")
+    .gte("created_at", startOfMonth);
+
+  const dealsWon = (commissionDeals || []).length;
+
+  const { count: dealsWonLast } = await supabase
+    .from("deals")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "CLOSED_WIN")
+    .gte("created_at", startOfLastMonth)
+    .lte("created_at", endOfLastMonth);
+
+  const dealsChange = dealsWon - (dealsWonLast || 0);
+
+  // 5. Total Commission (This Month)
+  const totalCommission = (commissionDeals || []).reduce(
+    (sum, d) => sum + (d.commission_amount || 0),
+    0
+  );
 
   return {
     revenueThisMonth: totalRevenueCurrent,
@@ -136,6 +162,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     dealsWon: dealsWon,
     dealsWonChange: dealsChange > 0 ? `+${dealsChange}` : `${dealsChange}`,
     dealsTarget: 10, // Hardcoded target
+    totalCommission,
   };
 }
 
@@ -289,4 +316,57 @@ export async function getPipelineStats(): Promise<PipelineData[]> {
       label: "ขายแล้ว",
     },
   ];
+}
+
+export async function getTopAgents(): Promise<TopAgent[]> {
+  const supabase = await createClient();
+
+  // Fetch closed deals
+  const { data: deals } = await supabase
+    .from("deals")
+    .select("created_by, commission_amount")
+    .eq("status", "CLOSED_WIN");
+
+  // Fetch profiles for names
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, avatar_url");
+
+  if (!deals || !profiles) return [];
+
+  // Aggregate by agent
+  const agentStats = new Map<
+    string,
+    { count: number; commission: number; profile: any }
+  >();
+
+  deals.forEach((d) => {
+    if (!d.created_by) return;
+    const current = agentStats.get(d.created_by) || {
+      count: 0,
+      commission: 0,
+      profile: profiles.find((p) => p.id === d.created_by) || {
+        full_name: "Unknown",
+        avatar_url: null,
+      },
+    };
+
+    agentStats.set(d.created_by, {
+      count: current.count + 1,
+      commission: current.commission + (d.commission_amount || 0),
+      profile: current.profile,
+    });
+  });
+
+  // Convert to array and sort
+  return Array.from(agentStats.entries())
+    .map(([id, stats]) => ({
+      id,
+      name: stats.profile.full_name || "Unknown Agent",
+      avatar_url: stats.profile.avatar_url,
+      deals_count: stats.count,
+      total_commission: stats.commission,
+    }))
+    .sort((a, b) => b.total_commission - a.total_commission)
+    .slice(0, 5);
 }

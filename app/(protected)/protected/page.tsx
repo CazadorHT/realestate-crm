@@ -32,7 +32,9 @@ import {
   getRevenueChartData,
   getFunnelStats,
   getPipelineStats,
+  getTopAgents,
 } from "@/features/dashboard/queries";
+import { TopAgents } from "@/components/dashboard/TopAgents";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { isStaff } from "@/lib/authz";
 
@@ -55,9 +57,10 @@ export default async function DashboardPage() {
   let revenueData: any = [];
   let funnelData: any = [];
   let pipelineData: any = null;
+  let topAgents: any = [];
 
   if (staff) {
-    const [recentPropertiesResult, stats, revenue, funnel, pipeline] =
+    const [recentPropertiesResult, stats, revenue, funnel, pipeline, agents] =
       await Promise.all([
         supabase
           .from("properties")
@@ -68,6 +71,7 @@ export default async function DashboardPage() {
         getRevenueChartData(),
         getFunnelStats(),
         getPipelineStats(),
+        getTopAgents(),
       ]);
 
     properties = (recentPropertiesResult.data ?? []) as PropertyRow[];
@@ -75,6 +79,7 @@ export default async function DashboardPage() {
     revenueData = revenue;
     funnelData = funnel;
     pipelineData = pipeline;
+    topAgents = agents;
   }
 
   return (
@@ -137,11 +142,15 @@ export default async function DashboardPage() {
                 <RevenueChart data={revenueData} />
               </div>
 
-              {/* ACTION ALERTS ROW */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FollowUpInsights />
-                <RiskAlerts />
-                <MissingDataAlert />
+              {/* TOP AGENTS & INSIGHTS */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-2">
+                  <TopAgents data={topAgents} />
+                </div>
+                <div className="flex flex-col gap-4">
+                  <FollowUpInsights />
+                  <RiskAlerts />
+                </div>
               </div>
             </div>
 

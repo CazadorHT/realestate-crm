@@ -5,8 +5,25 @@ import { createLeadActivityAction } from "@/features/leads/actions";
 import { LeadTimeline } from "@/components/leads/LeadTimeline";
 import { LeadActivityForm } from "@/components/leads/LeadActivityForm";
 import { getPropertySummariesByIdsQuery } from "@/features/leads/queries";
-import { leadStageLabelNullable ,leadSourceLabelNullable } from "@/features/leads/labels";
-import type { LeadStage, LeadSource } from "@/features/leads/labels";
+import {
+  leadStageLabelNullable,
+  leadSourceLabelNullable,
+} from "@/features/leads/labels";
+import { getDealsByLeadId } from "@/features/deals/queries";
+import { DealList } from "@/features/deals/components/DealList";
+import { DealFormDialog } from "@/features/deals/components/DealFormDialog";
+import { DocumentList } from "@/features/documents/components/DocumentList";
+import { DocumentUpload } from "@/features/documents/components/DocumentUpload";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
+
 export default async function LeadDetailPage({
   params,
 }: {
@@ -14,17 +31,37 @@ export default async function LeadDetailPage({
 }) {
   const { id } = await params;
   const lead = await getLeadWithActivitiesQuery(id);
+
   if (!lead) return notFound();
+
+  // Fetch Deals
+  const deals = await getDealsByLeadId(id);
+
+  // Fetch properties for the dropdown (simple list)
+  // Optimization: In real app, might want to search async, but for MVP fetching all (or limit) is okay.
+  // Using getAllPropertiesQuery or writing a new specific query.
+  // Let's assume we have a query for this or use basic supabase call here for speed if query not found.
+  const { data: properties } = await (await import("@/lib/supabase/server"))
+    .createClient()
+    .then((c) =>
+      c
+        .from("properties")
+        .select(
+          "id, title, price, rental_price, commission_sale_percentage, commission_rent_months"
+        )
+        .eq("status", "ACTIVE")
+        .order("created_at", { ascending: false })
+        .limit(50)
+    );
 
   async function onCreateActivity(values: any) {
     "use server";
     const res = await createLeadActivityAction(id, values);
     if (!res.success) throw new Error(res.message);
   }
-const propertyIds =
-    (lead.lead_activities ?? [])
-      .map((a: any) => a.property_id)
-      .filter(Boolean) as string[];
+  const propertyIds = (lead.lead_activities ?? [])
+    .map((a: any) => a.property_id)
+    .filter(Boolean) as string[];
 
   const propertiesById = await getPropertySummariesByIdsQuery(propertyIds);
 
@@ -34,15 +71,22 @@ const propertyIds =
         <div>
           <h1 className="text-xl font-semibold">{lead.full_name}</h1>
           <div className="text-sm text-muted-foreground">
-            {leadStageLabelNullable(lead.stage)} • {leadSourceLabelNullable(lead.source)}
+            {leadStageLabelNullable(lead.stage)} •{" "}
+            {leadSourceLabelNullable(lead.source)}
           </div>
         </div>
 
         <div className="flex gap-2">
-          <Link className="rounded-md border px-3 py-2 text-sm" href="/protected/leads">
+          <Link
+            className="rounded-md border px-3 py-2 text-sm"
+            href="/protected/leads"
+          >
             Back
           </Link>
-          <Link className="rounded-md bg-primary px-3 py-2 text-sm text-white" href={`/protected/leads/${id}/edit`}>
+          <Link
+            className="rounded-md bg-primary px-3 py-2 text-sm text-white"
+            href={`/protected/leads/${id}/edit`}
+          >
             Edit
           </Link>
         </div>
@@ -51,13 +95,59 @@ const propertyIds =
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-xl border p-4 space-y-2">
           <div className="font-medium">Contact</div>
-          <div>สถานะลูกค้า : <span className="font-semibold">{leadStageLabelNullable(lead.stage)}</span></div>
-          <div>Phone: <span className="font-semibold">{lead.phone ?? "-"}</span></div>
-          <div>Email: <span className="font-semibold">{lead.email ?? "-"}</span></div>
-          <div>Note: <span className="font-semibold">{lead.note ?? "-"}</span></div>
+          <div>
+            สถานะลูกค้า :{" "}
+            <span className="font-semibold">
+              {leadStageLabelNullable(lead.stage)}
+            </span>
+          </div>
+          <div>
+            Phone: <span className="font-semibold">{lead.phone ?? "-"}</span>
+          </div>
+          <div>
+            Email: <span className="font-semibold">{lead.email ?? "-"}</span>
+          </div>
+          <div>
+            Note: <span className="font-semibold">{lead.note ?? "-"}</span>
+          </div>
         </div>
 
         <LeadActivityForm onSubmitAction={onCreateActivity} />
+      </div>
+
+      {/* Deals Section */}
+      <div className="space-y-4 rounded-xl border p-4 bg-muted/5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            Deals ({deals.length})
+          </h2>
+          <DealFormDialog leadId={id} properties={properties || []} />
+        </div>
+        <DealList deals={deals} />
+      </div>
+
+      {/* Documents Section */}
+      <div className="space-y-4 rounded-xl border p-4 bg-muted/5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            Documents
+          </h2>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Upload
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Upload Document</DialogTitle>
+              </DialogHeader>
+              <DocumentUpload ownerId={id} ownerType="LEAD" />
+            </DialogContent>
+          </Dialog>
+        </div>
+        <DocumentList ownerId={id} ownerType="LEAD" />
       </div>
 
       <LeadTimeline
@@ -66,8 +156,6 @@ const propertyIds =
         leadStage={lead.stage}
         leadSource={lead.source}
       />
-
-
     </div>
   );
 }

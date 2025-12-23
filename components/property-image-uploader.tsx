@@ -15,10 +15,9 @@ import { cn } from "@/lib/utils";
 import {
   uploadPropertyImageAction,
   deletePropertyImageFromStorage,
+  cleanupUploadSessionAction,
 } from "@/features/properties/actions";
 import { toast } from "sonner";
-
-
 
 interface ImageItem {
   id: string;
@@ -27,6 +26,7 @@ interface ImageItem {
   is_cover: boolean;
   is_uploading?: boolean;
   file?: File; // For new uploads
+  origin?: "initial" | "temp";
 }
 
 interface PropertyImageUploaderProps {
@@ -62,14 +62,12 @@ function normalizeImageFileName(file: File, originalName?: string): File {
   };
 
   const ext = extByType[type] ?? "webp";
- 
 
   const baseFromOriginal = (originalName || file.name || "image")
     .trim()
     .replace(/\.[a-z0-9]+$/i, ""); // ตัด extension เดิม
 
-  const safeBase =
-    baseFromOriginal.replace(/[^\w\- ]+/g, "").trim() || "image";
+  const safeBase = baseFromOriginal.replace(/[^\w\- ]+/g, "").trim() || "image";
 
   const outName = `${safeBase}.${ext}`;
 
@@ -99,6 +97,7 @@ export function PropertyImageUploader({
         storage_path: img.storage_path,
         preview_url: img.image_url,
         is_cover: img.is_cover ?? index === 0,
+        origin: "initial",
       }));
     }
     return value.map((path, index) => ({
@@ -123,7 +122,7 @@ export function PropertyImageUploader({
     onChange(paths);
   }, [images, onChange]);
 
-  // Cleanup on unmount: revoke blob + delete temp uploaded images if not submitted
+  // Cleanup on unmount: revoke blob + clean temp session
   useEffect(() => {
     return () => {
       // revoke blob urls (กัน memory leak)
@@ -137,40 +136,45 @@ export function PropertyImageUploader({
 
       if (!cleanupOnUnmount) return;
 
-      const pathsToDelete = imagesRef.current
-        .filter((img) => img.storage_path && !img.is_uploading)
-        .map((img) => img.storage_path);
-
-      if (pathsToDelete.length === 0) return;
-
-      // fire-and-forget
+      // ✅ ลบเฉพาะ TEMP ใน session นี้ (ปลอดภัยสุด)
       (async () => {
         try {
-          for (const path of pathsToDelete) {
-            await deletePropertyImageFromStorage(path);
-          }
+          await cleanupUploadSessionAction(sessionId);
           console.log(
-            "[PropertyImageUploader] cleaned up unused images:",
-            pathsToDelete
+            "[PropertyImageUploader] cleaned TEMP upload session:",
+            sessionId
           );
         } catch (error) {
-          console.error("[PropertyImageUploader] cleanup error:", error);
+          console.error(
+            "[PropertyImageUploader] cleanup session error:",
+            error
+          );
         }
       })();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cleanupOnUnmount]);
+  }, [cleanupOnUnmount, sessionId]);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (disabled) return;
-    
+
       console.log("Dropped files:", acceptedFiles);
       console.log("Current images count:", images.length);
       console.log("Max files allowed:", maxFiles);
       console.log("Max file size (MB):", maxFileSizeMB);
-      console.log(acceptedFiles.map(f => ({ name: f.name, sizeMB: (f.size / (1024*1024)).toFixed(2), type: f.type })));
-      console.log(acceptedFiles[0]?.name, acceptedFiles[0]?.size, acceptedFiles[0]?.type);
+      console.log(
+        acceptedFiles.map((f) => ({
+          name: f.name,
+          sizeMB: (f.size / (1024 * 1024)).toFixed(2),
+          type: f.type,
+        }))
+      );
+      console.log(
+        acceptedFiles[0]?.name,
+        acceptedFiles[0]?.size,
+        acceptedFiles[0]?.type
+      );
       // Validate file count
       const remainingSlots = maxFiles - images.length;
       if (acceptedFiles.length > remainingSlots) {
@@ -245,6 +249,7 @@ export function PropertyImageUploader({
         is_cover: images.length === 0 && index === 0,
         is_uploading: true,
         file,
+        origin: "temp",
       }));
 
       setImages((prev) => [...prev, ...newItems]);
@@ -303,7 +308,12 @@ export function PropertyImageUploader({
   const handleRemove = async (index: number) => {
     const imageToRemove = images[index];
 
-    if (imageToRemove.storage_path && !imageToRemove.is_uploading) {
+    // ✅ ลบจาก storage เฉพาะ temp ที่อัปโหลดใน session นี้เท่านั้น
+    if (
+      imageToRemove.origin === "temp" &&
+      imageToRemove.storage_path &&
+      !imageToRemove.is_uploading
+    ) {
       try {
         await deletePropertyImageFromStorage(imageToRemove.storage_path);
       } catch (error) {
@@ -379,7 +389,9 @@ export function PropertyImageUploader({
             <p className="text-sm font-medium">
               รูปภาพทั้งหมด ({images.length}/{maxFiles})
             </p>
-            <p className="text-xs text-muted-foreground">ลากเพื่อจัดเรียง • ⭐ = รูปปก</p>
+            <p className="text-xs text-muted-foreground">
+              ลากเพื่อจัดเรียง • ⭐ = รูปปก
+            </p>
           </div>
 
           <DragDropContext onDragEnd={handleDragEnd}>
@@ -404,7 +416,8 @@ export function PropertyImageUploader({
                           className={cn(
                             "relative group aspect-square bg-muted rounded-lg overflow-hidden border-2",
                             snapshot.isDragging && "border-primary shadow-lg",
-                            image.is_cover && "border-primary ring-2 ring-primary/20"
+                            image.is_cover &&
+                              "border-primary ring-2 ring-primary/20"
                           )}
                         >
                           <div className="relative w-full h-full">
