@@ -317,6 +317,15 @@ export function PropertyForm({
   const priceVal = form.watch("price");
   const rentalVal = form.watch("rental_price");
 
+  // When listing type changes, clear fields that are not relevant to avoid stale values
+  React.useEffect(() => {
+    if (listingType === "RENT") {
+      form.setValue("price", undefined);
+    } else if (listingType === "SALE") {
+      form.setValue("rental_price", undefined);
+    }
+  }, [listingType]);
+
   // Helper scroll to field with data-field attribute หรือ คือฟังก์ชันช่วยเลื่อนหน้าจอไปยังฟิลด์ที่มีข้อผิดพลาด
   function scrollToField(name: string) {
     const el = document.querySelector(`[data-field="${name}"]`);
@@ -528,57 +537,57 @@ export function PropertyForm({
 
         {/* NUMBERS */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field, fieldState }) => (
-              <FormItem>
-                <FormLabel>ราคาขาย</FormLabel>
+          {(listingType === "SALE" || listingType === "SALE_AND_RENT") && (
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <FormLabel>ราคาขาย</FormLabel>
 
-                <FormControl>
-                  <Input
-                    aria-invalid={!!fieldState.error}
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
-                      )
-                    }
-                    placeholder="กรุณาใส่ราคาขาย"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormControl>
+                    <Input
+                      aria-invalid={!!fieldState.error}
+                      type="number"
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === "" ? undefined : Number(e.target.value)
+                        )
+                      }
+                      placeholder="กรุณาใส่ราคาขาย"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
-          <FormField
-            control={form.control}
-            name="rental_price"
-            render={({ field, fieldState }) => (
-              <FormItem>
-                <FormLabel>ราคาเช่า</FormLabel>
-                <FormControl>
-                  <Input
-                    aria-invalid={!!fieldState.error}
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
-                      )
-                    }
-                  />
-                </FormControl>
-                {/* <FormMessage /> */}
-              </FormItem>
-            )}
-          />
+          {(listingType === "RENT" || listingType === "SALE_AND_RENT") && (
+            <FormField
+              control={form.control}
+              name="rental_price"
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <FormLabel>ราคาเช่า</FormLabel>
+                  <FormControl>
+                    <Input
+                      aria-invalid={!!fieldState.error}
+                      type="number"
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === "" ? undefined : Number(e.target.value)
+                        )
+                      }
+                    />
+                  </FormControl>
+                  {/* <FormMessage /> */}
+                </FormItem>
+              )}
+            />
+          )}
 
           <FormField
             control={form.control}
@@ -592,9 +601,7 @@ export function PropertyForm({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
+                        e.target.value === "" ? undefined : Number(e.target.value)
                       )
                     }
                   />
@@ -616,9 +623,7 @@ export function PropertyForm({
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
+                        e.target.value === "" ? undefined : Number(e.target.value)
                       )
                     }
                   />
