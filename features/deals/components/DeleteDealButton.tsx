@@ -20,19 +20,34 @@ import { deleteDealAction } from "@/features/deals/actions";
 
 interface DeleteDealButtonProps {
   dealId: string;
-  leadId: string;
+  leadId?: string;
+  /** optional client-side callback executed after successful delete */
+  onSuccess?: () => void;
+  /** optional path to redirect to after delete (client-side) */
+  redirectPath?: string;
 }
 
-export function DeleteDealButton({ dealId, leadId }: DeleteDealButtonProps) {
+export function DeleteDealButton({ dealId, leadId, onSuccess, redirectPath }: DeleteDealButtonProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    const result = await deleteDealAction(dealId, leadId);
+    const result = await deleteDealAction(dealId, leadId ?? "");
     if (result.success) {
       toast.success("ลบดีลเรียบร้อย");
-      router.push(`/protected/leads/${leadId}`);
+      if (onSuccess) {
+        try {
+          onSuccess();
+        } catch (e) {
+          console.warn("onSuccess callback failed:", e);
+        }
+      } else if (redirectPath) {
+        router.push(redirectPath);
+      } else {
+        // default: refresh current route so UI updates without forcing navigation
+        router.refresh();
+      }
     } else {
       toast.error(result.message || "ลบไม่สำเร็จ");
       setIsDeleting(false);

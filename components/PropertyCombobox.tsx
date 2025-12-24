@@ -52,13 +52,16 @@ export function PropertyCombobox({
   // โหลด list ล่าสุดตอนเปิดครั้งแรก
   useEffect(() => {
     if (!open) return;
-    if (items.length) return;
+
+    // Reset search input and always load a fresh first page when opening so the user
+    // can "see all" after making a selection.
+    setQ("");
 
     startTransition(async () => {
       const data = await searchPropertiesAction("");
       setItems(data);
     });
-  }, [open, items.length, startTransition]);
+  }, [open, startTransition]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -88,17 +91,20 @@ export function PropertyCombobox({
               {isPending ? "กำลังค้นหา..." : "ไม่พบทรัพย์"}
             </CommandEmpty>
 
-            {/* ตัวเลือก: ไม่ผูกทรัพย์ */}
+            {/* ตัวเลือก: แสดงทั้งหมด */}
             <CommandItem
-              value="__none__"
+              value="__all__"
               onSelect={() => {
-                onChange(null, null);
+                // select 'all' -> clear filter (undefined) so caller can treat as no filter
+                onChange(undefined as any, null);
                 setOpen(false);
               }}
             >
-              <Check className={`mr-2 h-4 w-4 ${value === null ? "opacity-100" : "opacity-0"}`} />
-              (General) ไม่ผูกทรัพย์
+              <Check className={`mr-2 h-4 w-4 ${value === undefined ? "opacity-100" : "opacity-0"}`} />
+              (ทั้งหมด) แสดงทรัพย์ทั้งหมด
             </CommandItem>
+
+            {/* ตัวเลือก: ไม่ผูกทรัพย์ */}
 
             {items.map((item) => (
               <CommandItem

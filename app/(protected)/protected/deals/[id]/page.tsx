@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DealFormDialog } from "@/features/deals/components/DealFormDialog";
 import { DocumentList } from "@/features/documents/components/DocumentList";
 import { DocumentUpload } from "@/features/documents/components/DocumentUpload";
+import { DocumentSection } from "@/features/documents/components/DocumentSection";
 import { Separator } from "@/components/ui/separator";
 
 interface PageProps {
@@ -69,8 +70,13 @@ export default async function DealDetailPage({ params }: PageProps) {
                 แก้ไข
               </Button>
             }
+            refreshOnSuccess
           />
-          <DeleteDealButton dealId={deal.id} leadId={deal.lead_id} />
+          <DeleteDealButton
+            dealId={deal.id}
+            leadId={deal.lead_id}
+            redirectPath={`/protected/leads/${deal.lead_id}`}
+          />
         </div>
       </div>
 
@@ -128,13 +134,19 @@ export default async function DealDetailPage({ params }: PageProps) {
               <p className="text-sm font-medium text-muted-foreground mb-3">
                 Co-Agent ข้อมูลติดต่อ
               </p>
-              {deal.co_agent_name ? (
+              {deal.co_agent_name || deal.co_agent_contact || deal.co_agent_online ? (
                 <div className="bg-muted/50 p-3 rounded-lg flex items-start gap-4 text-sm">
                   <div>
-                    <p className="font-semibold">{deal.co_agent_name}</p>
-                    <p className="text-muted-foreground">
-                      {deal.co_agent_contact || "ไม่ได้ระบุเบอร์ติดต่อ"}
-                    </p>
+                    {deal.co_agent_name && <p className="font-semibold">{deal.co_agent_name}</p>}
+                    {deal.co_agent_contact && (
+                      <p className="text-muted-foreground">เบอร์: {deal.co_agent_contact}</p>
+                    )}
+                    {deal.co_agent_online && (
+                      <p className="text-muted-foreground">ช่องทางออนไลน์: {deal.co_agent_online}</p>
+                    )}
+                    {!deal.co_agent_contact && !deal.co_agent_online && !deal.co_agent_name && (
+                      <p className="text-muted-foreground">ไม่มีข้อมูลติดต่อ</p>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -200,17 +212,7 @@ export default async function DealDetailPage({ params }: PageProps) {
       {/* Documents Section */}
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <FileText className="h-5 w-5" /> เอกสารที่เกี่ยวข้อง
-              </CardTitle>
-              <DocumentUpload ownerId={deal.id} ownerType="DEAL" />
-            </CardHeader>
-            <CardContent>
-              <DocumentList ownerId={deal.id} ownerType="DEAL" />
-            </CardContent>
-          </Card>
+          <DocumentSection ownerId={deal.id} ownerType="DEAL" />
         </div>
 
         {/* Timeline placeholder or activity? */}

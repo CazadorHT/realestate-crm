@@ -41,6 +41,12 @@ export function SidebarNav({ role }: { role: UserRole }) {
       active: pathname.startsWith("/protected/leads"),
     },
     {
+      title: "Deals",
+      href: "/protected/deals",
+      icon: LayoutDashboard,
+      active: pathname.startsWith("/protected/deals"),
+    },
+    {
       title: "โปรไฟล์",
       href: "/protected/profile",
       icon: UserCircle,

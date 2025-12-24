@@ -114,3 +114,20 @@ export async function getProtectedPropertyWithImagesById(
 
   return data as unknown as PropertyWithImages;
 }
+
+/**
+ * Return minimal properties for select inputs in protected CRM
+ */
+export async function getPropertiesForSelect() {
+  const { supabase } = await requireAuthContext();
+
+  const { data, error } = await supabase
+    .from("properties")
+    .select(
+      `id, title, price, rental_price, commission_sale_percentage, commission_rent_months`
+    )
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}

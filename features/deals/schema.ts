@@ -19,6 +19,7 @@ export const createDealSchema = z.object({
   commission_percent: z.coerce.number().min(0).max(100).optional(),
   co_agent_name: z.string().optional(),
   co_agent_contact: z.string().optional(),
+  co_agent_online: z.string().optional(),
   source: z.string().optional(),
   transaction_date: z.string().optional().nullable(), // Closing Date (Sale) or Start Date (Rent)
   transaction_end_date: z.string().optional().nullable(), // End Date (Rent)
@@ -29,6 +30,9 @@ export type CreateDealInput = z.infer<typeof createDealSchema>;
 
 export const updateDealSchema = createDealSchema.partial().extend({
   id: z.string().uuid(),
+  co_agent_name: z.string().nullable().optional(),
+  co_agent_contact: z.string().nullable().optional(),
+  co_agent_online: z.string().nullable().optional(),
 });
 
 export type UpdateDealInput = z.infer<typeof updateDealSchema>;

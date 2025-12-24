@@ -4,6 +4,20 @@ import { cn } from "@/lib/utils";
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, ...props }, ref) => {
+    // Avoid React warning when `value` prop is explicitly `null`.
+    // If a caller passes `value: null` we normalize it to empty string.
+    const hasValueProp = Object.prototype.hasOwnProperty.call(props, "value");
+    const safeValue = hasValueProp ? (props.value ?? "") : undefined;
+
+    // Copy props but ensure we don't accidentally set `value` to null
+    const inputProps: any = { ...props };
+    if (safeValue !== undefined) {
+      inputProps.value = safeValue;
+    } else {
+      // Ensure uncontrolled inputs remain uncontrolled
+      delete inputProps.value;
+    }
+
     return (
       <input
         ref={ref}
@@ -14,7 +28,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           "aria-[invalid=true]:!border-red-500 aria-[invalid=true]:focus-visible:!ring-red-500",
           className
         )}
-        {...props}
+        {...inputProps}
       />
     );
   }

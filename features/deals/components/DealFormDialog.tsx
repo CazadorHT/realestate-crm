@@ -13,9 +13,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { LeadSelect } from "./LeadSelect";
 import {
   Form,
   FormControl,
@@ -47,6 +49,7 @@ interface DealFormDialogProps {
   }[];
   deal?: any; // Existing deal for editing
   onSuccess?: () => void;
+  refreshOnSuccess?: boolean;
   trigger?: React.ReactNode;
 }
 
@@ -55,6 +58,7 @@ export function DealFormDialog({
   properties = [],
   deal,
   onSuccess,
+  refreshOnSuccess,
   trigger,
 }: DealFormDialogProps) {
   const [open, setOpen] = useState(false);
@@ -65,13 +69,15 @@ export function DealFormDialog({
   const form = useForm<CreateDealInput>({
     resolver: zodResolver(createDealSchema),
     defaultValues: {
-      lead_id: leadId,
+      lead_id: leadId || "",
       deal_type: deal?.deal_type || "RENT",
       status: deal?.status || "NEGOTIATING",
-      commission_amount: deal?.commission_amount || 0,
+      commission_amount: deal?.commission_amount ?? undefined,
       property_id: deal?.property_id || "",
-      co_agent_name: deal?.co_agent_name || "",
-      transaction_date: deal?.transaction_date || "",
+      co_agent_name: deal?.co_agent_name ?? undefined,
+      co_agent_contact: deal?.co_agent_contact ?? undefined,
+      co_agent_online: deal?.co_agent_online ?? undefined,
+      transaction_date: deal?.transaction_date ?? undefined,
       duration_months:
         deal?.transaction_date && deal?.transaction_end_date
           ? undefined // Let's keep it simple for now, or calculate if needed
@@ -79,13 +85,19 @@ export function DealFormDialog({
     },
   });
 
-  // Reset form when deal changes
+  // Reset form when deal changes (sanitize nulls to undefined for optional fields)
   useEffect(() => {
     if (deal) {
-      form.reset({
-        ...deal,
-        duration_months: undefined, // Duration is virtual, we don't need to re-calc for edit init usually
+      const sanitized: any = { ...deal };
+      // Optional text fields that may be `null` in DB should be `undefined` for zod optional
+      ["co_agent_name", "co_agent_contact", "co_agent_online", "source"].forEach((k) => {
+        if (sanitized[k] === null) sanitized[k] = undefined;
       });
+      // Dates may be null — keep as undefined so inputs stay empty
+      if (sanitized.transaction_date === null) sanitized.transaction_date = undefined;
+      if (sanitized.transaction_end_date === null) sanitized.transaction_end_date = undefined;
+      sanitized.duration_months = undefined; // Duration is virtual, we don't need to re-calc for edit init usually
+      form.reset(sanitized);
     }
   }, [deal, form]);
 
@@ -124,8 +136,11 @@ export function DealFormDialog({
       toast.success(isEditing ? "อัปเดตดีลเรียบร้อย" : "สร้างดีลเรียบร้อย");
       setOpen(false);
       if (!isEditing) form.reset();
+
       if (onSuccess) onSuccess();
-      router.refresh();
+
+      // client-side refresh control: either explicit refresh or leave to parent handler
+      if (refreshOnSuccess) router.refresh();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
     }
@@ -144,6 +159,9 @@ export function DealFormDialog({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{isEditing ? "แก้ไขดีล" : "สร้างดีลใหม่"}</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            กรอกข้อมูลดีลที่เกี่ยวข้อง (วันที่เป็นค่าสามารถเว้นว่างได้)
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -176,6 +194,21 @@ export function DealFormDialog({
                 </FormItem>
               )}
             />
+
+            {/* Lead Selection - shown only when parent didn't pass a leadId */}
+            {!leadId && (
+              <FormField
+                control={form.control}
+                name="lead_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>เลือกลีด *</FormLabel>
+                    <LeadSelect value={field.value} onChange={field.onChange} />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Deal Type */}
             <div className="grid grid-cols-2 gap-4">
@@ -245,7 +278,15 @@ export function DealFormDialog({
                   <FormItem>
                     <FormLabel>ค่าคอมมิชชั่น (บาท)</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input
+                        type="number"
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === "" ? undefined : Number(e.target.value)
+                          )
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -266,9 +307,8 @@ export function DealFormDialog({
                     <FormControl>
                       <Input
                         type="date"
-                        {...field}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(e) => field.onChange(e.target.value || undefined)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -287,12 +327,18 @@ export function DealFormDialog({
                         <Input
                           type="number"
                           placeholder="เช่น 1"
-                          {...field}
+                          value={field.value ? String(field.value / 12) : ""}
                           onChange={(e) => {
-                            const years = parseFloat(e.target.value);
-                            field.onChange(years * 12); // Convert to months for storage
+                            const v = e.target.value;
+                            if (v === "") {
+                              field.onChange(undefined);
+                              return;
+                            }
+                            const years = parseFloat(v);
+                            if (!Number.isNaN(years)) {
+                              field.onChange(years * 12);
+                            }
                           }}
-                          value={field.value ? field.value / 12 : ""}
                         />
                       </FormControl>
                       <FormMessage />
@@ -300,21 +346,67 @@ export function DealFormDialog({
                   )}
                 />
               )}
+            </div> 
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="co_agent_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ชื่อ Co-Agent (ถ้ามี)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value || undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="co_agent_contact"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>เบอร์ Co-Agent</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="เช่น 081-xxx-xxxx"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value || undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="co_agent_online"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ช่องทางออนไลน์ของ Co-Agent</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="ตัวอย่าง: LINE:@agent, Facebook, Email"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value || undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <FormField
-              control={form.control}
-              name="co_agent_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ชื่อ Co-Agent (ถ้ามี)</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
 
             <DialogFooter>
               <Button type="submit" disabled={form.formState.isSubmitting}>

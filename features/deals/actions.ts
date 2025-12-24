@@ -36,6 +36,30 @@ export async function createDealAction(input: CreateDealInput) {
     // duration_months is a virtual field for the form, remove it before DB insert
     delete (dealData as any).duration_months;
 
+    // Clean empty/nullable fields (do not store empty strings).
+    const _cleanKeys = [
+      "transaction_date",
+      "transaction_end_date",
+      "co_agent_name",
+      "co_agent_contact",
+      "co_agent_online",
+      "source",
+    ] as const;
+    _cleanKeys.forEach((k) => {
+      const key = k as keyof typeof dealData;
+      if ((dealData as any)[key] === "" || (dealData as any)[key] === null) {
+        delete (dealData as any)[key];
+      }
+    });
+
+    // Remove any keys that are explicitly `undefined` (helpful for partial updates to preserve DB values)
+    Object.keys(dealData).forEach((k) => {
+      const key = k as keyof typeof dealData;
+      if ((dealData as any)[key] === undefined) {
+        delete (dealData as any)[key];
+      }
+    });
+
     const { data, error } = await supabase
       .from("deals")
       .insert({
@@ -114,6 +138,29 @@ export async function updateDealAction(input: UpdateDealInput) {
     }
     // Cleanup virtual field
     delete (dealData as any).duration_months;
+
+    // Clean empty-string fields before update (keep `null` to explicitly clear DB columns)
+    const _updateCleanKeys = [
+      "transaction_date",
+      "transaction_end_date",
+      "co_agent_name",
+      "co_agent_contact",
+      "source",
+    ] as const;
+    _updateCleanKeys.forEach((k) => {
+      const key = k as keyof typeof dealData;
+      if ((dealData as any)[key] === "") {
+        delete (dealData as any)[key];
+      }
+    });
+
+    // Remove explicit undefined keys so we don't overwrite existing values unintentionally
+    Object.keys(dealData).forEach((k) => {
+      const key = k as keyof typeof dealData;
+      if ((dealData as any)[key] === undefined) {
+        delete (dealData as any)[key];
+      }
+    });
 
     const { error } = await supabase
       .from("deals")

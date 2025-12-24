@@ -14,6 +14,7 @@ import { DealList } from "@/features/deals/components/DealList";
 import { DealFormDialog } from "@/features/deals/components/DealFormDialog";
 import { DocumentList } from "@/features/documents/components/DocumentList";
 import { DocumentUpload } from "@/features/documents/components/DocumentUpload";
+import { DocumentSection } from "@/features/documents/components/DocumentSection";
 import {
   Dialog,
   DialogContent,
@@ -127,28 +128,8 @@ export default async function LeadDetailPage({
       </div>
 
       {/* Documents Section */}
-      <div className="space-y-4 rounded-xl border p-4 bg-muted/5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            Documents
-          </h2>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="outline">
-                <Upload className="mr-2 h-4 w-4" />
-                Upload
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Upload Document</DialogTitle>
-              </DialogHeader>
-              <DocumentUpload ownerId={id} ownerType="LEAD" />
-            </DialogContent>
-          </Dialog>
-        </div>
-        <DocumentList ownerId={id} ownerType="LEAD" />
-      </div>
+      {/* Documents Section (client-side upload + list with refresh) */}
+      <DocumentSection ownerId={id} ownerType="LEAD" />
 
       <LeadTimeline
         activities={lead.lead_activities ?? []}

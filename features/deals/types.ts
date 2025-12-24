@@ -14,4 +14,6 @@ export type DealWithProperty = Deal & {
     rental_price: number | null;
     images: any;
   } | null;
+  lead?: { id: string; full_name?: string } | null;
+  co_agent_online?: string | null;
 };
