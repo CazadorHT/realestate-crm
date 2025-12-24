@@ -95,7 +95,7 @@ export function DealList({ deals }: DealListProps) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
+  const styleMap: Record<string, string> = {
     NEGOTIATING: "bg-blue-100 text-blue-800",
     SIGNED: "bg-purple-100 text-purple-800",
     CLOSED_WIN: "bg-green-100 text-green-800",
@@ -103,12 +103,24 @@ function StatusBadge({ status }: { status: string }) {
     CANCELLED: "bg-gray-100 text-gray-800",
   };
 
+  const labelMap: Record<string, string> = {
+    NEGOTIATING: "กำลังต่อรอง",
+    SIGNED: "เซ็นสัญญา",
+    CLOSED_WIN: "สำเร็จ",
+    CLOSED_LOSS: "ไม่สำเร็จ",
+    CANCELLED: "ยกเลิก",
+  };
+
+  const badgeClass = styleMap[status] || "bg-gray-100";
+  const label = labelMap[status] || status;
+
   return (
     <Badge
       variant="outline"
-      className={`border-0 ${map[status] || "bg-gray-100"}`}
+      className={`border-0 ${badgeClass}`}
+      title={status}
     >
-      {status}
+      {label}
     </Badge>
   );
 }
