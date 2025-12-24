@@ -25,6 +25,7 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
             <TableHead>Contact</TableHead>
             <TableHead>Stage</TableHead>
             <TableHead>Source</TableHead>
+            <TableHead className="text-center">Deals</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -52,6 +53,7 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                 {safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}
               </TableCell>
               {/* Action */}
+              <TableCell className="text-center">{(l as any).deals_count ?? 0}</TableCell>
               <TableCell className="text-right">
                 <LeadRowActions id={l.id} fullName={l.full_name} />
               </TableCell>
@@ -61,7 +63,7 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
           {leads.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={5}
+                colSpan={6}
                 className="py-10 text-center text-sm text-muted-foreground"
               >
                 ไม่พบ Leads

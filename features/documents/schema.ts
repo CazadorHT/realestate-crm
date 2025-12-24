@@ -15,7 +15,7 @@ export const DocumentTypeEnum = z.enum([
   "OTHER",
 ]);
 
-export const DocumentOwnerTypeEnum = z.enum(["LEAD", "PROPERTY", "DEAL"]);
+export const DocumentOwnerTypeEnum = z.enum(["LEAD", "PROPERTY", "DEAL", "RENTAL_CONTRACT"]);
 
 export const createDocumentSchema = z.object({
   owner_id: z.string().uuid(),

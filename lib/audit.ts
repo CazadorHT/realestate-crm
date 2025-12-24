@@ -19,7 +19,10 @@ export type AuditAction =
   | "user.role.update"
   | "deal.create"
   | "deal.update"
-  | "deal.delete";
+  | "deal.delete"
+  | "rental_contract.create"
+  | "rental_contract.update"
+  | "rental_contract.delete";
 
 type AuditInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];
 

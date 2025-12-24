@@ -18,6 +18,7 @@ export const contractFormSchema = z.object({
   lease_term_months: z.coerce.number().min(1, "ระยะเวลาสัญญาขั้นต่ำ 1 เดือน"),
   payment_cycle: z.string().optional(),
   other_terms: z.string().optional(),
+  status: z.enum(["DRAFT","ACTIVE","TERMINATED"]).optional(),
 });
 
 export type ContractFormInput = z.infer<typeof contractFormSchema>;

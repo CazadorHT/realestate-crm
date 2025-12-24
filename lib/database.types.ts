@@ -49,6 +49,7 @@ export type Database = {
           closed_at: string | null
           co_agent_contact: string | null
           co_agent_name: string | null
+          co_agent_online: string | null
           commission_amount: number | null
           commission_percent: number | null
           created_at: string
@@ -67,6 +68,7 @@ export type Database = {
           closed_at?: string | null
           co_agent_contact?: string | null
           co_agent_name?: string | null
+          co_agent_online?: string | null
           commission_amount?: number | null
           commission_percent?: number | null
           created_at?: string
@@ -85,6 +87,7 @@ export type Database = {
           closed_at?: string | null
           co_agent_contact?: string | null
           co_agent_name?: string | null
+          co_agent_online?: string | null
           commission_amount?: number | null
           commission_percent?: number | null
           created_at?: string
@@ -664,6 +667,7 @@ export type Database = {
         Row: {
           check_in_date: string | null
           check_out_date: string | null
+          contract_number: string | null
           deal_id: string
           deposit_amount: number | null
           end_date: string
@@ -674,10 +678,12 @@ export type Database = {
           payment_cycle: string | null
           rent_price: number
           start_date: string
+          status: string
         }
         Insert: {
           check_in_date?: string | null
           check_out_date?: string | null
+          contract_number?: string | null
           deal_id: string
           deposit_amount?: number | null
           end_date: string
@@ -688,10 +694,12 @@ export type Database = {
           payment_cycle?: string | null
           rent_price: number
           start_date: string
+          status?: string
         }
         Update: {
           check_in_date?: string | null
           check_out_date?: string | null
+          contract_number?: string | null
           deal_id?: string
           deposit_amount?: number | null
           end_date?: string
@@ -702,6 +710,7 @@ export type Database = {
           payment_cycle?: string | null
           rent_price?: number
           start_date?: string
+          status?: string
         }
         Relationships: [
           {
@@ -729,7 +738,7 @@ export type Database = {
         | "CLOSED_WIN"
         | "CLOSED_LOSS"
       deal_type: "RENT" | "SALE"
-      document_owner_type: "LEAD" | "PROPERTY" | "DEAL"
+      document_owner_type: "LEAD" | "PROPERTY" | "DEAL" | "RENTAL_CONTRACT"
       document_type:
         | "ID_CARD"
         | "PASSPORT"
@@ -909,7 +918,7 @@ export const Constants = {
         "CLOSED_LOSS",
       ],
       deal_type: ["RENT", "SALE"],
-      document_owner_type: ["LEAD", "PROPERTY", "DEAL"],
+      document_owner_type: ["LEAD", "PROPERTY", "DEAL", "RENTAL_CONTRACT"],
       document_type: [
         "ID_CARD",
         "PASSPORT",

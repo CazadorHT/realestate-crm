@@ -56,8 +56,28 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   if (error) throw new Error(error.message);
 
+  const leadIds = (data ?? []).map((l: any) => l.id);
+
+  // fetch deals for these leads and compute counts client-side (avoid unsupported .group in types)
+  let dealsCountMap: Record<string, number> = {};
+  if (leadIds.length > 0) {
+    const { data: dealsForLeads, error: dealsErr } = await supabase
+      .from("deals")
+      .select("id, lead_id")
+      .in("lead_id", leadIds);
+
+    if (!dealsErr && dealsForLeads) {
+      (dealsForLeads as any[]).forEach((d) => {
+        dealsCountMap[d.lead_id] = (dealsCountMap[d.lead_id] || 0) + 1;
+      });
+    }
+  }
+
+  // attach counts to leads (non-breaking addition)
+  const leadsWithCounts = (data ?? []).map((l: any) => ({ ...(l as any), deals_count: dealsCountMap[l.id] ?? 0 }));
+
   return {
-    data: (data ?? []) as LeadRow[],
+    data: leadsWithCounts as LeadRow[],
     count: count ?? 0,
     page,
     pageSize,

@@ -30,12 +30,15 @@ interface DeleteDealButtonProps {
 export function DeleteDealButton({ dealId, leadId, onSuccess, redirectPath }: DeleteDealButtonProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
     const result = await deleteDealAction(dealId, leadId ?? "");
     if (result.success) {
       toast.success("ลบดีลเรียบร้อย");
+      setOpen(false);
+      setIsDeleting(false);
       if (onSuccess) {
         try {
           onSuccess();
@@ -55,7 +58,7 @@ export function DeleteDealButton({ dealId, leadId, onSuccess, redirectPath }: De
   };
 
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm">
           <Trash2 className="h-4 w-4 mr-2" />

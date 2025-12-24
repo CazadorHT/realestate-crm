@@ -92,6 +92,41 @@ export default async function PropertyDetailsPage({
     imagesForLightbox[0]?.image_url ||
     null;
 
+  // Fetch related closed deal (if property sold/rented)
+  let relatedDeal: any = null;
+  let relatedContract: any = null;
+  let relatedDocuments: any[] = [];
+  if (property.status === "sold" || property.status === "rented") {
+    const { data: dealData } = await supabase
+      .from("deals")
+      .select("id, deal_type, commission_amount, commission_percent, created_by, status, lead:leads(id, full_name)")
+      .eq("property_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    relatedDeal = dealData ?? null;
+
+    if (relatedDeal) {
+      const { data: contractData } = await supabase
+        .from("rental_contracts")
+        .select("*")
+        .eq("deal_id", relatedDeal.id)
+        .single();
+      relatedContract = contractData ?? null;
+
+      // fetch documents attached to deal or contract
+      const ownerIds = [relatedDeal.id, relatedContract?.id].filter(Boolean);
+      if (ownerIds.length > 0) {
+        const { data: docs } = await supabase
+          .from("documents")
+          .select("*")
+          .in("owner_id", ownerIds);
+        relatedDocuments = docs ?? [];
+      }
+    }
+  }
+
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
       {/* HEADER ACTIONS */}
@@ -367,6 +402,41 @@ export default async function PropertyDetailsPage({
                       <span className="col-span-2 text-xs">
                         {property.property_source}
                       </span>
+                    </div>
+                  )}
+
+                  {/* Deal & Contracts (CRM only) */}
+                  {relatedDeal && (
+                    <div className="mt-4 p-3 bg-blue-50/40 rounded border border-blue-100 text-sm">
+                      <div className="flex items-center justify-between">
+                        <div className="font-semibold">ดีลที่เกี่ยวข้อง</div>
+                        <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded">🔒 CRM เท่านั้น</span>
+                      </div>
+
+                      <div className="mt-2 grid grid-cols-3">
+                        <span className="text-muted-foreground">ประเภทดีล:</span>
+                        <span className="col-span-2 font-medium">{relatedDeal.deal_type}</span>
+                      </div>
+
+                      <div className="mt-2 grid grid-cols-3">
+                        <span className="text-muted-foreground">ค่าคอม:</span>
+                        <span className="col-span-2 font-medium">{relatedDeal.commission_amount ? `฿${Number(relatedDeal.commission_amount).toLocaleString()}` : (relatedDeal.commission_percent ? `${relatedDeal.commission_percent}%` : '-')}</span>
+                      </div>
+
+                      <div className="mt-3 flex gap-2">
+                        <Link href={`/protected/deals/${relatedDeal.id}`} className="text-sm text-blue-600 hover:underline">ไปยังหน้า Deal</Link>
+                      </div>
+
+                      {relatedDocuments.length > 0 && (
+                        <div className="mt-3">
+                          <div className="text-sm text-muted-foreground">เอกสารสัญญา:</div>
+                          <ul className="mt-1 text-sm list-disc ml-5">
+                            {relatedDocuments.map((d) => (
+                              <li key={d.id}><a className="text-blue-600 hover:underline" href={`/${d.storage_path}`} target="_blank">{d.file_name}</a></li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

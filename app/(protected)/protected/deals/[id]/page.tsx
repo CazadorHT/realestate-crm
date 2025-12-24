@@ -24,6 +24,7 @@ import { DealFormDialog } from "@/features/deals/components/DealFormDialog";
 import { DocumentList } from "@/features/documents/components/DocumentList";
 import { DocumentUpload } from "@/features/documents/components/DocumentUpload";
 import { DocumentSection } from "@/features/documents/components/DocumentSection";
+import { RentalContractSection } from "@/features/rental-contracts/components/RentalContractSection";
 import { Separator } from "@/components/ui/separator";
 
 interface PageProps {
@@ -213,6 +214,15 @@ export default async function DealDetailPage({ params }: PageProps) {
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2 space-y-6">
           <DocumentSection ownerId={deal.id} ownerType="DEAL" />
+
+          <div className="rounded-xl border p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">สัญญาเช่า</h3>
+            </div>
+            <div className="mt-3">
+              <RentalContractSection dealId={deal.id} dealType={deal.deal_type} defaultRent={deal.property?.rental_price ?? null} />
+            </div>
+          </div>
         </div>
 
         {/* Timeline placeholder or activity? */}
