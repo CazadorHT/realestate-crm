@@ -87,6 +87,30 @@ export const FormSchema = z
         message: msg,
       });
     }
+
+    // Commission validation: require commission fields when listing type includes the corresponding mode
+    const saleCommissionMissing =
+      data.commission_sale_percentage === undefined ||
+      Number.isNaN(data.commission_sale_percentage);
+    const rentCommissionMissing =
+      data.commission_rent_months === undefined ||
+      Number.isNaN(data.commission_rent_months);
+
+    if ((data.listing_type === "SALE" || data.listing_type === "SALE_AND_RENT") && saleCommissionMissing) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["commission_sale_percentage"],
+        message: "กรุณาระบุ% ค่าคอมมิชชั่นการขาย",
+      });
+    }
+
+    if ((data.listing_type === "RENT" || data.listing_type === "SALE_AND_RENT") && rentCommissionMissing) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["commission_rent_months"],
+        message: "กรุณาระบุจำนวนเดือนค่าคอมมิชชั่นการเช่า",
+      });
+    }
   });
 
 export type PropertyFormValues = z.infer<typeof FormSchema>;

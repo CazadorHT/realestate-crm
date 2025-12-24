@@ -326,6 +326,135 @@ export function PropertyForm({
     }
   }, [listingType]);
 
+  // Derived helpers for responsive grid & visibility
+  const showPrice =
+    listingType === "SALE" || listingType === "SALE_AND_RENT";
+  const showRental =
+    listingType === "RENT" || listingType === "SALE_AND_RENT";
+  const numberFieldsCount = (showPrice ? 1 : 0) + (showRental ? 1 : 0) + 2; // bedrooms & bathrooms
+
+  // Map of possible grid classes so Tailwind can pick them up at build time
+  const gridClassMap: Record<number, string> = {
+    1: "md:grid-cols-1",
+    2: "md:grid-cols-2",
+    3: "md:grid-cols-3",
+    4: "md:grid-cols-4",
+  };
+
+  // Formatting helpers for numeric inputs (display with thousands separators, keep value as number)
+  const formatNumber = (val: number | undefined, decimals = 0) =>
+    val == null
+      ? ""
+      : new Intl.NumberFormat(undefined, {
+          maximumFractionDigits: decimals,
+          minimumFractionDigits: 0,
+        }).format(val);
+  const parseNumber = (s: string) => {
+    const cleaned = s.replace(/[^0-9.-]/g, "");
+    return cleaned === "" ? undefined : Number(cleaned);
+  };
+
+  // Small helper component to manage formatted number input without breaking hook order
+  function NumberInput({
+    value,
+    onChange,
+    placeholder,
+    ariaInvalid,
+    decimals = 0,
+    allowNegative = false,
+  }: {
+    value: number | undefined;
+    onChange: (v: number | undefined) => void;
+    placeholder?: string;
+    ariaInvalid?: boolean;
+    decimals?: number;
+    allowNegative?: boolean;
+  }) {
+    const [display, setDisplay] = React.useState<string>(() =>
+      formatNumber(value, decimals)
+    );
+    const [isFocused, setIsFocused] = React.useState(false);
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
+    const commitTimer = React.useRef<number | null>(null);
+
+    // Only update display from value when input is NOT focused to avoid
+    // interfering with user's typing and caret/selection.
+    React.useEffect(() => {
+      if (!isFocused) {
+        setDisplay(formatNumber(value, decimals));
+      }
+    }, [value, decimals, isFocused]);
+
+    // Clear any pending timer on unmount
+    React.useEffect(() => {
+      return () => {
+        if (commitTimer.current) window.clearTimeout(commitTimer.current);
+      };
+    }, []);
+
+    const commitValue = (raw: string) => {
+      const parsed = parseNumber(raw);
+      // Only call onChange if value actually changes to avoid unnecessary re-renders
+      if ((parsed === undefined && value === undefined) || (parsed != null && parsed === value)) {
+        return;
+      }
+      onChange(parsed);
+    };
+
+    return (
+      <Input
+        ref={inputRef}
+        type="text"
+        inputMode="numeric"
+        value={display}
+        aria-invalid={ariaInvalid}
+        onFocus={() => {
+          setIsFocused(true);
+          setDisplay(value == null ? "" : String(value));
+          // move caret to end
+          requestAnimationFrame(() => {
+            const el = inputRef.current;
+            if (el) el.selectionStart = el.selectionEnd = el.value.length;
+          });
+        }}
+        onChange={(e) => {
+          const val = e.target.value;
+          setDisplay(val);
+
+          // debounce committing the parsed value to avoid frequent form updates
+          if (commitTimer.current) window.clearTimeout(commitTimer.current);
+          commitTimer.current = window.setTimeout(() => {
+            commitValue(val);
+            commitTimer.current = null;
+          }, 1000);
+        }}
+        onBlur={(e) => {
+          setIsFocused(false);
+          // commit immediately on blur
+          if (commitTimer.current) window.clearTimeout(commitTimer.current);
+          const parsed = parseNumber(e.target.value);
+          // commit only if changed
+          if ((parsed === undefined && value !== undefined) || (parsed != null && parsed !== value)) {
+            onChange(parsed);
+          }
+          setDisplay(formatNumber(parsed, decimals));
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            // commit immediately on Enter
+            if (commitTimer.current) window.clearTimeout(commitTimer.current);
+            const parsed = parseNumber((e.target as HTMLInputElement).value);
+            if ((parsed === undefined && value !== undefined) || (parsed != null && parsed !== value)) {
+              onChange(parsed);
+            }
+            (e.target as HTMLInputElement).blur();
+          }
+        }}
+        placeholder={placeholder}
+      />
+    );
+  }
+
   // Helper scroll to field with data-field attribute หรือ คือฟังก์ชันช่วยเลื่อนหน้าจอไปยังฟิลด์ที่มีข้อผิดพลาด
   function scrollToField(name: string) {
     const el = document.querySelector(`[data-field="${name}"]`);
@@ -422,7 +551,7 @@ export function PropertyForm({
                 ชื่อทรัพย์ <span className="text-red-400">*</span>{" "}
               </FormLabel>
               <FormControl>
-                <Input {...field} placeholder="เช่น เศรษฐสิริ บางนา กม.10" />
+                <Input {...field} placeholder={field.value ? undefined : "เช่น เศรษฐสิริ บางนา กม.10"} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -441,6 +570,7 @@ export function PropertyForm({
                   rows={4}
                   {...field}
                   value={field.value ?? ""} // ✅ บังคับไม่ให้เป็น null/undefined
+                  placeholder={field.value ? undefined : "เช่น ขนาดที่ดิน, สิ่งอำนวยความสะดวก สั้น ๆ"}
                 />
               </FormControl>
               <FormMessage />
@@ -536,8 +666,8 @@ export function PropertyForm({
         </div>
 
         {/* NUMBERS */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {(listingType === "SALE" || listingType === "SALE_AND_RENT") && (
+        <div className={`grid grid-cols-1 gap-4 ${gridClassMap[Math.min(numberFieldsCount, 4)]}`}>
+          {showPrice && (
             <FormField
               control={form.control}
               name="price"
@@ -546,25 +676,23 @@ export function PropertyForm({
                   <FormLabel>ราคาขาย</FormLabel>
 
                   <FormControl>
-                    <Input
-                      aria-invalid={!!fieldState.error}
-                      type="number"
-                      value={field.value ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === "" ? undefined : Number(e.target.value)
-                        )
-                      }
-                      placeholder="กรุณาใส่ราคาขาย"
+                    <NumberInput
+                      ariaInvalid={!!fieldState.error}
+                      value={field.value}
+                      onChange={(v) => field.onChange(v)}
+                      placeholder={field.value != null ? undefined : "เช่น 3,500,000"}
                     />
                   </FormControl>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    สกุล: {form.getValues("currency") || "THB"}
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
             />
           )}
 
-          {(listingType === "RENT" || listingType === "SALE_AND_RENT") && (
+          {showRental && (
             <FormField
               control={form.control}
               name="rental_price"
@@ -572,17 +700,16 @@ export function PropertyForm({
                 <FormItem>
                   <FormLabel>ราคาเช่า</FormLabel>
                   <FormControl>
-                    <Input
-                      aria-invalid={!!fieldState.error}
-                      type="number"
-                      value={field.value ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === "" ? undefined : Number(e.target.value)
-                        )
-                      }
+                    <NumberInput
+                      ariaInvalid={!!fieldState.error}
+                      value={field.value}
+                      onChange={(v) => field.onChange(v)}
+                      placeholder={field.value != null ? undefined : "เช่น 12,000 (ต่อเดือน)"}
                     />
                   </FormControl>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ใส่จำนวนเงินต่อเดือน (สกุล: {form.getValues("currency") || "THB"})
+                  </p>
                   {/* <FormMessage /> */}
                 </FormItem>
               )}
@@ -599,6 +726,7 @@ export function PropertyForm({
                   <Input
                     type="number"
                     value={field.value ?? ""}
+                    placeholder={field.value == null ? "เช่น 3" : undefined}
                     onChange={(e) =>
                       field.onChange(
                         e.target.value === "" ? undefined : Number(e.target.value)
@@ -621,9 +749,62 @@ export function PropertyForm({
                   <Input
                     type="number"
                     value={field.value ?? ""}
+                    placeholder={field.value == null ? "เช่น 2" : undefined}
                     onChange={(e) =>
                       field.onChange(
                         e.target.value === "" ? undefined : Number(e.target.value)
+                      )
+                    }
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+               {/* AREA SPECIFICATIONS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="size_sqm"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>พื้นที่ใช้สอย (ตร.ม.)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    value={field.value ?? ""}
+                      placeholder={field.value == null ? "32 ตร.ม." : undefined}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
+                      )
+                    }
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="land_size_sqwah"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>ขนาดที่ดิน (ตร.ว.)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    value={field.value ?? ""}
+                      placeholder={field.value == null ? "180 ตร.ว." : undefined}
+
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
                       )
                     }
                   />
@@ -666,34 +847,29 @@ export function PropertyForm({
                     </div>
                     <FormControl>
                       <div className="relative max-w-[180px]">
-                        <Input
-                          type="number"
-                          step="0.1"
-                          {...field}
-                          value={field.value ?? ""}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value === ""
-                                ? undefined
-                                : Number(e.target.value)
-                            )
-                          }
-                          placeholder="เปอร์เซ็นต์"
-                          className="pr-8"
+                        <NumberInput
+                          decimals={1}
+                          value={field.value ?? undefined}
+                          onChange={(v) => field.onChange(v)}
+                          placeholder={field.value == null ? "เปอร์เซ็นต์" : undefined}
+                          ariaInvalid={false}
                         />
                       </div>
                     </FormControl>
                     <FormMessage />
-                    {priceVal && field.value && (
+                    {priceVal && field.value != null && (
                       <div className="mt-2 p-2 bg-white rounded border border-blue-100 text-sm flex justify-between">
                         <span className="text-muted-foreground">
                           ยอดเงินที่คาดว่าจะได้รับ:
                         </span>
                         <span className="font-bold text-blue-600">
-                          ฿{((priceVal * field.value) / 100).toLocaleString()}
+                          ฿{((priceVal * (field.value || 0)) / 100).toLocaleString()}
                         </span>
                       </div>
                     )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ตัวอย่าง: 3% ของราคาขายจะแปลงเป็นตัวเลขที่คาดว่าจะได้รับ
+                    </p>
                   </FormItem>
                 )}
               />
@@ -729,34 +905,29 @@ export function PropertyForm({
                     </div>
                     <FormControl>
                       <div className="relative max-w-[180px]">
-                        <Input
-                          type="number"
-                          step="0.1"
-                          {...field}
-                          value={field.value ?? ""}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value === ""
-                                ? undefined
-                                : Number(e.target.value)
-                            )
-                          }
-                          placeholder="จำนวนเดือน"
-                          className="pr-12"
+                        <NumberInput
+                          decimals={1}
+                          value={field.value ?? undefined}
+                          onChange={(v) => field.onChange(v)}
+                          placeholder={field.value == null ? "จำนวนเดือน" : undefined}
+                          ariaInvalid={false}
                         />
                       </div>
                     </FormControl>
                     <FormMessage />
-                    {rentalVal && field.value && (
+                    {rentalVal != null && field.value != null && (
                       <div className="mt-2 p-2 bg-white rounded border border-green-100 text-sm flex justify-between">
                         <span className="text-muted-foreground">
                           ยอดเงินที่คาดว่าจะได้รับ:
                         </span>
                         <span className="font-bold text-green-600">
-                          ฿{(rentalVal * field.value).toLocaleString()}
+                          ฿{(rentalVal * (field.value || 0)).toLocaleString()}
                         </span>
                       </div>
                     )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ตัวอย่าง: ค่าคอม = จำนวนเดือน × ค่าเช่าต่อเดือน
+                    </p>
                   </FormItem>
                 )}
               />
@@ -764,55 +935,7 @@ export function PropertyForm({
           )}
         </div>
 
-        {/* AREA SPECIFICATIONS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="size_sqm"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>พื้นที่ใช้สอย (ตร.ม.)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
-                      )
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="land_size_sqwah"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>ขนาดที่ดิน (ตร.ว.)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
-                      )
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+     
 
         {/* LOCATION */}
         <div className="space-y-4">
@@ -827,7 +950,7 @@ export function PropertyForm({
               <FormItem>
                 <FormLabel>บ้านเลขที่ / ซอย / ถนน</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value ?? ""} />
+                  <Input {...field} value={field.value ?? ""} placeholder={field.value ? undefined : "บ้านเลขที่ / ซอย / ถนน"} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -842,7 +965,7 @@ export function PropertyForm({
                 <FormItem>
                   <FormLabel>แขวง / ตำบล</FormLabel>
                   <FormControl>
-                    <Input {...field} value={field.value ?? ""} />
+                    <Input {...field} value={field.value ?? ""} placeholder={field.value ? undefined : "เช่น บางนา"} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -855,7 +978,7 @@ export function PropertyForm({
                 <FormItem>
                   <FormLabel>เขต / อำเภอ</FormLabel>
                   <FormControl>
-                    <Input {...field} value={field.value ?? ""} />
+                    <Input {...field} value={field.value ?? ""} placeholder={field.value ? undefined : "เช่น บางนา"} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -868,7 +991,7 @@ export function PropertyForm({
                 <FormItem>
                   <FormLabel>จังหวัด</FormLabel>
                   <FormControl>
-                    <Input {...field} value={field.value ?? ""} />
+                    <Input {...field} value={field.value ?? ""} placeholder={field.value ? undefined : "เช่น กรุงเทพมหานคร"} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -881,7 +1004,7 @@ export function PropertyForm({
                 <FormItem>
                   <FormLabel>รหัสไปรษณีย์</FormLabel>
                   <FormControl>
-                    <Input {...field} value={field.value ?? ""} />
+                    <Input {...field} value={field.value ?? ""} placeholder={field.value ? undefined : "เช่น 10260"} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -899,7 +1022,7 @@ export function PropertyForm({
                     <Input
                       {...field}
                       value={field.value ?? ""}
-                      placeholder="เช่น https://maps.app.goo.gl/..."
+                      placeholder={field.value ? undefined : "เช่น https://maps.app.goo.gl/..."}
                     />
                   </FormControl>
                   <FormMessage />
