@@ -10,7 +10,7 @@ export type Profile = {
   avatar_url: string | null;
   full_name: string | null;
 };
-
+// ดึงข้อมูลโปรไฟล์ปัจจุบันจาก Supabase Auth และตาราง profiles
 export async function getCurrentProfile(): Promise<Profile | null> {
   const supabase = await createClient();
 

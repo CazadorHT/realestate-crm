@@ -12,6 +12,7 @@ import { FormSchema, type PropertyFormValues } from "./schema";
 import {
   requireAuthContext,
   assertAuthenticated,
+  assertStaff,
   authzFail,
 } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
@@ -188,7 +189,8 @@ async function finalizeUploadSession(params: {
 
 export async function uploadPropertyImageAction(formData: FormData) {
   try {
-    const { supabase, user } = await requireAuthContext();
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
 
     const sessionId = formData.get("sessionId") as string | null;
     if (!sessionId) throw new Error("Missing sessionId");
@@ -272,6 +274,7 @@ export async function createPropertyAction(
   try {
     // ✅ Step 1.2: require auth context (แทน getUser แบบเดิม)
     const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
     if (!sessionId)
       return { success: false, message: "Missing upload session" };
 
@@ -438,6 +441,7 @@ export async function updatePropertyAction(
 ): Promise<CreatePropertyResult> {
   try {
     const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
 
     // 1) Validate form data
     const parsed = FormSchema.safeParse(values);
@@ -665,6 +669,7 @@ export async function updatePropertyAction(
 export async function getPropertyById(id: string): Promise<PropertyRow> {
   try {
     const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
 
     const { data: property, error: propErr } = await supabase
       .from("properties")
@@ -693,7 +698,8 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
 export async function getPropertyWithImages(
   id: string
 ): Promise<PropertyWithImages> {
-  const { supabase, user, role } = await requireAuthContext();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { data, error } = await supabase
     .from("properties")
@@ -716,12 +722,6 @@ export async function getPropertyWithImages(
 
   if (error || !data) throw error;
 
-  // ✅ เพิ่ม authorization check
-  assertAuthenticated({
-    userId: user.id,
-    role,
-  });
-
   if (data.property_images) {
     data.property_images.sort((a, b) => a.sort_order - b.sort_order);
   }
@@ -737,6 +737,7 @@ export async function getPropertyWithImages(
 export async function deletePropertyAction(formData: FormData) {
   try {
     const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
 
     const id = formData.get("id") as string | null;
     if (!id) throw new Error("Missing property id");
@@ -814,6 +815,7 @@ export async function deletePropertyAction(formData: FormData) {
 
 export async function deletePropertyImageFromStorage(storagePath: string) {
   const { supabase, user, role } = await requireAuthContext();
+  assertStaff(role);
 
   const mustStartWith = "properties/";
 
@@ -860,7 +862,8 @@ export async function deletePropertyImageFromStorage(storagePath: string) {
 }
 
 export async function cleanupUploadSessionAction(sessionId: string) {
-  const { supabase, user } = await requireAuthContext();
+  const { supabase, user, role } = await requireAuthContext();
+  assertStaff(role);
 
   if (!sessionId) return { success: true };
 

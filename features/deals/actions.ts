@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { addMonths } from "date-fns";
-import { requireAuthContext, assertAuthenticated } from "@/lib/authz";
+import { requireAuthContext, assertAuthenticated, assertStaff } from "@/lib/authz";
 import {
   createDealSchema,
   updateDealSchema,
@@ -10,6 +10,34 @@ import {
   UpdateDealInput,
 } from "./schema";
 import { logAudit } from "@/lib/audit";
+
+async function updatePropertyStatusFromDeals(
+  supabase: Awaited<ReturnType<typeof requireAuthContext>>["supabase"],
+  propertyId: string
+) {
+  if (!propertyId) return;
+
+  const { data, error } = await supabase
+    .from("deals")
+    .select("deal_type")
+    .eq("property_id", propertyId)
+    .eq("status", "CLOSED_WIN")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("updatePropertyStatusFromDeals error:", error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    await supabase.from("properties").update({ status: "ACTIVE" }).eq("id", propertyId);
+    return;
+  }
+
+  const newStatus = data[0].deal_type === "SALE" ? "SOLD" : "RENTED";
+  await supabase.from("properties").update({ status: newStatus }).eq("id", propertyId);
+}
 
 export async function createDealAction(input: CreateDealInput) {
   try {
@@ -20,6 +48,7 @@ export async function createDealAction(input: CreateDealInput) {
 
     // Auth Check: Agent & Admin can create deals
     assertAuthenticated({ userId: user.id, role });
+    assertStaff(role);
 
     // Calculate end date for RENT deals if duration is provided
     const dealData = { ...validated };
@@ -106,23 +135,25 @@ export async function updateDealAction(input: UpdateDealInput) {
 
     // Auth Check
     assertAuthenticated({ userId: user.id, role });
+    assertStaff(role);
 
-    // Pre-fetch if we need data for status automation and it's missing
-    let propertyId = validated.property_id;
-    let dealType = validated.deal_type;
+    const { data: currentDeal, error: currentErr } = await supabase
+      .from("deals")
+      .select("id, status, property_id, deal_type")
+      .eq("id", validated.id)
+      .single();
 
-    if (validated.status === "CLOSED_WIN" && (!propertyId || !dealType)) {
-      const { data: currentDeal } = await supabase
-        .from("deals")
-        .select("property_id, deal_type")
-        .eq("id", validated.id)
-        .single();
-
-      if (currentDeal) {
-        propertyId = propertyId || currentDeal.property_id;
-        dealType = dealType || currentDeal.deal_type;
-      }
+    if (currentErr || !currentDeal) {
+      return { success: false, message: "Deal not found" };
     }
+
+    const prevStatus = currentDeal.status;
+    const prevPropertyId = currentDeal.property_id;
+    const prevDealType = currentDeal.deal_type;
+
+    const nextStatus = validated.status ?? prevStatus;
+    const nextPropertyId = validated.property_id ?? prevPropertyId;
+    const nextDealType = validated.deal_type ?? prevDealType;
 
     // Calculate end date for RENT deals if duration is updated
     const dealData = { ...validated };
@@ -181,12 +212,21 @@ export async function updateDealAction(input: UpdateDealInput) {
     );
 
     // Auto-update property status if deal is closed
-    if (validated.status === "CLOSED_WIN" && propertyId && dealType) {
-      const newStatus = dealType === "SALE" ? "SOLD" : "RENTED";
+    if (nextStatus === "CLOSED_WIN" && nextPropertyId && nextDealType) {
+      const newStatus = nextDealType === "SALE" ? "SOLD" : "RENTED";
       await supabase
         .from("properties")
         .update({ status: newStatus })
-        .eq("id", propertyId);
+        .eq("id", nextPropertyId);
+    }
+
+    const shouldRecomputePrev =
+      prevStatus === "CLOSED_WIN" &&
+      prevPropertyId &&
+      (nextStatus !== "CLOSED_WIN" || nextPropertyId !== prevPropertyId);
+
+    if (shouldRecomputePrev) {
+      await updatePropertyStatusFromDeals(supabase, prevPropertyId);
     }
 
     // We don't have lead_id in input easily unless passed, creating separate revalidate often
@@ -207,7 +247,18 @@ export async function deleteDealAction(dealId: string, leadId: string) {
     const { supabase, user, role } = await requireAuthContext();
 
     assertAuthenticated({ userId: user.id, role });
+    assertStaff(role);
     // TODO: Add refined ownership check if needed (only owner/admin can delete)
+
+    const { data: existingDeal, error: fetchErr } = await supabase
+      .from("deals")
+      .select("id, status, property_id")
+      .eq("id", dealId)
+      .single();
+
+    if (fetchErr || !existingDeal) {
+      return { success: false, message: "Deal not found" };
+    }
 
     const { error } = await supabase.from("deals").delete().eq("id", dealId);
 
@@ -224,6 +275,11 @@ export async function deleteDealAction(dealId: string, leadId: string) {
     );
 
     revalidatePath(`/protected/leads/${leadId}`);
+
+    if (existingDeal.status === "CLOSED_WIN" && existingDeal.property_id) {
+      await updatePropertyStatusFromDeals(supabase, existingDeal.property_id);
+    }
+
     return { success: true };
   } catch (error: any) {
     return { success: false, message: error.message };

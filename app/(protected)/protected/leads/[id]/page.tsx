@@ -122,7 +122,7 @@ export default async function LeadDetailPage({
           <h2 className="text-lg font-semibold flex items-center gap-2">
             Deals ({deals.length})
           </h2>
-          <DealFormDialog leadId={id} properties={properties || []} />
+          <DealFormDialog leadId={id} properties={properties || []} refreshOnSuccess />
         </div>
         <DealList deals={deals} />
       </div>

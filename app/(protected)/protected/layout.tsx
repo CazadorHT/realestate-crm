@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarNav } from "@/components/dashboard/SidebarNav";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
+import { isStaff } from "@/lib/auth-shared";
 import { UserNav } from "@/components/dashboard/UserNav";
 
 export default async function ProtectedLayout({
@@ -25,6 +26,9 @@ export default async function ProtectedLayout({
 
   if (!profile) {
     return redirect("/auth/login");
+  }
+  if (!isStaff(profile.role)) {
+    return redirect("/auth/error?error=forbidden");
   }
 
   return (

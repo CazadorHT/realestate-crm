@@ -1,20 +1,19 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { requireAuthContext, assertAuthenticated } from "@/lib/authz";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 import {
   createDocumentSchema,
   CreateDocumentInput,
   DocumentOwnerType,
 } from "./schema";
-import { revalidatePath } from "next/cache";
 
 // 1. Get Documents by Owner
 export async function getDocumentsByOwner(
   ownerId: string,
   ownerType: DocumentOwnerType
 ) {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { data, error } = await supabase
     .from("documents")
@@ -36,7 +35,7 @@ export async function getDocumentsByOwner(
 export async function createDocumentRecordAction(input: CreateDocumentInput) {
   try {
     const { supabase, user, role } = await requireAuthContext();
-    assertAuthenticated({ userId: user.id, role });
+    assertStaff(role);
 
     const validated = createDocumentSchema.parse(input);
 
@@ -68,7 +67,8 @@ export async function getDocumentSignedUrl(
   storagePath: string,
   bucket = "documents"
 ) {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   // Create a signed URL valid for 1 hour (3600 seconds)
   const { data, error } = await supabase.storage
@@ -82,8 +82,8 @@ export async function getDocumentSignedUrl(
 // 4. Delete Document
 export async function deleteDocumentAction(id: string, storagePath: string) {
   try {
-    const { supabase, user, role } = await requireAuthContext();
-    assertAuthenticated({ userId: user.id, role });
+    const { supabase, role } = await requireAuthContext();
+    assertStaff(role);
 
     // 1. Delete from Storage
     const { error: storageError } = await supabase.storage

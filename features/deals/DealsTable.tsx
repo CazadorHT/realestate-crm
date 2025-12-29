@@ -235,7 +235,14 @@ export function DealsTable({
                     }}
                   />
 
-                  <DeleteDealButton dealId={deal.id} leadId={deal.lead_id} />
+                  <DeleteDealButton
+                    dealId={deal.id}
+                    leadId={deal.lead_id}
+                    onSuccess={() => {
+                      setPage(1);
+                      setReloadKey((k) => k + 1);
+                    }}
+                  />
                 </div>
               </TableCell>
             </TableRow>

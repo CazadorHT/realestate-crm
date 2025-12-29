@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { requireAuthContext } from "@/lib/authz";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getLeadsQuery } from "@/features/leads/queries";
 
 export async function GET(request: Request) {
-  await requireAuthContext();
+  const { role } = await requireAuthContext();
+  assertStaff(role);
 
   const url = new URL(request.url);
   const q = url.searchParams.get("q") ?? undefined;

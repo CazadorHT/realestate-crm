@@ -60,7 +60,7 @@ export function assertAuthenticated(input: { userId: string; role: UserRole }) {
     throw new AuthzError("UNAUTHORIZED", "Unauthorized");
   }
 }
-
+// ตรวจสอบว่า userId ตรงกับ resource ownerId หรือไม่
 export function assertStaff(role: UserRole) {
   if (!isStaff(role)) {
     throw new AuthzError("FORBIDDEN", "Forbidden: Staff access only");

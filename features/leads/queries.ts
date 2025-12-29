@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 import type { LeadRow, LeadWithActivities } from "./types";
 import type { Database } from "@/lib/database.types";
 
@@ -27,12 +27,13 @@ type ListArgs = {
 };
 // ใช้สำหรับแสดง leads หลายรายการ
 export async function getLeadsQuery(args: ListArgs = {}) {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const q = (args.q ?? "").trim();
   const stage = (args.stage ?? "").trim();
   const page = Math.max(1, args.page ?? 1);
-  const pageSize = Math.min(50, Math.max(5, args.pageSize ?? 10));
+  const pageSize = Math.min(10, Math.max(5, args.pageSize ?? 10));
 
   let query = supabase
     .from("leads")
@@ -88,7 +89,8 @@ export async function getLeadsQuery(args: ListArgs = {}) {
  * Optimized query for Kanban view, fetching all active/recent leads (limited)
  */
 export async function getLeadsForKanbanQuery() {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { data, error } = await supabase
     .from("leads")
@@ -102,7 +104,8 @@ export async function getLeadsForKanbanQuery() {
 }
 // ใช้สำหรับแสดง leads รายเดียว
 export async function getLeadByIdQuery(id: string): Promise<LeadRow | null> {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
   const { data, error } = await supabase
     .from("leads")
     .select("*")
@@ -120,7 +123,8 @@ export async function getLeadWithActivitiesQuery(
   id: string
 ): Promise<LeadWithActivities | null> {
   try {
-    const supabase = await createClient();
+    const { supabase, role } = await requireAuthContext();
+    assertStaff(role);
 
     const { data, error } = await supabase
       .from("leads")
@@ -154,7 +158,8 @@ export async function getLeadWithActivitiesQuery(
 }
 // ใช้สำหรับแสดง summary ของ property ที่มีใน leads
 export async function getPropertySummariesByIdsQuery(ids: string[]) {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
   const uniq = Array.from(new Set(ids)).filter(Boolean);
   if (uniq.length === 0) return {} as Record<string, PropertySummary>;
 

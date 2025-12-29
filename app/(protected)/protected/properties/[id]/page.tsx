@@ -5,7 +5,7 @@ import { ArrowLeft, Edit, MapPin } from "lucide-react";
 import { PropertyStatusBadge } from "@/components/properties/PropertyStatusBadge";
 import { PropertyTypeBadge } from "@/components/properties/PropertyTypeBadge";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { DocumentList } from "@/features/documents/components/DocumentList";
 import { ImageLightbox } from "@/components/properties/ImageLightbox"; // เปลี่ยน path ตามที่วางไฟล์จริง
 
 export default async function PropertyDetailsPage({
@@ -92,15 +92,17 @@ export default async function PropertyDetailsPage({
     imagesForLightbox[0]?.image_url ||
     null;
 
+  const isClosed = property.status === "SOLD" || property.status === "RENTED";
+
   // Fetch related closed deal (if property sold/rented)
   let relatedDeal: any = null;
   let relatedContract: any = null;
-  let relatedDocuments: any[] = [];
-  if (property.status === "sold" || property.status === "rented") {
+  if (isClosed) {
     const { data: dealData } = await supabase
       .from("deals")
       .select("id, deal_type, commission_amount, commission_percent, created_by, status, lead:leads(id, full_name)")
       .eq("property_id", id)
+      .eq("status", "CLOSED_WIN")
       .order("created_at", { ascending: false })
       .limit(1)
       .single();
@@ -115,17 +117,16 @@ export default async function PropertyDetailsPage({
         .single();
       relatedContract = contractData ?? null;
 
-      // fetch documents attached to deal or contract
-      const ownerIds = [relatedDeal.id, relatedContract?.id].filter(Boolean);
-      if (ownerIds.length > 0) {
-        const { data: docs } = await supabase
-          .from("documents")
-          .select("*")
-          .in("owner_id", ownerIds);
-        relatedDocuments = docs ?? [];
-      }
     }
   }
+
+  const commissionLabel = relatedDeal
+    ? relatedDeal.commission_amount != null
+      ? `฿${Number(relatedDeal.commission_amount).toLocaleString()}`
+      : relatedDeal.commission_percent != null
+      ? `${Number(relatedDeal.commission_percent).toLocaleString()}%`
+      : "-"
+    : "-";
 
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
@@ -282,6 +283,51 @@ export default async function PropertyDetailsPage({
             />
           )}
 
+          {/* Deal & Contracts (CRM only, after SOLD/RENTED) */}
+          {isClosed && relatedDeal && (
+            <div className="space-y-4 rounded-xl border p-4 bg-muted/5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">CRM Deal</h3>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/protected/deals/${relatedDeal.id}`}>
+                    ไปยังหน้า Deal
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-lg border p-3 bg-background">
+                  <div className="text-xs text-muted-foreground">ค่าคอม</div>
+                  <div className="text-lg font-semibold">
+                    {commissionLabel}
+                  </div>
+                </div>
+                <div className="rounded-lg border p-3 bg-background">
+                  <div className="text-xs text-muted-foreground">Lead</div>
+                  <div className="font-medium">
+                    {relatedDeal.lead?.full_name ?? "-"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">เอกสารดีล</div>
+                  <DocumentList ownerId={relatedDeal.id} ownerType="DEAL" />
+                </div>
+                {relatedContract?.id && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">เอกสารสัญญา</div>
+                    <DocumentList
+                      ownerId={relatedContract.id}
+                      ownerType="RENTAL_CONTRACT"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* ADDITIONAL INFO (Location & Meta) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
@@ -405,40 +451,6 @@ export default async function PropertyDetailsPage({
                     </div>
                   )}
 
-                  {/* Deal & Contracts (CRM only) */}
-                  {relatedDeal && (
-                    <div className="mt-4 p-3 bg-blue-50/40 rounded border border-blue-100 text-sm">
-                      <div className="flex items-center justify-between">
-                        <div className="font-semibold">ดีลที่เกี่ยวข้อง</div>
-                        <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded">🔒 CRM เท่านั้น</span>
-                      </div>
-
-                      <div className="mt-2 grid grid-cols-3">
-                        <span className="text-muted-foreground">ประเภทดีล:</span>
-                        <span className="col-span-2 font-medium">{relatedDeal.deal_type}</span>
-                      </div>
-
-                      <div className="mt-2 grid grid-cols-3">
-                        <span className="text-muted-foreground">ค่าคอม:</span>
-                        <span className="col-span-2 font-medium">{relatedDeal.commission_amount ? `฿${Number(relatedDeal.commission_amount).toLocaleString()}` : (relatedDeal.commission_percent ? `${relatedDeal.commission_percent}%` : '-')}</span>
-                      </div>
-
-                      <div className="mt-3 flex gap-2">
-                        <Link href={`/protected/deals/${relatedDeal.id}`} className="text-sm text-blue-600 hover:underline">ไปยังหน้า Deal</Link>
-                      </div>
-
-                      {relatedDocuments.length > 0 && (
-                        <div className="mt-3">
-                          <div className="text-sm text-muted-foreground">เอกสารสัญญา:</div>
-                          <ul className="mt-1 text-sm list-disc ml-5">
-                            {relatedDocuments.map((d) => (
-                              <li key={d.id}><a className="text-blue-600 hover:underline" href={`/${d.storage_path}`} target="_blank">{d.file_name}</a></li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
             )}

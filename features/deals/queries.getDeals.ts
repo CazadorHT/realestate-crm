@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 import type { DealWithProperty } from "./types";
 
 type ListArgs = {
@@ -20,7 +20,8 @@ export async function getDeals({
   order = "created_at",
   ascending = false,
 }: ListArgs = {}) {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const trimmed = q.trim();
   const pageSafe = Math.max(1, page);

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import {
   requireAuthContext,
   assertAuthenticated,
+  assertStaff,
   authzFail,
 } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
@@ -25,6 +26,7 @@ export async function createLeadAction(
     if (!parsed.success)
       return { success: false, message: "ข้อมูล Lead ไม่ถูกต้อง" };
     const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     const payload: LeadInsert = {
       ...parsed.data,
@@ -68,6 +70,7 @@ export async function updateLeadAction(
       return { success: false, message: "ข้อมูล Lead ไม่ถูกต้อง" };
 
     const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     // 1) โหลด lead เพื่อเช็ค owner/admin
     const { data: lead, error: findErr } = await ctx.supabase
@@ -119,6 +122,7 @@ export async function deleteLeadAction(
 ): Promise<{ success: true } | { success: false; message: string }> {
   try {
     const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     // 1) โหลด lead เพื่อเช็ค owner/admin
     const { data: lead, error: findErr } = await ctx.supabase
@@ -162,6 +166,7 @@ export async function createLeadActivityAction(
       return { success: false, message: "ข้อมูล Activity ไม่ถูกต้อง" };
 
     const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     // 1) owner/admin ของ lead เท่านั้นที่เพิ่ม activity ได้
     const { data: lead, error: leadErr } = await ctx.supabase
@@ -212,6 +217,7 @@ export async function updateLeadStageAction(
 ): Promise<{ success: true } | { success: false; message: string }> {
   try {
     const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     const { data: lead, error: findErr } = await ctx.supabase
       .from("leads")
@@ -255,6 +261,7 @@ export async function searchPropertiesAction(
   q?: string
 ): Promise<PropertyPickItem[]> {
   const ctx = await requireAuthContext();
+  assertStaff(ctx.role);
 
   const query = (q ?? "").trim();
 

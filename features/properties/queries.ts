@@ -11,7 +11,7 @@
 
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
-import { requireAuthContext, assertAuthenticated } from "@/lib/authz";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 
 export type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 export type PropertyImageRow =
@@ -80,7 +80,8 @@ export async function getPublicPropertyWithImagesBySlug(
 export async function getProtectedPropertyWithImagesById(
   id: string
 ): Promise<PropertyWithImages> {
-  const { supabase, user, role } = await requireAuthContext();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { data, error } = await supabase
     .from("properties")
@@ -104,7 +105,6 @@ export async function getProtectedPropertyWithImagesById(
   if (error || !data) throw error;
 
   // ✅ Authorization check (authenticated)
-  assertAuthenticated({ userId: user.id, role });
 
   if (data.property_images) {
     data.property_images.sort(
@@ -119,7 +119,8 @@ export async function getProtectedPropertyWithImagesById(
  * Return minimal properties for select inputs in protected CRM
  */
 export async function getPropertiesForSelect() {
-  const { supabase } = await requireAuthContext();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { data, error } = await supabase
     .from("properties")

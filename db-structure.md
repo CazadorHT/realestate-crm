@@ -1,4 +1,4 @@
- {
+| {
     "enums": [
         {
             "name": "deal_status",
@@ -25,7 +25,8 @@
             "values": [
                 "LEAD",
                 "PROPERTY",
-                "DEAL"
+                "DEAL",
+                "RENTAL_CONTRACT"
             ]
         },
         {
@@ -347,6 +348,14 @@
                     "nullable": "YES",
                     "udt_name": "timestamptz",
                     "data_type": "timestamp with time zone"
+                },
+                {
+                    "pos": 17,
+                    "name": "co_agent_online",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "text",
+                    "data_type": "text"
                 }
             ],
             "indexes": [
@@ -1613,6 +1622,22 @@
                     "nullable": "YES",
                     "udt_name": "text",
                     "data_type": "text"
+                },
+                {
+                    "pos": 13,
+                    "name": "contract_number",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "text",
+                    "data_type": "text"
+                },
+                {
+                    "pos": 14,
+                    "name": "status",
+                    "default": "'DRAFT'::text",
+                    "nullable": "NO",
+                    "udt_name": "text",
+                    "data_type": "text"
                 }
             ],
             "indexes": [
@@ -1623,6 +1648,10 @@
                 {
                     "def": "CREATE INDEX idx_rental_contracts_deal_id ON public.rental_contracts USING btree (deal_id)",
                     "name": "idx_rental_contracts_deal_id"
+                },
+                {
+                    "def": "CREATE INDEX idx_rental_contracts_status ON public.rental_contracts USING btree (status)",
+                    "name": "idx_rental_contracts_status"
                 }
             ]
         }
@@ -1794,5 +1823,5 @@
             ]
         }
     ],
-    "generated_at": "2025-12-23T11:26:10.154724+00:00"
-} 
+    "generated_at": "2025-12-24T15:21:41.464062+00:00"
+} |

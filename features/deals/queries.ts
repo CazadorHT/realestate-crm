@@ -1,10 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { DealWithProperty } from "./types";
 
 export async function getDealsByLeadId(
   leadId: string
 ): Promise<DealWithProperty[]> {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   // Fetch deals and join with properties (select title, price, etc.)
   const { data, error } = await supabase
@@ -35,7 +36,8 @@ export async function getDealsByLeadId(
 export async function getDealById(
   dealId: string
 ): Promise<DealWithProperty | null> {
-  const supabase = await createClient(); // Fixed: await createClient()
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { data, error } = await supabase
     .from("deals")

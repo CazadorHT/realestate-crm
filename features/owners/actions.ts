@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import {
   requireAuthContext,
   assertAuthenticated,
+  assertStaff,
   authzFail,
 } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
@@ -15,6 +16,7 @@ import type { OwnerFormValues } from "./types";
 export async function getOwnersAction() {
   try {
     const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     let query = ctx.supabase.from("owners").select("*").order("full_name");
 
@@ -40,6 +42,7 @@ export async function getOwnersAction() {
 
 export async function getOwnerByIdAction(id: string) {
   const ctx = await requireAuthContext();
+  assertStaff(ctx.role);
 
   const { data: owner, error } = await ctx.supabase
     .from("owners")
@@ -63,6 +66,7 @@ export async function getOwnerByIdAction(id: string) {
 export async function createOwnerAction(values: OwnerFormValues) {
   try {
     const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     const { data: owner, error } = await ctx.supabase
       .from("owners")
@@ -104,6 +108,7 @@ export async function createOwnerAction(values: OwnerFormValues) {
 export async function updateOwnerAction(id: string, values: OwnerFormValues) {
   try {
     const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     // 1) Verify ownership
     const { data: existing, error: findError } = await ctx.supabase
@@ -155,6 +160,7 @@ export async function updateOwnerAction(id: string, values: OwnerFormValues) {
 export async function deleteOwnerAction(id: string) {
   try {
     const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     // 1) Verify ownership
     const { data: existing, error: findError } = await ctx.supabase
@@ -192,6 +198,7 @@ export async function deleteOwnerAction(id: string) {
 
 export async function getOwnersWithPropertyCountAction() {
   const ctx = await requireAuthContext();
+  assertStaff(ctx.role);
 
   let query = ctx.supabase.from("owners").select("*").order("full_name");
 

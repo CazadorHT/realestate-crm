@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition, useState } from "react";
+import { useRouter } from "next/navigation";
 import { deletePropertyAction } from "@/features/properties/actions";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 
 export function DeletePropertyButton({ id }: { id: string }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -27,6 +29,7 @@ export function DeletePropertyButton({ id }: { id: string }) {
         // The original code was: await deletePropertyAction(formData);
 
         toast.success("ลบข้อมูลทรัพย์เรียบร้อยแล้ว");
+        router.refresh();
       } catch (e: any) {
         toast.error(e.message || "เกิดข้อผิดพลาดในการลบข้อมูล");
       } finally {
@@ -57,6 +60,7 @@ export function DeletePropertyButton({ id }: { id: string }) {
         cancelText="ยกเลิก"
         variant="destructive"
         onConfirm={onDelete}
+        
       />
     </>
   );

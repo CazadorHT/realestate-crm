@@ -1,7 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { requireAuthContext, assertAuthenticated } from "@/lib/authz";
+import { requireAuthContext, assertAuthenticated, assertStaff } from "@/lib/authz";
 import {
   contractFormSchema,
   updateContractSchema,
@@ -17,7 +16,8 @@ export async function getContractByDealId(
 ): Promise<RentalContract | null> {
   try {
     const ctx = await requireAuthContext();
-    const { supabase, user, role } = ctx;
+    const { supabase, role } = ctx;
+    assertStaff(role);
 
     // Load contract
     const { data: contract, error } = await supabase
@@ -27,19 +27,6 @@ export async function getContractByDealId(
       .single();
 
     if (error || !contract) return null;
-
-    // Authorization: allow staff or deal owner
-    const { data: deal } = await supabase
-      .from("deals")
-      .select("id, created_by")
-      .eq("id", dealId)
-      .single();
-
-    const { isStaff } = await import("@/lib/auth-shared");
-    if (!isStaff(role) && deal?.created_by !== user.id) {
-      // Not the owner nor staff
-      return null;
-    }
 
     return contract as RentalContract;
   } catch (err) {
@@ -53,6 +40,7 @@ export async function upsertContractAction(
   try {
     const { supabase, user, role } = await requireAuthContext();
     assertAuthenticated({ userId: user.id, role });
+    assertStaff(role);
 
     const validated = contractFormSchema.parse(input);
 
@@ -65,10 +53,6 @@ export async function upsertContractAction(
 
     if (dealErr || !deal) return { success: false, message: "Deal not found" };
     if (!['RENT', 'SALE'].includes(deal.deal_type)) return { success: false, message: "Contracts are allowed only for RENT or SALE deals" };
-
-    // 2) auth: only staff (ADMIN/AGENT) can create/update
-    const { isStaff } = await import("@/lib/auth-shared");
-    if (!isStaff(role)) return { success: false, message: "Forbidden: only staff can manage contracts" };
 
     // 3) Create or update
     let result;
@@ -125,8 +109,7 @@ export async function deleteContractAction(id: string) {
   try {
     const { supabase, user, role } = await requireAuthContext();
     assertAuthenticated({ userId: user.id, role });
-    const { isStaff } = await import("@/lib/auth-shared");
-    if (!isStaff(role)) return { success: false, message: "Forbidden: only staff can delete contracts" };
+    assertStaff(role);
 
     // Ensure contract exists
     const { data: existing, error: fetchErr } = await supabase

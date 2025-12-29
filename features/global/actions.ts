@@ -1,7 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { requireAuthContext } from "@/lib/authz";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 
 export interface SearchResult {
   id: string;
@@ -19,7 +18,8 @@ export async function searchGlobalAction(
 ): Promise<SearchResult[]> {
   if (!query || query.length < 2) return [];
 
-  const { supabase, user, role } = await requireAuthContext();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
   const results: SearchResult[] = [];
 
   try {

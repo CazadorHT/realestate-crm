@@ -152,82 +152,52 @@
   {
     "schemaname": "public",
     "tablename": "leads",
-    "policyname": "Authenticated can insert leads",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "INSERT",
-    "qual": null,
-    "with_check": "(auth.uid() IS NOT NULL)"
-  },
-  {
-    "schemaname": "public",
-    "tablename": "leads",
-    "policyname": "Authenticated can read leads",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "SELECT",
-    "qual": "(auth.uid() IS NOT NULL)",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "leads",
-    "policyname": "authenticated_delete_leads_all",
+    "policyname": "Staff can delete leads",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
     "cmd": "DELETE",
-    "qual": "true",
+    "qual": "is_staff()",
     "with_check": null
   },
   {
     "schemaname": "public",
     "tablename": "leads",
-    "policyname": "authenticated_update_leads_all",
-    "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "UPDATE",
-    "qual": "true",
-    "with_check": "true"
-  },
-  {
-    "schemaname": "public",
-    "tablename": "owners",
-    "policyname": "Authenticated users can delete all owners",
-    "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "DELETE",
-    "qual": "true",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "owners",
-    "policyname": "Authenticated users can insert owners",
+    "policyname": "Staff can insert leads",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
     "cmd": "INSERT",
     "qual": null,
-    "with_check": "true"
+    "with_check": "is_staff()"
   },
   {
     "schemaname": "public",
-    "tablename": "owners",
-    "policyname": "Authenticated users can update all owners",
+    "tablename": "leads",
+    "policyname": "Staff can update leads",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
     "cmd": "UPDATE",
-    "qual": "true",
+    "qual": "is_staff()",
+    "with_check": "is_staff()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "leads",
+    "policyname": "Staff can view leads",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "is_staff()",
     "with_check": null
   },
   {
     "schemaname": "public",
     "tablename": "owners",
-    "policyname": "Authenticated users can view all owners",
+    "policyname": "Staff can manage owners",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "SELECT",
-    "qual": "true",
-    "with_check": null
+    "cmd": "ALL",
+    "qual": "is_staff()",
+    "with_check": "is_staff()"
   },
   {
     "schemaname": "public",
@@ -292,12 +262,12 @@
   {
     "schemaname": "public",
     "tablename": "properties",
-    "policyname": "Authenticated can manage properties",
+    "policyname": "Staff can manage properties",
     "permissive": "PERMISSIVE",
-    "roles": "{public}",
+    "roles": "{authenticated}",
     "cmd": "ALL",
-    "qual": "(auth.role() = 'authenticated'::text)",
-    "with_check": "(auth.role() = 'authenticated'::text)"
+    "qual": "is_staff()",
+    "with_check": "is_staff()"
   },
   {
     "schemaname": "public",
@@ -352,32 +322,12 @@
   {
     "schemaname": "public",
     "tablename": "property_images",
-    "policyname": "Authenticated can insert images",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "INSERT",
-    "qual": null,
-    "with_check": "(auth.uid() IS NOT NULL)"
-  },
-  {
-    "schemaname": "public",
-    "tablename": "property_images",
-    "policyname": "Authenticated can read images",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "SELECT",
-    "qual": "(auth.uid() IS NOT NULL)",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "property_images",
-    "policyname": "authenticated_manage_all_images",
+    "policyname": "Staff can manage property images",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
     "cmd": "ALL",
-    "qual": "true",
-    "with_check": "true"
+    "qual": "is_staff()",
+    "with_check": "is_staff()"
   },
   {
     "schemaname": "public",
@@ -422,6 +372,46 @@
   {
     "schemaname": "storage",
     "tablename": "objects",
+    "policyname": "Allow authenticated users to delete documents",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "DELETE",
+    "qual": "(bucket_id = 'documents'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "storage",
+    "tablename": "objects",
+    "policyname": "Allow authenticated users to update documents",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(bucket_id = 'documents'::text)",
+    "with_check": "(bucket_id = 'documents'::text)"
+  },
+  {
+    "schemaname": "storage",
+    "tablename": "objects",
+    "policyname": "Allow authenticated users to upload documents",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(bucket_id = 'documents'::text)"
+  },
+  {
+    "schemaname": "storage",
+    "tablename": "objects",
+    "policyname": "Allow authenticated users to view documents",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(bucket_id = 'documents'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "storage",
+    "tablename": "objects",
     "policyname": "Public read property images",
     "permissive": "PERMISSIVE",
     "roles": "{public}",
@@ -432,11 +422,11 @@
   {
     "schemaname": "storage",
     "tablename": "objects",
-    "policyname": "authenticated_manage_images_storage",
+    "policyname": "Staff can manage property images storage",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
     "cmd": "ALL",
-    "qual": "(bucket_id = 'property-images'::text)",
-    "with_check": "(bucket_id = 'property-images'::text)"
+    "qual": "((bucket_id = 'property-images'::text) AND is_staff())",
+    "with_check": "((bucket_id = 'property-images'::text) AND is_staff())"
   }
 ]
