@@ -81,3 +81,45 @@ export function safeEnumLabel(map: Record<string, string>, v: any) {
   if (!v) return "-";
   return map[v] ?? String(v);
 }
+
+/** === POPULAR AREAS (ย่านยอดนิยม) === */
+export const POPULAR_AREAS = [
+  "อ่อนนุช",
+  "บางนา",
+  "ลาดพร้าว",
+  "พระราม9",
+  "สุขุมวิท",
+  "อารีย์",
+  "ทองหล่อ",
+  "เอกมัย",
+  "สยาม",
+  "รัชดา",
+  "ปิ่นเกล้า",
+  "นนทบุรี",
+  "รามอินทรา",
+  "สาทร",
+  "สีลม",
+  "พญาไท",
+  "ราชเทวี",
+  "สะพานควาย",
+  "พหลโยธิน",
+  "เจริญกรุง",
+  "พัฒนาการ",
+  "ศรีนครินทร์",
+  "เพชรบุรี",
+  "พร้อมพงษ์",
+  "นานา",
+  "อโศก",
+] as const;
+
+/** === TRANSIT TYPES === */
+export const TRANSIT_TYPE_ENUM = ["BTS", "MRT", "ARL", "SRT", "OTHER"] as const;
+export type TransitType = (typeof TRANSIT_TYPE_ENUM)[number];
+
+export const TRANSIT_TYPE_LABELS: Record<TransitType, string> = {
+  BTS: "BTS",
+  MRT: "MRT",
+  ARL: "Airport Rail Link",
+  SRT: "รถไฟชานเมือง (สายสีแดง)",
+  OTHER: "อื่นๆ",
+};

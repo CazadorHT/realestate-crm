@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Prompt, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -14,10 +14,18 @@ export const metadata: Metadata = {
   description: "The fastest way to build apps with Next.js and Supabase",
 };
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const prompt = Prompt({
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  subsets: ["thai", "latin"],
   display: "swap",
-  subsets: ["latin"],
+  variable: "--font-prompt",
+});
+
+const notoThai = Noto_Sans_Thai({
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  subsets: ["thai", "latin"],
+  display: "swap",
+  variable: "--font-noto-thai",
 });
 
 export default function RootLayout({
@@ -27,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+      <body className={`${prompt.className} ${notoThai.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

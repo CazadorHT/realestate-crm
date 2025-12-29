@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @layer base {
+  
   :root {
     /* Base Background & Foreground */
     --background: 210 40% 98%; /* #F8FAFC */
@@ -88,5 +89,17 @@
 @layer base {
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 rounded-full hover:bg-slate-300;
   }
 }

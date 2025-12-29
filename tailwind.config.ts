@@ -105,6 +105,10 @@ const config: Config = {
         "2xl": "1.25rem",
         "3xl": "1.5rem",
       },
+      fontFamily: {
+        sans: ["var(--font-prompt)", "var(--font-noto-thai)", "sans-serif"],
+        display: ["var(--font-prompt)", "sans-serif"],
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

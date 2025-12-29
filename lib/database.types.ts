@@ -377,6 +377,24 @@ export type Database = {
         }
         Relationships: []
       }
+      popular_areas: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -442,8 +460,10 @@ export type Database = {
           meta_description: string | null
           meta_keywords: string[] | null
           meta_title: string | null
+          near_transit: boolean | null
           owner_id: string | null
           parking_slots: number | null
+          popular_area: string | null
           postal_code: string | null
           price: number | null
           property_source: string | null
@@ -456,6 +476,9 @@ export type Database = {
           structured_data: Json | null
           subdistrict: string | null
           title: string
+          transit_distance_meters: number | null
+          transit_station_name: string | null
+          transit_type: string | null
           updated_at: string
           zoning: string | null
         }
@@ -481,8 +504,10 @@ export type Database = {
           meta_description?: string | null
           meta_keywords?: string[] | null
           meta_title?: string | null
+          near_transit?: boolean | null
           owner_id?: string | null
           parking_slots?: number | null
+          popular_area?: string | null
           postal_code?: string | null
           price?: number | null
           property_source?: string | null
@@ -495,6 +520,9 @@ export type Database = {
           structured_data?: Json | null
           subdistrict?: string | null
           title: string
+          transit_distance_meters?: number | null
+          transit_station_name?: string | null
+          transit_type?: string | null
           updated_at?: string
           zoning?: string | null
         }
@@ -520,8 +548,10 @@ export type Database = {
           meta_description?: string | null
           meta_keywords?: string[] | null
           meta_title?: string | null
+          near_transit?: boolean | null
           owner_id?: string | null
           parking_slots?: number | null
+          popular_area?: string | null
           postal_code?: string | null
           price?: number | null
           property_source?: string | null
@@ -534,6 +564,9 @@ export type Database = {
           structured_data?: Json | null
           subdistrict?: string | null
           title?: string
+          transit_distance_meters?: number | null
+          transit_station_name?: string | null
+          transit_type?: string | null
           updated_at?: string
           zoning?: string | null
         }
@@ -659,6 +692,116 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_matches: {
+        Row: {
+          created_at: string | null
+          id: string
+          match_reasons: Json | null
+          match_score: number | null
+          property_id: string | null
+          rank: number | null
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          match_reasons?: Json | null
+          match_score?: number | null
+          property_id?: string | null
+          rank?: number | null
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          match_reasons?: Json | null
+          match_score?: number | null
+          property_id?: string | null
+          rank?: number | null
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_matches_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_matches_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "property_search_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_search_sessions: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          converted_at: string | null
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          lead_id: string | null
+          near_transit: boolean | null
+          preferred_area: string | null
+          preferred_property_type: string | null
+          purpose: string | null
+          session_token: string
+          transit_distance_meters: number | null
+          transit_station_name: string | null
+          transit_type: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          lead_id?: string | null
+          near_transit?: boolean | null
+          preferred_area?: string | null
+          preferred_property_type?: string | null
+          purpose?: string | null
+          session_token: string
+          transit_distance_meters?: number | null
+          transit_station_name?: string | null
+          transit_type?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          lead_id?: string | null
+          near_transit?: boolean | null
+          preferred_area?: string | null
+          preferred_property_type?: string | null
+          purpose?: string | null
+          session_token?: string
+          transit_distance_meters?: number | null
+          transit_station_name?: string | null
+          transit_type?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_search_sessions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]

@@ -3,7 +3,7 @@
 "use client";
 import * as React from "react";
 import { useRef } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, TrendingUp, PlusCircle, Loader2, Home } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,13 +24,16 @@ import {
   PROPERTY_TYPE_ORDER,
   LISTING_TYPE_ORDER,
   PROPERTY_STATUS_ORDER,
-  PROPERTY_TYPE_ENUM,
-  LISTING_TYPE_ENUM,
   PROPERTY_STATUS_ENUM,
+  POPULAR_AREAS,
+  TRANSIT_TYPE_LABELS,
+  TRANSIT_TYPE_ENUM,
 } from "@/features/properties/labels";
 import {
   createPropertyAction,
   updatePropertyAction,
+  getPopularAreasAction,
+  addPopularAreaAction,
   type CreatePropertyResult,
 } from "./actions";
 import {
@@ -43,12 +46,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
+  SelectGroup,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
@@ -77,6 +82,11 @@ const EMPTY_VALUES: PropertyFormValues = {
 
   commission_sale_percentage: 3,
   commission_rent_months: 1,
+  popular_area: undefined,
+  near_transit: false,
+  transit_station_name: "",
+  transit_type: "BTS",
+  transit_distance_meters: undefined,
 };
 // Form schema moved to `features/properties/schema.ts` for shared type-safety
 // หน้าอื่นๆ สามารถ import FormSchema และ PropertyFormValues จากที่นั่นได้
@@ -116,17 +126,21 @@ function mapRowToFormValues(
     subdistrict: row.subdistrict ?? "",
     postal_code: row.postal_code ?? "",
     google_maps_link: row.google_maps_link ?? undefined,
+    popular_area: row.popular_area ?? undefined,
 
     // New fields
     owner_id: row.owner_id ?? undefined,
     property_source: row.property_source ?? undefined,
     assigned_to: row.assigned_to ?? undefined,
     agent_ids: [],
-
     images: images ?? [],
 
     commission_sale_percentage: row.commission_sale_percentage ?? 3,
     commission_rent_months: row.commission_rent_months ?? 1,
+    near_transit: (row as any).near_transit ?? false,
+    transit_station_name: (row as any).transit_station_name ?? "",
+    transit_type: (row as any).transit_type ?? "BTS",
+    transit_distance_meters: (row as any).transit_distance_meters ?? undefined,
   };
 }
 
@@ -166,6 +180,30 @@ export function PropertyForm({
     { id: string; full_name: string | null; phone: string | null }[]
   >([]);
 
+  const [popularAreas, setPopularAreas] = React.useState<string[]>([]);
+  const [newArea, setNewArea] = React.useState("");
+  const [isAddingArea, setIsAddingArea] = React.useState(false);
+
+  const handleAddArea = async () => {
+    if (!newArea.trim()) return;
+    setIsAddingArea(true);
+    try {
+      const res = await addPopularAreaAction(newArea);
+      if (res.success) {
+        toast.success("เพิ่มย่านสำเร็จ");
+        const updated = await getPopularAreasAction();
+        setPopularAreas(updated);
+        setNewArea("");
+      } else {
+        toast.error(res.message || "เกิดข้อผิดพลาด");
+      }
+    } catch (e) {
+      toast.error("เกิดข้อผิดพลาดในการเพิ่มย่าน");
+    } finally {
+      setIsAddingArea(false);
+    }
+  };
+
   // Session ID for image uploads
   const uploadSessionId = useRef<string>(
     typeof crypto !== "undefined" ? crypto.randomUUID() : "fallback"
@@ -190,6 +228,14 @@ export function PropertyForm({
         if (agentsData) {
           setAgents(agentsData);
         }
+
+        // Load popular areas
+        const areasData = await getPopularAreasAction();
+        setPopularAreas(
+          areasData.length > 0
+            ? areasData
+            : (POPULAR_AREAS as unknown as string[])
+        );
 
         // If edit mode, load assigned agents
         if (mode === "edit" && defaultValues?.id) {
@@ -327,10 +373,8 @@ export function PropertyForm({
   }, [listingType]);
 
   // Derived helpers for responsive grid & visibility
-  const showPrice =
-    listingType === "SALE" || listingType === "SALE_AND_RENT";
-  const showRental =
-    listingType === "RENT" || listingType === "SALE_AND_RENT";
+  const showPrice = listingType === "SALE" || listingType === "SALE_AND_RENT";
+  const showRental = listingType === "RENT" || listingType === "SALE_AND_RENT";
   const numberFieldsCount = (showPrice ? 1 : 0) + (showRental ? 1 : 0) + 2; // bedrooms & bathrooms
 
   // Map of possible grid classes so Tailwind can pick them up at build time
@@ -395,7 +439,10 @@ export function PropertyForm({
     const commitValue = (raw: string) => {
       const parsed = parseNumber(raw);
       // Only call onChange if value actually changes to avoid unnecessary re-renders
-      if ((parsed === undefined && value === undefined) || (parsed != null && parsed === value)) {
+      if (
+        (parsed === undefined && value === undefined) ||
+        (parsed != null && parsed === value)
+      ) {
         return;
       }
       onChange(parsed);
@@ -434,7 +481,10 @@ export function PropertyForm({
           if (commitTimer.current) window.clearTimeout(commitTimer.current);
           const parsed = parseNumber(e.target.value);
           // commit only if changed
-          if ((parsed === undefined && value !== undefined) || (parsed != null && parsed !== value)) {
+          if (
+            (parsed === undefined && value !== undefined) ||
+            (parsed != null && parsed !== value)
+          ) {
             onChange(parsed);
           }
           setDisplay(formatNumber(parsed, decimals));
@@ -444,7 +494,10 @@ export function PropertyForm({
             // commit immediately on Enter
             if (commitTimer.current) window.clearTimeout(commitTimer.current);
             const parsed = parseNumber((e.target as HTMLInputElement).value);
-            if ((parsed === undefined && value !== undefined) || (parsed != null && parsed !== value)) {
+            if (
+              (parsed === undefined && value !== undefined) ||
+              (parsed != null && parsed !== value)
+            ) {
               onChange(parsed);
             }
             (e.target as HTMLInputElement).blur();
@@ -551,7 +604,12 @@ export function PropertyForm({
                 ชื่อทรัพย์ <span className="text-red-400">*</span>{" "}
               </FormLabel>
               <FormControl>
-                <Input {...field} placeholder={field.value ? undefined : "เช่น เศรษฐสิริ บางนา กม.10"} />
+                <Input
+                  {...field}
+                  placeholder={
+                    field.value ? undefined : "เช่น เศรษฐสิริ บางนา กม.10"
+                  }
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -570,7 +628,11 @@ export function PropertyForm({
                   rows={4}
                   {...field}
                   value={field.value ?? ""} // ✅ บังคับไม่ให้เป็น null/undefined
-                  placeholder={field.value ? undefined : "เช่น ขนาดที่ดิน, สิ่งอำนวยความสะดวก สั้น ๆ"}
+                  placeholder={
+                    field.value
+                      ? undefined
+                      : "เช่น ขนาดที่ดิน, สิ่งอำนวยความสะดวก สั้น ๆ"
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -666,7 +728,11 @@ export function PropertyForm({
         </div>
 
         {/* NUMBERS */}
-        <div className={`grid grid-cols-1 gap-4 ${gridClassMap[Math.min(numberFieldsCount, 4)]}`}>
+        <div
+          className={`grid grid-cols-1 gap-4 ${
+            gridClassMap[Math.min(numberFieldsCount, 4)]
+          }`}
+        >
           {showPrice && (
             <FormField
               control={form.control}
@@ -680,7 +746,9 @@ export function PropertyForm({
                       ariaInvalid={!!fieldState.error}
                       value={field.value}
                       onChange={(v) => field.onChange(v)}
-                      placeholder={field.value != null ? undefined : "เช่น 3,500,000"}
+                      placeholder={
+                        field.value != null ? undefined : "เช่น 3,500,000"
+                      }
                     />
                   </FormControl>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -704,11 +772,16 @@ export function PropertyForm({
                       ariaInvalid={!!fieldState.error}
                       value={field.value}
                       onChange={(v) => field.onChange(v)}
-                      placeholder={field.value != null ? undefined : "เช่น 12,000 (ต่อเดือน)"}
+                      placeholder={
+                        field.value != null
+                          ? undefined
+                          : "เช่น 12,000 (ต่อเดือน)"
+                      }
                     />
                   </FormControl>
                   <p className="text-xs text-muted-foreground mt-1">
-                    ใส่จำนวนเงินต่อเดือน (สกุล: {form.getValues("currency") || "THB"})
+                    ใส่จำนวนเงินต่อเดือน (สกุล:{" "}
+                    {form.getValues("currency") || "THB"})
                   </p>
                   {/* <FormMessage /> */}
                 </FormItem>
@@ -729,7 +802,9 @@ export function PropertyForm({
                     placeholder={field.value == null ? "เช่น 3" : undefined}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? undefined : Number(e.target.value)
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
                       )
                     }
                   />
@@ -752,7 +827,9 @@ export function PropertyForm({
                     placeholder={field.value == null ? "เช่น 2" : undefined}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? undefined : Number(e.target.value)
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
                       )
                     }
                   />
@@ -762,7 +839,7 @@ export function PropertyForm({
             )}
           />
         </div>
-               {/* AREA SPECIFICATIONS */}
+        {/* AREA SPECIFICATIONS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -774,7 +851,7 @@ export function PropertyForm({
                   <Input
                     type="number"
                     value={field.value ?? ""}
-                      placeholder={field.value == null ? "32 ตร.ม." : undefined}
+                    placeholder={field.value == null ? "32 ตร.ม." : undefined}
                     onChange={(e) =>
                       field.onChange(
                         e.target.value === ""
@@ -798,8 +875,7 @@ export function PropertyForm({
                   <Input
                     type="number"
                     value={field.value ?? ""}
-                      placeholder={field.value == null ? "180 ตร.ว." : undefined}
-
+                    placeholder={field.value == null ? "180 ตร.ว." : undefined}
                     onChange={(e) =>
                       field.onChange(
                         e.target.value === ""
@@ -851,7 +927,9 @@ export function PropertyForm({
                           decimals={1}
                           value={field.value ?? undefined}
                           onChange={(v) => field.onChange(v)}
-                          placeholder={field.value == null ? "เปอร์เซ็นต์" : undefined}
+                          placeholder={
+                            field.value == null ? "เปอร์เซ็นต์" : undefined
+                          }
                           ariaInvalid={false}
                         />
                       </div>
@@ -863,7 +941,11 @@ export function PropertyForm({
                           ยอดเงินที่คาดว่าจะได้รับ:
                         </span>
                         <span className="font-bold text-blue-600">
-                          ฿{((priceVal * (field.value || 0)) / 100).toLocaleString()}
+                          ฿
+                          {(
+                            (priceVal * (field.value || 0)) /
+                            100
+                          ).toLocaleString()}
                         </span>
                       </div>
                     )}
@@ -909,7 +991,9 @@ export function PropertyForm({
                           decimals={1}
                           value={field.value ?? undefined}
                           onChange={(v) => field.onChange(v)}
-                          placeholder={field.value == null ? "จำนวนเดือน" : undefined}
+                          placeholder={
+                            field.value == null ? "จำนวนเดือน" : undefined
+                          }
                           ariaInvalid={false}
                         />
                       </div>
@@ -935,8 +1019,6 @@ export function PropertyForm({
           )}
         </div>
 
-     
-
         {/* LOCATION */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold border-b pb-2">
@@ -950,7 +1032,13 @@ export function PropertyForm({
               <FormItem>
                 <FormLabel>บ้านเลขที่ / ซอย / ถนน</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value ?? ""} placeholder={field.value ? undefined : "บ้านเลขที่ / ซอย / ถนน"} />
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    placeholder={
+                      field.value ? undefined : "บ้านเลขที่ / ซอย / ถนน"
+                    }
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -965,7 +1053,11 @@ export function PropertyForm({
                 <FormItem>
                   <FormLabel>แขวง / ตำบล</FormLabel>
                   <FormControl>
-                    <Input {...field} value={field.value ?? ""} placeholder={field.value ? undefined : "เช่น บางนา"} />
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      placeholder={field.value ? undefined : "เช่น บางนา"}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -978,7 +1070,11 @@ export function PropertyForm({
                 <FormItem>
                   <FormLabel>เขต / อำเภอ</FormLabel>
                   <FormControl>
-                    <Input {...field} value={field.value ?? ""} placeholder={field.value ? undefined : "เช่น บางนา"} />
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      placeholder={field.value ? undefined : "เช่น บางนา"}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -991,7 +1087,13 @@ export function PropertyForm({
                 <FormItem>
                   <FormLabel>จังหวัด</FormLabel>
                   <FormControl>
-                    <Input {...field} value={field.value ?? ""} placeholder={field.value ? undefined : "เช่น กรุงเทพมหานคร"} />
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      placeholder={
+                        field.value ? undefined : "เช่น กรุงเทพมหานคร"
+                      }
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -1004,7 +1106,11 @@ export function PropertyForm({
                 <FormItem>
                   <FormLabel>รหัสไปรษณีย์</FormLabel>
                   <FormControl>
-                    <Input {...field} value={field.value ?? ""} placeholder={field.value ? undefined : "เช่น 10260"} />
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      placeholder={field.value ? undefined : "เช่น 10260"}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -1022,7 +1128,11 @@ export function PropertyForm({
                     <Input
                       {...field}
                       value={field.value ?? ""}
-                      placeholder={field.value ? undefined : "เช่น https://maps.app.goo.gl/..."}
+                      placeholder={
+                        field.value
+                          ? undefined
+                          : "เช่น https://maps.app.goo.gl/..."
+                      }
                     />
                   </FormControl>
                   <FormMessage />
@@ -1030,6 +1140,186 @@ export function PropertyForm({
               )}
             />
           </div>
+
+          {/* POPULAR AREA TAG */}
+          <div className="bg-blue-50/30 p-4 rounded-xl border border-blue-100/50">
+            <FormField
+              control={form.control}
+              name="popular_area"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-blue-700 font-bold flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    ย่านยอดนิยม (สำหรับระบบ Smart Match ✨)
+                  </FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={(val) =>
+                        field.onChange(val === "none" ? null : val)
+                      }
+                      defaultValue={field.value ?? undefined}
+                    >
+                      <SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
+                        <SelectValue placeholder="-- เลือกย่านยอดนิยม --" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white max-h-[300px] w-full min-w-[200px]">
+                        <SelectGroup>
+                          <SelectItem value="none">-- ไม่ระบุ --</SelectItem>
+                          {popularAreas.map((area) => (
+                            <SelectItem key={area} value={area}>
+                              {area}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+
+                  {/* Add New Area Input */}
+                  <div className="mt-3 flex gap-2">
+                    <Input
+                      placeholder="เพิ่มย่านใหม่..."
+                      value={newArea}
+                      onChange={(e) => setNewArea(e.target.value)}
+                      className="h-8 text-xs flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddArea();
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                      onClick={handleAddArea}
+                      disabled={isAddingArea || !newArea.trim()}
+                    >
+                      {isAddingArea ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <PlusCircle className="h-4 w-4 mr-1" />
+                      )}
+                      เพิ่ม
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-blue-600 font-medium mt-1">
+                    💡 การระบุย่านนี้จะทำให้ระบบ Smart Match
+                    บนหน้าเว็บหาทรัพย์นี้เจอเป็นอันดับต้นๆ
+                    เมื่อลูกค้าเลือกย่านเดียวกัน
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* NEAR TRANSIT CHECKBOX */}
+          <div className="bg-blue-50/10 p-4 rounded-xl border border-blue-100/30">
+            <FormField
+              control={form.control}
+              name="near_transit"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm font-bold text-blue-700 flex items-center gap-2 cursor-pointer">
+                      <Home className="h-4 w-4" />
+                      ใกล้รถไฟฟ้า / เดินทางสะดวก ✨
+                    </FormLabel>
+                    <p className="text-[10px] text-blue-500 font-medium">
+                      เปิดใช้งานหากทรัพย์อยู่ใกล้สถานี BTS/MRT หรือจุดขนส่งหลัก
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Detailed Transit Fields (Visible only if near_transit is checked) */}
+          {form.watch("near_transit") && (
+            <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-3 p-4 border border-blue-100/50 rounded-xl bg-white shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+              <FormField
+                control={form.control}
+                name="transit_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                      ประเภทรถไฟฟ้า
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? "BTS"}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-8 text-xs bg-slate-50 border-slate-200">
+                          <SelectValue placeholder="เลือกประเภท" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white">
+                        {TRANSIT_TYPE_ENUM.map((t) => (
+                          <SelectItem key={t} value={t} className="text-xs">
+                            {TRANSIT_TYPE_LABELS[t]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="transit_station_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                      ชื่อสถานี
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        placeholder="เช่น อ่อนนุช"
+                        className="h-8 text-xs bg-slate-50 border-slate-200"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="transit_distance_meters"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                      ห่างสถานี (เมตร)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        value={field.value ?? ""}
+                        placeholder="เช่น 300"
+                        className="h-8 text-xs bg-slate-50 border-slate-200"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
         </div>
 
         {/* Owner & Agent Section */}
@@ -1107,46 +1397,50 @@ export function PropertyForm({
               </span>
             </FormLabel>
             <div className="space-y-2">
-              {form.watch("agent_ids")?.map((agentId, index) => (
-                <div key={index} className="flex gap-2">
-                  <Select
-                    value={agentId}
-                    onValueChange={(val) => {
-                      const current = form.getValues("agent_ids") || [];
-                      current[index] = val;
-                      // If first one, also set assigned_to
-                      if (index === 0) form.setValue("assigned_to", val);
-                      form.setValue("agent_ids", [...current]);
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="เลือก Agent" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
-                      {agents.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.full_name || "(No name)"}
-                          {(a.phone && ` (${a.phone})`) || " (No phone)"}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => {
-                      const current = form.getValues("agent_ids") || [];
-                      const newIds = current.filter((_, i) => i !== index);
-                      form.setValue("agent_ids", newIds);
-                      if (index === 0)
-                        form.setValue("assigned_to", newIds[0] || null);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+              {form
+                .watch("agent_ids")
+                ?.map((agentId: string, index: number) => (
+                  <div key={index} className="flex gap-2">
+                    <Select
+                      value={agentId}
+                      onValueChange={(val: string) => {
+                        const current = form.getValues("agent_ids") || [];
+                        current[index] = val;
+                        // If first one, also set assigned_to
+                        if (index === 0) form.setValue("assigned_to", val);
+                        form.setValue("agent_ids", [...current]);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="เลือก Agent" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
+                        {agents.map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {a.full_name || "(No name)"}
+                            {(a.phone && ` (${a.phone})`) || " (No phone)"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => {
+                        const current = form.getValues("agent_ids") || [];
+                        const newIds = current.filter(
+                          (_, i: number) => i !== index
+                        );
+                        form.setValue("agent_ids", newIds);
+                        if (index === 0)
+                          form.setValue("assigned_to", newIds[0] || null);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               <Button
                 type="button"
                 variant="outline"

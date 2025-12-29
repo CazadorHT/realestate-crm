@@ -893,3 +893,47 @@ export async function cleanupUploadSessionAction(sessionId: string) {
 
   return { success: true };
 }
+
+/**
+ * Get all popular areas from database
+ */
+export async function getPopularAreasAction() {
+  const { supabase } = await requireAuthContext();
+
+  const { data, error } = await (supabase.from("popular_areas" as any) as any)
+    .select("name")
+    .order("name");
+
+  if (error) {
+    console.error("getPopularAreasAction error:", error);
+    return [];
+  }
+
+  return (data as any[]).map((item) => item.name);
+}
+
+/**
+ * Add a new popular area to the database
+ */
+export async function addPopularAreaAction(name: string) {
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
+
+  if (!name || name.trim() === "") {
+    return { success: false, message: "กรุณาระบุชื่อย่าน" };
+  }
+
+  const { error } = await (supabase.from("popular_areas" as any) as any).insert(
+    { name: name.trim() }
+  );
+
+  if (error) {
+    if (error.code === "23505") {
+      return { success: false, message: "ย่านนี้มีอยู่แล้ว" };
+    }
+    console.error("addPopularAreaAction error:", error);
+    return { success: false, message: error.message };
+  }
+
+  return { success: true };
+}

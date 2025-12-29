@@ -9,6 +9,7 @@ import {
   PROPERTY_TYPE_ENUM,
   LISTING_TYPE_ENUM,
   PROPERTY_STATUS_ENUM,
+  TRANSIT_TYPE_ENUM,
 } from "./labels";
 
 /** Shared Zod schema for property forms */
@@ -43,6 +44,7 @@ export const FormSchema = z
     subdistrict: z.string().optional(),
     postal_code: z.string().optional(),
     google_maps_link: z.string().optional().nullable(),
+    popular_area: z.string().optional().nullable(),
 
     owner_id: z.string().uuid().nullable().optional(),
     assigned_to: z.string().uuid().nullable().optional(), // For primary agent / backward compatibility
@@ -53,6 +55,10 @@ export const FormSchema = z
 
     commission_sale_percentage: z.coerce.number().optional().nullable(),
     commission_rent_months: z.coerce.number().optional().nullable(),
+    near_transit: z.boolean().default(false),
+    transit_station_name: z.string().optional().nullable(),
+    transit_type: z.enum(TRANSIT_TYPE_ENUM).optional().nullable(),
+    transit_distance_meters: z.coerce.number().optional().nullable(),
   })
   .superRefine((data, ctx) => {
     const priceMissing = data.price === undefined || Number.isNaN(data.price);
@@ -96,7 +102,10 @@ export const FormSchema = z
       data.commission_rent_months === undefined ||
       Number.isNaN(data.commission_rent_months);
 
-    if ((data.listing_type === "SALE" || data.listing_type === "SALE_AND_RENT") && saleCommissionMissing) {
+    if (
+      (data.listing_type === "SALE" || data.listing_type === "SALE_AND_RENT") &&
+      saleCommissionMissing
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["commission_sale_percentage"],
@@ -104,7 +113,10 @@ export const FormSchema = z
       });
     }
 
-    if ((data.listing_type === "RENT" || data.listing_type === "SALE_AND_RENT") && rentCommissionMissing) {
+    if (
+      (data.listing_type === "RENT" || data.listing_type === "SALE_AND_RENT") &&
+      rentCommissionMissing
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["commission_rent_months"],
