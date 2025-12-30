@@ -20,7 +20,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
               <Home className="h-6 w-6 text-blue-600" />
@@ -53,14 +53,14 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section - Visual Priority */}
-      <section className="pt-32 pb-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+      <section className="py-40 max-w-screen-2xl mx-auto  ">
+        <div className=" px-4 sm:px-6 lg:px-8  ">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 items-center align-middle ">
             {/* Left: Value Proposition */}
-            <div className="space-y-6 animate-in fade-in-0 duration-700 slide-in-from-bottom-4">
+            <div className="space-y-6 animate-in fade-in-0 duration-700 slide-in-from-bottom-4 lg:col-span-2">
               <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
                 <TrendingUp className="h-4 w-4" />
-                <span>ค้นหาบ้านในฝันของคุณได้ง่ายขึ้น</span>
+                <span>ค้นหาพื้นที่ในฝันของคุณได้ง่ายขึ้น</span>
               </div>
 
               <HeroTitle />

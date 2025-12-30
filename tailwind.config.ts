@@ -2,7 +2,11 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   darkMode: "class", // ใช้ class="dark" บน <html> หรือ <body>
-  content: ["./app/**/*.{ts,tsx,js,jsx}", "./components/**/*.{ts,tsx,js,jsx}"],
+  content: [
+    "./app/**/*.{ts,tsx,js,jsx}",
+    "./components/**/*.{ts,tsx,js,jsx}",
+    "./features/**/*.{ts,tsx,js,jsx}",
+  ],
   theme: {
     extend: {
       colors: {

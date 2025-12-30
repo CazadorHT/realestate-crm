@@ -133,10 +133,10 @@ export function SmartMatchWizard() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100 min-h-[500px] flex flex-col">
+    <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100 min-h-[350px] flex flex-col">
       {step < 9 ? (
         <>
-          <div className="flex justify-between items-center mb-10 relative">
+          <div className="flex justify-between items-center relative ">
             <div className="flex items-center gap-3">
               {step > 1 && step < 4 && (
                 <button
@@ -166,10 +166,10 @@ export function SmartMatchWizard() {
             </div>
           </div>
 
-          <div className="relative flex-1 flex flex-col pt-2">
+          <div className="relative  flex-1 flex flex-col pt-5 max-h-[350px]">
             {step === 1 && (
               <QuizQuestion
-                title="คุณต้องการ?"
+                title="คุณต้องการ ?"
                 options={["ซื้อ", "เช่า", "ลงทุน"]}
                 onSelect={(val) => {
                   setPurpose(
@@ -181,7 +181,7 @@ export function SmartMatchWizard() {
             )}
             {step === 1.5 && (
               <QuizQuestion
-                title="ประเภทอสังหาฯ ที่คุณต้องการ?"
+                title="ประเภทอสังหาฯ ที่คุณต้องการ ?"
                 options={["บ้าน", "คอนโด", "อาคารสำนักงาน", "โฮมออฟฟิศ"]}
                 onSelect={(val) => {
                   const map: Record<string, PropertyType> = {
@@ -199,8 +199,8 @@ export function SmartMatchWizard() {
               <QuizQuestion
                 title={
                   purpose === "RENT"
-                    ? "งบเช่าต่อเดือนเท่าไหร่?"
-                    : "งบประมาณประมาณเท่าไหร่?"
+                    ? "งบเช่าต่อเดือนเท่าไหร่ ?"
+                    : "งบประมาณประมาณเท่าไหร่ ?"
                 }
                 options={
                   purpose === "RENT"
@@ -215,7 +215,7 @@ export function SmartMatchWizard() {
             )}
             {step === 2.5 && (
               <QuizQuestion
-                title="ต้องการเน้นใกล้รถไฟฟ้าไหม?"
+                title="ต้องการเน้นใกล้รถไฟฟ้าไหม ?"
                 options={["ใกล้รถไฟฟ้า BTS/MRT", "ไม่เน้นทำเลรถไฟฟ้า"]}
                 onSelect={(val) => {
                   setNearTransit(val.includes("ใกล้รถไฟฟ้า"));
@@ -225,7 +225,7 @@ export function SmartMatchWizard() {
             )}
             {step === 3 && (
               <QuizQuestion
-                title="ทำงานแถวไหน?"
+                title="ทำงานแถวไหน ?"
                 options={popularAreas}
                 onSelect={(val) => {
                   setArea(val);
@@ -255,9 +255,9 @@ interface QuizQuestionProps {
 
 function QuizQuestion({ title, options, onSelect }: QuizQuestionProps) {
   return (
-    <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex flex-col h-full">
-      <h2 className="text-2xl font-bold mb-6 text-slate-900">{title}</h2>
-      <div className="overflow-y-auto pr-2 max-h-[350px] custom-scrollbar">
+    <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex flex-col h-full max-h-[350px]">
+      <h2 className="text-3xl font-medium md:text-2xl mb-6 text-slate-900">{title}</h2>
+      <div className="overflow-y-auto pr-2 max-h-[200px] custom-scrollbar">
         <div className="grid grid-cols-2 gap-3 pb-4">
           {options.map((option) => (
             <button

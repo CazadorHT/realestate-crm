@@ -3,7 +3,14 @@
 "use client";
 import * as React from "react";
 import { useRef } from "react";
-import { Trash2, TrendingUp, PlusCircle, Loader2, Home } from "lucide-react";
+import {
+  Trash2,
+  TrendingUp,
+  PlusCircle,
+  Loader2,
+  Home,
+  Check,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,6 +62,7 @@ import {
   SelectItem,
   SelectGroup,
 } from "@/components/ui/select";
+
 import { Button } from "@/components/ui/button";
 
 const EMPTY_VALUES: PropertyFormValues = {
@@ -181,8 +189,16 @@ export function PropertyForm({
   >([]);
 
   const [popularAreas, setPopularAreas] = React.useState<string[]>([]);
+  const [currentStep, setCurrentStep] = React.useState(1);
   const [newArea, setNewArea] = React.useState("");
   const [isAddingArea, setIsAddingArea] = React.useState(false);
+
+  // Quick Info Dialog state
+  const [isQuickInfoOpen, setIsQuickInfoOpen] = React.useState(false);
+  const [quickTitle, setQuickTitle] = React.useState("");
+  const [quickArea, setQuickArea] = React.useState<string | undefined>(
+    undefined
+  );
 
   const handleAddArea = async () => {
     if (!newArea.trim()) return;
@@ -290,6 +306,46 @@ export function PropertyForm({
   const onInvalid = (errors: FieldErrors<PropertyFormValues>) => {
     const firstKey = Object.keys(errors)[0];
     if (firstKey) scrollToField(firstKey);
+    toast.error("กรุณาตรวจสอบข้อมูลให้ครบถ้วน");
+  };
+
+  // Multiple steps navigation & validation
+  const validateStep = async (step: number) => {
+    let fieldsToValidate: (keyof PropertyFormValues)[] = [];
+    if (step === 1) {
+      fieldsToValidate = ["listing_type", "property_type"];
+    } else if (step === 2) {
+      fieldsToValidate = [
+        "title",
+        "price" as any,
+        "rental_price" as any,
+        "size_sqm" as any,
+      ];
+    } else if (step === 3) {
+      fieldsToValidate = ["province", "district", "subdistrict"];
+    }
+
+    if (fieldsToValidate.length > 0) {
+      const isValid = await form.trigger(fieldsToValidate);
+      if (!isValid) {
+        toast.error("กรุณากรอกข้อมูลที่จำเป็นในขั้นตอนนี้ให้ครบถ้วน");
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleNext = async () => {
+    const isStepValid = await validateStep(currentStep);
+    if (isStepValid) {
+      setCurrentStep((prev) => Math.min(prev + 1, 4));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleBack = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Handle form submission หรือ การสร้าง/แก้ไขทรัพย์โดยการใช้ onSubmit
@@ -564,914 +620,1089 @@ export function PropertyForm({
     );
   }
   return (
-    <Form {...form}>
-      <form
-        className="space-y-6 max-w-2xl"
-        onSubmit={form.handleSubmit(onSubmit, onInvalid)}
-      >
-        {/* Error Summary หรือ สรุปข้อผิดพลาดของฟอร์ม */}
-        <ErrorSummary errors={form.formState.errors} />
-        {/* Img */}
-        <FormField
-          control={form.control}
-          name="images"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>รูปภาพทรัพย์</FormLabel>
-              <FormControl>
-                <PropertyImageUploader
-                  sessionId={uploadSessionId}
-                  value={field.value ?? []}
-                  onChange={field.onChange}
-                  initialImages={initialImages}
-                  maxFiles={IMAGE_UPLOAD_POLICY.maxFiles}
-                  maxFileSizeMB={IMAGE_UPLOAD_POLICY.maxBytes / (1024 * 1024)}
-                  // 🔥 ถ้า persistImages = true → ไม่ต้อง cleanup
-                  cleanupOnUnmount={!persistImages}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {/* TITLE */}
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem data-field="title">
-              <FormLabel>
-                ชื่อทรัพย์ <span className="text-red-400">*</span>{" "}
-              </FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder={
-                    field.value ? undefined : "เช่น เศรษฐสิริ บางนา กม.10"
-                  }
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* DESCRIPTION */}
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem data-field="description">
-              <FormLabel>รายละเอียด</FormLabel>
-              <FormControl>
-                <Textarea
-                  rows={4}
-                  {...field}
-                  value={field.value ?? ""} // ✅ บังคับไม่ให้เป็น null/undefined
-                  placeholder={
-                    field.value
-                      ? undefined
-                      : "เช่น ขนาดที่ดิน, สิ่งอำนวยความสะดวก สั้น ๆ"
-                  }
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* ENUMS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <FormField
-            control={form.control}
-            name="property_type"
-            render={({ field }) => (
-              <FormItem data-field="property_type">
-                <FormLabel>ประเภททรัพย์</FormLabel>
-                <FormControl>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="-- เลือกประเภท --" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      {PROPERTY_TYPE_ORDER.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {PROPERTY_TYPE_LABELS[t]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+    <div className="space-y-10">
+      {/* 🚀 Stepper Component */}
+      <div className="bg-white p-6 rounded-3xl shadow-lg shadow-slate-100 border border-slate-100 mb-10 sticky top-4 z-40 backdrop-blur-md bg-white/90 ">
+        <div className="flex justify-between items-center relative max-w-2xl mx-auto ">
+          {/* Progress Line */}
+          <div className="absolute top-5 left-0 w-full h-0.5 bg-slate-100 -z-0" />
+          <div
+            className="absolute top-5 left-0 h-0.5 bg-blue-600 transition-all duration-700 ease-in-out -z-0"
+            style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
           />
 
-          <FormField
-            control={form.control}
-            name="listing_type"
-            render={({ field }) => (
-              <FormItem data-field="listing_type">
-                <FormLabel>รูปแบบประกาศ</FormLabel>
-                <FormControl>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="ขาย/เช่า" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      {LISTING_TYPE_ORDER.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {LISTING_TYPE_LABELS[t]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem data-field="status">
-                <FormLabel>สถานะ</FormLabel>
-                <FormControl>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value ?? "DRAFT"}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="สถานะ" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      {PROPERTY_STATUS_ORDER.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {PROPERTY_STATUS_LABELS[t]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {[
+            { step: 1, label: "ข้อมูลประกาศ" },
+            { step: 2, label: "รายละเอียดทรัพย์" },
+            { step: 3, label: "ทำเลที่ตั้ง" },
+            { step: 4, label: "รูปภาพ & การจัดเก็บ" },
+          ].map((item) => (
+            <div
+              key={item.step}
+              className="relative z-10 flex flex-col items-center gap-2 group cursor-pointer"
+              onClick={async () => {
+                if (item.step < currentStep) setCurrentStep(item.step);
+                else if (item.step === currentStep + 1) handleNext();
+              }}
+            >
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-500 ${
+                  currentStep >= item.step
+                    ? "bg-blue-600 text-white shadow-xl shadow-blue-200 scale-110"
+                    : "bg-white text-slate-400 border-2 border-slate-100 group-hover:border-blue-200"
+                }`}
+              >
+                {currentStep > item.step ? "✓" : item.step}
+              </div>
+              <span
+                className={`text-[10px] whitespace-nowrap font-bold uppercase tracking-wider transition-colors duration-300 ${
+                  currentStep >= item.step ? "text-blue-600" : "text-slate-400"
+                }`}
+              >
+                {item.label}
+              </span>
+            </div>
+          ))}
         </div>
-
-        {/* NUMBERS */}
-        <div
-          className={`grid grid-cols-1 gap-4 ${
-            gridClassMap[Math.min(numberFieldsCount, 4)]
-          }`}
+      </div>
+      {/* 🚀 Form Content */}
+      <Form {...form}>
+        <form
+          className="space-y-10"
+          onSubmit={form.handleSubmit(onSubmit, onInvalid)}
         >
-          {showPrice && (
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel>ราคาขาย</FormLabel>
+          {/* Error Summary หรือ สรุปข้อผิดพลาดของฟอร์ม */}
+          <ErrorSummary errors={form.formState.errors} />
 
-                  <FormControl>
-                    <NumberInput
-                      ariaInvalid={!!fieldState.error}
-                      value={field.value}
-                      onChange={(v) => field.onChange(v)}
-                      placeholder={
-                        field.value != null ? undefined : "เช่น 3,500,000"
-                      }
-                    />
-                  </FormControl>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    สกุล: {form.getValues("currency") || "THB"}
-                  </p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
-          {showRental && (
-            <FormField
-              control={form.control}
-              name="rental_price"
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel>ราคาเช่า</FormLabel>
-                  <FormControl>
-                    <NumberInput
-                      ariaInvalid={!!fieldState.error}
-                      value={field.value}
-                      onChange={(v) => field.onChange(v)}
-                      placeholder={
-                        field.value != null
-                          ? undefined
-                          : "เช่น 12,000 (ต่อเดือน)"
-                      }
-                    />
-                  </FormControl>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    ใส่จำนวนเงินต่อเดือน (สกุล:{" "}
-                    {form.getValues("currency") || "THB"})
-                  </p>
-                  {/* <FormMessage /> */}
-                </FormItem>
-              )}
-            />
-          )}
-
-          <FormField
-            control={form.control}
-            name="bedrooms"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>ห้องนอน</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    value={field.value ?? ""}
-                    placeholder={field.value == null ? "เช่น 3" : undefined}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
-                      )
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="bathrooms"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>ห้องน้ำ</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    value={field.value ?? ""}
-                    placeholder={field.value == null ? "เช่น 2" : undefined}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
-                      )
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        {/* AREA SPECIFICATIONS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="size_sqm"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>พื้นที่ใช้สอย (ตร.ม.)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    value={field.value ?? ""}
-                    placeholder={field.value == null ? "32 ตร.ม." : undefined}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
-                      )
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="land_size_sqwah"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>ขนาดที่ดิน (ตร.ว.)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    value={field.value ?? ""}
-                    placeholder={field.value == null ? "180 ตร.ว." : undefined}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
-                      )
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* COMMISSION SETTINGS */}
-        <div className="space-y-4 border-t pt-6">
-          <h3 className="text-lg font-semibold">
-            ค่าคอมมิชชั่น (Commission) 💰
-          </h3>
-
-          {(listingType === "SALE" || listingType === "SALE_AND_RENT") && (
-            <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 space-y-4">
-              <FormField
-                control={form.control}
-                name="commission_sale_percentage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-blue-700">
-                      ค่าคอมมิชชั่นการขาย (%)
-                    </FormLabel>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {[3, 4, 5].map((val) => (
-                        <Button
-                          key={val}
-                          type="button"
-                          variant={field.value === val ? "default" : "outline"}
-                          size="sm"
-                          className="h-8"
-                          onClick={() => field.onChange(val)}
-                        >
-                          {val}%
-                        </Button>
-                      ))}
+          {/* 🚀 New 4-Step Wizard Content */}
+          {currentStep === 1 && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 ">
+              <section className="p-8 bg-white rounded-[2.5rem] shadow-xl shadow-slate-50 border border-slate-100 space-y-12 ">
+                <div className="space-y-8">
+                  <div className="flex items-center gap-5">
+                    <div className="bg-blue-600 p-3.5 rounded-2xl shadow-xl shadow-blue-100">
+                      <TrendingUp className="h-6 w-6 text-white" />
                     </div>
-                    <FormControl>
-                      <div className="relative max-w-[180px]">
-                        <NumberInput
-                          decimals={1}
-                          value={field.value ?? undefined}
-                          onChange={(v) => field.onChange(v)}
-                          placeholder={
-                            field.value == null ? "เปอร์เซ็นต์" : undefined
-                          }
-                          ariaInvalid={false}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                    {priceVal && field.value != null && (
-                      <div className="mt-2 p-2 bg-white rounded border border-blue-100 text-sm flex justify-between">
-                        <span className="text-muted-foreground">
-                          ยอดเงินที่คาดว่าจะได้รับ:
-                        </span>
-                        <span className="font-bold text-blue-600">
-                          ฿
-                          {(
-                            (priceVal * (field.value || 0)) /
-                            100
-                          ).toLocaleString()}
-                        </span>
+                    <div>
+                      <h3 className="text-2xl  text-slate-900 tracking-tight">
+                        ประเภทประกาศ
+                      </h3>
+                      <p className="text-slate-400 font-light tracking-wide">
+                        ระบุรูปแบบสิ่งที่คุณต้องการทำกับทรัพย์สินนี้
+                      </p>
+                    </div>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="listing_type"
+                    render={({ field }) => (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {LISTING_TYPE_ORDER.map((type: any) => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => field.onChange(type)}
+                            className={`p-6 rounded-xl border-2 transition-all duration-500 text-left relative group flex items-center gap-5 ${
+                              field.value === type
+                                ? "border-blue-500 bg-blue-500 text-white shadow-2xl shadow-blue-200 "
+                                : "border-slate-50 bg-slate-50/50 hover:border-blue-200 hover:bg-white hover:shadow-2xl hover:shadow-slate-100"
+                            }`}
+                          >
+                            <div
+                              className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-500 ${
+                                field.value === type
+                                  ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
+                                  : "bg-white text-slate-400 group-hover:text-blue-500"
+                              }`}
+                            >
+                              {type === "SALE" ? (
+                                <TrendingUp className="w-6 h-6" />
+                              ) : type === "RENT" ? (
+                                <PlusCircle className="w-6 h-6" />
+                              ) : (
+                                <Home className="w-6 h-6" />
+                              )}
+                            </div>
+
+                            <div>
+                              <div
+                                className={`text-xl transition-colors ${
+                                  field.value === type
+                                    ? "text-white"
+                                    : "text-slate-800"
+                                }`}
+                              >
+                                {(LISTING_TYPE_LABELS as any)[type]}
+                              </div>
+                              <div
+                                className={`text-xs uppercase tracking-widest mt-0.5 transition-colors ${
+                                  field.value === type
+                                    ? "text-blue-100"
+                                    : "text-slate-400"
+                                }`}
+                              >
+                                {type === "SALE"
+                                  ? "เปิดขาย"
+                                  : type === "RENT"
+                                  ? "ปล่อยเช่า"
+                                  : "ทั้งขายและเช่า"}
+                              </div>
+                            </div>
+
+                            {field.value === type && (
+                              <div className="absolute top-4 right-4 text-white">
+                                <div className="bg-white/20 text-white rounded-full p-1 shadow-md backdrop-blur-sm">
+                                  <Check className="h-4 w-4" />
+                                </div>
+                              </div>
+                            )}
+                          </button>
+                        ))}
                       </div>
                     )}
-                    <p className="text-xs text-muted-foreground mt-1">
-                      ตัวอย่าง: 3% ของราคาขายจะแปลงเป็นตัวเลขที่คาดว่าจะได้รับ
-                    </p>
-                  </FormItem>
-                )}
-              />
-            </div>
-          )}
+                  />
+                  <FormMessage className="text-red-500 text-sm font-bold" />
+                </div>
 
-          {(listingType === "RENT" || listingType === "SALE_AND_RENT") && (
-            <div className="bg-green-50/50 p-4 rounded-xl border border-green-100 space-y-4">
-              <FormField
-                control={form.control}
-                name="commission_rent_months"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-green-700">
-                      ค่าคอมมิชชั่นการเช่า (จำนวนเดือน)
-                    </FormLabel>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {[0.5, 1, 1.5, 2].map((val) => (
-                        <Button
-                          key={val}
-                          type="button"
-                          variant={field.value === val ? "default" : "outline"}
-                          size="sm"
-                          className="h-8"
-                          onClick={() => field.onChange(val)}
-                        >
-                          {val}
-                        </Button>
-                      ))}
-                      <span className="text-xs text-muted-foreground self-center ml-1">
-                        เดือน
-                      </span>
+                <div className="space-y-8 pt-6 border-t border-slate-50">
+                  <div className="flex items-center gap-5">
+                    <div className="bg-emerald-500 p-3.5 rounded-2xl shadow-xl shadow-emerald-50">
+                      <Home className="h-6 w-6 text-white" />
                     </div>
-                    <FormControl>
-                      <div className="relative max-w-[180px]">
-                        <NumberInput
-                          decimals={1}
-                          value={field.value ?? undefined}
-                          onChange={(v) => field.onChange(v)}
-                          placeholder={
-                            field.value == null ? "จำนวนเดือน" : undefined
-                          }
-                          ariaInvalid={false}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                    {rentalVal != null && field.value != null && (
-                      <div className="mt-2 p-2 bg-white rounded border border-green-100 text-sm flex justify-between">
-                        <span className="text-muted-foreground">
-                          ยอดเงินที่คาดว่าจะได้รับ:
-                        </span>
-                        <span className="font-bold text-green-600">
-                          ฿{(rentalVal * (field.value || 0)).toLocaleString()}
-                        </span>
+                    <div>
+                      <h3 className="text-2xl text-slate-900 tracking-tight">
+                        ประเภทอสังหาฯ
+                      </h3>
+                      <p className="text-slate-400 font-light tracking-wide">
+                        กรองข้อมูลเพื่อให้ลูกค้าหาระบุสิ่งที่ต้องการได้แม่นยำที่สุด
+                      </p>
+                    </div>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="property_type"
+                    render={({ field }) => (
+                      <div className="grid grid-cols-2 lg:grid-cols-8 gap-6">
+                        {PROPERTY_TYPE_ORDER.map((type: any) => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => {
+                              field.onChange(type);
+                              setIsQuickInfoOpen(true);
+                            }}
+                            className={`min-h-[60px] px-6 rounded-xl border-2 transition-all duration-500 flex flex-col items-center justify-center gap-4 group ${
+                              field.value === type
+                                ? "border-blue-600 bg-blue-600 text-white shadow-2xl shadow-blue-200 transform -translate-y-2 scale-105"
+                                : "border-slate-50 bg-slate-50/50 text-slate-500 hover:border-blue-200 hover:bg-white hover:text-blue-600 hover:shadow-lg"
+                            }`}
+                          >
+                            <span className="text-base uppercase tracking-widest text-center">
+                              {(PROPERTY_TYPE_LABELS as any)[type]}
+                            </span>
+                          </button>
+                        ))}
                       </div>
                     )}
-                    <p className="text-xs text-muted-foreground mt-1">
-                      ตัวอย่าง: ค่าคอม = จำนวนเดือน × ค่าเช่าต่อเดือน
-                    </p>
-                  </FormItem>
-                )}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* LOCATION */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold border-b pb-2">
-            ที่อยู่และทำเล
-          </h3>
-
-          <FormField
-            control={form.control}
-            name="address_line1"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>บ้านเลขที่ / ซอย / ถนน</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    value={field.value ?? ""}
-                    placeholder={
-                      field.value ? undefined : "บ้านเลขที่ / ซอย / ถนน"
-                    }
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage className="text-red-500 text-sm font-bold" />
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="subdistrict"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>แขวง / ตำบล</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder={field.value ? undefined : "เช่น บางนา"}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="district"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>เขต / อำเภอ</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder={field.value ? undefined : "เช่น บางนา"}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="province"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>จังหวัด</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder={
-                        field.value ? undefined : "เช่น กรุงเทพมหานคร"
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="postal_code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>รหัสไปรษณีย์</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder={field.value ? undefined : "เช่น 10260"}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="grid grid-cols-1">
-            <FormField
-              control={form.control}
-              name="google_maps_link"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ลิงก์ Google Map</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder={
-                        field.value
-                          ? undefined
-                          : "เช่น https://maps.app.goo.gl/..."
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                {/* Quick Info Section - appears after selecting property type */}
+                {isQuickInfoOpen && (
+                  <div className="animate-in fade-in slide-in-from-top-4 duration-500 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-3xl border-2 border-blue-200 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-xl  text-slate-900">
+                          ข้อมูลพื้นฐานของทรัพย์
+                        </h3>
+                        <p className="text-slate-500 font-light text-sm mt-1">
+                          ระบุชื่อและย่านเพื่อความสะดวกในการจัดการข้อมูล
+                        </p>
+                      </div>
+                    </div>
 
-          {/* POPULAR AREA TAG */}
-          <div className="bg-blue-50/30 p-4 rounded-xl border border-blue-100/50">
-            <FormField
-              control={form.control}
-              name="popular_area"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-blue-700 font-bold flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    ย่านยอดนิยม (สำหรับระบบ Smart Match ✨)
-                  </FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={(val) =>
-                        field.onChange(val === "none" ? null : val)
-                      }
-                      defaultValue={field.value ?? undefined}
-                    >
-                      <SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
-                        <SelectValue placeholder="-- เลือกย่านยอดนิยม --" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white max-h-[300px] w-full min-w-[200px]">
-                        <SelectGroup>
-                          <SelectItem value="none">-- ไม่ระบุ --</SelectItem>
-                          {popularAreas.map((area) => (
-                            <SelectItem key={area} value={area}>
-                              {area}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
+                    <div className="space-y-6">
+                      {/* Title Field */}
+                      <div className="space-y-2">
+                        <label className="text-blue-700  text-sm uppercase tracking-wider">
+                          ชื่อทรัพย์ <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          value={quickTitle}
+                          onChange={(e) => setQuickTitle(e.target.value)}
+                          className="h-14 text-sm rounded-2xl border-slate-100 bg-white focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all  px-6 shadow-sm"
+                          placeholder="เช่น คอนโด Ideo Sukhumvit 93"
+                        />
+                      </div>
 
-                  {/* Add New Area Input */}
-                  <div className="mt-3 flex gap-2">
-                    <Input
-                      placeholder="เพิ่มย่านใหม่..."
-                      value={newArea}
-                      onChange={(e) => setNewArea(e.target.value)}
-                      className="h-8 text-xs flex-1"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleAddArea();
+                      {/* Popular Area Field */}
+                      <div className="space-y-2">
+                        <label className="text-blue-700  text-sm uppercase tracking-wider">
+                          ย่านทำเล
+                        </label>
+                        <Select
+                          value={quickArea ?? "none"}
+                          onValueChange={(val) =>
+                            setQuickArea(val === "none" ? undefined : val)
+                          }
+                        >
+                          <SelectTrigger className="h-14 bg-white border-slate-100 rounded-2xl text-lg px-6 shadow-sm">
+                            <SelectValue placeholder="-- เลือกย่าน --" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px]">
+                            <SelectGroup>
+                              <SelectItem
+                                value="none"
+                                className=" text-slate-400"
+                              >
+                                -- ไม่ระบุ --
+                              </SelectItem>
+                              {popularAreas.map((area: string) => (
+                                <SelectItem
+                                  key={area}
+                                  value={area}
+                                  className=" text-slate-700 py-3"
+                                >
+                                  {area}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        if (quickTitle.trim()) {
+                          form.setValue("title", quickTitle);
+                          form.setValue("popular_area", quickArea);
+                          setIsQuickInfoOpen(false);
+                          toast.success("บันทึกข้อมูลพื้นฐานแล้ว");
+                        } else {
+                          toast.error("กรุณาระบุชื่อทรัพย์");
                         }
                       }}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-2 text-blue-600 border-blue-200 hover:bg-blue-50"
-                      onClick={handleAddArea}
-                      disabled={isAddingArea || !newArea.trim()}
+                      className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl text-lg shadow-xl shadow-blue-200 transition-all"
                     >
-                      {isAddingArea ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <PlusCircle className="h-4 w-4 mr-1" />
-                      )}
-                      เพิ่ม
+                      ยืนยันข้อมูล
                     </Button>
                   </div>
-                  <p className="text-[10px] text-blue-600 font-medium mt-1">
-                    💡 การระบุย่านนี้จะทำให้ระบบ Smart Match
-                    บนหน้าเว็บหาทรัพย์นี้เจอเป็นอันดับต้นๆ
-                    เมื่อลูกค้าเลือกย่านเดียวกัน
-                  </p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* NEAR TRANSIT CHECKBOX */}
-          <div className="bg-blue-50/10 p-4 rounded-xl border border-blue-100/30">
-            <FormField
-              control={form.control}
-              name="near_transit"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel className="text-sm font-bold text-blue-700 flex items-center gap-2 cursor-pointer">
-                      <Home className="h-4 w-4" />
-                      ใกล้รถไฟฟ้า / เดินทางสะดวก ✨
-                    </FormLabel>
-                    <p className="text-[10px] text-blue-500 font-medium">
-                      เปิดใช้งานหากทรัพย์อยู่ใกล้สถานี BTS/MRT หรือจุดขนส่งหลัก
-                    </p>
-                  </div>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Detailed Transit Fields (Visible only if near_transit is checked) */}
-          {form.watch("near_transit") && (
-            <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-3 p-4 border border-blue-100/50 rounded-xl bg-white shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
-              <FormField
-                control={form.control}
-                name="transit_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                      ประเภทรถไฟฟ้า
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value ?? "BTS"}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-8 text-xs bg-slate-50 border-slate-200">
-                          <SelectValue placeholder="เลือกประเภท" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white">
-                        {TRANSIT_TYPE_ENUM.map((t) => (
-                          <SelectItem key={t} value={t} className="text-xs">
-                            {TRANSIT_TYPE_LABELS[t]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
                 )}
-              />
-
-              <FormField
-                control={form.control}
-                name="transit_station_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                      ชื่อสถานี
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value ?? ""}
-                        placeholder="เช่น อ่อนนุช"
-                        className="h-8 text-xs bg-slate-50 border-slate-200"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="transit_distance_meters"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                      ห่างสถานี (เมตร)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        value={field.value ?? ""}
-                        placeholder="เช่น 300"
-                        className="h-8 text-xs bg-slate-50 border-slate-200"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              </section>
             </div>
           )}
-        </div>
+          {/* -------------------- STEP 2: DETAILS -------------------- */}
+          {currentStep === 2 && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-12 duration-700">
+              <section className="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-slate-50 border border-slate-100 space-y-10">
+                <div className="border-b border-slate-50 pb-6">
+                  <h3 className="text-2xl font-black text-slate-900">
+                    รายละเอียดข้อมูลทรัพย์
+                  </h3>
+                  <p className="text-sm text-slate-400 font-bold uppercase tracking-widest mt-1">
+                    ข้อมูลรายละเอียดและราคา
+                  </p>
+                </div>
 
-        {/* Owner & Agent Section */}
-        <div className="space-y-4 border-t pt-6">
-          <h3 className="text-lg font-semibold">ข้อมูลเจ้าของและ Agent</h3>
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-blue-700 font-black text-sm uppercase tracking-wider mb-2 block">
+                        ชื่อหัวข้อประกาศ (TITLE){" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          className="h-16 text-xl rounded-2xl border-slate-100 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all font-bold px-8 shadow-inner"
+                          placeholder="เช่น Ideo Sukhumvit 93 ห้องมุม ห้องสวย แต่งครบ"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          {/* Owner Selection */}
-          <FormField
-            control={form.control}
-            name="owner_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  เจ้าของทรัพย์ 🔒
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    (CRM เท่านั้น)
-                  </span>
-                </FormLabel>
-                <Select
-                  value={field.value ?? "NONE"}
-                  onValueChange={(v) => field.onChange(v === "NONE" ? null : v)}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="เลือกเจ้าของ (ถ้ามี)" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
-                    <SelectItem value="NONE">ไม่ระบุ</SelectItem>
-                    {owners.map((owner) => (
-                      <SelectItem key={owner.id} value={owner.id}>
-                        {owner.full_name}
-                        {owner.phone && ` (${owner.phone})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  {(form.watch("listing_type") === "SALE" ||
+                    form.watch("listing_type") === "SALE_AND_RENT") && (
+                    <FormField
+                      control={form.control}
+                      name="price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-emerald-600 font-black text-sm uppercase tracking-wider mb-2 block">
+                            ราคาตั้งขาย (บาท)
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative group">
+                              <NumberInput
+                                value={field.value ?? undefined}
+                                onChange={field.onChange}
+                                placeholder="0"
+                              />
+                              <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 font-black text-xl transition-colors">
+                                ฿
+                              </div>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
-          {/* Property Source */}
-          <FormField
-            control={form.control}
-            name="property_source"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  แหล่งที่มาของทรัพย์ 🔒
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    (CRM เท่านั้น)
-                  </span>
-                </FormLabel>
-                <FormControl>
-                  <Textarea
-                    rows={2}
-                    placeholder="เช่น Facebook: https://..., LINE, แนะนำจากเพื่อน"
-                    {...field}
-                    value={field.value || ""}
+                  {(form.watch("listing_type") === "RENT" ||
+                    form.watch("listing_type") === "SALE_AND_RENT") && (
+                    <FormField
+                      control={form.control}
+                      name="rental_price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-blue-600 font-black text-sm uppercase tracking-wider mb-2 block">
+                            ค่าเช่าต่อเดือน (บาท)
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative group">
+                              <NumberInput
+                                value={field.value ?? undefined}
+                                onChange={field.onChange}
+                                placeholder="0"
+                              />
+                              <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 font-black text-xl transition-colors">
+                                ฿
+                              </div>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 shadow-inner">
+                  <FormField
+                    control={form.control}
+                    name="bedrooms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px] uppercase font-black text-slate-400 tracking-widest mb-2 block">
+                          ห้องนอน
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-12 bg-white rounded-2xl border-none shadow-sm font-bold text-center"
+                            onChange={(e) =>
+                              field.onChange(parseNumber(e.target.value))
+                            }
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormField
+                    control={form.control}
+                    name="bathrooms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px] uppercase font-black text-slate-400 tracking-widest mb-2 block">
+                          ห้องน้ำ
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-12 bg-white rounded-2xl border-none shadow-sm font-bold text-center"
+                            onChange={(e) =>
+                              field.onChange(parseNumber(e.target.value))
+                            }
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="size_sqm"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px] uppercase font-black text-slate-400 tracking-widest mb-2 block">
+                          พื้นที่ (ตร.ม.)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-12 bg-white rounded-2xl border-none shadow-sm font-bold text-center"
+                            onChange={(e) =>
+                              field.onChange(parseNumber(e.target.value))
+                            }
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="land_size_sqwah"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px] uppercase font-black text-slate-400 tracking-widest mb-2 block">
+                          ที่ดิน (ตร.ว.)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-12 bg-white rounded-2xl border-none shadow-sm font-bold text-center"
+                            onChange={(e) =>
+                              field.onChange(parseNumber(e.target.value))
+                            }
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-          {/* Agent Assignment */}
-          {/* Agent Assignment - Multiple */}
-          <div className="space-y-4">
-            <FormLabel>
-              Agent ของเรา 🌐
-              <span className="ml-2 text-xs text-muted-foreground">
-                (แสดงบนเว็บสาธารณะ)
-              </span>
-            </FormLabel>
-            <div className="space-y-2">
-              {form
-                .watch("agent_ids")
-                ?.map((agentId: string, index: number) => (
-                  <div key={index} className="flex gap-2">
-                    <Select
-                      value={agentId}
-                      onValueChange={(val: string) => {
-                        const current = form.getValues("agent_ids") || [];
-                        current[index] = val;
-                        // If first one, also set assigned_to
-                        if (index === 0) form.setValue("assigned_to", val);
-                        form.setValue("agent_ids", [...current]);
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="เลือก Agent" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
-                        {agents.map((a) => (
-                          <SelectItem key={a.id} value={a.id}>
-                            {a.full_name || "(No name)"}
-                            {(a.phone && ` (${a.phone})`) || " (No phone)"}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-800 font-black text-sm uppercase tracking-wider mb-2 block">
+                        คำบรรยายประกอบประกาศ
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          value={field.value ?? ""}
+                          rows={6}
+                          className="rounded-3xl border-slate-100 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-blue-600 transition-all leading-relaxed p-8 resize-none shadow-inner"
+                          placeholder="บอกเล่าเรื่องราวของบ้านคุณ..."
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8 border-t border-slate-50">
+                  <FormField
+                    control={form.control}
+                    name="commission_sale_percentage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-blue-700 font-black text-sm uppercase tracking-wider mb-2 block">
+                          % ค่าคอมมิชชั่นการขาย 🔒
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative group/comm">
+                            <NumberInput
+                              value={field.value ?? undefined}
+                              onChange={field.onChange}
+                              decimals={2}
+                              placeholder="3"
+                            />
+                            <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/comm:text-blue-500 font-black text-xl transition-colors">
+                              %
+                            </div>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="commission_rent_months"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-blue-700 font-black text-sm uppercase tracking-wider mb-2 block">
+                          เดือนค่าคอมการเช่า 🔒
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative group/comm">
+                            <NumberInput
+                              value={field.value ?? undefined}
+                              onChange={field.onChange}
+                              decimals={1}
+                              placeholder="1"
+                            />
+                            <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/comm:text-blue-500 font-black text-sm transition-colors uppercase">
+                              เดือน
+                            </div>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* -------------------- STEP 3: LOCATION -------------------- */}
+          {currentStep === 3 && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-12 duration-700">
+              <section className="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-slate-50 border border-slate-100 space-y-10">
+                <div className="border-b border-slate-50 pb-6">
+                  <h3 className="text-2xl font-black text-slate-900">
+                    ระบุตำแหน่งที่ตั้ง
+                  </h3>
+                  <p className="text-sm text-slate-400 font-bold uppercase tracking-widest mt-1">
+                    ที่อยู่และการเชื่อมต่อระบบขนส่ง
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <FormField
+                    control={form.control}
+                    name="province"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-bold text-slate-700">
+                          จังหวัด
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm"
+                            placeholder="กรุงเทพฯ"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="district"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-bold text-slate-700">
+                          เขต / อำเภอ
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm"
+                            placeholder="สุขุมวิท"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="subdistrict"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-bold text-slate-700">
+                          แขวง / ตำบล
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm"
+                            placeholder="พระโขนงเหนือ"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="postal_code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-bold text-slate-700">
+                          รหัสไปรษณีย์
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm"
+                            placeholder="10260"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="google_maps_link"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-blue-700 font-black text-sm uppercase tracking-wider mb-2 block">
+                        พิกัดบน Google Maps
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          placeholder="วางลิงก์จาก Google Maps ที่นี่..."
+                          className="h-14 rounded-2xl border-2 border-slate-50 bg-slate-50 px-6 focus:ring-4 focus:ring-blue-50 focus:border-blue-600 transition-all"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-10 rounded-[2.5rem] text-white space-y-8 shadow-2xl shadow-blue-100 relative overflow-hidden group/area">
+                  <div className="absolute -right-10 -bottom-10 opacity-10 scale-150 rotate-12 group-hover/area:scale-110 transition-transform duration-1000">
+                    <TrendingUp className="w-80 h-80" />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="popular_area"
+                    render={({ field }) => (
+                      <FormItem className="relative z-10">
+                        <FormLabel className="font-black flex items-center gap-3 text-2xl tracking-tight">
+                          <TrendingUp className="h-8 w-8 text-blue-200" />
+                          ระบุย่านยอดนิยม (Smart Match)
+                        </FormLabel>
+                        <FormControl>
+                          <Select
+                            onValueChange={(val) =>
+                              field.onChange(val === "none" ? null : val)
+                            }
+                            defaultValue={field.value ?? undefined}
+                          >
+                            <SelectTrigger className="bg-white/20 border-white/30 text-white h-16 rounded-2xl backdrop-blur-3xl font-bold text-lg px-8 hover:bg-white/30 transition-all">
+                              <SelectValue placeholder="-- ค้นหาย่าน / เลือกย่าน --" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px]">
+                              <SelectGroup>
+                                <SelectItem
+                                  value="none"
+                                  className="font-bold text-slate-400"
+                                >
+                                  -- ไม่ระบุ --
+                                </SelectItem>
+                                {popularAreas.map((area: string) => (
+                                  <SelectItem
+                                    key={area}
+                                    value={area}
+                                    className="font-black text-slate-700 py-3"
+                                  >
+                                    {area}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+
+                        <div className="mt-8 flex gap-4 bg-white/10 p-4 rounded-2xl border border-white/20">
+                          <Input
+                            placeholder="พิมพ์ชื่อย่านใหม่..."
+                            value={newArea}
+                            onChange={(e) => setNewArea(e.target.value)}
+                            className="h-12 bg-white/10 border-none text-white placeholder:text-blue-100/70 font-bold px-6 rounded-xl flex-1"
+                          />
+                          <Button
+                            type="button"
+                            className="h-12 px-10 bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl"
+                            onClick={handleAddArea}
+                            disabled={isAddingArea}
+                          >
+                            {isAddingArea ? (
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                              "เพิ่มย่าน"
+                            )}
+                          </Button>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="bg-slate-50 p-10 rounded-[2.5rem] border border-slate-100 space-y-8">
+                  <FormField
+                    control={form.control}
+                    name="near_transit"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-6 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="w-8 h-8 rounded-xl border-slate-300 data-[state=checked]:bg-blue-600"
+                          />
+                        </FormControl>
+                        <div className="space-y-1">
+                          <FormLabel className="text-xl font-black text-slate-800 cursor-pointer">
+                            ตั้งอยู่ใกล้ระบบขนส่งสาธารณะ
+                          </FormLabel>
+                          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+                            ใกล้ BTS / MRT หรือรถสาธารณะ
+                          </p>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch("near_transit") && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 border-t border-slate-200/40 animate-in fade-in slide-in-from-top-4 duration-500">
+                      <FormField
+                        control={form.control}
+                        name="transit_type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[11px] uppercase font-black text-slate-400 tracking-widest mb-2 block">
+                              ประเภทรถไฟฟ้า
+                            </FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value ?? "BTS"}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="h-14 bg-white rounded-2xl border-none shadow-sm font-bold">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-white rounded-2xl">
+                                {TRANSIT_TYPE_ENUM.map((t: any) => (
+                                  <SelectItem
+                                    key={t}
+                                    value={t}
+                                    className="font-bold py-3"
+                                  >
+                                    {(TRANSIT_TYPE_LABELS as any)[t]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="transit_station_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[11px] uppercase font-black text-slate-400 tracking-widest mb-2 block">
+                              ชื่อสถานี
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value ?? ""}
+                                className="h-14 rounded-2xl bg-white border-none shadow-sm font-black px-6"
+                                placeholder="ทองหล่อ"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="transit_distance_meters"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[11px] uppercase font-black text-slate-400 tracking-widest mb-2 block">
+                              ระยะทาง (เมตร)
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                value={field.value ?? ""}
+                                className="h-14 rounded-2xl bg-white border-none shadow-sm font-black text-center"
+                                placeholder="350"
+                                onChange={(e) =>
+                                  field.onChange(parseNumber(e.target.value))
+                                }
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* -------------------- STEP 4: MEDIA & MANAGEMENT -------------------- */}
+          {currentStep === 4 && (
+            <div className="space-y-10 animate-in fade-in slide-in-from-right-12 duration-700">
+              <section className="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-slate-50 border border-slate-100 space-y-10">
+                <div className="border-b border-slate-50 pb-6">
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                    คลังรูปภาพและอัลบั้ม
+                  </h3>
+                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    อัลบั้มรูปภาพและสถานะประกาศ
+                  </p>
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="images"
+                  render={({ field }) => (
+                    <FormItem className="bg-slate-50/50 p-8 rounded-[2rem] border-2 border-dashed border-slate-200">
+                      <FormLabel className="text-blue-700 font-black text-sm uppercase tracking-wider mb-6 block text-center">
+                        อัปโหลดรูปภาพที่สวยที่สุดของคุณ
+                      </FormLabel>
+                      <FormControl>
+                        <PropertyImageUploader
+                          sessionId={uploadSessionId}
+                          value={field.value ?? []}
+                          onChange={field.onChange}
+                          initialImages={initialImages}
+                          maxFiles={IMAGE_UPLOAD_POLICY.maxFiles}
+                          maxFileSizeMB={
+                            IMAGE_UPLOAD_POLICY.maxBytes / (1024 * 1024)
+                          }
+                          cleanupOnUnmount={!persistImages}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-10 border-t border-slate-50">
+                  <FormField
+                    control={form.control}
+                    name="owner_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-slate-800 font-black text-xs uppercase tracking-widest mb-3 block">
+                          เจ้าของทรัพย์ 🔒
+                        </FormLabel>
+                        <Select
+                          value={field.value ?? "NONE"}
+                          onValueChange={(v) =>
+                            field.onChange(v === "NONE" ? null : v)
+                          }
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-14 rounded-2xl bg-white border-2 border-slate-100 font-bold px-6">
+                              <SelectValue placeholder="เลือกเจ้าของ" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px] overflow-y-auto">
+                            <SelectItem
+                              value="NONE"
+                              className="font-bold text-slate-400"
+                            >
+                              -- ไม่ระบุ --
+                            </SelectItem>
+                            {owners.map((o) => (
+                              <SelectItem
+                                key={o.id}
+                                value={o.id}
+                                className="py-4 font-black"
+                              >
+                                {o.full_name} {o.phone ? `(${o.phone})` : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-slate-800 font-black text-xs uppercase tracking-widest mb-3 block">
+                          สถานะปัจจุบัน
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-14 rounded-2xl bg-white border-2 border-slate-100 font-bold px-6">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white rounded-2xl border-none shadow-2xl">
+                            {PROPERTY_STATUS_ORDER.map((s: any) => (
+                              <SelectItem
+                                key={s}
+                                value={s}
+                                className="py-4 font-black"
+                              >
+                                {(PROPERTY_STATUS_LABELS as any)[s]}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-6 bg-blue-50/30 p-10 rounded-[2.5rem] border border-blue-100">
+                  <FormLabel className="text-blue-700 font-black text-sm uppercase tracking-widest mb-2 block">
+                    Agent ผู้ดูแลทรัพย์สิน
+                  </FormLabel>
+                  <div className="space-y-4">
+                    {form
+                      .watch("agent_ids")
+                      ?.map((agentId: string, index: number) => (
+                        <div key={index} className="flex gap-4">
+                          <Select
+                            value={agentId}
+                            onValueChange={(val: string) => {
+                              const current = form.getValues("agent_ids") || [];
+                              current[index] = val;
+                              if (index === 0)
+                                form.setValue("assigned_to", val);
+                              form.setValue("agent_ids", [...current]);
+                            }}
+                          >
+                            <SelectTrigger className="flex-1 h-14 rounded-2xl bg-white border-none shadow-sm font-black px-8">
+                              <SelectValue placeholder="เลือก Agent" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px] overflow-y-auto">
+                              {agents.map((a) => (
+                                <SelectItem
+                                  key={a.id}
+                                  value={a.id}
+                                  className="py-4 font-black"
+                                >
+                                  {a.full_name} {a.phone ? `(${a.phone})` : ""}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="w-14 h-14 rounded-2xl"
+                            onClick={() => {
+                              const current = form.getValues("agent_ids") || [];
+                              const newIds = current.filter(
+                                (_, i) => i !== index
+                              );
+                              form.setValue("agent_ids", newIds);
+                            }}
+                          >
+                            <Trash2 className="h-6 w-6" />
+                          </Button>
+                        </div>
+                      ))}
                     <Button
                       type="button"
-                      variant="destructive"
-                      size="icon"
+                      variant="ghost"
+                      className="text-blue-600 font-black hover:bg-white/50 w-full h-14 rounded-2xl border-2 border-dashed border-blue-200"
                       onClick={() => {
                         const current = form.getValues("agent_ids") || [];
-                        const newIds = current.filter(
-                          (_, i: number) => i !== index
-                        );
-                        form.setValue("agent_ids", newIds);
-                        if (index === 0)
-                          form.setValue("assigned_to", newIds[0] || null);
+                        form.setValue("agent_ids", [...current, ""]);
                       }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <PlusCircle className="h-5 w-5 mr-3" />
+                      เพิ่มรายชื่อ Co-Agent
                     </Button>
                   </div>
-                ))}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  const current = form.getValues("agent_ids") || [];
-                  form.setValue("agent_ids", [...current, ""]);
-                }}
-              >
-                + เพิ่ม Agent
-              </Button>
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="property_source"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-800 font-black text-xs uppercase tracking-widest mb-3 block">
+                        แหล่งที่มาของทรัพย์ 🔒
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          value={field.value || ""}
+                          rows={3}
+                          className="rounded-3xl border-slate-100 bg-slate-50 font-medium p-6 resize-none"
+                          placeholder="เช่น จากกลุ่ม Facebook, แนะนำจากเพื่อน..."
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </section>
+            </div>
+          )}
+
+          {/* -------------------- NAVIGATION BUTTONS -------------------- */}
+          <div className="mt-10">
+            <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-6">
+              <div className="flex items-center gap-6 w-full sm:w-auto justify-center sm:justify-start">
+                {currentStep > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleBack}
+                    className="h-16 px-10 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-lg transition-all active:scale-95"
+                  >
+                    ย้อนกลับ
+                  </Button>
+                )}
+                <CancelButton sessionId={uploadSessionId} />
+              </div>
+
+              <div className="w-full sm:w-auto text-center">
+                {currentStep < 4 ? (
+                  <Button
+                    type="button"
+                    onClick={handleNext}
+                    className="h-16 w-full sm:w-auto sm:px-20 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-200 text-xl transition-all active:scale-95 hover:translate-x-1"
+                  >
+                    ถัดไป
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    className="h-16 w-full sm:w-auto sm:px-20 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xl shadow-emerald-200 text-xl transition-all active:scale-95"
+                  >
+                    {mode === "create"
+                      ? "ยืนยันสร้างประกาศ"
+                      : "บันทึกการแก้ไขทรัพย์"}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </form>
 
-        <Button type="submit">
-          {mode === "create" ? "สร้างทรัพย์" : "บันทึกการแก้ไข"}
-        </Button>
-        <CancelButton sessionId={uploadSessionId} />
-      </form>
-
-      {/* Duplicate Warning Dialog */}
-      <DuplicateWarningDialog
-        open={showDuplicateDialog}
-        onOpenChange={setShowDuplicateDialog}
-        matches={duplicateMatches}
-        onConfirm={handleConfirmDuplicateSubmit}
-        onCancel={() => {
-          setShowDuplicateDialog(false);
-          setPendingSubmit(null);
-        }}
-      />
-    </Form>
+        {/* Duplicate Warning Dialog */}
+        <DuplicateWarningDialog
+          open={showDuplicateDialog}
+          onOpenChange={setShowDuplicateDialog}
+          matches={duplicateMatches}
+          onConfirm={handleConfirmDuplicateSubmit}
+          onCancel={() => {
+            setShowDuplicateDialog(false);
+            setPendingSubmit(null);
+          }}
+        />
+      </Form>
+    </div>
   );
 }
