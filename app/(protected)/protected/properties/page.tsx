@@ -9,9 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Database } from "@/lib/database.types";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
-import { ImageLightbox } from "@/components/properties/ImageLightbox"; 
-
-
+import { ImageLightbox } from "@/components/properties/ImageLightbox";
 
 export default async function PropertiesPage({
   searchParams,
@@ -59,7 +57,7 @@ export default async function PropertiesPage({
   // 1. Build Query
   let query = supabase
     .from("properties")
-    .select("*",   { count: "exact" }) // Get count for pagination
+    .select("*", { count: "exact" }) // Get count for pagination
     .range(from, to);
 
   // Search
@@ -106,7 +104,10 @@ export default async function PropertiesPage({
     "updated_at",
     "title",
     "price",
+    "rental_price",
     "bedrooms",
+    "status",
+    "property_type",
   ];
   const sortField = validSortFields.includes(sortBy) ? sortBy : "created_at";
   const ascending = sortOrder === "asc";
@@ -128,28 +129,41 @@ export default async function PropertiesPage({
   const assignedToIds = properties
     .map((p) => p.assigned_to)
     .filter(Boolean) as string[];
-
+const CLOSED_DEAL_STATUSES = ["SIGNED", "CLOSED_WIN"] as const;
   // 2. Fetch Associations in Parallel
-  const [imagesResult, leadsResult, profilesResult] = await Promise.all([
-    // Images: Get cover images for these properties
+  const soldOrRentedIds = properties
+    .filter((p) => p.status === "SOLD" || p.status === "RENTED")
+    .map((p) => p.id);
+
+  const [imagesResult, leadsResult, closedLeadsResult] = await Promise.all([
+    // Images: cover
     supabase
       .from("property_images")
       .select("property_id, image_url")
       .in("property_id", propertyIds)
       .eq("is_cover", true),
 
-    // Leads: Get leads to count them (Optimized: just fetching ID)
+    // Leads: count
     supabase.from("leads").select("property_id").in("property_id", propertyIds),
 
-    // Profiles: Get names for assigned agents
-    assignedToIds.length > 0
-      ? supabase
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", assignedToIds)
-      : Promise.resolve({ data: [] }),
-  ]);
-
+    // Closed lead (ล่าสุด) สำหรับ SOLD/RENTED เท่านั้น
+soldOrRentedIds.length > 0
+    ? supabase
+        .from("deals")
+        .select(
+          `
+          property_id,
+          deal_type,
+          status,
+          updated_at,
+          lead:leads(full_name)
+        `
+        )
+        .in("property_id", soldOrRentedIds)
+        .in("status", CLOSED_DEAL_STATUSES as any)
+        .order("updated_at", { ascending: false })
+    : Promise.resolve({ data: [] as any[] }),
+]);
   // 3. Map Data
   const coverMap = new Map(
     imagesResult.data?.map((img) => [img.property_id, img.image_url])
@@ -157,6 +171,7 @@ export default async function PropertiesPage({
 
   // Count leads per property
   const leadsCountMap = new Map<string, number>();
+
   leadsResult.data?.forEach((lead) => {
     if (lead.property_id) {
       leadsCountMap.set(
@@ -165,11 +180,23 @@ export default async function PropertiesPage({
       );
     }
   });
+  
+  // Map closed lead names
+
+const closedLeadNameMap = new Map<string, string>();
+
+(closedLeadsResult.data as any[] | undefined)?.forEach((d) => {
+  const pid = d?.property_id as string | undefined;
+  const name = d?.lead?.full_name as string | undefined;
+
+  if (!pid) return;
+  if (!closedLeadNameMap.has(pid) && name) {
+    closedLeadNameMap.set(pid, name);
+  }
+});
 
   // Map profile names
-  const profileMap = new Map(
-    (profilesResult.data as any[])?.map((p) => [p.id, p.full_name]) || []
-  );
+
 
   // 4. Transform to Table Data
   const tableData: PropertyTableData[] = properties.map((p) => {
@@ -182,10 +209,15 @@ export default async function PropertiesPage({
       new Date().getTime() - new Date(p.created_at).getTime() <
       7 * 24 * 60 * 60 * 1000;
 
+    const locationHint =
+      [p.district, p.province].filter(Boolean).join(", ") ||
+      p.address_line1 ||
+      "";
+
     return {
       id: p.id,
       title: p.title,
-      description: p.description, // using district/province if available in future, now description
+      description: locationHint || p.description,
       image_url: coverMap.get(p.id) || null,
       property_type: p.property_type,
       listing_type: p.listing_type,
@@ -195,7 +227,10 @@ export default async function PropertiesPage({
       leads_count: leadsCountMap.get(p.id) || 0,
       updated_at: p.updated_at,
       created_at: p.created_at,
-      agent_name: p.assigned_to ? profileMap.get(p.assigned_to) : null,
+
+      // ✅ ใหม่
+      closed_lead_name: closedLeadNameMap.get(p.id) || null,
+
       is_new: isNew,
     };
   });

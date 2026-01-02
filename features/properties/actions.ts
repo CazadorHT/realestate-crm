@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
 import { randomUUID } from "crypto";
 import { getPublicImageUrl } from "./image-utils";
-import type { PropertyRow, PropertyWithImages, PropertyImage } from "./types";
+import type { PropertyRow, PropertyWithImages, PropertyImage ,PropertyStatus} from "./types";
 import { FormSchema, type PropertyFormValues } from "./schema";
 // Authorization utilities คือการตรวจสอบสิทธิ์ผู้ใช้
 import {
@@ -19,6 +19,7 @@ import { logAudit } from "@/lib/audit";
 import { validateImageFile } from "@/lib/file-validation"; // สำหรับตรวจสอบไฟล์รูปภาพ
 import { IMAGE_UPLOAD_POLICY } from "@/components/property-image-uploader";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { PROPERTY_STATUS_ENUM } from "./labels";
 
 export type CreatePropertyResult = {
   success: boolean;
@@ -32,6 +33,15 @@ export type UploadedImageResult = {
   publicUrl: string; // public URL สำหรับแสดงผล
 };
 
+export type UpdatePropertyStatusResult = {
+  success: boolean;
+  message?: string;
+};
+export type DuplicatePropertyResult = {
+  success: boolean;
+  propertyId?: string;
+  message?: string;
+};
 /**
  * Upload single property image to storage
  * Used by PropertyImageUploader component
@@ -41,6 +51,8 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
 const UPLOAD_RATE_WINDOW_MS = 60_000; // 1 minute
 const UPLOAD_RATE_MAX = 10; // uploads per window per user
 const SESSION_ID_RE = /^[a-zA-Z0-9_-]{8,128}$/;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const MIME_TO_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -936,4 +948,183 @@ export async function addPopularAreaAction(name: string) {
   }
 
   return { success: true };
+}
+
+
+ /**
+ * Update property status
+ */
+export async function updatePropertyStatusAction(input: {
+  id: string;
+  status: PropertyStatus;
+}): Promise<UpdatePropertyStatusResult> {
+  try {
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
+    if (!input?.id || !UUID_RE.test(input.id)) {
+      return { success: false, message: "รูปแบบรหัสทรัพย์ไม่ถูกต้อง" };
+    }
+
+    if (!PROPERTY_STATUS_ENUM.includes(input.status)) {
+      return { success: false, message: "สถานะไม่ถูกต้อง" };
+    }
+
+    const { error } = await supabase
+      .from("properties")
+      .update({
+        status: input.status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", input.id);
+
+    if (error) {
+      return { success: false, message: error.message };
+    }
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "property.status.update",
+        entity: "properties",
+        entityId: input.id,
+        metadata: { status: input.status },
+      }
+    );
+
+    // protected pages
+    revalidatePath("/protected/properties");
+    revalidatePath(`/protected/properties/${input.id}`);
+
+    // public pages ที่อาจแสดงเฉพาะ ACTIVE
+    revalidatePath("/");
+    revalidatePath("/properties");
+
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, message: e?.message || "อัปเดตสถานะไม่สำเร็จ" };
+  }
+}
+
+/**
+ * Duplicate property
+ */
+export async function duplicatePropertyAction(
+  id: string
+): Promise<DuplicatePropertyResult> {
+  try {
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
+    const { data: src, error: srcErr } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (srcErr || !src) return { success: false, message: "ไม่พบทรัพย์ต้นฉบับ" };
+
+    const newTitle = `${src.title ?? "ไม่ระบุชื่อ"} (คัดลอก)`;
+
+    // regenerate SEO + slug (กันชน unique)
+    const { generatePropertySEO } = await import("@/lib/seo-utils");
+    const seoData = generatePropertySEO({
+  title: newTitle,
+  property_type: src.property_type ?? undefined,
+  listing_type: src.listing_type ?? undefined,
+
+  bedrooms: src.bedrooms ?? undefined,
+  bathrooms: src.bathrooms ?? undefined,
+  size_sqm: src.size_sqm ?? undefined,
+  price: src.price ?? undefined,
+  rental_price: src.rental_price ?? undefined,
+
+  district: src.district ?? undefined,
+  province: src.province ?? undefined,
+  address_line1: src.address_line1 ?? undefined,
+  postal_code: src.postal_code ?? undefined,
+  description: src.description ?? undefined,
+});
+
+
+    const uniqueSlug = `${seoData.slug}-${randomUUID().slice(0, 8)}`;
+
+    // omit fields ที่ไม่ควรถูก copy ตรง ๆ
+    const {
+      id: _id,
+      created_at: _created_at,
+      updated_at: _updated_at,
+      created_by: _created_by,
+      updated_by: _updated_by,
+      slug: _slug,
+      meta_title: _meta_title,
+      meta_description: _meta_description,
+      meta_keywords: _meta_keywords,
+      structured_data: _structured_data,
+      ...rest
+    } = src as any;
+
+    const { data: inserted, error: insErr } = await supabase
+      .from("properties")
+      .insert({
+        ...rest,
+        title: newTitle,
+        status: "DRAFT", // แนะนำให้เป็น draft เสมอ
+        created_by: user.id,
+        updated_by: user.id,
+        slug: uniqueSlug,
+        meta_title: seoData.metaTitle,
+        meta_description: seoData.metaDescription,
+        meta_keywords: seoData.metaKeywords,
+        structured_data: seoData.structuredData as any,
+      })
+      .select("id")
+      .single();
+
+    if (insErr || !inserted) {
+      return { success: false, message: insErr?.message || "Duplicate ไม่สำเร็จ" };
+    }
+
+    // copy images rows (ไม่ copy ไฟล์จริงใน storage — ใช้ไฟล์เดิมได้)
+    const { data: imgs } = await supabase
+      .from("property_images")
+      .select("image_url, storage_path, is_cover, sort_order")
+      .eq("property_id", id)
+      .order("sort_order", { ascending: true });
+
+    if (imgs?.length) {
+      const rows = imgs.map((img) => ({
+        property_id: inserted.id,
+        image_url: img.image_url,
+        storage_path: img.storage_path,
+        is_cover: img.is_cover,
+        sort_order: img.sort_order,
+      }));
+
+      const { error: imgErr } = await supabase
+        .from("property_images")
+        .insert(rows);
+
+      if (imgErr) {
+        // ไม่ถึงกับ fail ทั้งหมด แต่แจ้งไว้
+        console.warn("duplicatePropertyAction: copy images failed", imgErr);
+      }
+    }
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "property.create",
+        entity: "properties",
+        entityId: inserted.id,
+        metadata: { duplicated_from: id },
+      }
+    );
+
+    revalidatePath("/protected/properties");
+    return { success: true, propertyId: inserted.id };
+  } catch (err: any) {
+    console.error("duplicatePropertyAction → error:", err);
+    return authzFail(err);
+  }
 }

@@ -123,3 +123,14 @@ export const TRANSIT_TYPE_LABELS: Record<TransitType, string> = {
   SRT: "รถไฟชานเมือง (สายสีแดง)",
   OTHER: "อื่นๆ",
 };
+
+export const PROPERTY_TYPE_GRADIENTS = {
+  HOUSE: "from-purple-500 to-purple-600",
+  CONDO: "from-blue-500 to-blue-600",
+  TOWNHOME: "from-orange-500 to-orange-600",
+  LAND: "from-green-500 to-green-600",
+  OFFICE_BUILDING: "from-sky-500 to-sky-600",
+  WAREHOUSE: "from-yellow-500 to-yellow-600",
+  COMMERCIAL_BUILDING: "from-indigo-500 to-indigo-600",
+  OTHER: "from-slate-500 to-slate-600",
+} satisfies Record<PropertyType, string>;

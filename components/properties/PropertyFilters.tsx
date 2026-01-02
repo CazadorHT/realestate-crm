@@ -29,12 +29,13 @@ import {
   PROPERTY_STATUS_ORDER,
   PROPERTY_STATUS_LABELS,
 } from "@/features/properties/labels";
+import { useEffect } from "react";
 
 type Filters = {
   q: string;
-  status: string;   // "ALL" | PropertyStatus
-  type: string;     // "ALL" | PropertyType
-  listing: string;  // "ALL" | ListingType
+  status: string; // "ALL" | PropertyStatus
+  type: string; // "ALL" | PropertyType
+  listing: string; // "ALL" | ListingType
   bedrooms: string;
   bathrooms: string;
   province: string;
@@ -83,12 +84,14 @@ export function PropertyFilters() {
   const applyFilters = () => {
     const params = new URLSearchParams();
 
-    (Object.entries(filters) as [keyof Filters, string][]).forEach(([key, value]) => {
-      const v = String(value ?? "").trim();
-      if (!v) return;
-      if (v === "ALL") return;
-      params.set(String(key), v);
-    });
+    (Object.entries(filters) as [keyof Filters, string][]).forEach(
+      ([key, value]) => {
+        const v = String(value ?? "").trim();
+        if (!v) return;
+        if (v === "ALL") return;
+        params.set(String(key), v);
+      }
+    );
 
     const qs = params.toString();
     router.push(qs ? `/protected/properties?${qs}` : "/protected/properties");
@@ -116,6 +119,27 @@ export function PropertyFilters() {
       return true;
     });
   }, [filters]);
+  useEffect(() => {
+  const qs = searchParams.toString();
+
+  setFilters((prev) => ({
+    ...prev,
+    q: searchParams.get("q") || "",
+    status: searchParams.get("status") || "ALL",
+    type: searchParams.get("type") || "ALL",
+    listing: searchParams.get("listing") || "ALL",
+    bedrooms: searchParams.get("bedrooms") || "",
+    bathrooms: searchParams.get("bathrooms") || "",
+    province: searchParams.get("province") || "",
+    district: searchParams.get("district") || "",
+    minPrice: searchParams.get("minPrice") || "",
+    maxPrice: searchParams.get("maxPrice") || "",
+    sortBy: searchParams.get("sortBy") || "created_at",
+    sortOrder: searchParams.get("sortOrder") || "desc",
+  }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [searchParams.toString()]);
+
 
   return (
     <div className="flex items-center gap-2">
@@ -151,12 +175,66 @@ export function PropertyFilters() {
         <SelectContent className="overflow-y-auto bg-white">
           <SelectItem value="created_at-desc">ใหม่ล่าสุด</SelectItem>
           <SelectItem value="created_at-asc">เก่าสุด</SelectItem>
+          <SelectItem value="updated_at-desc">อัปเดตล่าสุด</SelectItem>
+          <SelectItem value="updated_at-asc">อัปเดตเก่าสุด</SelectItem>
           <SelectItem value="price-desc">ราคาสูงสุด</SelectItem>
           <SelectItem value="price-asc">ราคาต่ำสุด</SelectItem>
+          <SelectItem value="rental_price-desc">ค่าเช่าสูงสุด</SelectItem>
+          <SelectItem value="rental_price-asc">ค่าเช่าต่ำสุด</SelectItem>
           <SelectItem value="title-asc">ชื่อ A-Z</SelectItem>
           <SelectItem value="title-desc">ชื่อ Z-A</SelectItem>
           <SelectItem value="bedrooms-desc">ห้องนอนมากสุด</SelectItem>
-          <SelectItem value="updated_at-desc">อัปเดตล่าสุด</SelectItem>
+        </SelectContent>
+      </Select>
+      {/* Quick Status */}
+      <Select
+        value={filters.status}
+        onValueChange={(status) => {
+          setFilters({ ...filters, status });
+
+          const params = new URLSearchParams(searchParams.toString());
+          if (status === "ALL") params.delete("status");
+          else params.set("status", status);
+          params.delete("page");
+          router.push(`/protected/properties?${params.toString()}`);
+        }}
+      >
+        <SelectTrigger className="w-[160px]">
+          <SelectValue placeholder="สถานะ" />
+        </SelectTrigger>
+        <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
+          <SelectItem value="ALL">ทุกสถานะ</SelectItem>
+          {PROPERTY_STATUS_ORDER.map((s) => (
+            <SelectItem key={s} value={s}>
+              {PROPERTY_STATUS_LABELS[s]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Quick Type */}
+      <Select
+        value={filters.type}
+        onValueChange={(type) => {
+          setFilters({ ...filters, type });
+
+          const params = new URLSearchParams(searchParams.toString());
+          if (type === "ALL") params.delete("type");
+          else params.set("type", type);
+          params.delete("page");
+          router.push(`/protected/properties?${params.toString()}`);
+        }}
+      >
+        <SelectTrigger className="w-[190px]">
+          <SelectValue placeholder="ประเภท" />
+        </SelectTrigger>
+        <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
+          <SelectItem value="ALL">ทุกประเภท</SelectItem>
+          {PROPERTY_TYPE_ORDER.map((t) => (
+            <SelectItem key={t} value={t}>
+              {PROPERTY_TYPE_LABELS[t]}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
@@ -181,35 +259,14 @@ export function PropertyFilters() {
           </SheetHeader>
 
           <div className="space-y-6 mt-6 px-6 py-4">
-            {/* Property Type */}
-            <div className="space-y-2">
-              <Label>ประเภททรัพย์</Label>
-              <Select
-                value={filters.type}
-                onValueChange={(value) => setFilters({ ...filters, type: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="เลือกประเภท" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
-                  <SelectItem className="border-b" value="ALL">
-                    ทั้งหมด
-                  </SelectItem>
-                  {PROPERTY_TYPE_ORDER.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {PROPERTY_TYPE_LABELS[t]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Listing Type */}
             <div className="space-y-2">
               <Label>รูปแบบ</Label>
               <Select
                 value={filters.listing}
-                onValueChange={(value) => setFilters({ ...filters, listing: value })}
+                onValueChange={(value) =>
+                  setFilters({ ...filters, listing: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="เลือกรูปแบบ" />
@@ -226,30 +283,6 @@ export function PropertyFilters() {
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Status (แก้ให้ใช้ labels กลาง) */}
-            <div className="space-y-2">
-              <Label>สถานะ</Label>
-              <Select
-                value={filters.status}
-                onValueChange={(value) => setFilters({ ...filters, status: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="เลือกสถานะ" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
-                  <SelectItem className="border-b" value="ALL">
-                    ทั้งหมด
-                  </SelectItem>
-                  {PROPERTY_STATUS_ORDER.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {PROPERTY_STATUS_LABELS[s]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Bedrooms & Bathrooms */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

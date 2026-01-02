@@ -1,5 +1,9 @@
 import type { Database } from "@/lib/database.types";
 
+export type PropertyType = Database["public"]["Enums"]["property_type"];
+export type ListingType = Database["public"]["Enums"]["listing_type"];
+export type PropertyStatus = Database["public"]["Enums"]["property_status"];
+
 export type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 export type PropertyInsert = Database["public"]["Tables"]["properties"]["Insert"];
 export type PropertyUpdate = Database["public"]["Tables"]["properties"]["Update"];

@@ -5,6 +5,7 @@ import type { AuthContext } from "@/lib/authz";
 export type AuditAction =
   | "property.create"
   | "property.update"
+  | "property.status.update"
   | "property.delete"
   | "lead.create"
   | "lead.update"
