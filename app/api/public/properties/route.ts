@@ -1,6 +1,5 @@
 // create lead / นัดชม / ขอรายละเอียด (ป้องกัน spam)
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type PropertyRow = {
@@ -54,15 +53,7 @@ function pickCoverImage(
 }
 
 export async function GET() {
-  let supabase = await createClient();
-  try {
-    supabase = createAdminClient();
-  } catch (error) {
-    console.warn(
-      "createAdminClient failed (missing SUPABASE_SERVICE_ROLE_KEY?), using user client:",
-      error
-    );
-  }
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("properties")
