@@ -1,4 +1,4 @@
-| {
+db_structure_json                                                                    {
     "enums": [
         {
             "name": "deal_status",
@@ -910,6 +910,45 @@
             ]
         },
         {
+            "table": "popular_areas",
+            "columns": [
+                {
+                    "pos": 1,
+                    "name": "id",
+                    "default": "gen_random_uuid()",
+                    "nullable": "NO",
+                    "udt_name": "uuid",
+                    "data_type": "uuid"
+                },
+                {
+                    "pos": 2,
+                    "name": "name",
+                    "default": null,
+                    "nullable": "NO",
+                    "udt_name": "text",
+                    "data_type": "text"
+                },
+                {
+                    "pos": 3,
+                    "name": "created_at",
+                    "default": "timezone('utc'::text, now())",
+                    "nullable": "NO",
+                    "udt_name": "timestamptz",
+                    "data_type": "timestamp with time zone"
+                }
+            ],
+            "indexes": [
+                {
+                    "def": "CREATE UNIQUE INDEX popular_areas_pkey ON public.popular_areas USING btree (id)",
+                    "name": "popular_areas_pkey"
+                },
+                {
+                    "def": "CREATE UNIQUE INDEX popular_areas_name_key ON public.popular_areas USING btree (name)",
+                    "name": "popular_areas_name_key"
+                }
+            ]
+        },
+        {
             "table": "profiles",
             "columns": [
                 {
@@ -1306,6 +1345,54 @@
                     "nullable": "YES",
                     "udt_name": "float8",
                     "data_type": "double precision"
+                },
+                {
+                    "pos": 40,
+                    "name": "popular_area",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "text",
+                    "data_type": "text"
+                },
+                {
+                    "pos": 41,
+                    "name": "near_transit",
+                    "default": "false",
+                    "nullable": "YES",
+                    "udt_name": "bool",
+                    "data_type": "boolean"
+                },
+                {
+                    "pos": 42,
+                    "name": "transit_station_name",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "text",
+                    "data_type": "text"
+                },
+                {
+                    "pos": 43,
+                    "name": "transit_type",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "text",
+                    "data_type": "text"
+                },
+                {
+                    "pos": 44,
+                    "name": "transit_distance_meters",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "int4",
+                    "data_type": "integer"
+                },
+                {
+                    "pos": 45,
+                    "name": "internal_data",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "jsonb",
+                    "data_type": "jsonb"
                 }
             ],
             "indexes": [
@@ -1521,6 +1608,216 @@
                 {
                     "def": "CREATE UNIQUE INDEX property_images_pkey ON public.property_images USING btree (id)",
                     "name": "property_images_pkey"
+                }
+            ]
+        },
+        {
+            "table": "property_matches",
+            "columns": [
+                {
+                    "pos": 1,
+                    "name": "id",
+                    "default": "gen_random_uuid()",
+                    "nullable": "NO",
+                    "udt_name": "uuid",
+                    "data_type": "uuid"
+                },
+                {
+                    "pos": 2,
+                    "name": "session_id",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "uuid",
+                    "data_type": "uuid"
+                },
+                {
+                    "pos": 3,
+                    "name": "property_id",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "uuid",
+                    "data_type": "uuid"
+                },
+                {
+                    "pos": 4,
+                    "name": "match_score",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "numeric",
+                    "data_type": "numeric"
+                },
+                {
+                    "pos": 5,
+                    "name": "match_reasons",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "jsonb",
+                    "data_type": "jsonb"
+                },
+                {
+                    "pos": 6,
+                    "name": "rank",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "int4",
+                    "data_type": "integer"
+                },
+                {
+                    "pos": 7,
+                    "name": "created_at",
+                    "default": "now()",
+                    "nullable": "YES",
+                    "udt_name": "timestamptz",
+                    "data_type": "timestamp with time zone"
+                }
+            ],
+            "indexes": [
+                {
+                    "def": "CREATE UNIQUE INDEX property_matches_pkey ON public.property_matches USING btree (id)",
+                    "name": "property_matches_pkey"
+                }
+            ]
+        },
+        {
+            "table": "property_search_sessions",
+            "columns": [
+                {
+                    "pos": 1,
+                    "name": "id",
+                    "default": "gen_random_uuid()",
+                    "nullable": "NO",
+                    "udt_name": "uuid",
+                    "data_type": "uuid"
+                },
+                {
+                    "pos": 2,
+                    "name": "session_token",
+                    "default": null,
+                    "nullable": "NO",
+                    "udt_name": "text",
+                    "data_type": "text"
+                },
+                {
+                    "pos": 3,
+                    "name": "purpose",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "text",
+                    "data_type": "text"
+                },
+                {
+                    "pos": 4,
+                    "name": "budget_min",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "numeric",
+                    "data_type": "numeric"
+                },
+                {
+                    "pos": 5,
+                    "name": "budget_max",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "numeric",
+                    "data_type": "numeric"
+                },
+                {
+                    "pos": 6,
+                    "name": "preferred_area",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "text",
+                    "data_type": "text"
+                },
+                {
+                    "pos": 7,
+                    "name": "ip_address",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "text",
+                    "data_type": "text"
+                },
+                {
+                    "pos": 8,
+                    "name": "user_agent",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "text",
+                    "data_type": "text"
+                },
+                {
+                    "pos": 9,
+                    "name": "created_at",
+                    "default": "now()",
+                    "nullable": "YES",
+                    "udt_name": "timestamptz",
+                    "data_type": "timestamp with time zone"
+                },
+                {
+                    "pos": 10,
+                    "name": "lead_id",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "uuid",
+                    "data_type": "uuid"
+                },
+                {
+                    "pos": 11,
+                    "name": "converted_at",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "timestamptz",
+                    "data_type": "timestamp with time zone"
+                },
+                {
+                    "pos": 12,
+                    "name": "near_transit",
+                    "default": "false",
+                    "nullable": "YES",
+                    "udt_name": "bool",
+                    "data_type": "boolean"
+                },
+                {
+                    "pos": 13,
+                    "name": "transit_station_name",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "text",
+                    "data_type": "text"
+                },
+                {
+                    "pos": 14,
+                    "name": "transit_type",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "text",
+                    "data_type": "text"
+                },
+                {
+                    "pos": 15,
+                    "name": "transit_distance_meters",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "int4",
+                    "data_type": "integer"
+                },
+                {
+                    "pos": 16,
+                    "name": "preferred_property_type",
+                    "default": null,
+                    "nullable": "YES",
+                    "udt_name": "text",
+                    "data_type": "text"
+                }
+            ],
+            "indexes": [
+                {
+                    "def": "CREATE UNIQUE INDEX property_search_sessions_pkey ON public.property_search_sessions USING btree (id)",
+                    "name": "property_search_sessions_pkey"
+                },
+                {
+                    "def": "CREATE UNIQUE INDEX property_search_sessions_session_token_key ON public.property_search_sessions USING btree (session_token)",
+                    "name": "property_search_sessions_session_token_key"
                 }
             ]
         },
@@ -1812,6 +2109,39 @@
             ]
         },
         {
+            "to_table": "properties",
+            "constraint": "property_matches_property_id_fkey",
+            "from_table": "property_matches",
+            "to_columns": [
+                "id"
+            ],
+            "from_columns": [
+                "property_id"
+            ]
+        },
+        {
+            "to_table": "property_search_sessions",
+            "constraint": "property_matches_session_id_fkey",
+            "from_table": "property_matches",
+            "to_columns": [
+                "id"
+            ],
+            "from_columns": [
+                "session_id"
+            ]
+        },
+        {
+            "to_table": "leads",
+            "constraint": "property_search_sessions_lead_id_fkey",
+            "from_table": "property_search_sessions",
+            "to_columns": [
+                "id"
+            ],
+            "from_columns": [
+                "lead_id"
+            ]
+        },
+        {
             "to_table": "deals",
             "constraint": "rental_contracts_deal_id_fkey",
             "from_table": "rental_contracts",
@@ -1823,5 +2153,5 @@
             ]
         }
     ],
-    "generated_at": "2025-12-24T15:21:41.464062+00:00"
+    "generated_at": "2026-01-05T08:27:19.120667+00:00"
 } |

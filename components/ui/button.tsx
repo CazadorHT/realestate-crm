@@ -1,7 +1,6 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -36,23 +35,30 @@ const buttonVariants = cva(
   }
 )
 
+type ButtonProps = React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }
 function Button({
   className,
   variant,
   size,
   asChild = false,
+  type,
   ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
+}: ButtonProps) {
   const Comp = asChild ? Slot : "button"
+
+  
+  // ✅ สำคัญ: ถ้าเป็นปุ่มจริง ๆ (ไม่ใช่ asChild) และไม่ได้ระบุ type → default เป็น button
+  const safeType = asChild ? undefined : (type ?? "button")
 
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
+      {...(!asChild ? { type: safeType } : {})}
     />
   )
 }

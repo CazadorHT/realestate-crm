@@ -201,6 +201,26 @@
   },
   {
     "schemaname": "public",
+    "tablename": "popular_areas",
+    "policyname": "Allow authenticated insert",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "popular_areas",
+    "policyname": "Allow public read access",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
     "tablename": "profiles",
     "policyname": "Authenticated users can view all profiles",
     "permissive": "PERMISSIVE",
@@ -262,6 +282,16 @@
   {
     "schemaname": "public",
     "tablename": "properties",
+    "policyname": "Public can read ACTIVE properties",
+    "permissive": "PERMISSIVE",
+    "roles": "{anon}",
+    "cmd": "SELECT",
+    "qual": "(status = 'ACTIVE'::property_status)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "properties",
     "policyname": "Staff can manage properties",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
@@ -318,6 +348,16 @@
     "cmd": "INSERT",
     "qual": null,
     "with_check": "(auth.uid() = user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "property_images",
+    "policyname": "Public can read images for ACTIVE properties",
+    "permissive": "PERMISSIVE",
+    "roles": "{anon}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM properties p\n  WHERE ((p.id = property_images.property_id) AND (p.status = 'ACTIVE'::property_status))))",
+    "with_check": null
   },
   {
     "schemaname": "public",

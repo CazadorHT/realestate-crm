@@ -65,6 +65,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { useThaiAddress } from "@/hooks/useThaiAddress";
+import { QuickInfoSection } from "@/features/properties/property-form/sections/QuickInfoSection"; // ปรับ path
 
 const EMPTY_VALUES: PropertyFormValues = {
   title: "",
@@ -220,6 +221,7 @@ export function PropertyForm({
 
   // Quick Info Dialog state
   const [isQuickInfoOpen, setIsQuickInfoOpen] = React.useState(false);
+
   const [quickTitle, setQuickTitle] = React.useState("");
   const [quickArea, setQuickArea] = React.useState<string | undefined>(
     undefined
@@ -351,18 +353,18 @@ export function PropertyForm({
   const validateStep = async (step: number) => {
     let fieldsToValidate: (keyof PropertyFormValues)[] = [];
     if (step === 1) {
-      fieldsToValidate = ["listing_type", "property_type"];
-    } else if (step === 2) {
-      fieldsToValidate = [
-        "title",
+      fieldsToValidate.push("listing_type", "property_type", "title");
+    }
+    if (step === 2) {
+      fieldsToValidate.push(
         "price" as any,
         "rental_price" as any,
-        "size_sqm" as any,
-      ];
-    } else if (step === 3) {
-      fieldsToValidate = ["province", "district", "subdistrict"];
+        "size_sqm" as any
+      );
     }
-
+    if (step === 3) {
+      fieldsToValidate.push("province", "district", "subdistrict");
+    }
     if (fieldsToValidate.length > 0) {
       const isValid = await form.trigger(fieldsToValidate);
       if (!isValid) {
@@ -387,8 +389,14 @@ export function PropertyForm({
   };
 
   // Handle form submission หรือ การสร้าง/แก้ไขทรัพย์โดยการใช้ onSubmit
-  const onSubmit = async (values: PropertyFormValues) => {
-    // Check duplicates first
+  const onSubmit = async (
+    values: PropertyFormValues,
+    e?: React.BaseSyntheticEvent
+  ) => {
+    const submitter = (e?.nativeEvent as SubmitEvent | undefined)
+      ?.submitter as HTMLElement | null;
+    console.log("SUBMIT BY:", submitter);
+    console.log("SUBMIT BUTTON TEXT:", submitter?.textContent);
     try {
       const canProceed = await checkDuplicates(values);
       if (!canProceed) return; // Wait for user confirmation
@@ -717,6 +725,7 @@ export function PropertyForm({
       </div>
     );
   }
+  const submitNow = form.handleSubmit(onSubmit, onInvalid);
   const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
     if (e.key !== "Enter") return;
 
@@ -783,7 +792,11 @@ export function PropertyForm({
         <form
           onKeyDown={handleFormKeyDown}
           className="space-y-10"
-          onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+          onSubmit={(e) => {
+            // ✅ กัน implicit submit (Enter / browser default)
+            e.preventDefault();
+            e.stopPropagation();
+          }}
         >
           {/* Error Summary หรือ สรุปข้อผิดพลาดของฟอร์ม */}
           <ErrorSummary errors={form.formState.errors} />
@@ -926,153 +939,14 @@ export function PropertyForm({
 
                 {/* Quick Info Section - appears after selecting property type */}
                 {isQuickInfoOpen && (
-                  <div
-                    className={`animate-in fade-in slide-in-from-top-4 duration-500 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-3xl border-2 space-y-6 ${
-                      quickError || form.formState.errors.title
-                        ? "border-red-200 bg-red-50/30"
-                        : "border-blue-200"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3
-                          className={`text-xl ${
-                            quickError || form.formState.errors.title
-                              ? "text-red-700"
-                              : "text-slate-900"
-                          }`}
-                        >
-                          ข้อมูลพื้นฐานของทรัพย์
-                        </h3>
-                        <p className="text-slate-500 font-light text-sm mt-1">
-                          ระบุชื่อและย่านเพื่อความสะดวกในการจัดการข้อมูล
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-6">
-                      {/* Title Field */}
-                      <div className="space-y-2">
-                        <label
-                          className={`font-black text-sm uppercase tracking-wider ${
-                            quickError || form.formState.errors.title
-                              ? "text-red-600"
-                              : "text-blue-700"
-                          }`}
-                        >
-                          ชื่อทรัพย์ <span className="text-red-500">*</span>
-                        </label>
-                        <Input
-                          value={quickTitle}
-                          onChange={(e) => {
-                            setQuickTitle(e.target.value);
-                            if (e.target.value.trim()) setQuickError(false);
-                          }}
-                          className={`h-14 text-sm rounded-2xl border-2 px-6 shadow-sm transition-all focus:ring-4 ${
-                            quickError || form.formState.errors.title
-                              ? "border-red-300 bg-red-50 text-red-900 placeholder:text-red-300 focus:border-red-500 focus:ring-red-100"
-                              : "border-slate-100 bg-white focus:bg-white focus:ring-blue-100 focus:border-blue-500"
-                          }`}
-                          placeholder="เช่น คอนโด Ideo Sukhumvit 93"
-                        />
-                        {(quickError || form.formState.errors.title) && (
-                          <p className="text-red-500 text-xs font-bold animate-pulse">
-                            กรุณาระบุชื่อทรัพย์
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Smart Match & Manual Area (Moved from Step 3) */}
-                      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 rounded-[2rem] text-white space-y-6 shadow-xl shadow-blue-100 relative overflow-hidden group/area">
-                        <div className="absolute -right-10 -bottom-10 opacity-10 scale-150 rotate-12 group-hover/area:scale-110 transition-transform duration-1000">
-                          <TrendingUp className="w-80 h-80" />
-                        </div>
-
-                        <div className="relative z-10 space-y-4">
-                          <label className="font-medium flex items-center gap-3 text-lg tracking-tight text-blue-50">
-                            <TrendingUp className="h-6 w-6 text-blue-200" />
-                            ระบุย่านทำเล (Smart Match)
-                          </label>
-
-                          <div className="">
-                            <Select
-                              value={quickArea ?? "none"}
-                              onValueChange={(val) =>
-                                setQuickArea(val === "none" ? undefined : val)
-                              }
-                            >
-                              <SelectTrigger className=" mb-6  bg-white/20 border-white/30 text-white h-14 rounded-2xl backdrop-blur-3xl font-medium px-6 hover:bg-white/30 transition-all">
-                                <SelectValue placeholder="เลือกย่านยอดนิยม" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px] ">
-                                <SelectGroup>
-                                  <SelectItem
-                                    value="none"
-                                    className="font-medium text-slate-400"
-                                  >
-                                    -- ไม่ระบุ --
-                                  </SelectItem>
-                                  {popularAreas.map((area: string) => (
-                                    <SelectItem
-                                      key={area}
-                                      value={area}
-                                      className="font-medium text-slate-700 py-3"
-                                    >
-                                      {area}
-                                    </SelectItem>
-                                  ))}
-                                </SelectGroup>
-                              </SelectContent>
-                            </Select>
-
-                            <div className="flex gap-4 bg-white/10 p-4 rounded-2xl border border-white/20">
-                              <Input
-                                placeholder="พิมพ์ชื่อย่านใหม่..."
-                                value={newArea}
-                                onChange={(e) => setNewArea(e.target.value)}
-                                className="h-12 bg-white/10 border-none text-white placeholder:text-blue-100/70 font-bold px-6 rounded-xl flex-1"
-                              />
-                              <Button
-                                type="button"
-                                className="h-12 px-10 bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl"
-                                onClick={handleAddArea}
-                                disabled={isAddingArea}
-                              >
-                                {isAddingArea ? (
-                                  <Loader2 className="h-5 w-5 animate-spin" />
-                                ) : (
-                                  "เพิ่มย่าน"
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        if (quickTitle.trim()) {
-                          form.setValue("title", quickTitle);
-                          form.setValue("popular_area", quickArea);
-                          setIsQuickInfoOpen(false);
-                          setQuickError(false);
-                          toast.success("บันทึกข้อมูลพื้นฐานแล้ว");
-                        } else {
-                          setQuickError(true);
-                          toast.error("กรุณาระบุชื่อทรัพย์");
-                        }
-                      }}
-                      className={`w-full h-14 font-black rounded-2xl text-lg shadow-xl transition-all ${
-                        quickError
-                          ? "bg-red-600 hover:bg-red-700 shadow-red-200 text-white"
-                          : "bg-blue-600 hover:bg-blue-700 shadow-blue-200 text-white"
-                      }`}
-                    >
-                      ยืนยันข้อมูล
-                    </Button>
-                  </div>
+                  <QuickInfoSection
+                    form={form}
+                    popularAreas={popularAreas}
+                    isAddingArea={isAddingArea}
+                    newArea={newArea}
+                    setNewArea={setNewArea}
+                    onAddArea={handleAddArea}
+                  />
                 )}
               </section>
             </div>
@@ -1089,28 +963,6 @@ export function PropertyForm({
                     ข้อมูลรายละเอียดและราคา
                   </p>
                 </div>
-
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-blue-700 font-black text-sm uppercase tracking-wider mb-2 block">
-                        ชื่อหัวข้อประกาศ (TITLE){" "}
-                        <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value ?? ""}
-                          className="h-16 text-xl rounded-2xl border-slate-100 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all font-bold px-8 shadow-inner"
-                          placeholder="เช่น Ideo Sukhumvit 93 ห้องมุม ห้องสวย แต่งครบ"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   {(form.watch("listing_type") === "SALE" ||
@@ -1845,7 +1697,7 @@ export function PropertyForm({
                       }}
                     >
                       <PlusCircle className="h-5 w-5 mr-3" />
-                      เพิ่มรายชื่อ Co-Agent
+                      เพิ่ม Agent เพิ่มเติม
                     </Button>
                   </div>
                 </div>
@@ -1902,14 +1754,14 @@ export function PropertyForm({
                   </Button>
                 ) : (
                   <Button
-                    type="submit"
+                    type="button"
+                    onClick={submitNow}
                     className="h-16 w-full sm:w-auto sm:px-20 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xl shadow-emerald-200 text-xl transition-all active:scale-95"
                   >
                     {mode === "create"
                       ? "ยืนยันสร้างประกาศ"
                       : "บันทึกการแก้ไขทรัพย์"}
                   </Button>
-                  
                 )}
               </div>
             </div>

@@ -443,6 +443,12 @@ export type Database = {
           assigned_to: string | null
           bathrooms: number | null
           bedrooms: number | null
+          co_agent_contact_channel: string | null
+          co_agent_contact_id: string | null
+          co_agent_name: string | null
+          co_agent_phone: string | null
+          co_agent_rent_commission_months: number | null
+          co_agent_sale_commission_percent: number | null
           commission_rent_months: number | null
           commission_sale_percentage: number | null
           created_at: string
@@ -455,6 +461,7 @@ export type Database = {
           id: string
           images: Json | null
           internal_data: Json | null
+          is_co_agent: boolean | null
           land_size_sqwah: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           maintenance_fee: number | null
@@ -488,6 +495,12 @@ export type Database = {
           assigned_to?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
+          co_agent_contact_channel?: string | null
+          co_agent_contact_id?: string | null
+          co_agent_name?: string | null
+          co_agent_phone?: string | null
+          co_agent_rent_commission_months?: number | null
+          co_agent_sale_commission_percent?: number | null
           commission_rent_months?: number | null
           commission_sale_percentage?: number | null
           created_at?: string
@@ -500,6 +513,7 @@ export type Database = {
           id?: string
           images?: Json | null
           internal_data?: Json | null
+          is_co_agent?: boolean | null
           land_size_sqwah?: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           maintenance_fee?: number | null
@@ -533,6 +547,12 @@ export type Database = {
           assigned_to?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
+          co_agent_contact_channel?: string | null
+          co_agent_contact_id?: string | null
+          co_agent_name?: string | null
+          co_agent_phone?: string | null
+          co_agent_rent_commission_months?: number | null
+          co_agent_sale_commission_percent?: number | null
           commission_rent_months?: number | null
           commission_sale_percentage?: number | null
           created_at?: string
@@ -545,6 +565,7 @@ export type Database = {
           id?: string
           images?: Json | null
           internal_data?: Json | null
+          is_co_agent?: boolean | null
           land_size_sqwah?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           maintenance_fee?: number | null
