@@ -54,7 +54,7 @@ export type DuplicatePropertyResult = {
 const PROPERTY_IMAGES_BUCKET = "property-images";
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
 const UPLOAD_RATE_WINDOW_MS = 60_000; // 1 minute
-const UPLOAD_RATE_MAX = 10; // uploads per window per user
+const UPLOAD_RATE_MAX = 20; // uploads per window per user
 const SESSION_ID_RE = /^[a-zA-Z0-9_-]{8,128}$/;
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -321,21 +321,36 @@ export async function createPropertyAction(
     }
 
     const { generatePropertySEO } = await import("@/lib/seo-utils");
+
+    // Add logic to handle "Pet Friendly" tag
+    // Add logic to handle "Pet Friendly" tag
+    // propertyData usually doesn't have meta_keywords because it's excluded from form schema
+    const finalKeywords: string[] = [];
+    if (safeValues.is_pet_friendly) {
+      finalKeywords.push("Pet Friendly");
+    }
+
     const seoData = generatePropertySEO({
       title: propertyData.title,
       property_type: propertyData.property_type,
       listing_type: propertyData.listing_type,
-      bedrooms: propertyData.bedrooms,
-      bathrooms: propertyData.bathrooms,
-      size_sqm: propertyData.size_sqm,
-      price: propertyData.price,
-      rental_price: propertyData.rental_price,
+      bedrooms: propertyData.bedrooms ?? undefined,
+      bathrooms: propertyData.bathrooms ?? undefined,
+      size_sqm: propertyData.size_sqm ?? undefined,
+      price: propertyData.price ?? undefined,
+      rental_price: propertyData.rental_price ?? undefined,
       district: propertyData.district,
       province: propertyData.province,
       address_line1: propertyData.address_line1,
       postal_code: propertyData.postal_code,
       description: propertyData.description,
     });
+
+    // Merge SEO keywords with our custom tags if SEO generated keywords don't include them (or just append)
+    // Actually seoData.metaKeywords is usually string[]. We can combine them.
+    const mergedKeywords = Array.from(
+      new Set([...(seoData.metaKeywords || []), ...finalKeywords])
+    );
 
     const { data: property, error } = await supabase
       .from("properties")
@@ -345,7 +360,7 @@ export async function createPropertyAction(
         slug: seoData.slug,
         meta_title: seoData.metaTitle,
         meta_description: seoData.metaDescription,
-        meta_keywords: seoData.metaKeywords,
+        meta_keywords: mergedKeywords,
         structured_data: seoData.structuredData as any,
       })
       .select()
@@ -473,9 +488,10 @@ export async function updatePropertyAction(
     const { images, agent_ids, ...propertyData } = safeValues;
 
     // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ
+    // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ
     const { data: existing, error: findErr } = await supabase
       .from("properties")
-      .select("id, created_by")
+      .select("id, created_by, meta_keywords")
       .eq("id", id)
       .single();
 
@@ -499,21 +515,37 @@ export async function updatePropertyAction(
 
     // 4) SEO metadata
     const { generatePropertySEO } = await import("@/lib/seo-utils");
+
+    // Add logic to handle "Pet Friendly" tag
+    let finalKeywords = [...(existing.meta_keywords || [])];
+    if (safeValues.is_pet_friendly) {
+      if (!finalKeywords.includes("Pet Friendly")) {
+        finalKeywords.push("Pet Friendly");
+      }
+    } else {
+      // Remove if unchecked (optional logic, but safe to filter out)
+      finalKeywords = finalKeywords.filter((k) => k !== "Pet Friendly");
+    }
+
     const seoData = generatePropertySEO({
       title: propertyData.title,
       property_type: propertyData.property_type,
       listing_type: propertyData.listing_type,
-      bedrooms: propertyData.bedrooms,
-      bathrooms: propertyData.bathrooms,
-      size_sqm: propertyData.size_sqm,
-      price: propertyData.price,
-      rental_price: propertyData.rental_price,
+      bedrooms: propertyData.bedrooms ?? undefined,
+      bathrooms: propertyData.bathrooms ?? undefined,
+      size_sqm: propertyData.size_sqm ?? undefined,
+      price: propertyData.price ?? undefined,
+      rental_price: propertyData.rental_price ?? undefined,
       district: propertyData.district,
       province: propertyData.province,
       address_line1: propertyData.address_line1,
       postal_code: propertyData.postal_code,
       description: propertyData.description,
     });
+
+    const mergedKeywords = Array.from(
+      new Set([...(seoData.metaKeywords || []), ...finalKeywords])
+    );
 
     // 5) Update property data + SEO
     const { error: updateErr } = await supabase
@@ -523,7 +555,7 @@ export async function updatePropertyAction(
         slug: seoData.slug,
         meta_title: seoData.metaTitle,
         meta_description: seoData.metaDescription,
-        meta_keywords: seoData.metaKeywords,
+        meta_keywords: mergedKeywords,
         structured_data: seoData.structuredData as any,
         updated_at: new Date().toISOString(),
       })

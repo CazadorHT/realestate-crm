@@ -32,22 +32,25 @@ export default async function ProtectedLayout({
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-bg text-text">
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-border/10 bg-surface/80 px-4 backdrop-blur-md sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-        <div className="flex items-center gap-4">
-          {/* Mobile menu could go here */}
-          <h1 className="text-xl font-bold leading-none tracking-tight text-primary">
-            CRM Dashboard
-          </h1>
-        </div>
-        <div className="ml-auto flex items-center gap-4">
-          <ThemeToggle />
-          <UserNav profile={profile} />
-        </div>
-      </header>
-      <div className="flex flex-1">
-        <SidebarNav role={profile.role} />
-        <main className="flex-1 bg-bg p-4 sm:px-6 sm:py-6 md:gap-8 lg:py-8">
+    <div className="flex min-h-screen w-full bg-slate-50/50">
+      <SidebarNav role={profile.role} />
+
+      <div className="flex flex-1 flex-col min-w-0">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 bg-white/80 px-6 backdrop-blur-md border-b border-slate-100 shadow-sm supports-[backdrop-filter]:bg-white/60">
+          <div className="flex items-center gap-4">
+            {/* Mobile menu trigger could reside here */}
+            <h1 className="text-lg font-bold text-slate-800 tracking-tight sm:hidden">
+              CAZADOR
+            </h1>
+          </div>
+          <div className="ml-auto flex items-center gap-4">
+            <ThemeToggle />
+            <div className="h-6 w-px bg-slate-200 mx-2 hidden sm:block" />
+            <UserNav profile={profile} />
+          </div>
+        </header>
+
+        <main className="flex-1 p-6 md:p-8  mx-auto w-full">
           {children}
         </main>
       </div>

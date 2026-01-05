@@ -10,6 +10,7 @@ interface NumberInputProps {
   ariaInvalid?: boolean;
   decimals?: number;
   allowNegative?: boolean;
+  className?: string;
 }
 
 /**
@@ -23,6 +24,7 @@ export function NumberInput({
   ariaInvalid,
   decimals = 0,
   allowNegative = false,
+  className,
 }: NumberInputProps) {
   const formatNumber = (val: number | undefined, decimals = 0) =>
     val == null
@@ -77,6 +79,7 @@ export function NumberInput({
       inputMode="numeric"
       value={display}
       aria-invalid={ariaInvalid}
+      className={className}
       onFocus={() => {
         setIsFocused(true);
         setDisplay(value == null ? "" : String(value));

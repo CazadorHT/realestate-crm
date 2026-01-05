@@ -41,6 +41,11 @@ const EMPTY_VALUES: PropertyFormValues = {
   bathrooms: undefined,
   size_sqm: undefined,
   land_size_sqwah: undefined,
+  floor: undefined,
+
+  maintenance_fee: undefined,
+  parking_slots: undefined,
+  zoning: undefined,
   currency: "THB",
   property_source: "",
   owner_id: null,
@@ -57,10 +62,11 @@ const EMPTY_VALUES: PropertyFormValues = {
   is_co_agent: false,
   co_agent_name: "",
   co_agent_phone: "",
-  co_agent_contact_channel: "LINE",
+  co_agent_contact_channel: "Line",
   co_agent_contact_id: "",
   co_agent_sale_commission_percent: undefined,
   co_agent_rent_commission_months: undefined,
+  is_pet_friendly: false,
 };
 
 type Props = {
@@ -90,6 +96,10 @@ function mapRowToFormValues(
     bathrooms: row.bathrooms ?? undefined,
     size_sqm: row.size_sqm ?? undefined,
     land_size_sqwah: row.land_size_sqwah ?? undefined,
+    floor: row.floor ?? undefined,
+    maintenance_fee: row.maintenance_fee ?? undefined,
+    parking_slots: row.parking_slots ?? undefined,
+    zoning: row.zoning ?? undefined,
     currency: row.currency ?? "THB",
     address_line1: row.address_line1 ?? "",
     province: row.province ?? "",
@@ -122,6 +132,9 @@ function mapRowToFormValues(
     co_agent_rent_commission_months:
       (row.structured_data as any)?.co_agent_rent_commission_months ||
       undefined,
+
+    // Tags
+    is_pet_friendly: (row.meta_keywords || []).includes("Pet Friendly"),
   };
 }
 
@@ -368,7 +381,7 @@ export function PropertyForm({
       price: values.price,
       bedrooms: values.bedrooms,
       bathrooms: values.bathrooms,
-      size_sqm: values.size_sqm,
+      size_sqm: values.size_sqm ?? undefined,
     });
 
     if (matches.length > 0) {
@@ -559,29 +572,32 @@ export function PropertyForm({
             />
           )}
 
-          {/* Navigation Buttons */}
+          {/* Navigation Buttons: Fixed Layout */}
           <div className="mt-10">
             <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-6">
-              <div className="flex items-center gap-6 w-full sm:w-auto justify-center sm:justify-start">
+              {/* Left: Tertiary Action (Cancel) */}
+              <div className="w-full sm:w-auto flex justify-center sm:justify-start">
+                <CancelButton sessionId={uploadSessionId} />
+              </div>
+
+              {/* Right: Primary & Secondary Actions (Back & Next) */}
+              <div className="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-end">
                 {currentStep > 1 && (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handleBack}
-                    className="h-16 px-10 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-lg transition-all active:scale-95"
+                    className="h-14 px-8 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-medium transition-all active:scale-95"
                   >
                     ย้อนกลับ
                   </Button>
                 )}
-                <CancelButton sessionId={uploadSessionId} />
-              </div>
 
-              <div className="w-full sm:w-auto text-center">
                 {currentStep < 4 ? (
                   <Button
                     type="button"
                     onClick={handleNext}
-                    className="h-16 w-full sm:w-auto sm:px-20 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-200 text-xl transition-all active:scale-95 hover:translate-x-1"
+                    className="h-14 px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-100 font-bold text-lg transition-all active:scale-95 hover:translate-x-1"
                   >
                     ถัดไป
                   </Button>
@@ -589,11 +605,9 @@ export function PropertyForm({
                   <Button
                     type="button"
                     onClick={submitNow}
-                    className="h-16 w-full sm:w-auto sm:px-20 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xl shadow-emerald-200 text-xl transition-all active:scale-95"
+                    className="h-14 px-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 font-bold text-lg transition-all active:scale-95"
                   >
-                    {mode === "create"
-                      ? "ยืนยันสร้างประกาศ"
-                      : "บันทึกการแก้ไขทรัพย์"}
+                    {mode === "create" ? "ยืนยันสร้างประกาศ" : "บันทึกการแก้ไข"}
                   </Button>
                 )}
               </div>

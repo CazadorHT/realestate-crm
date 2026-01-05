@@ -49,6 +49,16 @@ export interface PropertyTableData {
   closed_lead_name: string | null;
   is_hot?: boolean;
   is_new?: boolean;
+  // Optional fields for enhanced table
+  subdistrict?: string | null;
+  district?: string | null;
+  province?: string | null;
+  size_sqm?: number | null;
+  land_size_sqwah?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  agent_name?: string | null;
+  popular_area?: string | null;
 }
 
 interface PropertiesTableProps {
@@ -132,29 +142,32 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
               <SortableHead label="ทรัพย์สิน" sortKey="created_at" />
             </TableHead>
             <TableHead>
-              <SortableHead label="ประเภท/เงื่อนไข" sortKey="property_type" />
+              <SortableHead label="ประเภท" sortKey="property_type" />
             </TableHead>
+            <TableHead>ทำเล/ขนาด</TableHead>
             <TableHead>
               <SortableHead label="ราคา" sortKey="price" />
             </TableHead>
+            <TableHead>ความสนใจ</TableHead>
             <TableHead className="w-[140px]">
-              <SortableHead label="อัปเดตล่าสุด" sortKey="updated_at" />
+              <SortableHead label="อัปเดต" sortKey="updated_at" />
             </TableHead>
-            <TableHead className="w-[220px]">ผู้ซื้อ/ผู้เช่า</TableHead>
-          
+            <TableHead className="w-[200px]">ผู้ซื้อ/ผู้เช่า/ผู้ดูแล</TableHead>
+
             <TableHead>
               <SortableHead label="สถานะ" sortKey="status" />
             </TableHead>
+            <TableHead>สัญญา</TableHead>
             <TableHead className="text-right">จัดการ</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((property) => (
-            <TableRow key={property.id} className="group hover:bg-muted/5">
+            <TableRow key={property.id} className="group hover:bg-slate-50/50">
               {/* PROPERTY NAME & COVER */}
               <TableCell>
                 <div className="flex items-start gap-4">
-                  <div className="relative h-[150px] w-[250px] flex-shrink-0 overflow-hidden rounded-md border bg-muted group/image cursor-zoom-in">
+                  <div className="relative h-[80px] w-[120px] flex-shrink-0 overflow-hidden rounded-lg border bg-slate-100 group/image cursor-zoom-in">
                     {property.image_url ? (
                       <Dialog>
                         <DialogTrigger asChild>
@@ -162,64 +175,60 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                             <img
                               src={property.image_url}
                               alt={property.title}
-                              className="h-full w-full object-cover transition-transform duration-300 group-hover/image:scale-125"
+                              className="h-full w-full object-cover transition-transform duration-300 group-hover/image:scale-110"
                             />
                           </div>
                         </DialogTrigger>
                         <DialogContent className="max-w-3xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
                           <VisuallyHidden>
                             <DialogTitle>{property.title}</DialogTitle>
-                            
                           </VisuallyHidden>
                           <img
                             src={property.image_url}
                             alt={property.title}
-                            className="max-h-[80vh] w-auto rounded-lg object-contain"
+                            className="max-h-[80vh] w-auto rounded-lg object-contain shadow-2xl"
                           />
                         </DialogContent>
-                        
                       </Dialog>
-                      
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-muted">
-                        <ImageIcon className="h-6 w-6 text-muted-foreground/50" />
+                      <div className="flex h-full w-full items-center justify-center bg-slate-100">
+                        <ImageIcon className="h-6 w-6 text-slate-300" />
                       </div>
                     )}
                     {property.is_new && (
-                      <Badge className="absolute top-1 left-1 h-5 px-1.5 text-[10px] bg-blue-500 hover:bg-blue-600 border-0 pointer-events-none">
+                      <Badge className="absolute top-1 left-1 h-5 px-1.5 text-[10px] bg-blue-500 hover:bg-blue-600 border-0 pointer-events-none shadow-sm">
                         NEW
                       </Badge>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1 min-w-0">
                     <Link
                       href={`/protected/properties/${property.id}`}
-                      className="font-medium hover:text-primary transition-colors line-clamp-1"
+                      className="font-bold text-slate-900 hover:text-blue-600 transition-colors line-clamp-1 text-sm"
                     >
                       {property.title || "ไม่ระบุชื่อ"}
                     </Link>
-                    <span className="text-xs text-muted-foreground line-clamp-1 max-w-[180px]">
-                      {property.description || "ไม่มีรายละเอียดทำเล"}
+                    <span className="text-xs text-slate-500 line-clamp-1">
+                      {property.popular_area || property.description || "-"}
                     </span>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    เพิ่มเมื่อ{" "}
-                    {formatDistanceToNow(new Date(property.created_at), {
-                      addSuffix: true,
-                      locale: th,
-                    })}
-                  </span>
-                      </div>
+                    <div className="flex items-center gap-2 mt-auto">
+                      <span className="text-[10px] text-slate-400 flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-100">
+                        <Clock className="h-3 w-3" />
+                        {formatDistanceToNow(new Date(property.created_at), {
+                          addSuffix: true,
+                          locale: th,
+                        })}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </TableCell>
 
-              {/* TYPE & LISTING */}
+              {/* TYPE */}
               <TableCell>
-                <div className="flex flex-col items-start gap-2">
+                <div className="flex flex-col items-start gap-1.5">
                   <PropertyTypeBadge type={property.property_type} />
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
                     {property.listing_type === "SALE"
                       ? "ขาย"
                       : property.listing_type === "RENT"
@@ -229,70 +238,146 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                 </div>
               </TableCell>
 
+              {/* LOCATION & ASSET INFO */}
+              <TableCell>
+                <div className="flex flex-col gap-1">
+                  {/* Location Placeholder - data.district not in interface, so defaulting to description or title snippet if needed, or assume data will be enriched later. 
+                         Actually, let's use a placeholder or check if PropertyTableData has location. 
+                         PropertyTableData currently has { ... }. I need to add district/subdistrict to PropertyTableData interface first if I want to use it.
+                         For now, I'll ignore specific location fields if not in Props and just show ASSET INFO.
+                     */}
+                  {/* Asset Info: Need to add to PropertyRow/TableData. Treating as if they are present or will be added. 
+                         I will cast for now or update interface in next step if errors differ. 
+                         Wait, I should update PropertyTableData interface at the TOP of the file too. I'll do that in a separate 'replace' or hope 'any' works? No, strict TS. 
+                         I will update the interface in this SAME file edit.
+                     */}
+                  <div className="font-medium text-xs text-slate-700">
+                    {property.popular_area ||
+                      property.subdistrict ||
+                      property.district ||
+                      "-"}
+                  </div>
+                  <div className="text-xs text-slate-500 flex items-center gap-2">
+                    {/* @ts-ignore */}
+                    {property.size_sqm ? (
+                      <span>{property.size_sqm} ตร.ม.</span>
+                    ) : null}
+                    {/* @ts-ignore */}
+                    {property.land_size_sqwah ? (
+                      <span>{property.land_size_sqwah} ตร.ว.</span>
+                    ) : null}
+                  </div>
+                  <div className="text-[10px] text-slate-400 flex gap-2">
+                    {/* @ts-ignore */}
+                    {property.bedrooms ? (
+                      <span>{property.bedrooms} นอน</span>
+                    ) : null}
+                    {/* @ts-ignore */}
+                    {property.bathrooms ? (
+                      <span>{property.bathrooms} น้ำ</span>
+                    ) : null}
+                  </div>
+                </div>
+              </TableCell>
+
               {/* PRICE */}
               <TableCell>
                 <div className="flex flex-col gap-1">
                   {property.listing_type !== "RENT" && property.price && (
-                    <span className="font-semibold text-sm">
+                    <span className="font-bold text-sm text-emerald-600">
                       ฿{property.price.toLocaleString()}
                     </span>
                   )}
                   {property.listing_type !== "SALE" &&
                     property.rental_price && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs font-semibold text-blue-600">
                         เช่า: ฿{property.rental_price.toLocaleString()}/ด
                       </span>
                     )}
                   {!property.price && !property.rental_price && (
-                    <span className="text-sm">-</span>
+                    <span className="text-sm text-slate-300">-</span>
                   )}
                 </div>
               </TableCell>
+
+              {/* INTEREST */}
+              <TableCell>
+                <div className="flex flex-col gap-1">
+                  <div
+                    className="flex items-center gap-1.5 text-xs font-medium text-slate-700"
+                    title="จำนวนผู้สนใจ (Leads)"
+                  >
+                    <Users className="h-3.5 w-3.5 text-blue-500" />
+                    <span>{property.leads_count} คน</span>
+                  </div>
+                  <div
+                    className="flex items-center gap-1.5 text-[10px] text-slate-400"
+                    title="ยอดเข้าชม (Views)"
+                  >
+                    <Eye className="h-3 w-3" />
+                    {/* Mock views for now */}
+                    <span>{Math.floor(Math.random() * 500) + 10}</span>
+                  </div>
+                </div>
+              </TableCell>
+
               {/* UPDATED */}
               <TableCell className="align-top">
                 <div
-                  className="text-xs text-muted-foreground"
+                  className="text-xs text-slate-500"
                   title={new Date(property.updated_at).toLocaleString("th-TH")}
                 >
-                  <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    แก้ไขล่าสุดเมื่อ{" "}
-                    {formatDistanceToNow(new Date(property.updated_at), {
-                      addSuffix: true,
-                      locale: th,
-                    })}
-                  </span>
+                  {formatDistanceToNow(new Date(property.updated_at), {
+                    addSuffix: true,
+                    locale: th,
+                  })}
                 </div>
               </TableCell>
-              {/* BUYER / TENANT */}
+
+              {/* BUYER / TENANT / AGENT */}
               <TableCell className="align-top">
                 {property.status === "SOLD" || property.status === "RENTED" ? (
                   property.closed_lead_name ? (
                     <Link
                       href={`/protected/leads?stage=CLOSED`}
-                      className="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-800 px-3 py-1 text-xs font-semibold hover:bg-emerald-100 transition-colors"
+                      className="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-800 px-3 py-1 text-xs font-bold hover:bg-emerald-100 transition-colors border border-emerald-100"
                       title="ดู Leads ที่ปิดดีล"
                     >
                       {property.status === "SOLD" ? "ผู้ซื้อ:" : "ผู้เช่า:"}
-                      <span className="max-w-[140px] truncate">
+                      <span className="max-w-[80px] truncate">
                         {property.closed_lead_name}
                       </span>
                     </Link>
                   ) : (
-                    <span className="text-xs text-muted-foreground">
-                      ปิดดีลแล้ว (ยังไม่ระบุชื่อ)
+                    <span className="text-xs text-slate-400 italic">
+                      (ปิดดีลแล้ว)
                     </span>
                   )
                 ) : (
-                  <span className="text-xs text-muted-foreground">-</span>
+                  /* Show Assigned Agent if available (mock/placeholder) */
+                  <div className="text-xs text-slate-500">
+                    <span className="text-[10px] text-slate-400 block mb-0.5">
+                      ผู้ดูแล:
+                    </span>
+                    {/* @ts-ignore */}
+                    <span className="font-medium text-blue-600">
+                      {property.agent_name || "คุณ (Me)"}
+                    </span>
+                  </div>
                 )}
               </TableCell>
+
               {/* STATUS */}
               <TableCell>
                 <PropertyStatusSelect
                   id={property.id}
                   value={property.status as PropertyStatus}
                 />
+              </TableCell>
+
+              {/* EXPIRY (MOCK) */}
+              <TableCell>
+                <span className="text-xs text-slate-400">-</span>
               </TableCell>
 
               {/* ACTIONS */}

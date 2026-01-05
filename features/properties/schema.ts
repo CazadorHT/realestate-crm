@@ -33,8 +33,14 @@ export const FormSchema = z
     bedrooms: z.coerce.number().optional(),
     bathrooms: z.coerce.number().optional(),
 
-    size_sqm: z.coerce.number().optional(),
-    land_size_sqwah: z.coerce.number().optional(),
+    size_sqm: z.coerce.number().optional().nullable(),
+    land_size_sqwah: z.coerce.number().optional().nullable(),
+
+    // New Fields
+    floor: z.coerce.number().optional().nullable(),
+    maintenance_fee: z.coerce.number().optional().nullable(),
+    parking_slots: z.coerce.number().optional().nullable(),
+    zoning: z.string().optional().nullable(),
 
     currency: z.string().default("THB"),
 
@@ -65,12 +71,23 @@ export const FormSchema = z
     co_agent_name: z.string().optional().nullable(),
     co_agent_phone: z.string().optional().nullable(),
     co_agent_contact_channel: z
-      .enum(["LINE", "WHATSAPP", "WECHAT", "PHONE", "OTHER"])
+      .enum([
+        "Line",
+        "Facebook",
+        "Instagram",
+        "WHATSAPP",
+        "WECHAT",
+        "PHONE",
+        "OTHER",
+      ])
       .optional()
       .nullable(),
     co_agent_contact_id: z.string().optional().nullable(),
     co_agent_sale_commission_percent: z.coerce.number().optional().nullable(),
     co_agent_rent_commission_months: z.coerce.number().optional().nullable(),
+
+    // Tags
+    is_pet_friendly: z.boolean().default(false),
   })
   .superRefine((data, ctx) => {
     const priceMissing = data.price === undefined || Number.isNaN(data.price);

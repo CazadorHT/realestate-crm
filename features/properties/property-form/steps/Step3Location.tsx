@@ -33,7 +33,7 @@ const parseNumber = (s: string) => {
 /**
  * Step 3: Location
  * Address fields and transit information
- * Uses useThaiAddress hook internally for province/district/subdistrict
+ * Compact Refactor
  */
 export function Step3Location({ form, mode }: Step3Props) {
   const {
@@ -95,24 +95,24 @@ export function Step3Location({ form, mode }: Step3Props) {
   }, [watchedSubDistrict, activeDistrictId, subDistrictOptions, form]);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-right-12 duration-700">
-      <section className="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-slate-50 border border-slate-100 space-y-10">
-        <div className="border-b border-slate-50 pb-6">
-          <h3 className="text-2xl font-black text-slate-900">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
+      <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100/60 space-y-6">
+        <div className="border-b border-slate-50 pb-4">
+          <h3 className="text-lg font-bold text-slate-900">
             ระบุตำแหน่งที่ตั้ง
           </h3>
-          <p className="text-sm text-slate-400 font-bold uppercase tracking-widest mt-1">
+          <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mt-1">
             ที่อยู่และการเชื่อมต่อระบบขนส่ง
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <FormField
             control={form.control}
             name="province"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-bold text-slate-700">
+                <FormLabel className="font-bold text-slate-700 text-xs uppercase tracking-wide">
                   จังหวัด{" "}
                   {addressLoading && (
                     <Loader2 className="inline h-3 w-3 animate-spin text-slate-400" />
@@ -130,7 +130,7 @@ export function Step3Location({ form, mode }: Step3Props) {
                   }}
                 >
                   <FormControl>
-                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm">
+                    <SelectTrigger className="h-11 rounded-lg bg-slate-50 border-none font-bold px-4 shadow-sm text-sm">
                       <SelectValue placeholder="เลือกจังหวัด" />
                     </SelectTrigger>
                   </FormControl>
@@ -150,7 +150,7 @@ export function Step3Location({ form, mode }: Step3Props) {
             name="district"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-bold text-slate-700">
+                <FormLabel className="font-bold text-slate-700 text-xs uppercase tracking-wide">
                   เขต / อำเภอ
                 </FormLabel>
                 <Select
@@ -164,7 +164,7 @@ export function Step3Location({ form, mode }: Step3Props) {
                   }}
                 >
                   <FormControl>
-                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm">
+                    <SelectTrigger className="h-11 rounded-lg bg-slate-50 border-none font-bold px-4 shadow-sm text-sm">
                       <SelectValue placeholder="เลือกอำเภอ" />
                     </SelectTrigger>
                   </FormControl>
@@ -184,7 +184,7 @@ export function Step3Location({ form, mode }: Step3Props) {
             name="subdistrict"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-bold text-slate-700">
+                <FormLabel className="font-bold text-slate-700 text-xs uppercase tracking-wide">
                   แขวง / ตำบล
                 </FormLabel>
                 <Select
@@ -195,7 +195,7 @@ export function Step3Location({ form, mode }: Step3Props) {
                   }}
                 >
                   <FormControl>
-                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm">
+                    <SelectTrigger className="h-11 rounded-lg bg-slate-50 border-none font-bold px-4 shadow-sm text-sm">
                       <SelectValue placeholder="เลือกตำบล" />
                     </SelectTrigger>
                   </FormControl>
@@ -215,7 +215,7 @@ export function Step3Location({ form, mode }: Step3Props) {
             name="postal_code"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-bold text-slate-700">
+                <FormLabel className="font-bold text-slate-700 text-xs uppercase tracking-wide">
                   รหัสไปรษณีย์
                 </FormLabel>
                 <FormControl>
@@ -223,7 +223,7 @@ export function Step3Location({ form, mode }: Step3Props) {
                     {...field}
                     value={field.value ?? ""}
                     readOnly
-                    className="h-14 rounded-2xl bg-slate-100/50 border-none font-bold px-6 shadow-sm text-slate-500"
+                    className="h-11 rounded-lg bg-slate-100/50 border-none font-bold px-4 shadow-sm text-slate-500 text-sm"
                     placeholder="อัตโนมัติ"
                   />
                 </FormControl>
@@ -237,7 +237,7 @@ export function Step3Location({ form, mode }: Step3Props) {
           name="google_maps_link"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-blue-700 font-black text-sm uppercase tracking-wider mb-2 block">
+              <FormLabel className="text-blue-700 font-bold text-xs uppercase tracking-wider mb-1.5 block">
                 พิกัดบน Google Maps
               </FormLabel>
               <FormControl>
@@ -245,31 +245,31 @@ export function Step3Location({ form, mode }: Step3Props) {
                   {...field}
                   value={field.value ?? ""}
                   placeholder="วางลิงก์จาก Google Maps ที่นี่..."
-                  className="h-14 rounded-2xl border-2 border-slate-50 bg-slate-50 px-6 focus:ring-4 focus:ring-blue-50 focus:border-blue-600 transition-all"
+                  className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm focus:ring-2 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm"
                 />
               </FormControl>
             </FormItem>
           )}
         />
 
-        <div className="bg-slate-50 p-10 rounded-[2.5rem] border border-slate-100 space-y-8">
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 space-y-6">
           <FormField
             control={form.control}
             name="near_transit"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center space-x-6 space-y-0">
+              <FormItem className="flex flex-row items-center space-x-4 space-y-0">
                 <FormControl>
                   <Checkbox
                     checked={field.value}
                     onCheckedChange={field.onChange}
-                    className="w-8 h-8 rounded-xl border-slate-300 data-[state=checked]:bg-blue-600"
+                    className="w-6 h-6 rounded-md border-slate-300 data-[state=checked]:bg-blue-600"
                   />
                 </FormControl>
-                <div className="space-y-1">
-                  <FormLabel className="text-xl font-black text-slate-800 cursor-pointer">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base font-bold text-slate-800 cursor-pointer">
                     ตั้งอยู่ใกล้ระบบขนส่งสาธารณะ
                   </FormLabel>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                     ใกล้ BTS / MRT หรือรถสาธารณะ
                   </p>
                 </div>
@@ -278,30 +278,30 @@ export function Step3Location({ form, mode }: Step3Props) {
           />
 
           {form.watch("near_transit") && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 border-t border-slate-200/40 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-slate-200/40 animate-in fade-in slide-in-from-top-2 duration-300">
               <FormField
                 control={form.control}
                 name="transit_type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[11px] uppercase font-black text-slate-400 tracking-widest mb-2 block">
-                      ประเภทรถไฟฟ้า
+                    <FormLabel className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5 block">
+                      ประเภท
                     </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value ?? "BTS"}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-14 bg-white rounded-2xl border-none shadow-sm font-bold">
+                        <SelectTrigger className="h-10 bg-white rounded-lg border-none shadow-sm font-bold text-sm">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-white rounded-2xl">
+                      <SelectContent className="bg-white rounded-xl">
                         {TRANSIT_TYPE_ENUM.map((t: any) => (
                           <SelectItem
                             key={t}
                             value={t}
-                            className="font-bold py-3"
+                            className="font-bold py-2 text-sm"
                           >
                             {(TRANSIT_TYPE_LABELS as any)[t]}
                           </SelectItem>
@@ -316,14 +316,14 @@ export function Step3Location({ form, mode }: Step3Props) {
                 name="transit_station_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[11px] uppercase font-black text-slate-400 tracking-widest mb-2 block">
+                    <FormLabel className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5 block">
                       ชื่อสถานี
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         value={field.value ?? ""}
-                        className="h-14 rounded-2xl bg-white border-none shadow-sm font-black px-6"
+                        className="h-10 rounded-lg bg-white border-none shadow-sm font-bold px-4 text-sm"
                         placeholder="ทองหล่อ"
                       />
                     </FormControl>
@@ -335,15 +335,15 @@ export function Step3Location({ form, mode }: Step3Props) {
                 name="transit_distance_meters"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[11px] uppercase font-black text-slate-400 tracking-widest mb-2 block">
-                      ระยะทาง (เมตร)
+                    <FormLabel className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5 block">
+                      ระยะทาง (ม.)
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         {...field}
                         value={field.value ?? ""}
-                        className="h-14 rounded-2xl bg-white border-none shadow-sm font-black text-center"
+                        className="h-10 rounded-lg bg-white border-none shadow-sm font-bold text-center text-sm"
                         placeholder="350"
                         onChange={(e) =>
                           field.onChange(parseNumber(e.target.value))

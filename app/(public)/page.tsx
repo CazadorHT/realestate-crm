@@ -1,4 +1,5 @@
-import { SmartMatchWizard } from "@/components/public/SmartMatchWizard";
+
+// Force rebuild
 import { HeroTitle } from "@/components/public/HeroTitle";
 import { PropertyTypeGrid } from "@/components/public/PropertyTypeGrid";
 import { PropertyListingSection } from "@/components/public/PropertyListingSection";
@@ -10,7 +11,6 @@ import { TestimonialsSection } from "@/components/public/TestimonialsSection";
 import { PublicFooter } from "@/components/public/PublicFooter";
 import { TrustSection } from "@/components/public/TrustSection";
 import { HeroSection } from "@/components/public/HeroSection";
-import { TrendingUp, CheckCircle2, Shield, Clock } from "lucide-react";
 import { CTASection } from "@/components/public/CTASection";
 import { DetailedSearchSection } from "@/components/public/DetailedSearchSection";
 import { PopularAreasSection } from "@/components/public/PopularAreasSection";

@@ -129,7 +129,7 @@ export default async function PropertiesPage({
   const assignedToIds = properties
     .map((p) => p.assigned_to)
     .filter(Boolean) as string[];
-const CLOSED_DEAL_STATUSES = ["SIGNED", "CLOSED_WIN"] as const;
+  const CLOSED_DEAL_STATUSES = ["SIGNED", "CLOSED_WIN"] as const;
   // 2. Fetch Associations in Parallel
   const soldOrRentedIds = properties
     .filter((p) => p.status === "SOLD" || p.status === "RENTED")
@@ -147,23 +147,23 @@ const CLOSED_DEAL_STATUSES = ["SIGNED", "CLOSED_WIN"] as const;
     supabase.from("leads").select("property_id").in("property_id", propertyIds),
 
     // Closed lead (ล่าสุด) สำหรับ SOLD/RENTED เท่านั้น
-soldOrRentedIds.length > 0
-    ? supabase
-        .from("deals")
-        .select(
-          `
+    soldOrRentedIds.length > 0
+      ? supabase
+          .from("deals")
+          .select(
+            `
           property_id,
           deal_type,
           status,
           updated_at,
           lead:leads(full_name)
         `
-        )
-        .in("property_id", soldOrRentedIds)
-        .in("status", CLOSED_DEAL_STATUSES as any)
-        .order("updated_at", { ascending: false })
-    : Promise.resolve({ data: [] as any[] }),
-]);
+          )
+          .in("property_id", soldOrRentedIds)
+          .in("status", CLOSED_DEAL_STATUSES as any)
+          .order("updated_at", { ascending: false })
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
   // 3. Map Data
   const coverMap = new Map(
     imagesResult.data?.map((img) => [img.property_id, img.image_url])
@@ -180,23 +180,22 @@ soldOrRentedIds.length > 0
       );
     }
   });
-  
+
   // Map closed lead names
 
-const closedLeadNameMap = new Map<string, string>();
+  const closedLeadNameMap = new Map<string, string>();
 
-(closedLeadsResult.data as any[] | undefined)?.forEach((d) => {
-  const pid = d?.property_id as string | undefined;
-  const name = d?.lead?.full_name as string | undefined;
+  (closedLeadsResult.data as any[] | undefined)?.forEach((d) => {
+    const pid = d?.property_id as string | undefined;
+    const name = d?.lead?.full_name as string | undefined;
 
-  if (!pid) return;
-  if (!closedLeadNameMap.has(pid) && name) {
-    closedLeadNameMap.set(pid, name);
-  }
-});
+    if (!pid) return;
+    if (!closedLeadNameMap.has(pid) && name) {
+      closedLeadNameMap.set(pid, name);
+    }
+  });
 
   // Map profile names
-
 
   // 4. Transform to Table Data
   const tableData: PropertyTableData[] = properties.map((p) => {
@@ -227,7 +226,7 @@ const closedLeadNameMap = new Map<string, string>();
       leads_count: leadsCountMap.get(p.id) || 0,
       updated_at: p.updated_at,
       created_at: p.created_at,
-
+      popular_area: p.popular_area,
       // ✅ ใหม่
       closed_lead_name: closedLeadNameMap.get(p.id) || null,
 

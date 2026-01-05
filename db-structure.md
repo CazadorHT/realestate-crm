@@ -1386,15 +1386,7 @@ db_structure_json                                                               
                     "udt_name": "int4",
                     "data_type": "integer"
                 },
-                {
-                    "pos": 45,
-                    "name": "internal_data",
-                    "default": null,
-                    "nullable": "YES",
-                    "udt_name": "jsonb",
-                    "data_type": "jsonb"
-                }
-            ],
+              
             "indexes": [
                 {
                     "def": "CREATE UNIQUE INDEX properties_slug_key ON public.properties USING btree (slug)",
