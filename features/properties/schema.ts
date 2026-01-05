@@ -59,6 +59,18 @@ export const FormSchema = z
     transit_station_name: z.string().optional().nullable(),
     transit_type: z.enum(TRANSIT_TYPE_ENUM).optional().nullable(),
     transit_distance_meters: z.coerce.number().optional().nullable(),
+
+    // Co-Agent Logic
+    is_co_agent: z.boolean().default(false),
+    co_agent_name: z.string().optional().nullable(),
+    co_agent_phone: z.string().optional().nullable(),
+    co_agent_contact_channel: z
+      .enum(["LINE", "WHATSAPP", "WECHAT", "PHONE", "OTHER"])
+      .optional()
+      .nullable(),
+    co_agent_contact_id: z.string().optional().nullable(),
+    co_agent_sale_commission_percent: z.coerce.number().optional().nullable(),
+    co_agent_rent_commission_months: z.coerce.number().optional().nullable(),
   })
   .superRefine((data, ctx) => {
     const priceMissing = data.price === undefined || Number.isNaN(data.price);
@@ -122,6 +134,57 @@ export const FormSchema = z
         path: ["commission_rent_months"],
         message: "กรุณาระบุจำนวนเดือนค่าคอมมิชชั่นการเช่า",
       });
+    }
+
+    // Co-Agent Validation
+    if (data.is_co_agent) {
+      if (!data.co_agent_name?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["co_agent_name"],
+          message: "กรุณาระบุชื่อ Co-Agent",
+        });
+      }
+      if (!data.co_agent_phone?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["co_agent_phone"],
+          message: "กรุณาระบุเบอร์โทร Co-Agent",
+        });
+      }
+
+      const isSale =
+        data.listing_type === "SALE" || data.listing_type === "SALE_AND_RENT";
+      const isRent =
+        data.listing_type === "RENT" || data.listing_type === "SALE_AND_RENT";
+
+      if (isSale) {
+        if (
+          data.co_agent_sale_commission_percent === undefined ||
+          Number.isNaN(data.co_agent_sale_commission_percent) ||
+          data.co_agent_sale_commission_percent === null
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["co_agent_sale_commission_percent"],
+            message: "ระบุส่วนแบ่งขาย (%)",
+          });
+        }
+      }
+
+      if (isRent) {
+        if (
+          data.co_agent_rent_commission_months === undefined ||
+          Number.isNaN(data.co_agent_rent_commission_months) ||
+          data.co_agent_rent_commission_months === null
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["co_agent_rent_commission_months"],
+            message: "ระบุส่วนแบ่งเช่า (เดือน)",
+          });
+        }
+      }
     }
   });
 

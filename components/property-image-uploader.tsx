@@ -454,6 +454,7 @@ export function PropertyImageUploader({
                                 </div>
 
                                 <Button
+                                  type="button"
                                   size="icon"
                                   variant="secondary"
                                   className="h-7 w-7 bg-white/90 hover:bg-white"
@@ -468,6 +469,7 @@ export function PropertyImageUploader({
                                 </Button>
 
                                 <Button
+                                  type="button"
                                   size="icon"
                                   variant="destructive"
                                   className="h-7 w-7"

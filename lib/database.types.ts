@@ -454,6 +454,7 @@ export type Database = {
           google_maps_link: string | null
           id: string
           images: Json | null
+          internal_data: Json | null
           land_size_sqwah: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           maintenance_fee: number | null
@@ -498,6 +499,7 @@ export type Database = {
           google_maps_link?: string | null
           id?: string
           images?: Json | null
+          internal_data?: Json | null
           land_size_sqwah?: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           maintenance_fee?: number | null
@@ -542,6 +544,7 @@ export type Database = {
           google_maps_link?: string | null
           id?: string
           images?: Json | null
+          internal_data?: Json | null
           land_size_sqwah?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           maintenance_fee?: number | null

@@ -64,6 +64,7 @@ import {
 } from "@/components/ui/select";
 
 import { Button } from "@/components/ui/button";
+import { useThaiAddress } from "@/hooks/useThaiAddress";
 
 const EMPTY_VALUES: PropertyFormValues = {
   title: "",
@@ -95,6 +96,15 @@ const EMPTY_VALUES: PropertyFormValues = {
   transit_station_name: "",
   transit_type: "BTS",
   transit_distance_meters: undefined,
+
+  // Co-Agent Defaults
+  is_co_agent: false,
+  co_agent_name: "",
+  co_agent_phone: "",
+  co_agent_contact_channel: "LINE",
+  co_agent_contact_id: "",
+  co_agent_sale_commission_percent: undefined,
+  co_agent_rent_commission_months: undefined,
 };
 // Form schema moved to `features/properties/schema.ts` for shared type-safety
 // หน้าอื่นๆ สามารถ import FormSchema และ PropertyFormValues จากที่นั่นได้
@@ -149,6 +159,21 @@ function mapRowToFormValues(
     transit_station_name: (row as any).transit_station_name ?? "",
     transit_type: (row as any).transit_type ?? "BTS",
     transit_distance_meters: (row as any).transit_distance_meters ?? undefined,
+
+    // Co-Agent mapping (from structured_data or default)
+    is_co_agent: (row.structured_data as any)?.is_co_agent || false,
+    co_agent_name: (row.structured_data as any)?.co_agent_name || "",
+    co_agent_phone: (row.structured_data as any)?.co_agent_phone || "",
+    co_agent_contact_channel:
+      (row.structured_data as any)?.co_agent_contact_channel || "LINE",
+    co_agent_contact_id:
+      (row.structured_data as any)?.co_agent_contact_id || "",
+    co_agent_sale_commission_percent:
+      (row.structured_data as any)?.co_agent_sale_commission_percent ||
+      undefined,
+    co_agent_rent_commission_months:
+      (row.structured_data as any)?.co_agent_rent_commission_months ||
+      undefined,
   };
 }
 
@@ -199,6 +224,19 @@ export function PropertyForm({
   const [quickArea, setQuickArea] = React.useState<string | undefined>(
     undefined
   );
+  const [quickError, setQuickError] = React.useState(false);
+
+  // Initialize Quick Info from default values (Edit Mode)
+  React.useEffect(() => {
+    if (defaultValues?.title) {
+      setQuickTitle(defaultValues.title);
+      // Ensure Quick Info is visible if data exists
+      setIsQuickInfoOpen(true);
+    }
+    if (defaultValues?.popular_area) {
+      setQuickArea(defaultValues.popular_area);
+    }
+  }, [defaultValues]);
 
   const handleAddArea = async () => {
     if (!newArea.trim()) return;
@@ -414,6 +452,66 @@ export function PropertyForm({
     setPendingSubmit(null);
   };
 
+  // --- Thai Address Hook Integration ---
+  const {
+    provinces,
+    getDistricts,
+    getSubDistricts,
+    getZipCode,
+    ensureDistrictsLoaded,
+    ensureSubDistrictsLoaded,
+    loading: addressLoading,
+  } = useThaiAddress();
+
+  const watchedProvince = form.watch("province");
+  const watchedDistrict = form.watch("district");
+  const watchedSubDistrict = form.watch("subdistrict");
+
+  // Load dependent data when needed
+  React.useEffect(() => {
+    if (watchedProvince) {
+      ensureDistrictsLoaded();
+    }
+  }, [watchedProvince, ensureDistrictsLoaded]);
+
+  React.useEffect(() => {
+    if (watchedDistrict) {
+      ensureSubDistrictsLoaded();
+    }
+  }, [watchedDistrict, ensureSubDistrictsLoaded]);
+
+  const activeProvinceId = React.useMemo(() => {
+    return provinces.find((p) => p.name_th === watchedProvince)?.id;
+  }, [provinces, watchedProvince]);
+
+  const activeDistrictId = React.useMemo(() => {
+    if (!activeProvinceId) return undefined;
+    const districts = getDistricts(activeProvinceId);
+    return districts.find((d) => d.name_th === watchedDistrict)?.id;
+  }, [activeProvinceId, watchedDistrict, getDistricts]);
+
+  const districtOptions = React.useMemo(() => {
+    if (!activeProvinceId) return [];
+    return getDistricts(activeProvinceId);
+  }, [activeProvinceId, getDistricts]);
+
+  const subDistrictOptions = React.useMemo(() => {
+    if (!activeDistrictId) return [];
+    return getSubDistricts(activeDistrictId);
+  }, [activeDistrictId, getSubDistricts]);
+
+  // Auto-fill zip code
+  React.useEffect(() => {
+    if (watchedSubDistrict && activeDistrictId) {
+      const sub = subDistrictOptions.find(
+        (s) => s.name_th === watchedSubDistrict
+      );
+      if (sub) {
+        form.setValue("postal_code", String(sub.zip_code));
+      }
+    }
+  }, [watchedSubDistrict, activeDistrictId, subDistrictOptions, form]);
+
   // Inline watches for friendly warnings (not only on submit) หรือ คือการตรวจสอบค่าต่างๆ ในฟอร์มแบบเรียลไทม์
   const listingType = form.watch("listing_type");
   const priceVal = form.watch("price");
@@ -619,6 +717,21 @@ export function PropertyForm({
       </div>
     );
   }
+  const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key !== "Enter") return;
+
+    const target = e.target as HTMLElement | null;
+    const tag = target?.tagName?.toLowerCase();
+
+    // อนุญาต Enter ใน textarea
+    if (tag === "textarea") return;
+
+    // กันกรณี contentEditable
+    if ((target as any)?.isContentEditable) return;
+
+    // กัน Enter submit โดยไม่ตั้งใจ
+    e.preventDefault();
+  };
   return (
     <div className="space-y-10">
       {/* 🚀 Stepper Component */}
@@ -668,6 +781,7 @@ export function PropertyForm({
       {/* 🚀 Form Content */}
       <Form {...form}>
         <form
+          onKeyDown={handleFormKeyDown}
           className="space-y-10"
           onSubmit={form.handleSubmit(onSubmit, onInvalid)}
         >
@@ -812,10 +926,22 @@ export function PropertyForm({
 
                 {/* Quick Info Section - appears after selecting property type */}
                 {isQuickInfoOpen && (
-                  <div className="animate-in fade-in slide-in-from-top-4 duration-500 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-3xl border-2 border-blue-200 space-y-6">
+                  <div
+                    className={`animate-in fade-in slide-in-from-top-4 duration-500 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-3xl border-2 space-y-6 ${
+                      quickError || form.formState.errors.title
+                        ? "border-red-200 bg-red-50/30"
+                        : "border-blue-200"
+                    }`}
+                  >
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-xl  text-slate-900">
+                        <h3
+                          className={`text-xl ${
+                            quickError || form.formState.errors.title
+                              ? "text-red-700"
+                              : "text-slate-900"
+                          }`}
+                        >
                           ข้อมูลพื้นฐานของทรัพย์
                         </h3>
                         <p className="text-slate-500 font-light text-sm mt-1">
@@ -827,51 +953,100 @@ export function PropertyForm({
                     <div className="space-y-6">
                       {/* Title Field */}
                       <div className="space-y-2">
-                        <label className="text-blue-700  text-sm uppercase tracking-wider">
+                        <label
+                          className={`font-black text-sm uppercase tracking-wider ${
+                            quickError || form.formState.errors.title
+                              ? "text-red-600"
+                              : "text-blue-700"
+                          }`}
+                        >
                           ชื่อทรัพย์ <span className="text-red-500">*</span>
                         </label>
                         <Input
                           value={quickTitle}
-                          onChange={(e) => setQuickTitle(e.target.value)}
-                          className="h-14 text-sm rounded-2xl border-slate-100 bg-white focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all  px-6 shadow-sm"
+                          onChange={(e) => {
+                            setQuickTitle(e.target.value);
+                            if (e.target.value.trim()) setQuickError(false);
+                          }}
+                          className={`h-14 text-sm rounded-2xl border-2 px-6 shadow-sm transition-all focus:ring-4 ${
+                            quickError || form.formState.errors.title
+                              ? "border-red-300 bg-red-50 text-red-900 placeholder:text-red-300 focus:border-red-500 focus:ring-red-100"
+                              : "border-slate-100 bg-white focus:bg-white focus:ring-blue-100 focus:border-blue-500"
+                          }`}
                           placeholder="เช่น คอนโด Ideo Sukhumvit 93"
                         />
+                        {(quickError || form.formState.errors.title) && (
+                          <p className="text-red-500 text-xs font-bold animate-pulse">
+                            กรุณาระบุชื่อทรัพย์
+                          </p>
+                        )}
                       </div>
 
-                      {/* Popular Area Field */}
-                      <div className="space-y-2">
-                        <label className="text-blue-700  text-sm uppercase tracking-wider">
-                          ย่านทำเล
-                        </label>
-                        <Select
-                          value={quickArea ?? "none"}
-                          onValueChange={(val) =>
-                            setQuickArea(val === "none" ? undefined : val)
-                          }
-                        >
-                          <SelectTrigger className="h-14 bg-white border-slate-100 rounded-2xl text-lg px-6 shadow-sm">
-                            <SelectValue placeholder="-- เลือกย่าน --" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px]">
-                            <SelectGroup>
-                              <SelectItem
-                                value="none"
-                                className=" text-slate-400"
+                      {/* Smart Match & Manual Area (Moved from Step 3) */}
+                      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 rounded-[2rem] text-white space-y-6 shadow-xl shadow-blue-100 relative overflow-hidden group/area">
+                        <div className="absolute -right-10 -bottom-10 opacity-10 scale-150 rotate-12 group-hover/area:scale-110 transition-transform duration-1000">
+                          <TrendingUp className="w-80 h-80" />
+                        </div>
+
+                        <div className="relative z-10 space-y-4">
+                          <label className="font-medium flex items-center gap-3 text-lg tracking-tight text-blue-50">
+                            <TrendingUp className="h-6 w-6 text-blue-200" />
+                            ระบุย่านทำเล (Smart Match)
+                          </label>
+
+                          <div className="">
+                            <Select
+                              value={quickArea ?? "none"}
+                              onValueChange={(val) =>
+                                setQuickArea(val === "none" ? undefined : val)
+                              }
+                            >
+                              <SelectTrigger className=" mb-6  bg-white/20 border-white/30 text-white h-14 rounded-2xl backdrop-blur-3xl font-medium px-6 hover:bg-white/30 transition-all">
+                                <SelectValue placeholder="เลือกย่านยอดนิยม" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px] ">
+                                <SelectGroup>
+                                  <SelectItem
+                                    value="none"
+                                    className="font-medium text-slate-400"
+                                  >
+                                    -- ไม่ระบุ --
+                                  </SelectItem>
+                                  {popularAreas.map((area: string) => (
+                                    <SelectItem
+                                      key={area}
+                                      value={area}
+                                      className="font-medium text-slate-700 py-3"
+                                    >
+                                      {area}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+
+                            <div className="flex gap-4 bg-white/10 p-4 rounded-2xl border border-white/20">
+                              <Input
+                                placeholder="พิมพ์ชื่อย่านใหม่..."
+                                value={newArea}
+                                onChange={(e) => setNewArea(e.target.value)}
+                                className="h-12 bg-white/10 border-none text-white placeholder:text-blue-100/70 font-bold px-6 rounded-xl flex-1"
+                              />
+                              <Button
+                                type="button"
+                                className="h-12 px-10 bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl"
+                                onClick={handleAddArea}
+                                disabled={isAddingArea}
                               >
-                                -- ไม่ระบุ --
-                              </SelectItem>
-                              {popularAreas.map((area: string) => (
-                                <SelectItem
-                                  key={area}
-                                  value={area}
-                                  className=" text-slate-700 py-3"
-                                >
-                                  {area}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
+                                {isAddingArea ? (
+                                  <Loader2 className="h-5 w-5 animate-spin" />
+                                ) : (
+                                  "เพิ่มย่าน"
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -882,12 +1057,18 @@ export function PropertyForm({
                           form.setValue("title", quickTitle);
                           form.setValue("popular_area", quickArea);
                           setIsQuickInfoOpen(false);
+                          setQuickError(false);
                           toast.success("บันทึกข้อมูลพื้นฐานแล้ว");
                         } else {
+                          setQuickError(true);
                           toast.error("กรุณาระบุชื่อทรัพย์");
                         }
                       }}
-                      className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl text-lg shadow-xl shadow-blue-200 transition-all"
+                      className={`w-full h-14 font-black rounded-2xl text-lg shadow-xl transition-all ${
+                        quickError
+                          ? "bg-red-600 hover:bg-red-700 shadow-red-200 text-white"
+                          : "bg-blue-600 hover:bg-blue-700 shadow-blue-200 text-white"
+                      }`}
                     >
                       ยืนยันข้อมูล
                     </Button>
@@ -1100,56 +1281,121 @@ export function PropertyForm({
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8 border-t border-slate-50">
-                  <FormField
-                    control={form.control}
-                    name="commission_sale_percentage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-blue-700 font-black text-sm uppercase tracking-wider mb-2 block">
-                          % ค่าคอมมิชชั่นการขาย 🔒
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative group/comm">
-                            <NumberInput
-                              value={field.value ?? undefined}
-                              onChange={field.onChange}
-                              decimals={2}
-                              placeholder="3"
-                            />
-                            <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/comm:text-blue-500 font-black text-xl transition-colors">
-                              %
+                  {/* Comm Sale */}
+                  {(form.watch("listing_type") === "SALE" ||
+                    form.watch("listing_type") === "SALE_AND_RENT") && (
+                    <FormField
+                      control={form.control}
+                      name="commission_sale_percentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-blue-700 font-black text-sm uppercase tracking-wider mb-2 block">
+                            % ค่าคอมมิชชั่นการขาย 🔒
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative group/comm">
+                              <NumberInput
+                                value={field.value ?? undefined}
+                                onChange={field.onChange}
+                                decimals={2}
+                                placeholder="3"
+                              />
+                              <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/comm:text-blue-500 font-black text-xl transition-colors">
+                                %
+                              </div>
                             </div>
+                          </FormControl>
+                          <div className="flex gap-2 mt-2">
+                            {[3, 4, 5].map((val) => (
+                              <button
+                                key={val}
+                                type="button"
+                                onClick={() => field.onChange(val)}
+                                className={`px-3 py-1 rounded-lg text-xs font-bold border ${
+                                  field.value === val
+                                    ? "bg-blue-100 text-blue-700 border-blue-200"
+                                    : "bg-white text-slate-500 border-slate-100 hover:border-blue-200"
+                                }`}
+                              >
+                                {val}%
+                              </button>
+                            ))}
                           </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="commission_rent_months"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-blue-700 font-black text-sm uppercase tracking-wider mb-2 block">
-                          เดือนค่าคอมการเช่า 🔒
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative group/comm">
-                            <NumberInput
-                              value={field.value ?? undefined}
-                              onChange={field.onChange}
-                              decimals={1}
-                              placeholder="1"
-                            />
-                            <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/comm:text-blue-500 font-black text-sm transition-colors uppercase">
-                              เดือน
+                          {form.watch("price") && field.value && (
+                            <div className="mt-2 text-sm text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                              <span className="font-bold text-slate-700">
+                                ฿
+                                {(
+                                  ((form.watch("price") || 0) * field.value) /
+                                  100
+                                ).toLocaleString()}
+                              </span>{" "}
+                              (โดยประมาณ)
                             </div>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {/* Comm Rent */}
+                  {(form.watch("listing_type") === "RENT" ||
+                    form.watch("listing_type") === "SALE_AND_RENT") && (
+                    <FormField
+                      control={form.control}
+                      name="commission_rent_months"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-blue-700 font-black text-sm uppercase tracking-wider mb-2 block">
+                            เดือนค่าคอมการเช่า 🔒
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative group/comm">
+                              <NumberInput
+                                value={field.value ?? undefined}
+                                onChange={field.onChange}
+                                decimals={1}
+                                placeholder="1"
+                              />
+                              <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/comm:text-blue-500 font-black text-sm transition-colors uppercase">
+                                เดือน
+                              </div>
+                            </div>
+                          </FormControl>
+                          <div className="flex gap-2 mt-2">
+                            {[0.5, 1, 1.5].map((val) => (
+                              <button
+                                key={val}
+                                type="button"
+                                onClick={() => field.onChange(val)}
+                                className={`px-3 py-1 rounded-lg text-xs font-bold border ${
+                                  field.value === val
+                                    ? "bg-blue-100 text-blue-700 border-blue-200"
+                                    : "bg-white text-slate-500 border-slate-100 hover:border-blue-200"
+                                }`}
+                              >
+                                {val} เดือน
+                              </button>
+                            ))}
                           </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          {form.watch("rental_price") && field.value && (
+                            <div className="mt-2 text-sm text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                              <span className="font-bold text-slate-700">
+                                ฿
+                                {(
+                                  (form.watch("rental_price") || 0) *
+                                  field.value
+                                ).toLocaleString()}
+                              </span>{" "}
+                              (โดยประมาณ)
+                            </div>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
               </section>
             </div>
@@ -1175,16 +1421,35 @@ export function PropertyForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="font-bold text-slate-700">
-                          จังหวัด
+                          จังหวัด{" "}
+                          {addressLoading && (
+                            <Loader2 className="inline h-3 w-3 animate-spin text-slate-400" />
+                          )}
                         </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value ?? ""}
-                            className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm"
-                            placeholder="กรุงเทพฯ"
-                          />
-                        </FormControl>
+                        <Select
+                          value={field.value ?? ""}
+                          onValueChange={(val) => {
+                            field.onChange(val);
+                            // Reset dependencies
+                            form.setValue("district", "");
+                            form.setValue("subdistrict", "");
+                            form.setValue("postal_code", "");
+                            ensureDistrictsLoaded();
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm">
+                              <SelectValue placeholder="เลือกจังหวัด" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-[300px]">
+                            {provinces.map((p) => (
+                              <SelectItem key={p.id} value={p.name_th}>
+                                {p.name_th}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormItem>
                     )}
                   />
@@ -1196,14 +1461,29 @@ export function PropertyForm({
                         <FormLabel className="font-bold text-slate-700">
                           เขต / อำเภอ
                         </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value ?? ""}
-                            className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm"
-                            placeholder="สุขุมวิท"
-                          />
-                        </FormControl>
+                        <Select
+                          value={field.value ?? ""}
+                          disabled={!activeProvinceId}
+                          onValueChange={(val) => {
+                            field.onChange(val);
+                            form.setValue("subdistrict", "");
+                            form.setValue("postal_code", "");
+                            ensureSubDistrictsLoaded();
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm">
+                              <SelectValue placeholder="เลือกอำเภอ" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-[300px]">
+                            {districtOptions.map((d) => (
+                              <SelectItem key={d.id} value={d.name_th}>
+                                {d.name_th}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormItem>
                     )}
                   />
@@ -1215,14 +1495,26 @@ export function PropertyForm({
                         <FormLabel className="font-bold text-slate-700">
                           แขวง / ตำบล
                         </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value ?? ""}
-                            className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm"
-                            placeholder="พระโขนงเหนือ"
-                          />
-                        </FormControl>
+                        <Select
+                          value={field.value ?? ""}
+                          disabled={!activeDistrictId}
+                          onValueChange={(val) => {
+                            field.onChange(val);
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm">
+                              <SelectValue placeholder="เลือกตำบล" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-[300px]">
+                            {subDistrictOptions.map((s) => (
+                              <SelectItem key={s.id} value={s.name_th}>
+                                {s.name_th}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormItem>
                     )}
                   />
@@ -1238,8 +1530,9 @@ export function PropertyForm({
                           <Input
                             {...field}
                             value={field.value ?? ""}
-                            className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 shadow-sm"
-                            placeholder="10260"
+                            readOnly
+                            className="h-14 rounded-2xl bg-slate-100/50 border-none font-bold px-6 shadow-sm text-slate-500"
+                            placeholder="อัตโนมัติ"
                           />
                         </FormControl>
                       </FormItem>
@@ -1267,76 +1560,7 @@ export function PropertyForm({
                   )}
                 />
 
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-10 rounded-[2.5rem] text-white space-y-8 shadow-2xl shadow-blue-100 relative overflow-hidden group/area">
-                  <div className="absolute -right-10 -bottom-10 opacity-10 scale-150 rotate-12 group-hover/area:scale-110 transition-transform duration-1000">
-                    <TrendingUp className="w-80 h-80" />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="popular_area"
-                    render={({ field }) => (
-                      <FormItem className="relative z-10">
-                        <FormLabel className="font-black flex items-center gap-3 text-2xl tracking-tight">
-                          <TrendingUp className="h-8 w-8 text-blue-200" />
-                          ระบุย่านยอดนิยม (Smart Match)
-                        </FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={(val) =>
-                              field.onChange(val === "none" ? null : val)
-                            }
-                            defaultValue={field.value ?? undefined}
-                          >
-                            <SelectTrigger className="bg-white/20 border-white/30 text-white h-16 rounded-2xl backdrop-blur-3xl font-bold text-lg px-8 hover:bg-white/30 transition-all">
-                              <SelectValue placeholder="-- ค้นหาย่าน / เลือกย่าน --" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px]">
-                              <SelectGroup>
-                                <SelectItem
-                                  value="none"
-                                  className="font-bold text-slate-400"
-                                >
-                                  -- ไม่ระบุ --
-                                </SelectItem>
-                                {popularAreas.map((area: string) => (
-                                  <SelectItem
-                                    key={area}
-                                    value={area}
-                                    className="font-black text-slate-700 py-3"
-                                  >
-                                    {area}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-
-                        <div className="mt-8 flex gap-4 bg-white/10 p-4 rounded-2xl border border-white/20">
-                          <Input
-                            placeholder="พิมพ์ชื่อย่านใหม่..."
-                            value={newArea}
-                            onChange={(e) => setNewArea(e.target.value)}
-                            className="h-12 bg-white/10 border-none text-white placeholder:text-blue-100/70 font-bold px-6 rounded-xl flex-1"
-                          />
-                          <Button
-                            type="button"
-                            className="h-12 px-10 bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl"
-                            onClick={handleAddArea}
-                            disabled={isAddingArea}
-                          >
-                            {isAddingArea ? (
-                              <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                              "เพิ่มย่าน"
-                            )}
-                          </Button>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                {/* Smart Match has been moved to Step 1 */}
 
                 <div className="bg-slate-50 p-10 rounded-[2.5rem] border border-slate-100 space-y-8">
                   <FormField
@@ -1685,6 +1909,7 @@ export function PropertyForm({
                       ? "ยืนยันสร้างประกาศ"
                       : "บันทึกการแก้ไขทรัพย์"}
                   </Button>
+                  
                 )}
               </div>
             </div>
