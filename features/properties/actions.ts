@@ -6,7 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
 import { randomUUID } from "crypto";
 import { getPublicImageUrl } from "./image-utils";
-import type { PropertyRow, PropertyWithImages, PropertyImage ,PropertyStatus} from "./types";
+import type {
+  PropertyRow,
+  PropertyWithImages,
+  PropertyImage,
+  PropertyStatus,
+} from "./types";
 import { FormSchema, type PropertyFormValues } from "./schema";
 // Authorization utilities คือการตรวจสอบสิทธิ์ผู้ใช้
 import {
@@ -910,7 +915,8 @@ export async function cleanupUploadSessionAction(sessionId: string) {
  * Get all popular areas from database
  */
 export async function getPopularAreasAction() {
-  const { supabase } = await requireAuthContext();
+  // Allow public access (no auth required)
+  const supabase = await createAdminClient();
 
   const { data, error } = await (supabase.from("popular_areas" as any) as any)
     .select("name")
@@ -950,8 +956,7 @@ export async function addPopularAreaAction(name: string) {
   return { success: true };
 }
 
-
- /**
+/**
  * Update property status
  */
 export async function updatePropertyStatusAction(input: {
@@ -1022,30 +1027,30 @@ export async function duplicatePropertyAction(
       .eq("id", id)
       .single();
 
-    if (srcErr || !src) return { success: false, message: "ไม่พบทรัพย์ต้นฉบับ" };
+    if (srcErr || !src)
+      return { success: false, message: "ไม่พบทรัพย์ต้นฉบับ" };
 
     const newTitle = `${src.title ?? "ไม่ระบุชื่อ"} (คัดลอก)`;
 
     // regenerate SEO + slug (กันชน unique)
     const { generatePropertySEO } = await import("@/lib/seo-utils");
     const seoData = generatePropertySEO({
-  title: newTitle,
-  property_type: src.property_type ?? undefined,
-  listing_type: src.listing_type ?? undefined,
+      title: newTitle,
+      property_type: src.property_type ?? undefined,
+      listing_type: src.listing_type ?? undefined,
 
-  bedrooms: src.bedrooms ?? undefined,
-  bathrooms: src.bathrooms ?? undefined,
-  size_sqm: src.size_sqm ?? undefined,
-  price: src.price ?? undefined,
-  rental_price: src.rental_price ?? undefined,
+      bedrooms: src.bedrooms ?? undefined,
+      bathrooms: src.bathrooms ?? undefined,
+      size_sqm: src.size_sqm ?? undefined,
+      price: src.price ?? undefined,
+      rental_price: src.rental_price ?? undefined,
 
-  district: src.district ?? undefined,
-  province: src.province ?? undefined,
-  address_line1: src.address_line1 ?? undefined,
-  postal_code: src.postal_code ?? undefined,
-  description: src.description ?? undefined,
-});
-
+      district: src.district ?? undefined,
+      province: src.province ?? undefined,
+      address_line1: src.address_line1 ?? undefined,
+      postal_code: src.postal_code ?? undefined,
+      description: src.description ?? undefined,
+    });
 
     const uniqueSlug = `${seoData.slug}-${randomUUID().slice(0, 8)}`;
 
@@ -1082,7 +1087,10 @@ export async function duplicatePropertyAction(
       .single();
 
     if (insErr || !inserted) {
-      return { success: false, message: insErr?.message || "Duplicate ไม่สำเร็จ" };
+      return {
+        success: false,
+        message: insErr?.message || "Duplicate ไม่สำเร็จ",
+      };
     }
 
     // copy images rows (ไม่ copy ไฟล์จริงใน storage — ใช้ไฟล์เดิมได้)

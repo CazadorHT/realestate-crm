@@ -52,10 +52,12 @@ function pickCoverImage(
   return sorted[0]?.image_url ?? null;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const idsParam = searchParams.get("ids");
   const supabase = createAdminClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("properties")
     .select(
       `
@@ -81,9 +83,18 @@ export async function GET() {
         )
       `
     )
-    .eq("status", "ACTIVE")
-    .order("created_at", { ascending: false })
-    .limit(60);
+    .eq("status", "ACTIVE");
+
+  if (idsParam) {
+    const ids = idsParam.split(",").filter((x) => x.trim().length > 0);
+    if (ids.length > 0) {
+      query = query.in("id", ids);
+    }
+  } else {
+    query = query.order("created_at", { ascending: false }).limit(60);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json(

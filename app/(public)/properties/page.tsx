@@ -1,12 +1,10 @@
-﻿export default function PublicPropertiesPage() {
+﻿import { PropertySearchPage } from "@/components/public/PropertySearchPage";
+import { PublicNav } from "@/components/public/PublicNav";
+export default function PublicPropertiesPage() {
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-4">รายการทรัพย์ทั้งหมด</h1>
-        <p className="text-slate-600">
-          กำลังเตรียมหน้าแสดงทรัพย์เพิ่มเติมสำหรับการค้นหาทั้งหมด
-        </p>
-      </div>
-    </div>
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+        <PublicNav />
+  <PropertySearchPage />
+  </div>
   );
-}
+};

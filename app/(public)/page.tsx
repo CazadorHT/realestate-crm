@@ -13,14 +13,15 @@ import { HeroSection } from "@/components/public/HeroSection";
 import { TrendingUp, CheckCircle2, Shield, Clock } from "lucide-react";
 import { CTASection } from "@/components/public/CTASection";
 import { DetailedSearchSection } from "@/components/public/DetailedSearchSection";
-
+import { PopularAreasSection } from "@/components/public/PopularAreasSection";
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       <PublicNav />
-      
+
       <HeroSection />
       <PropertyTypeGrid />
+      <PopularAreasSection />
       <PropertyListingSection />
       <DetailedSearchSection />
       <StatsBand />

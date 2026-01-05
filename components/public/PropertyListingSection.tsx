@@ -1,10 +1,13 @@
 ﻿"use client";
 
+import { useEffect, useMemo, useState, useRef, type MouseEvent } from "react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
 import { BedDouble, Bath, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
+import { toggleCompareId, readCompareIds } from "@/lib/compare-store";
+import { PropertyCard } from "./PropertyCard";
 
 type FilterType =
   | "ALL"
@@ -131,12 +134,53 @@ function getListingBadge(listingType: ApiProperty["listing_type"]) {
   return null;
 }
 
+// Inside component:
 export function PropertyListingSection() {
   const [filter, setFilter] = useState<FilterType>("ALL");
   const [properties, setProperties] = useState<ApiProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  const searchParams = useSearchParams();
+  const [areaFilter, setAreaFilter] = useState<string>("");
+  const [provinceFilter, setProvinceFilter] = useState<string>("");
+
+  // -- Drag to Scroll Logic --
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const isDragClick = useRef(false); // flag to distinguish drag vs click
+
+  const handleMouseDown = (e: MouseEvent) => {
+    isDragClick.current = false;
+    setIsDragging(true);
+    setStartX(e.pageX - (scrollContainerRef.current?.offsetLeft || 0));
+    setScrollLeft(scrollContainerRef.current?.scrollLeft || 0);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - (scrollContainerRef.current?.offsetLeft || 0);
+    const walk = (x - startX) * 2; // scroll-fast
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollLeft = scrollLeft - walk;
+    }
+    if (Math.abs(x - startX) > 5) {
+      isDragClick.current = true;
+    }
+  };
+  // -- End Drag Logic --
 
   useEffect(() => {
     const controller = new AbortController();
@@ -169,13 +213,46 @@ export function PropertyListingSection() {
     return () => controller.abort();
   }, [reloadKey]);
 
+  useEffect(() => {
+    const area = (searchParams.get("area") ?? "").trim();
+    const prov = (searchParams.get("province") ?? "").trim();
+    const type = (searchParams.get("type") ?? "").trim();
+
+    setAreaFilter(area);
+    setProvinceFilter(prov);
+
+    // sync type -> FilterType (รองรับ OFFICE_BUILDING / COMMERCIAL_BUILDING / WAREHOUSE)
+    if (type) {
+      const mapped =
+        type === "OFFICE_BUILDING"
+          ? "OFFICE"
+          : type === "COMMERCIAL_BUILDING"
+          ? "COMMERCIAL"
+          : type === "WAREHOUSE"
+          ? "WAREHOUSE"
+          : (type as FilterType);
+
+      if ((Object.keys(FILTER_LABELS) as string[]).includes(mapped)) {
+        setFilter(mapped as FilterType);
+      }
+    }
+  }, [searchParams]);
+
   const filteredProperties = useMemo(() => {
-    const items = properties.filter((item) => matchesFilter(item, filter));
+    let items = properties.filter((item) => matchesFilter(item, filter));
+
+    if (areaFilter) {
+      items = items.filter((p) => (p.popular_area ?? "").includes(areaFilter));
+    }
+    if (provinceFilter) {
+      items = items.filter((p) => (p.province ?? "").includes(provinceFilter));
+    }
+
     return [...items].sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-  }, [filter, properties]);
+  }, [filter, properties, areaFilter, provinceFilter]);
 
   const visibleProperties = useMemo(
     () => filteredProperties.slice(0, MAX_VISIBLE),
@@ -192,7 +269,10 @@ export function PropertyListingSection() {
     return parts.length ? parts.join(" • ") : null;
   }
   return (
-    <section className="py-20 px-4 bg-white border-y border-slate-100">
+    <section
+      id="latest-properties"
+      className="py-20 px-4 bg-white border-y border-slate-100"
+    >
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10">
           <div className="space-y-3">
@@ -220,31 +300,107 @@ export function PropertyListingSection() {
             </div>
           </div>
 
-          <div className="-mx-4 px-4">
-            <div
-              className="flex gap-2 overflow-x-auto whitespace-nowrap py-1 scrollbar-none scroll-smooth snap-x snap-mandatory"
-              role="tablist"
-              aria-label="Property type filters"
-            >
-              {(Object.keys(FILTER_LABELS) as FilterType[]).map((type) => {
-                const active = filter === type;
-                return (
-                  <button
-                    key={type}
-                    onClick={() => setFilter(type)}
-                    role="tab"
-                    aria-selected={active}
-                    aria-pressed={active}
-                    className={`shrink-0 snap-start px-4 py-2 rounded-full border text-sm font-semibold transition-all ${
-                      active
-                        ? "bg-slate-900 text-white border-slate-900 shadow-lg"
-                        : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600"
-                    }`}
-                  >
-                    {FILTER_LABELS[type]}
-                  </button>
-                );
-              })}
+          {/* เลือกประเภททรัพย์ (Scrollable with Arrows) */}
+          <div className="w-full lg:w-auto flex flex-wrap items-center gap-6 text-sm">
+            {(areaFilter || provinceFilter) && (
+              <div className="flex  items-center gap-2 text-sm">
+                <span className="text-slate-500">ทำเล:</span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-700">
+                  {[areaFilter, provinceFilter].filter(Boolean).join(" • ")}
+                </span>
+              </div>
+            )}
+
+            <div className="relative group max-w-[400px] lg:max-w-[400px] select-none">
+              <div
+                id="filter-scroll-container"
+                ref={scrollContainerRef}
+                className={`flex gap-2 overflow-x-auto whitespace-nowrap py-1 scroll-smooth snap-x snap-mandatory px-12 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing ${
+                  isDragging ? "snap-none scroll-auto" : ""
+                }`}
+                role="tablist"
+                aria-label="Property type filters"
+                onMouseDown={handleMouseDown}
+                onMouseLeave={handleMouseLeave}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+              >
+                {(Object.keys(FILTER_LABELS) as FilterType[]).map((type) => {
+                  const active = filter === type;
+                  return (
+                    <button
+                      key={type}
+                      onClick={(e) => {
+                        // ถ้ามีการลาก ไม่ให้ถือว่าคลิก (prevent click triggering after drag)
+                        if (isDragClick.current) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          return;
+                        }
+                        setFilter(type);
+                      }}
+                      role="tab"
+                      aria-selected={active}
+                      aria-pressed={active}
+                      className={`shrink-0 snap-start px-4 py-2 rounded-full border text-sm font-semibold transition-all pointer-events-auto ${
+                        active
+                          ? "bg-slate-900 text-white border-slate-900 shadow-md"
+                          : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600"
+                      }`}
+                    >
+                      {FILTER_LABELS[type]}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Prev Button */}
+              <button
+                onClick={() => {
+                  const el = document.getElementById("filter-scroll-container");
+                  if (el) el.scrollBy({ left: -200, behavior: "smooth" });
+                }}
+                className="absolute -left-12 top-1/2 -translate-y-1/2  bg-white/80 backdrop-blur border border-slate-200 rounded-full p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
+                aria-label="Previous filters"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+              </button>
+
+              {/* Next Button */}
+              <button
+                onClick={() => {
+                  const el = document.getElementById("filter-scroll-container");
+                  if (el) el.scrollBy({ left: 200, behavior: "smooth" });
+                }}
+                className="absolute -right-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur border border-slate-200 rounded-full p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Next filters"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -293,109 +449,13 @@ export function PropertyListingSection() {
         ) : (
           <div className="space-y-8">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {visibleProperties.map((property, index) => {
-                const href = `/properties/${property.id}`;
-                const badge = getListingBadge(property.listing_type);
-                const areaProvince = getAreaProvince(property);
-                return (
-                  <div
-                    key={property.id}
-                    className="group relative isolate rounded-3xl bg-white overflow-hidden shadow-sm transform-gpu will-change-transform transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500
-before:content-[''] before:absolute before:inset-0 before:rounded-3xl before:ring-1 before:ring-inset before:ring-slate-100 before:pointer-events-none before:z-10"
-                  >
-                    <Link
-                      href={href}
-                      className="block focus:outline-none "
-                      aria-label={`ดูรายละเอียดทรัพย์: ${property.title}`}
-                    >
-                      <div className="relative h-52 overflow-hidden rounded-t-3xl bg-slate-200">
-                        {property.image_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <Image
-                            src={property.image_url}
-                            alt={property.title}
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                            className="object-cover transform-gpu [will-change:transform] group-hover:scale-105 transition-transform duration-500"
-                            priority={index === 0}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 flex items-center justify-center text-sm text-slate-400">
-                            ไม่มีรูปภาพ
-                          </div>
-                        )}
-
-                        {/* Overlay gradient ช่วยให้ badge/ข้อความอ่านง่าย */}
-                        <div className="pointer-events-none absolute inset-0 rounded-t-3xl bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-
-                        {index === 0 && (
-                          <div className="pointer-events-none absolute top-3 left-3 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-                            ใหม่สุด
-                          </div>
-                        )}
-
-                        {badge && (
-                          <div
-                            className={`pointer-events-none absolute top-3 right-3 ${badge.className} text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md`}
-                          >
-                            {badge.label}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="p-6 space-y-4">
-                        <div className="space-y-1">
-                          <div className="text-sm text-blue-600 font-semibold">
-                            {getTypeLabel(property.property_type)}
-                          </div>
-
-                          <h3 className="text-xl font-bold text-slate-900 line-clamp-2">
-                            {property.title}
-                          </h3>
-
-                          <div className="flex items-center gap-2 text-sm text-slate-500">
-                            <MapPin className="h-4 w-4" />
-                            {getSafeText(areaProvince, "ไม่ระบุทำเล")}
-                          </div>
-                        </div>
-
-                        <p className="text-sm text-slate-600 leading-relaxed line-clamp-3">
-                          {getSafeText(
-                            property.description,
-                            "ยังไม่มีรายละเอียด"
-                          )}
-                        </p>
-
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-                          <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full border border-slate-200">
-                            <BedDouble className="h-4 w-4 text-blue-600" />
-                            {property.bedrooms || "-"} นอน
-                          </div>
-                          <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full border border-slate-200">
-                            <Bath className="h-4 w-4 text-blue-600" />
-                            {property.bathrooms || "-"} น้ำ
-                          </div>
-                        </div>
-                      </div>
-                      {/* Action zone: footer ของการ์ด (ไม่ซ้อน Link) */}
-                      <div className="px-6 pb-6 pt-4 border-t border-slate-100 bg-white/60 backdrop-blur">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="min-w-0">
-                            <div className="text-xs text-slate-500">ราคา</div>
-                            <div className="text-lg font-bold text-slate-900 truncate">
-                              {getDisplayPrice(property)}
-                            </div>
-                          </div>
-                          <div className="h-10 px-4 inline-flex items-center gap-2 rounded-full text-white text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600">
-                            ดูรายละเอียด
-                            <ArrowRight className="h-4 w-4" />
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </div>
-                );
-              })}
+              {visibleProperties.map((property, index) => (
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  priority={index === 0}
+                />
+              ))}
             </div>
 
             <div className="flex justify-center">
