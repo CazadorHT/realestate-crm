@@ -3,39 +3,16 @@
 "use client";
 import * as React from "react";
 import { useRef } from "react";
-import {
-  Trash2,
-  TrendingUp,
-  PlusCircle,
-  Loader2,
-  Home,
-  Check,
-} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import {
-  IMAGE_UPLOAD_POLICY,
-  PropertyImageUploader,
-} from "@/components/property-image-uploader";
 import { FormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
 import type { PropertyRow } from "@/features/properties/types";
 import type { FieldErrors } from "react-hook-form";
 import { CancelButton } from "./btn-cancel";
-import {
-  PROPERTY_TYPE_LABELS,
-  LISTING_TYPE_LABELS,
-  PROPERTY_STATUS_LABELS,
-  PROPERTY_TYPE_ORDER,
-  LISTING_TYPE_ORDER,
-  PROPERTY_STATUS_ORDER,
-  PROPERTY_STATUS_ENUM,
-  POPULAR_AREAS,
-  TRANSIT_TYPE_LABELS,
-  TRANSIT_TYPE_ENUM,
-} from "@/features/properties/labels";
+import { POPULAR_AREAS } from "@/features/properties/labels";
 import {
   createPropertyAction,
   updatePropertyAction,
@@ -43,29 +20,14 @@ import {
   addPopularAreaAction,
   type CreatePropertyResult,
 } from "./actions";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormControl,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-  SelectGroup,
-} from "@/components/ui/select";
-
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { useThaiAddress } from "@/hooks/useThaiAddress";
-import { QuickInfoSection } from "@/features/properties/property-form/sections/QuickInfoSection"; // ปรับ path
+
+// Step components
+import { Step1BasicInfo } from "./property-form/steps/Step1BasicInfo";
+import { Step2Details } from "./property-form/steps/Step2Details";
+import { Step3Location } from "./property-form/steps/Step3Location";
+import { Step4Media } from "./property-form/steps/Step4Media";
 
 const EMPTY_VALUES: PropertyFormValues = {
   title: "",
