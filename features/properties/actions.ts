@@ -306,7 +306,7 @@ export async function createPropertyAction(
     }
     const safeValues = parsed.data;
 
-    const { images, agent_ids, ...propertyData } = safeValues;
+    const { images, agent_ids, is_pet_friendly, ...propertyData } = safeValues;
 
     // ✅ image paths ต้องอยู่ภายใต้ properties/
     if (images?.length) {
@@ -485,7 +485,7 @@ export async function updatePropertyAction(
       };
     }
     const safeValues = parsed.data;
-    const { images, agent_ids, ...propertyData } = safeValues;
+    const { images, agent_ids, is_pet_friendly, ...propertyData } = safeValues;
 
     // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ
     // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ

@@ -70,18 +70,7 @@ export const FormSchema = z
     is_co_agent: z.boolean().default(false),
     co_agent_name: z.string().optional().nullable(),
     co_agent_phone: z.string().optional().nullable(),
-    co_agent_contact_channel: z
-      .enum([
-        "Line",
-        "Facebook",
-        "Instagram",
-        "WHATSAPP",
-        "WECHAT",
-        "PHONE",
-        "OTHER",
-      ])
-      .optional()
-      .nullable(),
+    co_agent_contact_channel: z.string().optional().nullable(),
     co_agent_contact_id: z.string().optional().nullable(),
     co_agent_sale_commission_percent: z.coerce.number().optional().nullable(),
     co_agent_rent_commission_months: z.coerce.number().optional().nullable(),

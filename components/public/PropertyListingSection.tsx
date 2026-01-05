@@ -29,6 +29,7 @@ type ApiProperty = {
   rental_price: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
+  size_sqm: number | null;
   popular_area: string | null;
   province: string | null;
   district: string | null;

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { BedDouble, Bath, MapPin, ArrowRight, Scale } from "lucide-react";
+import { BedDouble, Bath, MapPin, ArrowRight, Scale,Maximize } from "lucide-react";
 import { useEffect, useState, MouseEvent } from "react";
 import { toggleCompareId, readCompareIds } from "@/lib/compare-store";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,11 @@ export type PropertyCardProps = {
   image_url?: string | null;
   location?: string | null;
   priority?: boolean;
+  size_sqm?: number | null;
+  land_size?: number | null;
+  parking?: number | null;
+  floor?: number | null;
+  
 };
 
 const PRICE_FORMATTER = new Intl.NumberFormat("th-TH", {
@@ -155,6 +160,10 @@ export function PropertyCard({
               <Bath className="h-4 w-4 text-blue-600" />
               {property.bathrooms || "-"} น้ำ
             </div>
+            <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full border border-slate-200">
+              <Maximize className="h-4 w-4 text-blue-600" />
+              {property.size_sqm || "-"} ตร.ม.
+            </div>
           </div>
         </div>
 
@@ -163,14 +172,11 @@ export function PropertyCard({
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
               <div className="text-xs text-slate-500">ราคา</div>
-              <div className="text-lg font-bold text-slate-900 truncate">
+              <div className="text-lg font-bold text-blue-600 truncate ">
                 {getDisplayPrice(property)}
               </div>
             </div>
-            <div className="h-10 px-4 inline-flex items-center gap-2 rounded-full text-white text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600">
-              ดูรายละเอียด
-              <ArrowRight className="h-4 w-4" />
-            </div>
+            
           </div>
         </div>
       </Link>

@@ -1,20 +1,14 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RecentPropertyTracker } from "@/components/public/RecentPropertyTracker";
-import { Button } from "@/components/ui/button";
 import { PublicNav } from "@/components/public/PublicNav";
+import { PropertyGallery } from "@/components/public/PropertyGallery";
+import { PropertySpecs } from "@/components/public/PropertySpecs";
+import { AgentSidebar } from "@/components/public/AgentSidebar";
+import { MapPin, ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
-function pickCoverImage(images: any[] | null | undefined) {
-  if (!images?.length) return null;
-  const cover = images.find((img) => img.is_cover);
-  if (cover?.image_url) return cover.image_url;
-  const sorted = [...images].sort(
-    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
-  );
-  return sorted[0]?.image_url ?? null;
-}
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -27,15 +21,22 @@ export default async function PublicPropertyDetailPage(props: {
 
   const supabase = createAdminClient();
 
+  // Fetch with images & agent info
   const { data, error } = await supabase
     .from("properties")
     .select(
       `
         *,
         property_images (
+          id,
           image_url,
           is_cover,
           sort_order
+        ),
+        assigned_agent:profiles!properties_assigned_to_profile_fkey (
+           full_name,
+           phone,
+           avatar_url
         )
       `
     )
@@ -44,13 +45,14 @@ export default async function PublicPropertyDetailPage(props: {
 
   if (error || !data) notFound();
 
-  const cover = pickCoverImage((data as any).property_images);
+  const images = (data.property_images as any[]) || [];
+  const agent = (data.assigned_agent as any) || {};
+
   const locationParts = [
-    data.address_line1,
+    data.popular_area,
     data.subdistrict,
     data.district,
     data.province,
-    data.postcode,
   ]
     .filter(Boolean)
     .join(", ");
@@ -65,173 +67,227 @@ export default async function PublicPropertyDetailPage(props: {
       : "-";
 
   return (
-    <main className="min-h-screen bg-slate-50 pt-20 pb-20">
+    <main className="min-h-screen bg-white pb-20 font-sans">
       <PublicNav />
-      <div className="max-w-screen-2xl mx-auto px-4">
-        {/* Breadcrumb */}
-        <div className="mb-6 flex items-center gap-2 text-sm text-slate-500">
-          <Link href="/properties" className="hover:text-blue-600">
-            รายการทรัพย์
-          </Link>
-          <span>/</span>
-          <span className="text-slate-900 font-medium truncate max-w-[200px]">
-            {data.title}
-          </span>
+
+      {/* 1. Header & Breadcrumb */}
+      <div className="pt-24  bg-white sticky top-0 z-30 opacity-95 backdrop-blur-sm shadow-sm md:shadow-none md:static">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="flex flex-col gap-4">
+            {/* Back Link */}
+            <Link
+              href="/properties"
+              className="inline-flex items-center text-slate-500 hover:text-blue-600 transition-colors text-sm font-medium w-fit"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              ย้อนกลับไปหน้ารวมทรัพย์
+            </Link>
+
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge
+                    className={`rounded-full px-5 py-1 text-sm font-medium ${
+                      data.listing_type === "SALE"
+                        ? "bg-emerald-600"
+                        : "bg-blue-600"
+                    }`}
+                  >
+                    {data.listing_type === "SALE" ? "ขาย" : "เช่า"}
+                  </Badge>
+                  <span className="text-slate-400 text-xs">
+                    #{data.property_code || data.id.slice(0, 8)}
+                  </span>
+                </div>
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 leading-tight">
+                  {data.title}
+                </h1>
+                <div className="flex items-center text-slate-500 gap-1.5 font-light text-sm">
+                  <MapPin className="w-4 h-4 text-blue-500" />
+                  {locationParts || "ไม่ระบุทำเล"}
+                </div>
+              </div>
+
+              <div className="flex flex-col md:items-end">
+                <div className="text-2xl md:text-3xl font-extrabold text-blue-700">
+                  {/* If RENT, show rental_price. If SALE/SALE_AND_RENT, show price (main). */}
+                  {data.listing_type === "RENT"
+                    ? data.rental_price
+                      ? formatPrice(data.rental_price)
+                      : "สอบถามราคา"
+                    : data.price
+                    ? formatPrice(data.price)
+                    : "สอบถามราคา"}
+
+                  {(data.listing_type === "RENT" ||
+                    data.listing_type === "SALE_AND_RENT") &&
+                    // Show /month if we just showed a rental price OR if we showed a sale price but want to indicate rent is separate?
+                    // Actually for "RENT" only, we just showed rental_price, so append /month
+                    data.listing_type === "RENT" &&
+                    data.rental_price && (
+                      <span className="text-base font-normal text-slate-500 ml-1">
+                        /เดือน
+                      </span>
+                    )}
+                </div>
+                {data.rental_price && data.listing_type === "SALE_AND_RENT" && (
+                  <div className="text-lg text-slate-500 font-medium">
+                    เช่า {formatPrice(data.rental_price)}/เดือน
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 md:px-8 mt-6 md:mt-8">
+        {/* 2. Gallery (Mosaic) */}
+        <section className="mb-10">
+          <PropertyGallery images={images} title={data.title} />
+        </section>
 
         <RecentPropertyTracker
           property={{
             id: data.id,
             title: data.title,
-            image_url: cover,
+            image_url: images.find((i: any) => i.is_cover)?.image_url || null,
             province: data.province,
             popular_area: data.popular_area,
             price_text: data.price ? formatPrice(data.price) : "",
           }}
         />
 
-        <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
-          {/* Left Column: Images & Details */}
-          <div className="space-y-8">
-            <div className="rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-sm">
-              <div className="relative aspect-video bg-slate-100">
-                {cover ? (
-                  <Image
-                    src={cover}
-                    alt={data.title}
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                    ไม่มีรูปภาพ
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* 3. Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] xl:grid-cols-[2fr_1fr] gap-10 lg:gap-16">
+          {/* Left Content */}
+          <div className="space-y-10">
+            {/* Specs Grid */}
+            <section>
+              <PropertySpecs
+                bedrooms={data.bedrooms}
+                bathrooms={data.bathrooms}
+                parking={data.parking_slots}
+                sizeSqm={data.size_sqm}
+                landSize={data.land_size_sqwah}
+                floor={data.floor}
+                type={data.property_type}
+              />
+            </section>
 
-            {/* Description Card */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-              <h2 className="text-xl font-bold text-slate-900 mb-4">
+            <hr className="border-slate-100" />
+
+            {/* Description */}
+            <section>
+              <h2 className="text-xl font-bold text-slate-900 mb-6">
                 รายละเอียดทรัพย์
               </h2>
-              <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed whitespace-pre-wrap">
+              <div className="prose prose-slate max-w-none text-slate-600 leading-8 whitespace-pre-wrap text-md max-h-[400px] overflow-y-scroll">
                 {data.description || "ไม่มีรายละเอียดเพิ่มเติม"}
               </div>
-            </div>
+            </section>
 
-            {/* Features / Amenities Grid if applicable */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-              <h2 className="text-xl font-bold text-slate-900 mb-6">
-                ข้อมูลเพิ่มเติม
+            <hr className="border-slate-100" />
+
+            {/* Facilities / Highlights (Mock or Real Field) */}
+            <section>
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">
+                สิ่งอำนวยความสะดวก
               </h2>
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
+                {/* This would ideally come from a tags array or boolean fields we might have added later */}
+                {/* For now, we mimic some common ones or check if they exist in schema in future */}
                 {[
-                  { label: "รหัสทรัพย์", value: data.property_code },
-                  { label: "ประเภท", value: data.property_type },
-                  { label: "โครงการ", value: data.project_name },
-                  { label: "จำนวนชั้น", value: data.number_of_stories },
-                  { label: "ทิศหน้าทรัพย์", value: data.direction_facing },
-                  { label: "เฟอร์นิเจอร์", value: data.furniture_included },
-                  { label: "กรรมสิทธิ์", value: data.ownership_type },
-                  { label: "ค่าส่วนกลาง", value: data.common_fee },
-                  {
-                    label: "ขนาดที่ดิน",
-                    value: data.land_area
-                      ? `${data.land_area} ตร.วา`
-                      : undefined,
-                  },
-                  {
-                    label: "พื้นที่ใช้สอย",
-                    value: data.usable_area
-                      ? `${data.usable_area} ตร.ม.`
-                      : undefined,
-                  },
-                ].map((item) =>
-                  item.value ? (
-                    <div
-                      key={item.label}
-                      className="flex justify-between border-b border-slate-100 pb-2"
-                    >
-                      <dt className="text-slate-500">{item.label}</dt>
-                      <dd className="font-semibold text-slate-900">
-                        {item.value}
-                      </dd>
-                    </div>
-                  ) : null
-                )}
-              </dl>
-            </div>
-          </div>
-
-          {/* Right Column: Sticky Summary & Sidebar */}
-          <div className="space-y-6">
-            <div className="sticky top-24 space-y-6">
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-100/50">
-                <div className="space-y-4">
-                  <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider">
-                    {data.listing_type === "SALE" ? "ขาย" : "เช่า"}
-                  </span>
-
-                  <h1 className="text-2xl font-bold text-slate-900 leading-tight">
-                    {data.title}
-                  </h1>
-
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-extrabold text-blue-700">
-                      {data.price ? formatPrice(data.price) : "สอบถามราคา"}
-                    </span>
-                    {data.previous_price && (
-                      <span className="text-sm text-slate-400 line-through">
-                        {formatPrice(data.previous_price)}
-                      </span>
-                    )}
+                  "สระว่ายน้ำ",
+                  "ฟิตเนส",
+                  "ระบบรักษาความปลอดภัย 24 ชม.",
+                  "CCTV",
+                  "สวนหย่อม",
+                  "ที่จอดรถ",
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 text-slate-600"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    {item}
                   </div>
-
-                  <div className="text-sm text-slate-500 flex items-start gap-2">
-                    <span className="mt-1">📍</span>
-                    {locationParts || "ไม่ระบุทำเล"}
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 py-4 border-y border-slate-100">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-slate-900">
-                        {data.bedrooms ?? "-"}
-                      </div>
-                      <div className="text-xs text-slate-500">ห้องนอน</div>
-                    </div>
-                    <div className="text-center border-l border-slate-100">
-                      <div className="text-2xl font-bold text-slate-900">
-                        {data.bathrooms ?? "-"}
-                      </div>
-                      <div className="text-xs text-slate-500">ห้องน้ำ</div>
-                    </div>
-                    <div className="text-center border-l border-slate-100">
-                      <div className="text-2xl font-bold text-slate-900">
-                        {data.parking_spaces ?? "-"}
-                      </div>
-                      <div className="text-xs text-slate-500">จอดรถ</div>
-                    </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <Button
-                      size="lg"
-                      className="w-full text-lg h-12 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-200"
-                    >
-                      ติดต่อสอบถาม
-                    </Button>
-                  </div>
-                </div>
+                ))}
               </div>
+            </section>
 
-              {/* Map Placeholder or additional agent info could go here */}
-            </div>
+            <hr className="border-slate-100" />
+
+            {/* Map */}
+            <section>
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">
+                แผนที่ & ทำเลที่ตั้ง
+              </h2>
+              <div className="bg-slate-50 rounded-3xl h-[400px] flex items-center justify-center text-slate-400 border border-slate-100 relative overflow-hidden">
+                {data.google_maps_link ? (
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    style={{ border: 0 }}
+                    src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(
+                      data.title + " " + locationParts
+                    )}`} // Note: Requires valid API Key
+                    allowFullScreen
+                    title="Property Location"
+                  />
+                ) : (
+                  <div className="text-center space-y-2">
+                    <div className="bg-white p-4 rounded-full shadow-sm inline-block">
+                      <MapPin className="h-8 w-8 text-blue-300" />
+                    </div>
+                    <p>ไม่พบพิกัดแผนที่</p>
+                  </div>
+                )}
+
+                {/* Fallback visual for demo if no link/api key */}
+                {!data.google_maps_link && (
+                  <div className="absolute inset-0 bg-slate-100 flex items-center justify-center z-10">
+                    <span className="text-slate-400">
+                      Map unavailable (No Google Maps Link provided)
+                    </span>
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
+
+          {/* Right Sidebar (Sticky) */}
+          <aside className="relative">
+            <AgentSidebar
+              agentName={agent?.full_name}
+              agentImage={agent?.avatar_url}
+              agentPhone={agent?.phone}
+              isVerified={true}
+            />
+          </aside>
         </div>
       </div>
     </main>
   );
 }
-// generateMetadata() รายทรัพย์ (title/description/og)
+
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const { id } = await Promise.resolve(params);
+
+  if (!id || !UUID_RE.test(id)) return { title: "ไม่พบทรัพย์" };
+
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("properties")
+    .select("title, description")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!data) return { title: "ไม่พบทรัพย์" };
+
+  return {
+    title: `${data.title} | Real Estate CRM`,
+    description: data.description?.slice(0, 160) || "รายละเอียดทรัพย์",
+  };
+}

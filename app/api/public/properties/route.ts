@@ -11,6 +11,7 @@ type PropertyRow = {
   rental_price: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
+  size_sqm: number | null; // Added
   created_at: string;
   listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
   province: string | null;
@@ -69,6 +70,7 @@ export async function GET(request: Request) {
         rental_price,
         bedrooms,
         bathrooms,
+        size_sqm,
         created_at,
         listing_type,
         popular_area,
@@ -114,6 +116,7 @@ export async function GET(request: Request) {
       rental_price: typedRow.rental_price,
       bedrooms: typedRow.bedrooms,
       bathrooms: typedRow.bathrooms,
+      size_sqm: typedRow.size_sqm,
       created_at: typedRow.created_at,
       listing_type: typedRow.listing_type,
       popular_area: typedRow.popular_area,
