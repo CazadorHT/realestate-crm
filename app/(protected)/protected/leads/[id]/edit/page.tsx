@@ -3,6 +3,7 @@ import { LeadForm } from "@/features/leads/LeadsForm";
 import { getLeadByIdQuery } from "@/features/leads/queries";
 import { updateLeadAction } from "@/features/leads/actions";
 import { leadRowToFormValues } from "@/features/leads/mapper";
+import { LeadFormValues } from "@/features/leads/types";
 
 export default async function LeadEditPage({
   params,
@@ -13,7 +14,7 @@ export default async function LeadEditPage({
   const lead = await getLeadByIdQuery(id);
   if (!lead) return notFound();
 
-  async function onSubmitAction(values: any) {
+  async function onSubmitAction(values: LeadFormValues) {
     "use server";
     const res = await updateLeadAction(id, values);
     if (!res.success) throw new Error(res.message);
@@ -23,7 +24,10 @@ export default async function LeadEditPage({
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-semibold">แก้ไข Lead</h1>
-      <LeadForm initialValues={leadRowToFormValues(lead)} onSubmitAction={onSubmitAction} />
+      <LeadForm
+        initialValues={leadRowToFormValues(lead)}
+        onSubmitAction={onSubmitAction}
+      />
     </div>
   );
 }

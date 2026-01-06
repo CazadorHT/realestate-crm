@@ -105,7 +105,7 @@ export default async function PublicPropertyDetailPage(props: {
                     {data.listing_type === "SALE" ? "ขาย" : "เช่า"}
                   </Badge>
                   <span className="text-slate-400 text-xs">
-                    #{data.property_code || data.id.slice(0, 8)}
+                    #{data.id.slice(0, 8)}
                   </span>
                 </div>
                 <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 leading-tight">

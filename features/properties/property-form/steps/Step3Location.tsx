@@ -297,13 +297,13 @@ export function Step3Location({ form, mode }: Step3Props) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-white rounded-xl">
-                        {TRANSIT_TYPE_ENUM.map((t: any) => (
+                        {TRANSIT_TYPE_ENUM.map((t) => (
                           <SelectItem
                             key={t}
                             value={t}
                             className="font-bold py-2 text-sm"
                           >
-                            {(TRANSIT_TYPE_LABELS as any)[t]}
+                            {TRANSIT_TYPE_LABELS[t]}
                           </SelectItem>
                         ))}
                       </SelectContent>

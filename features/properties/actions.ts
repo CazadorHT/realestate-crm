@@ -771,11 +771,13 @@ export async function getPropertyWithImages(
 
   if (error || !data) throw error;
 
-  if (data.property_images) {
-    data.property_images.sort((a, b) => a.sort_order - b.sort_order);
+  const property = data as unknown as PropertyWithImages;
+
+  if (property.property_images) {
+    property.property_images.sort((a, b) => a.sort_order - b.sort_order);
   }
 
-  return data as unknown as PropertyWithImages;
+  return property;
 }
 
 /**
@@ -950,7 +952,8 @@ export async function getPopularAreasAction() {
   // Allow public access (no auth required)
   const supabase = await createAdminClient();
 
-  const { data, error } = await (supabase.from("popular_areas" as any) as any)
+  const { data, error } = await supabase
+    .from("popular_areas")
     .select("name")
     .order("name");
 
@@ -959,7 +962,7 @@ export async function getPopularAreasAction() {
     return [];
   }
 
-  return (data as any[]).map((item) => item.name);
+  return data.map((item) => item.name);
 }
 
 /**
@@ -973,9 +976,9 @@ export async function addPopularAreaAction(name: string) {
     return { success: false, message: "กรุณาระบุชื่อย่าน" };
   }
 
-  const { error } = await (supabase.from("popular_areas" as any) as any).insert(
-    { name: name.trim() }
-  );
+  const { error } = await supabase.from("popular_areas").insert({
+    name: name.trim(),
+  });
 
   if (error) {
     if (error.code === "23505") {
@@ -1038,8 +1041,9 @@ export async function updatePropertyStatusAction(input: {
     revalidatePath("/properties");
 
     return { success: true };
-  } catch (e: any) {
-    return { success: false, message: e?.message || "อัปเดตสถานะไม่สำเร็จ" };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "อัปเดตสถานะไม่สำเร็จ";
+    return { success: false, message: msg };
   }
 }
 
@@ -1124,6 +1128,8 @@ export async function duplicatePropertyAction(
         message: insErr?.message || "Duplicate ไม่สำเร็จ",
       };
     }
+    // Explicitly re-affirm inserted is not null for TS (though the if above should handle it, sometimes block scoping is tricky)
+    const newPropertyId = inserted.id;
 
     // copy images rows (ไม่ copy ไฟล์จริงใน storage — ใช้ไฟล์เดิมได้)
     const { data: imgs } = await supabase
@@ -1134,7 +1140,7 @@ export async function duplicatePropertyAction(
 
     if (imgs?.length) {
       const rows = imgs.map((img) => ({
-        property_id: inserted.id,
+        property_id: newPropertyId,
         image_url: img.image_url,
         storage_path: img.storage_path,
         is_cover: img.is_cover,
@@ -1156,14 +1162,16 @@ export async function duplicatePropertyAction(
       {
         action: "property.create",
         entity: "properties",
-        entityId: inserted.id,
+        entityId: newPropertyId,
         metadata: { duplicated_from: id },
       }
     );
 
     revalidatePath("/protected/properties");
-    return { success: true, propertyId: inserted.id };
-  } catch (err: any) {
+    return { success: true, propertyId: newPropertyId };
+    revalidatePath("/protected/properties");
+    return { success: true, propertyId: newPropertyId };
+  } catch (err) {
     console.error("duplicatePropertyAction → error:", err);
     return authzFail(err);
   }

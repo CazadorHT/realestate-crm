@@ -84,6 +84,16 @@ function mapRowToFormValues(
   row: PropertyRow,
   images?: string[]
 ): PropertyFormValues {
+  const structuredData = row.structured_data as unknown as {
+    is_co_agent?: boolean;
+    co_agent_name?: string;
+    co_agent_phone?: string;
+    co_agent_contact_channel?: "LINE" | "FB" | "TEL";
+    co_agent_contact_id?: string;
+    co_agent_sale_commission_percent?: number;
+    co_agent_rent_commission_months?: number;
+  } | null;
+
   return {
     title: row.title ?? "",
     description: row.description ?? undefined,
@@ -115,23 +125,20 @@ function mapRowToFormValues(
     images: images ?? [],
     commission_sale_percentage: row.commission_sale_percentage ?? 3,
     commission_rent_months: row.commission_rent_months ?? 1,
-    near_transit: (row as any).near_transit ?? false,
-    transit_station_name: (row as any).transit_station_name ?? "",
-    transit_type: (row as any).transit_type ?? "BTS",
-    transit_distance_meters: (row as any).transit_distance_meters ?? undefined,
-    is_co_agent: (row.structured_data as any)?.is_co_agent || false,
-    co_agent_name: (row.structured_data as any)?.co_agent_name || "",
-    co_agent_phone: (row.structured_data as any)?.co_agent_phone || "",
+    near_transit: row.near_transit ?? false,
+    transit_station_name: row.transit_station_name ?? "",
+    transit_type: (row.transit_type as any) ?? "BTS",
+    transit_distance_meters: row.transit_distance_meters ?? undefined,
+    is_co_agent: structuredData?.is_co_agent || false,
+    co_agent_name: structuredData?.co_agent_name || "",
+    co_agent_phone: structuredData?.co_agent_phone || "",
     co_agent_contact_channel:
-      (row.structured_data as any)?.co_agent_contact_channel || "LINE",
-    co_agent_contact_id:
-      (row.structured_data as any)?.co_agent_contact_id || "",
+      structuredData?.co_agent_contact_channel || "LINE",
+    co_agent_contact_id: structuredData?.co_agent_contact_id || "",
     co_agent_sale_commission_percent:
-      (row.structured_data as any)?.co_agent_sale_commission_percent ||
-      undefined,
+      structuredData?.co_agent_sale_commission_percent || undefined,
     co_agent_rent_commission_months:
-      (row.structured_data as any)?.co_agent_rent_commission_months ||
-      undefined,
+      structuredData?.co_agent_rent_commission_months || undefined,
 
     // Tags
     is_pet_friendly: (row.meta_keywords || []).includes("Pet Friendly"),

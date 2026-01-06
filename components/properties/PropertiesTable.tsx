@@ -26,7 +26,11 @@ import { th } from "date-fns/locale";
 import Link from "next/link";
 import { PropertiesEmptyState } from "./PropertiesEmptyState";
 import { PropertyStatusSelect } from "./PropertyStatusDropdown";
-import type { PropertyStatus } from "@/features/properties/types";
+import type {
+  PropertyStatus,
+  PropertyType,
+  ListingType,
+} from "@/features/properties/types";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit3 } from "lucide-react";
 import { DuplicatePropertyButton } from "./DuplicatePropertyButton";
@@ -38,8 +42,8 @@ export interface PropertyTableData {
   title: string;
   description: string | null;
   image_url: string | null;
-  property_type: string;
-  listing_type: string;
+  property_type: PropertyType;
+  listing_type: ListingType;
   price: number | null;
   rental_price: number | null;
   status: PropertyStatus;
@@ -64,6 +68,8 @@ export interface PropertyTableData {
 interface PropertiesTableProps {
   data: PropertyTableData[];
 }
+// ... (SortableHead code omitted for brevity as it is unchanged) ...
+
 function SortableHead({
   label,
   sortKey,
@@ -241,16 +247,6 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
               {/* LOCATION & ASSET INFO */}
               <TableCell>
                 <div className="flex flex-col gap-1">
-                  {/* Location Placeholder - data.district not in interface, so defaulting to description or title snippet if needed, or assume data will be enriched later. 
-                         Actually, let's use a placeholder or check if PropertyTableData has location. 
-                         PropertyTableData currently has { ... }. I need to add district/subdistrict to PropertyTableData interface first if I want to use it.
-                         For now, I'll ignore specific location fields if not in Props and just show ASSET INFO.
-                     */}
-                  {/* Asset Info: Need to add to PropertyRow/TableData. Treating as if they are present or will be added. 
-                         I will cast for now or update interface in next step if errors differ. 
-                         Wait, I should update PropertyTableData interface at the TOP of the file too. I'll do that in a separate 'replace' or hope 'any' works? No, strict TS. 
-                         I will update the interface in this SAME file edit.
-                     */}
                   <div className="font-medium text-xs text-slate-700">
                     {property.popular_area ||
                       property.subdistrict ||
@@ -258,21 +254,17 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                       "-"}
                   </div>
                   <div className="text-xs text-slate-500 flex items-center gap-2">
-                    {/* @ts-ignore */}
                     {property.size_sqm ? (
                       <span>{property.size_sqm} ตร.ม.</span>
                     ) : null}
-                    {/* @ts-ignore */}
                     {property.land_size_sqwah ? (
                       <span>{property.land_size_sqwah} ตร.ว.</span>
                     ) : null}
                   </div>
                   <div className="text-[10px] text-slate-400 flex gap-2">
-                    {/* @ts-ignore */}
                     {property.bedrooms ? (
                       <span>{property.bedrooms} นอน</span>
                     ) : null}
-                    {/* @ts-ignore */}
                     {property.bathrooms ? (
                       <span>{property.bathrooms} น้ำ</span>
                     ) : null}
@@ -359,7 +351,6 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                     <span className="text-[10px] text-slate-400 block mb-0.5">
                       ผู้ดูแล:
                     </span>
-                    {/* @ts-ignore */}
                     <span className="font-medium text-blue-600">
                       {property.agent_name || "คุณ (Me)"}
                     </span>

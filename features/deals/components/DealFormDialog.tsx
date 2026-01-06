@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createDealSchema, CreateDealInput } from "../schema";
 import { createDealAction, updateDealAction } from "../actions";
+import { DealWithProperty, DealPropertyOption } from "../types";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -39,15 +40,8 @@ import { Plus } from "lucide-react";
 
 interface DealFormDialogProps {
   leadId: string;
-  properties?: {
-    id: string;
-    title: string;
-    price?: number | null;
-    rental_price?: number | null;
-    commission_sale_percentage?: number | null;
-    commission_rent_months?: number | null;
-  }[];
-  deal?: any; // Existing deal for editing
+  properties?: DealPropertyOption[];
+  deal?: DealWithProperty; // Existing deal for editing
   onSuccess?: () => void;
   refreshOnSuccess?: boolean;
   trigger?: React.ReactNode;
@@ -88,14 +82,26 @@ export function DealFormDialog({
   // Reset form when deal changes (sanitize nulls to undefined for optional fields)
   useEffect(() => {
     if (deal) {
-      const sanitized: any = { ...deal };
+      // Manual mapping to satisfy Type check, though direct spread might work if types aligned perfectly
+      // We need to cast strict nulls to undefined for the form
+      const sanitized: any = {
+        ...deal,
+        deal_type: deal.deal_type ?? "RENT", // Default fallback if null (shouldn't be)
+      };
       // Optional text fields that may be `null` in DB should be `undefined` for zod optional
-      ["co_agent_name", "co_agent_contact", "co_agent_online", "source"].forEach((k) => {
+      [
+        "co_agent_name",
+        "co_agent_contact",
+        "co_agent_online",
+        "source",
+      ].forEach((k) => {
         if (sanitized[k] === null) sanitized[k] = undefined;
       });
       // Dates may be null — keep as undefined so inputs stay empty
-      if (sanitized.transaction_date === null) sanitized.transaction_date = undefined;
-      if (sanitized.transaction_end_date === null) sanitized.transaction_end_date = undefined;
+      if (sanitized.transaction_date === null)
+        sanitized.transaction_date = undefined;
+      if (sanitized.transaction_end_date === null)
+        sanitized.transaction_end_date = undefined;
       sanitized.duration_months = undefined; // Duration is virtual, we don't need to re-calc for edit init usually
       form.reset(sanitized);
     }
@@ -127,10 +133,11 @@ export function DealFormDialog({
     form.setValue("commission_amount", calculatedCommission);
   }, [propertyId, dealType, properties, form]);
 
-  const onSubmit = async (data: any) => {
-    const result = isEditing
-      ? await updateDealAction({ ...data, id: deal.id })
-      : await createDealAction(data);
+  const onSubmit = async (data: CreateDealInput) => {
+    const result =
+      isEditing && deal
+        ? await updateDealAction({ ...data, id: deal.id })
+        : await createDealAction(data);
 
     if (result.success) {
       toast.success(isEditing ? "อัปเดตดีลเรียบร้อย" : "สร้างดีลเรียบร้อย");
@@ -283,7 +290,9 @@ export function DealFormDialog({
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(
-                            e.target.value === "" ? undefined : Number(e.target.value)
+                            e.target.value === ""
+                              ? undefined
+                              : Number(e.target.value)
                           )
                         }
                       />
@@ -308,7 +317,9 @@ export function DealFormDialog({
                       <Input
                         type="date"
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value || undefined)}
+                        onChange={(e) =>
+                          field.onChange(e.target.value || undefined)
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -346,7 +357,7 @@ export function DealFormDialog({
                   )}
                 />
               )}
-            </div> 
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -359,7 +370,9 @@ export function DealFormDialog({
                       <Input
                         {...field}
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value || undefined)}
+                        onChange={(e) =>
+                          field.onChange(e.target.value || undefined)
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -378,7 +391,9 @@ export function DealFormDialog({
                         placeholder="เช่น 081-xxx-xxxx"
                         {...field}
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value || undefined)}
+                        onChange={(e) =>
+                          field.onChange(e.target.value || undefined)
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -397,7 +412,9 @@ export function DealFormDialog({
                         placeholder="ตัวอย่าง: LINE:@agent, Facebook, Email"
                         {...field}
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value || undefined)}
+                        onChange={(e) =>
+                          field.onChange(e.target.value || undefined)
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -405,8 +422,6 @@ export function DealFormDialog({
                 )}
               />
             </div>
-
-
 
             <DialogFooter>
               <Button type="submit" disabled={form.formState.isSubmitting}>

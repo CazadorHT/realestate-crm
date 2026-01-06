@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { LeadForm } from "@/features/leads/LeadsForm";
 import { createLeadAction } from "@/features/leads/actions";
+import { LeadFormValues } from "@/features/leads/types";
 
 export default function LeadNewPage() {
-  async function onSubmitAction(values: any) {
+  async function onSubmitAction(values: LeadFormValues) {
     "use server";
     const res = await createLeadAction(values);
     if (!res.success) throw new Error(res.message);

@@ -11,6 +11,31 @@ type ListArgs = {
   ascending?: boolean;
 };
 
+// Helper interface for the joined result structure
+// Helper interface for the joined result structure
+import { Deal } from "./types";
+
+type RawDealWithJoin = Deal & {
+  property: {
+    id: string;
+    title: string;
+    price: number | null;
+    rental_price: number | null;
+    property_images: {
+      id: string;
+      property_id: string;
+      image_url: string;
+      is_cover: boolean;
+      sort_order: number;
+    }[];
+  } | null;
+  lead: {
+    id: string;
+    full_name: string;
+    phone: string | null;
+  } | null;
+};
+
 export async function getDeals({
   q = "",
   property_id,
@@ -32,7 +57,7 @@ export async function getDeals({
     .select(
       `
       *,
-      property:properties ( id, title, price, rental_price, property_images ( id, property_id, image_url, is_cover ) ),
+      property:properties ( id, title, price, rental_price, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
       lead:leads ( id, full_name, phone )
     `,
       { count: "exact" }
@@ -75,17 +100,21 @@ export async function getDeals({
         .select("id")
         .ilike("full_name", `%${trimmed}%`);
 
-      const propIds = (propRes.data ?? []).map((p: any) => p.id);
-      const leadIds = (leadRes.data ?? []).map((l: any) => l.id);
+      const propIds = (propRes.data ?? []).map((p) => p.id);
+      const leadIds = (leadRes.data ?? []).map((l) => l.id);
 
       // Build a new deals query scoped by found property/lead ids (if any)
-      if (propIds.length > 0 || leadIds.length > 0 || /^[0-9a-fA-F-]{36}$/.test(trimmed)) {
+      if (
+        propIds.length > 0 ||
+        leadIds.length > 0 ||
+        /^[0-9a-fA-F-]{36}$/.test(trimmed)
+      ) {
         let q2 = supabase
           .from("deals")
           .select(
             `
       *,
-      property:properties ( id, title, price, rental_price, property_images ( id, property_id, image_url, is_cover ) ),
+      property:properties ( id, title, price, rental_price, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
       lead:leads ( id, full_name, phone )
     `,
             { count: "exact" }
@@ -107,17 +136,30 @@ export async function getDeals({
   }
 
   // normalize property to include `images` for the DealWithProperty view model
-  const normalized = (finalData ?? []).map((d: any) => {
-    if (d.property) {
-      d.property.images = d.property.property_images ?? [];
-    }
-    // attach lead object if present
-    if (!d.lead) d.lead = null;
-    return d;
+  const rawData = (finalData ?? []) as unknown as RawDealWithJoin[];
+
+  const normalized: DealWithProperty[] = rawData.map((d) => {
+    // Transform property structure if it exists
+    const property = d.property
+      ? {
+          id: d.property.id,
+          title: d.property.title,
+          price: d.property.price,
+          rental_price: d.property.rental_price,
+          images: d.property.property_images ?? [],
+        }
+      : null;
+
+    // Return the correctly typed shape
+    return {
+      ...d,
+      property,
+      lead: d.lead ? { id: d.lead.id, full_name: d.lead.full_name } : null,
+    } as DealWithProperty;
   });
 
   return {
-    data: normalized as DealWithProperty[],
+    data: normalized,
     count: finalCount,
     page: pageSafe,
     pageSize: size,

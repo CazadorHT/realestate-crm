@@ -9,26 +9,35 @@ export function leadRowToFormValues(row: LeadRow): LeadFormValues {
     source: row.source ?? null,
     stage: row.stage,
 
-    property_id: (row as any).property_id ?? null,
-    assigned_to: (row as any).assigned_to ?? null,
+    property_id: row.property_id ?? null,
+    assigned_to: row.assigned_to ?? null,
 
-    budget_min: (row as any).budget_min ?? null,
-    budget_max: (row as any).budget_max ?? null,
+    // Identity
+    lead_type: row.lead_type ?? null,
+    nationality: row.nationality ?? null,
+    is_foreigner: row.is_foreigner ?? false,
 
-    note: (row as any).note ?? null,
+    budget_min: row.budget_min ?? null,
+    budget_max: row.budget_max ?? null,
 
-    // ฟิลด์ advanced (ถ้าใน schema มี แต่ db อาจเป็น nullable / jsonb)
-    preferences: (row as any).preferences ?? null,
-    preferred_locations: (row as any).preferred_locations ?? null,
-    preferred_property_types: (row as any).preferred_property_types ?? null,
+    note: row.note ?? null,
 
-    min_bedrooms: (row as any).min_bedrooms ?? null,
-    min_bathrooms: (row as any).min_bathrooms ?? null,
-    min_size_sqm: (row as any).min_size_sqm ?? null,
-    max_size_sqm: (row as any).max_size_sqm ?? null,
+    // JSONB / Specific fields
+    preferences: row.preferences
+      ? (row.preferences as Record<string, any>)
+      : null,
+    preferred_locations:
+      (row.preferred_locations as string[] | null | undefined) ?? null,
+    preferred_property_types: row.preferred_property_types ?? null,
 
-    has_pets: (row as any).has_pets ?? null,
-    need_company_registration: (row as any).need_company_registration ?? null,
-    allow_airbnb: (row as any).allow_airbnb ?? null,
+    min_bedrooms: row.min_bedrooms ?? null,
+    min_bathrooms: row.min_bathrooms ?? null,
+    min_size_sqm: row.min_size_sqm ?? null,
+    max_size_sqm: row.max_size_sqm ?? null,
+    num_occupants: row.num_occupants ?? null,
+
+    has_pets: row.has_pets ?? false,
+    need_company_registration: row.need_company_registration ?? false,
+    allow_airbnb: row.allow_airbnb ?? false,
   };
 }

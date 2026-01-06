@@ -140,13 +140,13 @@ export function Step4Media({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-white rounded-xl border-none shadow-lg">
-                    {PROPERTY_STATUS_ORDER.map((s: any) => (
+                    {PROPERTY_STATUS_ORDER.map((s) => (
                       <SelectItem
                         key={s}
                         value={s}
                         className="py-3 font-bold text-sm"
                       >
-                        {(PROPERTY_STATUS_LABELS as any)[s]}
+                        {PROPERTY_STATUS_LABELS[s]}
                       </SelectItem>
                     ))}
                   </SelectContent>

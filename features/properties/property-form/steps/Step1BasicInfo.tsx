@@ -50,7 +50,7 @@ export function Step1BasicInfo({
             name="listing_type"
             render={({ field }) => (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {LISTING_TYPE_ORDER.map((type: any) => (
+                {LISTING_TYPE_ORDER.map((type) => (
                   <button
                     key={type}
                     type="button"
@@ -83,7 +83,7 @@ export function Step1BasicInfo({
                           field.value === type ? "text-white" : "text-slate-800"
                         }`}
                       >
-                        {(LISTING_TYPE_LABELS as any)[type]}
+                        {LISTING_TYPE_LABELS[type]}
                       </div>
                       <div
                         className={`text-[10px] uppercase tracking-wider mt-0.5 transition-colors ${
@@ -133,7 +133,7 @@ export function Step1BasicInfo({
             name="property_type"
             render={({ field }) => (
               <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3">
-                {PROPERTY_TYPE_ORDER.map((type: any) => (
+                {PROPERTY_TYPE_ORDER.map((type) => (
                   <button
                     key={type}
                     type="button"
@@ -148,7 +148,7 @@ export function Step1BasicInfo({
                     }`}
                   >
                     <span className="text-[11px] font-bold uppercase tracking-wider text-center truncate w-full">
-                      {(PROPERTY_TYPE_LABELS as any)[type]}
+                      {PROPERTY_TYPE_LABELS[type]}
                     </span>
                   </button>
                 ))}

@@ -1,7 +1,8 @@
 import type { Database } from "@/lib/database.types";
 export type LeadStage = Database["public"]["Enums"]["lead_stage"];
 export type LeadSource = Database["public"]["Enums"]["lead_source"];
-export type LeadActivityType = Database["public"]["Enums"]["lead_activity_type"];
+export type LeadActivityType =
+  Database["public"]["Enums"]["lead_activity_type"];
 /** ===== Activity Types (enum ของคุณ) =====
  * ถ้าคุณมี enum จริงใน DB (recommended):
  * Database["public"]["Enums"]["lead_activity_type"]
@@ -23,7 +24,6 @@ export const LEAD_STAGE_LABELS = {
   CLOSED: "ปิดดีลแล้ว",
 } satisfies Record<LeadStage, string>;
 
-
 export const LEAD_ACTIVITY_TYPE_LABELS = {
   CALL: "โทร",
   LINE_CHAT: "แชท LINE",
@@ -36,24 +36,24 @@ export const LEAD_ACTIVITY_TYPE_LABELS = {
 /** === ORDER (ใช้ sort_order ที่คุณกำหนด) ===
  * TS จะบังคับว่ารายการใน array ต้องเป็น enum ของจริง
  */
-export const LEAD_STAGE_ORDER: LeadStage[] = [
+export const LEAD_STAGE_ORDER = [
   "NEW",
   "CONTACTED",
   "VIEWED",
   "NEGOTIATING",
   "CLOSED",
-];
+] as const satisfies readonly [LeadStage, ...LeadStage[]];
 
-export const LEAD_SOURCE_ORDER: LeadSource[] = [
+export const LEAD_SOURCE_ORDER = [
   "PORTAL",
   "FACEBOOK",
   "LINE",
   "WEBSITE",
   "REFERRAL",
   "OTHER",
-];
+] as const satisfies readonly [LeadSource, ...LeadSource[]];
 
-export const LEAD_ACTIVITY_TYPE_ORDER: LeadActivityType[] = [
+export const LEAD_ACTIVITY_TYPE_ORDER = [
   "CALL",
   "LINE_CHAT",
   "EMAIL",
@@ -61,7 +61,7 @@ export const LEAD_ACTIVITY_TYPE_ORDER: LeadActivityType[] = [
   "FOLLOW_UP",
   "NOTE",
   "SYSTEM",
-];
+] as const satisfies readonly [LeadActivityType, ...LeadActivityType[]];
 /** helpers */
 
 export function leadStageLabelNullable(v: LeadStage | null | undefined) {
@@ -72,7 +72,9 @@ export function leadSourceLabelNullable(v: LeadSource | null | undefined) {
   if (!v) return "-";
   return LEAD_SOURCE_LABELS[v];
 }
-export function leadActivityTypeLabelNullable(v: LeadActivityType | null | undefined) {
+export function leadActivityTypeLabelNullable(
+  v: LeadActivityType | null | undefined
+) {
   if (!v) return "-";
   return LEAD_ACTIVITY_TYPE_LABELS[v];
 }
@@ -81,4 +83,3 @@ export function safeEnumLabel(map: Record<string, string>, v: any) {
   if (!v) return "-";
   return map[v] ?? String(v);
 }
-

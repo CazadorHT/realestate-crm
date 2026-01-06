@@ -1,32 +1,13 @@
 import { z } from "zod";
-export const PROPERTY_TYPES = [
-  "HOUSE",
-  "CONDO",
-  "TOWNHOME",
-  "LAND",
-  "OTHER",
-  "OFFICE_BUILDING",
-  "WAREHOUSE",
-  "COMMERCIAL_BUILDING",
-] as const;
+import { PROPERTY_TYPE_ORDER } from "@/features/properties/labels";
+import { LEAD_SOURCE_ORDER, LEAD_STAGE_ORDER } from "@/features/leads/labels";
+
+// Re-export constants to maintain compatibility with other files importing them from here
+export const PROPERTY_TYPES = PROPERTY_TYPE_ORDER;
 export type PropertyType = (typeof PROPERTY_TYPES)[number];
 
-export const LEAD_SOURCES = [
-  "OTHER",
-  "PORTAL",
-  "FACEBOOK",
-  "LINE",
-  "WEBSITE",
-  "REFERRAL",
-] as const;
-
-export const LEAD_STAGES = [
-  "NEW",
-  "CONTACTED",
-  "VIEWED",
-  "NEGOTIATING",
-  "CLOSED",
-] as const;
+export const LEAD_SOURCES = LEAD_SOURCE_ORDER;
+export const LEAD_STAGES = LEAD_STAGE_ORDER;
 
 export const leadFormSchema = z.object({
   full_name: z.string().min(1, "กรุณากรอกชื่อ"),
@@ -68,7 +49,7 @@ export const leadFormSchema = z.object({
     .array(z.enum(PROPERTY_TYPES))
     .optional()
     .nullable(),
-  preferred_locations: z.string().optional().nullable(),
+  preferred_locations: z.array(z.string()).optional().nullable(),
 
   min_bedrooms: z.coerce.number().int().optional().nullable(),
   min_bathrooms: z.coerce.number().int().optional().nullable(),

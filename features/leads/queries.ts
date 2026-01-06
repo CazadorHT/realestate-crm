@@ -57,7 +57,8 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   if (error) throw new Error(error.message);
 
-  const leadIds = (data ?? []).map((l: any) => l.id);
+  const leads = data as LeadRow[];
+  const leadIds = leads.map((l) => l.id);
 
   // fetch deals for these leads and compute counts client-side (avoid unsupported .group in types)
   let dealsCountMap: Record<string, number> = {};
@@ -75,7 +76,10 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   }
 
   // attach counts to leads (non-breaking addition)
-  const leadsWithCounts = (data ?? []).map((l: any) => ({ ...(l as any), deals_count: dealsCountMap[l.id] ?? 0 }));
+  const leadsWithCounts = leads.map((l) => ({
+    ...l,
+    deals_count: dealsCountMap[l.id] ?? 0,
+  }));
 
   return {
     data: leadsWithCounts as LeadRow[],
@@ -113,7 +117,7 @@ export async function getLeadByIdQuery(id: string): Promise<LeadRow | null> {
     .single();
 
   if (error) {
-    if ((error as any)?.code === "PGRST116") return null;
+    if (error && "code" in error && error.code === "PGRST116") return null;
     throw new Error(error.message);
   }
   return data;
@@ -141,16 +145,17 @@ export async function getLeadWithActivitiesQuery(
       .single();
 
     if (error) {
-      if ((error as any)?.code === "PGRST116") return null;
+      if (error && "code" in error && error.code === "PGRST116") return null;
       throw new Error(error.message);
     }
+    const lead = data as unknown as LeadWithActivities;
 
-    (data as any).lead_activities?.sort(
-      (a: any, b: any) =>
+    lead.lead_activities?.sort(
+      (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
-    return data as any;
+    return lead;
   } catch (error) {
     console.log(error);
     return null;

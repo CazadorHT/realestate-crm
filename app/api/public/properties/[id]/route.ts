@@ -6,11 +6,17 @@ function pickCoverImage(images: any[] | null | undefined) {
   if (!images?.length) return null;
   const cover = images.find((img) => img.is_cover);
   if (cover?.image_url) return cover.image_url;
-  const sorted = [...images].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  const sorted = [...images].sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+  );
   return sorted[0]?.image_url ?? null;
 }
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  _: Request,
+  props: { params: Promise<{ id: string }> }
+) {
+  const params = await props.params;
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
@@ -44,7 +50,10 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ error: "Failed to load property detail" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to load property detail" },
+      { status: 500 }
+    );
   }
 
   if (!data) {

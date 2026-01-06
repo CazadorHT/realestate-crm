@@ -30,10 +30,8 @@ export async function createLeadAction(
 
     const payload: LeadInsert = {
       ...parsed.data,
-      preferred_locations: parsed.data.preferred_locations
-        ? [parsed.data.preferred_locations]
-        : null,
-      lead_type: (parsed.data as any).lead_type ?? undefined,
+      preferred_locations: parsed.data.preferred_locations ?? null,
+      lead_type: parsed.data.lead_type ?? undefined,
       created_by: ctx.user.id,
       updated_at: new Date().toISOString(),
     } as LeadInsert;
@@ -89,10 +87,8 @@ export async function updateLeadAction(
     // 2) update
     const payload: LeadUpdate = {
       ...parsed.data,
-      preferred_locations: parsed.data.preferred_locations
-        ? [parsed.data.preferred_locations]
-        : null,
-      lead_type: (parsed.data as any).lead_type ?? undefined,
+      preferred_locations: parsed.data.preferred_locations ?? null,
+      lead_type: parsed.data.lead_type ?? undefined,
       updated_at: new Date().toISOString(),
     } as LeadUpdate;
 

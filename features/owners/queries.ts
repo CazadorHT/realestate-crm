@@ -36,7 +36,10 @@ export async function getOwners() {
     return [];
   }
 
-  return data.map((owner: any) => ({
+  type OwnerWithCount = Owner & { properties: { count: number }[] };
+  const owners = data as unknown as OwnerWithCount[];
+
+  return owners.map((owner) => ({
     ...owner,
     property_count: owner.properties?.[0]?.count || 0,
   }));
@@ -92,7 +95,10 @@ export async function getOwnersQuery({
     return { data: [], count: 0, pageSize, page, totalPages: 0 };
   }
 
-  const owners = data.map((owner: any) => ({
+  type OwnerWithCount = Owner & { properties: { count: number }[] };
+  const rawOwners = data as unknown as OwnerWithCount[];
+
+  const owners = rawOwners.map((owner) => ({
     ...owner,
     property_count: owner.properties?.[0]?.count || 0,
   }));

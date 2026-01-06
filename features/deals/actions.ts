@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { addMonths } from "date-fns";
-import { requireAuthContext, assertAuthenticated, assertStaff } from "@/lib/authz";
+import {
+  requireAuthContext,
+  assertAuthenticated,
+  assertStaff,
+} from "@/lib/authz";
 import {
   createDealSchema,
   updateDealSchema,
@@ -31,12 +35,18 @@ async function updatePropertyStatusFromDeals(
   }
 
   if (!data || data.length === 0) {
-    await supabase.from("properties").update({ status: "ACTIVE" }).eq("id", propertyId);
+    await supabase
+      .from("properties")
+      .update({ status: "ACTIVE" })
+      .eq("id", propertyId);
     return;
   }
 
   const newStatus = data[0].deal_type === "SALE" ? "SOLD" : "RENTED";
-  await supabase.from("properties").update({ status: newStatus }).eq("id", propertyId);
+  await supabase
+    .from("properties")
+    .update({ status: newStatus })
+    .eq("id", propertyId);
 }
 
 export async function createDealAction(input: CreateDealInput) {
@@ -62,8 +72,10 @@ export async function createDealAction(input: CreateDealInput) {
         dealData.duration_months
       ).toISOString();
     }
+
     // duration_months is a virtual field for the form, remove it before DB insert
-    delete (dealData as any).duration_months;
+    // Use destructuring to cleanly separate duration_months from the rest
+    const { duration_months, ...insertData } = dealData;
 
     // Clean empty/nullable fields (do not store empty strings).
     const _cleanKeys = [
@@ -121,9 +133,11 @@ export async function createDealAction(input: CreateDealInput) {
 
     revalidatePath(`/protected/leads/${validated.lead_id}`);
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Create Deal Error:", error);
-    return { success: false, message: error.message };
+    const msg =
+      error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างดีล";
+    return { success: false, message: msg };
   }
 }
 
@@ -168,7 +182,8 @@ export async function updateDealAction(input: UpdateDealInput) {
       ).toISOString();
     }
     // Cleanup virtual field
-    delete (dealData as any).duration_months;
+    const updateData: any = { ...dealData };
+    delete updateData.duration_months;
 
     // Clean empty-string fields before update (keep `null` to explicitly clear DB columns)
     const _updateCleanKeys = [
@@ -176,26 +191,25 @@ export async function updateDealAction(input: UpdateDealInput) {
       "transaction_end_date",
       "co_agent_name",
       "co_agent_contact",
+      "co_agent_contact",
       "source",
     ] as const;
     _updateCleanKeys.forEach((k) => {
-      const key = k as keyof typeof dealData;
-      if ((dealData as any)[key] === "") {
-        delete (dealData as any)[key];
+      if (updateData[k] === "") {
+        delete updateData[k];
       }
     });
 
-    // Remove explicit undefined keys so we don't overwrite existing values unintentionally
-    Object.keys(dealData).forEach((k) => {
-      const key = k as keyof typeof dealData;
-      if ((dealData as any)[key] === undefined) {
-        delete (dealData as any)[key];
+    // Remove explicit undefined keys
+    Object.keys(updateData).forEach((k) => {
+      if (updateData[k] === undefined) {
+        delete updateData[k];
       }
     });
 
     const { error } = await supabase
       .from("deals")
-      .update(dealData)
+      .update(updateData)
       .eq("id", validated.id)
       .single();
 
