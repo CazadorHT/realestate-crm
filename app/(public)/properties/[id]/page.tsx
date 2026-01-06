@@ -6,7 +6,7 @@ import { PublicNav } from "@/components/public/PublicNav";
 import { PropertyGallery } from "@/components/public/PropertyGallery";
 import { PropertySpecs } from "@/components/public/PropertySpecs";
 import { AgentSidebar } from "@/components/public/AgentSidebar";
-import { MapPin, ArrowLeft } from "lucide-react";
+import { MapPin, ArrowLeft, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const UUID_RE =
@@ -65,6 +65,15 @@ export default async function PublicPropertyDetailPage(props: {
           maximumFractionDigits: 0,
         }).format(val)
       : "-";
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const d = String(date.getDate()).padStart(2, "0");
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const y = String(date.getFullYear()).slice(-4);
+    return `${d}/${m}/${y}`;
+  };
 
   return (
     <main className="min-h-screen bg-white pb-20 font-sans">
@@ -174,9 +183,32 @@ export default async function PublicPropertyDetailPage(props: {
                 type={data.property_type}
               />
             </section>
-
-            <hr className="border-slate-100" />
-
+            <section>
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 leading-tight">
+                {data.title}
+              </h1>
+              <div className="flex items-center text-slate-500 gap-1.5 font-light text-sm mt-3">
+                <MapPin className="w-4 h-4 text-blue-500" />
+                {locationParts || "ไม่ระบุทำเล"}
+              </div>
+              <div className="flex items-center gap-2 mt-3">
+                <Badge
+                  className={`rounded-full px-5 py-1 text-sm font-medium ${
+                    data.listing_type === "SALE"
+                      ? "bg-emerald-600"
+                      : "bg-blue-600"
+                  }`}
+                >
+                  {data.listing_type === "SALE" ? "ขาย" : "เช่า"}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2 mt-3 py-1 text-xs font-medium border-b border-slate-100 pb-4">
+                <Clock className="w-4 h-4 text-blue-500" />
+                <span className="text-gray-400 text-xs">
+                  สร้างเมื่อ : {formatDate(data.created_at)}
+                </span>
+              </div>
+            </section>
             {/* Description */}
             <section>
               <h2 className="text-xl font-bold text-slate-900 mb-6">

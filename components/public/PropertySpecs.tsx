@@ -69,13 +69,13 @@ export function PropertySpecs({
   );
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 ">
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 ">
       {specs.map((spec, index) => (
         <div
           key={index}
-          className="flex items-center gap-2 p-3 rounded-2xl bg-slate-50 border border-slate-100/50 hover:bg-blue-50/50 transition-colors"
+          className="flex items-center gap-2 p-2 rounded-2xl bg-slate-50 border border-slate-100/50 hover:bg-blue-50/50 transition-colors"
         >
-          <div className="w-6 h-6 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 text-blue-600">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-blue-600">
             {spec.icon}
           </div>
           <div>
