@@ -1,4 +1,3 @@
-
 // Force rebuild
 import { HeroTitle } from "@/components/public/HeroTitle";
 import { PropertyTypeGrid } from "@/components/public/PropertyTypeGrid";
@@ -12,8 +11,9 @@ import { PublicFooter } from "@/components/public/PublicFooter";
 import { TrustSection } from "@/components/public/TrustSection";
 import { HeroSection } from "@/components/public/HeroSection";
 import { CTASection } from "@/components/public/CTASection";
-import { DetailedSearchSection } from "@/components/public/DetailedSearchSection";
 import { PopularAreasSection } from "@/components/public/PopularAreasSection";
+import { DepositPropertySection } from "@/components/public/DepositPropertySection";
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -23,10 +23,10 @@ export default function LandingPage() {
       <PropertyTypeGrid />
       <PopularAreasSection />
       <PropertyListingSection />
-      <DetailedSearchSection />
       <StatsBand />
       <TrustSection />
       <HowItWorksSection />
+      <DepositPropertySection />
       <TestimonialsSection />
       <CTASection />
       <PublicFooter />

@@ -100,7 +100,9 @@ export default async function PropertyDetailsPage({
   if (isClosed) {
     const { data: dealData } = await supabase
       .from("deals")
-      .select("id, deal_type, commission_amount, commission_percent, created_by, status, lead:leads(id, full_name)")
+      .select(
+        "id, deal_type, commission_amount, commission_percent, created_by, status, lead:leads(id, full_name)"
+      )
       .eq("property_id", id)
       .eq("status", "CLOSED_WIN")
       .order("created_at", { ascending: false })
@@ -116,7 +118,6 @@ export default async function PropertyDetailsPage({
         .eq("deal_id", relatedDeal.id)
         .single();
       relatedContract = contractData ?? null;
-
     }
   }
 
@@ -298,9 +299,7 @@ export default async function PropertyDetailsPage({
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="rounded-lg border p-3 bg-background">
                   <div className="text-xs text-muted-foreground">ค่าคอม</div>
-                  <div className="text-lg font-semibold">
-                    {commissionLabel}
-                  </div>
+                  <div className="text-lg font-semibold">{commissionLabel}</div>
                 </div>
                 <div className="rounded-lg border p-3 bg-background">
                   <div className="text-xs text-muted-foreground">Lead</div>
@@ -370,7 +369,7 @@ export default async function PropertyDetailsPage({
                         className="inline-flex items-center gap-1 text-blue-600 hover:underline"
                       >
                         <MapPin className="h-3 w-3" />
-                        ดูบน Google Maps
+                        เปิดลิงก์ Google Maps
                       </a>
                     ) : (
                       "-"
@@ -450,7 +449,6 @@ export default async function PropertyDetailsPage({
                       </span>
                     </div>
                   )}
-
                 </div>
               </div>
             )}

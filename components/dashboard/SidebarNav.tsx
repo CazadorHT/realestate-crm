@@ -9,14 +9,27 @@ import {
   UserCircle,
   User,
   BarChart3, // Changed from PieChart to BarChart3 for safety
+  FileText,
+  Sparkles,
+  Shield,
+  MapPin,
+  FolderOpen,
 } from "lucide-react";
-import { isStaff, type UserRole } from "@/lib/auth-shared";
+import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
 
 export function SidebarNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
 
-  const navItems = [
+  interface NavItem {
+    title: string;
+    href: string;
+    icon: any; // LucideIcon type is tricky to import sometimes, any works for now or use LucideIcon
+    active: boolean;
+    roles?: UserRole[];
+  }
+
+  const navItems: NavItem[] = [
     {
       title: "Dashboard",
       href: "/protected",
@@ -47,27 +60,68 @@ export function SidebarNav({ role }: { role: UserRole }) {
       icon: LayoutDashboard,
       active: pathname?.startsWith("/protected/deals") ?? false,
     },
+
+    {
+      title: "จัดการทำเล (Area)",
+      href: "/protected/admin/popular-areas",
+      icon: MapPin,
+      active: pathname?.startsWith("/protected/admin/popular-areas") ?? false,
+      roles: ["AGENT", "ADMIN"],
+    },
+    {
+      title: "สัญญาเช่า",
+      href: "/protected/contracts",
+      icon: FileText,
+      active: pathname?.startsWith("/protected/contracts") ?? false,
+    },
+    {
+      title: "เอกสาร",
+      href: "/protected/documents",
+      icon: FolderOpen,
+      active: pathname?.startsWith("/protected/documents") ?? false,
+    },
     {
       title: "โปรไฟล์",
       href: "/protected/profile",
       icon: UserCircle,
       active: pathname === "/protected/profile",
     },
+    {
+      title: "จัดการผู้ใช้ (Admin)",
+      href: "/protected/admin/users",
+      icon: Shield,
+      active: pathname?.startsWith("/protected/admin/users") ?? false,
+      roles: ["ADMIN"],
+    },
   ];
 
   const filteredItems = navItems.filter((item) => {
-    // Only staff can see these items
+    // 1. Check specific roles if defined
+    if (item.roles && item.roles.length > 0) {
+      if (!role) return false;
+      // If the user's role is NOT in the allowed list, hide it
+      if (!item.roles.includes(role)) return false;
+    }
+
+    // 2. Legacy checks for items without explicit 'roles' property
+    // (We could move these to 'roles' property in the object definition to be cleaner,
+    // but preserving existing behavior for now as requested)
     const staffOnlyItems = [
       "Dashboard",
       "Properties",
       "เจ้าของทรัพย์",
       "Leads",
       "Deals",
+      "สัญญาเช่า",
+      "เอกสาร",
     ];
+
+    // Items in this list require AGENT or ADMIN
     if (staffOnlyItems.includes(item.title)) {
       return isStaff(role);
     }
-    return true; // "โปรไฟล์" is visible to everyone
+
+    return true;
   });
 
   return (

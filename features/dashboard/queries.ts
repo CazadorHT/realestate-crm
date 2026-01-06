@@ -370,3 +370,192 @@ export async function getTopAgents(): Promise<TopAgent[]> {
     .sort((a, b) => b.total_commission - a.total_commission)
     .slice(0, 5);
 }
+// ... existing code ...
+
+export type Notification = {
+  id: string | number;
+  message: string;
+  type: "info" | "warning" | "alert" | "success";
+  time: string;
+  read: boolean;
+};
+
+export async function getRecentNotifications(): Promise<Notification[]> {
+  const supabase = await createClient();
+  const notifications: Notification[] = [];
+
+  // 1. Get New Website Leads (Last 3 Days)
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+  const { data: recentLeads } = await supabase
+    .from("leads")
+    .select("id, full_name, created_at, note")
+    .eq("source", "WEBSITE")
+    .gte("created_at", threeDaysAgo.toISOString())
+    .order("created_at", { ascending: false });
+
+  if (recentLeads) {
+    recentLeads.forEach((lead) => {
+      // Parse time diff
+      const created = new Date(lead.created_at);
+      const diffMs = new Date().getTime() - created.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+
+      let timeStr = "Just now";
+      if (diffMins < 60) timeStr = `${diffMins}m ago`;
+      else if (diffHours < 24) timeStr = `${diffHours}h ago`;
+      else timeStr = "1d ago";
+
+      notifications.push({
+        id: `lead-${lead.id}`,
+        message: `Lead ใหม่จากเว็บ: ${lead.full_name} ฝากทรัพย์`,
+        type: "success",
+        time: timeStr,
+        read: false, // In a real app, track read status
+      });
+    });
+  }
+
+  // 2. We can add more sources here (e.g. Overdue Tasks, Closing Deals) like in the mock
+
+  return notifications;
+}
+// ... existing code ...
+
+export type AgendaEvent = {
+  id: string | number;
+  time: string;
+  title: string;
+  type: "meeting" | "call" | "task" | "deadline";
+  priority: "high" | "medium" | "low";
+};
+
+export async function getTodayAgenda(): Promise<AgendaEvent[]> {
+  const supabase = await createClient();
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayIso = todayStart.toISOString();
+
+  // 1. Fetch New Leads Today
+  const { data: newLeads } = await supabase
+    .from("leads")
+    .select("id, full_name, created_at, lead_type")
+    .gte("created_at", todayIso)
+    .order("created_at", { ascending: false });
+
+  // 2. Fetch New Deals Today
+  const { data: newDeals } = await supabase
+    .from("deals")
+    .select("id, deal_type, created_at")
+    .gte("created_at", todayIso)
+    .order("created_at", { ascending: false });
+
+  const agenda: AgendaEvent[] = [];
+
+  // Map Leads to "Call" tasks
+  newLeads?.forEach((lead) => {
+    agenda.push({
+      id: `lead-${lead.id}`,
+      time: new Date(lead.created_at).toLocaleTimeString("th-TH", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      title: `ติดต่อลูกค้าใหม่: ${lead.full_name}`,
+      type: "call",
+      priority: "high",
+    });
+  });
+
+  // Map Deals to "Meeting" or "Task"
+  newDeals?.forEach((deal) => {
+    agenda.push({
+      id: `deal-${deal.id}`,
+      time: new Date(deal.created_at).toLocaleTimeString("th-TH", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      title: `ดำเนินการดีลใหม่ (${deal.deal_type})`,
+      type: "meeting",
+      priority: "medium",
+    });
+  });
+
+  // Sort by time desc
+  return agenda.sort((a, b) => b.time.localeCompare(a.time));
+}
+
+export type FollowUpLead = {
+  id: string;
+  name: string;
+  daysQuiet: number;
+  stage: string;
+};
+
+export async function getFollowUpLeads(): Promise<FollowUpLead[]> {
+  const supabase = await createClient();
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+  // Fetch leads not updated in last 3 days and not closed
+  const { data: leads } = await supabase
+    .from("leads")
+    .select("id, full_name, updated_at, stage")
+    .lt("updated_at", threeDaysAgo.toISOString())
+    .neq("stage", "CLOSED")
+    .limit(5);
+
+  if (!leads) return [];
+
+  return leads.map((l) => {
+    const updated = new Date(l.updated_at);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - updated.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return {
+      id: l.id,
+      name: l.full_name,
+      daysQuiet: diffDays,
+      stage: l.stage,
+    };
+  });
+}
+
+export type RiskDeal = {
+  id: string;
+  title: string;
+  daysInStage: number;
+  stage: string;
+};
+
+export async function getRiskDeals(): Promise<RiskDeal[]> {
+  const supabase = await createClient();
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const { data: deals } = await supabase
+    .from("deals")
+    .select("id, updated_at, status, properties(title)")
+    .lt("updated_at", sevenDaysAgo.toISOString())
+    .neq("status", "CLOSED_WIN")
+    .neq("status", "CLOSED_LOSS")
+    .limit(5);
+
+  if (!deals) return [];
+
+  return deals.map((d: any) => {
+    const updated = new Date(d.updated_at);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - updated.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return {
+      id: d.id,
+      title: d.properties?.title || `Deal #${d.id.slice(0, 4)}`,
+      daysInStage: diffDays,
+      stage: d.status,
+    };
+  });
+}

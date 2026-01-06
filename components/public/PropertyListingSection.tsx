@@ -1,12 +1,10 @@
 ﻿"use client";
-
+//property listing section
 import { useEffect, useMemo, useState, useRef, type MouseEvent } from "react";
 import Link from "next/link";
-import { BedDouble, Bath, MapPin, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { toggleCompareId, readCompareIds } from "@/lib/compare-store";
 import { PropertyCard } from "./PropertyCard";
 
 type FilterType =
@@ -36,43 +34,27 @@ type ApiProperty = {
   subdistrict: string | null;
   address_line1: string | null;
   created_at: string;
+  updated_at: string;
   listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
   image_url: string | null;
   location: string | null;
 };
 
 const FILTER_LABELS: Record<FilterType, string> = {
-  ALL: "ทั้งหมด",
-  HOUSE: "บ้าน",
-  CONDO: "คอนโด",
-  OFFICE: "ออฟฟิศ",
-  TOWNHOME: "ทาวน์โฮม",
-  WAREHOUSE: "โกดัง",
-  COMMERCIAL: "อาคารพาณิชย์",
-  LAND: "ที่ดิน",
-  OTHER: "อื่นๆ",
-};
-
-const PROPERTY_TYPE_LABELS: Record<string, string> = {
-  HOUSE: "บ้าน",
-  CONDO: "คอนโด",
-  TOWNHOME: "ทาวน์โฮม",
-  LAND: "ที่ดิน",
-  OFFICE_BUILDING: "ออฟฟิศ",
-  COMMERCIAL_BUILDING: "อาคารพาณิชย์",
-  WAREHOUSE: "โกดัง",
-  OTHER: "อื่นๆ",
+  ALL: "🏡 ทั้งหมด",
+  HOUSE: "🏠 บ้าน",
+  CONDO: "🏢 คอนโด",
+  OFFICE: "👔 ออฟฟิศ",
+  TOWNHOME: "🏡 ทาวน์โฮม",
+  WAREHOUSE: "🏭 โกดัง",
+  COMMERCIAL: "🏪 อาคารพาณิชย์",
+  LAND: "🌳 ที่ดิน",
+  OTHER: "🔹 อื่นๆ",
 };
 
 const OFFICE_TYPES = new Set(["OFFICE_BUILDING"]);
 const COMMERCIAL_TYPES = new Set(["COMMERCIAL_BUILDING"]);
 const WAREHOUSE_TYPES = new Set(["WAREHOUSE"]);
-
-const PRICE_FORMATTER = new Intl.NumberFormat("th-TH", {
-  style: "currency",
-  currency: "THB",
-  maximumFractionDigits: 0,
-});
 
 const LOADING_ITEMS = Array.from({ length: 6 });
 const MAX_VISIBLE = 8;
@@ -91,48 +73,6 @@ function matchesFilter(item: ApiProperty, filter: FilterType) {
     default:
       return pt === filter;
   }
-}
-
-function getTypeLabel(propertyType: string | null) {
-  if (!propertyType) return "อื่นๆ";
-  return PROPERTY_TYPE_LABELS[propertyType] ?? "อื่นๆ";
-}
-
-function getDisplayPrice(property: ApiProperty) {
-  const salePrice = property.price ?? undefined;
-  const rentPrice = property.rental_price ?? undefined;
-
-  let value: number | undefined;
-  let isRent = false;
-
-  if (property.listing_type === "SALE") {
-    value = salePrice;
-  } else if (property.listing_type === "RENT") {
-    value = rentPrice;
-    isRent = true;
-  } else {
-    value = salePrice ?? rentPrice;
-    isRent = !salePrice && !!rentPrice;
-  }
-
-  if (!value) return "สอบถามราคา";
-
-  const formatted = PRICE_FORMATTER.format(value);
-  return isRent ? `${formatted}/เดือน` : formatted;
-}
-
-function getSafeText(value: string | null, fallback: string) {
-  return value && value.trim() ? value : fallback;
-}
-
-function getListingBadge(listingType: ApiProperty["listing_type"]) {
-  if (listingType === "SALE")
-    return { label: "ขาย", className: "bg-emerald-600" };
-  if (listingType === "RENT")
-    return { label: "เช่า", className: "bg-indigo-600" };
-  if (listingType === "SALE_AND_RENT")
-    return { label: "ขาย/เช่า", className: "bg-slate-900" };
-  return null;
 }
 
 // Inside component:
@@ -251,7 +191,7 @@ export function PropertyListingSection() {
 
     return [...items].sort(
       (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
     );
   }, [filter, properties, areaFilter, provinceFilter]);
 
@@ -263,12 +203,6 @@ export function PropertyListingSection() {
   const hasMore = filteredProperties.length > MAX_VISIBLE;
   const resultCount = filteredProperties.length;
 
-  function getAreaProvince(p: ApiProperty) {
-    const parts = [p.popular_area, p.province].filter(
-      (v) => v && v.trim()
-    ) as string[];
-    return parts.length ? parts.join(" • ") : null;
-  }
   return (
     <section
       id="latest-properties"
@@ -427,7 +361,7 @@ export function PropertyListingSection() {
                 className="rounded-3xl border border-slate-100 bg-white overflow-hidden shadow-sm animate-pulse"
               >
                 <div className="h-48 bg-slate-200" />
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-4 ">
                   <div className="h-4 w-24 bg-slate-200 rounded" />
                   <div className="h-6 w-3/4 bg-slate-200 rounded" />
                   <div className="h-4 w-2/3 bg-slate-200 rounded" />

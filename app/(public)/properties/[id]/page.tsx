@@ -255,34 +255,31 @@ export default async function PublicPropertyDetailPage(props: {
               <h2 className="text-2xl font-bold text-slate-900 mb-6">
                 แผนที่ & ทำเลที่ตั้ง
               </h2>
-              <div className="bg-slate-50 rounded-3xl h-[400px] flex items-center justify-center text-slate-400 border border-slate-100 relative overflow-hidden">
+              <div className="bg-slate-50 rounded-3xl p-8 flex flex-col items-center justify-center text-slate-400 border border-slate-100 relative overflow-hidden space-y-4">
                 {data.google_maps_link ? (
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    style={{ border: 0 }}
-                    src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(
-                      data.title + " " + locationParts
-                    )}`} // Note: Requires valid API Key
-                    allowFullScreen
-                    title="Property Location"
-                  />
+                  <>
+                    <div className="bg-white p-4 rounded-full shadow-sm inline-block">
+                      <MapPin className="h-8 w-8 text-blue-500" />
+                    </div>
+                    <p className="text-slate-600 font-medium max-w-md text-center">
+                      ดูตำแหน่งที่ตั้งทรัพย์สินนี้บน Google Maps
+                    </p>
+                    <a
+                      href={data.google_maps_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full font-medium transition-colors cursor-pointer"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      เปิดดูใน Google Maps
+                    </a>
+                  </>
                 ) : (
                   <div className="text-center space-y-2">
                     <div className="bg-white p-4 rounded-full shadow-sm inline-block">
-                      <MapPin className="h-8 w-8 text-blue-300" />
+                      <MapPin className="h-8 w-8 text-slate-300" />
                     </div>
-                    <p>ไม่พบพิกัดแผนที่</p>
-                  </div>
-                )}
-
-                {/* Fallback visual for demo if no link/api key */}
-                {!data.google_maps_link && (
-                  <div className="absolute inset-0 bg-slate-100 flex items-center justify-center z-10">
-                    <span className="text-slate-400">
-                      Map unavailable (No Google Maps Link provided)
-                    </span>
+                    <p>ไม่พบข้อมูลพิกัดแผนที่</p>
                   </div>
                 )}
               </div>

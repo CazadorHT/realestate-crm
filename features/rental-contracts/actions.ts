@@ -1,6 +1,10 @@
 "use server";
 
-import { requireAuthContext, assertAuthenticated, assertStaff } from "@/lib/authz";
+import {
+  requireAuthContext,
+  assertAuthenticated,
+  assertStaff,
+} from "@/lib/authz";
 import {
   contractFormSchema,
   updateContractSchema,
@@ -52,56 +56,76 @@ export async function upsertContractAction(
       .single();
 
     if (dealErr || !deal) return { success: false, message: "Deal not found" };
-    if (!['RENT', 'SALE'].includes(deal.deal_type)) return { success: false, message: "Contracts are allowed only for RENT or SALE deals" };
+    if (!["RENT", "SALE"].includes(deal.deal_type))
+      return {
+        success: false,
+        message: "Contracts are allowed only for RENT or SALE deals",
+      };
 
     // 3) Create or update
-    let result;
+    let data: RentalContract | null = null;
+    let error: any = null;
+
     if (input.id) {
       // Update
-      result = await supabase
+      const updateRes = await supabase
         .from("rental_contracts")
         .update(validated)
         .eq("id", input.id)
         .select()
         .single();
+      data = updateRes.data;
+      error = updateRes.error;
     } else {
       // Create -> auto-generate contract number if not provided
-      const toInsert = { ...validated } as any;
+      const toInsert: any = { ...validated };
       if (!toInsert.contract_number) {
-        toInsert.contract_number = `RC-${new Date().getFullYear()}-${Math.random().toString(36).slice(2,8).toUpperCase()}`;
+        toInsert.contract_number = `RC-${new Date().getFullYear()}-${Math.random()
+          .toString(36)
+          .slice(2, 8)
+          .toUpperCase()}`;
       }
 
-      result = await supabase
+      const insertRes = await supabase
         .from("rental_contracts")
         .insert(toInsert)
         .select()
         .single();
+
+      data = insertRes.data;
+      error = insertRes.error;
     }
 
-    if (result.error) {
+    if (error || !data) {
+      const errMsg = error?.message || "Operation failed";
       // Improve uniqueness error message for duplicate deal
-      if (result.error.message && /unique/.test(result.error.message.toLowerCase())) {
-        return { success: false, message: "A contract already exists for this deal" };
+      if (errMsg && /unique/.test(errMsg.toLowerCase())) {
+        return {
+          success: false,
+          message: "A contract already exists for this deal",
+        };
       }
-      throw new Error(result.error.message);
+      throw new Error(errMsg);
     }
 
     // Log audit
     try {
-      await logAudit({ user: user.id } as any, {
+      // Safe casting for audit helper
+      await logAudit({ supabase, user, role } as any, {
         action: input.id ? "rental_contract.update" : "rental_contract.create",
         entity: "rental_contracts",
-        entityId: result.data.id,
+        entityId: data.id,
         metadata: { dealId: validated.deal_id },
       });
     } catch (e) {
       // ignore audit errors
     }
 
-    return { success: true, data: result.data };
-  } catch (error: any) {
+    return { success: true, data: data };
+  } catch (error: unknown) {
     console.error("Upsert Contract Error:", error);
-    return { success: false, message: error.message };
+    const msg = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, message: msg };
   }
 }
 
@@ -118,12 +142,16 @@ export async function deleteContractAction(id: string) {
       .eq("id", id)
       .single();
 
-    if (fetchErr || !existing) return { success: false, message: "Contract not found" };
+    if (fetchErr || !existing)
+      return { success: false, message: "Contract not found" };
 
-    const { error } = await supabase.from("rental_contracts").delete().eq("id", id);
+    const { error } = await supabase
+      .from("rental_contracts")
+      .delete()
+      .eq("id", id);
     if (error) return { success: false, message: error.message };
 
-    await logAudit({ user: user.id } as any, {
+    await logAudit({ supabase, user, role } as any, {
       action: "rental_contract.delete",
       entity: "rental_contracts",
       entityId: id,
@@ -134,8 +162,9 @@ export async function deleteContractAction(id: string) {
     revalidatePath(`/protected/deals/${existing.deal_id}`);
 
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("deleteContractAction error:", err);
-    return { success: false, message: err.message };
+    const msg = err instanceof Error ? err.message : "An error occurred";
+    return { success: false, message: msg };
   }
 }

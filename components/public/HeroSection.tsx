@@ -1,10 +1,18 @@
 import { HeroTitle } from "@/components/public/HeroTitle";
 import { SmartMatchWizard } from "@/components/public/SmartMatchWizard";
-import { TrendingUp, CheckCircle2, Shield, Clock } from "lucide-react";
+import {
+  TrendingUp,
+  CheckCircle2,
+  Shield,
+  Clock,
+  ArrowRight,
+} from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
   return (
-    <section className="py-40 max-w-screen-2xl mx-auto">
+    <section className="my-20 max-w-screen-2xl mx-auto">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 items-center">
           <div className="space-y-6 animate-in fade-in-0 duration-700 slide-in-from-bottom-4 lg:col-span-2">
@@ -16,9 +24,31 @@ export function HeroSection() {
             <HeroTitle />
 
             <p className="text-xl text-slate-600 leading-relaxed">
-              เราช่วยคุณค้นหาทรัพย์สินในฝันด้วยเทคโนโลยีที่ทันสมัย
-              และทีมงานมืออาชีพที่คอยดูแลคุณตลอดทุกขั้นตอน
+              ฝากขาย-เช่ากับเรา สบายใจกว่าที่เคย เปลี่ยนอสังหาฯ เป็นรายได้ไวขึ้น
+              ด้วยทีมงานมืออาชีพ
             </p>
+
+            <div className="flex flex-wrap gap-4">
+              <Link href="/properties">
+                <Button
+                  size="lg"
+                  className="h-12 px-8 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all animate-in fade-in-0 duration-700 slide-in-from-bottom-4"
+                >
+                  หาพื้นที่ที่ใช่
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+
+              <Link href="#deposit-section"   >
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-12 px-8 text-lg  rounded-xl bg-white/80 hover:bg-white border-slate-200 text-slate-700 hover:text-blue-600 shadow-sm transition-all animate-in fade-in-0 duration-700 slide-in-from-bottom-4"
+                >
+                  ฝากขาย/เช่าทรัพย์
+                </Button>
+              </Link>
+            </div>
 
             <div className="flex flex-wrap gap-6 pt-4">
               <div className="flex items-center gap-2">
@@ -33,7 +63,9 @@ export function HeroSection() {
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-purple-600" />
-                <span className="text-sm text-slate-600">ตอบกลับภายใน 24 ชม.</span>
+                <span className="text-sm text-slate-600">
+                  ตอบกลับภายใน 24 ชม.
+                </span>
               </div>
             </div>
           </div>

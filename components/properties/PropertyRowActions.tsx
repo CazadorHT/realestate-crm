@@ -11,12 +11,22 @@ import {
 import { MoreHorizontal, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { DeletePropertyMenuItem } from "./DeletePropertyMenuItem";
+import { renewPropertyAction } from "@/features/properties/renew-action";
 
 export function PropertyRowActions({ id }: { id: string }) {
   const copyPublicLink = async () => {
     const url = `${window.location.origin}/properties/${id}`;
     await navigator.clipboard.writeText(url);
     toast.success("คัดลอกลิงก์หน้า Public แล้ว");
+  };
+
+  const handleRenew = async () => {
+    const res = await renewPropertyAction(id);
+    if (res.success) {
+      toast.success("ดันประกาศสำเร็จ");
+    } else {
+      toast.error(res.message || "เกิดข้อผิดพลาด");
+    }
   };
 
   return (
@@ -42,9 +52,9 @@ export function PropertyRowActions({ id }: { id: string }) {
 
         <DropdownMenuItem
           className="cursor-pointer text-blue-600 focus:text-blue-700"
-          onSelect={() => {
-            toast.success("ดันประกาศสำเร็จ (Mock)");
-            // In real app, call server action to update updated_at
+          onSelect={(e) => {
+            e.preventDefault();
+            handleRenew();
           }}
         >
           <svg

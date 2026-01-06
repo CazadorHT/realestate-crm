@@ -67,6 +67,12 @@ export function assertStaff(role: UserRole) {
   }
 }
 
+export function assertAdmin(role: UserRole) {
+  if (!isAdmin(role)) {
+    throw new AuthzError("FORBIDDEN", "Forbidden: Admin access only");
+  }
+}
+
 /**
  * Helper สำหรับ server actions ที่ต้อง return รูปแบบ { success:false, message }
  */

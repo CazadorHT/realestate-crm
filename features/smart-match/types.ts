@@ -32,7 +32,7 @@ export interface PropertyMatch {
   transit_station_name?: string;
   transit_type?: string;
   transit_distance_meters?: number;
-  property_type?: string;
+  property_type?: PropertyType;
 }
 
 export interface SearchSession {

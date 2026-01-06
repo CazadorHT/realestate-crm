@@ -952,7 +952,7 @@ export async function getPopularAreasAction() {
   // Allow public access (no auth required)
   const supabase = await createAdminClient();
 
-  const { data, error } = await supabase
+  const { data: allAreas, error } = await supabase
     .from("popular_areas")
     .select("name")
     .order("name");
@@ -962,7 +962,19 @@ export async function getPopularAreasAction() {
     return [];
   }
 
-  return data.map((item) => item.name);
+  // Check which areas actually have active properties
+  const { data: activeProps } = await supabase
+    .from("properties")
+    .select("popular_area")
+    .eq("status", "ACTIVE")
+    .not("popular_area", "is", null);
+
+  const activeSet = new Set((activeProps || []).map((p) => p.popular_area));
+
+  // Return intersection
+  return allAreas
+    .map((item) => item.name)
+    .filter((name) => activeSet.has(name));
 }
 
 /**

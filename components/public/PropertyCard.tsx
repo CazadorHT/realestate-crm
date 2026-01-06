@@ -2,10 +2,19 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { BedDouble, Bath, MapPin, ArrowRight, Scale,Maximize } from "lucide-react";
+import {
+  BedDouble,
+  Bath,
+  MapPin,
+  ArrowRight,
+  Scale,
+  Maximize,
+} from "lucide-react";
 import { useEffect, useState, MouseEvent } from "react";
 import { toggleCompareId, readCompareIds } from "@/lib/compare-store";
 import { Button } from "@/components/ui/button";
+import { formatDistanceToNow } from "date-fns";
+import { th } from "date-fns/locale";
 
 // Re-using types or defining subset
 export type PropertyCardProps = {
@@ -20,6 +29,7 @@ export type PropertyCardProps = {
   popular_area?: string | null;
   province?: string | null;
   created_at: string;
+  updated_at: string;
   listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
   image_url?: string | null;
   location?: string | null;
@@ -28,7 +38,6 @@ export type PropertyCardProps = {
   land_size?: number | null;
   parking?: number | null;
   floor?: number | null;
-  
 };
 
 const PRICE_FORMATTER = new Intl.NumberFormat("th-TH", {
@@ -80,10 +89,10 @@ export function PropertyCard({
     .join(" • ");
 
   return (
-    <div className="group relative isolate rounded-3xl bg-white overflow-hidden shadow-sm transform-gpu will-change-transform transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 before:content-[''] before:absolute before:inset-0 before:rounded-3xl before:ring-1 before:ring-inset before:ring-slate-100 before:pointer-events-none before:z-10">
+    <div className="group relative isolate rounded-3xl bg-white overflow-hidden shadow-sm h-full flex flex-col transform-gpu will-change-transform transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 before:content-[''] before:absolute before:inset-0 before:rounded-3xl before:ring-1 before:ring-inset before:ring-slate-100 before:pointer-events-none before:z-10">
       <Link
         href={`/properties/${property.id}`}
-        className="block focus:outline-none"
+        className="flex flex-col h-full focus:outline-none"
         aria-label={`ดูรายละเอียดทรัพย์: ${property.title}`}
       >
         {/* Image Section */}
@@ -131,7 +140,7 @@ export function PropertyCard({
         </div>
 
         {/* Content Section */}
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 flex-grow">
           <div className="space-y-1">
             <div className="text-sm text-blue-600 font-semibold">
               {getTypeLabel(property.property_type)}
@@ -171,12 +180,42 @@ export function PropertyCard({
         <div className="px-6 pb-6 pt-4 border-t border-slate-100 bg-white/60 backdrop-blur">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <div className="text-xs text-slate-500">ราคา</div>
-              <div className="text-lg font-bold text-blue-600 truncate ">
-                {getDisplayPrice(property)}
-              </div>
+              {property.listing_type === "SALE_AND_RENT" ? (
+                <div className="flex flex-col justify-center">
+                  <div className="text-lg font-bold text-blue-600 truncate leading-tight">
+                    {property.price
+                      ? PRICE_FORMATTER.format(property.price)
+                      : "สอบถามราคา"}
+                  </div>
+                  <div className="text-sm font-medium text-slate-600 truncate leading-tight">
+                    เช่า{" "}
+                    {property.rental_price
+                      ? PRICE_FORMATTER.format(property.rental_price)
+                      : "-"}
+                    /เดือน
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-xs text-slate-500">ราคา</div>
+                  <div className="text-xl font-bold text-blue-600 truncate ">
+                    {getDisplayPrice(property)}
+                  </div>
+                </>
+              )}
             </div>
-            
+            <div className="text-xs text-slate-400 text-right">
+              {property.updated_at &&
+              !isNaN(new Date(property.updated_at).getTime()) ? (
+                <span className="text-slate-600 font-medium bg-slate-100 px-2 py-1 rounded-full">
+                  อัปเดต{" "}
+                  {formatDistanceToNow(new Date(property.updated_at), {
+                    addSuffix: true,
+                    locale: th,
+                  })}
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
       </Link>

@@ -5,7 +5,8 @@ interface PipelineSummaryProps {
   data: PipelineData[];
 }
 
-export function PipelineSummary({ data }: PipelineSummaryProps) {
+export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
+  if (!data) return null;
   const total = data.reduce((acc, curr) => acc + curr.count, 0);
 
   return (

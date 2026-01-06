@@ -30,6 +30,24 @@ export async function getDocumentsByOwner(
   return data;
 }
 
+export async function getAllDocuments(limit = 50) {
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
+
+  const { data, error } = await supabase
+    .from("documents")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Fetch All Documents Error:", error);
+    return [];
+  }
+
+  return data;
+}
+
 // 2. Create Document Record (Metadata)
 // Note: File upload happens on client (or via separate upload action), this records the metadata
 export async function createDocumentRecordAction(input: CreateDocumentInput) {
@@ -57,8 +75,9 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
     // We can rely on router.refresh() on client side.
 
     return { success: true, data };
-  } catch (error: any) {
-    return { success: false, message: error.message };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, message: msg };
   }
 }
 
@@ -102,7 +121,8 @@ export async function deleteDocumentAction(id: string, storagePath: string) {
     if (dbError) throw new Error(dbError.message);
 
     return { success: true };
-  } catch (error: any) {
-    return { success: false, message: error.message };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "An error occurred";
+    return { success: false, message: msg };
   }
 }

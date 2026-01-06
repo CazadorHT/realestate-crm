@@ -57,10 +57,23 @@ export async function GET() {
     // 3) aggregate ตาม (popular_area + province)
     const map = new Map<string, AreaRow>();
 
+    // 0) Fetch valid popular areas
+    const { data: validAreasData } = await supabase
+      .from("popular_areas")
+      .select("name");
+    const validAreaNames = new Set(
+      (validAreasData || []).map((a: any) => a.name)
+    );
+
     for (const p of properties as any[]) {
       const area = (p?.popular_area ?? "").trim();
       const prov = (p?.province ?? "").trim();
       if (!area || !prov) continue;
+
+      // Filter: Must be in valid popular_areas table if data exists
+      if (validAreaNames.size > 0 && !validAreaNames.has(area)) {
+        continue;
+      }
 
       const key = `${area}__${prov}`;
       const cover = coverByPropertyId.get(p.id) ?? null;
@@ -74,7 +87,7 @@ export async function GET() {
         if (!existing.cover && cover) existing.cover = cover;
       }
     }
-   
+
     const result = Array.from(map.values())
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);

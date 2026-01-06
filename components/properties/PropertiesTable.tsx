@@ -35,7 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, Edit3 } from "lucide-react";
 import { DuplicatePropertyButton } from "./DuplicatePropertyButton";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, Download } from "lucide-react";
 
 export interface PropertyTableData {
   id: string;
@@ -139,10 +139,60 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
     return <PropertiesEmptyState />;
   }
 
+
+  const handleExport = () => {
+    // CSV Export Logic
+    const headers = [
+      "ID",
+      "Title",
+      "Type",
+      "Listing Type",
+      "Price",
+      "Rent",
+      "Status",
+      "Leads",
+      "Created At"
+    ];
+
+    const rows = data.map(p => [
+      p.id,
+      p.title.replace(/"/g, '""'), // escape quotes
+      p.property_type,
+      p.listing_type,
+      p.price || 0,
+      p.rental_price || 0,
+      p.status,
+      p.leads_count,
+      p.created_at
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(r => r.map(c => `"${c}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `properties_export_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div className="rounded-md border shadow-sm bg-card">
-      <Table>
-        <TableHeader>
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
+          <Download className="h-4 w-4" /> Export CSV
+        </Button>
+      </div>
+      
+      <div className="rounded-md border shadow-sm bg-card">
+        <Table>
+          <TableHeader>
+  {/* Rest of the table header content ... */}
           <TableRow className="bg-muted/50 hover:bg-muted/50">
             <TableHead className="w-[300px]">
               <SortableHead label="ทรัพย์สิน" sortKey="created_at" />
@@ -414,5 +464,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
         </TableBody>
       </Table>
     </div>
+    </div>
   );
 }
+ 

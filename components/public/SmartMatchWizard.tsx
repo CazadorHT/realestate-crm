@@ -11,13 +11,16 @@ import {
   Mail,
   User,
   ChevronLeft,
+  MessageCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import Link from "next/link";
 import {
   searchPropertiesAction,
   createLeadFromMatchAction,
 } from "@/features/smart-match/actions";
+
 import {
   PropertyMatch,
   SearchPurpose,
@@ -49,9 +52,11 @@ export function SmartMatchWizard() {
         } else {
           // Fallback to defaults
           setPopularAreas(["อ่อนนุช", "บางนา", "ลาดพร้าว", "พระราม 9"]);
+          toast.error("เกิดข้อผิดพลาดในการโหลดข้อมูลพื้นที่");
         }
       } catch (e) {
         setPopularAreas(["อ่อนนุช", "บางนา", "ลาดพร้าว", "พระราม 9"]);
+        toast.error("เกิดข้อผิดพลาดในการโหลดข้อมูลพื้นที่");
       }
     }
     loadAreas();
@@ -87,14 +92,14 @@ export function SmartMatchWizard() {
 
     if (purpose === "RENT") {
       if (budgetRange === "< 1.5 หมื่น") max = 15000;
-      else if (budgetRange === "1.5-3 หมื่น") {
+      else if (budgetRange === "1.5 - 5 หมื่น") {
         min = 15000;
-        max = 30000;
-      } else if (budgetRange === "3-7 หมื่น") {
-        min = 30000;
-        max = 70000;
-      } else if (budgetRange === "> 7 หมื่น") {
-        min = 70000;
+        max = 50000;
+      } else if (budgetRange === "5 - 9 หมื่น") {
+        min = 50000;
+        max = 90000;
+      } else if (budgetRange === "> 9 หมื่น") {
+        min = 90000;
       }
     } else {
       if (budgetRange === "< 3 ล้าน") max = 3000000;
@@ -170,11 +175,11 @@ export function SmartMatchWizard() {
             {step === 1 && (
               <QuizQuestion
                 title="คุณต้องการ ?"
-                options={["ซื้อ", "เช่า", "ลงทุน"]}
+                options={["🛒 ซื้อ", "🔑 เช่า", "📈 ลงทุน"]}
                 onSelect={(val) => {
-                  setPurpose(
-                    val === "ซื้อ" ? "BUY" : val === "เช่า" ? "RENT" : "INVEST"
-                  );
+                  if (val.includes("ซื้อ")) setPurpose("BUY");
+                  else if (val.includes("เช่า")) setPurpose("RENT");
+                  else setPurpose("INVEST");
                   setStep(1.5);
                 }}
               />
@@ -182,13 +187,18 @@ export function SmartMatchWizard() {
             {step === 1.5 && (
               <QuizQuestion
                 title="ประเภทอสังหาฯ ที่คุณต้องการ ?"
-                options={["บ้าน", "คอนโด", "อาคารสำนักงาน", "โฮมออฟฟิศ"]}
+                options={[
+                  "🏠 บ้าน",
+                  "🏢 คอนโด",
+                  "👔 อาคารสำนักงาน",
+                  "🏡 โฮมออฟฟิศ",
+                ]}
                 onSelect={(val) => {
-                  const map: Record<string, PropertyType> = {
-                    บ้าน: "HOUSE",
-                    คอนโด: "CONDO",
-                    อาคารสำนักงาน: "OFFICE_BUILDING",
-                    โฮมออฟฟิศ: "TOWNHOME", // Or specific mapping
+                  const map: Partial<Record<string, PropertyType>> = {
+                    "🏠 บ้าน": "HOUSE",
+                    "🏢 คอนโด": "CONDO",
+                    "👔 อาคารสำนักงาน": "OFFICE_BUILDING",
+                    "🏡 โฮมออฟฟิศ": "TOWNHOME",
                   };
                   setPropertyType(map[val] || "OTHER");
                   setStep(2);
@@ -204,8 +214,13 @@ export function SmartMatchWizard() {
                 }
                 options={
                   purpose === "RENT"
-                    ? ["< 1.5 หมื่น", "1.5-3 หมื่น", "3-7 หมื่น", "> 7 หมื่น"]
-                    : ["< 3 ล้าน", "3-5 ล้าน", "5-10 ล้าน", "> 10 ล้าน"]
+                    ? [
+                        "< 1.5 หมื่น",
+                        "1.5  - 5 หมื่น",
+                        "5 - 9 หมื่น",
+                        "> 9 หมื่น",
+                      ]
+                    : ["< 3 ล้าน", "3 - 5 ล้าน", "5 - 10 ล้าน", "> 10 ล้าน"]
                 }
                 onSelect={(val) => {
                   setBudgetRange(val);
@@ -216,7 +231,7 @@ export function SmartMatchWizard() {
             {step === 2.5 && (
               <QuizQuestion
                 title="ต้องการเน้นใกล้รถไฟฟ้าไหม ?"
-                options={["ใกล้รถไฟฟ้า BTS/MRT", "ไม่เน้นทำเลรถไฟฟ้า"]}
+                options={["🚆 ใกล้รถไฟฟ้า BTS/MRT", "🚫 ไม่เน้นทำเลรถไฟฟ้า"]}
                 onSelect={(val) => {
                   setNearTransit(val.includes("ใกล้รถไฟฟ้า"));
                   setStep(3);
@@ -240,6 +255,7 @@ export function SmartMatchWizard() {
         <ResultsContainer
           matches={matches}
           sessionId={sessionId}
+          purpose={purpose}
           onReset={() => setStep(1)}
         />
       )}
@@ -256,7 +272,9 @@ interface QuizQuestionProps {
 function QuizQuestion({ title, options, onSelect }: QuizQuestionProps) {
   return (
     <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex flex-col h-full max-h-[350px]">
-      <h2 className="text-3xl font-medium md:text-2xl mb-6 text-slate-900">{title}</h2>
+      <h2 className="text-3xl font-medium md:text-2xl mb-6 text-slate-900">
+        {title}
+      </h2>
       <div className="overflow-y-auto pr-2 max-h-[200px] custom-scrollbar">
         <div className="grid grid-cols-2 gap-3 pb-4">
           {options.map((option) => (
@@ -291,10 +309,12 @@ function LoadingState() {
 function ResultsContainer({
   matches,
   sessionId,
+  purpose,
   onReset,
 }: {
   matches: PropertyMatch[];
   sessionId: string;
+  purpose: SearchPurpose;
   onReset: () => void;
 }) {
   const [showForm, setShowForm] = useState(false);
@@ -323,6 +343,7 @@ function ResultsContainer({
       <LeadForm
         match={selectedMatch}
         sessionId={sessionId}
+        isRent={purpose === "RENT"}
         onBack={() => setShowForm(false)}
       />
     );
@@ -341,6 +362,7 @@ function ResultsContainer({
             <ResultCard
               key={match.id}
               match={match}
+              isRent={purpose === "RENT"}
               onSelect={() => {
                 setSelectedMatch(match);
                 setShowForm(true);
@@ -360,7 +382,7 @@ function ResultsContainer({
   );
 }
 
-const PROPERTY_TYPE_NAMES: Record<string, string> = {
+const PROPERTY_TYPE_NAMES: Partial<Record<PropertyType, string>> = {
   CONDO: "คอนโด",
   HOUSE: "บ้าน",
   TOWNHOME: "โฮมออฟฟิศ/ทาวน์โฮม",
@@ -372,98 +394,99 @@ const PROPERTY_TYPE_NAMES: Record<string, string> = {
 
 function ResultCard({
   match,
+  isRent,
   onSelect,
 }: {
   match: PropertyMatch;
+  isRent: boolean;
   onSelect: () => void;
 }) {
   return (
     <div className="border border-slate-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow bg-slate-50/50 p-4">
-      <div className="flex gap-4">
-        <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200">
-          <img
-            src={match.image_url}
-            alt={match.title}
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-start">
-            <h3 className="font-bold text-slate-900 truncate pr-2">
-              {match.title}
-            </h3>
-            <div className="relative group/score">
-              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded cursor-help transition-all hover:bg-blue-100 whitespace-nowrap">
-                คะแนน
-                {" " + match.match_score}
-              </span>
+      <Link href={`/properties/${match.id}`} target="_blank" className="block">
+        <div className="flex gap-4">
+          <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200">
+            <img
+              src={match.image_url}
+              alt={match.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between items-start">
+              <h3 className="font-bold text-slate-900 truncate pr-2 hover:text-blue-600 transition-colors">
+                {match.title}
+              </h3>
+              <div className="relative group/score">
+                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded cursor-help transition-all hover:bg-blue-100 whitespace-nowrap">
+                  คะแนน
+                  {" " + match.match_score}
+                </span>
 
-              {/* Tooltip Breakdown */}
-              {match.score_breakdown && match.score_breakdown.length > 0 && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-3 z-50 opacity-0 invisible group-hover/score:opacity-100 group-hover/score:visible transition-all duration-200 origin-top-right scale-95 group-hover/score:scale-100">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-50 pb-1">
-                    รายละเอียดคะแนน
-                  </div>
-                  <div className="space-y-1.5">
-                    {match.score_breakdown.map((item, i) => (
-                      <div
-                        key={i}
-                        className="flex justify-between items-center text-xs"
-                      >
-                        <span className="text-slate-600">{item.label}</span>
-                        <span className="font-bold text-blue-600">
-                          {item.points > 0 ? `+${item.points}` : item.points}
+                {/* Tooltip Breakdown */}
+                {match.score_breakdown && match.score_breakdown.length > 0 && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-3 z-50 opacity-0 invisible group-hover/score:opacity-100 group-hover/score:visible transition-all duration-200 origin-top-right scale-95 group-hover/score:scale-100">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-50 pb-1">
+                      รายละเอียดคะแนน
+                    </div>
+                    <div className="space-y-1.5">
+                      {match.score_breakdown.map((item, i) => (
+                        <div
+                          key={i}
+                          className="flex justify-between items-center text-xs"
+                        >
+                          <span className="text-slate-600">{item.label}</span>
+                          <span className="font-bold text-blue-600">
+                            {item.points > 0 ? `+${item.points}` : item.points}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="pt-1 mt-1 border-t border-slate-50 flex justify-between items-center font-bold text-xs text-slate-900 uppercase">
+                        <span>รวมสุทธิ</span>
+                        <span className="text-blue-600">
+                          {match.match_score}
                         </span>
                       </div>
-                    ))}
-                    <div className="pt-1 mt-1 border-t border-slate-50 flex justify-between items-center font-bold text-xs text-slate-900 uppercase">
-                      <span>รวมสุทธิ</span>
-                      <span className="text-blue-600">
-                        {match.match_score}
-                      </span>
                     </div>
                   </div>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="text-sm font-bold text-blue-600">
+                ฿ {match.price.toLocaleString()} บาท{isRent ? " / เดือน" : ""}
+              </div>
+              {match.property_type && (
+                <span className="text-[10px] text-slate-400 bg-slate-200/50 px-1.5 py-0.5 rounded uppercase font-bold tracking-tight">
+                  {PROPERTY_TYPE_NAMES[match.property_type] ||
+                    match.property_type}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
+              {(match.bedrooms || match.bathrooms) && (
+                <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium bg-slate-100 px-1.5 py-0.5 rounded">
+                  <Home className="h-3 w-3" />
+                  {match.bedrooms || 0} นอน • {match.bathrooms || 0} น้ำ
+                </div>
+              )}
+              <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium bg-slate-100 px-1.5 py-0.5 rounded">
+                <MapPin className="h-3 w-3" />
+                {match.commute_time} นาทีถึงที่ทำงาน
+              </div>
+              {match.near_transit && match.transit_station_name && (
+                <div className="flex items-center gap-1 text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                  <TrendingUp className="h-3 w-3" />
+                  {match.transit_type || "BTS"} {match.transit_station_name}
+                  {match.transit_distance_meters
+                    ? ` (${match.transit_distance_meters} ม.)`
+                    : ""}
                 </div>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="text-sm font-bold text-blue-600">
-              ฿
-              {match.price >= 1000000
-                ? `${(match.price / 1000000).toFixed(2)} ล้าน`
-                : `${(match.price / 1000).toFixed(0)} พัน`}
-            </div>
-            {match.property_type && (
-              <span className="text-[10px] text-slate-400 bg-slate-200/50 px-1.5 py-0.5 rounded uppercase font-bold tracking-tight">
-                {PROPERTY_TYPE_NAMES[match.property_type] ||
-                  match.property_type}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
-            {(match.bedrooms || match.bathrooms) && (
-              <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium bg-slate-100 px-1.5 py-0.5 rounded">
-                <Home className="h-3 w-3" />
-                {match.bedrooms || 0} นอน • {match.bathrooms || 0} น้ำ
-              </div>
-            )}
-            <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium bg-slate-100 px-1.5 py-0.5 rounded">
-              <MapPin className="h-3 w-3" />
-              {match.commute_time} นาทีถึงที่ทำงาน
-            </div>
-            {match.near_transit && match.transit_station_name && (
-              <div className="flex items-center gap-1 text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                <TrendingUp className="h-3 w-3" />
-                {match.transit_type || "BTS"} {match.transit_station_name}
-                {match.transit_distance_meters
-                  ? ` (${match.transit_distance_meters} ม.)`
-                  : ""}
-              </div>
-            )}
-          </div>
         </div>
-      </div>
+      </Link>
       <div className="mt-4 space-y-1">
         {match.match_reasons.slice(0, 2).map((reason, i) => (
           <div
@@ -489,24 +512,35 @@ function ResultCard({
 function LeadForm({
   match,
   sessionId,
+  isRent,
   onBack,
 }: {
   match: PropertyMatch;
   sessionId: string;
+  isRent: boolean;
   onBack: () => void;
 }) {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
     email: "",
+    lineId: "",
   });
+  const [errors, setErrors] = useState<{ fullName?: boolean; phone?: boolean }>(
+    {}
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName || !formData.phone) {
-      toast.error("กรุณากรอกชื่อและเบอร์โทรศัพท์");
+    const newErrors: { fullName?: boolean; phone?: boolean } = {};
+    if (!formData.fullName) newErrors.fullName = true;
+    if (!formData.phone) newErrors.phone = true;
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
 
@@ -566,7 +600,7 @@ function LeadForm({
       </div>
 
       <div className="bg-slate-50 rounded-xl p-3 mb-6 flex gap-3 border border-slate-100">
-        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200">
+        <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200">
           <img
             src={match.image_url}
             className="w-full h-full object-cover"
@@ -574,65 +608,96 @@ function LeadForm({
           />
         </div>
         <div className="min-w-0">
-          <div className="text-xs font-bold text-slate-900 truncate">
+          <div className="text-md font-bold text-slate-900 truncate">
             {match.title}
           </div>
-          <div className="text-[10px] text-blue-600 font-bold">
-            ฿{(match.price / 1000000).toFixed(2)} ล้าน
+          <div className="text-lg text-blue-600 font-medium">
+            ฿ {match.price.toLocaleString()} บาท{isRent ? " / เดือน" : ""}
           </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label className="text-xs font-medium text-slate-700 ml-1">
-            ชื่อ-นามสกุล *
+          <label
+            className={`text-xs font-medium text-slate-700 ml-1 ${
+              errors.fullName ? "text-red-500" : ""
+            }`}
+          >
+            ชื่อ-นามสกุล <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
             <Input
-              className="pl-10 h-10 border-slate-200 focus:border-blue-500"
+              className={`pl-10 h-10 border-slate-200 focus:border-blue-500 ${
+                errors.fullName ? "border-red-500 focus:ring-red-200" : ""
+              }`}
               placeholder="กรอกชื่อของคุณ"
               value={formData.fullName}
-              onChange={(e) =>
-                setFormData({ ...formData, fullName: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, fullName: e.target.value });
+                if (errors.fullName) setErrors({ ...errors, fullName: false });
+              }}
             />
           </div>
         </div>
 
         <div className="space-y-1">
           <label className="text-xs font-medium text-slate-700 ml-1">
-            เบอร์โทรศัพท์ *
+            เบอร์โทรศัพท์ <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
             <Input
-              className="pl-10 h-10 border-slate-200 focus:border-blue-500"
+              className={`pl-10 h-10 border-slate-200 focus:border-blue-500 ${
+                errors.phone ? "border-red-500 focus:ring-red-200" : ""
+              }`}
               placeholder="08X-XXX-XXXX"
               value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, phone: e.target.value });
+                if (errors.phone) setErrors({ ...errors, phone: false });
+              }}
             />
           </div>
         </div>
 
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-slate-700 ml-1">
-            อีเมล (ถ้ามี)
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-            <Input
-              className="pl-10 h-10 border-slate-200 focus:border-blue-500"
-              placeholder="example@mail.com"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-            />
+        <div className="flex gap-4">
+          <div className="space-y-1 flex-1">
+            <label className="text-xs font-medium text-slate-700 ml-1">
+              อีเมล (ถ้ามี)
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <Input
+                className="pl-10 h-10 border-slate-200 focus:border-blue-500"
+                placeholder="example@mail.com"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+              />
+            </div>
           </div>
+          <div className="space-y-1 flex-1">
+            <label className="text-xs font-medium text-slate-700 ml-1">
+              ไลน์ (ถ้ามี)
+            </label>
+            <div className="relative">
+              <MessageCircle className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <Input
+                className="pl-10 h-10 border-slate-200 focus:border-blue-500"
+                placeholder="ID Line"
+                value={formData.lineId}
+                onChange={(e) =>
+                  setFormData({ ...formData, lineId: e.target.value })
+                }
+              />
+            </div>
+          </div>
+        </div>
+        <div className="text-xs text-slate-500">
+          ข้อมูลส่วนตัวของคุณจะถูกเก็บเป็นความเป็นส่วนตัวและใช้เพื่อส่งข้อมูลและขอนัดชม
         </div>
 
         <Button
