@@ -146,11 +146,11 @@ export function PropertyCard({
               {getTypeLabel(property.property_type)}
             </div>
 
-            <h3 className="text-xl font-bold text-slate-900 line-clamp-2">
+            <h3 className="text-lg font-bold text-slate-900 line-clamp-2">
               {property.title}
             </h3>
 
-            <div className="flex items-center gap-2 text-sm text-slate-500">
+            <div className="flex items-center gap-2 text-xs text-slate-500">
               <MapPin className="h-4 w-4" />
               {getSafeText(areaProvince, "ไม่ระบุทำเล")}
             </div>
@@ -160,7 +160,7 @@ export function PropertyCard({
             {getSafeText(property.description, "ยังไม่มีรายละเอียด")}
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
             <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full border border-slate-200">
               <BedDouble className="h-4 w-4 text-blue-600" />
               {property.bedrooms || "-"} นอน
@@ -220,6 +220,7 @@ export function PropertyCard({
         </div>
       </Link>
     </div>
+    
   );
 }
 

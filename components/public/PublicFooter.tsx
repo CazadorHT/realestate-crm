@@ -1,4 +1,5 @@
 import { Home } from "lucide-react";
+import Link from "next/link";
 
 export function PublicFooter() {
   return (
@@ -51,6 +52,14 @@ export function PublicFooter() {
                 <a href="#" className="hover:text-white transition-colors">
                   ติดต่อเรา
                 </a>
+              </li>
+              <li>
+                <Link
+                  href="/blog"
+                  className="hover:text-white transition-colors"
+                >
+                  บทความ
+                </Link>
               </li>
             </ul>
           </div>

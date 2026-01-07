@@ -60,6 +60,12 @@ export function SidebarNav({ role }: { role: UserRole }) {
       icon: LayoutDashboard,
       active: pathname?.startsWith("/protected/deals") ?? false,
     },
+    {
+      title: "บทความ (Blog)",
+      href: "/protected/blogs",
+      icon: Sparkles,
+      active: pathname?.startsWith("/protected/blogs") ?? false,
+    },
 
     {
       title: "จัดการทำเล (Area)",
