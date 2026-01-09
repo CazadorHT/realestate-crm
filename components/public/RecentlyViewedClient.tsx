@@ -23,6 +23,7 @@ import { FavoriteButton } from "@/components/public/FavoriteButton";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { RecommendedProperty } from "@/features/properties/recommended-actions";
+import { getRecommendedProperties } from "@/features/properties/recommended-actions";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -135,8 +136,18 @@ export function RecentlyViewedClient({
       const recentItems = readRecentProperties();
       if (recentItems.length === 0) {
         // Show recommended properties
-        setItems(recommendedProperties.map(convertToRecentProperty));
-        setShowingRecommended(true);
+        if (recommendedProperties.length > 0) {
+          setItems(recommendedProperties.map(convertToRecentProperty));
+          setShowingRecommended(true);
+        } else {
+          // Provide fallback fetch on mount if needed
+          getRecommendedProperties(10).then((recs) => {
+            if (recs.length > 0) {
+              setItems(recs.map(convertToRecentProperty));
+              setShowingRecommended(true);
+            }
+          });
+        }
       } else {
         setItems(recentItems);
         setShowingRecommended(false);
@@ -145,11 +156,31 @@ export function RecentlyViewedClient({
     }, 100);
     return () => clearTimeout(timer);
 
-    const handleUpdate = () => {
+    const handleUpdate = async () => {
       const updated = readRecentProperties();
       if (updated.length === 0) {
-        setItems(recommendedProperties.map(convertToRecentProperty));
-        setShowingRecommended(true);
+        // Assume we need to switch to recommended
+        // First, clear items or show loading to give immediate feedback
+        setItems([]);
+
+        if (recommendedProperties.length > 0) {
+          setItems(recommendedProperties.map(convertToRecentProperty));
+          setShowingRecommended(true);
+        } else {
+          // Show skeletons while fetching
+          setInitializing(true);
+          try {
+            const freshRecs = await getRecommendedProperties(10);
+            if (freshRecs.length > 0) {
+              setItems(freshRecs.map(convertToRecentProperty));
+              setShowingRecommended(true);
+            }
+          } catch (error) {
+            console.error("Failed to fetch fresh recommendations", error);
+          } finally {
+            setInitializing(false);
+          }
+        }
       } else {
         setItems(updated);
         setShowingRecommended(false);
@@ -159,6 +190,32 @@ export function RecentlyViewedClient({
     window.addEventListener("recent-updated", handleUpdate);
     return () => window.removeEventListener("recent-updated", handleUpdate);
   }, [recommendedProperties]);
+
+  const handleClear = async () => {
+    // 1. Clear Local Storage
+    clearRecentProperties();
+
+    // 2. Immediate UI Feedback
+    setItems([]);
+    setShowingRecommended(true);
+
+    // 3. Load Recommendations
+    if (recommendedProperties.length > 0) {
+      setItems(recommendedProperties.map(convertToRecentProperty));
+    } else {
+      setInitializing(true);
+      try {
+        const freshRecs = await getRecommendedProperties(10);
+        if (freshRecs.length > 0) {
+          setItems(freshRecs.map(convertToRecentProperty));
+        }
+      } catch (error) {
+        console.error("Failed to fetch recommendations on clear", error);
+      } finally {
+        setInitializing(false);
+      }
+    }
+  };
 
   // Drag-to-scroll logic
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -285,7 +342,7 @@ export function RecentlyViewedClient({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => clearRecentProperties()}
+              onClick={handleClear}
               className="text-slate-400 hover:text-red-500 transition-colors rounded-md gap-2"
             >
               <Trash2 className="h-5 w-4" />
