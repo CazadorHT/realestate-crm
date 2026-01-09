@@ -17,31 +17,41 @@ export function PartnerSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchPartners() {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("partners")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
+    try {
+      async function fetchPartners() {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("partners")
+          .select("*")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true });
 
-      if (data) {
-        setPartners(data as Partner[]);
+        if (data) {
+          setPartners(data as Partner[]);
+        }
+        setLoading(false);
       }
+      fetchPartners();
+    } catch (error) {
+      console.error("Error fetching partners:", error);
       setLoading(false);
     }
-    fetchPartners();
   }, []);
 
   // if (loading || partners.length === 0) return null;
-  if (!loading && partners.length === 0) return null;
+  try {
+    if (!loading && partners.length === 0) return null;
+  } catch (error) {
+    console.error("Error fetching partners:", error);
+    setLoading(false);
+  }
 
   return (
     <section className="pt-20 bg-white border-t border-slate-50">
       <div className="max-w-7xl mx-auto px-4">
         {/* --- Header Section (Micro-copy) --- */}
         <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
+          <h2 className="text-2xl md:text-4xl font-semibold text-slate-900 mb-4">
             Our Marketing Network
             <p className="text-base md:text-lg text-slate-500">
               เครือข่ายการโฆษณาของเรา
@@ -65,7 +75,7 @@ export function PartnerSection() {
                       key={idx}
                       className="flex items-center justify-center px-4"
                     >
-                      <Skeleton className="h-16 w-32 md:h-20 md:w-40 rounded-lg bg-slate-100" />
+                      <div className="h-16 w-32 md:h-20 md:w-40 rounded-lg animate-shimmer" />
                     </div>
                   ))
                 : partners.map((partner) => (
@@ -93,7 +103,7 @@ export function PartnerSection() {
                       key={`dup-${idx}`}
                       className="flex items-center justify-center px-4"
                     >
-                      <Skeleton className="h-16 w-32 md:h-20 md:w-40 rounded-lg bg-slate-100" />
+                      <div className="h-16 w-32 md:h-20 md:w-40 rounded-lg animate-shimmer" />
                     </div>
                   ))
                 : partners.map((partner) => (

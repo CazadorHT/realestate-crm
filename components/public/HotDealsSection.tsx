@@ -42,47 +42,79 @@ export function HotDealsSection() {
   if (isEmpty && !isLoading) return null;
 
   return (
-    <section className="py-28 relative overflow-hidden">
-      {/* === PREMIUM BACKGROUND === */}
-      {/* Base Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-rose-50 -z-20" />
+    <section className="py-8 relative overflow-hidden bg-slate-800">
+      {/* === ANIMATED PREMIUM BACKGROUND === */}
 
-      {/* Subtle Grid Pattern Overlay (เพิ่ม Texture ให้ดูแพง) */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] -z-10"></div>
+      {/* Moving Gradient Blobs */}
+      <div
+        className="absolute top-[-10%] left-[-15%] w-[500px] h-[500px] bg-red-600/50 rounded-full mix-blend-screen filter blur-[100px] z-0"
+        style={{ animation: "blob 2s ease-in-out infinite" }}
+      />
+      <div
+        className="absolute left-[70%] top-[50%] w-[500px] h-[500px] bg-orange-600/50 rounded-full mix-blend-screen filter blur-[100px] z-0"
+        style={{
+          animation: "blob-horizontal 2s ease-in-out infinite",
+          marginLeft: "-250px",
+          marginTop: "-250px",
+        }}
+      />
+      <div
+        className="absolute top-[-20%] right-[-10%] w-[400px] h-[400px] bg-orange-500/80 rounded-full mix-blend-screen filter blur-[100px] z-0"
+        style={{
+          animation: "blob-reverse 2.5s ease-in-out infinite",
+          animationDelay: "2s",
+        }}
+      />
+      <div
+        className="absolute bottom-[-10%] left-[5%] w-[600px] h-[600px] bg-fuchsia-600/60 rounded-full mix-blend-screen filter blur-[120px] z-0"
+        style={{
+          animation: "blob-horizontal 3s ease-in-out infinite",
+          animationDelay: "4s",
+        }}
+      />
+      <div
+        className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-rose-500/50 rounded-full mix-blend-screen filter blur-[100px] z-0"
+        style={{
+          animation: "blob-vertical 4s ease-in-out infinite",
+          animationDelay: "4s",
+        }}
+      />
 
-      {/* Richer, Organic Gradient Blobs (แสงฟุ้งที่ดูมีมิติขึ้น) */}
-      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-orange-300/30 via-rose-300/20 to-transparent rounded-full blur-3xl -mr-96 -mt-96 opacity-70" />
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-red-400/20 via-amber-200/30 to-transparent rounded-full blur-3xl -ml-80 -mb-80 opacity-70" />
+      {/* Glassmorphism Overlay Texture */}
+      <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px] z-[1]"></div>
+
+      {/* Subtle Grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:32px_32px] z-[2]"></div>
 
       {/* Decorative Elements */}
-      <div className="absolute top-20 left-10 opacity-10 animate-pulse-slow">
-        <Sparkles className="h-12 w-12 text-orange-500" />
+      <div className="absolute top-20 left-10 opacity-30 animate-pulse-slow z-[3]">
+        <Sparkles className="h-12 w-12 text-white" />
       </div>
 
       <div className="max-w-screen-2xl mx-auto px-4 relative z-10">
         {/* === HEADER SECTION === */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-          <div className="space-y-5 max-w-2xl">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div className="space-y-4 max-w-2xl">
             {/* Badge ที่ดู Modern ขึ้น */}
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white pl-2 pr-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-md transform hover:scale-105 transition-transform">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white pl-2 pr-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/60 transform hover:scale-105 transition-all animate-pulse-scale">
               <div className="bg-white/20 p-1 rounded-full">
                 <Flame className="h-3.5 w-3.5 fill-yellow-200 animate-pulse" />
               </div>
               <span>Flash Sale & Hot Deals</span>
             </div>
 
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.1]">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.1]">
               โอกาสทอง! <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 drop-shadow-sm">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-orange-400 to-amber-400 drop-shadow-sm">
                 ทรัพย์ราคาลดแรงแห่งปี
               </span>
             </h2>
 
-            <div className="flex items-start gap-3 text-slate-700 text-lg">
+            <div className="flex items-start gap-3 text-slate-300 text-base">
               <TrendingDown className="h-6 w-6 text-red-500 mt-1 flex-shrink-0" />
               <p>
                 คัดเฉพาะยูนิตที่{" "}
-                <span className="font-bold text-slate-900 decoration-red-500/30 underline decoration-4 underline-offset-4 rounded-full">
+                <span className="font-bold text-white decoration-red-500/30 underline decoration-4 underline-offset-4 rounded-full">
                   ราคาต่ำกว่าตลาด
                 </span>{" "}
                 และข้อเสนอพิเศษที่มีจำกัด อัปเดตแบบ Real-time
@@ -93,11 +125,11 @@ export function HotDealsSection() {
           <div className="flex gap-3">
             <Button
               asChild
-              className="rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 h-12 shadow-lg hover:shadow-xl transition-all group"
+              className="rounded-full bg-white text-slate-900 hover:bg- font-semibold px-6 h-10 text-sm shadow-lg hover:shadow-xl hover:scale-110 duration-300 hover:brightness-110 hover:shadow-white/20 transition-all group border border-transparent  hover:text-blue-800"
             >
               <Link href="/properties?sortBy=price&sortOrder=asc&filter=hot_deals">
                 ดูดีลทั้งหมด
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1 bg-white/20 rounded-full p-0.5" />
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1 bg-slate-200 group-hover:bg-white hover:brightness-125 rounded-full p-0.5" />
               </Link>
             </Button>
           </div>
@@ -105,16 +137,16 @@ export function HotDealsSection() {
 
         {/* === CARDS SECTION === */}
         {isLoading ? (
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <PropertyCardSkeleton key={i} />
-            ))}
+            <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4 p-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <PropertyCardSkeleton key={i} />
+              ))}
           </div>
         ) : (
           /* Horizontal Scroll on Mobile / Grid on Desktop */
           <div
             ref={scrollRef}
-            className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 overflow-x-auto md:overflow-visible pb-12 md:pb-0 scrollbar-hide snap-x px-2 md:px-0"
+            className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-12 overflow-x-auto md:overflow-visible scrollbar-hide snap-x"
           >
             {properties.slice(0, 4).map((property, index) => (
               <div
@@ -125,15 +157,15 @@ export function HotDealsSection() {
                 <div className="absolute -top-4 -left-4 z-30">
                   <div className="relative">
                     <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
-                    <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0 transition-all duration-300 scale-110">
+                    <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-6 transition-all duration-300 scale-110 ">
                       <Sparkles className="h-6 w-6 fill-yellow-200" />
                     </div>
                   </div>
                 </div>
 
                 {/* Card Wrapper with Premium Glow Effect */}
-                <div className="rounded-[2.5rem] p-1.5 bg-gradient-to-b from-white/80 to-white/40 backdrop-blur-sm shadow-xl shadow-orange-900/5 group-hover:shadow-orange-600/20 hover:-translate-y-2 transition-all duration-500 border border-white/50">
-                  <div className="rounded-[2rem] overflow-hidden">
+                <div className="rounded-[1.5rem] p-2 bg-gradient-to-b from-white/80 to-white/40 backdrop-blur-sm shadow-xl shadow-orange-900/5 group-hover:shadow-orange-600/20 hover:-translate-y-2 transition-all duration-500  ">
+                  <div className="hover:scale-105 transition-all duration-300">
                     <PropertyCard property={property} priority={index === 0} />
                   </div>
                 </div>
@@ -145,7 +177,7 @@ export function HotDealsSection() {
         {/* Small Decorative Footer */}
 
         <div className="mt-16 flex justify-center">
-          <div className="h-1 w-24 bg-gradient-to-r from-transparent via-orange-300 to-transparent rounded-full opacity-50"></div>
+          <div className="h-1 min-w-80 bg-gradient-to-r from-transparent via-orange-300  to-transparent rounded-full opacity-50"></div>
         </div>
       </div>
     </section>

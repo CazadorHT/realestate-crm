@@ -110,7 +110,7 @@ export function PropertyCard({
     .join(" • ");
 
   return (
-    <div className="group relative isolate rounded-3xl bg-white overflow-hidden shadow-sm h-full flex flex-col transform-gpu will-change-transform transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 before:content-[''] before:absolute before:inset-0 before:rounded-3xl before:ring-1 before:ring-inset before:ring-slate-100 before:pointer-events-none before:z-10">
+    <div className="group relative isolate rounded-3xl bg-white overflow-hidden shadow-sm h-full flex flex-col transform-gpu will-change-transform transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2  before:content-[''] before:absolute before:inset-0 before:rounded-3xl  before:ring-inset  before:pointer-events-none before:z-10">
       <Link
         href={`/properties/${property.id}`}
         className="flex flex-col h-full focus:outline-none"
@@ -118,7 +118,7 @@ export function PropertyCard({
       >
         {/* Image Section */}
 
-        <div className="relative h-52 overflow-hidden rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5 ">
+        <div className="relative h-48 overflow-hidden rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5 ">
           {property.image_url ? (
             <Image
               src={property.image_url}
@@ -183,11 +183,11 @@ export function PropertyCard({
         </div>
 
         {/* Content Section */}
-        <div className="p-6 space-y-4 flex-grow">
+        <div className="pt-2 pb-6 px-6 space-y-4 flex-grow min-h-[160px]">
           <div className="space-y-1">
             <div className="flex justify-between items-center mb-3">
               <span
-                className={`text-xs font-bold ${
+                className={`text-xs font-medium ${
                   getTypeColor(property.property_type).text
                 } ${
                   getTypeColor(property.property_type).bg
@@ -196,51 +196,49 @@ export function PropertyCard({
                 {getTypeLabel(property.property_type)}
               </span>
               <div className="flex items-center gap-1 text-stone-500">
-                <MapPin className="h-3 w-3" />
+                <MapPin className="h-3 w-3 text-blue-500" />
                 <span className="text-xs">
                   {getSafeText(areaProvince, "กรุงเทพฯ")}
                 </span>
               </div>
             </div>
-            <h3 className="text-lg font-bold text-slate-800 line-clamp-2 group-hover:text-blue-700 transition-all duration-300 ">
+            <h3 className="text-lg font-medium text-slate-800 line-clamp-2 group-hover:text-blue-800 transition-all duration-300 ease-in-out">
               {property.title}
             </h3>
           </div>
 
-          <p className="text-sm text-slate-500 leading-relaxed line-clamp-3 min-h-[65px]">
-            {getSafeText(property.description, "ยังไม่มีรายละเอียด")}
-          </p>
+         
           {/* Property Specs - ใช้สไตล์ Clean Minimal */}
-          <div className="flex flex-wrap items-center text-xs text-slate-600 gap-4 pt-6">
+          <div className="flex flex-wrap items-center text-xs text-slate-600 gap-4 ">
             <div className="flex items-center gap-1.5 ">
-              <BedDouble className="h-5 w-5 text-slate-600" />
-              <span className="text-sm font-medium text-[#1B263B]">
+              <BedDouble className="h-5 w-5 text-blue-600/70" />
+              <span className="text-sm font-semibold text-slate-600">
                 {property.bedrooms || "-"}
               </span>
             </div>
 
             <div className="flex items-center gap-1.5 ">
-              <Bath className="h-5 w-5 text-slate-600" />
-              <span className="text-sm font-medium text-[#1B263B]">
+              <Bath className="h-5 w-5 text-blue-600/70" />
+              <span className="text-sm font-semibold text-slate-600">
                 {property.bathrooms || "-"}
               </span>
             </div>
 
             <div className="flex items-center gap-1.5 ">
-              <Car className="h-5 w-5 text-slate-600" />
-              <span className="text-sm font-medium text-[#1B263B]">
+              <Car className="h-5 w-5 text-blue-600/70" />
+              <span className="text-sm font-semibold text-slate-600">
                 {property.parking_slots || "-"}
               </span>
             </div>
 
             <div className="flex items-center gap-1.5  ">
-              <Expand className="h-5 w-5 text-slate-600" />
-              <span className="text-sm font-medium text-[#1B263B]  ">
+              <Expand className="h-5 w-5 text-blue-600/70" />
+              <span className="text-sm font-semibold text-slate-600  ">
                 {property.size_sqm || "-"}
                 <small className="text-[12px]">
                   {" "}
                   ม.
-                  <small className="text-[10px] relative top-[-0.2em] ml-0.5">
+                  <small className="text-[10px] font-medium relative top-[-0.2em] ml-0.5">
                     2
                   </small>
                 </small>
@@ -250,7 +248,7 @@ export function PropertyCard({
         </div>
 
         {/* Footer Section */}
-        <div className="px-6 pb-6   pt-4 border-t border-slate-100 bg-white/60 backdrop-blur">
+        <div className="p-6 border-t border-slate-100 bg-white/60 backdrop-blur">
           <div className="flex items-end justify-between gap-4  ">
             <div className="min-w-0 ">
               {property.listing_type === "SALE_AND_RENT" ? (
@@ -263,7 +261,7 @@ export function PropertyCard({
                         <span className="text-xs text-slate-400 font-normal line-through decoration-slate-400/70">
                           {PRICE_FORMATTER.format(property.original_price)}
                         </span>
-                        <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded-md">
+                        <span className="text-[10px] font-semibold bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
                           -
                           {Math.round(
                             ((property.original_price - property.price) /
@@ -273,14 +271,14 @@ export function PropertyCard({
                           %
                         </span>
                       </div>
-                      <div className="text-lg font-bold text-red-600 truncate leading-tight">
+                      <div className="text-lg font-semibold text-red-600 truncate leading-tight">
                         {property.price
                           ? PRICE_FORMATTER.format(property.price)
                           : "สอบถามราคา"}
                       </div>
                     </>
                   ) : (
-                    <div className="text-lg font-bold text-[#1B263B] truncate leading-tight">
+                    <div className="text-lg font-semibold text-[#1B263B] truncate leading-tight">
                       {property.price
                         ? PRICE_FORMATTER.format(property.price)
                         : "สอบถามราคา"}
@@ -291,12 +289,12 @@ export function PropertyCard({
                   property.original_rental_price > property.rental_price ? (
                     <>
                       <div className="flex items-center gap-2 ">
-                        <span className="text-xs text-slate-400 font-normal line-through decoration-slate-400/70">
+                        <span className="text-xs text-slate-400 font-semibold line-through decoration-slate-400/70">
                           {PRICE_FORMATTER.format(
                             property.original_rental_price
                           )}
                         </span>
-                        <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded-md">
+                        <span className="text-[10px] font-semiboldbg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
                           -
                           {Math.round(
                             ((property.original_rental_price -
@@ -307,12 +305,12 @@ export function PropertyCard({
                           %
                         </span>
                       </div>
-                      <div className="text-sm font-medium text-red-600 truncate leading-tight">
+                      <div className="text-sm font-semibold text-red-600 truncate leading-tight">
                         เช่า{" "}
                         {property.rental_price
                           ? PRICE_FORMATTER.format(property.rental_price)
                           : "-"}
-                        <span className="text-xs text-red-400 font-normal">
+                        <span className="text-xs text-red-600 font-normal">
                           /เดือน
                         </span>
                       </div>
@@ -336,7 +334,7 @@ export function PropertyCard({
                   <div className="text-xs text-stone-400 uppercase tracking-tight">
                     ราคาเริ่มต้น
                   </div>
-                  <div className="text-xl font-bold text-[#1B263B] truncate flex items-baseline gap-2">
+                  <div className="text-xl font-semibold text-[#1B263B] truncate flex items-baseline gap-2">
                     {/* SALE or RENT Discount Logic */}
                     {(property.listing_type === "SALE"
                       ? property.original_price
@@ -353,7 +351,7 @@ export function PropertyCard({
                       <>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-400 font-normal line-through decoration-slate-400/70">
+                            <span className="text-xs text-slate-400 font-semibold line-through decoration-slate-400/70">
                               {new Intl.NumberFormat("th-TH", {
                                 style: "currency",
                                 currency: "THB",
@@ -364,7 +362,7 @@ export function PropertyCard({
                                   : property.original_rental_price!
                               )}
                             </span>
-                            <span className="text-xs font-bold text-white bg-red-500 px-1.5 py-0.5 rounded-md">
+                            <span className="text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
                               -
                               {Math.round(
                                 (((property.listing_type === "SALE"
@@ -386,7 +384,7 @@ export function PropertyCard({
                               {getDisplayPrice(property)}
                             </span>
                             {property.listing_type === "RENT" && (
-                              <span className="text-xs text-slate-500 font-normal">
+                              <span className="text-xs text-slate-500 font-semibold">
                                 /เดือน
                               </span>
                             )}
@@ -397,7 +395,7 @@ export function PropertyCard({
                       <>
                         {getDisplayPrice(property)}
                         {property.listing_type === "RENT" && (
-                          <span className="text-xs text-slate-500 font-normal">
+                          <span className="text-xs text-slate-500 font-semibold"> 
                             {" "}
                             /เดือน
                           </span>

@@ -549,6 +549,8 @@ export type Database = {
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
+          wechat_id: string | null
+          whatsapp_id: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -562,6 +564,8 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
+          wechat_id?: string | null
+          whatsapp_id?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -575,6 +579,8 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
+          wechat_id?: string | null
+          whatsapp_id?: string | null
         }
         Relationships: []
       }

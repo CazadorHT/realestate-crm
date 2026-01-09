@@ -23,6 +23,10 @@ import {
 const profileSchema = z.object({
   full_name: z.string().min(1, "กรุณากรอกชื่อ-นามสกุล"),
   phone: z.string().optional(),
+  line_id: z.string().optional(),
+  facebook_url: z.string().optional(),
+  whatsapp_id: z.string().optional(),
+  wechat_id: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -30,6 +34,10 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 interface ProfileInfoFormProps {
   fullName: string | null;
   phone: string | null;
+  line_id: string | null;
+  facebook_url: string | null;
+  whatsapp_id: string | null;
+  wechat_id: string | null;
   email: string | null;
   role: string | null;
 }
@@ -37,6 +45,10 @@ interface ProfileInfoFormProps {
 export function ProfileInfoForm({
   fullName,
   phone,
+  line_id,
+  facebook_url,
+  whatsapp_id,
+  wechat_id,
   email,
   role,
 }: ProfileInfoFormProps) {
@@ -48,6 +60,10 @@ export function ProfileInfoForm({
     defaultValues: {
       full_name: fullName || "",
       phone: phone || "",
+      line_id: line_id || "",
+      facebook_url: facebook_url || "",
+      whatsapp_id: whatsapp_id || "",
+      wechat_id: wechat_id || "",
     },
   });
 
@@ -59,6 +75,12 @@ export function ProfileInfoForm({
       if (values.phone) {
         formData.append("phone", values.phone);
       }
+      if (values.line_id) formData.append("line_id", values.line_id);
+      if (values.facebook_url)
+        formData.append("facebook_url", values.facebook_url);
+      if (values.whatsapp_id)
+        formData.append("whatsapp_id", values.whatsapp_id);
+      if (values.wechat_id) formData.append("wechat_id", values.wechat_id);
 
       const result = await updateProfileAction(formData);
 
@@ -98,7 +120,7 @@ export function ProfileInfoForm({
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>เบอร์โทรศัพท์</FormLabel>
+              <FormLabel>เบอร์โทรศัพท์ (เริ่มต้นด้วย 0)</FormLabel>
               <FormControl>
                 <Input placeholder="0xx-xxx-xxxx" {...field} />
               </FormControl>
@@ -106,6 +128,67 @@ export function ProfileInfoForm({
             </FormItem>
           )}
         />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="line_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Line ID</FormLabel>
+                <FormControl>
+                  <Input placeholder="@yourlineid" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="facebook_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Facebook Link</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="https://facebook.com/username"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="whatsapp_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>WhatsApp (เบอร์โทร)</FormLabel>
+                <FormControl>
+                  <Input placeholder="66xxxxxxxxx" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="wechat_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>WeChat ID</FormLabel>
+                <FormControl>
+                  <Input placeholder="WeChatID" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="space-y-2">
           <Label htmlFor="email" className="text-muted-foreground">

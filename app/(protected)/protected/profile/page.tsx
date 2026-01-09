@@ -67,7 +67,11 @@ export default async function ProfilePage() {
 
           <ProfileInfoForm
             fullName={profile.full_name}
-            phone={(profile as any).phone}
+            phone={profile.phone}
+            line_id={profile.line_id}
+            facebook_url={profile.facebook_url}
+            whatsapp_id={profile.whatsapp_id}
+            wechat_id={profile.wechat_id}
             email={profile.email}
             role={profile.role}
           />

@@ -3,7 +3,6 @@
 @tailwind utilities;
 
 @layer base {
-  
   :root {
     /* Base Background & Foreground */
     --background: 210 40% 98%; /* #F8FAFC */
@@ -84,7 +83,6 @@
     --color-text: 226 232 240;
     --color-text-muted: 148 163 184;
   }
-
 }
 
 @layer base {
@@ -112,21 +110,106 @@
   .animate-shimmer {
     background: linear-gradient(
       90deg,
-      theme('colors.slate.100') 0%,
-      theme('colors.slate.200') 50%,
-      theme('colors.slate.100') 100%
+      theme("colors.slate.100") 0%,
+      theme("colors.slate.200") 50%,
+      theme("colors.slate.100") 100%
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
 
   @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(50px, -100px) scale(1.15);
+    }
+    66% {
+      transform: translate(-40px, 40px) scale(0.9);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+
+  @keyframes blob-reverse {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(-50px, 80px) scale(1.1);
+    }
+    66% {
+      transform: translate(40px, -30px) scale(0.95);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+
+  @keyframes blob-horizontal {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(70px, 20px) scale(1.05);
+    }
+    66% {
+      transform: translate(-70px, -10px) scale(1.1);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+
+  @keyframes blob-vertical {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(15px, -90px) scale(1.12);
+    }
+    66% {
+      transform: translate(-20px, 70px) scale(0.92);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
   }
 
   .mask-linear-fade {
-    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 10%,
+      black 90%,
+      transparent
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 10%,
+      black 90%,
+      transparent
+    );
+  }
+
+  @keyframes pulse-scale {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .animate-pulse-scale {
+    animation: pulse-scale 2s ease-in-out infinite;
   }
 }

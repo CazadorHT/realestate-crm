@@ -145,11 +145,71 @@ const config: Config = {
           from: { transform: "translateX(0)" },
           to: { transform: "translateX(calc(-100% - var(--gap)))" },
         },
+        blob: {
+          "0%": {
+            transform: "translate(0px, 0px) scale(1)",
+          },
+          "33%": {
+            transform: "translate(50px, -100px) scale(1.15)",
+          },
+          "66%": {
+            transform: "translate(-40px, 40px) scale(0.9)",
+          },
+          "100%": {
+            transform: "translate(0px, 0px) scale(1)",
+          },
+        },
+        "blob-reverse": {
+          "0%": {
+            transform: "translate(0px, 0px) scale(1)",
+          },
+          "33%": {
+            transform: "translate(-50px, 80px) scale(1.1)",
+          },
+          "66%": {
+            transform: "translate(40px, -30px) scale(0.95)",
+          },
+          "100%": {
+            transform: "translate(0px, 0px) scale(1)",
+          },
+        },
+        "blob-horizontal": {
+          "0%": {
+            transform: "translate(0px, 0px) scale(1)",
+          },
+          "33%": {
+            transform: "translate(400px, 80px) scale(1.05)",
+          },
+          "66%": {
+            transform: "translate(-800px, -80px) scale(1.1)",
+          },
+          "100%": {
+            transform: "translate(0px, 0px) scale(1)",
+          },
+        },
+        "blob-vertical": {
+          "0%": {
+            transform: "translate(0px, 0px) scale(1)",
+          },
+          "33%": {
+            transform: "translate(15px, -90px) scale(1.12)",
+          },
+          "66%": {
+            transform: "translate(-20px, 70px) scale(0.92)",
+          },
+          "100%": {
+            transform: "translate(0px, 0px) scale(1)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.4s ease-out",
         "accordion-up": "accordion-up 0.4s ease-out",
-        marquee: "marquee 25s linear infinite",
+        marquee: "marquee 50s linear infinite",
+        blob: "blob 2s ease-in-out infinite",
+        "blob-reverse": "blob-reverse 2.5s ease-in-out infinite",
+        "blob-horizontal": "blob-horizontal 5s ease-in-out infinite",
+        "blob-vertical": "blob-vertical 2s ease-in-out infinite",
       },
     },
   },

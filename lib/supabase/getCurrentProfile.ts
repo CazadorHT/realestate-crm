@@ -1,15 +1,8 @@
-// lib/supabase/getCurrentProfile.ts
 import { createClient } from "@/lib/supabase/server";
+import { Database } from "@/lib/database.types";
 
-import { type UserRole } from "@/lib/auth-shared";
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
-export type Profile = {
-  id: string;
-  email: string | null;
-  role: UserRole;
-  avatar_url: string | null;
-  full_name: string | null;
-};
 // ดึงข้อมูลโปรไฟล์ปัจจุบันจาก Supabase Auth และตาราง profiles
 export async function getCurrentProfile(): Promise<Profile | null> {
   const supabase = await createClient();
@@ -30,7 +23,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   // ตารางนี้เราสร้างเองเพื่อเก็บข้อมูลที่แก้ได้ เช่น ชื่อที่เปลี่ยนใหม่, รูปโปรไฟล์ที่อัพโหลดเอง
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, email, role, avatar_url, full_name")
+    .select("*")
     .eq("id", user.id)
     .single();
 
@@ -42,10 +35,18 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     return {
       id: user.id,
       email: user.email ?? null,
-      role: user.user_metadata?.role ?? "USER", // Default to USER for new signups
+      role: (user.user_metadata?.role as any) ?? "USER", // Default to USER for new signups
       avatar_url: user.user_metadata?.avatar_url ?? null, // รูปจาก Google
       full_name:
         user.user_metadata?.full_name ?? user.user_metadata?.name ?? null, // ชื่อจาก Google
+      phone: null,
+      line_id: null,
+      facebook_url: null,
+      whatsapp_id: null,
+      wechat_id: null,
+      other_contact: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
   }
 

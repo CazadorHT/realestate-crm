@@ -2,7 +2,7 @@
 //property listing section
 import { useEffect, useMemo, useState, useRef, type MouseEvent } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
 import { PropertyCard } from "./PropertyCard";
@@ -391,16 +391,37 @@ export function PropertyListingSection() {
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {visibleProperties.map((property, index) => (
-                <div
-                  key={property.id}
-                  data-aos="fade-up"
-                  data-aos-delay={index * 50}
-                >
-                  <PropertyCard property={property} priority={index === 0} />
-                </div>
-              ))}
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+              {visibleProperties.map((property, index) => {
+                const hasDiscount =
+                  (property.original_price &&
+                    property.price &&
+                    property.original_price > property.price) ||
+                  (property.original_rental_price &&
+                    property.rental_price &&
+                    property.original_rental_price > property.rental_price);
+
+                return (
+                  <div
+                    key={property.id}
+                    data-aos="fade-up"
+                    data-aos-delay={index * 50}
+                    className="relative group"
+                  >
+                    {hasDiscount && (
+                      <div className="absolute -top-4 -left-4 z-30">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
+                          <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-6 transition-all duration-300 scale-110 ">
+                            <Sparkles className="h-6 w-6 fill-yellow-200" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <PropertyCard property={property} priority={index === 0} />
+                  </div>
+                );
+              })}
             </div>
 
             <div

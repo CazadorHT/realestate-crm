@@ -109,11 +109,11 @@ export function PopularAreasSection() {
             data-aos="fade-right"
             suppressHydrationWarning
           >
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 text-blue-600 px-4 py-1.5 text-sm font-bold border border-blue-100">
+            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50  text-blue-600 px-4 py-1.5 text-sm font-semibold border border-blue-100">
               <MapPin className="h-4 w-4" />
               ทำเลยอดนิยม
             </div>
-            <h2 className="text-3xl md:text-5xl font-semibold text-slate-900 tracking-tight">
+            <h2 className="text-3xl md:text-5xl font-semibold text-slate-900 ">
               เจาะลึกย่านน่าอยู่{" "}
               <span className="text-blue-600">ซื้อ-ขาย-เช่า</span> ทั่วกรุงเทพฯ
             </h2>
@@ -126,7 +126,7 @@ export function PopularAreasSection() {
 
           <Button
             variant="outline"
-            className="h-12 px-6 rounded-2xl border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-all duration-300 group"
+            className="h-12 px-6 rounded-xl shadow-md border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-all duration-300"
             onClick={() => router.push("/?type=ALL#latest-properties")}
             data-aos="fade-left"
             suppressHydrationWarning
@@ -139,13 +139,13 @@ export function PopularAreasSection() {
         {/* Content Area - Fixed height to prevent layout shift */}
         <div className="min-h-[250px]">
           {isLoading ? (
-            <div className="flex gap-4 overflow-hidden py-12">
+            <div className="flex gap-4 overflow-hidden py-4 px-2">
               {LOADING.map((_, i) => (
                 <div
                   key={i}
-                  className="h-[180px] w-[260px] flex-shrink-0 rounded-[2rem] bg-slate-100 overflow-hidden"
+                  className="h-[180px] w-[260px] flex-shrink-0 rounded-[2rem] overflow-hidden"
                 >
-                  <Skeleton className="h-full w-full" />
+                  <div className="h-full w-full animate-shimmer bg-slate-100" />
                 </div>
               ))}
             </div>
