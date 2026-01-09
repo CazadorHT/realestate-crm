@@ -321,7 +321,7 @@ export function PropertySearchPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {filtered.map((item, i) => (
               <PropertyCard key={item.id} property={item} priority={i < 4} />
             ))}

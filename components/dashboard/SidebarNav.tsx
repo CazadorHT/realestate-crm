@@ -14,6 +14,9 @@ import {
   Shield,
   MapPin,
   FolderOpen,
+  CircleHelp,
+  Globe,
+  LayoutTemplate,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -63,10 +66,21 @@ export function SidebarNav({ role }: { role: UserRole }) {
     {
       title: "บทความ (Blog)",
       href: "/protected/blogs",
-      icon: Sparkles,
+      icon: LayoutTemplate,
       active: pathname?.startsWith("/protected/blogs") ?? false,
     },
-
+    {
+      title: "FAQs",
+      href: "/protected/faqs",
+      icon: CircleHelp,
+      active: pathname?.startsWith("/protected/faqs") ?? false,
+    },
+    {
+      title: "Partners",
+      href: "/protected/partners",
+      icon: Users,
+      active: pathname?.startsWith("/protected/partners") ?? false,
+    },
     {
       title: "จัดการทำเล (Area)",
       href: "/protected/admin/popular-areas",

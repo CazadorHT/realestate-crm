@@ -227,12 +227,13 @@ export default async function PropertiesPage({
       updated_at: p.updated_at,
       created_at: p.created_at,
       popular_area: p.popular_area,
-      // ✅ ใหม่
       closed_lead_name: closedLeadNameMap.get(p.id) || null,
-
+      original_price: p.original_price,
+      original_rental_price: p.original_rental_price,
       is_new: isNew,
     };
   });
+
 
   return (
     <div className="p-6 space-y-6">

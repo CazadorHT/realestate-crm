@@ -103,4 +103,30 @@
   .custom-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-slate-200 rounded-full hover:bg-slate-300;
   }
+
+  /* Hide scrollbar completely */
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      theme('colors.slate.100') 0%,
+      theme('colors.slate.200') 50%,
+      theme('colors.slate.100') 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .mask-linear-fade {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
 }

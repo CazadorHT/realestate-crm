@@ -5,7 +5,9 @@ export function TrustSection() {
     <section id="trust" className="py-20 px-4 bg-white">
       <div className="max-w-7xl mx-auto">
         <div className="text-center space-y-4 mb-16">
-          <h2 className="text-4xl font-bold text-slate-900">ทำไมต้อง PropertyHub</h2>
+          <h2 className="text-4xl font-bold text-slate-900">
+            บริการของเรา <span className="text-blue-600">Real Estate CRM</span>
+          </h2>
           <p className="text-xl text-slate-600">
             เราออกแบบประสบการณ์ให้ “ตัดสินใจง่าย” และ “มั่นใจได้จริง”
           </p>
@@ -16,7 +18,9 @@ export function TrustSection() {
             <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center mb-5">
               <CheckCircle2 className="h-6 w-6 text-green-600" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">ข้อมูลตรวจสอบแล้ว</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              ข้อมูลตรวจสอบแล้ว
+            </h3>
             <p className="text-slate-600 leading-relaxed">
               คัดกรองทรัพย์ก่อนแสดงผล ลดความเสี่ยงจากข้อมูลไม่ครบหรือไม่ตรงปก
             </p>
@@ -26,9 +30,12 @@ export function TrustSection() {
             <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-5">
               <Shield className="h-6 w-6 text-blue-600" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">ปลอดภัยทุกขั้นตอน</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              ปลอดภัยทุกขั้นตอน
+            </h3>
             <p className="text-slate-600 leading-relaxed">
-              ชัดเจนเรื่องเอกสาร เงื่อนไข และขั้นตอนการทำธุรกรรม พร้อมคำแนะนำจากทีมงาน
+              ชัดเจนเรื่องเอกสาร เงื่อนไข และขั้นตอนการทำธุรกรรม
+              พร้อมคำแนะนำจากทีมงาน
             </p>
           </div>
 
@@ -38,7 +45,8 @@ export function TrustSection() {
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-2">ตอบกลับไว</h3>
             <p className="text-slate-600 leading-relaxed">
-              ระบบช่วยคัดกรองความต้องการ และทีมงานติดต่อกลับเพื่อพาคุณไปสู่คำตอบที่เร็วที่สุด
+              ระบบช่วยคัดกรองความต้องการ
+              และทีมงานติดต่อกลับเพื่อพาคุณไปสู่คำตอบที่เร็วที่สุด
             </p>
           </div>
         </div>

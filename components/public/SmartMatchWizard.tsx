@@ -12,6 +12,7 @@ import {
   User,
   ChevronLeft,
   MessageCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ import {
   searchPropertiesAction,
   createLeadFromMatchAction,
 } from "@/features/smart-match/actions";
+import { getTypeColor, getTypeLabel } from "@/lib/property-utils";
 
 import {
   PropertyMatch,
@@ -138,7 +140,7 @@ export function SmartMatchWizard() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100 min-h-[350px] flex flex-col">
+    <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100 h-[450px] flex flex-col">
       {step < 9 ? (
         <>
           <div className="flex justify-between items-center relative ">
@@ -171,11 +173,15 @@ export function SmartMatchWizard() {
             </div>
           </div>
 
-          <div className="relative  flex-1 flex flex-col pt-5 max-h-[350px]">
+          <div className="relative flex-1 flex flex-col pt-5 min-h-0">
             {step === 1 && (
               <QuizQuestion
-                title="คุณต้องการ ?"
-                options={["🛒 ซื้อ", "🔑 เช่า", "📈 ลงทุน"]}
+                title="วันนี้คุณกำลังมองหา..."
+                options={[
+                  "🏠 ซื้อเพื่ออยู่อาศัย",
+                  "🔑 เช่าพักอาศัย",
+                  "📈 ลงทุนอสังหาฯ",
+                ]}
                 onSelect={(val) => {
                   if (val.includes("ซื้อ")) setPurpose("BUY");
                   else if (val.includes("เช่า")) setPurpose("RENT");
@@ -186,7 +192,7 @@ export function SmartMatchWizard() {
             )}
             {step === 1.5 && (
               <QuizQuestion
-                title="ประเภทอสังหาฯ ที่คุณต้องการ ?"
+                title="ที่พักอาศัยแบบไหนที่ตอบโจทย์คุณ?"
                 options={[
                   "🏠 บ้าน",
                   "🏢 คอนโด",
@@ -240,7 +246,7 @@ export function SmartMatchWizard() {
             )}
             {step === 3 && (
               <QuizQuestion
-                title="ทำงานแถวไหน ?"
+                title="ระบุย่านที่คุณต้องการ (เช่น อารีย์, บางนา)"
                 options={popularAreas}
                 onSelect={(val) => {
                   setArea(val);
@@ -249,6 +255,12 @@ export function SmartMatchWizard() {
               />
             )}
             {step === 4 && <LoadingState />}
+          </div>
+          <div className="mt-4 text-xs text-slate-500 text-center ">
+            <p className="flex items-center justify-center">
+              <ShieldCheck className=" w-4 h-4 text-blue-600  mr-2" />
+              ข้อมูลของคุณจะถูกเก็บเป็นความลับตามนโยบาย PDPA"
+            </p>
           </div>
         </>
       ) : (
@@ -271,11 +283,11 @@ interface QuizQuestionProps {
 
 function QuizQuestion({ title, options, onSelect }: QuizQuestionProps) {
   return (
-    <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex flex-col h-full max-h-[350px]">
-      <h2 className="text-3xl font-medium md:text-2xl mb-6 text-slate-900">
+    <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex flex-col h-full">
+      <h2 className="text-3xl font-medium md:text-2xl mb-6 text-slate-900 flex-shrink-0">
         {title}
       </h2>
-      <div className="overflow-y-auto pr-2 max-h-[200px] custom-scrollbar">
+      <div className="overflow-y-auto pr-2 flex-1 custom-scrollbar">
         <div className="grid grid-cols-2 gap-3 pb-4">
           {options.map((option) => (
             <button
@@ -300,7 +312,7 @@ function LoadingState() {
         กำลังวิเคราะห์ข้อมูล...
       </div>
       <p className="text-sm text-slate-500 mt-2">
-        ระบบกำลังค้นหาทรัพย์สินจากฐานข้อมูลจริง
+        ระบบกำลังจับคู่บ้านที่ตรงใจคุณจาก 10,000+ รายการ...
       </p>
     </div>
   );
@@ -324,7 +336,7 @@ function ResultsContainer({
 
   if (matches.length === 0) {
     return (
-      <div className="text-center py-12 flex-1 flex flex-col justify-center">
+      <div className="text-center py-12 flex-1 flex flex-col justify-center ">
         <h3 className="text-xl font-bold text-slate-900 mb-2">
           ไม่พบทรัพย์สินที่ตรงเป๊ะ
         </h3>
@@ -350,13 +362,13 @@ function ResultsContainer({
   }
 
   return (
-    <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex-1">
-      <div className="bg-green-50 text-green-700 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-4 border border-green-200">
+    <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex-1 flex flex-col min-h-0">
+      <div className="bg-green-50 text-green-700 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-4 border border-green-200 flex-shrink-0">
         <span className="text-lg">🏆</span>
         พบ {matches.length} ทรัพย์สินที่เหมาะกับคุณ
       </div>
 
-      <div className="overflow-y-auto pr-2 max-h-[480px] custom-scrollbar mb-4">
+      <div className="overflow-y-auto pr-2 flex-1 custom-scrollbar mb-4">
         <div className="space-y-6 pb-2">
           {matches.map((match) => (
             <ResultCard
@@ -374,7 +386,7 @@ function ResultsContainer({
 
       <button
         onClick={onReset}
-        className="w-full mt-8 text-sm text-slate-500 hover:text-blue-600 transition-colors"
+        className="w-full mt-auto text-sm text-slate-500 hover:text-blue-600 transition-colors flex-shrink-0 pt-4"
       >
         ← ค้นหาใหม่อีกครั้ง
       </button>
@@ -383,9 +395,9 @@ function ResultsContainer({
 }
 
 const PROPERTY_TYPE_NAMES: Partial<Record<PropertyType, string>> = {
-  CONDO: "คอนโด",
-  HOUSE: "บ้าน",
-  TOWNHOME: "โฮมออฟฟิศ/ทาวน์โฮม",
+  CONDO: "คอนโดมิเนียมทำเลดี",
+  HOUSE: "บ้านเดี่ยว/บ้านแฝด",
+  TOWNHOME: "ทาวน์โฮม/โฮมออฟฟิศ",
   OFFICE_BUILDING: "อาคารสำนักงาน",
   LAND: "ที่ดิน",
   WAREHOUSE: "โกดัง",
@@ -419,8 +431,8 @@ function ResultCard({
               </h3>
               <div className="relative group/score">
                 <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded cursor-help transition-all hover:bg-blue-100 whitespace-nowrap">
-                  คะแนน
-                  {" " + match.match_score}
+                  ตรงใจคุณ
+                  {" " + match.match_score + "%"}
                 </span>
 
                 {/* Tooltip Breakdown */}
@@ -444,7 +456,7 @@ function ResultCard({
                       <div className="pt-1 mt-1 border-t border-slate-50 flex justify-between items-center font-bold text-xs text-slate-900 uppercase">
                         <span>รวมสุทธิ</span>
                         <span className="text-blue-600">
-                          {match.match_score}
+                          {match.match_score} %
                         </span>
                       </div>
                     </div>
@@ -452,14 +464,19 @@ function ResultCard({
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center justify-between  gap-2 mt-1">
               <div className="text-sm font-bold text-blue-600">
                 ฿ {match.price.toLocaleString()} บาท{isRent ? " / เดือน" : ""}
               </div>
               {match.property_type && (
-                <span className="text-[10px] text-slate-400 bg-slate-200/50 px-1.5 py-0.5 rounded uppercase font-bold tracking-tight">
-                  {PROPERTY_TYPE_NAMES[match.property_type] ||
-                    match.property_type}
+                <span
+                  className={`text-xs font-bold ${
+                    getTypeColor(match.property_type).text
+                  } ${
+                    getTypeColor(match.property_type).bg
+                  } px-2 py-0.5 rounded-full uppercase tracking-wide`}
+                >
+                  {getTypeLabel(match.property_type)}
                 </span>
               )}
             </div>
@@ -470,7 +487,7 @@ function ResultCard({
                   {match.bedrooms || 0} นอน • {match.bathrooms || 0} น้ำ
                 </div>
               )}
-              <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium bg-slate-100 px-1.5 py-0.5 rounded">
+              <div className="flex items-center gap-1 text-[10px] text-green-700 font-bold bg-green-50 border border-green-200 px-2 py-1 rounded-md">
                 <MapPin className="h-3 w-3" />
                 {match.commute_time} นาทีถึงที่ทำงาน
               </div>
@@ -503,7 +520,7 @@ function ResultCard({
         onClick={onSelect}
         className="w-full mt-4 h-9 text-xs bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
       >
-        นัดชมทรัพย์นี้
+        สนใจนัดชม/สอบถามข้อมูล
       </Button>
     </div>
   );
@@ -593,9 +610,12 @@ function LeadForm({
       </button>
 
       <div className="mb-6">
-        <h3 className="text-xl font-bold text-slate-900">ระบุข้อมูลติดต่อ</h3>
+        <h3 className="text-xl font-bold text-slate-900">
+          รับข้อมูลเชิงลึกและนัดชมห้องจริง
+        </h3>
         <p className="text-sm text-slate-500">
-          เพื่อนัดชมทรัพย์และรับคำปรึกษาฟรี
+          เจ้าหน้าที่ผู้เชี่ยวชาญจะติดต่อกลับเพื่อดูแลคุณโดยเฉพาะ
+          (ไม่มีค่าใช้จ่าย)
         </p>
       </div>
 
@@ -705,7 +725,9 @@ function LeadForm({
           disabled={isSubmitting}
           className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg mt-4"
         >
-          {isSubmitting ? "กำลังส่งข้อมูล..." : "ส่งข้อมูลและขอนัดชม"}
+          {isSubmitting
+            ? "กำลังส่งข้อมูล..."
+            : "ยืนยันเพื่อรับสิทธิ์นัดชมทรัพย์"}
         </Button>
       </form>
     </div>

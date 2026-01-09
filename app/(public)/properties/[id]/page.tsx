@@ -17,15 +17,14 @@ export default async function PublicPropertyDetailPage(props: {
 }) {
   const { id } = await Promise.resolve(props.params);
 
-  if (!id || !UUID_RE.test(id)) notFound();
+  // Relax UUID check: if it's not a UUID, assume it's a slug or slug-UUID combination
+  // const UUID_RE = ... (already defined above) but let's just attempt fetch.
 
   const supabase = createAdminClient();
 
-  // Fetch with images & agent info
-  const { data, error } = await supabase
-    .from("properties")
-    .select(
-      `
+  // Try to find by ID (primary) or Slug (secondary)
+  let query = supabase.from("properties").select(
+    `
         *,
         property_images (
           id,
@@ -39,9 +38,17 @@ export default async function PublicPropertyDetailPage(props: {
            avatar_url
         )
       `
-    )
-    .eq("id", id)
-    .maybeSingle();
+  );
+
+  if (UUID_RE.test(id)) {
+    query = query.eq("id", id);
+  } else {
+    // Determine if we should split slug (case: some-title-UUID) or just direct slug match
+    // Ideally, we just check 'slug' column
+    query = query.eq("slug", id);
+  }
+
+  const { data, error } = await query.maybeSingle();
 
   if (error || !data) notFound();
 
@@ -77,8 +84,6 @@ export default async function PublicPropertyDetailPage(props: {
 
   return (
     <main className="min-h-screen bg-white pb-20 font-sans">
-      <PublicNav />
-
       {/* 1. Header & Breadcrumb */}
       <div className="pt-24  bg-white sticky top-0 z-30 opacity-95 backdrop-blur-sm shadow-sm md:shadow-none md:static">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -118,33 +123,74 @@ export default async function PublicPropertyDetailPage(props: {
               </div>
 
               <div className="flex flex-col md:items-end">
-                <div className="text-2xl md:text-3xl font-extrabold text-blue-700">
-                  {/* If RENT, show rental_price. If SALE/SALE_AND_RENT, show price (main). */}
-                  {data.listing_type === "RENT"
-                    ? data.rental_price
-                      ? formatPrice(data.rental_price)
-                      : "สอบถามราคา"
-                    : data.price
-                    ? formatPrice(data.price)
-                    : "สอบถามราคา"}
+                <div className="text-2xl md:text-3xl font-extrabold text-blue-700 flex flex-col items-end">
+                  {/* Discount Logic Display */}
+                  {(() => {
+                    const isRent = data.listing_type === "RENT";
+                    const currentPrice = isRent
+                      ? data.rental_price ?? 0
+                      : data.price ?? 0;
+                    const originalPrice = data.original_price ?? 0;
+                    const hasDiscount = originalPrice > currentPrice;
 
-                  {(data.listing_type === "RENT" ||
-                    data.listing_type === "SALE_AND_RENT") &&
-                    // Show /month if we just showed a rental price OR if we showed a sale price but want to indicate rent is separate?
-                    // Actually for "RENT" only, we just showed rental_price, so append /month
-                    data.listing_type === "RENT" &&
-                    data.rental_price && (
-                      <span className="text-base font-normal text-slate-500 ml-1">
-                        /เดือน
-                      </span>
-                    )}
+                    if (hasDiscount) {
+                      return (
+                        <div className="flex flex-col items-end">
+                          <span className="text-sm text-slate-400 line-through decoration-slate-400/70 font-normal">
+                            {formatPrice(originalPrice)}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full animate-pulse">
+                              ลด{" "}
+                              {Math.round(
+                                ((originalPrice - currentPrice) /
+                                  originalPrice) *
+                                  100
+                              )}
+                              %
+                            </span>
+                            <span className="text-red-600">
+                              {formatPrice(currentPrice)}
+                              {isRent && (
+                                <span className="text-lg text-slate-500 font-normal ml-1">
+                                  /เดือน
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <>
+                        <div className="flex items-baseline">
+                          {data.listing_type === "RENT"
+                            ? data.rental_price
+                              ? formatPrice(data.rental_price)
+                              : "สอบถามราคา"
+                            : data.price
+                            ? formatPrice(data.price)
+                            : "สอบถามราคา"}
+                          {(data.listing_type === "RENT" ||
+                            data.listing_type === "SALE_AND_RENT") &&
+                            data.listing_type === "RENT" &&
+                            data.rental_price && (
+                              <span className="text-base font-normal text-slate-500 ml-1">
+                                /เดือน
+                              </span>
+                            )}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
-                {data.rental_price && data.listing_type === "SALE_AND_RENT" && (
-                  <div className="text-lg text-slate-500 font-medium">
-                    เช่า {formatPrice(data.rental_price)}/เดือน
-                  </div>
-                )}
               </div>
+              {data.rental_price && data.listing_type === "SALE_AND_RENT" && (
+                <div className="text-lg text-slate-500 font-medium">
+                  เช่า {formatPrice(data.rental_price)}/เดือน
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -163,7 +209,98 @@ export default async function PublicPropertyDetailPage(props: {
             image_url: images.find((i: any) => i.is_cover)?.image_url || null,
             province: data.province,
             popular_area: data.popular_area,
-            price_text: data.price ? formatPrice(data.price) : "",
+            price_text: (() => {
+              // SALE_AND_RENT - Show both prices
+              if (data.listing_type === "SALE_AND_RENT") {
+                const parts = [];
+
+                // Sale price
+                const hasSaleDiscount =
+                  data.original_price &&
+                  data.price &&
+                  data.original_price > data.price;
+                if (hasSaleDiscount) {
+                  const discountPercent = Math.round(
+                    ((data.original_price! - data.price!) /
+                      data.original_price!) *
+                      100
+                  );
+                  parts.push(
+                    `฿${data.original_price!.toLocaleString()} (-${discountPercent}%)`
+                  );
+                } else if (data.price) {
+                  parts.push(formatPrice(data.price));
+                } else if (data.original_price) {
+                  parts.push(formatPrice(data.original_price));
+                }
+
+                // Rental price
+                const hasRentDiscount =
+                  data.original_rental_price &&
+                  data.rental_price &&
+                  data.original_rental_price > data.rental_price;
+                if (hasRentDiscount) {
+                  const discountPercent = Math.round(
+                    ((data.original_rental_price! - data.rental_price!) /
+                      data.original_rental_price!) *
+                      100
+                  );
+                  parts.push(
+                    `฿${data.original_rental_price!.toLocaleString()}/ด (-${discountPercent}%)`
+                  );
+                } else if (data.rental_price) {
+                  parts.push(`${formatPrice(data.rental_price)}/ด`);
+                } else if (data.original_rental_price) {
+                  parts.push(`${formatPrice(data.original_rental_price)}/ด`);
+                }
+
+                return parts.filter(Boolean).join(" | ");
+              }
+
+              // Sale price logic
+              if (data.listing_type === "SALE") {
+                const hasDiscount =
+                  data.original_price &&
+                  data.price &&
+                  data.original_price > data.price;
+                if (hasDiscount) {
+                  const discountPercent = Math.round(
+                    ((data.original_price! - data.price!) /
+                      data.original_price!) *
+                      100
+                  );
+                  return `฿${data.original_price!.toLocaleString()} (-${discountPercent}%)`;
+                } else if (data.price) {
+                  return formatPrice(data.price);
+                } else if (data.original_price) {
+                  return formatPrice(data.original_price);
+                }
+              }
+
+              // Rent price logic
+              if (data.listing_type === "RENT") {
+                const hasDiscount =
+                  data.original_rental_price &&
+                  data.rental_price &&
+                  data.original_rental_price > data.rental_price;
+                if (hasDiscount) {
+                  const discountPercent = Math.round(
+                    ((data.original_rental_price! - data.rental_price!) /
+                      data.original_rental_price!) *
+                      100
+                  );
+                  return `฿${data.original_rental_price!.toLocaleString()}/ด (-${discountPercent}%)`;
+                } else if (data.rental_price) {
+                  return `${formatPrice(data.rental_price)}/ด`;
+                } else if (data.original_rental_price) {
+                  return `${formatPrice(data.original_rental_price)}/ด`;
+                }
+              }
+              return "";
+            })(),
+            property_type: data.property_type,
+            listing_type: data.listing_type,
+            slug: data.slug,
           }}
         />
 
@@ -304,14 +441,18 @@ export default async function PublicPropertyDetailPage(props: {
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const { id } = await Promise.resolve(params);
 
-  if (!id || !UUID_RE.test(id)) return { title: "ไม่พบทรัพย์" };
+  // if (!id || !UUID_RE.test(id)) return { title: "ไม่พบทรัพย์" }; // Relaxed for slug
 
   const supabase = createAdminClient();
-  const { data } = await supabase
-    .from("properties")
-    .select("title, description")
-    .eq("id", id)
-    .maybeSingle();
+  let query = supabase.from("properties").select("title, description");
+
+  if (UUID_RE.test(id)) {
+    query = query.eq("id", id);
+  } else {
+    query = query.eq("slug", id);
+  }
+
+  const { data } = await query.maybeSingle();
 
   if (!data) return { title: "ไม่พบทรัพย์" };
 

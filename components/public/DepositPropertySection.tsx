@@ -222,7 +222,10 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
                   <SelectItem value="HOUSE">บ้านเดี่ยว (House)</SelectItem>
                   <SelectItem value="TOWNHOME">ทาวน์โฮม (Townhome)</SelectItem>
                   <SelectItem value="LAND">ที่ดิน (Land)</SelectItem>
-                  <SelectItem value="COMMERCIAL">อาคารพาณิชย์</SelectItem>
+                  <SelectItem value="COMMERCIAL">
+                    อาคารพาณิชย์/สำนักงาน
+                  </SelectItem>
+                  <SelectItem value="FACTORY">โรงงาน/โกดัง</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

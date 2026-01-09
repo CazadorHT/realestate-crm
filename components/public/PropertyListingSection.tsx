@@ -6,6 +6,9 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
 import { PropertyCard } from "./PropertyCard";
+import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 type FilterType =
   | "ALL"
@@ -38,6 +41,8 @@ type ApiProperty = {
   listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
   image_url: string | null;
   location: string | null;
+  original_price: number | null;
+  original_rental_price: number | null;
 };
 
 const FILTER_LABELS: Record<FilterType, string> = {
@@ -56,8 +61,8 @@ const OFFICE_TYPES = new Set(["OFFICE_BUILDING"]);
 const COMMERCIAL_TYPES = new Set(["COMMERCIAL_BUILDING"]);
 const WAREHOUSE_TYPES = new Set(["WAREHOUSE"]);
 
-const LOADING_ITEMS = Array.from({ length: 6 });
 const MAX_VISIBLE = 8;
+const LOADING_ITEMS = Array.from({ length: MAX_VISIBLE });
 
 function matchesFilter(item: ApiProperty, filter: FilterType) {
   if (filter === "ALL") return true;
@@ -122,6 +127,21 @@ export function PropertyListingSection() {
     }
   };
   // -- End Drag Logic --
+
+  // Initialize AOS
+  useEffect(() => {
+    // Delay AOS init to prevent hydration mismatch
+    const timer = setTimeout(() => {
+      AOS.init({
+        duration: 600,
+        easing: "ease-out-cubic",
+        once: false,
+        mirror: false,
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -210,13 +230,16 @@ export function PropertyListingSection() {
     >
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10">
-          <div className="space-y-3">
+          <div className="space-y-3" data-aos="fade-right">
             <h2 className="text-4xl font-bold text-slate-900">
-              แสดงทรัพย์จากดาต้าทั้งหมด
+              ประกาศ{" "}
+              <span className="font-semibold text-blue-600">ขาย-เช่า</span>{" "}
+              อสังหาฯ ล่าสุดที่น่าสนใจ
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl">
-              เลือกประเภททรัพย์ที่ต้องการ แล้วดูรายการแบบเรียงจากใหม่สุด
-              พร้อมรายละเอียดครบถ้วนในรูปแบบการ์ด
+              รวบรวมประกาศ ซื้อ-ขาย-เช่า บ้านและคอนโดจากทั่วประเทศ
+              ตรวจสอบข้อมูลแล้ว 100%
+              พร้อมให้คุณเลือกชมย่านที่ใช่ในงบประมาณที่กำหนด
             </p>
             <div className="flex flex-wrap items-center gap-3">
               {!isLoading && !error && (
@@ -236,7 +259,10 @@ export function PropertyListingSection() {
           </div>
 
           {/* เลือกประเภททรัพย์ (Scrollable with Arrows) */}
-          <div className="w-full lg:w-auto flex flex-wrap items-center gap-6 text-sm">
+          <div
+            className="w-full lg:w-auto flex flex-wrap items-center gap-6 text-sm"
+            data-aos="fade-left"
+          >
             {(areaFilter || provinceFilter) && (
               <div className="flex  items-center gap-2 text-sm">
                 <span className="text-slate-500">ทำเล:</span>
@@ -354,27 +380,9 @@ export function PropertyListingSection() {
             </div>
           </div>
         ) : isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {LOADING_ITEMS.map((_, index) => (
-              <div
-                key={index}
-                className="rounded-3xl border border-slate-100 bg-white overflow-hidden shadow-sm animate-pulse"
-              >
-                <div className="h-48 bg-slate-200" />
-                <div className="p-6 space-y-4 ">
-                  <div className="h-4 w-24 bg-slate-200 rounded" />
-                  <div className="h-6 w-3/4 bg-slate-200 rounded" />
-                  <div className="h-4 w-2/3 bg-slate-200 rounded" />
-                  <div className="flex gap-2">
-                    <div className="h-6 w-20 bg-slate-200 rounded-full" />
-                    <div className="h-6 w-20 bg-slate-200 rounded-full" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="h-6 w-24 bg-slate-200 rounded" />
-                    <div className="h-10 w-28 bg-slate-200 rounded-full" />
-                  </div>
-                </div>
-              </div>
+              <PropertyCardSkeleton key={index} />
             ))}
           </div>
         ) : filteredProperties.length === 0 ? (
@@ -385,15 +393,21 @@ export function PropertyListingSection() {
           <div className="space-y-8">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {visibleProperties.map((property, index) => (
-                <PropertyCard
+                <div
                   key={property.id}
-                  property={property}
-                  priority={index === 0}
-                />
+                  data-aos="fade-up"
+                  data-aos-delay={index * 50}
+                >
+                  <PropertyCard property={property} priority={index === 0} />
+                </div>
               ))}
             </div>
 
-            <div className="flex justify-center">
+            <div
+              className="flex justify-center"
+              data-aos="fade-up"
+              data-aos-delay="400"
+            >
               <Button
                 asChild
                 variant="outline"

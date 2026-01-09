@@ -11,14 +11,19 @@ type PropertyRow = {
   rental_price: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
-  size_sqm: number | null; // Added
+  size_sqm: number | null;
+  parking_slots: number | null;
+  floor: number | null;
   created_at: string;
+  updated_at: string;
   listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
   province: string | null;
   district: string | null;
   subdistrict: string | null;
   address_line1: string | null;
   popular_area: string | null;
+  original_price: number | null;
+  original_rental_price: number | null;
 
   property_images?: Array<{
     image_url: string;
@@ -62,29 +67,35 @@ export async function GET(request: Request) {
     .from("properties")
     .select(
       `
-        id,
-        title,
-        description,
-        property_type,
-        price,
-        rental_price,
-        bedrooms,
-        bathrooms,
-        size_sqm,
-        created_at,
-        listing_type,
-        popular_area,
-        province,
-        district,
-        subdistrict,
-        address_line1,
-        property_images (
-          image_url,
-          is_cover,
-          sort_order
-        )
-      `
+      id,
+      title,
+      description,
+      property_type,
+      price,
+      rental_price,
+      original_price,
+      original_rental_price,
+      bedrooms,
+      bathrooms,
+      size_sqm,
+      parking_slots,
+      floor,
+      created_at,
+      updated_at,
+      listing_type,
+      popular_area,
+      province,
+      district,
+      subdistrict,
+      address_line1,
+      property_images (
+        image_url,
+        is_cover,
+        sort_order
+      )
+    `
     )
+
     .eq("status", "ACTIVE");
 
   if (idsParam) {
@@ -92,6 +103,13 @@ export async function GET(request: Request) {
     if (ids.length > 0) {
       query = query.in("id", ids);
     }
+  } else if (searchParams.get("filter") === "hot_deals") {
+    // Hot Deals: Fetch items that HAVE an original price (Sale OR Rent)
+    // We will filter for actual "Price Drop" in JS to avoid complex RPC
+    query = query
+      .or("original_price.not.is.null,original_rental_price.not.is.null")
+      .order("updated_at", { ascending: false })
+      .limit(30);
   } else {
     query = query.order("created_at", { ascending: false }).limit(60);
   }
@@ -105,29 +123,78 @@ export async function GET(request: Request) {
     );
   }
 
-  const items = (data ?? []).map((row) => {
-    const typedRow = row as PropertyRow;
-    return {
-      id: typedRow.id,
-      title: typedRow.title,
-      description: typedRow.description,
-      property_type: typedRow.property_type,
-      price: typedRow.price,
-      rental_price: typedRow.rental_price,
-      bedrooms: typedRow.bedrooms,
-      bathrooms: typedRow.bathrooms,
-      size_sqm: typedRow.size_sqm,
-      created_at: typedRow.created_at,
-      listing_type: typedRow.listing_type,
-      popular_area: typedRow.popular_area,
-      province: typedRow.province,
-      district: typedRow.district,
-      subdistrict: typedRow.subdistrict,
-      address_line1: typedRow.address_line1,
-      image_url: pickCoverImage(typedRow.property_images),
-      location: buildLocation(typedRow),
-    };
-  });
+  const items = (data ?? [])
+    .map((row) => {
+      const typedRow = row as PropertyRow;
+      return {
+        id: typedRow.id,
+        title: typedRow.title,
+        description: typedRow.description,
+        property_type: typedRow.property_type,
+        price: typedRow.price,
+        rental_price: typedRow.rental_price,
+        original_price: typedRow.original_price,
+        original_rental_price: typedRow.original_rental_price,
+        bedrooms: typedRow.bedrooms,
+        bathrooms: typedRow.bathrooms,
+        size_sqm: typedRow.size_sqm,
+        parking_slots: typedRow.parking_slots,
+        floor: typedRow.floor,
+        created_at: typedRow.created_at,
+        updated_at: typedRow.updated_at,
+        listing_type: typedRow.listing_type,
+        popular_area: typedRow.popular_area,
+        province: typedRow.province,
+        district: typedRow.district,
+        subdistrict: typedRow.subdistrict,
+        address_line1: typedRow.address_line1,
+        image_url: pickCoverImage(typedRow.property_images),
+        location: buildLocation(typedRow),
+      };
+    })
+    .filter((item) => {
+      // If filtering for hot deals, strictly ensure Current Price < Original Price
+      if (searchParams.get("filter") === "hot_deals") {
+        const isSaleDrop =
+          (item.listing_type === "SALE" ||
+            item.listing_type === "SALE_AND_RENT") &&
+          item.original_price &&
+          item.price &&
+          item.price < item.original_price;
+
+        const isRentDrop =
+          (item.listing_type === "RENT" ||
+            item.listing_type === "SALE_AND_RENT") &&
+          item.original_rental_price &&
+          item.rental_price &&
+          item.rental_price < item.original_rental_price;
+
+        const hasDiscount = isSaleDrop || isRentDrop;
+
+        // Debug logging
+        if (
+          !hasDiscount &&
+          (item.original_price || item.original_rental_price)
+        ) {
+          console.log("🚫 Property excluded from Hot Deals:", {
+            id: item.id,
+            title: item.title,
+            listing_type: item.listing_type,
+            price: item.price,
+            original_price: item.original_price,
+            rental_price: item.rental_price,
+            original_rental_price: item.original_rental_price,
+            isSaleDrop,
+            isRentDrop,
+          });
+        }
+
+        return hasDiscount;
+      }
+      return true;
+    });
+
+  console.log(`🔥 Hot Deals: Found ${items.length} properties with discounts`);
 
   return NextResponse.json(items);
 }

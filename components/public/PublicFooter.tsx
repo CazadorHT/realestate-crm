@@ -9,7 +9,7 @@ export function PublicFooter() {
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-white">
               <Home className="h-6 w-6" />
-              <span className="text-xl font-bold">PropertyHub</span>
+              <span className="text-xl font-bold">Real Estate CRM</span>
             </div>
             <p className="text-sm">แพลตฟอร์มอสังหาริมทรัพย์ที่คุณไว้วางใจ</p>
           </div>
@@ -87,7 +87,7 @@ export function PublicFooter() {
         </div>
 
         <div className="border-t border-slate-700 pt-8 text-center text-sm">
-          © 2025 PropertyHub. All rights reserved.
+          © 2025 Real Estate CRM. All rights reserved.
         </div>
       </div>
     </footer>

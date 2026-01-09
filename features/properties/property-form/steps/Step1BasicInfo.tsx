@@ -28,9 +28,10 @@ export function Step1BasicInfo({
   setIsQuickInfoOpen,
 }: Step1Props) {
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <section className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100/60 space-y-8">
-        <div className="space-y-5">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ">
+      <section className=" bg-white  rounded-2xl shadow-sm border border-slate-100/60  grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ">
+      {/* Section : Listing Type */}
+        <div className="space-y-5 shadow-xl p-4 rounded-xl  ">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 p-2 rounded-lg shadow-md shadow-blue-100">
               <TrendingUp className="h-5 w-5 text-white" />
@@ -49,16 +50,16 @@ export function Step1BasicInfo({
             control={form.control}
             name="listing_type"
             render={({ field }) => (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
                 {LISTING_TYPE_ORDER.map((type) => (
                   <button
                     key={type}
                     type="button"
                     onClick={() => field.onChange(type)}
-                    className={`p-4 rounded-xl border transition-all duration-300 text-left relative group flex items-center gap-4 ${
+                    className={`p-2 rounded-xl border transition-all duration-300 text-left relative group flex items-center gap-2 ${
                       field.value === type
                         ? "border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-100"
-                        : "border-slate-100 bg-slate-50 hover:border-blue-200 hover:bg-white hover:shadow-md"
+                        : "border-slate-100 bg-slate-50 hover:border-blue-200 hover:bg-white hover:shadow-md shadow-md"
                     }`}
                   >
                     <div
@@ -112,8 +113,8 @@ export function Step1BasicInfo({
           />
           <FormMessage className="text-red-500 text-xs font-medium" />
         </div>
-
-        <div className="space-y-6 pt-6 border-t border-slate-50">
+{/* Section : Property Type */}
+        <div className="border-t border-slate-50 lg:col-span-2 px-4 shadow-xl  rounded-xl p-4 ">
           <div className="flex items-center gap-3">
             <div className="bg-emerald-500 p-2 rounded-lg shadow-md shadow-emerald-50">
               <Home className="h-5 w-5 text-white" />
@@ -132,7 +133,7 @@ export function Step1BasicInfo({
             control={form.control}
             name="property_type"
             render={({ field }) => (
-              <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
                 {PROPERTY_TYPE_ORDER.map((type) => (
                   <button
                     key={type}
@@ -141,13 +142,13 @@ export function Step1BasicInfo({
                       field.onChange(type);
                       setIsQuickInfoOpen(true);
                     }}
-                    className={`h-[44px] px-2 rounded-lg border transition-all duration-300 flex items-center justify-center group ${
+                    className={`rounded-lg border transition-all duration-300 flex items-center justify-center group ${
                       field.value === type
-                        ? "border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-100"
-                        : "border-slate-100 bg-slate-50 text-slate-500 hover:border-blue-200 hover:bg-white hover:text-blue-600"
+                        ? "border-blue-600 bg-blue-600 text-white shadow-xl shadow-blue-100"
+                        : "border-slate-100 bg-slate-50 text-slate-500 shadow-md hover:border-blue-200 hover:bg-white hover:text-blue-600"
                     }`}
                   >
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-center truncate w-full">
+                    <span className="text-sm font-medium uppercase tracking-wider text-center truncate w-full py-5">
                       {PROPERTY_TYPE_LABELS[type]}
                     </span>
                   </button>
@@ -160,7 +161,7 @@ export function Step1BasicInfo({
 
         {/* Quick Info Section */}
         {isQuickInfoOpen && (
-          <div className="pt-2">
+          <div className="pt-2 lg:col-span-3">
             <QuickInfoSection
               form={form}
               popularAreas={popularAreas}

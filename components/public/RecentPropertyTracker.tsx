@@ -13,6 +13,9 @@ export function RecentPropertyTracker({
     province?: string | null;
     popular_area?: string | null;
     price_text?: string | null;
+    property_type?: string | null;
+    listing_type?: string | null;
+    slug?: string | null;
   };
 }) {
   useEffect(() => {

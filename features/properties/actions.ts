@@ -356,6 +356,8 @@ export async function createPropertyAction(
       .from("properties")
       .insert({
         ...propertyData,
+        original_price: propertyData.original_price, // Force include
+        original_rental_price: propertyData.original_rental_price,
         created_by: user.id,
         slug: seoData.slug,
         meta_title: seoData.metaTitle,
@@ -367,7 +369,6 @@ export async function createPropertyAction(
       .single();
 
     if (error) {
-      console.error("Property creation error:", error);
       return { success: false, message: error.message };
     }
 
@@ -552,6 +553,10 @@ export async function updatePropertyAction(
       .from("properties")
       .update({
         ...propertyData,
+        price: propertyData.price, // Force include (allow null)
+        rental_price: propertyData.rental_price, // Force include (allow null)
+        original_price: propertyData.original_price, // Force include
+        original_rental_price: propertyData.original_rental_price,
         slug: seoData.slug,
         meta_title: seoData.metaTitle,
         meta_description: seoData.metaDescription,

@@ -5,11 +5,14 @@ export type RecentProperty = {
   price_text?: string | null;
   province?: string | null;
   popular_area?: string | null;
+  property_type?: string | null;
+  listing_type?: string | null;
+  slug?: string | null;
   ts: number;
 };
 
 const KEY = "recent_properties_v1";
-const MAX = 8;
+const MAX = 10;
 
 export function addRecentProperty(item: Omit<RecentProperty, "ts">) {
   if (typeof window === "undefined") return;

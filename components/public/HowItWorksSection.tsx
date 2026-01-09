@@ -44,7 +44,7 @@ const STEPS: StepItem[] = [
     step: "2",
     icon: MapPin,
     title: "นัดชมทรัพย์",
-    desc: "Agent ของเราจะติดต่อกลับภายใน 24 ชม. จัดนัดชมพร้อมให้คำปรึกษาฟรี",
+    desc: "ทีมงานผู้เชี่ยวชาญจะติดต่อกลับภายใน 24 ชม. จัดนัดชมพร้อมให้คำปรึกษาฟรี",
     tone: "purple",
   },
   {
@@ -58,7 +58,9 @@ const STEPS: StepItem[] = [
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="py-20 px-4">
+    <section id="how-it-works" className="py-24 px-4 bg-slate-50 relative">
+      {/* Dot Pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] -z-10" />
       <div className="max-w-7xl mx-auto">
         <div className="text-center space-y-4 mb-16">
           <h2 className="text-4xl font-bold text-slate-900">วิธีการทำงาน</h2>

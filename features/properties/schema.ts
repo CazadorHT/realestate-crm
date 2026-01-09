@@ -27,8 +27,10 @@ export const FormSchema = z
     }),
     status: z.enum(PROPERTY_STATUS_ENUM).default("DRAFT"),
 
-    price: z.coerce.number().optional(),
-    rental_price: z.coerce.number().optional(),
+    price: z.coerce.number().optional().nullable(),
+    original_price: z.coerce.number().optional(),
+    rental_price: z.coerce.number().optional().nullable(),
+    original_rental_price: z.coerce.number().optional(),
 
     bedrooms: z.coerce.number().optional(),
     bathrooms: z.coerce.number().optional(),
@@ -79,9 +81,9 @@ export const FormSchema = z
     is_pet_friendly: z.boolean().default(false),
   })
   .superRefine((data, ctx) => {
-    const priceMissing = data.price === undefined || Number.isNaN(data.price);
+    const priceMissing = data.original_price === undefined || Number.isNaN(data.original_price);
     const rentMissing =
-      data.rental_price === undefined || Number.isNaN(data.rental_price);
+      data.original_rental_price === undefined || Number.isNaN(data.original_rental_price);
     // Cross-field validation: price required for SALE, rental_price required for RENT
     if (data.listing_type === "SALE" && priceMissing) {
       ctx.addIssue({

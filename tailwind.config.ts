@@ -7,6 +7,25 @@ const config: Config = {
     "./components/**/*.{ts,tsx,js,jsx}",
     "./features/**/*.{ts,tsx,js,jsx}",
   ],
+  safelist: [
+    // Property type badge colors - ensure all dynamic colors are compiled
+    "text-blue-700",
+    "bg-blue-50",
+    "text-purple-700",
+    "bg-purple-50",
+    "text-orange-700",
+    "bg-orange-50",
+    "text-sky-700",
+    "bg-sky-50",
+    "text-yellow-700",
+    "bg-yellow-50",
+    "text-green-700",
+    "bg-green-50",
+    "text-indigo-700",
+    "bg-indigo-50",
+    "text-slate-700",
+    "bg-slate-50",
+  ],
   theme: {
     extend: {
       colors: {
@@ -112,6 +131,25 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-prompt)", "var(--font-noto-thai)", "sans-serif"],
         display: ["var(--font-prompt)", "sans-serif"],
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(calc(-100% - var(--gap)))" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.4s ease-out",
+        "accordion-up": "accordion-up 0.4s ease-out",
+        marquee: "marquee 25s linear infinite",
       },
     },
   },

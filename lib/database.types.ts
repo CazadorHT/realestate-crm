@@ -251,6 +251,39 @@ export type Database = {
           },
         ]
       }
+      faqs: {
+        Row: {
+          answer: string
+          category: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          question: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          question: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          question?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lead_activities: {
         Row: {
           activity_type: Database["public"]["Enums"]["lead_activity_type"]
@@ -452,6 +485,39 @@ export type Database = {
         }
         Relationships: []
       }
+      partners: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          logo_url: string
+          name: string
+          sort_order: number | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          logo_url: string
+          name: string
+          sort_order?: number | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string
+          name?: string
+          sort_order?: number | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       popular_areas: {
         Row: {
           created_at: string
@@ -543,6 +609,8 @@ export type Database = {
           meta_keywords: string[] | null
           meta_title: string | null
           near_transit: boolean | null
+          original_price: number | null
+          original_rental_price: number | null
           owner_id: string | null
           parking_slots: number | null
           popular_area: string | null
@@ -594,6 +662,8 @@ export type Database = {
           meta_keywords?: string[] | null
           meta_title?: string | null
           near_transit?: boolean | null
+          original_price?: number | null
+          original_rental_price?: number | null
           owner_id?: string | null
           parking_slots?: number | null
           popular_area?: string | null
@@ -645,6 +715,8 @@ export type Database = {
           meta_keywords?: string[] | null
           meta_title?: string | null
           near_transit?: boolean | null
+          original_price?: number | null
+          original_rental_price?: number | null
           owner_id?: string | null
           parking_slots?: number | null
           popular_area?: string | null

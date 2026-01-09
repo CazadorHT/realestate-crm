@@ -26,7 +26,7 @@ export function CTASection() {
             variant="outline"
             className="text-lg px-8 py-6 border-2"
           >
-            ติดต่อ Agent
+            ปรึกษาทีมงาน
           </Button>
         </div>
       </div>

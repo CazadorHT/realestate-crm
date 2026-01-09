@@ -43,7 +43,7 @@ export function QuickInfoSection({
 
   return (
     <div
-      className={`animate-in fade-in slide-in-from-top-4 duration-500 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-3xl border-2 space-y-6 ${
+      className={`animate-in fade-in slide-in-from-top-4 duration-500 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-3xl border-2 space-y-6   ${
         hasTitleError ? "border-red-200 bg-red-50/30" : "border-blue-200"
       }`}
     >
