@@ -29,6 +29,7 @@ import {
   Sparkles,
   Info,
   PawPrint,
+  ShieldCheck,
 } from "lucide-react";
 // จัดการ header section
 function SectionHeader({
@@ -172,7 +173,7 @@ export function Step2Details({ form, mode }: Step2Props) {
     mode === ("read" as any);
 
   const showSale = listingType === "SALE" || listingType === "SALE_AND_RENT";
-  const showRent = listingType === "RENT";
+  const showRent = listingType === "RENT" || listingType === "SALE_AND_RENT";
 
   // State for showing discount fields
   const [showSaleDiscount, setShowSaleDiscount] = React.useState(false);
@@ -254,184 +255,235 @@ export function Step2Details({ form, mode }: Step2Props) {
           <Separator className="bg-slate-200/70" />
         </CardHeader>
 
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-6">
-            {/* Sale */}
+        <CardContent>
+          <div className="space-y-8">
+            {/* ================= SALE ZONE ================= */}
             {showSale && (
-              <>
-                {/* Warning: Invalid Discount */}
-                {showSaleDiscount &&
-                  saleOriginal &&
-                  salePrice &&
-                  saleOriginal <= salePrice && (
-                    <>
+              <div className="space-y-4">
+                {showSale && showRent && (
+                  <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                    <div className="h-6 w-1 bg-rose-500 rounded-full" />
+                    <h4 className="text-sm font-bold text-slate-800">
+                      ข้อมูลการขาย (For Sale)
+                    </h4>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-6">
+                  {/* Warning: Invalid Discount */}
+                  {showSaleDiscount &&
+                    saleOriginal &&
+                    salePrice &&
+                    saleOriginal <= salePrice && (
+                      <>
+                        <div className="col-span-full rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+                          <div className="flex items-start gap-2 text-amber-800">
+                            <Info className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="font-bold">⚠️ ราคาไม่ถูกต้อง</p>
+                              <p className="text-xs mt-1">
+                                <span className="font-semibold">ราคาเต็ม</span>{" "}
+                                ต้อง
+                                <span className="font-bold underline">
+                                  มากกว่า
+                                </span>
+                                <span className="font-semibold">
+                                  ราคาหลังลด
+                                </span>{" "}
+                                เพื่อให้เกิดส่วนลด
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                  {/* Step 1: ราคาเดิม (Original) */}
+                  <div className="lg:col-span-3">
+                    <UnitNumberField
+                      label="ราคาตั้งขาย (เต็ม)"
+                      name="original_price"
+                      control={form.control}
+                      placeholder="0"
+                      suffix="฿"
+                      disabled={isReadOnly}
+                      emphasize
+                      description="📌 กรอกอันนี้ก่อน - ราคาเดิมที่ยังไม่ลด"
+                    />
+                  </div>
+
+                  {/* Step 2: Toggle หรือ ราคาลด */}
+                  <div className="lg:col-span-3">
+                    {!showSaleDiscount ? (
+                      <div className="flex items-end h-full pt-6">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowSaleDiscount(true)}
+                          disabled={isReadOnly}
+                          className="h-11 w-full gap-2 border-dashed border-2 border-blue-300 bg-blue-50/50 hover:bg-blue-100 text-blue-700 font-bold"
+                        >
+                          <TrendingDown className="h-4 w-4" />
+                          มีราคาลด? คลิกเพื่อกรอก
+                        </Button>
+                      </div>
+                    ) : (
+                      <UnitNumberField
+                        label="ราคาตั้งขาย (หลังลด)"
+                        name="price"
+                        control={form.control}
+                        placeholder="ระบุราคาที่ต้องการขาย"
+                        suffix="฿"
+                        disabled={isReadOnly}
+                        emphasize
+                        description="ราคาขายปัจจุบันที่แสดงหน้าเว็บ"
+                        labelHint={
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowSaleDiscount(false);
+                              // ลบค่า price ออกจาก database (เซตเป็น null)
+                              form.setValue("price", null);
+                            }}
+                            className="text-[10px] text-slate-400 hover:text-red-600 underline"
+                          >
+                            ยกเลิก
+                          </button>
+                        }
+                      />
+                    )}
+                  </div>
+
+                  {/* Maintenance fee */}
+                  <div className="lg:col-span-3">
+                    <UnitNumberField
+                      label="ค่าส่วนกลาง"
+                      name="maintenance_fee"
+                      control={form.control}
+                      placeholder="0"
+                      suffix="฿ / ปี"
+                      disabled={isReadOnly}
+                      description="ช่วยให้ลูกค้าประเมินค่าใช้จ่ายรวมได้ง่ายขึ้น"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Separator if both active */}
+            {showSale && showRent && <Separator className="bg-slate-200" />}
+
+            {/* ================= RENT ZONE ================= */}
+            {showRent && (
+              <div className="space-y-4">
+                {showSale && showRent && (
+                  <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                    <div className="h-6 w-1 bg-orange-500 rounded-full" />
+                    <h4 className="text-sm font-bold text-slate-800">
+                      ข้อมูลการเช่า (For Rent)
+                    </h4>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-6">
+                  {/* Warning: Invalid Rent Discount */}
+                  {showRentDiscount &&
+                    rentOriginal &&
+                    rentPrice &&
+                    rentOriginal <= rentPrice && (
                       <div className="col-span-full rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-3 text-sm">
                         <div className="flex items-start gap-2 text-amber-800">
                           <Info className="h-5 w-5 mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="font-bold">⚠️ ราคาไม่ถูกต้อง</p>
+                            <p className="font-bold">⚠️ ค่าเช่าไม่ถูกต้อง</p>
                             <p className="text-xs mt-1">
-                              <span className="font-semibold">ราคาเต็ม</span>{" "}
+                              <span className="font-semibold">ค่าเช่าเต็ม</span>{" "}
                               ต้อง
                               <span className="font-bold underline">
                                 มากกว่า
                               </span>
-                              <span className="font-semibold">ราคาหลังลด</span>{" "}
+                              <span className="font-semibold">
+                                ค่าเช่าหลังลด
+                              </span>{" "}
                               เพื่อให้เกิดส่วนลด
                             </p>
                           </div>
                         </div>
                       </div>
-                    </>
-                  )}
-                {/* Step 1: ราคาเดิม (Original) */}
-                <UnitNumberField
-                  label="ราคาตั้งขาย (เต็ม)"
-                  name="original_price"
-                  control={form.control}
-                  placeholder="0"
-                  suffix="฿"
-                  disabled={isReadOnly}
-                  emphasize
-                  description="📌 กรอกอันนี้ก่อน - ราคาเดิมที่ยังไม่ลด"
-                />
+                    )}
 
-                {/* Step 2: Toggle หรือ ราคาลด */}
-                {!showSaleDiscount ? (
-                  <div className="flex items-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowSaleDiscount(true)}
+                  {/* Step 1: ค่าเช่าเดิม (Original) */}
+                  <div className="lg:col-span-3">
+                    <UnitNumberField
+                      label="ค่าเช่าต่อเดือน (เต็ม)"
+                      name="original_rental_price"
+                      control={form.control}
+                      placeholder="ระบุราคาที่ต้องการเช่า"
+                      suffix="฿ / ด."
                       disabled={isReadOnly}
-                      className="h-11 w-full gap-2 border-dashed border-2 border-blue-300 bg-blue-50/50 hover:bg-blue-100 text-blue-700 font-bold"
-                    >
-                      <TrendingDown className="h-4 w-4" />
-                      มีราคาลด? คลิกเพื่อกรอก
-                    </Button>
+                      emphasize
+                      description="📌 กรอกอันนี้ก่อน - ค่าเช่าเดิมที่ยังไม่ลด"
+                    />
                   </div>
-                ) : (
-                  <UnitNumberField
-                    label="ราคาตั้งขาย (หลังลด)"
-                    name="price"
-                    control={form.control}
-                    placeholder="ระบุราคาที่ต้องการขาย"
-                    suffix="฿"
-                    disabled={isReadOnly}
-                    emphasize
-                    description="ราคาขายปัจจุบันที่แสดงหน้าเว็บ"
-                    labelHint={
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowSaleDiscount(false);
-                          // ลบค่า price ออกจาก database (เซตเป็น null)
-                          form.setValue("price", null);
-                        }}
-                        className="text-[10px] text-slate-400 hover:text-red-600 underline"
-                      >
-                        ยกเลิก
-                      </button>
-                    }
-                  />
-                )}
-              </>
-            )}
 
-            {/* Rent */}
-            {showRent && (
-              <>
-                {/* Warning: Invalid Rent Discount */}
-                {showRentDiscount &&
-                  rentOriginal &&
-                  rentPrice &&
-                  rentOriginal <= rentPrice && (
-                    <div className="col-span-full -mt-3 rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-3 text-sm">
-                      <div className="flex items-start gap-2 text-amber-800">
-                        <Info className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold">⚠️ ค่าเช่าไม่ถูกต้อง</p>
-                          <p className="text-xs mt-1">
-                            <span className="font-semibold">ค่าเช่าเต็ม</span>{" "}
-                            ต้อง
-                            <span className="font-bold underline">มากกว่า</span>
-                            <span className="font-semibold">
-                              ค่าเช่าหลังลด
-                            </span>{" "}
-                            เพื่อให้เกิดส่วนลด
-                          </p>
-                        </div>
+                  {/* Step 2: Toggle หรือ ค่าเช่าลด */}
+                  <div className="lg:col-span-3">
+                    {!showRentDiscount ? (
+                      <div className="flex items-end h-full pt-6">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowRentDiscount(true)}
+                          disabled={isReadOnly}
+                          className="h-11 w-full gap-2 border-dashed border-2 border-orange-300 bg-orange-50/50 hover:bg-orange-100 text-orange-700 font-bold"
+                        >
+                          <TrendingDown className="h-4 w-4" />
+                          มีค่าเช่าลด? คลิกเพื่อกรอก
+                        </Button>
                       </div>
-                    </div>
-                  )}
-                {/* Step 1: ค่าเช่าเดิม (Original) */}
-                <UnitNumberField
-                  label="ค่าเช่าต่อเดือน (เต็ม)"
-                  name="original_rental_price"
-                  control={form.control}
-                  placeholder="ระบุราคาที่ต้องการเช่า"
-                  suffix="฿ / ด."
-                  disabled={isReadOnly}
-                  emphasize
-                  description="📌 กรอกอันนี้ก่อน - ค่าเช่าเดิมที่ยังไม่ลด"
-                />
-
-                {/* Step 2: Toggle หรือ ค่าเช่าลด */}
-                {!showRentDiscount ? (
-                  <div className="flex items-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowRentDiscount(true)}
-                      disabled={isReadOnly}
-                      className="h-11 w-full gap-2 border-dashed border-2 border-orange-300 bg-orange-50/50 hover:bg-orange-100 text-orange-700 font-bold"
-                    >
-                      <TrendingDown className="h-4 w-4" />
-                      มีค่าเช่าลด? คลิกเพื่อกรอก
-                    </Button>
+                    ) : (
+                      <UnitNumberField
+                        label="ค่าเช่าต่อเดือน (หลังลด)"
+                        name="rental_price"
+                        control={form.control}
+                        placeholder="ระบุราคาที่ต้องการเช่า"
+                        suffix="฿ / ด."
+                        disabled={isReadOnly}
+                        emphasize
+                        description="ค่าเช่าปัจจุบันที่แสดงหน้าเว็บ"
+                        labelHint={
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowRentDiscount(false);
+                              // ลบค่า rental_price ออกจาก database (เซตเป็น undefined)
+                              form.setValue("rental_price", null);
+                            }}
+                            className="text-[10px] text-slate-400 hover:text-red-600 underline"
+                          >
+                            ยกเลิก
+                          </button>
+                        }
+                      />
+                    )}
                   </div>
-                ) : (
-                  <UnitNumberField
-                    label="ค่าเช่าต่อเดือน (หลังลด)"
-                    name="rental_price"
-                    control={form.control}
-                    placeholder="ระบุราคาที่ต้องการเช่า"
-                    suffix="฿ / ด."
-                    disabled={isReadOnly}
-                    emphasize
-                    description="ค่าเช่าปัจจุบันที่แสดงหน้าเว็บ"
-                    labelHint={
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowRentDiscount(false);
-                          // ลบค่า rental_price ออกจาก database (เซตเป็น undefined)
-                          form.setValue("rental_price", null);
-                        }}
-                        className="text-[10px] text-slate-400 hover:text-red-600 underline"
-                      >
-                        ยกเลิก
-                      </button>
-                    }
-                  />
-                )}
-              </>
-            )}
 
-            {/* Maintenance fee - แสดงเฉพาะ SALE / SALE_AND_RENT */}
-            {showSale && (
-              <UnitNumberField
-                label="ค่าส่วนกลาง"
-                name="maintenance_fee"
-                control={form.control}
-                placeholder="0"
-                suffix="฿ / ปี"
-                disabled={isReadOnly}
-                description="ช่วยให้ลูกค้าประเมินค่าใช้จ่ายรวมได้ง่ายขึ้น"
-              />
+                  {/* Min Contract - แสดงเฉพาะ RENT / SALE_AND_RENT */}
+                  <div className="lg:col-span-3">
+                    <UnitNumberField
+                      label="สัญญาขั้นต่ำ"
+                      name="min_contract_months"
+                      control={form.control}
+                      placeholder="12"
+                      suffix="เดือน"
+                      disabled={isReadOnly}
+                      description="เช่น 12 เดือน (1 ปี) ช่วยกรองลูกค้าเช่าระยะยาว"
+                    />
+                  </div>
+                </div>
+              </div>
             )}
           </div>
-
           {/* Micro UX: guidance */}
           <div className="rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-sm text-slate-700">
             <span className="font-semibold">ทิป:</span> ถ้าทรัพย์ “ลดแรง”
@@ -609,6 +661,37 @@ export function Step2Details({ form, mode }: Step2Props) {
           </CardHeader>
 
           <CardContent className="space-y-4">
+            {/* Verified Toggle */}
+            <FormField
+              control={form.control}
+              name="verified"
+              render={({ field }) => (
+                <FormItem className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 transition hover:bg-blue-50/60">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <FormLabel className="text-sm font-bold text-blue-900 flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4" />
+                        Verified Listing
+                      </FormLabel>
+                      <p className="text-xs text-blue-800/70">
+                        เปิดเมื่อตรวจสอบเอกสารสิทธิ์/ทรัพย์จริงแล้ว
+                        (เพิ่มความน่าเชื่อถือ)
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isReadOnly}
+                        className="data-[state=checked]:bg-blue-600"
+                      />
+                    </FormControl>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            {/* Pet Friendly Toggle */}
             <FormField
               control={form.control}
               name="is_pet_friendly"

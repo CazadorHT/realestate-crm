@@ -40,6 +40,7 @@ export const FormSchema = z
 
     // New Fields
     floor: z.coerce.number().optional().nullable(),
+    min_contract_months: z.coerce.number().optional().nullable(),
     maintenance_fee: z.coerce.number().optional().nullable(),
     parking_slots: z.coerce.number().optional().nullable(),
     zoning: z.string().optional().nullable(),
@@ -78,12 +79,15 @@ export const FormSchema = z
     co_agent_rent_commission_months: z.coerce.number().optional().nullable(),
 
     // Tags
+    verified: z.boolean().default(false),
     is_pet_friendly: z.boolean().default(false),
   })
   .superRefine((data, ctx) => {
-    const priceMissing = data.original_price === undefined || Number.isNaN(data.original_price);
+    const priceMissing =
+      data.original_price === undefined || Number.isNaN(data.original_price);
     const rentMissing =
-      data.original_rental_price === undefined || Number.isNaN(data.original_rental_price);
+      data.original_rental_price === undefined ||
+      Number.isNaN(data.original_rental_price);
     // Cross-field validation: price required for SALE, rental_price required for RENT
     if (data.listing_type === "SALE" && priceMissing) {
       ctx.addIssue({

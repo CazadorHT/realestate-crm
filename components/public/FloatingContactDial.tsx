@@ -1,0 +1,216 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Phone, MessageCircle, X, Facebook, MessageSquare } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+
+export function FloatingContactDial() {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [revealedAgentId, setRevealedAgentId] = useState<string | null>(null);
+  const [agents, setAgents] = useState<
+    {
+      id: string;
+      phone: string | null;
+      agentName: string;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    async function fetchContactInfo() {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, full_name, phone")
+          .limit(5);
+
+        if (data && data.length > 0) {
+          const mappedAgents = data.map((d) => ({
+            id: d.id,
+            phone: d.phone || "08x-xxx-xxxx",
+            agentName: d.full_name || "Agent",
+          }));
+          setAgents(mappedAgents);
+        } else {
+          // Fallback if no agents found
+          setAgents([
+            {
+              id: "default",
+              phone: "081-234-5678",
+              agentName: "คุณแคซซา (Agent)",
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error("Error fetching contact info:", error);
+      }
+    }
+
+    fetchContactInfo();
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show after scrolling 100px
+      if (window.scrollY > 100) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const toggleMenu = () => setIsOpen(!isOpen);
+
+  if (agents.length === 0) return null;
+
+  // Masking helper
+  const getMaskedPhone = (phone: string) => {
+    if (phone.length < 10) return phone;
+    // 0812345678 -> 081-2xx-xxxx
+    return `${phone.substring(0, 3)}-${phone.substring(3, 4)}xx-xxxx`;
+  };
+
+  return (
+    <div
+      className={`fixed bottom-24 right-6 z-50 flex flex-col items-end gap-4 transition-all duration-500 transform ${
+        isVisible
+          ? "translate-y-0 opacity-100"
+          : "translate-y-10 opacity-0 pointer-events-none"
+      }`}
+    >
+      {/* Menu Items (Stacking upwards) */}
+      <div
+        className={`flex flex-col items-end gap-3 transition-all duration-300 ${
+          isOpen
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-4 pointer-events-none"
+        }`}
+      >
+        {/* Agents Phone List (Scrollable Container) */}
+        <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-2 items-end w-full scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+          {agents.map((agent) => (
+            <div key={agent.id} className="flex-shrink-0">
+              {agent.phone &&
+                (revealedAgentId === agent.id ? (
+                  <a
+                    href={`tel:${agent.phone}`}
+                    className="group flex items-center gap-2"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <div className="flex items-center justify-center h-9 w-9 rounded-full shadow-sm bg-[#25D366] text-white hover:bg-[#20bd5a] hover:shadow-md hover:scale-105 transition-all">
+                    <div className="bg-white px-3 py-1.5 rounded-lg shadow-md flex flex-col items-end">
+                      <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
+                        {agent.agentName}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">
+                        {agent.phone}
+                      </span>
+                    </div>
+                    <div className="w-12 h-12 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-green-600 hover:scale-110 transition-all duration-200">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                  </div>
+                  </a>
+                ) : (
+                  <button
+                    onClick={() => setRevealedAgentId(agent.id)}
+                    className="group flex items-center gap-2"
+                  >
+                    <div className="bg-white px-3 py-1.5 rounded-lg shadow-md flex flex-col items-end">
+                      <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
+                        {agent.agentName}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">
+                        {getMaskedPhone(agent.phone)}
+                      </span>
+                    </div>
+                    <div className="w-12 h-12 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-green-600 hover:scale-110 transition-all duration-200">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                  </button>
+                ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Generic/Office Channels */}
+        <a
+          href="https://m.me/yourpage"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center gap-2"
+          onClick={() => setIsOpen(false)}
+        >
+          <span className="bg-white px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            Messenger
+          </span>
+          <div className="w-12 h-12 bg-[#0084FF] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#0074e0] hover:scale-110 transition-all duration-200">
+            <Facebook className="w-6 h-6" />
+          </div>
+        </a>
+
+        {/* Line */}
+        <a
+          href="https://line.me/ti/p/@cazador"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center gap-2"
+          onClick={() => setIsOpen(false)}
+        >
+          <span className="bg-white px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            แชท LINE
+          </span>
+          <div className="w-12 h-12 bg-[#06C755] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#05b34c] hover:scale-110 transition-all duration-200">
+            {/* Line Icon (SVG) */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="currentColor"
+              viewBox="0 0 16 16"
+              className="text-white relative z-10"
+            >
+              <path d="M8 0c4.418 0 8 2.972 8 6.61 0 3.307-2.956 6.075-6.848 6.516-.628.14-1.378.852-1.558 1.487-.184.646-.118 1.259-.884.693-1.127-.832-2.78-2.613-3.23-3.13C1.353 11.233 0 9.066 0 6.61 0 2.972 3.582 0 8 0z" />
+            </svg>
+          </div>
+        </a>
+      </div>
+
+      {/* Main Toggle Button */}
+      <button
+        onClick={toggleMenu}
+        className={`group relative flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300 focus:outline-none ${
+          isOpen ? "bg-slate-800 rotate-90" : "bg-blue-600 hover:scale-110"
+        }`}
+        aria-label="Contact Options"
+      >
+        {/* Pulsing Effect (only when closed) */}
+        {!isOpen && (
+          <span className="absolute inline-flex h-full w-full rounded-full bg-blue-600 opacity-20 animate-ping duration-1000 group-hover:duration-700"></span>
+        )}
+
+        <div className="relative z-10">
+          {isOpen ? (
+            <X className="w-6 h-6 text-white" />
+          ) : (
+            <div className="relative">
+              <MessageSquare className="w-6 h-6 text-white" />
+              {/* Notification dot to encourage click */}
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+            </div>
+          )}
+        </div>
+      </button>
+    </div>
+  );
+}

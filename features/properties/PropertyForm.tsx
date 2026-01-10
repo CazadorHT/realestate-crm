@@ -44,6 +44,8 @@ const EMPTY_VALUES: PropertyFormValues = {
   size_sqm: undefined,
   land_size_sqwah: undefined,
   floor: undefined,
+  min_contract_months: undefined,
+  verified: false,
 
   maintenance_fee: undefined,
   parking_slots: undefined,
@@ -111,6 +113,7 @@ function mapRowToFormValues(
     size_sqm: row.size_sqm ?? undefined,
     land_size_sqwah: row.land_size_sqwah ?? undefined,
     floor: row.floor ?? undefined,
+    min_contract_months: row.min_contract_months ?? undefined,
     maintenance_fee: row.maintenance_fee ?? undefined,
     parking_slots: row.parking_slots ?? undefined,
     zoning: row.zoning ?? undefined,
@@ -145,6 +148,7 @@ function mapRowToFormValues(
       structuredData?.co_agent_rent_commission_months || undefined,
 
     // Tags
+    verified: row.verified ?? false,
     is_pet_friendly: (row.meta_keywords || []).includes("Pet Friendly"),
   };
 }
@@ -391,9 +395,9 @@ export function PropertyForm({
       district: values.district,
       province: values.province,
       postal_code: values.postal_code,
-      price: values.price,
-      bedrooms: values.bedrooms,
-      bathrooms: values.bathrooms,
+      price: values.price ?? undefined,
+      bedrooms: values.bedrooms ?? undefined,
+      bathrooms: values.bathrooms ?? undefined,
       size_sqm: values.size_sqm ?? undefined,
     });
 

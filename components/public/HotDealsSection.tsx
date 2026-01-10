@@ -137,10 +137,10 @@ export function HotDealsSection() {
 
         {/* === CARDS SECTION === */}
         {isLoading ? (
-            <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4 p-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <PropertyCardSkeleton key={i} />
-              ))}
+          <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4 p-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <PropertyCardSkeleton key={i} />
+            ))}
           </div>
         ) : (
           /* Horizontal Scroll on Mobile / Grid on Desktop */
@@ -154,7 +154,7 @@ export function HotDealsSection() {
                 className="min-w-[320px] md:min-w-0 snap-center relative group perspective-1000"
               >
                 {/* Floating Hot Badge Overlay */}
-                <div className="absolute -top-4 -left-4 z-30">
+                <div className="absolute -top-5 -left-5 z-30">
                   <div className="relative">
                     <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
                     <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-6 transition-all duration-300 scale-110 ">

@@ -614,6 +614,7 @@ export type Database = {
           meta_description: string | null
           meta_keywords: string[] | null
           meta_title: string | null
+          min_contract_months: number | null
           near_transit: boolean | null
           original_price: number | null
           original_rental_price: number | null
@@ -636,6 +637,7 @@ export type Database = {
           transit_station_name: string | null
           transit_type: string | null
           updated_at: string
+          verified: boolean | null
           zoning: string | null
         }
         Insert: {
@@ -667,6 +669,7 @@ export type Database = {
           meta_description?: string | null
           meta_keywords?: string[] | null
           meta_title?: string | null
+          min_contract_months?: number | null
           near_transit?: boolean | null
           original_price?: number | null
           original_rental_price?: number | null
@@ -689,6 +692,7 @@ export type Database = {
           transit_station_name?: string | null
           transit_type?: string | null
           updated_at?: string
+          verified?: boolean | null
           zoning?: string | null
         }
         Update: {
@@ -720,6 +724,7 @@ export type Database = {
           meta_description?: string | null
           meta_keywords?: string[] | null
           meta_title?: string | null
+          min_contract_months?: number | null
           near_transit?: boolean | null
           original_price?: number | null
           original_rental_price?: number | null
@@ -742,6 +747,7 @@ export type Database = {
           transit_station_name?: string | null
           transit_type?: string | null
           updated_at?: string
+          verified?: boolean | null
           zoning?: string | null
         }
         Relationships: [

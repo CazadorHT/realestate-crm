@@ -24,6 +24,9 @@ type PropertyRow = {
   popular_area: string | null;
   original_price: number | null;
   original_rental_price: number | null;
+  verified: boolean | null;
+  min_contract_months: number | null;
+  meta_keywords: string[] | null;
 
   property_images?: Array<{
     image_url: string;
@@ -75,7 +78,10 @@ export async function GET(request: Request) {
       rental_price,
       original_price,
       original_rental_price,
+      verified,
+      min_contract_months,
       bedrooms,
+      meta_keywords,
       bathrooms,
       size_sqm,
       parking_slots,
@@ -135,6 +141,9 @@ export async function GET(request: Request) {
         rental_price: typedRow.rental_price,
         original_price: typedRow.original_price,
         original_rental_price: typedRow.original_rental_price,
+        verified: typedRow.verified,
+        min_contract_months: typedRow.min_contract_months,
+        meta_keywords: typedRow.meta_keywords,
         bedrooms: typedRow.bedrooms,
         bathrooms: typedRow.bathrooms,
         size_sqm: typedRow.size_sqm,

@@ -14,6 +14,10 @@ import {
   Pen,
   Clock,
   Heart,
+  ShieldCheck,
+  PawPrint,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { useEffect, useState, MouseEvent } from "react";
 import { toggleCompareId, readCompareIds } from "@/lib/compare-store";
@@ -51,6 +55,9 @@ export type PropertyCardProps = {
   floor?: number | null;
   original_price?: number | null;
   original_rental_price?: number | null;
+  verified?: boolean;
+  min_contract_months?: number | null;
+  meta_keywords?: string[] | null;
 };
 
 export function PropertyCard({
@@ -110,7 +117,7 @@ export function PropertyCard({
     .join(" • ");
 
   return (
-    <div className="group relative isolate rounded-3xl bg-white overflow-hidden shadow-sm h-full flex flex-col transform-gpu will-change-transform transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2  before:content-[''] before:absolute before:inset-0 before:rounded-3xl  before:ring-inset  before:pointer-events-none before:z-10">
+    <div className="group relative isolate rounded-3xl  bg-white overflow-hidden shadow-md h-full flex flex-col transform-gpu will-change-transform transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2  before:content-[''] before:absolute before:inset-0 before:rounded-3xl  before:ring-inset  before:pointer-events-none before:z-10">
       <Link
         href={`/properties/${property.id}`}
         className="flex flex-col h-full focus:outline-none"
@@ -141,17 +148,20 @@ export function PropertyCard({
 
           <div className="pointer-events-none absolute inset-0 rounded-t-3xl bg-gradient-to-t from-black/35 via-transparent to-transparent" />
 
-          {/* Compare Button */}
-          <button
-            onClick={handleCompareClick}
-            className={`absolute top-3 left-3 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 ${
-              isInCompare
-                ? "bg-blue-600 text-white"
-                : "bg-white/80 text-[#1B263B] hover:bg-blue-600 hover:text-white"
-            }`}
-          >
-            <Scale className="h-4 w-4" />
-          </button>
+          {/* Verified Badge */}
+          {property.verified && (
+            <div className="absolute top-3 left-3 bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg z-20 ">
+              <ShieldCheck className="w-4 h-4" />
+              <span>VERIFIED</span>
+            </div>
+          )}
+
+          {property.meta_keywords?.includes("Pet Friendly") && (
+            <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md text-orange-600 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm z-20 ">
+              <PawPrint className="w-4 h-4" />
+              <span>Pet Friendly</span>
+            </div>
+          )}
 
           {/* Favorite Button */}
           <button
@@ -183,9 +193,9 @@ export function PropertyCard({
         </div>
 
         {/* Content Section */}
-        <div className="pt-2 pb-6 px-6 space-y-4 flex-grow min-h-[160px]">
-          <div className="space-y-1">
-            <div className="flex justify-between items-center mb-3">
+        <div className="pt-2 pb-6 px-6 mt-3 gap-y-4 flex-grow min-h-[180px] flex flex-col">
+          <div className="space-y-1 mb-3">
+            <div className="flex justify-between items-center mb-2">
               <span
                 className={`text-xs font-medium ${
                   getTypeColor(property.property_type).text
@@ -202,37 +212,48 @@ export function PropertyCard({
                 </span>
               </div>
             </div>
-            <h3 className="text-lg font-medium text-slate-800 line-clamp-2 group-hover:text-blue-800 transition-all duration-300 ease-in-out">
+            <h3 className="text-lg font-semibold tracking-wide text-slate-800 line-clamp-2 group-hover:text-blue-800 transition-all duration-300 ease-in-out">
               {property.title}
             </h3>
           </div>
 
-         
           {/* Property Specs - ใช้สไตล์ Clean Minimal */}
-          <div className="flex flex-wrap items-center text-xs text-slate-600 gap-4 ">
+          <div className="flex flex-wrap items-center text-xs text-slate-600 gap-x-4 gap-y-2 mt-auto  ">
             <div className="flex items-center gap-1.5 ">
-              <BedDouble className="h-5 w-5 text-blue-600/70" />
+              <BedDouble
+                className="h-5 w-5 text-slate-400 strokeWidth={1.5}"
+                strokeWidth={1.5}
+              />
               <span className="text-sm font-semibold text-slate-600">
                 {property.bedrooms || "-"}
               </span>
             </div>
 
             <div className="flex items-center gap-1.5 ">
-              <Bath className="h-5 w-5 text-blue-600/70" />
+              <Bath
+                className="h-5 w-5 text-slate-400 strokeWidth={1.5}"
+                strokeWidth={1.5}
+              />
               <span className="text-sm font-semibold text-slate-600">
                 {property.bathrooms || "-"}
               </span>
             </div>
 
             <div className="flex items-center gap-1.5 ">
-              <Car className="h-5 w-5 text-blue-600/70" />
+              <Car
+                className="h-5 w-5 text-slate-400 strokeWidth={1.5}"
+                strokeWidth={1.5}
+              />
               <span className="text-sm font-semibold text-slate-600">
                 {property.parking_slots || "-"}
               </span>
             </div>
 
             <div className="flex items-center gap-1.5  ">
-              <Expand className="h-5 w-5 text-blue-600/70" />
+              <Expand
+                className="h-5 w-5 text-slate-400 strokeWidth={1.5}"
+                strokeWidth={1.5}
+              />
               <span className="text-sm font-semibold text-slate-600  ">
                 {property.size_sqm || "-"}
                 <small className="text-[12px]">
@@ -245,23 +266,45 @@ export function PropertyCard({
               </span>
             </div>
           </div>
+
+          {/* Compare Checkbox Button */}
+          <button
+            onClick={handleCompareClick}
+            className={`mt-3 flex items-center gap-1.5 text-xs font-medium transition-all duration-200 ${
+              isInCompare
+                ? "text-blue-600"
+                : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            {isInCompare ? (
+              <CheckSquare className="h-4 w-4" />
+            ) : (
+              <Square className="h-4 w-4" />
+            )}
+            เปรียบเทียบ
+          </button>
         </div>
 
         {/* Footer Section */}
-        <div className="p-6 border-t border-slate-100 bg-white/60 backdrop-blur">
-          <div className="flex items-end justify-between gap-4  ">
-            <div className="min-w-0 ">
-              {property.listing_type === "SALE_AND_RENT" ? (
-                <div className="flex flex-col justify-center  ">
+        <div className="p-4 border-t border-slate-200 bg-white/60 backdrop-blur flex flex-col gap-3">
+          <div className="min-w-0">
+            {property.listing_type === "SALE_AND_RENT" ? (
+              <div className="flex items-center gap-3 divide-x divide-slate-200">
+                {/* SALE PRICE BLOCK */}
+                <div className="flex flex-col  ">
+                  <span className="text-[9px] font-bold uppercase tracking-tight mb-0.5">
+                    ขาย
+                  </span>
                   {property.original_price &&
                   property.price &&
                   property.original_price > property.price ? (
-                    <>
-                      <div className="flex items-center gap-2 ">
-                        <span className="text-xs text-slate-400 font-normal line-through decoration-slate-400/70">
+                    <div className="flex flex-wrap items-baseline gap-2 ">
+                      {/* Discount Label */}
+                      <div className="order-2 flex items-center gap-1 ">
+                        <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
                           {PRICE_FORMATTER.format(property.original_price)}
                         </span>
-                        <span className="text-[10px] font-semibold bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
+                        <span className="text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-100 px-1 rounded-sm">
                           -
                           {Math.round(
                             ((property.original_price - property.price) /
@@ -271,30 +314,39 @@ export function PropertyCard({
                           %
                         </span>
                       </div>
-                      <div className="text-lg font-semibold text-red-600 truncate leading-tight">
-                        {property.price
-                          ? PRICE_FORMATTER.format(property.price)
-                          : "สอบถามราคา"}
+                      {/* Current Price */}
+                      <div className="order-1 text-xl font-bold text-rose-600">
+                        {PRICE_FORMATTER.format(property.price)}
                       </div>
-                    </>
+                    </div>
                   ) : (
-                    <div className="text-lg font-semibold text-[#1B263B] truncate leading-tight">
-                      {property.price
-                        ? PRICE_FORMATTER.format(property.price)
+                    <div className="text-xl font-bold text-slate-900">
+                      {property.price || property.original_price
+                        ? PRICE_FORMATTER.format(
+                            property.price || property.original_price!
+                          )
                         : "สอบถามราคา"}
                     </div>
                   )}
+                </div>
+
+                {/* RENT PRICE BLOCK */}
+                <div className="flex flex-col pl-3">
+                  <span className="text-[9px] font-bold uppercase tracking-tight mb-0.5">
+                    เช่า
+                  </span>
                   {property.original_rental_price &&
                   property.rental_price &&
                   property.original_rental_price > property.rental_price ? (
-                    <>
-                      <div className="flex items-center gap-2 ">
-                        <span className="text-xs text-slate-400 font-semibold line-through decoration-slate-400/70">
+                    <div className="flex flex-wrap items-baseline gap-2">
+                      {/* Discount Label */}
+                      <div className="order-2 flex items-center gap-1">
+                        <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
                           {PRICE_FORMATTER.format(
                             property.original_rental_price
                           )}
                         </span>
-                        <span className="text-[10px] font-semiboldbg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
+                        <span className="text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-100 px-1 rounded-sm">
                           -
                           {Math.round(
                             ((property.original_rental_price -
@@ -305,112 +357,123 @@ export function PropertyCard({
                           %
                         </span>
                       </div>
-                      <div className="text-sm font-semibold text-red-600 truncate leading-tight">
-                        เช่า{" "}
-                        {property.rental_price
-                          ? PRICE_FORMATTER.format(property.rental_price)
-                          : "-"}
-                        <span className="text-xs text-red-600 font-normal">
+                      {/* Current Price */}
+                      <div className="order-1 text-xl font-bold text-rose-600">
+                        {PRICE_FORMATTER.format(property.rental_price)}
+                        <span className="text-xs text-slate-500 font-normal ml-0.5">
                           /เดือน
                         </span>
                       </div>
-                    </>
+                    </div>
                   ) : (
-                    // กรณีไม่มีราคาเช่า
-                    <div className="text-sm font-medium text-[#1B263B] truncate leading-tight">
-                      เช่า{" "}
-                      {property.rental_price
-                        ? PRICE_FORMATTER.format(property.rental_price)
-                        : "-"}
-                      <span className="text-xs text-slate-400 font-normal">
+                    <div className="text-xl font-bold text-slate-900">
+                      {property.rental_price || property.original_rental_price
+                        ? PRICE_FORMATTER.format(
+                            property.rental_price ||
+                              property.original_rental_price!
+                          )
+                        : "สอบถามค่าเช่า"}
+                      <span className="text-xs text-slate-400 font-normal ml-0.5">
                         /เดือน
                       </span>
                     </div>
                   )}
                 </div>
-              ) : (
-                <>
-                  {/* กรณีขาย/เช่า และมีส่วนลด */}
-                  <div className="text-xs text-stone-400 uppercase tracking-tight">
-                    ราคาเริ่มต้น
-                  </div>
-                  <div className="text-xl font-semibold text-[#1B263B] truncate flex items-baseline gap-2">
-                    {/* SALE or RENT Discount Logic */}
-                    {(property.listing_type === "SALE"
-                      ? property.original_price
-                      : property.original_rental_price) &&
-                    (property.price || property.rental_price) &&
+              </div>
+            ) : (
+              <>
+                <div className="text-xs text-stone-400 uppercase tracking-tight">
+                  ราคาเริ่มต้น
+                </div>
+                <div className="text-xl font-bold text-[#1B263B] truncate flex items-baseline gap-2">
+                  {/* SALE or RENT Discount Logic */}
+                  {(property.listing_type === "SALE"
+                    ? property.original_price
+                    : property.original_rental_price) &&
+                  (property.price || property.rental_price) &&
+                  (property.listing_type === "SALE"
+                    ? property.original_price!
+                    : property.original_rental_price!) >
                     (property.listing_type === "SALE"
-                      ? property.original_price!
-                      : property.original_rental_price!) >
-                      (property.listing_type === "SALE"
-                        ? property.price!
-                        : property.rental_price!) &&
-                    (property.listing_type === "SALE" ||
-                      property.listing_type === "RENT") ? (
-                      <>
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-400 font-semibold line-through decoration-slate-400/70">
-                              {new Intl.NumberFormat("th-TH", {
-                                style: "currency",
-                                currency: "THB",
-                                maximumFractionDigits: 0,
-                              }).format(
-                                property.listing_type === "SALE"
-                                  ? property.original_price!
-                                  : property.original_rental_price!
-                              )}
-                            </span>
-                            <span className="text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
-                              -
-                              {Math.round(
-                                (((property.listing_type === "SALE"
-                                  ? property.original_price!
-                                  : property.original_rental_price!) -
-                                  (property.listing_type === "SALE"
-                                    ? property.price!
-                                    : property.rental_price!)) /
-                                  (property.listing_type === "SALE"
-                                    ? property.original_price!
-                                    : property.original_rental_price!)) *
-                                  100
-                              )}
-                              %
-                            </span>
-                          </div>
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-red-600">
-                              {getDisplayPrice(property)}
-                            </span>
-                            {property.listing_type === "RENT" && (
-                              <span className="text-xs text-slate-500 font-semibold">
-                                /เดือน
-                              </span>
+                      ? property.price!
+                      : property.rental_price!) &&
+                  (property.listing_type === "SALE" ||
+                    property.listing_type === "RENT") ? (
+                    <>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-400 font-bold line-through decoration-slate-400/70">
+                            {new Intl.NumberFormat("th-TH", {
+                              style: "currency",
+                              currency: "THB",
+                              maximumFractionDigits: 0,
+                            }).format(
+                              property.listing_type === "SALE"
+                                ? property.original_price!
+                                : property.original_rental_price!
                             )}
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        {getDisplayPrice(property)}
-                        {property.listing_type === "RENT" && (
-                          <span className="text-xs text-slate-500 font-semibold"> 
-                            {" "}
-                            /เดือน
                           </span>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </>
+                          <span className="text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
+                            -
+                            {Math.round(
+                              (((property.listing_type === "SALE"
+                                ? property.original_price!
+                                : property.original_rental_price!) -
+                                (property.listing_type === "SALE"
+                                  ? property.price!
+                                  : property.rental_price!)) /
+                                (property.listing_type === "SALE"
+                                  ? property.original_price!
+                                  : property.original_rental_price!)) *
+                                100
+                            )}
+                            %
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-xl font-bold text-rose-600">
+                            {getDisplayPrice(property)}
+                          </span>
+                          {property.listing_type === "RENT" && (
+                            <span className="text-xs text-slate-500 font-normal">
+                              /เดือน
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {getDisplayPrice(property)}
+                      {property.listing_type === "RENT" && (
+                        <span className="text-xs text-slate-500 font-normal">
+                          /เดือน
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between">
+            {/* Min Contract Display (Left) */}
+            {(property.listing_type === "RENT" ||
+              property.listing_type === "SALE_AND_RENT") &&
+              property.min_contract_months && (
+                <div className="flex items-center gap-1 text-[10px] text-slate-600 font-medium italic">
+                  <div className="w-1 h-1 rounded-full bg-slate-300" />
+                  สัญญาขั้นต่ำ {property.min_contract_months} เดือน
+                </div>
               )}
-            </div>
+
+            {/* Update Date (Right) */}
             <div className="text-[10px] text-stone-400 italic flex ">
               {property.updated_at ? (
                 <>
                   <Clock className="h-3 w-3 mr-1" />
-                  <span className="text-slate-600 font-medium ">
+                  <span className="text-slate-400 font-normal ">
                     {format(new Date(property.updated_at), "d MMM yyyy", {
                       locale: th,
                     })}
