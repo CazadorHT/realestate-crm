@@ -6,8 +6,9 @@ import { PublicNav } from "@/components/public/PublicNav";
 import { PropertyGallery } from "@/components/public/PropertyGallery";
 import { PropertySpecs } from "@/components/public/PropertySpecs";
 import { AgentSidebar } from "@/components/public/AgentSidebar";
-import { MapPin, ArrowLeft, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ICON_MAP, DEFAULT_ICON } from "@/features/amenities/icons";
+import { Box, MapPin, ArrowLeft, Clock } from "lucide-react";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -36,6 +37,14 @@ export default async function PublicPropertyDetailPage(props: {
            full_name,
            phone,
            avatar_url
+        ),
+        property_features (
+          features (
+            id,
+            name,
+            icon_key,
+            category
+          )
         )
       `
   );
@@ -54,6 +63,8 @@ export default async function PublicPropertyDetailPage(props: {
 
   const images = (data.property_images as any[]) || [];
   const agent = (data.assigned_agent as any) || {};
+  const rawFeatures = (data.property_features as any[]) || [];
+  const features = rawFeatures.map((pf: any) => pf.features).filter(Boolean);
 
   const locationParts = [
     data.popular_area,
@@ -301,6 +312,7 @@ export default async function PublicPropertyDetailPage(props: {
             property_type: data.property_type,
             listing_type: data.listing_type,
             slug: data.slug,
+            features: features,
           }}
         />
 
@@ -359,31 +371,30 @@ export default async function PublicPropertyDetailPage(props: {
             <hr className="border-slate-100" />
 
             {/* Facilities / Highlights (Mock or Real Field) */}
-            <section>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">
-                สิ่งอำนวยความสะดวก
-              </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
-                {/* This would ideally come from a tags array or boolean fields we might have added later */}
-                {/* For now, we mimic some common ones or check if they exist in schema in future */}
-                {[
-                  "สระว่ายน้ำ",
-                  "ฟิตเนส",
-                  "ระบบรักษาความปลอดภัย 24 ชม.",
-                  "CCTV",
-                  "สวนหย่อม",
-                  "ที่จอดรถ",
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 text-slate-600"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </section>
+            {/* Facilities / Highlights */}
+            {features.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold text-slate-900 mb-6">
+                  สิ่งอำนวยความสะดวก
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
+                  {features.map((item: any, i: number) => {
+                    const Icon = ICON_MAP[item.icon_key] || DEFAULT_ICON;
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-center gap-3 text-slate-600"
+                      >
+                        <div className="p-2 rounded-full bg-blue-50 text-blue-600">
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        {item.name}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
 
             <hr className="border-slate-100" />
 

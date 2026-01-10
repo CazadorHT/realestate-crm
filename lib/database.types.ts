@@ -284,6 +284,30 @@ export type Database = {
         }
         Relationships: []
       }
+      features: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          icon_key: string
+          id: string
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          icon_key?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          icon_key?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       lead_activities: {
         Row: {
           activity_type: Database["public"]["Enums"]["lead_activity_type"]
@@ -793,6 +817,39 @@ export type Database = {
           },
           {
             foreignKeyName: "property_agents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_features: {
+        Row: {
+          created_at: string | null
+          feature_id: string
+          property_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feature_id: string
+          property_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feature_id?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_features_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "features"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_features_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"

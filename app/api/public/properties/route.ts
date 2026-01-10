@@ -33,6 +33,13 @@ type PropertyRow = {
     is_cover: boolean | null;
     sort_order: number | null;
   }> | null;
+  property_features?: Array<{
+    features: {
+      id: string;
+      name: string;
+      icon_key: string;
+    } | null;
+  }> | null;
 };
 
 function buildLocation(row: PropertyRow) {
@@ -98,6 +105,13 @@ export async function GET(request: Request) {
         image_url,
         is_cover,
         sort_order
+      ),
+      property_features (
+        features (
+          id,
+          name,
+          icon_key
+        )
       )
     `
     )
@@ -159,6 +173,9 @@ export async function GET(request: Request) {
         address_line1: typedRow.address_line1,
         image_url: pickCoverImage(typedRow.property_images),
         location: buildLocation(typedRow),
+        features: (typedRow.property_features || [])
+          .map((pf) => pf.features)
+          .filter((f): f is NonNullable<typeof f> => f !== null),
       };
     })
     .filter((item) => {

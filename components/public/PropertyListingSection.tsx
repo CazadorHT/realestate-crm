@@ -43,6 +43,7 @@ type ApiProperty = {
   location: string | null;
   original_price: number | null;
   original_rental_price: number | null;
+  features?: { id: string; name: string; icon_key: string }[];
 };
 
 const FILTER_LABELS: Record<FilterType, string> = {

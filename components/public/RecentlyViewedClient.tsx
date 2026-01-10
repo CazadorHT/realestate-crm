@@ -490,6 +490,20 @@ export function RecentlyViewedClient({
                     )}
                   </div>
 
+                  {/* Features Preview */}
+                  {item.features && item.features.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-3 h-5 overflow-hidden">
+                      {item.features.slice(0, 3).map((f) => (
+                        <span
+                          key={f.id}
+                          className="text-[9px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200 truncate max-w-[80px]"
+                        >
+                          {f.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex items-center text-xs text-slate-500 mb-4 bg-slate-50 p-2 rounded-lg">
                     <MapPin className="h-3 w-3 mr-1.5 text-blue-500" />
                     <span className="truncate">

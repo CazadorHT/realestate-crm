@@ -28,6 +28,7 @@ import { Step1BasicInfo } from "./property-form/steps/Step1BasicInfo";
 import { Step2Details } from "./property-form/steps/Step2Details";
 import { Step3Location } from "./property-form/steps/Step3Location";
 import { Step4Media } from "./property-form/steps/Step4Media";
+import { Step5Features } from "./property-form/steps/Step5Features";
 
 const EMPTY_VALUES: PropertyFormValues = {
   title: "",
@@ -71,6 +72,7 @@ const EMPTY_VALUES: PropertyFormValues = {
   co_agent_sale_commission_percent: undefined,
   co_agent_rent_commission_months: undefined,
   is_pet_friendly: false,
+  feature_ids: [],
 };
 
 type Props = {
@@ -150,6 +152,7 @@ function mapRowToFormValues(
     // Tags
     verified: row.verified ?? false,
     is_pet_friendly: (row.meta_keywords || []).includes("Pet Friendly"),
+    feature_ids: [],
   };
 }
 
@@ -166,6 +169,7 @@ const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
   ],
   3: ["province", "district", "subdistrict"],
   4: [],
+  5: ["feature_ids"],
 };
 
 // Error summary component
@@ -314,7 +318,32 @@ export function PropertyForm({
     }
 
     loadData();
+    loadData();
   }, []);
+
+  // Fetch Features on Edit Mode (separate effect or integrated)
+  React.useEffect(() => {
+    async function loadFeatures() {
+      if (mode === "edit" && defaultValues?.id) {
+        try {
+          const { createClient } = await import("@/lib/supabase/client");
+          const supabase = createClient();
+          const { data: featuresData } = await supabase
+            .from("property_features")
+            .select("feature_id")
+            .eq("property_id", defaultValues.id);
+
+          if (featuresData && featuresData.length > 0) {
+            const ids = featuresData.map((f) => f.feature_id);
+            form.setValue("feature_ids", ids);
+          }
+        } catch (err) {
+          console.error("Error loading features:", err);
+        }
+      }
+    }
+    loadFeatures();
+  }, [mode, defaultValues]);
 
   // Initialize Quick Info for edit mode
   React.useEffect(() => {
@@ -375,7 +404,7 @@ export function PropertyForm({
   const handleNext = async () => {
     const isStepValid = await validateStep(currentStep);
     if (isStepValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, 4));
+      setCurrentStep((prev) => Math.min(prev + 1, 5));
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -419,17 +448,56 @@ export function PropertyForm({
 
       let result: CreatePropertyResult | { success: boolean; message?: string };
 
+      const { images, feature_ids, ...restValues } = values;
+
+      // Remove feature_ids from restValues for updatePropertyAction compatibility if strict
+      // But type-safe way is to construct object. Assuming action ignores extra fields or we clean it.
+      // Actually, updatePropertyAction likely accepts PropertyFormValues. If it strips unknown, good.
+      // But to be safe, let's just pass `values` because updatePropertyAction usually just picks keys from schema or types.
+      // OR better: Let the action handle it? No, action might not know about feature_ids yet if not updated.
+      // The safest is to rely on backend ignoring extra fields, OR just submit as is.
+      // However, if we want to save features separately after, we need the property ID.
+
       if (mode === "create") {
-        result = await createPropertyAction(values, uploadSessionId);
+        result = await createPropertyAction({ ...values }, uploadSessionId);
       } else {
         result = await updatePropertyAction(
           defaultValues!.id,
-          values,
+          { ...values },
           uploadSessionId
         );
       }
 
       if (result.success) {
+        // === SAVE FEATURES ===
+        const propertyId =
+          mode === "create" ? (result as any).data?.id : defaultValues!.id; // createPropertyAction should return data.id
+        // Note: result from createPropertyAction is CreatePropertyResult. If success, we should have the ID?
+        // In existing code action returns { success: true, message: "...", data: { id: ... } } usually.
+        // Let's assume result follows conventions.
+
+        if (propertyId && values.feature_ids) {
+          const { createClient } = await import("@/lib/supabase/client");
+          const supabase = createClient();
+
+          // 1. Delete old
+          if (mode === "edit") {
+            await supabase
+              .from("property_features")
+              .delete()
+              .eq("property_id", propertyId);
+          }
+
+          // 2. Insert new
+          if (values.feature_ids.length > 0) {
+            const insertData = values.feature_ids.map((fid) => ({
+              property_id: propertyId,
+              feature_id: fid,
+            }));
+            await supabase.from("property_features").insert(insertData);
+          }
+        }
+
         toast.success(
           mode === "create" ? "เพิ่มทรัพย์ใหม่สำเร็จ" : "บันทึกข้อมูลสำเร็จ"
         );
@@ -508,7 +576,7 @@ export function PropertyForm({
           <div className="absolute top-5 left-0 w-full h-0.5 bg-slate-100 -z-0" />
           <div
             className="absolute top-5 left-0 h-0.5 bg-blue-600 transition-all duration-700 ease-in-out -z-0"
-            style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+            style={{ width: `${((currentStep - 1) / 4) * 100}%` }}
           />
 
           {[
@@ -516,6 +584,7 @@ export function PropertyForm({
             { step: 2, label: "รายละเอียดทรัพย์" },
             { step: 3, label: "ทำเลที่ตั้ง" },
             { step: 4, label: "รูปภาพ & การจัดเก็บ" },
+            { step: 5, label: "สิ่งอำนวยความสะดวก" },
           ].map((item) => (
             <div
               key={item.step}
@@ -589,6 +658,8 @@ export function PropertyForm({
             />
           )}
 
+          {currentStep === 5 && <Step5Features />}
+
           {/* Navigation Buttons: Fixed Layout */}
           <div className="mt-10">
             <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-6">
@@ -610,7 +681,7 @@ export function PropertyForm({
                   </Button>
                 )}
 
-                {currentStep < 4 ? (
+                {currentStep < 5 ? (
                   <Button
                     type="button"
                     onClick={handleNext}

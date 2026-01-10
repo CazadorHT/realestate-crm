@@ -58,6 +58,7 @@ export type PropertyCardProps = {
   verified?: boolean;
   min_contract_months?: number | null;
   meta_keywords?: string[] | null;
+  features?: { id: string; name: string; icon_key: string }[] | null;
 };
 
 export function PropertyCard({
@@ -266,6 +267,25 @@ export function PropertyCard({
               </span>
             </div>
           </div>
+
+          {/* Features Preview */}
+          {property.features && property.features.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2 h-6 overflow-hidden">
+              {property.features.slice(0, 3).map((f) => (
+                <span
+                  key={f.id}
+                  className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200"
+                >
+                  {f.name}
+                </span>
+              ))}
+              {property.features.length > 3 && (
+                <span className="text-[10px] px-1.5 py-0.5 bg-slate-50 text-slate-400 rounded-md">
+                  +{property.features.length - 3}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Compare Checkbox Button */}
           <button

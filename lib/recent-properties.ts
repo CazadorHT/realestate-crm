@@ -8,6 +8,7 @@ export type RecentProperty = {
   property_type?: string | null;
   listing_type?: string | null;
   slug?: string | null;
+  features?: { id: string; name: string; icon_key: string }[];
   ts: number;
 };
 

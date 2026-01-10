@@ -81,6 +81,7 @@ export const FormSchema = z
     // Tags
     verified: z.boolean().default(false),
     is_pet_friendly: z.boolean().default(false),
+    feature_ids: z.array(z.string()).default([]),
   })
   .superRefine((data, ctx) => {
     const priceMissing =
