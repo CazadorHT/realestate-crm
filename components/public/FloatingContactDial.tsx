@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 export function FloatingContactDial() {
   const [isVisible, setIsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isPhoneListOpen, setIsPhoneListOpen] = useState(false);
 
   const [revealedAgentId, setRevealedAgentId] = useState<string | null>(null);
   const [agents, setAgents] = useState<
@@ -66,7 +67,10 @@ export function FloatingContactDial() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const toggleMenu = () => setIsOpen(!isOpen);
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+    setIsPhoneListOpen(false);
+  };
 
   if (agents.length === 0) return null;
 
@@ -94,50 +98,66 @@ export function FloatingContactDial() {
         }`}
       >
         {/* Agents Phone List (Scrollable Container) */}
-        <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-2 items-end w-full scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-          {agents.map((agent) => (
-            <div key={agent.id} className="flex-shrink-0">
-              {agent.phone &&
-                (revealedAgentId === agent.id ? (
-                  <a
-                    href={`tel:${agent.phone}`}
-                    className="group flex items-center gap-2"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <div className="flex items-center justify-center h-9 w-9 rounded-full shadow-sm bg-[#25D366] text-white hover:bg-[#20bd5a] hover:shadow-md hover:scale-105 transition-all">
-                    <div className="bg-white px-3 py-1.5 rounded-lg shadow-md flex flex-col items-end">
-                      <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
-                        {agent.agentName}
-                      </span>
-                      <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">
-                        {agent.phone}
-                      </span>
-                    </div>
-                    <div className="w-12 h-12 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-green-600 hover:scale-110 transition-all duration-200">
-                      <Phone className="w-5 h-5" />
-                    </div>
-                  </div>
-                  </a>
-                ) : (
-                  <button
-                    onClick={() => setRevealedAgentId(agent.id)}
-                    className="group flex items-center gap-2"
-                  >
-                    <div className="bg-white px-3 py-1.5 rounded-lg shadow-md flex flex-col items-end">
-                      <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
-                        {agent.agentName}
-                      </span>
-                      <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">
-                        {getMaskedPhone(agent.phone)}
-                      </span>
-                    </div>
-                    <div className="w-12 h-12 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-green-600 hover:scale-110 transition-all duration-200">
-                      <Phone className="w-5 h-5" />
-                    </div>
-                  </button>
-                ))}
-            </div>
-          ))}
+        {/* Phone Group */}
+        <div className="flex items-end gap-2">
+          {/* Agent List Popover */}
+
+          {/* Agent List Popover */}
+          <div
+            className={`flex flex-col gap-2 bg-white p-2 rounded-xl shadow-xl max-h-[160px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent transition-all duration-300 origin-bottom-right ${
+              isPhoneListOpen
+                ? "opacity-100 translate-x-0 scale-100"
+                : "opacity-0 translate-x-8 scale-95 pointer-events-none absolute right-16" // adjust positioning to ensure it doesn't take up layout space when hidden or looks correct
+            }`}
+          >
+            {agents.map((agent) => (
+              <div key={agent.id} className="flex-shrink-0">
+                {agent.phone &&
+                  (revealedAgentId === agent.id ? (
+                    <a
+                      href={`tel:${agent.phone}`}
+                      className="block group"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <div className="bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-lg transition-colors min-w-[160px]">
+                        <div className="text-[10px] text-slate-500 font-medium whitespace-nowrap mb-0.5">
+                          {agent.agentName}
+                        </div>
+                        <div className="text-sm font-bold text-slate-800 whitespace-nowrap flex items-center gap-2">
+                          {agent.phone}
+                        </div>
+                      </div>
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => setRevealedAgentId(agent.id)}
+                      className="block w-full text-left group"
+                    >
+                      <div className="bg-slate-50 hover:bg-slate-100 px-3 py-2 rounded-lg transition-colors min-w-[160px]">
+                        <div className="text-[10px] text-slate-500 font-medium whitespace-nowrap mb-0.5">
+                          {agent.agentName}
+                        </div>
+                        <div className="text-sm font-bold text-slate-800 whitespace-nowrap">
+                          {getMaskedPhone(agent.phone)}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Static Phone Icon Indicator */}
+          <button
+            onClick={() => setIsPhoneListOpen(!isPhoneListOpen)}
+            className="w-12 h-12 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white shrink-0 hover:bg-green-600 hover:scale-110 transition-all duration-200"
+          >
+            {isPhoneListOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Phone className="w-5 h-5 " />
+            )}
+          </button>
         </div>
 
         {/* Generic/Office Channels */}
