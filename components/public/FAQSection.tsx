@@ -73,8 +73,8 @@ export function FAQSection() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <div className="max-w-4xl mx-auto px-4 relative z-10">
-        <div className="text-center mb-16">
+      <div className="max-w-screen-xl mx-auto px-4 relative z-10 flex grid-cols-2 gap-12  justify-between items-center">
+        <div className="text-left mb-16 w-full">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-blue-400 text-sm font-medium mb-6 backdrop-blur-sm">
             <Sparkles className="w-4 h-4" />
             <span>Help Center & Support</span>

@@ -392,7 +392,7 @@ export function PropertyListingSection() {
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {visibleProperties.map((property, index) => {
                 const hasDiscount =
                   (property.original_price &&

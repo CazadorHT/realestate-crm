@@ -271,10 +271,15 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                         </Badge>
                       )}
                     </div>
-                    <div className="flex flex-col gap-1 min-w-0">
+                    <div className="flex flex-col gap-1 w-72">
                       <Link
                         href={`/protected/properties/${property.id}`}
-                        className="font-bold text-slate-900 hover:text-blue-600 transition-colors line-clamp-1 text-sm"
+                        style={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                        }}
+                        className="block font-bold text-slate-900 hover:text-blue-600 transition-colors text-sm line-clamp-2 whitespace-normal break-all overflow-hidden"
                       >
                         {property.title || "ไม่ระบุชื่อ"}
                       </Link>

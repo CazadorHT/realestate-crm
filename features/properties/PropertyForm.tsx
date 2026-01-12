@@ -45,7 +45,7 @@ const EMPTY_VALUES: PropertyFormValues = {
   size_sqm: undefined,
   land_size_sqwah: undefined,
   floor: undefined,
-  min_contract_months: undefined,
+  min_contract_months: 12, // Default to 1 year
   verified: false,
 
   maintenance_fee: undefined,
@@ -293,12 +293,13 @@ export function PropertyForm({
         }
 
         // Load popular areas
-        const areasData = await getPopularAreasAction();
-        setPopularAreas(
-          areasData.length > 0
-            ? areasData
-            : (POPULAR_AREAS as unknown as string[])
-        );
+        const areasData = await getPopularAreasAction({ onlyActive: false });
+        // Merge DB areas with hardcoded defaults to ensure we have a good list
+        const combinedAreas = Array.from(
+          new Set([...areasData, ...(POPULAR_AREAS as unknown as string[])])
+        ).sort();
+
+        setPopularAreas(combinedAreas);
 
         // If edit mode, load assigned agents
         if (mode === "edit" && defaultValues?.id) {
@@ -569,9 +570,40 @@ export function PropertyForm({
   };
 
   return (
-    <div className="space-y-10">
-      {/* Stepper */}
-      <div className="bg-white p-6 rounded-3xl shadow-lg shadow-slate-100 border border-slate-100 mb-10 sticky top-4 z-40 backdrop-blur-md bg-white/90">
+    <div className="space-y-6 relative">
+      {/* 1. Sticky Header - ตัวจัดการบันทึก */}
+      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm -mx-4 px-4 md:-mx-8 md:px-8 py-4 mb-6 transition-all duration-200">
+        <div className="flex justify-between items-center max-w-7xl mx-auto">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">
+              {mode === "edit" ? "แก้ไขข้อมูลทรัพย์สิน" : "สร้างประกาศใหม่"}
+            </h1>
+            <p className="text-xs text-slate-500 hidden sm:block">
+              {mode === "edit"
+                ? `${defaultValues?.title || "-"}`
+                : "กรอกข้อมูลให้ครบถ้วนเพื่อสร้างประกาศ"}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <CancelButton sessionId={uploadSessionId} />
+
+            {/* ปุ่มบันทึกด่วน แสดงตลอดเวลาในโหมด Edit */}
+            {mode === "edit" && (
+              <Button
+                onClick={submitNow}
+                disabled={!form.formState.isDirty}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 sm:px-6 py-2 rounded-xl font-bold shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              >
+                บันทึกการแก้ไข
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Stepper */}
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
         <div className="flex justify-between items-center relative max-w-2xl mx-auto">
           <div className="absolute top-5 left-0 w-full h-0.5 bg-slate-100 -z-0" />
           <div
@@ -588,8 +620,18 @@ export function PropertyForm({
           ].map((item) => (
             <div
               key={item.step}
-              className="relative z-10 flex flex-col items-center gap-2 group cursor-pointer"
+              className={`relative z-10 flex flex-col items-center gap-2 group transition-all duration-300 ${
+                mode === "edit" || item.step < currentStep
+                  ? "cursor-pointer"
+                  : "cursor-not-allowed opacity-80"
+              }`}
               onClick={async () => {
+                // Edit mode: Jump to any step
+                if (mode === "edit") {
+                  setCurrentStep(item.step);
+                  return;
+                }
+                // Create mode: Only backward or next step
                 if (item.step < currentStep) setCurrentStep(item.step);
                 else if (item.step === currentStep + 1) handleNext();
               }}
@@ -693,7 +735,8 @@ export function PropertyForm({
                   <Button
                     type="button"
                     onClick={submitNow}
-                    className="h-14 px-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 font-bold text-lg transition-all active:scale-95"
+                    disabled={!form.formState.isDirty}
+                    className="h-14 px-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 font-bold text-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                   >
                     {mode === "create" ? "ยืนยันสร้างประกาศ" : "บันทึกการแก้ไข"}
                   </Button>

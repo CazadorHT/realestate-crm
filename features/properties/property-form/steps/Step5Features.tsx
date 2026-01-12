@@ -72,7 +72,10 @@ export function Step5Features() {
     } else {
       current.add(featureId);
     }
-    setValue("feature_ids", Array.from(current));
+    setValue("feature_ids", Array.from(current), {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   };
 
   if (loading) {

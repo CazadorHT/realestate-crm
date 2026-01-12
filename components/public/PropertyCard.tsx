@@ -23,6 +23,12 @@ import { useEffect, useState, MouseEvent } from "react";
 import { toggleCompareId, readCompareIds } from "@/lib/compare-store";
 import { toggleFavoriteId, readFavoriteIds } from "@/lib/favorite-store";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatDistanceToNow, format } from "date-fns";
 import { th } from "date-fns/locale";
 import {
@@ -118,7 +124,7 @@ export function PropertyCard({
     .join(" • ");
 
   return (
-    <div className="group relative isolate rounded-3xl  bg-white overflow-hidden shadow-md h-full flex flex-col transform-gpu will-change-transform transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2  before:content-[''] before:absolute before:inset-0 before:rounded-3xl  before:ring-inset  before:pointer-events-none before:z-10">
+    <div className="group relative isolate rounded-3xl w-[350px] bg-white overflow-hidden shadow-md h-full flex flex-col transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2  before:content-[''] before:absolute before:inset-0 before:rounded-3xl  before:ring-inset  before:pointer-events-none before:z-10">
       <Link
         href={`/properties/${property.id}`}
         className="flex flex-col h-full focus:outline-none"
@@ -126,7 +132,7 @@ export function PropertyCard({
       >
         {/* Image Section */}
 
-        <div className="relative h-48 overflow-hidden rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5 ">
+        <div className="relative aspect-square h-[300px]  w-full overflow-hidden rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5  ">
           {property.image_url ? (
             <Image
               src={property.image_url}
@@ -137,23 +143,28 @@ export function PropertyCard({
               ].join(" - ")}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-              className="object-cover  transform-gpu [will-change:transform] group-hover:scale-105 transition-transform duration-500"
+              className="object-cover object-top  transform-gpu [will-change:transform] group-hover:scale-125 group:hover:object-contain transition-transform duration-1000 "
               priority={priority}
               loading={priority ? "eager" : "lazy"}
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 flex items-center justify-center text-sm text-slate-400">
+            <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
               ไม่มีรูปภาพ
             </div>
           )}
 
-          <div className="pointer-events-none absolute inset-0 rounded-t-3xl bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+          <div className="pointer-events-none absolute inset-0 rounded-t-3xl bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
           {/* Verified Badge */}
           {property.verified && (
-            <div className="absolute top-3 left-3 bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg z-20 ">
+            <div className="group/verified absolute top-3 left-3 flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 rounded-full shadow-lg z-20 transition-all duration-300 hover:pr-3 cursor-default">
+              {/* Icon stays visible */}
               <ShieldCheck className="w-4 h-4" />
-              <span>VERIFIED</span>
+
+              {/* Text expands from 0 width */}
+              <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 group-hover/verified:max-w-[100px] group-hover/verified:opacity-100 group-hover/verified:ml-1.5">
+                VERIFIED
+              </span>
             </div>
           )}
 
@@ -194,7 +205,7 @@ export function PropertyCard({
         </div>
 
         {/* Content Section */}
-        <div className="pt-2 pb-6 px-6 mt-3 gap-y-4 flex-grow min-h-[180px] flex flex-col">
+        <div className="pt-2 pb-6 px-6 mt-3 gap-y-3 flex-grow min-h-[180px] flex flex-col">
           <div className="space-y-1 mb-3">
             <div className="flex justify-between items-center mb-2">
               <span
@@ -270,19 +281,48 @@ export function PropertyCard({
 
           {/* Features Preview */}
           {property.features && property.features.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2 h-6 overflow-hidden">
+            <div className="flex flex-wrap gap-1 mt-2 h-6 overflow-hidden ">
               {property.features.slice(0, 3).map((f) => (
                 <span
                   key={f.id}
-                  className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200"
+                  className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200 group-hover:bg-slate-100 duration-300 group-hover:text-slate-700"
                 >
                   {f.name}
                 </span>
               ))}
               {property.features.length > 3 && (
-                <span className="text-[10px] px-1.5 py-0.5 bg-slate-50 text-slate-400 rounded-md">
-                  +{property.features.length - 3}
-                </span>
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-slate-50 text-slate-400 rounded-md cursor-help hover:bg-slate-100 transition-colors  group-hover:text-slate-600">
+                        +{property.features.length - 3}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="bg-slate-900/95 backdrop-blur-sm text-slate-50 border-slate-800 p-3 shadow-xl z-50"
+                    >
+                      <div className="font-semibold text-[10px] mb-1.5 text-slate-400 uppercase tracking-wider">
+                        เพิ่มเติม
+                      </div>
+                      <ul className="text-xs space-y-1 min-w-[120px]">
+                        {property.features.slice(3, 8).map((f) => (
+                          <li key={f.id} className="flex items-center gap-2">
+                            <div className="w-1 h-1 rounded-full bg-blue-500 shrink-0"></div>
+                            <span className="truncate max-w-[150px]">
+                              {f.name}
+                            </span>
+                          </li>
+                        ))}
+                        {property.features.length > 8 && (
+                          <li className="text-slate-500 pl-3 text-[10px]">
+                            ...และอีก {property.features.length - 8} รายการ
+                          </li>
+                        )}
+                      </ul>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
           )}
@@ -306,7 +346,7 @@ export function PropertyCard({
         </div>
 
         {/* Footer Section */}
-        <div className="p-4 border-t border-slate-200 bg-white/60 backdrop-blur flex flex-col gap-3">
+        <div className="h-28 px-4 py-3 border-t border-slate-200 bg-white/60 flex flex-col justify-between gap-2">
           <div className="min-w-0">
             {property.listing_type === "SALE_AND_RENT" ? (
               <div className="flex items-center gap-3 divide-x divide-slate-200">
@@ -318,7 +358,7 @@ export function PropertyCard({
                   {property.original_price &&
                   property.price &&
                   property.original_price > property.price ? (
-                    <div className="flex flex-wrap items-baseline gap-2 ">
+                    <div className="flex flex-wrap items-baseline  ">
                       {/* Discount Label */}
                       <div className="order-2 flex items-center gap-1 ">
                         <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
@@ -358,7 +398,7 @@ export function PropertyCard({
                   {property.original_rental_price &&
                   property.rental_price &&
                   property.original_rental_price > property.rental_price ? (
-                    <div className="flex flex-wrap items-baseline gap-2">
+                    <div className="flex flex-wrap items-baseline ">
                       {/* Discount Label */}
                       <div className="order-2 flex items-center gap-1">
                         <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
@@ -482,14 +522,14 @@ export function PropertyCard({
             {(property.listing_type === "RENT" ||
               property.listing_type === "SALE_AND_RENT") &&
               property.min_contract_months && (
-                <div className="flex items-center gap-1 text-[10px] text-slate-600 font-medium italic">
+                <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium italic  ">
                   <div className="w-1 h-1 rounded-full bg-slate-300" />
                   สัญญาขั้นต่ำ {property.min_contract_months} เดือน
                 </div>
               )}
 
             {/* Update Date (Right) */}
-            <div className="text-[10px] text-stone-400 italic flex ">
+            <div className="text-[11px] text-stone-400 italic flex ">
               {property.updated_at ? (
                 <>
                   <Clock className="h-3 w-3 mr-1" />

@@ -81,6 +81,19 @@ export function FloatingContactDial() {
     return `${phone.substring(0, 3)}-${phone.substring(3, 4)}xx-xxxx`;
   };
 
+  // Format helper: 0935502143 -> 093-550-2143
+  const formatPhone = (phone: string) => {
+    // Clean non-digit characters first if needed, but assuming mostly digits here
+    const clean = phone.replace(/\D/g, "");
+    if (clean.length === 10) {
+      return `${clean.substring(0, 3)}-${clean.substring(
+        3,
+        6
+      )}-${clean.substring(6)}`;
+    }
+    return phone;
+  };
+
   return (
     <div
       className={`fixed bottom-24 right-6 z-50 flex flex-col items-end gap-4 transition-all duration-500 transform ${
@@ -123,8 +136,8 @@ export function FloatingContactDial() {
                         <div className="text-[10px] text-slate-500 font-medium whitespace-nowrap mb-0.5">
                           {agent.agentName}
                         </div>
-                        <div className="text-sm font-bold text-slate-800 whitespace-nowrap flex items-center gap-2">
-                          {agent.phone}
+                        <div className="text-sm font-semibold text-slate-800 whitespace-nowrap flex items-center gap-2">
+                          {formatPhone(agent.phone)}
                         </div>
                       </div>
                     </a>
@@ -137,7 +150,7 @@ export function FloatingContactDial() {
                         <div className="text-[10px] text-slate-500 font-medium whitespace-nowrap mb-0.5">
                           {agent.agentName}
                         </div>
-                        <div className="text-sm font-bold text-slate-800 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-slate-800 whitespace-nowrap">
                           {getMaskedPhone(agent.phone)}
                         </div>
                       </div>

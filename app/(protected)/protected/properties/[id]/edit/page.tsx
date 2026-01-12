@@ -19,7 +19,6 @@ export default async function EditPropertyPage({
 
   return (
     <div className="p-6">
-      <h1 className="font-bold text-xl mb-4">แก้ไขทรัพย์</h1>
       <PropertyForm
         mode="edit"
         defaultValues={property}

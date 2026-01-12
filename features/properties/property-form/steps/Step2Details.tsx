@@ -470,14 +470,64 @@ export function Step2Details({ form, mode }: Step2Props) {
 
                   {/* Min Contract - แสดงเฉพาะ RENT / SALE_AND_RENT */}
                   <div className="lg:col-span-3">
-                    <UnitNumberField
-                      label="สัญญาขั้นต่ำ"
-                      name="min_contract_months"
+                    <FormField
                       control={form.control}
-                      placeholder="12"
-                      suffix="เดือน"
-                      disabled={isReadOnly}
-                      description="เช่น 12 เดือน (1 ปี) ช่วยกรองลูกค้าเช่าระยะยาว"
+                      name="min_contract_months"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-700">
+                            สัญญาขั้นต่ำ
+                          </FormLabel>
+
+                          <FormControl>
+                            <div className="flex items-center">
+                              <NumberInput
+                                {...field}
+                                value={field.value ?? undefined}
+                                placeholder="12"
+                                disabled={isReadOnly}
+                                className="h-11 w-full rounded-l-xl rounded-r-none border-r-0 border-slate-200 bg-white font-semibold focus:border-slate-900 focus:ring-0"
+                              />
+                              <span className="h-11 select-none whitespace-nowrap rounded-r-xl border border-l-0 border-slate-200 bg-slate-50 px-3 font-semibold">
+                                เดือน
+                              </span>
+                            </div>
+                          </FormControl>
+
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { value: 12, label: "1 ปี" },
+                              { value: 24, label: "2 ปี" },
+                              { value: 36, label: "3 ปี" },
+                            ].map((preset) => {
+                              const active =
+                                Number(field.value) === preset.value;
+                              return (
+                                <button
+                                  key={preset.value}
+                                  type="button"
+                                  disabled={isReadOnly}
+                                  onClick={() => field.onChange(preset.value)}
+                                  className={[
+                                    "h-10 rounded-xl border text-xs font-bold transition",
+                                    active
+                                      ? "border-orange-600 bg-orange-600 text-white"
+                                      : "border-orange-100 bg-white text-orange-600 hover:bg-orange-50",
+                                    isReadOnly ? "opacity-60" : "",
+                                  ].join(" ")}
+                                >
+                                  {preset.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <FormDescription className="text-xs text-slate-500">
+                            เช่น 12 เดือน (1 ปี) ช่วยกรองลูกค้าเช่าระยะยาว
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
                 </div>
@@ -696,10 +746,13 @@ export function Step2Details({ form, mode }: Step2Props) {
               control={form.control}
               name="is_pet_friendly"
               render={({ field }) => (
-                <FormItem className="rounded-2xl border border-orange-100 bg-orange-50/40 p-4 transition hover:bg-orange-50/60">
-                  <div className="flex items-start justify-between gap-3">
+                <FormItem className="rounded-2xl border border-orange-100 bg-orange-50/40 p-4 transition hover:bg-orange-50/60 cursor-pointer">
+                  <div
+                    className="flex items-start justify-between gap-3"
+                    onClick={() => !isReadOnly && field.onChange(!field.value)}
+                  >
                     <div className="space-y-1">
-                      <FormLabel className="text-sm font-bold text-orange-900">
+                      <FormLabel className="text-sm font-bold text-orange-900 cursor-pointer">
                         🐶 Pet Friendly
                       </FormLabel>
                       <p className="text-xs text-orange-800/70">
@@ -711,6 +764,8 @@ export function Step2Details({ form, mode }: Step2Props) {
                         checked={field.value}
                         onCheckedChange={field.onChange}
                         disabled={isReadOnly}
+                        className="data-[state=checked]:bg-blue-600"
+                        onClick={(e) => e.stopPropagation()} // Prevent double toggle
                       />
                     </FormControl>
                   </div>

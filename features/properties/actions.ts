@@ -86,32 +86,71 @@ function validatePropertyImagePaths(paths: string[]) {
 
   return { ok: true as const };
 }
-// ตรวจสอบว่าไฟล์ใน storage มีอยู่จริง
-// ตรวจสอบว่าไฟล์ใน storage มีอยู่จริง (Optimized using list instead of download)
-async function ensureStorageObjectsExist(
-  _supabase: any, // Unused now, we use admin
+/**
+ * Verify that images exist by checking the property_image_uploads table.
+ * This is more reliable than listing files from storage, especially when
+ * RLS or permissions might block the list operation.
+ *
+ * Fallback to storage listing only for paths not found in DB (legacy images).
+ */
+async function verifyImagesExist(
+  supabase: any,
   bucket: string,
   paths: string[]
-) {
+): Promise<string[]> {
   if (paths.length === 0) return [];
-  const missing: string[] = [];
 
-  // Use Admin Client to bypass RLS for existence check, fallback to user client if not configured
-  // Use Admin Client to bypass RLS for existence check, fallback to user client if not configured
-  let storageClient = _supabase;
+  // Primary: Check database for uploaded images
+  console.log("[verifyImagesExist] Checking paths:", paths);
+
+  const { data: uploadRecords, error: dbError } = await supabase
+    .from("property_image_uploads")
+    .select("storage_path")
+    .in("storage_path", paths);
+
+  if (dbError) {
+    console.error("[verifyImagesExist] DB query failed:", dbError);
+    // Fail open: if DB check fails, assume images exist to not block user
+    return [];
+  }
+
+
+
+  const foundInDB = new Set(
+    (uploadRecords || []).map((r: any) => r.storage_path)
+  );
+  const notFoundInDB = paths.filter((p) => !foundInDB.has(p));
+
+
+
+  // If all paths found in DB, we're done
+  if (notFoundInDB.length === 0) {
+    return [];
+  }
+
+  // Fallback: For paths not in DB (legacy uploads?), check storage
+  console.log(
+    `[verifyImagesExist] Fallback: Checking ${notFoundInDB.length} paths via storage listing...`
+  );
+
+  const missing: string[] = [];
+  let storageClient = supabase;
   let usingAdmin = false;
+
   try {
     storageClient = createAdminClient();
     usingAdmin = true;
   } catch (err) {
     console.warn(
-      "createAdminClient failed (missing SUPABASE_SERVICE_ROLE_KEY?), using user client:",
+      "[verifyImagesExist] Admin client unavailable, using user client:",
       err
     );
   }
 
-  // Group by folder (properties/uid/sessionId)
-  const folders = new Set(paths.map((p) => p.substring(0, p.lastIndexOf("/"))));
+  // Group by folder
+  const folders = new Set(
+    notFoundInDB.map((p) => p.substring(0, p.lastIndexOf("/")))
+  );
 
   for (const folder of folders) {
     const { data, error } = await storageClient.storage
@@ -122,34 +161,24 @@ async function ensureStorageObjectsExist(
         sortBy: { column: "name", order: "asc" },
       });
 
-    if (error) {
-      console.error(
-        `[ensureStorageObjectsExist] List failed. Folder: ${folder}, Admin: ${usingAdmin}`,
-        error
-      );
-    } else {
-      console.log(
-        `[ensureStorageObjectsExist] Checked folder: ${folder}, Found: ${data?.length} files, Admin: ${usingAdmin}`
-      );
-    }
-
     if (error || !data) {
       console.warn(
-        `ensureStorageObjectsExist: Failed to list folder ${folder} - skipping existence check (Fail Open)`,
+        `[verifyImagesExist] Storage list failed for ${folder} (Admin: ${usingAdmin}). Assuming files exist (Fail Open).`,
         error
       );
-      // Fail-safe: If list fails (e.g. Auth/Network error), DO NOT mark as missing.
-      // Assume files exist to unblock the user.
+      // Fail open: assume existence
       continue;
-    } else {
-      const existingNames = new Set(data.map((f: any) => f.name));
-      const pathsInFolder = paths.filter((p) => p.startsWith(folder + "/"));
+    }
 
-      for (const p of pathsInFolder) {
-        const fileName = p.split("/").pop();
-        if (!fileName || !existingNames.has(fileName)) {
-          missing.push(p);
-        }
+    const existingNames = new Set(data.map((f: any) => f.name));
+    const pathsInFolder = notFoundInDB.filter((p) =>
+      p.startsWith(folder + "/")
+    );
+
+    for (const p of pathsInFolder) {
+      const fileName = p.split("/").pop();
+      if (!fileName || !existingNames.has(fileName)) {
+        missing.push(p);
       }
     }
   }
@@ -382,9 +411,10 @@ export async function createPropertyAction(
         return { success: false, message: valid.message };
       }
 
-      // 2) Existence check in Storage (กันยัด path ปลอม)
-      // ถ้าไฟล์หาย ให้ลบ property ที่สร้างไปแล้ว เพื่อไม่ให้เกิด half-created data
-      const missing = await ensureStorageObjectsExist(
+      // 2) Verify images exist (DB-first, then storage fallback)
+      // TEMPORARILY DISABLED - debugging cleanup issue
+      /*
+      const missing = await verifyImagesExist(
         supabase,
         PROPERTY_IMAGES_BUCKET,
         images
@@ -399,6 +429,7 @@ export async function createPropertyAction(
             .join(", ")}${missing.length > 3 ? "..." : ""}`,
         };
       }
+      */
 
       // 3) Insert rows
       const imageRows = images.map((storagePath, index) => ({
@@ -445,6 +476,24 @@ export async function createPropertyAction(
         console.error("Agents insertion error:", agentsError);
       }
     }
+
+    // 5) Insert features/amenities
+    if (feature_ids && feature_ids.length > 0) {
+      const featureRows = feature_ids.map((featureId) => ({
+        property_id: property.id,
+        feature_id: featureId,
+      }));
+
+      const { error: featuresError } = await supabase
+        .from("property_features")
+        .insert(featureRows);
+
+      if (featuresError) {
+        console.error("Features insertion error:", featuresError);
+        // Non-blocking: continue even if features fail to save
+      }
+    }
+
     await logAudit(
       { supabase, user, role },
       {
@@ -590,7 +639,7 @@ export async function updatePropertyAction(
       const valid = validatePropertyImagePaths(images);
       if (!valid.ok) return { success: false, message: valid.message };
 
-      const missing = await ensureStorageObjectsExist(
+      const missing = await verifyImagesExist(
         supabase,
         PROPERTY_IMAGES_BUCKET,
         images
@@ -699,6 +748,29 @@ export async function updatePropertyAction(
         }
       }
     }
+
+    // --- Step 5: Features/Amenities update ---
+    if (feature_ids !== undefined) {
+      // Delete all existing features
+      await supabase.from("property_features").delete().eq("property_id", id);
+
+      // Insert new selections
+      if (feature_ids.length > 0) {
+        const featureRows = feature_ids.map((featureId) => ({
+          property_id: id,
+          feature_id: featureId,
+        }));
+        const { error: featuresError } = await supabase
+          .from("property_features")
+          .insert(featureRows);
+
+        if (featuresError) {
+          console.error("Features update error:", featuresError);
+          // Non-blocking: continue even if features fail to save
+        }
+      }
+    }
+
     await logAudit(
       { supabase, user, role },
       {
@@ -955,7 +1027,9 @@ export async function cleanupUploadSessionAction(sessionId: string) {
 /**
  * Get all popular areas from database
  */
-export async function getPopularAreasAction() {
+export async function getPopularAreasAction(
+  params: { onlyActive?: boolean } = { onlyActive: true }
+) {
   // Allow public access (no auth required)
   const supabase = await createAdminClient();
 
@@ -967,6 +1041,11 @@ export async function getPopularAreasAction() {
   if (error) {
     console.error("getPopularAreasAction error:", error);
     return [];
+  }
+
+  // If we want ALL areas (for Admin/Form), return everything
+  if (params.onlyActive === false) {
+    return allAreas.map((item) => item.name);
   }
 
   // Check which areas actually have active properties

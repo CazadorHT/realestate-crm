@@ -78,7 +78,7 @@ export function Step4Media({
                   initialImages={initialImages}
                   maxFiles={IMAGE_UPLOAD_POLICY.maxFiles}
                   maxFileSizeMB={IMAGE_UPLOAD_POLICY.maxBytes / (1024 * 1024)}
-                  cleanupOnUnmount={!persistImages}
+                  cleanupOnUnmount={false}
                 />
               </FormControl>
               <FormMessage />

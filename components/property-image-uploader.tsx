@@ -100,19 +100,90 @@ export function PropertyImageUploader({
         origin: "initial",
       }));
     }
-    return value.map((path, index) => ({
-      id: `value-${index}`,
-      storage_path: path,
-      preview_url: "",
-      is_cover: index === 0,
-    }));
+
+    // If no initialImages but value has paths, generate preview URLs
+    if (value.length > 0) {
+      const {
+        getPublicImageUrl,
+      } = require("@/features/properties/image-utils");
+      return value.map((path, index) => ({
+        id: `value-${index}`,
+        storage_path: path,
+        preview_url: getPublicImageUrl(path),
+        is_cover: index === 0,
+        origin: "temp" as const,
+      }));
+    }
+
+    return [];
   });
 
   // keep latest snapshot for cleanup without triggering setState during render
   const imagesRef = useRef<ImageItem[]>(images);
+  const prevValueRef = useRef<string[]>(value);
+  const isUploadingRef = useRef(false);
+
   useEffect(() => {
     imagesRef.current = images;
   }, [images]);
+
+  // Sync value prop changes back to images state (e.g., when navigating steps)
+  useEffect(() => {
+    // Don't sync if we're in the middle of uploading
+    if (isUploadingRef.current) {
+      console.log("[PropertyImageUploader] Skipping sync - upload in progress");
+      return;
+    }
+
+    // Only sync if value has actual paths
+    if (value.length === 0) {
+      if (images.length > 0 && !images.some((img) => img.is_uploading)) {
+        // Value was cleared and no uploads in progress, clear images too
+        console.log("[PropertyImageUploader] Clearing images - value is empty");
+        setImages([]);
+      }
+      prevValueRef.current = value;
+      return;
+    }
+
+    const currentPaths = images.map((img) => img.storage_path).filter(Boolean);
+    const valuePaths = value.filter(Boolean);
+
+    // Check if value is different from current images
+    const hasChanged =
+      valuePaths.length !== currentPaths.length ||
+      valuePaths.some((path, idx) => path !== currentPaths[idx]);
+
+    // Also check if different from previous value to avoid infinite loop
+    const changedFromPrev =
+      prevValueRef.current.length !== valuePaths.length ||
+      prevValueRef.current.some((path, idx) => path !== valuePaths[idx]);
+
+    if (!hasChanged || !changedFromPrev) {
+      prevValueRef.current = valuePaths;
+      return;
+    }
+
+    console.log("[PropertyImageUploader] Syncing value to images:", {
+      valuePaths,
+      currentPaths,
+      hasChanged,
+      changedFromPrev,
+    });
+
+    // Regenerate images from value with proper preview URLs
+    const { getPublicImageUrl } = require("@/features/properties/image-utils");
+    const syncedImages = valuePaths.map((path, index) => ({
+      id: `synced-${Date.now()}-${index}`,
+      storage_path: path,
+      preview_url: getPublicImageUrl(path),
+      is_cover: index === 0,
+      origin: "temp" as const,
+    }));
+
+    prevValueRef.current = valuePaths;
+    setImages(syncedImages);
+  }, [value]); // Only depend on value, not images
 
   // Sync images state to parent (react-hook-form)
   useEffect(() => {
@@ -242,6 +313,8 @@ export function PropertyImageUploader({
       }
 
       // Step 3: Create preview items
+      isUploadingRef.current = true; // Mark as uploading
+
       const newItems: ImageItem[] = compressedFiles.map((file, index) => ({
         id: `new-${Date.now()}-${index}`,
         storage_path: "",
@@ -292,6 +365,9 @@ export function PropertyImageUploader({
           setImages((prev) => prev.filter((img) => img.id !== item.id));
         }
       }
+
+      // Mark upload as complete
+      isUploadingRef.current = false;
     },
     [disabled, images.length, maxFiles, maxFileSizeMB, sessionId]
   );

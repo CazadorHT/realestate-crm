@@ -137,7 +137,7 @@ export function HotDealsSection() {
 
         {/* === CARDS SECTION === */}
         {isLoading ? (
-          <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4 p-2">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 p-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <PropertyCardSkeleton key={i} />
             ))}
@@ -146,12 +146,12 @@ export function HotDealsSection() {
           /* Horizontal Scroll on Mobile / Grid on Desktop */
           <div
             ref={scrollRef}
-            className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-12 overflow-x-auto md:overflow-visible scrollbar-hide snap-x"
+            className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto md:overflow-visible scrollbar-hide snap-x"
           >
             {properties.slice(0, 4).map((property, index) => (
               <div
                 key={property.id}
-                className="min-w-[320px] md:min-w-0 snap-center relative group perspective-1000"
+                className="min-w-[350px] md:min-w-0 snap-center relative group perspective-1000"
               >
                 {/* Floating Hot Badge Overlay */}
                 <div className="absolute -top-5 -left-5 z-30">
@@ -164,8 +164,8 @@ export function HotDealsSection() {
                 </div>
 
                 {/* Card Wrapper with Premium Glow Effect */}
-                <div className="rounded-[1.5rem] p-2 bg-gradient-to-b from-white/80 to-white/40 backdrop-blur-sm shadow-xl shadow-orange-900/5 group-hover:shadow-orange-600/20 hover:-translate-y-2 transition-all duration-500  ">
-                  <div className="hover:scale-105 transition-all duration-300">
+                <div className="rounded-[1.5rem] p-1 bg-gradient-to-b from-white/80 to-white/40 shadow-xl shadow-orange-900/5 group-hover:shadow-orange-600/20 hover:-translate-y-2 transition-all duration-500  ">
+                  <div className="hover:scale-105 transition-all duration-500">
                     <PropertyCard property={property} priority={index === 0} />
                   </div>
                 </div>
