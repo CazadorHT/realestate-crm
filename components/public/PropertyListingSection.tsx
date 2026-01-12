@@ -23,6 +23,7 @@ type FilterType =
 
 type ApiProperty = {
   id: string;
+  slug?: string | null;
   title: string;
   description: string | null;
   property_type: string | null;
@@ -257,7 +258,9 @@ export function PropertyListingSection() {
             priceCurrency: "THB",
           },
         },
-        url: `https://your-domain.com/properties/${property.id}`,
+        url: `https://your-domain.com/properties/${
+          property.slug || property.id
+        }`,
       },
     })),
   };

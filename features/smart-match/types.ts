@@ -19,6 +19,7 @@ export interface SearchCriteria {
 
 export interface PropertyMatch {
   id: string;
+  slug?: string | null;
   title: string;
   price: number;
   image_url: string;

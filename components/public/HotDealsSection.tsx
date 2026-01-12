@@ -174,10 +174,10 @@ export function HotDealsSection() {
                 data-aos-delay={index * 100}
               >
                 {/* Floating Hot Badge Overlay */}
-                <div className="absolute -top-5 -left-5 z-30">
+                <div className="absolute -top-7 -left-5 z-30">
                   <div className="relative">
                     <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
-                    <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-6 transition-all duration-300 scale-110 ">
+                    <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.1)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-6 transition-all duration-300 scale-110 ">
                       <Sparkles className="h-6 w-6 fill-yellow-200" />
                     </div>
                   </div>

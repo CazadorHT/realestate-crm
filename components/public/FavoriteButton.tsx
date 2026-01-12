@@ -1,45 +1,90 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
-import { toggleFavoriteId, isFavorite } from "@/lib/favorite-store";
+import { Button } from "@/components/ui/button";
+import {
+  toggleFavoriteId,
+  readFavoriteIds,
+  isFavorite,
+} from "@/lib/favorite-store";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+interface FavoriteButtonProps {
+  propertyId: string;
+  variant?: "default" | "outline" | "ghost" | "icon";
+  className?: string;
+  showText?: boolean;
+}
 
 export function FavoriteButton({
   propertyId,
-  className = "",
-}: {
-  propertyId: string;
-  className?: string;
-}) {
-  const [favorite, setFavorite] = useState(false);
+  variant = "outline",
+  className,
+  showText = false,
+}: FavoriteButtonProps) {
+  const [favorited, setFavorited] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
-    setFavorite(isFavorite(propertyId));
+    // Initial check
+    setFavorited(isFavorite(propertyId));
 
-    const handleUpdate = () => setFavorite(isFavorite(propertyId));
+    // Listen for updates
+    const handleUpdate = () => {
+      setFavorited(isFavorite(propertyId));
+    };
+
     window.addEventListener("favorite-updated", handleUpdate);
     return () => window.removeEventListener("favorite-updated", handleUpdate);
   }, [propertyId]);
 
-  const toggleFavorite = (e: React.MouseEvent) => {
+  const handleToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 600);
+
     toggleFavoriteId(propertyId);
+
+    if (!favorited) {
+      toast.success("บันทึกรายการโปรดแล้ว");
+    } else {
+      toast.info("ลบออกจากรายการโปรดแล้ว");
+    }
   };
 
   return (
-    <button
-      onClick={toggleFavorite}
-      className={`group/fav transition-all duration-300 ${className}`}
-      aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
+    <Button
+      variant="outline"
+      size={showText ? "default" : "icon"}
+      className={cn(
+        "rounded-full transition-all duration-300 border-slate-200 hover:border-red-200 hover:bg-red-50",
+        favorited ? "text-red-500 border-red-200 bg-red-50" : "text-slate-400",
+        className
+      )}
+      onClick={handleToggle}
+      title={favorited ? "ลบจากรายการโปรด" : "บันทึกรายการโปรด"}
     >
       <Heart
-        className={`h-5 w-5 transition-all duration-300 ${
-          favorite
-            ? "fill-red-500 text-red-500 scale-110"
-            : "fill-transparent text-white group-hover/fav:text-red-500 group-hover/fav:scale-110"
-        }`}
+        className={cn(
+          "h-5 w-5 transition-all duration-500",
+          favorited ? "fill-current scale-110" : "scale-100",
+          isAnimating && "animate-pulse"
+        )}
       />
-    </button>
+      {showText && (
+        <span
+          className={cn(
+            "ml-2",
+            favorited ? "text-red-600 font-medium" : "text-slate-600"
+          )}
+        >
+          {favorited ? "บันทึกแล้ว" : "บันทึก"}
+        </span>
+      )}
+    </Button>
   );
 }

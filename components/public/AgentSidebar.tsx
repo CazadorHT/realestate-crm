@@ -4,6 +4,9 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Phone, MessageCircle, BadgeCheck, ShieldCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ContactAgentDialog } from "@/components/public/ContactAgentDialog";
+import { FavoriteButton } from "@/components/public/FavoriteButton";
+import { ShareButtons } from "@/components/public/ShareButtons";
 
 interface AgentSidebarProps {
   agentName?: string | null;
@@ -11,6 +14,9 @@ interface AgentSidebarProps {
   agentPhone?: string | null;
   agentLine?: string | null;
   isVerified?: boolean;
+  propertyId?: string;
+  propertyTitle?: string;
+  shareUrl: string;
 }
 
 export function AgentSidebar({
@@ -19,6 +25,9 @@ export function AgentSidebar({
   agentPhone,
   agentLine,
   isVerified = true,
+  propertyId,
+  propertyTitle,
+  shareUrl,
 }: AgentSidebarProps) {
   return (
     <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-xl shadow-slate-100/50  top-24">
@@ -50,7 +59,7 @@ export function AgentSidebar({
       </div>
 
       <div className="space-y-3">
-        <Button className="w-full h-12 rounded-xl text-base font-semibold bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-100 transition-all hover:-translate-y-0.5 animate-fade-in-out transition-all duration-500">
+        <Button className="w-full h-12 rounded-xl text-base font-semibold bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-100 transition-all hover:-translate-y-0.5 animate-fade-in-out duration-500">
           <MessageCircle className="w-5 h-5 mr-2" />
           ทักไลน์ (Line)
         </Button>
@@ -59,6 +68,17 @@ export function AgentSidebar({
           <Phone className="w-5 h-5 mr-2 text-slate-400" />
           {agentPhone || "0xx-xxx-xxxx"}
         </Button>
+
+        <ContactAgentDialog
+          propertyId={propertyId}
+          propertyTitle={propertyTitle}
+        />
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-center gap-3 pt-2">
+          {propertyId && <FavoriteButton propertyId={propertyId} showText />}
+          <ShareButtons url={shareUrl} title={propertyTitle || ""} />
+        </div>
       </div>
 
       <div className="mt-6 pt-6 border-t border-slate-50 text-center">

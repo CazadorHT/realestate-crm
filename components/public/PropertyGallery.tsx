@@ -10,16 +10,35 @@ import {
 } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  ImageIcon,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  ShieldCheck,
+  PawPrint,
+} from "lucide-react";
+import { IoShieldCheckmark } from "react-icons/io5";
 import { cn } from "@/lib/utils";
 import { PropertyImage } from "@/features/properties/types";
 
 interface PropertyGalleryProps {
   images: PropertyImage[];
   title: string;
+  isHot?: boolean;
+  verified?: boolean;
+  petFriendly?: boolean;
 }
 
-export function PropertyGallery({ images, title }: PropertyGalleryProps) {
+export function PropertyGallery({
+  images,
+  title,
+  isHot,
+  verified,
+  petFriendly,
+}: PropertyGalleryProps) {
   const [open, setOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -55,67 +74,103 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2 h-[300px] md:h-[450px] rounded-3xl overflow-hidden relative group">
-        {/* Main Image (Large Left) */}
-        <div
-          className="md:col-span-2 md:row-span-2 relative cursor-pointer bg-slate-200 "
-          onClick={() => {
-            setCurrentIndex(0);
-            setOpen(true);
-          }}
-        >
-          <Image
-            src={mainImage.image_url}
-            alt={title}
-            fill
-            className="object-cover hover:scale-105 transition-transform duration-700"
-            priority
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
-        </div>
-
-        {/* Sub Images (Grid Right) */}
-        <div className="hidden md:grid grid-cols-2 gap-2 col-span-2 row-span-2 max-h-full">
-          {subImages.map((img, idx) => (
-            <div
-              key={img.id}
-              className="relative bg-slate-200 cursor-pointer overflow-hidden"
-              onClick={() => {
-                setCurrentIndex(idx + 1);
-                setOpen(true);
-              }}
-            >
-              <Image
-                src={img.image_url}
-                alt={`${title} - ${idx + 1}`}
-                fill
-                className="object-cover hover:scale-105 transition-transform duration-500"
-                sizes="25vw"
-              />
-              {/* Overlay for the last visible image if more exist */}
-              {idx === 3 && remainingCount > 0 && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg backdrop-blur-[2px] hover:bg-black/60 transition-colors">
-                  +{remainingCount} รูป
-                </div>
-              )}
+      <div className="relative group">
+        {/* Floating Hot Badge Overlay */}
+        {isHot && (
+          <div className="absolute -top-5 -left-5 z-30 pointer-events-none">
+            <div className="relative">
+              <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
+              <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-1 transition-all duration-300 scale-110 ">
+                <Sparkles className="h-6 w-6 fill-yellow-200" />
+              </div>
             </div>
-          ))}
-          {/* Fallback for empty slots to keep grid shape if < 5 images */}
-          {Array.from({ length: 4 - subImages.length }).map((_, i) => (
-            <div key={`empty-${i}`} className="bg-slate-50" />
-          ))}
+          </div>
+        )}
+
+        {/* Verified Badge - Icon only with hover text */}
+        {verified && (
+          <div className="group/verified absolute top-4 left-6 z-50 flex items-center bg-blue-600/90 backdrop-blur-md text-white p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
+            {/* Icon stays visible */}
+            <IoShieldCheckmark className="w-5 h-5" />
+
+            {/* Text expands from 0 width on hover */}
+            <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 group-hover/verified:max-w-[100px] group-hover/verified:opacity-100 group-hover/verified:ml-2">
+              VERIFIED
+            </span>
+          </div>
+        )}
+        <div className="absolute bottom-6 left-6 z-50 flex gap-2">
+          {petFriendly && (
+            <Badge className="bg-white/90 backdrop-blur-sm text-orange-600 border border-orange-200 rounded-full px-3 py-1.5 text-xs font-bold gap-1.5 shadow-lg hover:bg-white/90 hover:text-orange-600 hover:border-orange-200">
+              <PawPrint className="w-5 h-5" />
+              <span className="hidden min-[360px]:inline">Pet Friendly</span>
+              <span className="inline min-[360px]:hidden">Pet</span>
+            </Badge>
+          )}
         </div>
 
-        {/* Mobile View All Button */}
-        <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6">
-          <Button
-            variant="secondary"
-            className="bg-white/90 hover:bg-white text-slate-900 shadow-lg backdrop-blur-sm h-10 px-4 rounded-xl font-semibold"
-            onClick={() => setOpen(true)}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 h-[300px] md:h-[450px] rounded-3xl overflow-hidden relative">
+          {/* Main Image (Large Left) */}
+          <div
+            className="md:col-span-2 md:row-span-2 relative cursor-pointer bg-slate-200 group/main"
+            onClick={() => {
+              setCurrentIndex(0);
+              setOpen(true);
+            }}
           >
-            <ImageIcon className="w-4 h-4 mr-2" />
-            ดูรูปทั้งหมด ({sortedImages.length})
-          </Button>
+            <Image
+              src={mainImage.image_url}
+              alt={title}
+              fill
+              className="object-cover hover:scale-105 transition-transform duration-700"
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
+
+          {/* Sub Images (Grid Right) */}
+          <div className="hidden md:grid grid-cols-2 gap-2 col-span-2 row-span-2 max-h-full">
+            {subImages.map((img, idx) => (
+              <div
+                key={img.id}
+                className="relative bg-slate-200 cursor-pointer overflow-hidden group/sub"
+                onClick={() => {
+                  setCurrentIndex(idx + 1);
+                  setOpen(true);
+                }}
+              >
+                <Image
+                  src={img.image_url}
+                  alt={`${title} - ${idx + 1}`}
+                  fill
+                  className="object-cover hover:scale-105 transition-transform duration-500"
+                  sizes="25vw"
+                />
+                {/* Overlay for the last visible image if more exist */}
+                {idx === 3 && remainingCount > 0 && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg backdrop-blur-[2px] hover:bg-black/60 transition-colors">
+                    +{remainingCount} รูป
+                  </div>
+                )}
+              </div>
+            ))}
+            {/* Fallback for empty slots to keep grid shape if < 5 images */}
+            {Array.from({ length: 4 - subImages.length }).map((_, i) => (
+              <div key={`empty-${i}`} className="bg-slate-50" />
+            ))}
+          </div>
+
+          {/* Mobile View All Button */}
+          <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6">
+            <Button
+              variant="secondary"
+              className="bg-white/90 hover:bg-white text-slate-900 shadow-lg backdrop-blur-sm h-10 px-4 rounded-xl font-semibold"
+              onClick={() => setOpen(true)}
+            >
+              <ImageIcon className="w-4 h-4 mr-2" />
+              ดูรูปทั้งหมด ({sortedImages.length})
+            </Button>
+          </div>
         </div>
       </div>
 

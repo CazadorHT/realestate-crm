@@ -38,10 +38,12 @@ import {
   PRICE_FORMATTER,
   getSafeText,
 } from "@/lib/property-utils";
+import { IoShieldCheckmark } from "react-icons/io5";
 
 // Re-using types or defining subset
 export type PropertyCardProps = {
   id: string;
+  slug?: string | null;
   title: string;
   description?: string | null;
   property_type: string | null;
@@ -124,9 +126,9 @@ export function PropertyCard({
     .join(" • ");
 
   return (
-    <div className="group relative isolate rounded-3xl w-[350px] bg-white overflow-hidden shadow-md h-full flex flex-col transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2  before:content-[''] before:absolute before:inset-0 before:rounded-3xl  before:ring-inset  before:pointer-events-none before:z-10">
+    <div className="group relative isolate rounded-3xl w-full max-w-[350px] mx-auto bg-white overflow-hidden shadow-md h-full flex flex-col transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2  before:content-[''] before:absolute before:inset-0 before:rounded-3xl  before:ring-inset  before:pointer-events-none before:z-10">
       <Link
-        href={`/properties/${property.id}`}
+        href={`/properties/${property.slug || property.id}`}
         className="flex flex-col h-full focus:outline-none"
         aria-label={`ดูรายละเอียดทรัพย์: ${property.title}`}
       >
@@ -163,7 +165,7 @@ export function PropertyCard({
           {property.verified && (
             <div className="group/verified absolute top-3 left-3 flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 rounded-full shadow-lg z-20 transition-all duration-300 hover:pr-3 cursor-default">
               {/* Icon stays visible */}
-              <ShieldCheck className="w-4 h-4" />
+              <IoShieldCheckmark className="w-5 h-5" />
 
               {/* Text expands from 0 width */}
               <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 group-hover/verified:max-w-[100px] group-hover/verified:opacity-100 group-hover/verified:ml-1.5">
@@ -174,7 +176,7 @@ export function PropertyCard({
 
           {property.meta_keywords?.includes("Pet Friendly") && (
             <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md text-orange-600 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm z-20 ">
-              <PawPrint className="w-4 h-4" />
+              <PawPrint className="w-5 h-5" />
               <span>Pet Friendly</span>
             </div>
           )}

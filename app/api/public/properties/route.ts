@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 type PropertyRow = {
   id: string;
+  slug: string;
   title: string;
   description: string | null;
   property_type: string | null;
@@ -78,6 +79,7 @@ export async function GET(request: Request) {
     .select(
       `
       id,
+      slug,
       title,
       description,
       property_type,
@@ -148,6 +150,7 @@ export async function GET(request: Request) {
       const typedRow = row as PropertyRow;
       return {
         id: typedRow.id,
+        slug: typedRow.slug,
         title: typedRow.title,
         description: typedRow.description,
         property_type: typedRow.property_type,

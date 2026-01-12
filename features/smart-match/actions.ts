@@ -54,7 +54,11 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
 
   // 2. Fetch properties
   // Basic filtering to reduce result set before scoring
-  let query = supabase.from("properties").select("*, property_images(*)");
+  let query = supabase
+    .from("properties")
+    .select(
+      "id, slug, title, price, rental_price, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, property_images(*)"
+    );
 
   if (criteria.purpose === "BUY" || criteria.purpose === "INVEST") {
     query = query.eq("listing_type", "SALE");
@@ -99,6 +103,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
 
       return {
         id: prop.id,
+        slug: prop.slug,
         title: prop.title,
         price: prop.price || prop.rental_price,
         image_url: imageUrl,

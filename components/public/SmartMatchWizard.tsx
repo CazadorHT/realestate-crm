@@ -415,7 +415,11 @@ function ResultCard({
 }) {
   return (
     <div className="border border-slate-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow bg-slate-50/50 p-4">
-      <Link href={`/properties/${match.id}`} target="_blank" className="block">
+      <Link
+        href={`/properties/${match.slug || match.id}`}
+        target="_blank"
+        className="block"
+      >
         <div className="flex gap-4">
           <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200">
             <img
