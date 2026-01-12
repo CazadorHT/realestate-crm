@@ -60,8 +60,9 @@ export function FAQSection() {
 
   return (
     <section
+      id="faq"
       className="py-24 relative overflow-hidden bg-slate-900"
-      data-aos="fade-up"
+     
     >
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -73,7 +74,9 @@ export function FAQSection() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <div className="max-w-screen-xl mx-auto px-4 relative z-10 flex grid-cols-2 gap-12  justify-between items-center">
+      <div className="max-w-screen-xl mx-auto px-4 relative z-10 flex grid-cols-2 gap-12  justify-between items-center"
+       data-aos="fade-up"
+       data-aos-delay="100">
         <div className="text-left mb-16 w-full">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-blue-400 text-sm font-medium mb-6 backdrop-blur-sm">
             <Sparkles className="w-4 h-4" />

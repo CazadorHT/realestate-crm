@@ -224,27 +224,78 @@ export function PropertyListingSection() {
   const hasMore = filteredProperties.length > MAX_VISIBLE;
   const resultCount = filteredProperties.length;
 
+  // Schema.org ItemList for SEO
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "ประกาศขายเช่าอสังหาริมทรัพย์ล่าสุด",
+    description:
+      "รวมประกาศซื้อ ขาย เช่า บ้าน คอนโด ที่ดิน ทาวน์โฮม และอสังหาริมทรัพย์ทุกประเภท",
+    numberOfItems: visibleProperties.length,
+    itemListElement: visibleProperties.slice(0, 8).map((property, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "Product",
+        name: property.title,
+        description: property.description || "ทรัพย์สินคุณภาพ",
+        image: property.image_url,
+        offers: {
+          "@type": "Offer",
+          price:
+            property.listing_type === "RENT"
+              ? property.rental_price
+              : property.price,
+          priceCurrency: "THB",
+          availability: "https://schema.org/InStock",
+          priceSpecification: {
+            "@type": "PriceSpecification",
+            price:
+              property.listing_type === "RENT"
+                ? property.rental_price
+                : property.price,
+            priceCurrency: "THB",
+          },
+        },
+        url: `https://your-domain.com/properties/${property.id}`,
+      },
+    })),
+  };
+
   return (
     <section
       id="latest-properties"
       className="py-20 px-4 bg-white border-y border-slate-100"
     >
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
+
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10">
+          {/* SEO-Optimized Header */}
           <div className="space-y-3" data-aos="fade-right">
-            <h2 className="text-4xl font-bold text-slate-900">
-              ประกาศ{" "}
-              <span className="font-semibold text-blue-600">ขาย-เช่า</span>{" "}
-              อสังหาฯ ล่าสุดที่น่าสนใจ
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600">
+                บ้าน คอนโด สำนักงานออฟฟิศ
+              </span>
+              <br />
+              <span className="text-slate-600 text-2xl md:text-3xl font-semibold">
+                ซื้อ · ขาย · เช่า
+              </span>{" "}
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl">
-              รวบรวมประกาศ ซื้อ-ขาย-เช่า บ้านและคอนโดจากทั่วประเทศ
-              ตรวจสอบข้อมูลแล้ว 100%
-              พร้อมให้คุณเลือกชมย่านที่ใช่ในงบประมาณที่กำหนด
+            <p className="text-base md:text-lg text-slate-600 max-w-2xl leading-relaxed">
+              รวมประกาศ{" "}
+              <span className="font-semibold text-slate-900">
+                บ้านเดี่ยว คอนโดมิเนียม สำนักงานออฟฟิศ ทาวน์โฮม
+              </span>{" "}
+              และ อสังหาริมทรัพย์ทุกประเภท ตรวจสอบข้อมูลแล้ว 100%
             </p>
             <div className="flex flex-wrap items-center gap-3">
               {!isLoading && !error && (
-                <div className="text-sm text-slate-600 ">
+                <div className="text-sm text-slate-600">
                   หมวด:{" "}
                   <span className="font-semibold text-blue-600">
                     {FILTER_LABELS[filter]}
@@ -391,8 +442,8 @@ export function PropertyListingSection() {
             ยังไม่มีทรัพย์ในประเภทที่เลือก — ลองเปลี่ยนหมวด หรือดู “ทั้งหมด”
           </div>
         ) : (
-          <div className="space-y-8">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-8 align-center">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 gap-y-8">
               {visibleProperties.map((property, index) => {
                 const hasDiscount =
                   (property.original_price &&

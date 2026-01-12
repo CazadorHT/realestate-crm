@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, Home, Key, Send } from "lucide-react";
+import { Loader2, Home, Key, Send, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -31,59 +31,115 @@ import { DepositLeadInput } from "@/features/public/types";
 
 export function DepositPropertySection() {
   const [isSuccess, setIsSuccess] = useState(false);
-  // ... rest of component
+
+  // Schema.org Service for SEO
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "ฝากขาย ฝากเช่า บ้าน คอนโด สำนักงานออฟฟิศ",
+    description:
+      "บริการฝากขาย ฝากเช่า บ้าน คอนโด สำนักงานออฟฟิศ ฟรี ไม่มีค่าใช้จ่ายเบื้องต้น มีทีมการตลาดพร้อมดูแล",
+    provider: {
+      "@type": "RealEstateAgent",
+      name: "Your Real Estate Company",
+    },
+    areaServed: "Thailand",
+    availableChannel: {
+      "@type": "ServiceChannel",
+      serviceUrl: "https://your-domain.com/#deposit-section",
+    },
+  };
 
   return (
     <section
       id="deposit-section"
-      className="py-24 bg-slate-900 relative overflow-hidden"
+      className="py-24 bg-white relative overflow-hidden"
     >
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-      <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
 
-      <div className="container px-4 mx-auto relative z-10 text-white">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
+      <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
+
+      <div className="max-w-screen-xl px-4 mx-auto relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
-          <div className="space-y-8 text-center lg:text-left">
-            <div className="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-sm font-medium text-blue-300 backdrop-blur-sm mx-auto lg:mx-0">
+          <div
+            className="space-y-6 text-center lg:text-left"
+            data-aos="fade-right"
+          >
+            <div className="inline-flex items-center rounded-full border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 px-4 py-2 text-sm font-bold text-blue-700 backdrop-blur-sm mx-auto lg:mx-0 shadow-sm">
               <Key className="mr-2 h-4 w-4" />
-              สำหรับเจ้าของทรัพย์ (Owners)
+              บริการฝากทรัพย์สิน
             </div>
 
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight">
-              มีทรัพย์ว่าง อยากปล่อยเช่า หรือขาย?
+              <span className="text-slate-900">ฝากขาย ฝากเช่า</span>
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                บ้าน คอนโด ออฟฟิศ
+              </span>
             </h2>
-            <p className="text-xl text-slate-300">
-              ฝากทรัพย์กับเราวันนี้ ฟรี! ไม่มีค่าใช้จ่ายเบื้องต้น
+
+            <p className="text-lg md:text-xl text-slate-600 leading-relaxed">
+              <span className="font-semibold text-slate-900">
+                ฟรี! ไม่มีค่าใช้จ่ายเบื้องต้น
+              </span>
+              <br />
               เรามีฐานลูกค้าและทีมการตลาดพร้อมดูแลให้ทรัพย์ของคุณปล่อยออกได้เร็วที่สุด
             </p>
-            <div className="pt-4 flex flex-col gap-4 text-slate-300/80">
-              <div className="flex items-center gap-3 justify-center lg:justify-start">
-                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold">
-                  1
+
+            <div className="pt-4 space-y-4">
+              {[
+                { step: 1, text: "กรอกข้อมูลทรัพย์เบื้องต้น" },
+                { step: 2, text: "เจ้าหน้าที่ติดต่อกลับเพื่อยืนยัน" },
+                { step: 3, text: "ทำการตลาดหาลูกค้าให้ทันที" },
+              ].map((item) => (
+                <div
+                  key={item.step}
+                  className="flex items-center gap-3 justify-center lg:justify-start group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-md group-hover:scale-110 transition-transform">
+                    {item.step}
+                  </div>
+                  <span className="text-slate-700 font-medium">
+                    {item.text}
+                  </span>
                 </div>
-                <span>กรอกข้อมูลทรัพย์เบื้องต้น</span>
+              ))}
+            </div>
+
+            {/* Trust Badges */}
+            <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-4">
+              <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-medium text-slate-700">
+                  ฟรี ไม่มีค่าใช้จ่าย
+                </span>
               </div>
-              <div className="flex items-center gap-3 justify-center lg:justify-start">
-                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold">
-                  2
-                </div>
-                <span>เจ้าหน้าที่ติดต่อกลับเพื่อยืนยัน</span>
-              </div>
-              <div className="flex items-center gap-3 justify-center lg:justify-start">
-                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold">
-                  3
-                </div>
-                <span>ทำการตลาดหาลูกค้าให้ทันที</span>
+              <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-medium text-slate-700">
+                  ทีมมืออาชีพ
+                </span>
               </div>
             </div>
           </div>
 
           {/* Right Form Card */}
-          <div className="bg-white rounded-2xl p-6 md:p-8 shadow-2xl text-slate-900">
-            <div className="mb-6">
-              <h3 className="text-2xl font-bold text-slate-900">
+          <div
+            className="bg-white rounded-2xl p-6 md:p-8 shadow-2xl border border-slate-200 relative overflow-hidden"
+            data-aos="fade-left"
+          >
+            {/* Card gradient decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50 -z-10"></div>
+
+            <div className="mb-6 relative z-10">
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">
                 ฝากข้อมูลทรัพย์สิน
               </h3>
               <p className="text-slate-500 text-sm">
@@ -93,20 +149,22 @@ export function DepositPropertySection() {
 
             {isSuccess ? (
               <div className="text-center py-12 space-y-4 animate-in fade-in zoom-in">
-                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                   <Home className="h-8 w-8" />
                 </div>
-                <h3 className="text-2xl font-bold text-green-700">
+                <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">
                   ขอบคุณสำหรับข้อมูล
                 </h3>
                 <p className="text-slate-600">
                   ทางทีมงานได้รับข้อมูลทรัพย์ของท่านแล้ว <br />
-                  เจ้าหน้าที่จะรีบติดต่อกลับไปครับ
+                  <span className="font-semibold text-slate-900">
+                    เจ้าหน้าที่จะรีบติดต่อกลับไปครับ
+                  </span>
                 </p>
                 <Button
                   variant="outline"
                   onClick={() => setIsSuccess(false)}
-                  className="mt-4"
+                  className="mt-4 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                 >
                   ส่งข้อมูลเพิ่มเติม
                 </Button>
@@ -162,11 +220,15 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
           name="fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
+              <FormLabel className="text-slate-700 font-semibold">
                 ชื่อ-นามสกุล/ชื่อเล่น <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
-                <Input placeholder="เช่น คุณสมชาย (เจ้าของ)" {...field} />
+                <Input
+                  placeholder="เช่น คุณสมชาย (เจ้าของ)"
+                  className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -178,11 +240,15 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
             name="phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
+                <FormLabel className="text-slate-700 font-semibold">
                   เบอร์โทรศัพท์ <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="08x-xxx-xxxx" {...field} />
+                  <Input
+                    placeholder="08x-xxx-xxxx"
+                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -193,9 +259,15 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
             name="lineId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Line ID (ถ้ามี)</FormLabel>
+                <FormLabel className="text-slate-700 font-semibold">
+                  Line ID (ถ้ามี)
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="" {...field} />
+                  <Input
+                    placeholder="ID ของคุณ"
+                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -208,24 +280,24 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
           name="propertyType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
+              <FormLabel className="text-slate-700 font-semibold">
                 ประเภททรัพย์ <span className="text-red-500">*</span>
               </FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="เลือกประเภท" />
+                  <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500">
+                    <SelectValue placeholder="เลือกประเภททรัพย์สิน" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="CONDO">คอนโด (Condo)</SelectItem>
-                  <SelectItem value="HOUSE">บ้านเดี่ยว (House)</SelectItem>
-                  <SelectItem value="TOWNHOME">ทาวน์โฮม (Townhome)</SelectItem>
-                  <SelectItem value="LAND">ที่ดิน (Land)</SelectItem>
+                  <SelectItem value="CONDO">🏢 คอนโด</SelectItem>
+                  <SelectItem value="HOUSE">🏠 บ้านเดี่ยว</SelectItem>
+                  <SelectItem value="TOWNHOME">🏘️ ทาวน์โฮม</SelectItem>
+                  <SelectItem value="LAND">🌳 ที่ดิน</SelectItem>
                   <SelectItem value="COMMERCIAL">
-                    อาคารพาณิชย์/สำนักงาน
+                    🏢 อาคารพาณิชย์/สำนักงาน
                   </SelectItem>
-                  <SelectItem value="FACTORY">โรงงาน/โกดัง</SelectItem>
+                  <SelectItem value="FACTORY">🏭 โรงงาน/โกดัง</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -238,11 +310,13 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
           name="details"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>ทำเล / ชื่อโครงการ / รายละเอียดเพิ่มเติม</FormLabel>
+              <FormLabel className="text-slate-700 font-semibold">
+                ทำเล / ชื่อโครงการ / รายละเอียดเพิ่มเติม
+              </FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="เช่น ต้องการขายคอนโด Rhythm รัชดา 1 ห้องนอน.."
-                  className="resize-none h-24"
+                  placeholder="เช่น ต้องการฝากขายคอนโด Rhythm รัชดา 1 ห้องนอน ติด BTS รัชดา..."
+                  className="resize-none h-24 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                   {...field}
                 />
               </FormControl>
@@ -254,7 +328,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
         <div className="pt-2">
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-lg"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
             disabled={isLoading}
           >
             {isLoading ? (

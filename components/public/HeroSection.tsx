@@ -1,3 +1,5 @@
+"use client";
+
 import { HeroTitle } from "@/components/public/HeroTitle";
 import { SmartMatchWizard } from "@/components/public/SmartMatchWizard";
 import {
@@ -12,6 +14,20 @@ import { Button } from "@/components/ui/button";
 import { ScrollDownButton } from "@/components/public/ScrollDownButton";
 
 export function HeroSection() {
+  const handleScrollToDeposit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const element = document.getElementById("deposit-section");
+    if (element) {
+      const offset = 80;
+      const elementPosition =
+        element.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: elementPosition - offset,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <div className="relative pt-20 min-h-screen bg-[url('/images/hero-realestate.png')] bg-cover bg-center bg-no-repeat">
       {/* Gradient Overlay สำหรับความคมของ text */}
@@ -42,7 +58,7 @@ export function HeroSection() {
               <h2 className="text-xl text-white leading-relaxed max-w-3xl">
                 แหล่งรวม{" "}
                 <strong className="text-blue-300 font-semibold">
-                  บ้านเดี่ยว คอนโด ที่ดิน อาคารสำนักงาน
+                  บ้านเดี่ยว คอนโด ออฟฟิศ อาคารสำนักงาน
                 </strong>{" "}
                 คุณภาพ คัดสรรมาเพื่อคุณโดยเฉพาะ ช่วยให้คุณเจอที่ที่ใช่
                 ในทำเลศักยภาพ พร้อมบริการระดับมืออาชีพครบวงจร
@@ -59,15 +75,14 @@ export function HeroSection() {
                   </Button>
                 </Link>
 
-                <Link href="#deposit-section">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="h-14 px-8 text-lg  rounded-xl bg-white/90 hover:bg-white border-slate-200 text-slate-700 hover:text-blue-600 shadow-sm transition-all animate-in fade-in-0 duration-300 slide-in-from-bottom-4"
-                  >
-                    ลงประกาศฟรี
-                  </Button>
-                </Link>
+                <Button
+                  onClick={handleScrollToDeposit}
+                  size="lg"
+                  variant="outline"
+                  className="h-14 px-8 text-lg  rounded-xl bg-white/90 hover:bg-white border-slate-200 text-slate-700 hover:text-blue-600 shadow-sm transition-all animate-in fade-in-0 duration-300 slide-in-from-bottom-4"
+                >
+                  ลงประกาศฟรี
+                </Button>
               </div>
 
               <div className="flex flex-wrap gap-6 pt-4">

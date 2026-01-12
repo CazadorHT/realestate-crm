@@ -103,43 +103,69 @@ export function PopularAreasSection() {
     <section className="pt-8 bg-white">
       <div className="max-w-screen-2xl mx-auto">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 ">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 py-6 ">
           <div
-            className="space-y-3"
+            className="space-y-4 px-4 md:px-0"
             data-aos="fade-right"
             suppressHydrationWarning
           >
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50  text-blue-600 px-4 py-1.5 text-sm font-semibold border border-blue-100">
-              <MapPin className="h-4 w-4" />
-              ทำเลยอดนิยม
+            {/* Animated Badge with Glow */}
+            <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-600 px-4 py-2 text-sm font-bold border border-blue-200/50 shadow-sm hover:shadow-md hover:shadow-blue-500/20 transition-all duration-300 group cursor-default">
+              <div className="relative">
+                <MapPin className="h-4 w-4 relative z-10" />
+                <div className="absolute inset-0 bg-blue-500 blur-md opacity-30 group-hover:opacity-50 transition-opacity" />
+              </div>
+              <span className="tracking-wide">ทำเลยอดนิยม</span>
             </div>
-            <h2 className="text-3xl md:text-5xl font-semibold text-slate-900 ">
-              เจาะลึกย่านน่าอยู่{" "}
-              <span className="text-blue-600">ซื้อ-ขาย-เช่า</span> ทั่วกรุงเทพฯ
+
+            {/* SEO-Optimized Gradient Heading */}
+            <h2 className="text-3xl md:text-5xl font-semibold text-slate-900 leading-tight">
+              เจาะลึก
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-blue-500 to-purple-600">
+                ย่านน่าอยู่
+              </span>{" "}
+              บ้าน คอนโด สำนักงาน
+              <br className="hidden md:block" />
+              <span className="text-slate-600 text-2xl md:text-4xl font-semibold">
+                ซื้อ · ขาย · เช่า
+              </span>{" "}
+              <span className="text-slate-500 text-xl md:text-3xl font-normal">
+                ทั่วกรุงเทพฯ
+              </span>
             </h2>
-            <p className="text-slate-500 text-lg max-w-2xl leading-relaxed">
-              รวบรวมบ้าน คอนโด และที่ดิน ในย่านศักยภาพ
-              ใกล้รถไฟฟ้าและสิ่งอำนวยความสะดวก
-              พร้อมสถิติจำนวนทรัพย์ล่าสุดเพื่อให้คุณตัดสินใจได้แม่นยำขึ้น
+
+            {/* SEO-Enhanced Description with Keywords */}
+            <p className="text-slate-600 text-base md:text-lg max-w-2xl leading-relaxed">
+              รวมทรัพย์สินคุณภาพในย่านศักยภาพสูง
+              ใกล้รถไฟฟ้าและสิ่งอำนวยความสะดวก พร้อมสถิติจำนวนทรัพย์อัพเดทล่าสุด
+              ช่วยให้คุณตัดสินใจได้แม่นยำ
             </p>
           </div>
 
-          <Button
-            variant="outline"
-            className="h-12 px-6 rounded-xl shadow-md border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-all duration-300"
+          <button
             onClick={() => router.push("/?type=ALL#latest-properties")}
             data-aos="fade-left"
             suppressHydrationWarning
+            className="group relative h-12 px-8 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-300 hover:scale-105"
           >
-            ดูทรัพย์ทั้งหมด
-            <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
+            {/* Animated gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+            {/* Shine effect */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+            {/* Button content */}
+            <div className="relative flex items-center gap-2">
+              <span>ดูทรัพย์ทั้งหมด</span>
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+            </div>
+          </button>
         </div>
 
         {/* Content Area - Fixed height to prevent layout shift */}
         <div className="min-h-[250px]">
           {isLoading ? (
-            <div className="flex gap-4 overflow-hidden py-4 px-2">
+            <div className="flex gap-4 overflow-hidden py-4 ">
               {LOADING.map((_, i) => (
                 <div
                   key={i}
@@ -168,7 +194,7 @@ export function PopularAreasSection() {
               onMouseLeave={handleMouseLeave}
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}
-              className={`flex w-full gap-5 overflow-x-auto pb-8 px-2  py-4 snap-x snap-mandatory scrollbar-none transition-all ${
+              className={`flex w-full gap-5 overflow-x-auto pb-8   py-4 snap-x snap-mandatory scrollbar-none transition-all ${
                 isDragging ? "cursor-grabbing scale-[0.99]" : "cursor-grab"
               }`}
             >

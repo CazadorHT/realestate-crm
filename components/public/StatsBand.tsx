@@ -1,37 +1,59 @@
 "use client";
 
-import { Building2, Users2, Trophy, Headset, Sparkles } from "lucide-react";
+import { Building2, Users2, Trophy, Headset } from "lucide-react";
 
 export function StatsBand() {
   const stats = [
     {
       icon: <Building2 className="w-6 h-6" />,
       value: "500+",
-      label: "อสังหาฯ คุณภาพคัดสรร",
+      label: "บ้าน คอนโด สำนักงานคุณภาพ",
       subLabel: "Verified Properties",
     },
     {
       icon: <Users2 className="w-6 h-6" />,
       value: "1,200+",
-      label: "ครอบครัวที่ไว้วางใจ",
-      subLabel: "Happy Families",
+      label: "ครอบครัวซื้อ-ขาย-เช่าสำเร็จ",
+      subLabel: "Happy Customers",
     },
     {
       icon: <Trophy className="w-6 h-6" />,
       value: "98%",
-      label: "อัตราความสำเร็จ",
+      label: "อัตราความพึงพอใจลูกค้า",
       subLabel: "Success Rate",
     },
     {
       icon: <Headset className="w-6 h-6" />,
       value: "24/7",
-      label: "ทีมงานดูแลใกล้ชิด",
+      label: "ทีมงานดูแลตลอด 24 ชม.",
       subLabel: "Premium Support",
     },
   ];
 
+  // Schema.org Organization/Service markup for SEO
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    name: "Your Real Estate Company",
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.9",
+      ratingCount: "1200",
+    },
+    numberOfEmployees: {
+      "@type": "QuantitativeValue",
+      value: "500",
+    },
+  };
+
   return (
-    <section className="relative py-20 overflow-hidden bg-gradient-to-r from-blue-500 to-purple-500 ">
+    <section className="relative py-10 overflow-hidden bg-gradient-to-r from-blue-500 to-purple-500">
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
+
       {/* === BACKGROUND DESIGN === */}
       {/* ใช้สีเข้มเพื่อให้สถิติดูโดดเด่นและน่าเชื่อถือ */}
       <div className="absolute inset-0 bg-[#0F172A] -z-20" />
@@ -42,7 +64,12 @@ export function StatsBand() {
       {/* ลายตารางทางสถาปัตยกรรม */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] -z-10" />
 
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-screen-2xl mx-auto px-4">
+        {/* SEO-Critical Heading */}
+        <h2 className="sr-only">
+          สถิติความสำเร็จในการขายและให้เช่าอสังหาริมทรัพย์ บ้าน คอนโด ที่ดิน
+        </h2>
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-8">
           {stats.map((stat, index) => (
             <div
@@ -66,7 +93,7 @@ export function StatsBand() {
               </div>
 
               <div className="space-y-1">
-                <div className="text-4xl md:text-5xl font-extrabold text-white tracking-normal">
+                <div className="text-4xl md:text-5xl font-bold text-white tracking-normal">
                   {stat.value}
                 </div>
                 <div className="flex flex-col">

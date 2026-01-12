@@ -269,7 +269,7 @@ export function RecentlyViewedClient({
   // If initializing, show skeletons to hold layout
   if (initializing) {
     return (
-      <section className="py-16 bg-white border-t border-slate-100 overflow-hidden">
+      <section className="py-16 bg-slate-50 border-t border-slate-100 overflow-hidden">
         <div className="max-w-screen-2xl mx-auto px-4">
           <div className="flex items-center gap-3 mb-6">
             <Skeleton className="w-10 h-10 rounded-2xl" />
@@ -303,9 +303,32 @@ export function RecentlyViewedClient({
 
   if (items.length === 0) return null;
 
+  // Schema.org ItemList for SEO
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: showingRecommended ? "ทรัพย์สินแนะนำ" : "ทรัพย์สินที่เพิ่งดู",
+    description: showingRecommended
+      ? "คอลเลกชันบ้าน คอนโด ที่ดิน และอสังหาริมทรัพย์ที่แนะนำสำหรับคุณ"
+      : "ประวัติการดูบ้าน คอนโด ที่ดิน และอสังหาริมทรัพย์ล่าสุด",
+    numberOfItems: items.length,
+    itemListElement: items.slice(0, 10).map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: item.slug
+        ? `https://your-domain.com/properties/${item.slug}`
+        : `https://your-domain.com/properties/${item.id}`,
+    })),
+  };
+
   return (
-    <section className="py-16 bg-white border-t border-slate-100 overflow-hidden">
-      <div className="max-w-screen-2xl mx-auto px-4">
+    <section className="py-12 bg-slate-50 border-t border-slate-100 overflow-hidden">
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
+      <div className="max-w-7xl mx-auto ">
         {/* === HEADER WITH CLEAR ACTION === */}
         <div
           className="flex items-center justify-between "
@@ -325,15 +348,29 @@ export function RecentlyViewedClient({
               )}
             </div>
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-                {showingRecommended
-                  ? "รายการแนะนำสำหรับคุณ"
-                  : "อสังหาฯ ที่คุณสนใจล่าสุด"}
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900  leading-tight">
+                {showingRecommended ? (
+                  <>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
+                      บ้าน คอนโด สำนักงานออฟฟิศ
+                    </span>
+                    <br className="hidden md:block" />
+                    แนะนำสำหรับคุณ
+                  </>
+                ) : (
+                  <>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                      บ้าน คอนโด สำนักงานออฟฟิศ
+                    </span>
+                    <br className="hidden md:block" />
+                    ที่คุณสนใจล่าสุด
+                  </>
+                )}
               </h2>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-slate-600 mt-1">
                 {showingRecommended
-                  ? "ทรัพย์ล่าสุดที่น่าสนใจสำหรับคุณ"
-                  : "รายการอสังหาฯ ล่าสุดที่คุณเพิ่งเปิดชม"}
+                  ? "ทรัพย์สินอสังหาริมทรัพย์ที่คัดสรรมาเพื่อคุณโดยเฉพาะ"
+                  : "ประวัติทรัพย์สินอสังหาริมทรัพย์ล่าสุดที่คุณเพิ่งเปิดชม"}
               </p>
             </div>
           </div>
@@ -390,7 +427,7 @@ export function RecentlyViewedClient({
                     ? `/properties/${item.slug}`
                     : `/properties/${item.id}`
                 }
-                className="min-w-[300px] w-[300px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 snap-start flex-shrink-0 group relative isolate hover:-translate-y-1"
+                className="min-w-[300px] w-[300px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-blue-500/10 transition-all duration-500 snap-start flex-shrink-0 group relative isolate hover:-translate-y-1"
                 data-aos="fade-left"
                 onClick={(e) => {
                   if (isDragging) e.preventDefault();
@@ -424,7 +461,7 @@ export function RecentlyViewedClient({
                       alt={item.title}
                       fill
                       sizes="300px"
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                      className="object-cover  group-hover:scale-110 transition-transform duration-700"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-300">

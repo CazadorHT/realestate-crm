@@ -136,11 +136,15 @@ export function PropertyCard({
           {property.image_url ? (
             <Image
               src={property.image_url}
-              alt={[
-                property.title,
-                property.property_type,
-                property.popular_area,
-              ].join(" - ")}
+              alt={`${
+                property.listing_type === "SALE"
+                  ? "ขาย"
+                  : property.listing_type === "RENT"
+                  ? "เช่า"
+                  : "ขาย-เช่า"
+              }${getTypeLabel(property.property_type)} - ${property.title}${
+                areaProvince ? ` ทำเล${areaProvince}` : ""
+              }`}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
               className="object-cover object-top  transform-gpu [will-change:transform] group-hover:scale-125 group:hover:object-contain transition-transform duration-1000 "

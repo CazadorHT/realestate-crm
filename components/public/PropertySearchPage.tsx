@@ -14,6 +14,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import { MorphingLoader } from "@/components/ui/MorphingLoader";
+import { Home } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
 type ApiProperty = PropertyCardProps;
 
@@ -62,7 +65,25 @@ export function PropertySearchPage() {
     }
     load();
   }, []);
-
+  // Breadcrumb Schema.org
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "หน้าแรก",
+        item: "https://your-domain.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "ทรัพย์สิน",
+        item: "https://your-domain.com/properties",
+      },
+    ],
+  };
   // Compute unique Popular Areas from data
   const availableAreas = useMemo(() => {
     const areas = new Set<string>();
@@ -296,12 +317,51 @@ export function PropertySearchPage() {
           </div>
         </div>
       </div>
-
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      {/* Breadcrumbs */}
+      <div className="container mx-auto px-4 pt-8 pb-2">
+        <nav
+          className="flex items-center gap-2 text-sm text-slate-600"
+          itemScope
+          itemType="https://schema.org/BreadcrumbList"
+        >
+          <Link
+            href="/"
+            className="hover:text-blue-600 transition-colors flex items-center gap-1"
+            itemProp="itemListElement"
+            itemScope
+            itemType="https://schema.org/ListItem"
+          >
+            <meta itemProp="position" content="1" />
+            <Home className="w-4 h-4" />
+            <span itemProp="name">หน้าแรก</span>
+            <meta itemProp="item" content="https://your-domain.com" />
+          </Link>
+          <ChevronRight className="w-4 h-4" />
+          <span
+            className="text-blue-600 font-medium"
+            itemProp="itemListElement"
+            itemScope
+            itemType="https://schema.org/ListItem"
+          >
+            <meta itemProp="position" content="2" />
+            <span itemProp="name">ทรัพย์สิน</span>
+            <meta
+              itemProp="item"
+              content="https://your-domain.com/properties"
+            />
+          </span>
+        </nav>
+      </div>
       {/* Results Grid */}
-      <div className="max-w-screen-2xl mx-auto px-4 py-8">
-        <div className="mb-6 text-slate-600">
+      <div className="max-w-screen-2xl mx-auto px-4">
+        <div className="mb-6 text-slate-600 text-sm">
           พบทรัพย์ทั้งหมด{" "}
-          <span className="font-bold text-slate-900">{filtered.length}</span>{" "}
+          <span className="font-bold text-blue-600">{filtered.length}</span>{" "}
           รายการ
         </div>
 

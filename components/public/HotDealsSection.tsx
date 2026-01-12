@@ -42,7 +42,7 @@ export function HotDealsSection() {
   if (isEmpty && !isLoading) return null;
 
   return (
-    <section className="py-8 relative overflow-hidden bg-slate-800">
+    <section className="py-8 relative overflow-hidden bg-slate-800 max-h-[1052px] h-full">
       {/* === ANIMATED PREMIUM BACKGROUND === */}
 
       {/* Moving Gradient Blobs */}
@@ -94,42 +94,60 @@ export function HotDealsSection() {
       <div className="max-w-screen-2xl mx-auto px-4 relative z-10">
         {/* === HEADER SECTION === */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-          <div className="space-y-4 max-w-2xl">
+          <div className="space-y-4 max-w-screen-2xl">
             {/* Badge ที่ดู Modern ขึ้น */}
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white pl-2 pr-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/60 transform hover:scale-105 transition-all animate-pulse-scale">
+            <div
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white pl-2 pr-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/60 transform hover:scale-105 transition-all animate-pulse-scale"
+              data-aos="fade-right"
+            >
               <div className="bg-white/20 p-1 rounded-full">
                 <Flame className="h-3.5 w-3.5 fill-yellow-200 animate-pulse" />
               </div>
               <span>Flash Sale & Hot Deals</span>
             </div>
 
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.1]">
-              โอกาสทอง! <br />
+            {/* SEO-Optimized Heading */}
+            <h2
+              className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.1]"
+              data-aos="fade-up"
+              data-aos-delay="100"
+            >
+              โอกาสทอง!{" "}
+              <span className="text-slate-200 text-2xl md:text-3xl">
+                บ้าน คอนโด สำนักงานออฟฟิศ
+              </span>
+              <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-orange-400 to-amber-400 drop-shadow-sm">
-                ทรัพย์ราคาลดแรงแห่งปี
+                ลดราคาพิเศษ ขาย-เช่า
               </span>
             </h2>
 
-            <div className="flex items-start gap-3 text-slate-300 text-base">
+            {/* SEO-Enhanced Description */}
+            <div
+              className="flex items-start gap-3 text-slate-300 text-base"
+              data-aos="fade-up"
+              data-aos-delay="200"
+            >
               <TrendingDown className="h-6 w-6 text-red-500 mt-1 flex-shrink-0" />
               <p>
-                คัดเฉพาะยูนิตที่{" "}
-                <span className="font-bold text-white decoration-red-500/30 underline decoration-4 underline-offset-4 rounded-full">
-                  ราคาต่ำกว่าตลาด
+                คัดเฉพาะทรัพย์สินคุณภาพ{" "}
+                <span className="font-bold text-white decoration-red-500/30 underline decoration-4 underline-offset-4">
+                  ลดราคาสูงสุด 40%
                 </span>{" "}
-                และข้อเสนอพิเศษที่มีจำกัด อัปเดตแบบ Real-time
+                พร้อมข้อเสนอพิเศษจำกัดเวลา อัปเดตแบบเรียลไทม์ทุกวัน
               </p>
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3" data-aos="fade-left" data-aos-delay="300">
+            {/* Fixed CTA Button */}
             <Button
               asChild
-              className="rounded-full bg-white text-slate-900 hover:bg- font-semibold px-6 h-10 text-sm shadow-lg hover:shadow-xl hover:scale-110 duration-300 hover:brightness-110 hover:shadow-white/20 transition-all group border border-transparent  hover:text-blue-800"
+              className="rounded-full bg-white text-slate-900 hover:bg-slate-100 font-semibold px-6 h-10 text-sm shadow-lg hover:shadow-xl hover:scale-105 duration-300 hover:shadow-white/20 transition-all group"
             >
               <Link href="/properties?sortBy=price&sortOrder=asc&filter=hot_deals">
                 ดูดีลทั้งหมด
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1 bg-slate-200 group-hover:bg-white hover:brightness-125 rounded-full p-0.5" />
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
           </div>
@@ -137,7 +155,7 @@ export function HotDealsSection() {
 
         {/* === CARDS SECTION === */}
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 p-2">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 p-2 min-h-[681px]">
             {Array.from({ length: 4 }).map((_, i) => (
               <PropertyCardSkeleton key={i} />
             ))}
@@ -152,6 +170,8 @@ export function HotDealsSection() {
               <div
                 key={property.id}
                 className="min-w-[350px] md:min-w-0 snap-center relative group perspective-1000"
+                data-aos="fade-up"
+                data-aos-delay={index * 100}
               >
                 {/* Floating Hot Badge Overlay */}
                 <div className="absolute -top-5 -left-5 z-30">
