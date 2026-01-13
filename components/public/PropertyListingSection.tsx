@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useRef, type MouseEvent } from "react";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { PropertyCard } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 import AOS from "aos";
@@ -91,6 +91,7 @@ export function PropertyListingSection() {
   const [reloadKey, setReloadKey] = useState(0);
 
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [areaFilter, setAreaFilter] = useState<string>("");
   const [provinceFilter, setProvinceFilter] = useState<string>("");
 
@@ -315,14 +316,37 @@ export function PropertyListingSection() {
 
           {/* เลือกประเภททรัพย์ (Scrollable with Arrows) */}
           <div
-            className="w-full lg:w-auto flex flex-wrap items-center gap-6 text-sm"
+            className="w-full lg:w-auto flex flex-wrap items-center gap-16 text-sm"
             data-aos="fade-left"
           >
             {(areaFilter || provinceFilter) && (
-              <div className="flex  items-center gap-2 text-sm">
-                <span className="text-slate-500">ทำเล:</span>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-slate-500">ทรัพย์ในย่านทำเล :</span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-700">
                   {[areaFilter, provinceFilter].filter(Boolean).join(" • ")}
+                  <button
+                    onClick={() => {
+                      // Clear filters and stay at current position using hash
+                      router.push("/#latest-properties");
+                    }}
+                    className="ml-1 -mr-1 rounded-full p-0.5 hover:bg-rose-400 hover:text-white duration-300 transition-colors"
+                    title="ลบตัวกรอง"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
                 </span>
               </div>
             )}
@@ -479,11 +503,7 @@ export function PropertyListingSection() {
               })}
             </div>
 
-            <div
-              className="flex justify-center"
-              data-aos="fade-up"
-              data-aos-delay="400"
-            >
+            <div className="flex justify-center">
               <Button
                 asChild
                 variant="outline"
