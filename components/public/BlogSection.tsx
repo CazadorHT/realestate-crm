@@ -89,7 +89,7 @@ export function BlogSection() {
                 บทความอสังหาริมทรัพย์
               </span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
+            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
               เคล็ดลับ
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
                 {" "}

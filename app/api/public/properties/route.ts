@@ -215,24 +215,6 @@ export async function GET(request: Request) {
 
         const hasDiscount = isSaleDrop || isRentDrop;
 
-        // Debug logging
-        if (
-          !hasDiscount &&
-          (item.original_price || item.original_rental_price)
-        ) {
-          console.log("🚫 Property excluded from Hot Deals:", {
-            id: item.id,
-            title: item.title,
-            listing_type: item.listing_type,
-            price: item.price,
-            original_price: item.original_price,
-            rental_price: item.rental_price,
-            original_rental_price: item.original_rental_price,
-            isSaleDrop,
-            isRentDrop,
-          });
-        }
-
         return hasDiscount;
       }
       return true;

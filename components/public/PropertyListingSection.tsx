@@ -281,7 +281,7 @@ export function PropertyListingSection() {
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10">
           {/* SEO-Optimized Header */}
           <div className="space-y-3" data-aos="fade-right">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
+            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600">
                 บ้าน คอนโด สำนักงานออฟฟิศ
               </span>
@@ -478,11 +478,17 @@ export function PropertyListingSection() {
             </div>
           </div>
         ) : isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {LOADING_ITEMS.map((_, index) => (
-              <PropertyCardSkeleton key={index} />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-h-[600px]">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <PropertyCardSkeleton key={index} />
+              ))}
+            </div>
+            {/* Button skeleton */}
+            <div className="flex justify-center mt-4">
+              <div className="h-10 w-48 bg-slate-200 rounded-2xl animate-pulse"></div>
+            </div>
+          </>
         ) : filteredProperties.length === 0 ? (
           <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6 text-slate-600">
             ยังไม่มีทรัพย์ในประเภทที่เลือก — ลองเปลี่ยนหมวด หรือดู “ทั้งหมด”

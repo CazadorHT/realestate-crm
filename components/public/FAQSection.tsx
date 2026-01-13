@@ -59,11 +59,7 @@ export function FAQSection() {
   };
 
   return (
-    <section
-      id="faq"
-      className="py-24 relative overflow-hidden bg-slate-900"
-     
-    >
+    <section id="faq" className="py-24 relative overflow-hidden bg-slate-900">
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px]" />
@@ -74,9 +70,11 @@ export function FAQSection() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <div className="max-w-screen-xl mx-auto px-4 relative z-10 flex grid-cols-2 gap-12  justify-between items-center"
-       data-aos="fade-up"
-       data-aos-delay="100">
+      <div
+        className="max-w-screen-xl mx-auto px-4 relative z-10 flex grid-cols-2 gap-12  justify-between items-center"
+        data-aos="fade-up"
+        data-aos-delay="100"
+      >
         <div className="text-left mb-16 w-full">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-blue-400 text-sm font-medium mb-6 backdrop-blur-sm">
             <Sparkles className="w-4 h-4" />
@@ -94,13 +92,20 @@ export function FAQSection() {
           </p>
         </div>
 
-        <Accordion type="single" collapsible className="w-full space-y-4">
+        <Accordion
+          type="single"
+          collapsible
+          className="w-full space-y-4 min-h-[500px]"
+        >
           {loading
             ? Array.from({ length: 5 }).map((_, idx) => (
-                <div key={idx} className="space-y-4">
-                  {/* Left Skeleton (Question) */}
-                  <div className="flex justify-start">
-                    <Skeleton className="h-20 w-3/4 max-w-2xl rounded-2xl rounded-tl-sm bg-white/5" />
+                <div key={idx} className="flex justify-start mb-4">
+                  <div className="flex items-start gap-4 p-5 rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 max-w-2xl">
+                    <Skeleton className="w-10 h-10 rounded-full bg-white/10" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-5 w-full bg-white/10" />
+                      <Skeleton className="h-5 w-3/4 bg-white/10" />
+                    </div>
                   </div>
                 </div>
               ))

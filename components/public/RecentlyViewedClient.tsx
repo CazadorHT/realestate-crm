@@ -273,29 +273,46 @@ export function RecentlyViewedClient({
   // If initializing, show skeletons to hold layout
   if (initializing) {
     return (
-      <section className="py-16 bg-slate-50 border-t border-slate-100 overflow-hidden">
-        <div className="max-w-screen-2xl mx-auto px-4">
-          <div className="flex items-center gap-3 mb-6">
-            <Skeleton className="w-10 h-10 rounded-2xl" />
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-48" />
+      <section className="py-12 bg-slate-50 border-t border-slate-100 overflow-hidden relative z-0">
+        <SectionBackground pattern="blobs" intensity="low" />
+        <div className={cn("max-w-7xl mx-auto", containerClassName)}>
+          {/* Header Skeleton */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Skeleton className="w-12 h-12 rounded-2xl" />
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-80" />
+                <Skeleton className="h-4 w-64" />
+              </div>
             </div>
           </div>
-          <div className="flex gap-6 overflow-hidden">
+
+          {/* Navigation Buttons Skeleton */}
+          <div className="flex justify-end gap-2 mb-4">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
+
+          {/* Cards Skeleton */}
+          <div className="flex gap-6 overflow-hidden pb-6 px-2 pt-9">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
                 className="min-w-[300px] w-[300px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden"
               >
-                <Skeleton className="h-44 w-full" />
+                <Skeleton className="h-44 w-full rounded-none" />
                 <div className="p-5 space-y-3">
                   <Skeleton className="h-6 w-3/4" />
                   <div className="flex gap-2">
-                    <Skeleton className="h-4 w-12" />
-                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-5 w-16" />
                   </div>
                   <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <div className="flex items-center justify-between mt-4">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                  </div>
                 </div>
               </div>
             ))}
@@ -353,7 +370,7 @@ export function RecentlyViewedClient({
               )}
             </div>
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900  leading-tight">
+              <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
                 {showingRecommended ? (
                   <>
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">

@@ -119,7 +119,7 @@ export function PopularAreasSection() {
             </div>
 
             {/* SEO-Optimized Gradient Heading */}
-            <h2 className="text-3xl md:text-5xl font-semibold text-slate-900 leading-tight">
+            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
               เจาะลึก
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-blue-500 to-purple-600">
                 ย่านน่าอยู่

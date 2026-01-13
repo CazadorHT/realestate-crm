@@ -177,14 +177,14 @@ export function HotDealsSection() {
                 <div className="absolute -top-7 -left-5 z-30">
                   <div className="relative">
                     <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
-                    <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.1)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-6 transition-all duration-300 scale-110 ">
+                    <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.1)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-5 transition-all duration-300 scale-110 ">
                       <Sparkles className="h-6 w-6 fill-yellow-200" />
                     </div>
                   </div>
                 </div>
 
                 {/* Card Wrapper with Premium Glow Effect */}
-                <div className="rounded-[1.5rem] p-1 bg-gradient-to-b from-white/80 to-white/40 shadow-xl shadow-orange-900/5 group-hover:shadow-orange-600/20 hover:-translate-y-2 transition-all duration-500  ">
+                <div className="rounded-[1.5rem] p-1 bg-gradient-to-b from-white/80 to-white/40 shadow-xl shadow-orange-900/5 group-hover:shadow-orange-600/20  transition-all duration-500  ">
                   <div className="hover:scale-105 transition-all duration-500">
                     <PropertyCard property={property} priority={index === 0} />
                   </div>

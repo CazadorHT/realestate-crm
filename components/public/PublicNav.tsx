@@ -170,7 +170,7 @@ export function PublicNav() {
                   <Link href="/properties">
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="lg"
                       className="border-blue-600 text-blue-600 hover:bg-blue-50"
                     >
                       <Search className="h-4 w-4 mr-1" />
@@ -182,7 +182,7 @@ export function PublicNav() {
                     onClick={(e) => handleNavClick(e, "#deposit-section")}
                   >
                     <Button
-                      size="sm"
+                      size="lg"
                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md"
                     >
                       <Key className="h-4 w-4 mr-1" />

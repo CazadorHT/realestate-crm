@@ -64,7 +64,7 @@ export function MortgageCalculatorSection() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/10 text-blue-700 text-sm font-bold border border-blue-200/50">
               <Calculator className="w-4 h-4" /> คำนวณสินเชื่อบ้าน-คอนโด
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
+            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
               คำนวณ
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
                 สินเชื่อบ้าน

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Dialog,
@@ -62,6 +62,24 @@ export function PropertyGallery({
       (prev) => (prev - 1 + sortedImages.length) % sortedImages.length
     );
   };
+
+  // Keyboard Navigation
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+      } else if (e.key === "ArrowLeft") {
+        handlePrev();
+      } else if (e.key === "ArrowRight") {
+        handleNext();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, sortedImages.length]);
 
   if (!mainImage) {
     return (
@@ -177,7 +195,16 @@ export function PropertyGallery({
       {/* Lightbox Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
-          className="max-w-[100vw] h-[100dvh] p-0 border-none bg-black/95 flex flex-col items-center justify-center z-[100]"
+          className="
+              !fixed !inset-0
+              !left-0 !top-0
+              !translate-x-0 !translate-y-0
+              !w-screen !h-screen
+              !max-w-none
+              !rounded-none
+              p-0 border-none bg-black/85
+              flex flex-col items-center justify-center
+              z-[100]"
           showCloseButton={false}
         >
           <VisuallyHidden>
@@ -188,12 +215,22 @@ export function PropertyGallery({
 
           <button
             onClick={() => setOpen(false)}
-            className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-full hover:bg-white/20 transition-colors z-50"
+            className="absolute top-4 right-4 p-2.5 bg-black/60 text-white rounded-full hover:bg-white/20 transition-colors z-50 backdrop-blur-sm"
           >
             <X className="h-6 w-6" />
           </button>
 
-          <div className="relative w-full h-full flex items-center justify-center p-4 md:p-10">
+          {/* Image Counter & Title */}
+          <div className="absolute top-4 left-4 z-50 flex flex-col gap-2 max-w-[calc(100%-8rem)]">
+            <div className="px-4 py-2 bg-black/60 text-white text-sm font-medium rounded-full backdrop-blur-sm line-clamp-1">
+              {title}
+            </div>
+            <div className="px-4 py-2 bg-black/60 text-white text-sm font-medium rounded-full backdrop-blur-sm">
+              {currentIndex + 1} / {sortedImages.length}
+            </div>
+          </div>
+
+          <div className="relative w-full h-full flex items-center justify-center px-4 pb-24 pt-4">
             <div className="relative w-full h-full flex items-center justify-center">
               <Image
                 src={sortedImages[currentIndex].image_url}
@@ -215,33 +252,33 @@ export function PropertyGallery({
                   e.stopPropagation();
                   handlePrev();
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-md"
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50"
               >
-                <ChevronLeft className="h-8 w-8" />
+                <ChevronLeft className="h-6 w-6" />
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleNext();
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-md"
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50"
               >
-                <ChevronRight className="h-8 w-8" />
+                <ChevronRight className="h-6 w-6" />
               </button>
             </>
           )}
 
-          {/* Thumbnails Strip (Bottom) */}
-          <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 overflow-x-auto px-4 py-2 no-scrollbar">
+          {/* Thumbnails Strip (Bottom) - Compact */}
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 overflow-x-auto px-4 py-3 no-scrollbar z-50">
             {sortedImages.map((img, idx) => (
               <button
                 key={img.id}
                 onClick={() => setCurrentIndex(idx)}
                 className={cn(
-                  "relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0",
+                  "relative w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0",
                   currentIndex === idx
-                    ? "border-white scale-110"
-                    : "border-transparent opacity-50 hover:opacity-100"
+                    ? "border-white scale-110 shadow-lg"
+                    : "border-white/30 opacity-60 hover:opacity-100 hover:border-white/60"
                 )}
               >
                 <Image

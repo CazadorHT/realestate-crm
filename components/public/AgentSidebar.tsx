@@ -30,9 +30,10 @@ export function AgentSidebar({
   shareUrl,
 }: AgentSidebarProps) {
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-xl shadow-slate-100/50  top-24">
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative">
+    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-xl shadow-slate-100/50 top-24 sticky">
+      {/* Agent Info */}
+      <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
+        <div className="relative flex-shrink-0">
           <Avatar className="h-16 w-16 border-2 border-white shadow-md">
             <AvatarImage src={agentImage || ""} alt={agentName || "Agent"} />
             <AvatarFallback className="bg-slate-100 text-slate-500 font-bold text-lg">
@@ -46,20 +47,23 @@ export function AgentSidebar({
           )}
         </div>
 
-        <div>
+        <div className="flex-1 min-w-0">
           <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">
             ดูแลโดย
           </div>
-          <h3 className="font-bold text-slate-900 text-lg flex items-center gap-1.5">
+          <h3 className="font-bold text-slate-900 text-lg flex items-center gap-1.5 truncate">
             {agentName || "Admin Team"}
-            {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500" />}
+            {isVerified && (
+              <BadgeCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />
+            )}
           </h3>
           <div className="text-sm text-slate-500">Professional Agent</div>
         </div>
       </div>
 
-      <div className="space-y-3">
-        <Button className="w-full h-12 rounded-xl text-base font-semibold bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-100 transition-all hover:-translate-y-0.5 animate-fade-in-out duration-500">
+      {/* Contact Buttons */}
+      <div className="space-y-3 mb-6">
+        <Button className="w-full h-12 rounded-xl text-base font-semibold bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-100 transition-all hover:-translate-y-0.5">
           <MessageCircle className="w-5 h-5 mr-2" />
           ทักไลน์ (Line)
         </Button>
@@ -73,18 +77,27 @@ export function AgentSidebar({
           propertyId={propertyId}
           propertyTitle={propertyTitle}
         />
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-center gap-3 pt-2">
-          {propertyId && <FavoriteButton propertyId={propertyId} showText />}
-          <ShareButtons url={shareUrl} title={propertyTitle || ""} />
-        </div>
       </div>
 
-      <div className="mt-6 pt-6 border-t border-slate-50 text-center">
-        <p className="text-xs text-slate-400">
-          มั่นใจ สะดวก ปลอดภัย ด้วยทีมงานมืออาชีพ <br />
-          พร้อมบริการสินเชื่อฟรี
+      {/* Action Buttons */}
+      <div className="flex items-stretch gap-2 pb-6 border-b border-slate-100">
+        {propertyId && (
+          <div className="flex-1">
+            <FavoriteButton
+              propertyId={propertyId}
+              showText
+              className="w-full h-10"
+            />
+          </div>
+        )}
+        <ShareButtons url={shareUrl} title={propertyTitle || ""} />
+      </div>
+
+      {/* Trust Message */}
+      <div className="mt-6 text-center">
+        <p className="text-xs text-slate-400 leading-relaxed">
+          มั่นใจ สะดวก ปลอดภัย <br />
+          ด้วยทีมงานมืออาชีพ พร้อมบริการสินเชื่อฟรี
         </p>
       </div>
     </div>
