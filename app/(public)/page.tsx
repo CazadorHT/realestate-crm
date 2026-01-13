@@ -99,7 +99,6 @@ export default function LandingPage() {
       {/* Action (ช่วงสุดท้าย: กระตุ้นการกระทำ) */}
       <DepositPropertySection />
       <CTASection />
-      <PublicFooter />
     </div>
   );
 }

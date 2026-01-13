@@ -316,131 +316,150 @@ export function PropertyListingSection() {
 
           {/* เลือกประเภททรัพย์ (Scrollable with Arrows) */}
           <div
-            className="w-full lg:w-auto flex flex-wrap items-center gap-16 text-sm"
+            className="w-full lg:w-auto flex flex-col items-end gap-4 text-sm"
             data-aos="fade-left"
           >
-            {(areaFilter || provinceFilter) && (
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-slate-500">ทรัพย์ในย่านทำเล :</span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-700">
-                  {[areaFilter, provinceFilter].filter(Boolean).join(" • ")}
-                  <button
-                    onClick={() => {
-                      // Clear filters and stay at current position using hash
-                      router.push("/#latest-properties");
-                    }}
-                    className="ml-1 -mr-1 rounded-full p-0.5 hover:bg-rose-400 hover:text-white duration-300 transition-colors"
-                    title="ลบตัวกรอง"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                </span>
-              </div>
-            )}
-
-            <div className="relative group max-w-[400px] lg:max-w-[400px] select-none">
-              <div
-                id="filter-scroll-container"
-                ref={scrollContainerRef}
-                className={`flex gap-2 overflow-x-auto whitespace-nowrap py-1 scroll-smooth snap-x snap-mandatory px-12 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing ${
-                  isDragging ? "snap-none scroll-auto" : ""
-                }`}
-                role="tablist"
-                aria-label="Property type filters"
-                onMouseDown={handleMouseDown}
-                onMouseLeave={handleMouseLeave}
-                onMouseUp={handleMouseUp}
-                onMouseMove={handleMouseMove}
+            <div className="flex justify-end">
+              <Button
+                asChild
+                variant="outline"
+                className="h-11 px-6 text-base "
               >
-                {(Object.keys(FILTER_LABELS) as FilterType[]).map((type) => {
-                  const active = filter === type;
-                  return (
+                <Link href="/properties">
+                  ดูทรัพย์เพิ่มเติม
+                  {hasMore && <ArrowRight className="h-4 w-4" />}
+                </Link>
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-14">
+              {(areaFilter || provinceFilter) && (
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="text-slate-500">ทรัพย์ในย่านทำเล :</span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-700">
+                    {[areaFilter, provinceFilter].filter(Boolean).join(" • ")}
                     <button
-                      key={type}
-                      onClick={(e) => {
-                        // ถ้ามีการลาก ไม่ให้ถือว่าคลิก (prevent click triggering after drag)
-                        if (isDragClick.current) {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          return;
-                        }
-                        setFilter(type);
+                      onClick={() => {
+                        // Clear filters and stay at current position using hash
+                        router.push("/#latest-properties");
                       }}
-                      role="tab"
-                      aria-selected={active}
-                      aria-pressed={active}
-                      className={`shrink-0 snap-start px-4 py-2 rounded-full border text-sm font-semibold transition-all pointer-events-auto ${
-                        active
-                          ? "bg-slate-900 text-white border-slate-900 shadow-md"
-                          : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600"
-                      }`}
+                      className="ml-1 -mr-1 rounded-full p-0.5 hover:bg-rose-400 hover:text-white duration-300 transition-colors"
+                      title="ลบตัวกรอง"
                     >
-                      {FILTER_LABELS[type]}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
                     </button>
-                  );
-                })}
+                  </span>
+                </div>
+              )}
+
+              <div className="relative group max-w-[400px] lg:max-w-[400px] select-none">
+                <div
+                  id="filter-scroll-container"
+                  ref={scrollContainerRef}
+                  className={`flex gap-2 overflow-x-auto whitespace-nowrap py-1 scroll-smooth snap-x snap-mandatory px-12 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing ${
+                    isDragging ? "snap-none scroll-auto" : ""
+                  }`}
+                  role="tablist"
+                  aria-label="Property type filters"
+                  onMouseDown={handleMouseDown}
+                  onMouseLeave={handleMouseLeave}
+                  onMouseUp={handleMouseUp}
+                  onMouseMove={handleMouseMove}
+                >
+                  {(Object.keys(FILTER_LABELS) as FilterType[]).map((type) => {
+                    const active = filter === type;
+                    return (
+                      <button
+                        key={type}
+                        onClick={(e) => {
+                          // ถ้ามีการลาก ไม่ให้ถือว่าคลิก (prevent click triggering after drag)
+                          if (isDragClick.current) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return;
+                          }
+                          setFilter(type);
+                        }}
+                        role="tab"
+                        aria-selected={active}
+                        aria-pressed={active}
+                        className={`shrink-0 snap-start px-4 py-2 rounded-full border text-sm font-semibold transition-all pointer-events-auto ${
+                          active
+                            ? "bg-slate-900 text-white border-slate-900 shadow-md"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600"
+                        }`}
+                      >
+                        {FILTER_LABELS[type]}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Prev Button */}
+                <button
+                  onClick={() => {
+                    const el = document.getElementById(
+                      "filter-scroll-container"
+                    );
+                    if (el) el.scrollBy({ left: -200, behavior: "smooth" });
+                  }}
+                  className="absolute -left-12 top-1/2 -translate-y-1/2  bg-white/80 backdrop-blur border border-slate-200 rounded-full p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
+                  aria-label="Previous filters"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </button>
+
+                {/* Next Button */}
+                <button
+                  onClick={() => {
+                    const el = document.getElementById(
+                      "filter-scroll-container"
+                    );
+                    if (el) el.scrollBy({ left: 200, behavior: "smooth" });
+                  }}
+                  className="absolute -right-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur border border-slate-200 rounded-full p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label="Next filters"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </button>
               </div>
-
-              {/* Prev Button */}
-              <button
-                onClick={() => {
-                  const el = document.getElementById("filter-scroll-container");
-                  if (el) el.scrollBy({ left: -200, behavior: "smooth" });
-                }}
-                className="absolute -left-12 top-1/2 -translate-y-1/2  bg-white/80 backdrop-blur border border-slate-200 rounded-full p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
-                aria-label="Previous filters"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m15 18-6-6 6-6" />
-                </svg>
-              </button>
-
-              {/* Next Button */}
-              <button
-                onClick={() => {
-                  const el = document.getElementById("filter-scroll-container");
-                  if (el) el.scrollBy({ left: 200, behavior: "smooth" });
-                }}
-                className="absolute -right-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur border border-slate-200 rounded-full p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-                aria-label="Next filters"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m9 18 6-6-6-6" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>

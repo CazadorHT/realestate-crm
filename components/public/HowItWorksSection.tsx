@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
+import { SectionBackground } from "./SectionBackground";
 
 const STEP_TONES = {
   blue: {
@@ -89,16 +90,14 @@ export function HowItWorksSection() {
   return (
     <section
       id="how-it-works"
-      className="py-24 px-4 bg-slate-50 relative overflow-hidden"
+      className="py-24 px-4 bg-slate-50 relative overflow-hidden z-0"
     >
+      <SectionBackground pattern="blobs" intensity="low" showDots={true} />
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
-
-      {/* Dot Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] -z-10" />
 
       <div className="max-w-7xl mx-auto">
         {/* SEO-Optimized Header */}

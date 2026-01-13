@@ -1,5 +1,5 @@
 const KEY = "compare_ids_v1";
-const MAX = 3;
+const MAX = 4;
 
 export function readCompareIds(): string[] {
   if (typeof window === "undefined") return [];

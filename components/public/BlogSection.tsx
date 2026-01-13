@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Calendar, ArrowRight, User, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SectionBackground } from "./SectionBackground";
 
 type BlogPost = {
   id: string;
@@ -66,7 +67,12 @@ export function BlogSection() {
   };
 
   return (
-    <section id="blog" className="py-12 bg-slate-50" data-aos="fade-up">
+    <section
+      id="blog"
+      className="py-12 bg-slate-50 relative overflow-hidden z-0"
+      data-aos="fade-up"
+    >
+      <SectionBackground pattern="icons" intensity="low" />
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"

@@ -28,6 +28,7 @@ import {
 import { createDepositLeadAction } from "@/features/public/actions";
 import { depositLeadSchema } from "@/features/public/schema";
 import { DepositLeadInput } from "@/features/public/types";
+import { SectionBackground } from "./SectionBackground";
 
 export function DepositPropertySection() {
   const [isSuccess, setIsSuccess] = useState(false);
@@ -53,7 +54,7 @@ export function DepositPropertySection() {
   return (
     <section
       id="deposit-section"
-      className="py-24 bg-white relative overflow-hidden"
+      className="py-24 bg-white relative overflow-hidden z-0"
     >
       {/* Schema.org Structured Data */}
       <script
@@ -62,8 +63,7 @@ export function DepositPropertySection() {
       />
 
       {/* Background Decor */}
-      <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
-      <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
+      <SectionBackground pattern="blobs" intensity="medium" />
 
       <div className="max-w-screen-xl px-4 mx-auto relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">

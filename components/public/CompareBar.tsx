@@ -32,7 +32,7 @@ export function CompareBar() {
           <div className="h-9 w-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center">
             <Scale className="h-4 w-4" />
           </div>
-          เลือกเพื่อเปรียบเทียบ: {ids.length}/3
+          เลือกเพื่อเปรียบเทียบ: {ids.length}/4
         </div>
 
         <div className="flex items-center gap-2">

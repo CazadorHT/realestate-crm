@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import {
   History,
   ArrowRight,
@@ -26,6 +27,7 @@ import type { RecommendedProperty } from "@/features/properties/recommended-acti
 import { getRecommendedProperties } from "@/features/properties/recommended-actions";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { SectionBackground } from "./SectionBackground";
 
 function formatPrice(price: number) {
   return `฿${price.toLocaleString()}`;
@@ -117,8 +119,10 @@ function convertToRecentProperty(prop: RecommendedProperty): RecentProperty {
 
 export function RecentlyViewedClient({
   recommendedProperties,
+  containerClassName,
 }: {
   recommendedProperties: RecommendedProperty[];
+  containerClassName?: string;
 }) {
   const [items, setItems] = useState<RecentProperty[]>([]);
   const [showingRecommended, setShowingRecommended] = useState(false);
@@ -322,13 +326,14 @@ export function RecentlyViewedClient({
   };
 
   return (
-    <section className="py-12 bg-slate-50 border-t border-slate-100 overflow-hidden">
+    <section className="py-12 bg-slate-50 border-t border-slate-100 overflow-hidden relative z-0">
+      <SectionBackground pattern="blobs" intensity="low" />
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
-      <div className="max-w-7xl mx-auto ">
+      <div className={cn("max-w-7xl mx-auto", containerClassName)}>
         {/* === HEADER WITH CLEAR ACTION === */}
         <div
           className="flex items-center justify-between "

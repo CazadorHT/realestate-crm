@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Search, MessageCircle, TrendingUp, Users, Award } from "lucide-react";
 import Link from "next/link";
+import { SectionBackground } from "./SectionBackground";
 
 export function CTASection() {
   // Schema.org Action for SEO
@@ -19,7 +20,7 @@ export function CTASection() {
   };
 
   return (
-    <section className="py-20 px-4 bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50 relative overflow-hidden">
+    <section className="py-24 px-4 bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50 relative overflow-hidden z-0">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
@@ -27,11 +28,7 @@ export function CTASection() {
       />
 
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-30"></div>
-
-      {/* Decorative blobs */}
-      <div className="absolute top-0 right-0 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-72 h-72 bg-purple-400/20 rounded-full blur-3xl"></div>
+      <SectionBackground pattern="blobs" intensity="medium" />
 
       <div className="max-w-screen-xl mx-auto text-center space-y-8 relative z-10">
         {/* Trust Stats */}
@@ -122,9 +119,7 @@ export function CTASection() {
         </div>
 
         {/* Small trust message */}
-        <p className="text-sm text-slate-500 pt-4"
-          data-aos="fade-up"
-          >
+        <p className="text-sm text-slate-500 pt-4" data-aos="fade-up">
           🔒 ข้อมูลของคุณปลอดภัย | 🎯 ไม่มีค่าใช้จ่าย | ⚡ รวดเร็วทันใจ
         </p>
       </div>

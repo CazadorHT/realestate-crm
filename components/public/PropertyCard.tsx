@@ -358,7 +358,7 @@ export function PropertyCard({
               <div className="flex items-center gap-3 divide-x divide-slate-200">
                 {/* SALE PRICE BLOCK */}
                 <div className="flex flex-col  ">
-                  <span className="text-[9px] font-bold uppercase tracking-tight mb-0.5">
+                  <span className="text-xs font-bold uppercase tracking-tight mb-0.5">
                     ขาย
                   </span>
                   {property.original_price &&
@@ -398,7 +398,7 @@ export function PropertyCard({
 
                 {/* RENT PRICE BLOCK */}
                 <div className="flex flex-col pl-3">
-                  <span className="text-[9px] font-bold uppercase tracking-tight mb-0.5">
+                  <span className="text-xs font-bold uppercase tracking-tight mb-0.5">
                     เช่า
                   </span>
                   {property.original_rental_price &&
@@ -449,7 +449,7 @@ export function PropertyCard({
             ) : (
               <>
                 <div className="text-xs text-stone-400 uppercase tracking-tight">
-                  ราคาเริ่มต้น
+                  {property.listing_type === "RENT" ? "ค่าเช่า" : "ราคาขาย"}
                 </div>
                 <div className="text-xl font-bold text-[#1B263B] truncate flex items-baseline gap-2">
                   {/* SALE or RENT Discount Logic */}
@@ -563,13 +563,26 @@ function getDisplayPrice(property: PropertyCardProps) {
   let isRent = false;
 
   if (property.listing_type === "SALE") {
-    value = salePrice;
+    value = salePrice ?? property.original_price ?? undefined;
   } else if (property.listing_type === "RENT") {
-    value = rentPrice;
+    value = rentPrice ?? property.original_rental_price ?? undefined;
     isRent = true;
   } else {
-    value = salePrice ?? rentPrice;
-    isRent = !salePrice && !!rentPrice;
+    // SALE_AND_RENT or null
+    value =
+      salePrice ??
+      rentPrice ??
+      property.original_price ??
+      property.original_rental_price ??
+      undefined;
+
+    // Determine if it's effectively a rental (no sale price, but has rent price)
+    const hasSale = !!(salePrice ?? property.original_price);
+    const hasRent = !!(rentPrice ?? property.original_rental_price);
+
+    if (!hasSale && hasRent) {
+      isRent = true;
+    }
   }
 
   if (!value) return "สอบถามราคา";

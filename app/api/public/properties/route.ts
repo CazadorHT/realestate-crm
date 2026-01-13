@@ -28,6 +28,11 @@ type PropertyRow = {
   verified: boolean | null;
   min_contract_months: number | null;
   meta_keywords: string[] | null;
+  near_transit: boolean | null;
+  transit_type: string | null;
+  transit_station_name: string | null;
+  transit_distance_meters: number | null;
+  google_maps_link: string | null;
 
   property_images?: Array<{
     image_url: string;
@@ -114,7 +119,12 @@ export async function GET(request: Request) {
           name,
           icon_key
         )
-      )
+      ),
+      near_transit,
+      transit_type,
+      transit_station_name,
+      transit_distance_meters,
+      google_maps_link
     `
     )
 
@@ -179,6 +189,11 @@ export async function GET(request: Request) {
         features: (typedRow.property_features || [])
           .map((pf) => pf.features)
           .filter((f): f is NonNullable<typeof f> => f !== null),
+        near_transit: typedRow.near_transit,
+        transit_type: typedRow.transit_type,
+        transit_station_name: typedRow.transit_station_name,
+        transit_distance_meters: typedRow.transit_distance_meters,
+        google_maps_link: typedRow.google_maps_link,
       };
     })
     .filter((item) => {

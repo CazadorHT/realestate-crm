@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Calculator, Banknote, Percent, CalendarClock } from "lucide-react";
 import { Slider } from "../ui/slider";
 import { Button } from "@/components/ui/button";
+import { SectionBackground } from "./SectionBackground";
 
 export function MortgageCalculatorSection() {
   const [propertyPrice, setPropertyPrice] = useState(5000000);
@@ -48,7 +49,8 @@ export function MortgageCalculatorSection() {
   };
 
   return (
-    <section className="py-16 bg-gradient-to-br from-blue-50 to-blue-100">
+    <section className="py-16 bg-gradient-to-br from-blue-50 to-blue-100 relative overflow-hidden z-0">
+      <SectionBackground pattern="icons" intensity="low" />
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"

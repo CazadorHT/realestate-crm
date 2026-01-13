@@ -1,4 +1,5 @@
 import { Shield, CheckCircle2, Clock, Star, Award } from "lucide-react";
+import { SectionBackground } from "./SectionBackground";
 
 export function TrustSection() {
   // Schema.org Service + AggregateRating for SEO
@@ -57,7 +58,8 @@ export function TrustSection() {
   ];
 
   return (
-    <section id="trust" className="bg-white">
+    <section id="trust" className="bg-white relative overflow-hidden z-0">
+      <SectionBackground pattern="grid" intensity="low" />
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"

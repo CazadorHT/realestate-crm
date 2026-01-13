@@ -44,7 +44,7 @@ export function PublicNav() {
 
   const navigationLinks = [
     { name: "หน้าหลัก", href: "/" },
-    { name: "ทรัพย์สิน", href: "/properties" },
+    { name: "ทรัพย์สิน", href: "#latest-properties" },
     { name: "วิธีการทำงาน", href: "#how-it-works" },
     { name: "บทความ", href: "#blog" },
     { name: "คำถามที่พบบ่อย", href: "#faq" },
@@ -143,8 +143,20 @@ export function PublicNav() {
                   className="relative group"
                   aria-label="รายการโปรด"
                 >
-                  <div className="flex items-center gap-2 text-slate-600 hover:text-pink-600 transition-colors">
-                    <Heart className="h-5 w-5 group-hover:fill-pink-600 transition-all" />
+                  <div
+                    className={`flex items-center gap-2 transition-colors ${
+                      favoriteCount > 0
+                        ? "text-red-500"
+                        : "text-slate-600 hover:text-pink-600"
+                    }`}
+                  >
+                    <Heart
+                      className={`h-5 w-5 transition-all ${
+                        favoriteCount > 0
+                          ? "fill-red-500"
+                          : "group-hover:fill-pink-600"
+                      }`}
+                    />
                     {favoriteCount > 0 && (
                       <span className="absolute -top-2 -right-2 h-5 w-5 bg-gradient-to-br from-pink-500 to-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
                         {favoriteCount > 99 ? "99+" : favoriteCount}
@@ -185,12 +197,18 @@ export function PublicNav() {
                 {/* Mobile Favorites */}
                 <Link
                   href="/favorites"
-                  className="relative"
+                  className="relative group"
                   aria-label="รายการโปรด"
                 >
-                  <Heart className="h-5 w-5 text-slate-600" />
+                  <Heart
+                    className={`h-5 w-5 transition-colors ${
+                      favoriteCount > 0
+                        ? "text-red-500 fill-red-500"
+                        : "text-slate-600 group-hover:text-slate-900"
+                    }`}
+                  />
                   {favoriteCount > 0 && (
-                    <span className="absolute -top-2 -right-2 h-5 w-5 bg-gradient-to-br from-pink-500 to-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-2 -right-2 h-5 w-5 bg-gradient-to-br from-pink-500 to-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm border border-white">
                       {favoriteCount > 99 ? "99+" : favoriteCount}
                     </span>
                   )}

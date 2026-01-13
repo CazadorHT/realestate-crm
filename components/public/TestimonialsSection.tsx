@@ -1,4 +1,5 @@
 import { Star, Quote, CheckCircle2, Award } from "lucide-react";
+import { SectionBackground } from "./SectionBackground";
 
 const TESTIMONIALS = [
   {
@@ -67,7 +68,7 @@ export function TestimonialsSection() {
   };
 
   return (
-    <section className="py-20 px-4 bg-white relative overflow-hidden">
+    <section className="py-20 px-4 bg-white relative overflow-hidden z-0">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
@@ -75,8 +76,7 @@ export function TestimonialsSection() {
       />
 
       {/* Decorative Background */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-100/30 to-purple-100/30 rounded-full blur-3xl -z-10" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-amber-100/30 to-orange-100/30 rounded-full blur-3xl -z-10" />
+      <SectionBackground pattern="blobs" intensity="low" />
 
       <div className="max-w-7xl mx-auto">
         {/* SEO-Optimized Header */}
