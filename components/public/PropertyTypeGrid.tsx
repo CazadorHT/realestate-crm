@@ -187,7 +187,7 @@ export function PropertyTypeGrid({
       <div className="max-w-screen-2xl mx-auto relative z-10">
         {/* SEO-Optimized Section Header */}
         <div className="text-center mb-10" data-aos="fade-up">
-          <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
+          <h2 className="text-2xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
             ค้นหา{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
               บ้าน คอนโด ที่ดิน
@@ -208,13 +208,13 @@ export function PropertyTypeGrid({
         </div>
 
         {/* PropertyTypeCard wrapper with AOS */}
-        <div className="grid grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 text-center">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-6 text-center">
           {isLoading
             ? Array.from({ length: 6 }).map((_, idx) => (
                 <PropertyTypeSkeleton key={idx} />
               ))
             : propertyTypes.map((type, idx) => (
-                <div key={idx} data-aos="fade-left" data-aos-delay={idx * 50}>
+                <div key={idx} data-aos="fade-up" data-aos-delay={idx * 50}>
                   <PropertyTypeCard {...type} />
                 </div>
               ))}

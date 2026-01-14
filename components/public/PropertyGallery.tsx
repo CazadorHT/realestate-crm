@@ -127,27 +127,67 @@ export function PropertyGallery({
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 h-[300px] md:h-[450px] rounded-3xl overflow-hidden relative">
+        {/* Mobile Carousel (Visible on Mobile Only) */}
+        <div className="md:hidden relative h-[300px] -mx-4 sm:mx-0">
+          <div className="absolute top-4 right-4 z-20">
+            <Badge className="bg-black/60 text-white hover:bg-black/70 border-none backdrop-blur-md">
+              <ImageIcon className="w-3 h-3 mr-1" />
+              {sortedImages.length} รูป
+            </Badge>
+          </div>
+
+          <div
+            className="flex overflow-x-auto snap-x snap-mandatory h-full w-full no-scrollbar"
+            onScroll={(e) => {
+              // Optional: Update current index for a dot indicator if we added one
+              // const scrollLeft = e.currentTarget.scrollLeft;
+              // const width = e.currentTarget.offsetWidth;
+              // const newIndex = Math.round(scrollLeft / width);
+            }}
+          >
+            {sortedImages.map((img, idx) => (
+              <div
+                key={img.id}
+                className="flex-shrink-0 w-full h-full snap-center relative bg-slate-200"
+                onClick={() => {
+                  setCurrentIndex(idx);
+                  setOpen(true);
+                }}
+              >
+                <Image
+                  src={img.image_url}
+                  alt={`${title} ${idx + 1}`}
+                  fill
+                  className="object-cover"
+                  priority={idx === 0}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop Grid (Hidden on Mobile) */}
+        <div className="hidden md:grid grid-cols-4 gap-2 h-[450px] rounded-3xl overflow-hidden relative">
           {/* Main Image (Large Left) */}
           <div
-            className="md:col-span-2 md:row-span-2 relative cursor-pointer bg-slate-200 group/main"
+            className="col-span-2 row-span-2 relative cursor-pointer bg-slate-200 group/main"
             onClick={() => {
               setCurrentIndex(0);
               setOpen(true);
             }}
           >
             <Image
-              src={mainImage.image_url}
+              src={mainImage?.image_url || "/images/placeholder.jpg"}
               alt={title}
               fill
               className="object-cover hover:scale-105 transition-transform duration-700"
               priority
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="50vw"
             />
           </div>
 
           {/* Sub Images (Grid Right) */}
-          <div className="hidden md:grid grid-cols-2 gap-2 col-span-2 row-span-2 max-h-full">
+          <div className="grid grid-cols-2 gap-2 col-span-2 row-span-2 max-h-full">
             {subImages.map((img, idx) => (
               <div
                 key={img.id}
@@ -173,13 +213,15 @@ export function PropertyGallery({
               </div>
             ))}
             {/* Fallback for empty slots to keep grid shape if < 5 images */}
-            {Array.from({ length: 4 - subImages.length }).map((_, i) => (
-              <div key={`empty-${i}`} className="bg-slate-50" />
-            ))}
+            {Array.from({ length: Math.max(0, 4 - subImages.length) }).map(
+              (_, i) => (
+                <div key={`empty-${i}`} className="bg-slate-50" />
+              )
+            )}
           </div>
 
-          {/* Mobile View All Button */}
-          <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6">
+          {/* Desktop View All Button */}
+          <div className="absolute bottom-6 right-6">
             <Button
               variant="secondary"
               className="bg-white/90 hover:bg-white text-slate-900 shadow-lg backdrop-blur-sm h-10 px-4 rounded-xl font-semibold"

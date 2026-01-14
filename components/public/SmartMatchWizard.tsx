@@ -140,7 +140,7 @@ export function SmartMatchWizard() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100 h-[450px] flex flex-col">
+    <div className="bg-white rounded-2xl shadow-xl p-5 md:p-8 border border-slate-100 min-h-[450px] md:h-[450px] flex flex-col">
       {step < 9 ? (
         <>
           <div className="flex justify-between items-center relative ">
