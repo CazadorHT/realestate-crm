@@ -175,23 +175,31 @@ export function PublicFooter() {
             </div>
 
             {/* Newsletter */}
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-white">รับข่าวสารใหม่</p>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="อีเมลของคุณ"
-                  className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-slate-500"
-                  disabled
-                />
-                <button
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-colors"
-                  disabled
-                >
-                  ส่ง
+            {/* Newsletter */}
+            <div className="mt-6 p-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm">
+              <div className="flex items-center gap-2 text-white mb-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
+                  <Mail className="h-4 w-4" />
+                </span>
+                <span className="font-medium text-sm">รับข่าวสารใหม่</span>
+              </div>
+              <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                ไม่พลาดโปรโมชั่น บ้านหลุดจอง และข่าวสารอสังหาฯ ล่าสุด
+                ส่งตรงถึงมือคุณ
+              </p>
+              <div className="space-y-2">
+                <div className="relative">
+                  <input
+                    type="email"
+                    placeholder="กรอกอีเมลของคุณ"
+                    className="w-full pl-9 pr-4 py-2.5 bg-slate-900 border border-slate-700/80 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white placeholder-slate-500 transition-all"
+                  />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                </div>
+                <button className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-sm font-semibold text-white shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                  สมัครรับข่าวสาร
                 </button>
               </div>
-              <p className="text-xs text-slate-500">Coming Soon</p>
             </div>
           </div>
         </div>

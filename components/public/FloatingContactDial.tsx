@@ -96,7 +96,7 @@ export function FloatingContactDial() {
 
   return (
     <div
-      className={`fixed bottom-24 right-6 z-50 flex flex-col items-end gap-4 transition-all duration-500 transform ${
+      className={`fixed bottom-24 right-4 md:right-6 z-50 flex flex-col items-end gap-4 transition-all duration-500 transform ${
         isVisible
           ? "translate-y-0 opacity-100"
           : "translate-y-10 opacity-0 pointer-events-none"
@@ -120,7 +120,7 @@ export function FloatingContactDial() {
             className={`flex flex-col gap-2 bg-white p-2 rounded-xl shadow-xl max-h-[160px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent transition-all duration-300 origin-bottom-right ${
               isPhoneListOpen
                 ? "opacity-100 translate-x-0 scale-100"
-                : "opacity-0 translate-x-8 scale-95 pointer-events-none absolute right-16" // adjust positioning to ensure it doesn't take up layout space when hidden or looks correct
+                : "opacity-0 translate-x-4 scale-95 pointer-events-none absolute right-16" // adjust positioning to ensure it doesn't take up layout space when hidden or looks correct
             }`}
           >
             {agents.map((agent) => (

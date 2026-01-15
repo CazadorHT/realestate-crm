@@ -157,7 +157,7 @@ export function PropertyTypeGrid({
     "@type": "ItemList",
     name: "ประเภทอสังหาริมทรัพย์",
     description:
-      "รวมประกาศซื้อ ขาย เช่า บ้าน คอนโด ที่ดิน และอสังหาริมทรัพย์ทุกประเภท",
+      "รวมประกาศซื้อ ขาย เช่า บ้าน คอนโด สำนักงานออฟฟิศ และอสังหาริมทรัพย์ทุกประเภท",
     itemListElement: propertyTypes.map((type, index) => ({
       "@type": "ListItem",
       position: index + 1,
@@ -171,7 +171,7 @@ export function PropertyTypeGrid({
   };
 
   return (
-    <section className="pt-20 pb-10 px-4 bg-slate-50 relative overflow-hidden">
+    <section className="pt-20 pb-10 px-4 sm:px-6 lg:px-8 bg-slate-50 relative overflow-hidden">
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-[100px]" />
@@ -190,7 +190,7 @@ export function PropertyTypeGrid({
           <h2 className="text-2xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
             ค้นหา{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-              บ้าน คอนโด ที่ดิน
+              บ้าน คอนโด สำนักงานออฟฟิศ
             </span>{" "}
             ตามประเภท
           </h2>
@@ -208,7 +208,7 @@ export function PropertyTypeGrid({
         </div>
 
         {/* PropertyTypeCard wrapper with AOS */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-6 text-center">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-6 text-center">
           {isLoading
             ? Array.from({ length: 6 }).map((_, idx) => (
                 <PropertyTypeSkeleton key={idx} />

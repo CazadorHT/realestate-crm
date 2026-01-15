@@ -124,7 +124,7 @@ export function PublicNav() {
               </div>
 
               {/* Desktop Navigation */}
-              <div className="hidden lg:flex items-center gap-6">
+              <div className="hidden xl:flex items-center gap-6">
                 {navigationLinks.map((link) => (
                   <a
                     key={link.name}
@@ -193,7 +193,7 @@ export function PublicNav() {
               </div>
 
               {/* Mobile Menu Button */}
-              <div className="lg:hidden flex items-center gap-4">
+              <div className="xl:hidden flex items-center gap-4">
                 {/* Mobile Favorites */}
                 <Link
                   href="/favorites"
@@ -231,43 +231,45 @@ export function PublicNav() {
 
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="lg:hidden border-t border-slate-200 bg-white">
+            <div className="xl:hidden border-t border-slate-200 bg-white">
               <div className="px-4 py-4 space-y-3">
                 {navigationLinks.map((link) => (
                   <a
                     key={link.name}
                     href={link.href}
                     onClick={(e) => handleNavClick(e, link.href)}
-                    className="block px-4 py-3 text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium"
+                    className="block px-4 py-3 text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium "
                   >
                     {link.name}
                   </a>
                 ))}
 
-                <div className="pt-4 space-y-2 border-t border-slate-200 ">
+                <div className="pt-4 border-t border-slate-200 flex items-center gap-3">
                   <Link
                     href="/properties"
                     onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1"
                   >
                     <Button
                       variant="outline"
                       size="lg"
-                      className="w-full  border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-base"
+                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-base"
                     >
                       <Search className="h-5 w-5 mr-2" />
-                      ค้นหาทรัพย์สิน
+                      ค้นหา
                     </Button>
                   </Link>
                   <a
                     href="#deposit-section"
                     onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1"
                   >
                     <Button
                       size="lg"
-                      className="w-full  bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base"
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base"
                     >
                       <Key className="h-5 w-5 mr-2" />
-                      ฝากทรัพย์กับเรา
+                      ฝากทรัพย์
                     </Button>
                   </a>
                 </div>

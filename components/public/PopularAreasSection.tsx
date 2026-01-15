@@ -101,11 +101,11 @@ export function PopularAreasSection() {
 
   return (
     <section className="pt-8 bg-white">
-      <div className="max-w-screen-2xl mx-auto">
+      <div className="max-w-screen-2xl mx-auto sm:px-4 md:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 py-6 ">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 md:gap-12 py-6 mb-4">
           <div
-            className="space-y-4 px-4 md:px-0"
+            className="space-y-4 px-4 md:px-0 flex-1 md:max-w-2xl lg:max-w-4xl"
             data-aos="fade-right"
             suppressHydrationWarning
           >
@@ -119,47 +119,49 @@ export function PopularAreasSection() {
             </div>
 
             {/* SEO-Optimized Gradient Heading */}
-            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
               เจาะลึก
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-blue-500 to-purple-600">
                 ย่านน่าอยู่
               </span>{" "}
-              บ้าน คอนโด สำนักงาน
+              บ้าน คอนโด
               <br className="hidden md:block" />
-              <span className="text-slate-600 text-2xl md:text-4xl font-semibold">
+              <span className="text-slate-600 text-2xl sm:text-3xl md:text-4xl font-semibold mt-1 block md:inline">
+                {" "}
                 ซื้อ · ขาย · เช่า
               </span>{" "}
-              <span className="text-slate-500 text-xl md:text-3xl font-normal">
+              <span className="text-slate-500 text-xl sm:text-2xl md:text-3xl font-normal">
                 ทั่วกรุงเทพฯ
               </span>
             </h2>
 
             {/* SEO-Enhanced Description with Keywords */}
-            <p className="text-slate-600 text-base md:text-lg max-w-2xl leading-relaxed">
+            <p className="text-slate-600 text-base md:text-lg leading-relaxed">
               รวมทรัพย์สินคุณภาพในย่านศักยภาพสูง
               ใกล้รถไฟฟ้าและสิ่งอำนวยความสะดวก พร้อมสถิติจำนวนทรัพย์อัพเดทล่าสุด
-              ช่วยให้คุณตัดสินใจได้แม่นยำ
             </p>
           </div>
 
-          <button
-            onClick={() => router.push("/?type=ALL#latest-properties")}
-            data-aos="fade-left"
-            suppressHydrationWarning
-            className="group relative h-12 px-8 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-300 hover:scale-105"
-          >
-            {/* Animated gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="px-4 md:px-0 w-full md:w-auto md:shrink-0">
+            <button
+              onClick={() => router.push("/?type=ALL#latest-properties")}
+              data-aos="fade-left"
+              suppressHydrationWarning
+              className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-300 hover:scale-105 flex items-center justify-center"
+            >
+              {/* Animated gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-            {/* Shine effect */}
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              {/* Shine effect */}
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-            {/* Button content */}
-            <div className="relative flex items-center gap-2">
-              <span>ดูทรัพย์ทั้งหมด</span>
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-            </div>
-          </button>
+              {/* Button content */}
+              <div className="relative flex items-center gap-2">
+                <span>ดูทรัพย์ทั้งหมด</span>
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Content Area - Fixed height to prevent layout shift */}

@@ -42,7 +42,7 @@ export function HotDealsSection() {
   if (isEmpty && !isLoading) return null;
 
   return (
-    <section className="py-8 relative overflow-hidden bg-slate-800 max-h-[1052px] h-full">
+    <section className="py-8 relative overflow-hidden bg-slate-800 max-h-[1052px] h-full ">
       {/* === ANIMATED PREMIUM BACKGROUND === */}
 
       {/* Moving Gradient Blobs */}
@@ -91,9 +91,9 @@ export function HotDealsSection() {
         <Sparkles className="h-12 w-12 text-white" />
       </div>
 
-      <div className="max-w-screen-2xl mx-auto px-4 relative z-10">
+      <div className="max-w-screen-2xl mx-auto px-4 relative z-10 md:px-6 lg:px-8">
         {/* === HEADER SECTION === */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-12 mb-8 md:mb-12">
           <div className="space-y-4 max-w-screen-2xl">
             {/* Badge ที่ดู Modern ขึ้น */}
             <div
@@ -108,27 +108,27 @@ export function HotDealsSection() {
 
             {/* SEO-Optimized Heading */}
             <h2
-              className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.1]"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.1]"
               data-aos="fade-up"
               data-aos-delay="100"
             >
               โอกาสทอง!{" "}
-              <span className="text-slate-200 text-2xl md:text-3xl">
-                บ้าน คอนโด สำนักงานออฟฟิศ
+              <span className="text-slate-200 text-2xl sm:text-3xl md:text-3xl block md:inline mt-1">
+                บ้าน คอนโด สำนักงาน
               </span>
-              <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-orange-400 to-amber-400 drop-shadow-sm">
+              <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-orange-400 to-amber-400 drop-shadow-sm mt-1 block">
                 ลดราคาพิเศษ ขาย-เช่า
               </span>
             </h2>
 
             {/* SEO-Enhanced Description */}
             <div
-              className="flex items-start gap-3 text-slate-300 text-base"
+              className="flex items-start gap-3 text-slate-300 text-sm sm:text-base md:text-base"
               data-aos="fade-up"
               data-aos-delay="200"
             >
-              <TrendingDown className="h-6 w-6 text-red-500 mt-1 flex-shrink-0" />
+              <TrendingDown className="h-5 w-5  md:h-6 md:w-6 text-red-500 mt-0.5 md:mt-1 flex-shrink-0" />
               <p>
                 คัดเฉพาะทรัพย์สินคุณภาพ{" "}
                 <span className="font-bold text-white decoration-red-500/30 underline decoration-4 underline-offset-4">
@@ -139,11 +139,15 @@ export function HotDealsSection() {
             </div>
           </div>
 
-          <div className="flex gap-3" data-aos="fade-left" data-aos-delay="300">
+          <div
+            className="flex gap-3 w-full md:w-auto"
+            data-aos="fade-left"
+            data-aos-delay="300"
+          >
             {/* Fixed CTA Button */}
             <Button
               asChild
-              className="rounded-full bg-white text-slate-900 hover:bg-slate-100 font-semibold px-6 h-10 text-sm shadow-lg hover:shadow-xl hover:scale-105 duration-300 hover:shadow-white/20 transition-all group"
+              className="rounded-full bg-white text-slate-900 hover:bg-slate-100 font-semibold px-6 h-12 w-full md:w-auto md:h-10 text-sm shadow-lg hover:shadow-xl hover:scale-105 duration-300 hover:shadow-white/20 transition-all group"
             >
               <Link href="/properties?sortBy=price&sortOrder=asc&filter=hot_deals">
                 ดูดีลทั้งหมด
@@ -164,12 +168,12 @@ export function HotDealsSection() {
           /* Horizontal Scroll on Mobile / Grid on Desktop */
           <div
             ref={scrollRef}
-            className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto md:overflow-visible scrollbar-hide snap-x"
+            className="flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-x-auto md:overflow-visible scrollbar-hide snap-x"
           >
             {properties.slice(0, 4).map((property, index) => (
               <div
                 key={property.id}
-                className="min-w-[350px] md:min-w-0 snap-center relative group perspective-1000"
+                className="min-w-[300px] sm:min-w-[340px] md:min-w-0 snap-center relative group perspective-1000"
                 data-aos="fade-up"
                 data-aos-delay={index * 100}
               >

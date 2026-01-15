@@ -71,7 +71,7 @@ export function FAQSection() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <div
-        className="max-w-screen-xl mx-auto px-4 relative z-10 flex grid-cols-2 gap-12  justify-between items-center"
+        className="max-w-screen-xl mx-auto px-4 relative z-10 grid lg:grid-cols-2 gap-12 items-start"
         data-aos="fade-up"
         data-aos-delay="100"
       >

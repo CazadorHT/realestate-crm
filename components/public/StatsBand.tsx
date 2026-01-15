@@ -47,7 +47,7 @@ export function StatsBand() {
   };
 
   return (
-    <section className="relative py-10 overflow-hidden bg-gradient-to-r from-blue-500 to-purple-500">
+    <section className="relative py-10  overflow-hidden bg-gradient-to-r from-blue-500 to-purple-500">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
@@ -67,10 +67,10 @@ export function StatsBand() {
       <div className="max-w-screen-2xl mx-auto px-4">
         {/* SEO-Critical Heading */}
         <h2 className="sr-only">
-          สถิติความสำเร็จในการขายและให้เช่าอสังหาริมทรัพย์ บ้าน คอนโด ที่ดิน
+          สถิติความสำเร็จในการขายและให้เช่าอสังหาริมทรัพย์ บ้าน คอนโด สำนักงานออฟฟิศ
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8 sm:px-4 md:px-6 lg:px-8">
           {stats.map((stat, index) => (
             <div
               key={index}

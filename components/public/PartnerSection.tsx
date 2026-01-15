@@ -63,7 +63,7 @@ export function PartnerSection() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
-      <div className="max-w-screen-2xl mx-auto px-4">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 md:px-8">
         {/* SEO-Optimized Header Section */}
         <div className="text-center mb-12" data-aos="fade-up">
           <h2 className="text-2xl md:text-4xl font-bold text-slate-900 mb-3">
