@@ -62,7 +62,8 @@ export function AgentSidebar({
       </div>
 
       {/* Contact Buttons */}
-      <div className="space-y-3 mb-6">
+      {/* Contact Buttons - Hidden on Mobile since we have Sticky Bar */}
+      <div className="space-y-3 mb-6 hidden lg:block">
         <Button className="w-full h-12 rounded-xl text-base font-semibold bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-100 transition-all hover:-translate-y-0.5">
           <MessageCircle className="w-5 h-5 mr-2" />
           ทักไลน์ (Line)
@@ -80,17 +81,28 @@ export function AgentSidebar({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-stretch gap-2 pb-6 border-b border-slate-100">
+      <div className="flex items-center justify-between gap-2 pb-6 border-b border-slate-100">
         {propertyId && (
-          <div className="flex-1">
+          <div className="flex-shrink-0">
             <FavoriteButton
               propertyId={propertyId}
-              showText
-              className="w-full h-10"
+              showText={false}
+              className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 border-none"
             />
           </div>
         )}
-        <ShareButtons url={shareUrl} title={propertyTitle || ""} />
+
+        {/* Desktop: Default (Grid), Mobile: Icon */}
+        <div className="hidden lg:block flex-1">
+          <ShareButtons url={shareUrl} title={propertyTitle || ""} />
+        </div>
+        <div className="lg:hidden flex-1 flex justify-end">
+          <ShareButtons
+            url={shareUrl}
+            title={propertyTitle || ""}
+            variant="icon"
+          />
+        </div>
       </div>
 
       {/* Trust Message */}

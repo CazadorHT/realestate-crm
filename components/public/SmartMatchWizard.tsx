@@ -140,7 +140,7 @@ export function SmartMatchWizard() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-5 md:p-8 border border-slate-100 min-h-[450px] md:h-[450px] flex flex-col">
+    <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-5 md:p-8 border border-slate-100 h-[450px] flex flex-col ">
       {step < 9 ? (
         <>
           <div className="flex justify-between items-center relative ">
@@ -284,11 +284,11 @@ interface QuizQuestionProps {
 function QuizQuestion({ title, options, onSelect }: QuizQuestionProps) {
   return (
     <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex flex-col h-full">
-      <h2 className="text-3xl font-medium md:text-2xl mb-6 text-slate-900 flex-shrink-0">
+      <h2 className="text-2xl sm:text-3xl font-medium md:text-2xl mb-4 sm:mb-6 text-slate-900 flex-shrink-0">
         {title}
       </h2>
       <div className="overflow-y-auto pr-2 flex-1 custom-scrollbar">
-        <div className="grid grid-cols-2 gap-3 pb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4">
           {options.map((option) => (
             <button
               key={option}
@@ -421,7 +421,7 @@ function ResultCard({
         className="block"
       >
         <div className="flex gap-4">
-          <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200">
             <img
               src={match.image_url}
               alt={match.title}
@@ -605,135 +605,138 @@ function LeadForm({
   }
 
   return (
-    <div className="animate-in fade-in-0 slide-in-from-right-4 duration-500 flex-1">
-      <button
-        onClick={onBack}
-        className="text-xs text-slate-500 mb-6 flex items-center gap-1 hover:text-blue-600"
-      >
-        ← กลับไปที่ผลการค้นหา
-      </button>
-
-      <div className="mb-6">
-        <h3 className="text-xl font-bold text-slate-900">
-          รับข้อมูลเชิงลึกและนัดชมห้องจริง
-        </h3>
-        <p className="text-sm text-slate-500">
-          เจ้าหน้าที่ผู้เชี่ยวชาญจะติดต่อกลับเพื่อดูแลคุณโดยเฉพาะ
-          (ไม่มีค่าใช้จ่าย)
-        </p>
-      </div>
-
-      <div className="bg-slate-50 rounded-xl p-3 mb-6 flex gap-3 border border-slate-100">
-        <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200">
-          <img
-            src={match.image_url}
-            className="w-full h-full object-cover"
-            alt=""
-          />
-        </div>
-        <div className="min-w-0">
-          <div className="text-md font-bold text-slate-900 truncate">
-            {match.title}
-          </div>
-          <div className="text-lg text-blue-600 font-medium">
-            ฿ {match.price.toLocaleString()} บาท{isRent ? " / เดือน" : ""}
-          </div>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1">
-          <label
-            className={`text-xs font-medium text-slate-700 ml-1 ${
-              errors.fullName ? "text-red-500" : ""
-            }`}
-          >
-            ชื่อ-นามสกุล <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-            <Input
-              className={`pl-10 h-10 border-slate-200 focus:border-blue-500 ${
-                errors.fullName ? "border-red-500 focus:ring-red-200" : ""
-              }`}
-              placeholder="กรอกชื่อของคุณ"
-              value={formData.fullName}
-              onChange={(e) => {
-                setFormData({ ...formData, fullName: e.target.value });
-                if (errors.fullName) setErrors({ ...errors, fullName: false });
-              }}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-slate-700 ml-1">
-            เบอร์โทรศัพท์ <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-            <Input
-              className={`pl-10 h-10 border-slate-200 focus:border-blue-500 ${
-                errors.phone ? "border-red-500 focus:ring-red-200" : ""
-              }`}
-              placeholder="08X-XXX-XXXX"
-              value={formData.phone}
-              onChange={(e) => {
-                setFormData({ ...formData, phone: e.target.value });
-                if (errors.phone) setErrors({ ...errors, phone: false });
-              }}
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-4">
-          <div className="space-y-1 flex-1">
-            <label className="text-xs font-medium text-slate-700 ml-1">
-              อีเมล (ถ้ามี)
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-              <Input
-                className="pl-10 h-10 border-slate-200 focus:border-blue-500"
-                placeholder="example@mail.com"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <div className="space-y-1 flex-1">
-            <label className="text-xs font-medium text-slate-700 ml-1">
-              ไลน์ (ถ้ามี)
-            </label>
-            <div className="relative">
-              <MessageCircle className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-              <Input
-                className="pl-10 h-10 border-slate-200 focus:border-blue-500"
-                placeholder="ID Line"
-                value={formData.lineId}
-                onChange={(e) =>
-                  setFormData({ ...formData, lineId: e.target.value })
-                }
-              />
-            </div>
-          </div>
-        </div>
-        <div className="text-xs text-slate-500">
-          ข้อมูลส่วนตัวของคุณจะถูกเก็บเป็นความเป็นส่วนตัวและใช้เพื่อส่งข้อมูลและขอนัดชม
-        </div>
-
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg mt-4"
+    <div className="animate-in fade-in-0 slide-in-from-right-4 duration-500 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 overflow-y-auto pr-2 pb-6 custom-scrollbar">
+        <button
+          onClick={onBack}
+          className="text-xs text-slate-500 mb-6 flex items-center gap-1 hover:text-blue-600"
         >
-          {isSubmitting
-            ? "กำลังส่งข้อมูล..."
-            : "ยืนยันเพื่อรับสิทธิ์นัดชมทรัพย์"}
-        </Button>
-      </form>
+          ← กลับไปที่ผลการค้นหา
+        </button>
+
+        <div className="mb-6">
+          <h3 className="text-xl font-bold text-slate-900">
+            รับข้อมูลเชิงลึกและนัดชมห้องจริง
+          </h3>
+          <p className="text-sm text-slate-500">
+            เจ้าหน้าที่ผู้เชี่ยวชาญจะติดต่อกลับเพื่อดูแลคุณโดยเฉพาะ
+            (ไม่มีค่าใช้จ่าย)
+          </p>
+        </div>
+
+        <div className="bg-slate-50 rounded-xl p-3 mb-6 flex gap-3 border border-slate-100">
+          <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200">
+            <img
+              src={match.image_url}
+              className="w-full h-full object-cover"
+              alt=""
+            />
+          </div>
+          <div className="min-w-0">
+            <div className="text-md font-bold text-slate-900 truncate">
+              {match.title}
+            </div>
+            <div className="text-lg text-blue-600 font-medium">
+              ฿ {match.price.toLocaleString()} บาท{isRent ? " / เดือน" : ""}
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <label
+              className={`text-xs font-medium text-slate-700 ml-1 ${
+                errors.fullName ? "text-red-500" : ""
+              }`}
+            >
+              ชื่อ-นามสกุล <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <Input
+                className={`pl-10 h-10 border-slate-200 focus:border-blue-500 ${
+                  errors.fullName ? "border-red-500 focus:ring-red-200" : ""
+                }`}
+                placeholder="กรอกชื่อของคุณ"
+                value={formData.fullName}
+                onChange={(e) => {
+                  setFormData({ ...formData, fullName: e.target.value });
+                  if (errors.fullName)
+                    setErrors({ ...errors, fullName: false });
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-700 ml-1">
+              เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <Input
+                className={`pl-10 h-10 border-slate-200 focus:border-blue-500 ${
+                  errors.phone ? "border-red-500 focus:ring-red-200" : ""
+                }`}
+                placeholder="08X-XXX-XXXX"
+                value={formData.phone}
+                onChange={(e) => {
+                  setFormData({ ...formData, phone: e.target.value });
+                  if (errors.phone) setErrors({ ...errors, phone: false });
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="space-y-1 flex-1">
+              <label className="text-xs font-medium text-slate-700 ml-1">
+                อีเมล (ถ้ามี)
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input
+                  className="pl-10 h-10 border-slate-200 focus:border-blue-500"
+                  placeholder="example@mail.com"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-1 flex-1">
+              <label className="text-xs font-medium text-slate-700 ml-1">
+                ไลน์ (ถ้ามี)
+              </label>
+              <div className="relative">
+                <MessageCircle className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input
+                  className="pl-10 h-10 border-slate-200 focus:border-blue-500"
+                  placeholder="ID Line"
+                  value={formData.lineId}
+                  onChange={(e) =>
+                    setFormData({ ...formData, lineId: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+          <div className="text-xs text-slate-500">
+            ข้อมูลส่วนตัวของคุณจะถูกเก็บเป็นความเป็นส่วนตัวและใช้เพื่อส่งข้อมูลและขอนัดชม
+          </div>
+
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg mt-4"
+          >
+            {isSubmitting
+              ? "กำลังส่งข้อมูล..."
+              : "ยืนยันเพื่อรับสิทธิ์นัดชมทรัพย์"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

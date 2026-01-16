@@ -34,7 +34,7 @@ export function ScrollDownButton() {
   return (
     <button
       onClick={handleScroll}
-      className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 animate-pulse cursor-pointer hover:scale-125 transition-transform duration-300"
+      className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 hidden md:flex flex-col items-center gap-1 animate-pulse cursor-pointer hover:scale-125 transition-transform duration-300"
       aria-label="Scroll to next section"
       style={{ animationDuration: "1.5s" }}
     >

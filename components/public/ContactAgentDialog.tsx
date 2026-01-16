@@ -22,7 +22,7 @@ import { MessageSquare, Loader2, Send } from "lucide-react";
 interface ContactAgentDialogProps {
   propertyId?: string;
   propertyTitle?: string;
-  triggerButton?: React.ReactNode;
+  trigger?: React.ReactNode;
 }
 
 function SubmitButton() {
@@ -52,7 +52,7 @@ function SubmitButton() {
 export function ContactAgentDialog({
   propertyId,
   propertyTitle,
-  triggerButton,
+  trigger,
 }: ContactAgentDialogProps) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<LeadState>({});
@@ -72,7 +72,7 @@ export function ContactAgentDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {triggerButton || (
+        {trigger || (
           <Button className="w-full h-12 rounded-xl text-base font-semibold bg-slate-900 text-white hover:bg-slate-800 shadow-lg transition-all hover:-translate-y-0.5">
             <MessageSquare className="w-5 h-5 mr-2" />
             สนใจทรัพย์นี้ / นัดชม

@@ -37,7 +37,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   let query = supabase
     .from("leads")
-    .select("*", { count: "exact" })
+    .select("*, property:properties(id, title)", { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (q) {

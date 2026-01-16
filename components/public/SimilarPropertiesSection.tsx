@@ -60,10 +60,10 @@ export async function SimilarPropertiesSection({
   if (!properties || properties.length === 0) return null;
 
   return (
-    <section className="py-12 border-t border-slate-100">
-      <div className="flex justify-between items-end mb-8">
+    <section className="py-8 md:py-12 border-t border-slate-100">
+      <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6 md:mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">
+          <h2 className="text-xl md:text-2xl font-bold text-slate-900">
             ทรัพย์สินที่คล้ายกัน
           </h2>
           <p className="text-slate-500 text-sm mt-1">
@@ -72,14 +72,14 @@ export async function SimilarPropertiesSection({
         </div>
         <Link
           href={`/properties?type=${propertyType}`}
-          className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 group"
+          className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 group self-start md:self-auto"
         >
           ดูทั้งหมด{" "}
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
         {properties.map((property: any) => {
           const imageUrl =
             property.property_images?.find((img: any) => img.is_cover)

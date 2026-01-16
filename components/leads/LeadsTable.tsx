@@ -23,6 +23,8 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
           <TableRow>
             <TableHead>ชื่อลูกค้า</TableHead>
             <TableHead>ข้อมูลติดต่อ</TableHead>
+            <TableHead>ทรัพย์ที่สนใจ</TableHead>
+            <TableHead>ข้อความ</TableHead>
             <TableHead>สถานะ</TableHead>
             <TableHead>ที่มา</TableHead>
             <TableHead className="text-center">ดีลที่เกี่ยวข้อง</TableHead>
@@ -42,7 +44,35 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
               {/* เบอร์โทร */}
               <TableCell className="text-sm text-muted-foreground">
                 <div>{l.phone ?? "-"}</div>
-                <div>{l.email ?? "-"}</div>
+                {l.email && <div>{l.email}</div>}
+                {(l as any).line_id && (
+                  <div className="text-green-600">
+                    Line: {(l as any).line_id}
+                  </div>
+                )}
+              </TableCell>
+              {/* Property */}
+              <TableCell>
+                {(l as any).property ? (
+                  <Link
+                    href={`/properties/${(l as any).property.id}`}
+                    target="_blank"
+                    className="text-sm text-blue-600 hover:underline block max-w-[200px] truncate"
+                  >
+                    {(l as any).property.title}
+                  </Link>
+                ) : (
+                  <span className="text-muted-foreground">-</span>
+                )}
+              </TableCell>
+              {/* Message/Note */}
+              <TableCell>
+                <div
+                  className="max-w-[200px] truncate text-sm text-muted-foreground"
+                  title={l.note || ""}
+                >
+                  {l.note || "-"}
+                </div>
               </TableCell>
               {/* Stage */}
               <TableCell>

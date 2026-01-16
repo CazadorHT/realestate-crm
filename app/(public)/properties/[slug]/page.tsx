@@ -18,6 +18,7 @@ import {
 import { ShareButtons } from "@/components/public/ShareButtons";
 import { SimilarPropertiesSection } from "@/components/public/SimilarPropertiesSection";
 import { FavoriteButton } from "@/components/public/FavoriteButton";
+import { MobilePropertyActions } from "@/components/public/MobilePropertyActions";
 import { Database } from "@/lib/database.types";
 import { Metadata } from "next";
 
@@ -32,7 +33,7 @@ type PropertyDetail = Database["public"]["Tables"]["properties"]["Row"] & {
   >[];
   assigned_agent: Pick<
     Database["public"]["Tables"]["profiles"]["Row"],
-    "full_name" | "phone" | "avatar_url"
+    "full_name" | "phone" | "avatar_url" | "line_id"
   > | null;
   property_features: {
     features: Pick<
@@ -65,7 +66,8 @@ export default async function PublicPropertyDetailPage(props: {
         assigned_agent:profiles!properties_assigned_to_profile_fkey (
            full_name,
            phone,
-           avatar_url
+           avatar_url,
+           line_id
         ),
         property_features (
           features (
@@ -148,14 +150,14 @@ export default async function PublicPropertyDetailPage(props: {
   const shareUrl = `https://your-domain.com/properties/${data.slug || slug}`;
 
   return (
-    <main className="min-h-screen bg-white pb-20 font-sans">
+    <main className="min-h-screen bg-white pb-24 lg:pb-20 font-sans">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
       {/* 1. Header & Breadcrumb */}
-      <div className="pt-20 md:pt-24 px-4 md:px-6 lg:px-8 bg-white sticky top-0 z-30 opacity-95 backdrop-blur-sm shadow-sm md:shadow-none md:static">
+      <div className="pt-20 md:pt-24 px-5 md:px-6 lg:px-8 bg-white relative">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col gap-3 md:gap-4">
             {/* Back Link */}
@@ -167,10 +169,6 @@ export default async function PublicPropertyDetailPage(props: {
                 <ArrowLeft className="w-4 h-4 mr-1" />
                 ย้อนกลับไปหน้ารวมทรัพย์
               </Link>
-              <div className="md:hidden flex items-center gap-2 ">
-                <FavoriteButton propertyId={data.id} />
-                <ShareButtons url={shareUrl} title={data.title} />
-              </div>
             </div>
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -480,19 +478,6 @@ export default async function PublicPropertyDetailPage(props: {
               />
             </section>
             <section className="space-y-4">
-              {/* Title with line clamp */}
-              <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-tight line-clamp-2">
-                {data.title}
-              </h1>
-
-              {/* Location */}
-              <div className="flex items-center text-slate-600 gap-2 font-normal text-sm">
-                <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                <span className="line-clamp-1">
-                  {locationParts || "ไม่ระบุทำเล"}
-                </span>
-              </div>
-
               {/* Badges and Meta in horizontal layout */}
               <div className="flex items-center justify-between gap-4 flex-wrap border-b border-slate-100 pb-4">
                 {/* Listing Type Badge */}
@@ -532,7 +517,7 @@ export default async function PublicPropertyDetailPage(props: {
                 <h2 className="text-lg md:text-2xl font-bold text-slate-900 mb-4 md:mb-6">
                   สิ่งอำนวยความสะดวก
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-y-4 md:gap-x-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-y-4 md:gap-x-8">
                   {features.map((item: any, i: number) => {
                     const Icon = ICON_MAP[item.icon_key] || DEFAULT_ICON;
                     return (
@@ -612,6 +597,15 @@ export default async function PublicPropertyDetailPage(props: {
           province={data.province || undefined}
         />
       </div>
+
+      <MobilePropertyActions
+        agentName={agent?.full_name}
+        agentImage={agent?.avatar_url}
+        agentPhone={agent?.phone}
+        agentLine={agent?.line_id}
+        propertyId={data.id}
+        propertyTitle={data.title}
+      />
     </main>
   );
 }

@@ -47,7 +47,7 @@ export function HeroSection() {
       >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 xl:gap-16 items-center">
-            <div className="space-y-4 sm:space-y-5 md:space-y-6 animate-in fade-in-0 duration-700 slide-in-from-bottom-4 lg:col-span-7">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 animate-in fade-in-0 duration-700 slide-in-from-bottom-4 lg:col-span-8">
               <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-blue-50/90 backdrop-blur-sm text-blue-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium border border-blue-100 shadow-sm">
                 <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span>แพลตฟอร์มอสังหาฯ ที่คัดสรรเพื่อคุณโดยเฉพาะ</span>
@@ -107,7 +107,7 @@ export function HeroSection() {
               </div>
             </div>
 
-            <div className="lg:col-span-5 w-full max-w-md mx-auto lg:max-w-none relative z-20">
+            <div className="lg:col-span-4  w-full max-w-md mx-auto lg:max-w-none relative z-20">
               <SmartMatchWizard />
             </div>
           </div>
