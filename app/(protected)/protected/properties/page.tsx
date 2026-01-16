@@ -10,6 +10,8 @@ import { Database } from "@/lib/database.types";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import { ImageLightbox } from "@/components/properties/ImageLightbox";
+import { getPropertiesDashboardStatsQuery } from "@/features/properties/queries";
+import { PropertiesDashboard } from "@/components/properties/PropertiesDashboard";
 
 export default async function PropertiesPage({
   searchParams,
@@ -234,6 +236,7 @@ export default async function PropertiesPage({
     };
   });
 
+  const stats = await getPropertiesDashboardStatsQuery();
 
   return (
     <div className="p-6 space-y-6">
@@ -252,13 +255,20 @@ export default async function PropertiesPage({
         </Button>
       </div>
 
-      <PropertyFilters />
-      <PropertiesTable data={tableData} />
-      <PaginationControls
-        totalCount={count ?? 0}
-        pageSize={PAGE_SIZE}
-        currentPage={currentPage}
-      />
+      <PropertiesDashboard stats={stats} />
+
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold border-l-4 border-blue-500 pl-3">
+          รายการทรัพย์สิน
+        </h2>
+        <PropertyFilters />
+        <PropertiesTable data={tableData} />
+        <PaginationControls
+          totalCount={count ?? 0}
+          pageSize={PAGE_SIZE}
+          currentPage={currentPage}
+        />
+      </div>
     </div>
   );
 }

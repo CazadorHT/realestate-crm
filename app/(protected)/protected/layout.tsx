@@ -5,6 +5,7 @@ import { SidebarNav } from "@/components/dashboard/SidebarNav";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { isStaff } from "@/lib/auth-shared";
 import { UserNav } from "@/components/dashboard/UserNav";
+import { MobileNav } from "@/components/dashboard/MobileNav";
 
 export default async function ProtectedLayout({
   children,
@@ -38,7 +39,8 @@ export default async function ProtectedLayout({
       <div className="flex flex-1 flex-col min-w-0">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 bg-white/80 px-6 backdrop-blur-md border-b border-slate-100 shadow-sm supports-[backdrop-filter]:bg-white/60">
           <div className="flex items-center gap-4">
-            {/* Mobile menu trigger could reside here */}
+            <MobileNav role={profile.role} />
+
             <h1 className="text-lg font-bold text-slate-800 tracking-tight sm:hidden">
               CAZADOR
             </h1>
@@ -50,9 +52,7 @@ export default async function ProtectedLayout({
           </div>
         </header>
 
-        <main className="flex-1 p-6 md:p-8  mx-auto w-full">
-          {children}
-        </main>
+        <main className="flex-1 p-6 md:p-8  mx-auto w-full">{children}</main>
       </div>
     </div>
   );

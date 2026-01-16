@@ -4,15 +4,15 @@ import { FeaturesClient } from "@/features/amenities/components/FeaturesClient";
 import { Loader2 } from "lucide-react";
 
 export const metadata = {
-  title: "Features Management | Real Estate CRM",
-  description: "Manage property features and amenities.",
+  title: "จัดการสิ่งอำนวยความสะดวก | Real Estate CRM",
+  description: "จัดการรายการสิ่งอำนวยความสะดวก ไอคอน และหมวดหมู่",
 };
 
 export default async function FeaturesPage() {
   const features = await getFeatures();
 
   return (
-    <div className="container py-8 max-w-6xl">
+    <div className="space-y-6">
       <Suspense fallback={<FeaturesLoading />}>
         <FeaturesClient features={features} />
       </Suspense>

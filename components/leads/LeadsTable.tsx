@@ -21,12 +21,12 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Lead</TableHead>
-            <TableHead>Contact</TableHead>
-            <TableHead>Stage</TableHead>
-            <TableHead>Source</TableHead>
-            <TableHead className="text-center">Deals</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>ชื่อลูกค้า</TableHead>
+            <TableHead>ข้อมูลติดต่อ</TableHead>
+            <TableHead>สถานะ</TableHead>
+            <TableHead>ที่มา</TableHead>
+            <TableHead className="text-center">ดีลที่เกี่ยวข้อง</TableHead>
+            <TableHead className="text-right">จัดการ</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -53,7 +53,9 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                 {safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}
               </TableCell>
               {/* Action */}
-              <TableCell className="text-center">{(l as any).deals_count ?? 0}</TableCell>
+              <TableCell className="text-center">
+                {(l as any).deals_count ?? 0}
+              </TableCell>
               <TableCell className="text-right">
                 <LeadRowActions id={l.id} fullName={l.full_name} />
               </TableCell>

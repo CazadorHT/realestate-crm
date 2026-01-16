@@ -1,7 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Users, AlertTriangle } from "lucide-react";
 import Link from "next/link";
@@ -11,7 +17,10 @@ interface AdminTeamCardProps {
   isViewingOwnProfile: boolean;
 }
 
-export function AdminTeamCard({ currentRole, isViewingOwnProfile }: AdminTeamCardProps) {
+export function AdminTeamCard({
+  currentRole,
+  isViewingOwnProfile,
+}: AdminTeamCardProps) {
   const isAdmin = currentRole === "ADMIN";
 
   if (!isAdmin) {
@@ -28,9 +37,7 @@ export function AdminTeamCard({ currentRole, isViewingOwnProfile }: AdminTeamCar
             </div>
             <div>
               <CardTitle>ทีมและการจัดการสิทธิ์</CardTitle>
-              <CardDescription>
-                คุณมีสิทธิ์ผู้ดูแลระบบ (Admin)
-              </CardDescription>
+              <CardDescription>คุณมีสิทธิ์ผู้ดูแลระบบ (Admin)</CardDescription>
             </div>
           </div>
           <Badge variant="default" className="bg-primary">
@@ -54,7 +61,7 @@ export function AdminTeamCard({ currentRole, isViewingOwnProfile }: AdminTeamCar
             </div>
             <Button variant="outline" asChild>
               <Link href="/protected/settings/users">
-                ไปหน้า User Management
+                ไปยังหน้าจัดการผู้ใช้
               </Link>
             </Button>
           </div>

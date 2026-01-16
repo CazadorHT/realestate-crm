@@ -124,7 +124,7 @@ export default async function DashboardPage() {
           />
 
           {/* 3. KPI CARDS */}
-          <StatsOverview stats={dashboardStats} />
+          <StatsOverview initialStats={dashboardStats} />
 
           {/* 4. MAIN ANALYTICS & OPERATIONS GRID */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -138,7 +138,7 @@ export default async function DashboardPage() {
 
               {/* REVENUE CHART */}
               <div className="h-[350px]">
-                <RevenueChart data={revenueData} />
+                <RevenueChart initialData={revenueData} />
               </div>
 
               {/* TOP AGENTS & INSIGHTS */}

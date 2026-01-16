@@ -2,10 +2,12 @@ import Link from "next/link";
 import {
   getLeadsQuery,
   getLeadsForKanbanQuery,
+  getLeadsDashboardStatsQuery,
 } from "@/features/leads/queries";
 import { LeadsFilters } from "@/components/leads/LeadsFilters";
 import { LeadsTable } from "@/components/leads/LeadsTable";
 import { LeadsKanban } from "@/features/leads/LeadsKanban";
+import { LeadsStats } from "@/components/leads/LeadsStats";
 
 export default async function LeadsPage({
   searchParams,
@@ -60,11 +62,15 @@ export default async function LeadsPage({
     return `/protected/leads?${params.toString()}`;
   };
 
+  /* Fetch Dashboard Stats */
+  const stats = await getLeadsDashboardStatsQuery();
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Leads</h1>
+        <h1 className="text-xl font-semibold">ลีด (Leads)</h1>
         <div className="flex items-center gap-2">
+          {/* View Toggles */}
           <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border">
             <Link
               href={toggleViewHref("list")}
@@ -74,7 +80,7 @@ export default async function LeadsPage({
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              List
+              รายการ
             </Link>
             <Link
               href={toggleViewHref("kanban")}
@@ -84,17 +90,20 @@ export default async function LeadsPage({
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Kanban
+              กระดานงาน
             </Link>
           </div>
           <Link
             className="rounded-md bg-primary px-3 py-2 text-sm text-white hover:bg-primary/90 transition-colors"
             href="/protected/leads/new"
           >
-            + เพิ่ม Lead
+            + สร้างลีดใหม่
           </Link>
         </div>
       </div>
+
+      {/* Stats Section */}
+      <LeadsStats stats={stats} />
 
       {view === "list" ? (
         <>
@@ -112,7 +121,7 @@ export default async function LeadsPage({
                 }`}
                 href={makeHref(page - 1)}
               >
-                Prev
+                ก่อนหน้า
               </Link>
               <Link
                 className={`rounded-md border px-3 py-1 ${
@@ -120,7 +129,7 @@ export default async function LeadsPage({
                 }`}
                 href={makeHref(page + 1)}
               >
-                Next
+                ถัดไป
               </Link>
             </div>
           </div>

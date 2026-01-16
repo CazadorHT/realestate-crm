@@ -2,7 +2,11 @@ import { Button } from "@/components/ui/button";
 import { OwnersTable } from "@/components/owners/OwnersTable";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
-import { getOwnersQuery } from "@/features/owners/queries";
+import { OwnersStats } from "@/components/owners/OwnersStats";
+import {
+  getOwnersQuery,
+  getOwnersDashboardStatsQuery,
+} from "@/features/owners/queries";
 
 type PageProps = {
   searchParams: Promise<{
@@ -25,6 +29,8 @@ export default async function OwnersPage({ searchParams }: PageProps) {
     page,
     pageSize: 10,
   });
+
+  const stats = await getOwnersDashboardStatsQuery();
 
   const makeHref = (newPage: number) => {
     const params = new URLSearchParams();
@@ -49,6 +55,8 @@ export default async function OwnersPage({ searchParams }: PageProps) {
           </Link>
         </Button>
       </div>
+
+      <OwnersStats stats={stats} />
 
       <OwnersTable owners={owners} />
 

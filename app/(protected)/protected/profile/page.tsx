@@ -38,59 +38,85 @@ export default async function ProfilePage() {
   const isAdmin = profile.role === "ADMIN";
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+    <div className="mx-auto p-4 md:p-6 space-y-6">
       {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">โปรไฟล์ของฉัน</h1>
-        <p className="text-muted-foreground">
-          จัดการข้อมูลส่วนตัวและการตั้งค่าบัญชี
+      <div className="space-y-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+          โปรไฟล์ของฉัน
+        </h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
+          จัดการข้อมูลส่วนตัว ความปลอดภัย และการตั้งค่าบัญชี
         </p>
       </div>
 
-      <Separator />
+      <Separator className="my-6" />
 
-      {/* Section 1: Profile Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>ข้อมูลโปรไฟล์</CardTitle>
-          <CardDescription>
-            อัปเดตข้อมูลส่วนตัวและรูปโปรไฟล์ของคุณ
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          <ProfileAvatar
-            avatarUrl={profile.avatar_url}
-            fullName={profile.full_name}
-          />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column - Identity & Settings (4 cols) */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Identity Card */}
+          <Card className="overflow-hidden border-slate-200 shadow-sm">
+            <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90"></div>
+            <CardContent className="pt-0 relative px-6 pb-6">
+              <div className="-mt-12 mb-4 flex justify-center">
+                <ProfileAvatar
+                  avatarUrl={profile.avatar_url}
+                  fullName={profile.full_name}
+                />
+              </div>
+              <div className="text-center mb-4">
+                <h2 className="text-xl font-bold text-slate-900">
+                  {profile.full_name || "ไม่ระบุชื่อ"}
+                </h2>
+                <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">
+                  {profile.role || "USER"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-          <Separator />
+          {/* Account Security */}
+          <AccountSecurityCard />
 
-          <ProfileInfoForm
-            fullName={profile.full_name}
-            phone={profile.phone}
-            line_id={profile.line_id}
-            facebook_url={profile.facebook_url}
-            whatsapp_id={profile.whatsapp_id}
-            wechat_id={profile.wechat_id}
-            email={profile.email}
-            role={profile.role}
-          />
-        </CardContent>
-      </Card>
+          {/* Admin Team (If Admin) */}
+          {isAdmin && (
+            <AdminTeamCard
+              currentRole={profile.role || "AGENT"}
+              isViewingOwnProfile={true}
+            />
+          )}
+        </div>
 
-      {/* Section 2: Account & Security */}
-      <AccountSecurityCard />
+        {/* Right Column - Forms (8 cols) */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Section 1: Profile Information */}
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold">
+                ข้อมูลส่วนตัว
+              </CardTitle>
+              <CardDescription>
+                อัปเดตข้อมูลรายละเอียดของคุณเพื่อใช้ในการติดต่อ
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProfileInfoForm
+                fullName={profile.full_name}
+                phone={profile.phone}
+                line_id={profile.line_id}
+                facebook_url={profile.facebook_url}
+                whatsapp_id={profile.whatsapp_id}
+                wechat_id={profile.wechat_id}
+                email={profile.email}
+                role={profile.role}
+              />
+            </CardContent>
+          </Card>
 
-      {/* Section 3: Notification Preferences */}
-      <NotificationSettings />
-
-      {/* Section 4: Admin Team & Role Management (Admin Only) */}
-      {isAdmin && (
-        <AdminTeamCard
-          currentRole={profile.role || "AGENT"}
-          isViewingOwnProfile={true}
-        />
-      )}
+          {/* Section 3: Notification Preferences */}
+          <NotificationSettings />
+        </div>
+      </div>
     </div>
   );
 }

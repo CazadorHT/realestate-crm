@@ -293,7 +293,7 @@ function LeadCard({ lead, isOverlay }: { lead: LeadRow; isOverlay?: boolean }) {
         </div>
 
         <div className="pt-2 border-t flex justify-between items-center text-[10px] text-muted-foreground">
-          <span>{new Date(lead.created_at).toLocaleDateString()}</span>
+          <span>{new Date(lead.created_at).toLocaleDateString("th-TH")}</span>
           {lead.lead_type && (
             <Badge
               variant="secondary"

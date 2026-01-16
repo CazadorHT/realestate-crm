@@ -20,7 +20,7 @@ export function FunnelChart({ data }: FunnelChartProps) {
   return (
     <Card className="shadow-sm h-full">
       <CardHeader>
-        <CardTitle className="text-base">Sales Funnel</CardTitle>
+        <CardTitle className="text-base">ช่องทางการขาย (Funnel)</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[250px] w-full flex">
@@ -40,7 +40,7 @@ export function FunnelChart({ data }: FunnelChartProps) {
               />
               <Tooltip
                 cursor={{ fill: "transparent" }}
-                formatter={(value: number) => [value, "Count"]}
+                formatter={(value: number) => [value, "จำนวน"]}
               />
               <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={24}>
                 {data.map((entry, index) => (

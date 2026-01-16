@@ -111,3 +111,46 @@ export async function getOwnersQuery({
     totalPages: count ? Math.ceil(count / pageSize) : 0,
   };
 }
+
+export async function getOwnersDashboardStatsQuery() {
+  const supabase = await createClient();
+
+  // 1. Total Owners
+  const { count: totalOwners } = await supabase
+    .from("owners")
+    .select("*", { count: "exact", head: true });
+
+  // 2. New this month
+  const now = new Date();
+  const startOfMonth = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    1
+  ).toISOString();
+  const { count: newOwnersMonth } = await supabase
+    .from("owners")
+    .select("*", { count: "exact", head: true })
+    .gte("created_at", startOfMonth);
+
+  // 3. Owners with properties (Active)
+  // This is a bit tricky with simple query, but we can check distinct owner_id in properties
+  const { count: activeOwners } = await supabase
+    .from("properties")
+    .select("owner_id", { count: "exact", head: true });
+  // This is property count, not unique owner count.
+  // Better approximation: fetch all distinct owner_ids from properties?
+  // Or just "Total Properties" owned by these owners?
+  // User probably cares about "How many owners have at least 1 property".
+  // For now, let's just show "Total Properties" linked to owners.
+
+  const { count: totalPropertiesLinked } = await supabase
+    .from("properties")
+    .select("*", { count: "exact", head: true })
+    .not("owner_id", "is", null);
+
+  return {
+    totalOwners: totalOwners || 0,
+    newOwnersMonth: newOwnersMonth || 0,
+    totalPropertiesLinked: totalPropertiesLinked || 0,
+  };
+}

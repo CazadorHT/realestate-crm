@@ -12,7 +12,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Plus, X } from "lucide-react";
+import {
+  Eye,
+  Edit,
+  Trash2,
+  Plus,
+  X,
+  Search,
+  Filter,
+  Handshake,
+} from "lucide-react";
 import Link from "next/link";
 import { DealWithProperty, DealPropertyOption } from "./types";
 import { DealFormDialog } from "./components/DealFormDialog";
@@ -109,12 +118,18 @@ export function DealsTable({
   const totalPages = Math.max(1, Math.ceil(count / pageSize));
 
   const StatusBadge = ({ status }: { status: string }) => {
-    const styleMap: Record<string, string> = {
-      NEGOTIATING: "bg-blue-100 text-blue-800",
-      SIGNED: "bg-purple-100 text-purple-800",
-      CLOSED_WIN: "bg-green-100 text-green-800",
-      CLOSED_LOSS: "bg-red-100 text-red-800",
-      CANCELLED: "bg-gray-100 text-gray-800",
+    const styleMap: Record<
+      string,
+      { bg: string; text: string; icon?: string }
+    > = {
+      NEGOTIATING: { bg: "bg-blue-50", text: "text-blue-700 border-blue-200" },
+      SIGNED: { bg: "bg-purple-50", text: "text-purple-700 border-purple-200" },
+      CLOSED_WIN: {
+        bg: "bg-green-50",
+        text: "text-green-700 border-green-200",
+      },
+      CLOSED_LOSS: { bg: "bg-red-50", text: "text-red-700 border-red-200" },
+      CANCELLED: { bg: "bg-slate-50", text: "text-slate-700 border-slate-200" },
     };
 
     const labelMap: Record<string, string> = {
@@ -125,26 +140,48 @@ export function DealsTable({
       CANCELLED: "ยกเลิก",
     };
 
+    const style = styleMap[status] || {
+      bg: "bg-slate-50",
+      text: "text-slate-700 border-slate-200",
+    };
+
     return (
       <Badge
         variant="outline"
-        className={`${styleMap[status] || "bg-gray-100"}`}
+        className={`${style.bg} ${style.text} font-medium`}
       >
         {labelMap[status] || status}
       </Badge>
     );
   };
 
+  const hasActiveFilters = selectedPropertyId || selectedLeadId || q;
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 w-full max-w-3xl">
-          <div className="flex items-center gap-2 w-72">
+    <div className="space-y-6">
+      {/* Filters Section */}
+      <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+        <div className="flex items-center gap-2 mb-3">
+          <Filter className="h-4 w-4 text-slate-600" />
+          <h3 className="text-sm font-semibold text-slate-700">ตัวกรอง</h3>
+          {hasActiveFilters && (
+            <Badge
+              variant="secondary"
+              className="ml-2 bg-blue-100 text-blue-700"
+            >
+              {[selectedPropertyId, selectedLeadId, q].filter(Boolean).length}{" "}
+              active
+            </Badge>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Property Filter */}
+          <div className="flex items-center gap-2">
             <div className="flex-1">
               <PropertyCombobox
                 value={selectedPropertyId ?? (undefined as any)}
                 onChange={(id) => {
-                  // PropertyCombobox returns `null` for "(General) ไม่ผูกทรัพย์" which is not a supported filter yet.
                   if (id === null) {
                     setSelectedPropertyId(undefined);
                     import("sonner").then(({ toast }) =>
@@ -155,174 +192,237 @@ export function DealsTable({
                   }
                   setPage(1);
                 }}
-                placeholder="แสดงทรัพย์ทั้งหมด"
+                placeholder="เลือกทรัพย์..."
               />
             </div>
-
-            {selectedPropertyId ? (
+            {selectedPropertyId && (
               <Button
-                size="sm"
+                size="icon"
                 variant="ghost"
                 onClick={() => setSelectedPropertyId(undefined)}
-                title="ล้าง"
+                className="h-10 w-10 hover:bg-red-50 hover:text-red-600"
+                title="ลบตัวกรอง"
               >
                 <X className="h-4 w-4" />
               </Button>
-            ) : null}
+            )}
           </div>
 
-          <div className="w-72">
-            <LeadCombobox
-              value={selectedLeadId ?? null}
-              onChange={(id) => {
-                setSelectedLeadId(id ?? undefined);
-                setPage(1);
-              }}
-              placeholder="แสดงลีดทั้งหมด"
-            />
+          {/* Lead Filter */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <LeadCombobox
+                value={selectedLeadId ?? null}
+                onChange={(id) => {
+                  setSelectedLeadId(id ?? undefined);
+                  setPage(1);
+                }}
+                placeholder="เลือกลีด..."
+              />
+            </div>
+            {selectedLeadId && (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setSelectedLeadId(undefined)}
+                className="h-10 w-10 hover:bg-red-50 hover:text-red-600"
+                title="ลบตัวกรอง"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
-          <div className="flex-1">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="ค้นหาด้วยชื่อทรัพย์, ชื่อลีด..."
+              placeholder="ค้นหา..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
+              className="pl-10"
             />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <DealFormDialog
-            trigger={
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> สร้าง Deal
+            {q && (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setQ("")}
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-red-50 hover:text-red-600"
+              >
+                <X className="h-3 w-3" />
               </Button>
-            }
-            leadId={""}
-            properties={properties}
-            onSuccess={() => {
-              setPage(1);
-              setDebouncedQ("");
-              setReloadKey((k) => k + 1);
-            }}
-          />
-        </div>
-      </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ทรัพย์</TableHead>
-            <TableHead>ลีด</TableHead>
-            <TableHead>ราคา</TableHead>
-            <TableHead>วันที่</TableHead>
-            <TableHead>สถานะ</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((deal) => (
-            <TableRow key={deal.id}>
-              <TableCell>
-                <Link
-                  href={`/protected/properties/${deal.property_id}`}
-                  className="font-medium hover:underline"
-                >
-                  {deal.property?.title || "-"}
-                </Link>
-              </TableCell>
-              <TableCell>
-                <Link
-                  href={`/protected/leads/${deal.lead_id}`}
-                  className="text-sm text-muted-foreground hover:underline"
-                >
-                  {deal.lead?.full_name || "-"}
-                </Link>
-              </TableCell>
-              <TableCell>
-                {deal.deal_type === "RENT"
-                  ? deal.property?.rental_price
-                    ? `${deal.property.rental_price.toLocaleString()} ฿/เดือน`
-                    : "-"
-                  : deal.property?.price
-                  ? `${deal.property.price.toLocaleString()} ฿`
-                  : "-"}
-              </TableCell>
-              <TableCell>
-                {deal.transaction_date
-                  ? format(new Date(deal.transaction_date), "d MMM yy", {
-                      locale: th,
-                    })
-                  : "-"}
-              </TableCell>
-              <TableCell>
-                <StatusBadge status={deal.status} />
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <Link
-                    href={`/protected/deals/${deal.id}`}
-                    className="btn btn-ghost"
-                  >
-                    <Button variant="ghost" size="icon">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </Link>
-
-                  <DealFormDialog
-                    leadId={deal.lead_id}
-                    properties={properties}
-                    deal={deal}
-                    trigger={
-                      <Button variant="ghost" size="icon">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    }
-                    onSuccess={() => {
-                      // refresh after edit
-                      setPage(1);
-                      setReloadKey((k) => k + 1);
-                    }}
-                  />
-
-                  <DeleteDealButton
-                    dealId={deal.id}
-                    leadId={deal.lead_id}
-                    onSuccess={() => {
-                      setPage(1);
-                      setReloadKey((k) => k + 1);
-                    }}
-                  />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          แสดง {Math.min(count, (page - 1) * pageSize + 1)} -{" "}
-          {Math.min(count, page * pageSize)} จาก {count}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-          >
-            ก่อนหน้า
-          </Button>
-          <div className="px-2 py-1 rounded border bg-muted text-sm">
-            {page} / {totalPages}
+            )}
           </div>
-          <Button
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          >
-            ถัดไป
-          </Button>
         </div>
       </div>
+
+      {/* Table */}
+      <div className="relative">
+        {loading && (
+          <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        )}
+
+        <Table>
+          <TableHeader className="bg-slate-50">
+            <TableRow>
+              <TableHead className="font-semibold">ทรัพย์</TableHead>
+              <TableHead className="font-semibold">ลีด</TableHead>
+              <TableHead className="font-semibold">ราคา</TableHead>
+              <TableHead className="font-semibold">วันที่</TableHead>
+              <TableHead className="font-semibold">สถานะ</TableHead>
+              <TableHead className="text-right font-semibold">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-44 text-center">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <Handshake className="h-12 w-12 text-slate-300" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-600">
+                        {hasActiveFilters ? "ไม่พบดีลที่ค้นหา" : "ยังไม่มีดีล"}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {hasActiveFilters
+                          ? "ลองปรับตัวกรองใหม่"
+                          : "สร้างดีลแรกของคุณเพื่อเริ่มต้น"}
+                      </p>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.map((deal) => (
+                <TableRow key={deal.id} className="hover:bg-slate-50/50">
+                  <TableCell>
+                    <Link
+                      href={`/protected/properties/${deal.property_id}`}
+                      className="font-medium text-slate-900 hover:text-blue-600 hover:underline transition-colors"
+                    >
+                      {deal.property?.title || "-"}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <Link
+                      href={`/protected/leads/${deal.lead_id}`}
+                      className="text-sm text-slate-600 hover:text-blue-600 hover:underline transition-colors"
+                    >
+                      {deal.lead?.full_name || "-"}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="font-medium text-slate-700">
+                    {deal.deal_type === "RENT"
+                      ? deal.property?.rental_price
+                        ? `${deal.property.rental_price.toLocaleString()} ฿/เดือน`
+                        : "-"
+                      : deal.property?.price
+                      ? `${deal.property.price.toLocaleString()} ฿`
+                      : "-"}
+                  </TableCell>
+                  <TableCell className="text-slate-600">
+                    {deal.transaction_date
+                      ? format(new Date(deal.transaction_date), "d MMM yy", {
+                          locale: th,
+                        })
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={deal.status} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        asChild
+                        className="hover:bg-blue-50 hover:text-blue-600"
+                        title="ดูรายละเอียด"
+                      >
+                        <Link href={`/protected/deals/${deal.id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+
+                      <DealFormDialog
+                        leadId={deal.lead_id}
+                        properties={properties}
+                        deal={deal}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="hover:bg-purple-50 hover:text-purple-600"
+                            title="แก้ไข"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        }
+                        onSuccess={() => {
+                          setPage(1);
+                          setReloadKey((k) => k + 1);
+                        }}
+                      />
+
+                      <DeleteDealButton
+                        dealId={deal.id}
+                        leadId={deal.lead_id}
+                        onSuccess={() => {
+                          setPage(1);
+                          setReloadKey((k) => k + 1);
+                        }}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Pagination */}
+      {data.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 px-4">
+          <div className="text-sm text-slate-600">
+            แสดง{" "}
+            <span className="font-medium text-slate-900">
+              {Math.min(count, (page - 1) * pageSize + 1)}
+            </span>{" "}
+            -{" "}
+            <span className="font-medium text-slate-900">
+              {Math.min(count, page * pageSize)}
+            </span>{" "}
+            จาก <span className="font-medium text-slate-900">{count}</span>{" "}
+            รายการ
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+            >
+              ก่อนหน้า
+            </Button>
+            <div className="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-medium text-slate-700">
+              {page} / {totalPages}
+            </div>
+            <Button
+              variant="outline"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+            >
+              ถัดไป
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -99,7 +99,7 @@ export function RecentPropertiesTable({
                             href={`/protected/properties/${property.id}`}
                             className="cursor-pointer"
                           >
-                            <Eye className="mr-2 h-4 w-4" /> View Details
+                            <Eye className="mr-2 h-4 w-4" /> ดูรายละเอียด
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
@@ -107,15 +107,15 @@ export function RecentPropertiesTable({
                             href={`/protected/properties/${property.id}/edit`}
                             className="cursor-pointer"
                           >
-                            <Edit className="mr-2 h-4 w-4" /> Edit Property
+                            <Edit className="mr-2 h-4 w-4" /> แก้ไข
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem className="cursor-pointer">
-                          <Share2 className="mr-2 h-4 w-4" /> Share Listing
+                          <Share2 className="mr-2 h-4 w-4" /> แชร์
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-red-600 cursor-pointer">
-                          <Archive className="mr-2 h-4 w-4" /> Archive
+                          <Archive className="mr-2 h-4 w-4" /> เก็บถาวร
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

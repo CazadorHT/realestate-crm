@@ -50,7 +50,7 @@ export default async function UsersManagementPage() {
     users?.filter((u) => u.role === "USER" || !u.role).length || 0;
 
   return (
-    <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+    <div className=" mx-auto p-4 md:p-6 space-y-6">
       {/* Header */}
       <UsersPageHeader />
 

@@ -201,3 +201,51 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
 
   return out;
 }
+
+// ใช้สำหรับ dashboard stats
+export async function getLeadsDashboardStatsQuery() {
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
+
+  // 1. Total Count
+  const { count: totalLeads } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true });
+
+  // 2. Active Count (Not closed)
+  const { count: activeLeads } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .neq("stage", "CLOSED");
+
+  // 3. New this month
+  const now = new Date();
+  const startOfMonth = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    1
+  ).toISOString();
+  const { count: newLeadsMonth } = await supabase
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .gte("created_at", startOfMonth);
+
+  // 4. Source distribution (for Chart/Cards)
+  const { data: leads } = await supabase.from("leads").select("stage, source");
+
+  const byStage: Record<string, number> = {};
+  const bySource: Record<string, number> = {};
+
+  (leads || []).forEach((l) => {
+    if (l.stage) byStage[l.stage] = (byStage[l.stage] || 0) + 1;
+    if (l.source) bySource[l.source] = (bySource[l.source] || 0) + 1;
+  });
+
+  return {
+    totalLeads: totalLeads || 0,
+    activeLeads: activeLeads || 0,
+    newLeadsMonth: newLeadsMonth || 0,
+    byStage,
+    bySource,
+  };
+}

@@ -263,11 +263,11 @@ export function PropertyGallery({
           </button>
 
           {/* Image Counter & Title */}
-          <div className="absolute top-4 left-4 z-50 flex flex-col gap-2 max-w-[calc(100%-8rem)]">
-            <div className="px-4 py-2 bg-black/60 text-white text-sm font-medium rounded-full backdrop-blur-sm line-clamp-1">
+          <div className="absolute top-4 left-4 z-50 flex flex-col gap-2">
+            <div className="px-4 py-2 bg-black/60 text-white text-sm font-medium rounded-full backdrop-blur-sm line-clamp-1 max-w-xs">
               {title}
             </div>
-            <div className="px-4 py-2 bg-black/60 text-white text-sm font-medium rounded-full backdrop-blur-sm">
+            <div className="px-4 py-2 bg-black/60 text-white text-sm font-medium rounded-full backdrop-blur-sm w-fit">
               {currentIndex + 1} / {sortedImages.length}
             </div>
           </div>

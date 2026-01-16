@@ -45,7 +45,50 @@ export async function getAllDocuments(limit = 50) {
     return [];
   }
 
-  return data;
+  // Manually fetch owner data for each document
+  const documentsWithOwners = await Promise.all(
+    (data || []).map(async (doc: any) => {
+      let ownerData = null;
+
+      try {
+        if (doc.owner_type === "PROPERTY") {
+          const { data: property } = await supabase
+            .from("properties")
+            .select("id, title")
+            .eq("id", doc.owner_id)
+            .single();
+          ownerData = { property };
+        } else if (doc.owner_type === "LEAD") {
+          const { data: lead } = await supabase
+            .from("leads")
+            .select("id, full_name, email")
+            .eq("id", doc.owner_id)
+            .single();
+          ownerData = { lead };
+        } else if (doc.owner_type === "DEAL") {
+          const { data: deal } = await supabase
+            .from("deals")
+            .select("id, property:properties(title)")
+            .eq("id", doc.owner_id)
+            .single();
+          ownerData = { deal };
+        } else if (doc.owner_type === "RENTAL_CONTRACT") {
+          const { data: contract } = await supabase
+            .from("rental_contracts")
+            .select("id, property:properties(title)")
+            .eq("id", doc.owner_id)
+            .single();
+          ownerData = { rental_contract: contract };
+        }
+      } catch (err) {
+        console.error(`Failed to fetch owner for document ${doc.id}:`, err);
+      }
+
+      return { ...doc, ...ownerData };
+    })
+  );
+
+  return documentsWithOwners;
 }
 
 // 2. Create Document Record (Metadata)

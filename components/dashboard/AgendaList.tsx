@@ -46,7 +46,7 @@ export function AgendaList({ agenda = [] }: AgendaListProps) {
                       </span>
                       {event.priority === "high" && (
                         <span className="text-[10px] text-red-600 font-bold bg-red-50 px-1 rounded">
-                          Important
+                          ด่วน!
                         </span>
                       )}
                     </div>

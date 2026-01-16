@@ -72,3 +72,27 @@ export async function deletePartner(id: string) {
   revalidatePath("/admin/partners");
   revalidatePath("/");
 }
+
+export async function getPartnersDashboardStats() {
+  const supabase = await createClient();
+
+  const { count: totalPartners } = await supabase
+    .from("partners")
+    .select("*", { count: "exact", head: true });
+
+  const { count: activePartners } = await supabase
+    .from("partners")
+    .select("*", { count: "exact", head: true })
+    .eq("is_active", true);
+
+  const { count: inactivePartners } = await supabase
+    .from("partners")
+    .select("*", { count: "exact", head: true })
+    .eq("is_active", false);
+
+  return {
+    totalPartners: totalPartners || 0,
+    activePartners: activePartners || 0,
+    inactivePartners: inactivePartners || 0,
+  };
+}

@@ -4,6 +4,7 @@ import {
   getRelatedPosts,
 } from "@/lib/services/blog";
 import { BlogCard } from "@/components/public/BlogCard";
+import { ShareButtons } from "@/components/public/ShareButtons";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -13,10 +14,6 @@ import {
   Home,
   ChevronRight,
   Share2,
-  Facebook,
-  Twitter,
-  Linkedin,
-  Link as LinkIcon,
   User,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -348,24 +345,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   <Share2 className="w-5 h-5 text-blue-600" />
                   แชร์บทความนี้
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <button className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors font-medium text-sm">
-                    <Facebook className="w-4 h-4" />
-                    Facebook
-                  </button>
-                  <button className="flex items-center justify-center gap-2 px-4 py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-xl transition-colors font-medium text-sm">
-                    <Twitter className="w-4 h-4" />
-                    Twitter
-                  </button>
-                  <button className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl transition-colors font-medium text-sm">
-                    <Linkedin className="w-4 h-4" />
-                    LinkedIn
-                  </button>
-                  <button className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-xl transition-colors font-medium text-sm">
-                    <LinkIcon className="w-4 h-4" />
-                    Copy
-                  </button>
-                </div>
+                <ShareButtons
+                  url={
+                    typeof window !== "undefined"
+                      ? window.location.href
+                      : `https://your-domain.com/blog/${slug}`
+                  }
+                  title={post.title}
+                />
               </div>
 
               {/* Related Posts in Sidebar */}
@@ -403,9 +390,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <p className="text-sm text-slate-300 mb-4">
                   ปรึกษาผู้เชี่ยวชาญด้านอสังหาริมทรัพย์ ฟรี!
                 </p>
-                <button className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-medium transition-colors">
-                  ติดต่อเรา
-                </button>
+                <Link href="/contact">
+                  <button className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-medium transition-colors">
+                    ติดต่อเรา
+                  </button>
+                </Link>
               </div>
             </div>
           </aside>

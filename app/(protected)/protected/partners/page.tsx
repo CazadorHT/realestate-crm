@@ -1,4 +1,9 @@
-import { getPartners, deletePartner } from "@/features/admin/partners-actions";
+import {
+  getPartners,
+  deletePartner,
+  getPartnersDashboardStats,
+} from "@/features/admin/partners-actions";
+import { PartnersStats } from "@/components/admin/PartnersStats";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus, Edit, Trash2, ExternalLink } from "lucide-react";
@@ -14,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default async function PartnersPage() {
   const partners = await getPartners();
+  const stats = await getPartnersDashboardStats();
 
   return (
     <div className="container mx-auto py-10">
@@ -26,6 +32,8 @@ export default async function PartnersPage() {
           </Button>
         </Link>
       </div>
+
+      <PartnersStats stats={stats} />
 
       <div className="bg-white rounded-lg border shadow-sm">
         <Table>

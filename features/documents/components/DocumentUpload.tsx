@@ -73,14 +73,66 @@ export function DocumentUpload({
           const fileExt = file.name.split(".").pop();
           const fileName = `${ownerType}/${ownerId}/${uuidv4()}.${fileExt}`;
 
+          let fileToUpload: File | Blob = file;
+          let finalSize = file.size;
+
+          // Compress PDF before upload
+          if (
+            file.type === "application/pdf" ||
+            file.type === "application/x-pdf"
+          ) {
+            try {
+              const arrayBuffer = await file.arrayBuffer();
+              const { PDFDocument } = await import("pdf-lib");
+
+              // Load and compress PDF
+              const pdfDoc = await PDFDocument.load(arrayBuffer);
+              const compressedBytes = await pdfDoc.save({
+                useObjectStreams: true,
+                addDefaultPage: false,
+                objectsPerTick: 50,
+              });
+
+              const originalSize = file.size;
+              const compressedSize = compressedBytes.byteLength;
+              const savedBytes = originalSize - compressedSize;
+              const compressionRatio = (savedBytes / originalSize) * 100;
+
+              // Only use compressed version if it's significantly smaller (>5%)
+              if (compressionRatio > 5) {
+                fileToUpload = new Blob([compressedBytes as BlobPart], {
+                  type: "application/pdf",
+                });
+                finalSize = compressedSize;
+                console.log(
+                  `PDF compressed: ${file.name} - ${(
+                    originalSize / 1024
+                  ).toFixed(1)}KB → ${(compressedSize / 1024).toFixed(
+                    1
+                  )}KB (${compressionRatio.toFixed(1)}% saved)`
+                );
+              } else {
+                console.log(
+                  `PDF compression skipped (< 5% reduction): ${file.name}`
+                );
+              }
+            } catch (pdfError) {
+              console.error(
+                "PDF compression failed, uploading original:",
+                pdfError
+              );
+              // Continue with original file
+            }
+          }
+
           // 1. Upload to Storage
           const { error: uploadError } = await supabase.storage
             .from("documents")
-            .upload(fileName, file);
+            .upload(fileName, fileToUpload);
 
           if (uploadError) throw new Error(uploadError.message);
 
-          // 2. Create DB Record
+          // 2. Create DB Record (use final size after compression)
           const res = await createDocumentRecordAction({
             owner_id: ownerId,
             owner_type: ownerType,
@@ -88,7 +140,7 @@ export function DocumentUpload({
             file_name: file.name,
             storage_path: fileName,
             mime_type: file.type,
-            size_bytes: file.size,
+            size_bytes: finalSize,
           });
 
           if (!res.success) throw new Error(res.message);

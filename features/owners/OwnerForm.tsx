@@ -181,10 +181,10 @@ export function OwnerForm(props: Props) {
       <div className="flex items-center gap-2">
         <Button type="submit" disabled={isPending}>
           {isPending
-            ? "Saving..."
+            ? "กำลังบันทึก..."
             : props.mode === "create"
-            ? "Create owner"
-            : "Save changes"}
+            ? "เพิ่มเจ้าของ"
+            : "บันทึกข้อมูล"}
         </Button>
 
         <Button
@@ -193,7 +193,7 @@ export function OwnerForm(props: Props) {
           disabled={isPending}
           onClick={() => router.back()}
         >
-          Cancel
+          ยกเลิก
         </Button>
       </div>
     </form>

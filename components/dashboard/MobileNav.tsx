@@ -21,14 +21,23 @@ import {
   Briefcase,
   FileStack,
   Settings,
+  Menu,
   Box,
 } from "lucide-react";
-import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
+import { isStaff, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
-export function SidebarNav({ role }: { role: UserRole }) {
+export function MobileNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>(["crm", "public"]);
 
   const toggleGroup = (groupId: string) => {
@@ -55,7 +64,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
     roles?: UserRole[];
   }
 
-  // Core CRM Group
+  // Same configuration as SidebarNav
   const crmItems: NavItem[] = [
     {
       title: "ทรัพย์สิน",
@@ -89,7 +98,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
     },
   ];
 
-  // Documents Group
   const documentsItems: NavItem[] = [
     {
       title: "สัญญาเช่า",
@@ -105,7 +113,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
     },
   ];
 
-  // Public Content Group
   const publicItems: NavItem[] = [
     {
       title: "บทความ (Blog)",
@@ -134,7 +141,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
     },
   ];
 
-  // Settings Group
   const settingsItems: NavItem[] = [
     {
       title: "โปรไฟล์",
@@ -194,7 +200,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
         items: filterItems(group.items),
       }))
       .filter((group) => {
-        // Only show group if it has items and user has permission
         if (group.items.length === 0) return false;
         if (group.roles && group.roles.length > 0) {
           if (!role || !group.roles.includes(role)) return false;
@@ -206,122 +211,116 @@ export function SidebarNav({ role }: { role: UserRole }) {
   const filteredGroups = filterGroups(groups);
 
   return (
-    <aside className="hidden w-72 flex-col border-r border-slate-100 bg-white sm:flex shadow-sm z-40 h-screen sticky top-0">
-      <div className="p-8 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200">
-            <Building2 className="text-white h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-medium tracking-tight text-slate-700 uppercase">
-              SabaiCaza
-            </h1>
-            <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
-              Real Estate CRM
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto">
-        {/* Dashboard - Top Level */}
-        <Link
-          href="/protected"
-          className={cn(
-            "flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all duration-300 font-bold text-sm relative overflow-hidden group",
-            pathname === "/protected"
-              ? "bg-blue-50 text-blue-700 shadow-sm"
-              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-          )}
-        >
-          {pathname === "/protected" && (
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-blue-600 rounded-r-full" />
-          )}
-          <BarChart3
-            className={cn(
-              "h-5 w-5 transition-colors",
-              pathname === "/protected"
-                ? "text-blue-600"
-                : "text-slate-400 group-hover:text-slate-600"
-            )}
-          />
-          แดชบอร์ด
-        </Link>
-
-        {/* Grouped Menus */}
-        {filteredGroups.map((group) => {
-          const isOpen = openGroups.includes(group.id);
-          const hasActiveItem = group.items.some((item) => item.active);
-
-          return (
-            <div key={group.id} className="space-y-1">
-              {/* Group Header */}
-              <button
-                onClick={() => toggleGroup(group.id)}
-                className={cn(
-                  "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition-all duration-300 font-semibold text-xs uppercase tracking-wider",
-                  hasActiveItem
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <group.icon className="h-4 w-4" />
-                  {group.title}
-                </div>
-                {isOpen ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-              </button>
-
-              {/* Group Items */}
-              {isOpen && (
-                <div className="space-y-1 ml-2">
-                  {group.items.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-300 text-sm relative overflow-hidden group",
-                        item.active
-                          ? "bg-blue-50 text-blue-700 font-semibold"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium"
-                      )}
-                    >
-                      {item.active && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 bg-blue-600 rounded-r-full" />
-                      )}
-                      <item.icon
-                        className={cn(
-                          "h-4 w-4 transition-colors",
-                          item.active
-                            ? "text-blue-600"
-                            : "text-slate-400 group-hover:text-slate-600"
-                        )}
-                      />
-                      {item.title}
-                    </Link>
-                  ))}
-                </div>
-              )}
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="sm:hidden">
+          <Menu className="h-6 w-6 text-slate-700" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-[300px] p-0 overflow-y-auto">
+        <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
+        <div className="p-6 border-b">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200">
+              <Building2 className="text-white h-6 w-6" />
             </div>
-          );
-        })}
-      </nav>
-
-      <div className="p-4 m-4 rounded-2xl bg-slate-50 border border-slate-100">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="bg-emerald-100 p-2 rounded-lg">
-            <Users className="h-4 w-4 text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-slate-900">สถานะทีม</p>
-            <p className="text-[10px] text-slate-500">ออนไลน์</p>
+            <div>
+              <h1 className="text-xl font-medium tracking-tight text-slate-700 uppercase">
+                SabaiCaza
+              </h1>
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                Real Estate CRM
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-    </aside>
+
+        <nav className="flex flex-col gap-1 p-4">
+          <Link
+            href="/protected"
+            onClick={() => setOpen(false)}
+            className={cn(
+              "flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all duration-300 font-bold text-sm relative overflow-hidden group",
+              pathname === "/protected"
+                ? "bg-blue-50 text-blue-700 shadow-sm"
+                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+            )}
+          >
+            {pathname === "/protected" && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-blue-600 rounded-r-full" />
+            )}
+            <BarChart3
+              className={cn(
+                "h-5 w-5 transition-colors",
+                pathname === "/protected"
+                  ? "text-blue-600"
+                  : "text-slate-400 group-hover:text-slate-600"
+              )}
+            />
+            แดชบอร์ด
+          </Link>
+
+          {filteredGroups.map((group) => {
+            const isOpen = openGroups.includes(group.id);
+            const hasActiveItem = group.items.some((item) => item.active);
+
+            return (
+              <div key={group.id} className="space-y-1">
+                <button
+                  onClick={() => toggleGroup(group.id)}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition-all duration-300 font-semibold text-xs uppercase tracking-wider",
+                    hasActiveItem
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <group.icon className="h-4 w-4" />
+                    {group.title}
+                  </div>
+                  {isOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </button>
+
+                {isOpen && (
+                  <div className="space-y-1 ml-2">
+                    {group.items.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-300 text-sm relative overflow-hidden group",
+                          item.active
+                            ? "bg-blue-50 text-blue-700 font-semibold"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium"
+                        )}
+                      >
+                        {item.active && (
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 bg-blue-600 rounded-r-full" />
+                        )}
+                        <item.icon
+                          className={cn(
+                            "h-4 w-4 transition-colors",
+                            item.active
+                              ? "text-blue-600"
+                              : "text-slate-400 group-hover:text-slate-600"
+                          )}
+                        />
+                        {item.title}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
+      </SheetContent>
+    </Sheet>
   );
 }

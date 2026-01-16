@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/select";
 import { LEAD_STAGE_ORDER, LEAD_STAGE_LABELS } from "@/features/leads/labels";
 
-
 export function LeadsFilters() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -59,10 +58,10 @@ export function LeadsFilters() {
 
         <Select value={stage} onValueChange={setStage}>
           <SelectTrigger className="md:w-[220px]">
-            <SelectValue placeholder="Stage" />
+            <SelectValue placeholder="สถานะ" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All stages</SelectItem>
+            <SelectItem value="ALL">ทุกสถานะ</SelectItem>
             {LEAD_STAGE_ORDER.map((s) => (
               <SelectItem key={s} value={s}>
                 {LEAD_STAGE_LABELS[s]}
@@ -72,10 +71,10 @@ export function LeadsFilters() {
         </Select>
 
         <Button onClick={apply} disabled={isPending}>
-          Apply
+          ค้นหา
         </Button>
         <Button variant="outline" onClick={clear} disabled={isPending}>
-          Clear
+          ล้างค่า
         </Button>
       </div>
     </div>

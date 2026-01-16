@@ -248,23 +248,41 @@ export default async function BlogListingPage() {
                     </h3>
                   </div>
                   <div className="space-y-2">
-                    {[
-                      "ซื้อบ้าน",
-                      "เช่าคอนโด",
-                      "ลงทุนอสังหาฯ",
-                      "สินเชื่อบ้าน",
-                      "กฎหมาย",
-                    ].map((cat, idx) => (
-                      <button
-                        key={idx}
-                        className="w-full text-left px-4 py-3 rounded-xl bg-slate-50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 text-slate-700 hover:text-blue-700 font-medium transition-all duration-300 border border-transparent hover:border-blue-200 flex items-center justify-between group"
-                      >
-                        <span>{cat}</span>
-                        <span className="text-xs bg-slate-200 group-hover:bg-blue-100 group-hover:text-blue-700 px-2 py-0.5 rounded-full transition-colors">
-                          {Math.floor(Math.random() * 15) + 3}
-                        </span>
-                      </button>
-                    ))}
+                    {(() => {
+                      // Get unique categories with counts
+                      const categoryMap = new Map<string, number>();
+                      posts.forEach((post) => {
+                        if (post.category) {
+                          categoryMap.set(
+                            post.category,
+                            (categoryMap.get(post.category) || 0) + 1
+                          );
+                        }
+                      });
+                      const categories = Array.from(categoryMap.entries())
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 8);
+
+                      if (categories.length === 0) {
+                        return (
+                          <div className="text-center py-8 text-slate-400 text-sm">
+                            ยังไม่มีหมวดหมู่
+                          </div>
+                        );
+                      }
+
+                      return categories.map(([cat, count]) => (
+                        <button
+                          key={cat}
+                          className="w-full text-left px-4 py-3 rounded-xl bg-slate-50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 text-slate-700 hover:text-blue-700 font-medium transition-all duration-300 border border-transparent hover:border-blue-200 flex items-center justify-between group"
+                        >
+                          <span>{cat}</span>
+                          <span className="text-xs bg-slate-200 group-hover:bg-blue-100 group-hover:text-blue-700 px-2 py-0.5 rounded-full transition-colors">
+                            {count}
+                          </span>
+                        </button>
+                      ));
+                    })()}
                   </div>
                 </div>
 
@@ -277,25 +295,31 @@ export default async function BlogListingPage() {
                     </h3>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {[
-                      "บ้านเดี่ยว",
-                      "คอนโด",
-                      "ออฟฟิศ",
-                      "ลงทุน",
-                      "เช่า",
-                      "ซื้อ",
-                      "ทำเลดี",
-                      "ราคาถูก",
-                      "กรุงเทพ",
-                      "สุขุมวิท",
-                    ].map((tag, idx) => (
-                      <button
-                        key={idx}
-                        className="px-3 py-1.5 text-sm font-medium bg-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 text-slate-700 hover:text-white rounded-full border border-slate-200 hover:border-transparent transition-all duration-300 hover:shadow-md hover:scale-105"
-                      >
-                        #{tag}
-                      </button>
-                    ))}
+                    {(() => {
+                      // Get all tags from posts
+                      const allTags = posts.flatMap((post) => post.tags || []);
+                      const uniqueTags = Array.from(new Set(allTags)).slice(
+                        0,
+                        12
+                      );
+
+                      if (uniqueTags.length === 0) {
+                        return (
+                          <div className="text-center w-full py-4 text-slate-400 text-sm">
+                            ยังไม่มีแท็ก
+                          </div>
+                        );
+                      }
+
+                      return uniqueTags.map((tag, idx) => (
+                        <button
+                          key={idx}
+                          className="px-3 py-1.5 text-sm font-medium bg-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 text-slate-700 hover:text-white rounded-full border border-slate-200 hover:border-transparent transition-all duration-300 hover:shadow-md hover:scale-105"
+                        >
+                          #{tag}
+                        </button>
+                      ));
+                    })()}
                   </div>
                 </div>
 

@@ -12,7 +12,7 @@ export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
   return (
     <Card className="shadow-sm h-full">
       <CardHeader>
-        <CardTitle>Pipeline Overview</CardTitle>
+        <CardTitle className="text-base">ภาพรวม Pipeline</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
