@@ -214,21 +214,21 @@ export function MobileNav({ role }: { role: UserRole }) {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="sm:hidden">
-          <Menu className="h-6 w-6 text-slate-700" />
+          <Menu className="h-6 w-6 text-slate-700 dark:text-slate-300" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[300px] p-0 overflow-y-auto">
         <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
-        <div className="p-6 border-b">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/30">
               <Building2 className="text-white h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-xl font-medium tracking-tight text-slate-700 uppercase">
+              <h1 className="text-xl font-medium tracking-tight text-slate-700 dark:text-slate-200 uppercase">
                 SabaiCaza
               </h1>
-              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-bold">
                 Real Estate CRM
               </p>
             </div>
@@ -242,8 +242,8 @@ export function MobileNav({ role }: { role: UserRole }) {
             className={cn(
               "flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all duration-300 font-bold text-sm relative overflow-hidden group",
               pathname === "/protected"
-                ? "bg-blue-50 text-blue-700 shadow-sm"
-                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
             )}
           >
             {pathname === "/protected" && (
@@ -253,8 +253,8 @@ export function MobileNav({ role }: { role: UserRole }) {
               className={cn(
                 "h-5 w-5 transition-colors",
                 pathname === "/protected"
-                  ? "text-blue-600"
-                  : "text-slate-400 group-hover:text-slate-600"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
               )}
             />
             แดชบอร์ด
@@ -271,8 +271,8 @@ export function MobileNav({ role }: { role: UserRole }) {
                   className={cn(
                     "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition-all duration-300 font-semibold text-xs uppercase tracking-wider",
                     hasActiveItem
-                      ? "bg-blue-100 text-blue-700"
-                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
+                      : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                   )}
                 >
                   <div className="flex items-center gap-3">
@@ -296,8 +296,8 @@ export function MobileNav({ role }: { role: UserRole }) {
                         className={cn(
                           "flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-300 text-sm relative overflow-hidden group",
                           item.active
-                            ? "bg-blue-50 text-blue-700 font-semibold"
-                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium"
+                            ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-semibold"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"
                         )}
                       >
                         {item.active && (
@@ -307,8 +307,8 @@ export function MobileNav({ role }: { role: UserRole }) {
                           className={cn(
                             "h-4 w-4 transition-colors",
                             item.active
-                              ? "text-blue-600"
-                              : "text-slate-400 group-hover:text-slate-600"
+                              ? "text-blue-600 dark:text-blue-400"
+                              : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                           )}
                         />
                         {item.title}

@@ -104,15 +104,15 @@ export function StatsOverview({ initialStats }: StatsOverviewProps) {
     <div className="space-y-3">
       {/* Time Range Indicator */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           แสดงข้อมูล:{" "}
-          <span className="font-semibold text-slate-700">
+          <span className="font-semibold text-slate-700 dark:text-slate-200">
             {timeRangeLabels[timeRange]}
           </span>
         </p>
         <button
           onClick={cycleTimeRange}
-          className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline"
+          className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline"
         >
           เปลี่ยนช่วงเวลา →
         </button>
@@ -156,7 +156,7 @@ export function StatsOverview({ initialStats }: StatsOverviewProps) {
       </div>
 
       {loading && (
-        <p className="text-xs text-center text-slate-400 animate-pulse">
+        <p className="text-xs text-center text-slate-400 dark:text-slate-500 animate-pulse">
           กำลังโหลดข้อมูล...
         </p>
       )}

@@ -92,8 +92,8 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
       <CardContent>
         <div className="h-[250px] w-full relative">
           {loading && (
-            <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 flex items-center justify-center z-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
             </div>
           )}
           <ResponsiveContainer width="100%" height="100%">

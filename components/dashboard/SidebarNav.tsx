@@ -206,17 +206,17 @@ export function SidebarNav({ role }: { role: UserRole }) {
   const filteredGroups = filterGroups(groups);
 
   return (
-    <aside className="hidden w-72 flex-col border-r border-slate-100 bg-white sm:flex shadow-sm z-40 h-screen sticky top-0">
+    <aside className="hidden w-72 flex-col border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 sm:flex shadow-sm z-40 h-screen sticky top-0">
       <div className="p-8 pb-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/30">
             <Building2 className="text-white h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-xl font-medium tracking-tight text-slate-700 uppercase">
+            <h1 className="text-xl font-medium tracking-tight text-slate-700 dark:text-slate-200 uppercase">
               SabaiCaza
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-bold">
               Real Estate CRM
             </p>
           </div>
@@ -230,8 +230,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
           className={cn(
             "flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all duration-300 font-bold text-sm relative overflow-hidden group",
             pathname === "/protected"
-              ? "bg-blue-50 text-blue-700 shadow-sm"
-              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+              ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm"
+              : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
           )}
         >
           {pathname === "/protected" && (
@@ -241,8 +241,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
             className={cn(
               "h-5 w-5 transition-colors",
               pathname === "/protected"
-                ? "text-blue-600"
-                : "text-slate-400 group-hover:text-slate-600"
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
             )}
           />
           แดชบอร์ด
@@ -261,8 +261,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
                 className={cn(
                   "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition-all duration-300 font-semibold text-xs uppercase tracking-wider",
                   hasActiveItem
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                    ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
+                    : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -286,8 +286,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
                       className={cn(
                         "flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-300 text-sm relative overflow-hidden group",
                         item.active
-                          ? "bg-blue-50 text-blue-700 font-semibold"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium"
+                          ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-semibold"
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"
                       )}
                     >
                       {item.active && (
@@ -297,8 +297,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
                         className={cn(
                           "h-4 w-4 transition-colors",
                           item.active
-                            ? "text-blue-600"
-                            : "text-slate-400 group-hover:text-slate-600"
+                            ? "text-blue-600 dark:text-blue-400"
+                            : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                         )}
                       />
                       {item.title}
@@ -311,14 +311,18 @@ export function SidebarNav({ role }: { role: UserRole }) {
         })}
       </nav>
 
-      <div className="p-4 m-4 rounded-2xl bg-slate-50 border border-slate-100">
+      <div className="p-4 m-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
         <div className="flex items-center gap-3 mb-2">
-          <div className="bg-emerald-100 p-2 rounded-lg">
-            <Users className="h-4 w-4 text-emerald-600" />
+          <div className="bg-emerald-100 dark:bg-emerald-900/50 p-2 rounded-lg">
+            <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-900">สถานะทีม</p>
-            <p className="text-[10px] text-slate-500">ออนไลน์</p>
+            <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
+              สถานะทีม
+            </p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              ออนไลน์
+            </p>
           </div>
         </div>
       </div>

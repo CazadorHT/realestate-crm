@@ -58,12 +58,12 @@ export function NotificationCenter({
                     className={`mt-0.5 rounded-full p-1.5 
                   ${
                     notif.read
-                      ? "bg-gray-100 text-gray-500"
+                      ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
                       : notif.type === "warning"
-                      ? "bg-yellow-100 text-yellow-600"
+                      ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400"
                       : notif.type === "alert"
-                      ? "bg-red-100 text-red-600"
-                      : "bg-blue-100 text-blue-600"
+                      ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                      : "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
                   }`}
                   >
                     <Icon className="h-3 w-3" />

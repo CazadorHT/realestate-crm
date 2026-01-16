@@ -1,7 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { KeyRound, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -46,7 +52,7 @@ export function AccountSecurityCard() {
             </div>
           </div>
           <Button variant="outline" asChild>
-            <a href="/auth/reset-password">เปลี่ยนรหัสผ่าน</a>
+            <a href="/auth/update-password">เปลี่ยนรหัสผ่าน</a>
           </Button>
         </div>
 
@@ -59,9 +65,7 @@ export function AccountSecurityCard() {
             </div>
             <div>
               <p className="font-medium">ออกจากระบบ</p>
-              <p className="text-sm text-muted-foreground">
-                ออกจากบัญชีของคุณ
-              </p>
+              <p className="text-sm text-muted-foreground">ออกจากบัญชีของคุณ</p>
             </div>
           </div>
           <Button variant="destructive" onClick={handleSignOut}>

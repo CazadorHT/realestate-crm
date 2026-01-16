@@ -26,11 +26,11 @@ export function TopAgents({ data }: TopAgentsProps) {
                   className={`flex h-8 w-8 items-center justify-center rounded-full font-bold text-xs
                   ${
                     index === 0
-                      ? "bg-yellow-100 text-yellow-700 ring-4 ring-yellow-50"
+                      ? "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 ring-4 ring-yellow-50 dark:ring-yellow-900/20"
                       : index === 1
-                      ? "bg-slate-100 text-slate-700"
+                      ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                       : index === 2
-                      ? "bg-orange-100 text-orange-700"
+                      ? "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >

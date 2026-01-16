@@ -49,6 +49,7 @@ export function PublicNav() {
     { name: "บทความ", href: "#blog" },
     { name: "คำถามที่พบบ่อย", href: "#faq" },
     { name: "เกี่ยวกับเรา", href: "#trust" },
+    { name: "ติดต่อเรา", href: "/contact" },
   ];
 
   // Smooth scroll handler
@@ -174,7 +175,7 @@ export function PublicNav() {
                       className="border-blue-600 text-blue-600 hover:bg-blue-50"
                     >
                       <Search className="h-4 w-4 mr-1" />
-                      ค้นหา
+                      ค้นหาทรัพย์
                     </Button>
                   </Link>
                   <a

@@ -75,10 +75,10 @@ export function RecentPropertiesTable({
                       className={`
                         ${
                           property.status === "ACTIVE"
-                            ? "bg-green-50 text-green-700 border-green-200"
+                            ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
                             : property.status === "ARCHIVED"
-                            ? "bg-indigo-50 text-indigo-700 border-indigo-200"
-                            : "bg-gray-50 text-gray-700 border-gray-200"
+                            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800"
+                            : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700"
                         }
                       `}
                     >

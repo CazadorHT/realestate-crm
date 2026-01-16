@@ -302,13 +302,13 @@ export default async function PublicPropertyDetailPage(props: {
                           {renderPriceBlock(
                             data.price,
                             data.original_price,
-                            "ขาย",
+                            "ราคาขาย",
                             false
                           )}
                           {renderPriceBlock(
                             data.rental_price,
                             data.original_rental_price,
-                            "เช่า",
+                            "ค่าเช่า",
                             true
                           )}
                         </>
@@ -319,7 +319,7 @@ export default async function PublicPropertyDetailPage(props: {
                       return renderPriceBlock(
                         data.rental_price,
                         data.original_rental_price,
-                        "",
+                        "ค่าเช่า",
                         true
                       );
                     }
@@ -328,7 +328,7 @@ export default async function PublicPropertyDetailPage(props: {
                     return renderPriceBlock(
                       data.price,
                       data.original_price,
-                      "",
+                      "ราคาขาย",
                       false
                     );
                   })()}
