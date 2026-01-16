@@ -56,16 +56,16 @@ export function PartnerSection() {
   };
 
   return (
-    <section className="pt-20 bg-white border-t border-slate-50">
+    <section className="py-12 md:py-16 lg:py-20 px-4 md:px-6 lg:px-8 bg-white border-t border-slate-50">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 md:px-8">
+      <div className="max-w-screen-2xl mx-auto">
         {/* SEO-Optimized Header Section */}
-        <div className="text-center mb-12" data-aos="fade-up">
+        <div className="text-center mb-8 md:mb-10 lg:mb-12" data-aos="fade-up">
           <h2 className="text-2xl md:text-4xl font-bold text-slate-900 mb-3">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
               พันธมิตร

@@ -75,7 +75,8 @@ export async function GET() {
         continue;
       }
 
-      const key = `${area}__${prov}`;
+      // Use only area as key to prevent duplicates (e.g., "บางนา กรุงเทพฯ" vs "บางนา สมุทรปราการ")
+      const key = area;
       const cover = coverByPropertyId.get(p.id) ?? null;
 
       const existing = map.get(key);

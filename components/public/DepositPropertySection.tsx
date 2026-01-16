@@ -54,7 +54,7 @@ export function DepositPropertySection() {
   return (
     <section
       id="deposit-section"
-      className="py-24 bg-white relative overflow-hidden z-0"
+      className="py-12 md:py-16 lg:py-24 px-4 md:px-6 lg:px-8 bg-white relative overflow-hidden z-0"
     >
       {/* Schema.org Structured Data */}
       <script
@@ -65,19 +65,19 @@ export function DepositPropertySection() {
       {/* Background Decor */}
       <SectionBackground pattern="blobs" intensity="medium" />
 
-      <div className="max-w-screen-xl px-4 mx-auto relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="max-w-screen-xl mx-auto relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 lg:gap-12 items-center">
           {/* Left Content */}
           <div
-            className="space-y-6 text-center lg:text-left"
+            className="space-y-4 md:space-y-6 text-center lg:text-left"
             data-aos="fade-right"
           >
-            <div className="inline-flex items-center rounded-full border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 px-4 py-2 text-sm font-bold text-blue-700 backdrop-blur-sm mx-auto lg:mx-0 shadow-sm">
-              <Key className="mr-2 h-4 w-4" />
+            <div className="inline-flex items-center rounded-full border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold text-blue-700 backdrop-blur-sm mx-auto lg:mx-0 shadow-sm">
+              <Key className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
               บริการฝากทรัพย์สิน
             </div>
 
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight">
+            <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold tracking-tight leading-tight">
               <span className="text-slate-900">ฝากขาย ฝากเช่า</span>
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
@@ -85,7 +85,7 @@ export function DepositPropertySection() {
               </span>
             </h2>
 
-            <p className="text-lg md:text-xl text-slate-600 leading-relaxed">
+            <p className="text-base md:text-lg lg:text-xl text-slate-600 leading-relaxed">
               <span className="font-semibold text-slate-900">
                 ฟรี! ไม่มีค่าใช้จ่ายเบื้องต้น
               </span>
@@ -93,7 +93,7 @@ export function DepositPropertySection() {
               เรามีฐานลูกค้าและทีมการตลาดพร้อมดูแลให้ทรัพย์ของคุณปล่อยออกได้เร็วที่สุด
             </p>
 
-            <div className="pt-4 space-y-4">
+            <div className="pt-3 md:pt-4 space-y-3 md:space-y-4">
               {[
                 { step: 1, text: "กรอกข้อมูลทรัพย์เบื้องต้น" },
                 { step: 2, text: "เจ้าหน้าที่ติดต่อกลับเพื่อยืนยัน" },
@@ -101,12 +101,12 @@ export function DepositPropertySection() {
               ].map((item) => (
                 <div
                   key={item.step}
-                  className="flex items-center gap-3 justify-center lg:justify-start group"
+                  className="flex items-center gap-2 md:gap-3 justify-center lg:justify-start group"
                 >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-md group-hover:scale-110 transition-transform">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm md:text-base font-bold shadow-md group-hover:scale-110 transition-transform">
                     {item.step}
                   </div>
-                  <span className="text-slate-700 font-medium">
+                  <span className="text-sm md:text-base text-slate-700 font-medium">
                     {item.text}
                   </span>
                 </div>
@@ -114,16 +114,16 @@ export function DepositPropertySection() {
             </div>
 
             {/* Trust Badges */}
-            <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-4">
-              <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-slate-700">
+            <div className="flex flex-wrap gap-2 md:gap-4 justify-center lg:justify-start pt-3 md:pt-4">
+              <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-slate-50 rounded-lg md:rounded-xl border border-slate-200">
+                <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
+                <span className="text-xs md:text-sm font-medium text-slate-700">
                   ฟรี ไม่มีค่าใช้จ่าย
                 </span>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-slate-700">
+              <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-slate-50 rounded-lg md:rounded-xl border border-slate-200">
+                <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
+                <span className="text-xs md:text-sm font-medium text-slate-700">
                   ทีมมืออาชีพ
                 </span>
               </div>
@@ -132,17 +132,17 @@ export function DepositPropertySection() {
 
           {/* Right Form Card */}
           <div
-            className="bg-white rounded-2xl p-6 md:p-8 shadow-2xl border border-slate-200 relative overflow-hidden"
+            className="bg-white rounded-xl md:rounded-2xl p-5 md:p-6 lg:p-8 shadow-xl md:shadow-2xl border border-slate-200 relative overflow-hidden"
             data-aos="fade-left"
           >
             {/* Card gradient decoration */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50 -z-10"></div>
+            <div className="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50 -z-10"></div>
 
-            <div className="mb-6 relative z-10">
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">
+            <div className="mb-4 md:mb-6 relative z-10">
+              <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-1.5 md:mb-2">
                 ฝากข้อมูลทรัพย์สิน
               </h3>
-              <p className="text-slate-500 text-sm">
+              <p className="text-slate-500 text-xs md:text-sm">
                 กรอกข้อมูลให้ครบถ้วน เจ้าหน้าที่จะติดต่อกลับโดยเร็ว
               </p>
             </div>
@@ -234,7 +234,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
           <FormField
             control={form.control}
             name="phone"
@@ -328,7 +328,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
         <div className="pt-2">
           <Button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-5 md:py-6 text-base md:text-lg shadow-lg hover:shadow-xl transition-all"
             disabled={isLoading}
           >
             {isLoading ? (

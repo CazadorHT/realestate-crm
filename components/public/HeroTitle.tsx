@@ -23,13 +23,13 @@ export function HeroTitle() {
 
   return (
     <div className="flex">
-      <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-tight">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight">
         <p className="inline-block text-white">ค้นหา</p>
 
-        <div className="inline-block ml-3 relative    ">
+        <div className="inline-block ml-2 sm:ml-3 relative">
           <span
             key={index}
-            className="   bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-8 duration-700 flex items-center h-full  leading-normal"
+            className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-8 duration-700 flex items-center h-full leading-normal"
           >
             {words[index]}
           </span>

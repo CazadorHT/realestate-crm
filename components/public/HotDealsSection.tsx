@@ -159,37 +159,42 @@ export function HotDealsSection() {
 
         {/* === CARDS SECTION === */}
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 p-2 min-h-[681px]">
+          <div className="flex md:grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-4 overflow-x-auto md:overflow-visible scrollbar-hide pb-4 md:pb-0">
             {Array.from({ length: 4 }).map((_, i) => (
-              <PropertyCardSkeleton key={i} />
+              <div
+                key={i}
+                className="min-w-[260px] sm:min-w-[280px] md:min-w-0 flex-shrink-0"
+              >
+                <PropertyCardSkeleton />
+              </div>
             ))}
           </div>
         ) : (
           /* Horizontal Scroll on Mobile / Grid on Desktop */
           <div
             ref={scrollRef}
-            className="flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-x-auto md:overflow-visible scrollbar-hide snap-x"
+            className="flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible scrollbar-hide snap-x pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0"
           >
             {properties.slice(0, 4).map((property, index) => (
               <div
                 key={property.id}
-                className="min-w-[300px] sm:min-w-[340px] md:min-w-0 snap-center relative group perspective-1000"
+                className="min-w-[260px] sm:min-w-[280px] md:min-w-0 snap-start flex-shrink-0 relative group"
                 data-aos="fade-up"
                 data-aos-delay={index * 100}
               >
-                {/* Floating Hot Badge Overlay */}
-                <div className="absolute -top-7 -left-5 z-30">
+                {/* Floating Hot Badge Overlay - hidden on mobile */}
+                <div className="absolute -top-5 -left-3 md:-top-7 md:-left-5 z-30 hidden md:block">
                   <div className="relative">
                     <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
-                    <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.1)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-5 transition-all duration-300 scale-110 ">
-                      <Sparkles className="h-6 w-6 fill-yellow-200" />
+                    <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2 md:p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.1)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-5 transition-all duration-300 scale-100 md:scale-110">
+                      <Sparkles className="h-5 w-5 md:h-6 md:w-6 fill-yellow-200" />
                     </div>
                   </div>
                 </div>
 
                 {/* Card Wrapper with Premium Glow Effect */}
-                <div className="rounded-[1.5rem] p-1 bg-gradient-to-b from-white/80 to-white/40 shadow-xl shadow-orange-900/5 group-hover:shadow-orange-600/20  transition-all duration-500  ">
-                  <div className="hover:scale-105 transition-all duration-500">
+                <div className="rounded-2xl md:rounded-[1.5rem] p-1 md:p-1 bg-gradient-to-b from-white/80 to-white/40 shadow-xl shadow-orange-900/5 group-hover:shadow-orange-600/20 transition-all duration-500 ">
+                  <div className="md:group-hover:scale-[1.02] transition-all duration-500 ">
                     <PropertyCard property={property} priority={index === 0} />
                   </div>
                 </div>
@@ -199,9 +204,8 @@ export function HotDealsSection() {
         )}
 
         {/* Small Decorative Footer */}
-
-        <div className="mt-16 flex justify-center">
-          <div className="h-1 min-w-80 bg-gradient-to-r from-transparent via-orange-300  to-transparent rounded-full opacity-50"></div>
+        <div className="mt-8 md:mt-16 flex justify-center">
+          <div className="h-1 w-40 md:min-w-80 bg-gradient-to-r from-transparent via-orange-300 to-transparent rounded-full opacity-50"></div>
         </div>
       </div>
     </section>

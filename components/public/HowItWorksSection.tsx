@@ -90,7 +90,7 @@ export function HowItWorksSection() {
   return (
     <section
       id="how-it-works"
-      className="py-24 px-4 bg-slate-50 relative overflow-hidden z-0"
+      className="py-12 md:py-16 lg:py-24 px-4 md:px-6 lg:px-8 bg-slate-50 relative overflow-hidden z-0"
     >
       <SectionBackground pattern="blobs" intensity="low" showDots={true} />
       {/* Schema.org Structured Data */}
@@ -101,7 +101,10 @@ export function HowItWorksSection() {
 
       <div className="max-w-7xl mx-auto">
         {/* SEO-Optimized Header */}
-        <div className="text-center space-y-4 mb-16" data-aos="fade-up">
+        <div
+          className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"
+          data-aos="fade-up"
+        >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100">
             <Sparkles className="w-4 h-4 text-blue-600" />
             <span className="text-sm font-bold text-blue-700">
@@ -137,7 +140,7 @@ export function HowItWorksSection() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 relative">
             {STEPS.map((item, idx) => {
               const t = STEP_TONES[item.tone];
 
@@ -149,26 +152,28 @@ export function HowItWorksSection() {
                   data-aos-delay={idx * 100}
                   id={`step-${idx + 1}`}
                 >
-                  <div className="bg-white rounded-3xl p-8 shadow-lg border border-slate-200 hover:border-slate-300 hover:shadow-2xl transition-all hover:-translate-y-2 duration-500 relative overflow-hidden">
+                  <div className="bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 shadow-lg border border-slate-200 hover:border-slate-300 hover:shadow-2xl transition-all hover:-translate-y-2 duration-500 relative overflow-hidden">
                     {/* Step Number Badge */}
                     <div
-                      className={`absolute -top-1 -left-1 w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-xl ${t.badge} group-hover:scale-110 transition-transform duration-300`}
+                      className={`absolute -top-1 -left-1 w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-xl md:rounded-2xl flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl shadow-xl ${t.badge} group-hover:scale-110 transition-transform duration-300`}
                     >
                       {item.step}
                     </div>
 
                     {/* Icon */}
                     <div
-                      className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-300 ${t.iconWrap} group-hover:scale-110 group-hover:rotate-3`}
+                      className={`w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 ${t.iconWrap} group-hover:scale-110 group-hover:rotate-3`}
                     >
-                      <item.icon className={`h-8 w-8 ${t.icon}`} />
+                      <item.icon
+                        className={`h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 ${t.icon}`}
+                      />
                     </div>
 
                     {/* Content */}
-                    <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
                       {item.title}
                     </h3>
-                    <p className="text-slate-600 leading-relaxed mb-4">
+                    <p className="text-sm md:text-base text-slate-600 leading-relaxed mb-3 md:mb-4">
                       {item.desc}
                     </p>
 
@@ -196,16 +201,16 @@ export function HowItWorksSection() {
 
         {/* Bottom CTA */}
         <div
-          className="mt-16 text-center"
+          className="mt-10 md:mt-16 text-center"
           data-aos="fade-up"
           data-aos-delay="300"
         >
-          <p className="text-slate-600 mb-4">
+          <p className="text-sm md:text-base text-slate-600 mb-3 md:mb-4">
             พร้อมเริ่มต้นค้นหาทรัพย์สินในฝันแล้วหรือยัง?
           </p>
-          <button className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-2xl hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105">
+          <button className="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm md:text-base font-bold rounded-xl md:rounded-2xl hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105">
             เริ่มต้นเลย
-            <ArrowRight className="h-5 w-5" />
+            <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
           </button>
         </div>
       </div>

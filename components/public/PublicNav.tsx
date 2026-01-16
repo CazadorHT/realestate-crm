@@ -256,7 +256,7 @@ export function PublicNav() {
                       className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-base"
                     >
                       <Search className="h-5 w-5 mr-2" />
-                      ค้นหา
+                      ค้นหาทรัพย์
                     </Button>
                   </Link>
                   <a

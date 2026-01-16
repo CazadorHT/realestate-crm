@@ -126,7 +126,7 @@ export function PropertyCard({
     .join(" • ");
 
   return (
-    <div className="group relative isolate rounded-3xl w-full max-w-[350px] mx-auto bg-white overflow-hidden shadow-md h-full flex flex-col transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2  before:content-[''] before:absolute before:inset-0 before:rounded-3xl  before:ring-inset  before:pointer-events-none before:z-10">
+    <div className="group relative isolate rounded-2xl sm:rounded-2xl md:rounded-3xl w-full max-w-[350px] mx-auto bg-white overflow-hidden shadow-md h-full flex flex-col transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2 before:content-[''] before:absolute before:inset-0 before:rounded-2xl sm:before:rounded-2xl md:before:rounded-3xl before:ring-inset before:pointer-events-none before:z-10">
       <Link
         href={`/properties/${property.slug || property.id}`}
         className="flex flex-col h-full focus:outline-none"
@@ -134,7 +134,7 @@ export function PropertyCard({
       >
         {/* Image Section */}
 
-        <div className="relative aspect-square h-[300px]  w-full overflow-hidden rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5  ">
+        <div className="relative aspect-[4/3] sm:aspect-[4/3] md:aspect-square h-auto sm:h-auto md:h-[300px] w-full overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5">
           {property.image_url ? (
             <Image
               src={property.image_url}
@@ -159,7 +159,7 @@ export function PropertyCard({
             </div>
           )}
 
-          <div className="pointer-events-none absolute inset-0 rounded-t-3xl bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          <div className="pointer-events-none absolute inset-0 rounded-t-2xl md:rounded-t-3xl bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
           {/* Verified Badge */}
           {property.verified && (
@@ -211,15 +211,15 @@ export function PropertyCard({
         </div>
 
         {/* Content Section */}
-        <div className="pt-2 pb-6 px-6 mt-3 gap-y-3 flex-grow min-h-[180px] flex flex-col">
+        <div className="pt-2 pb-4 sm:pb-5 md:pb-6 px-4 sm:px-5 md:px-6 mt-2 sm:mt-2 md:mt-3 gap-y-2 sm:gap-y-2 md:gap-y-3 flex-grow min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col">
           <div className="space-y-1 mb-3">
             <div className="flex justify-between items-center mb-2">
               <span
-                className={`text-xs font-medium ${
+                className={`text-[10px] sm:text-[11px] md:text-xs font-medium ${
                   getTypeColor(property.property_type).text
                 } ${
                   getTypeColor(property.property_type).bg
-                } px-3 py-1 rounded-full uppercase tracking-wide`}
+                } px-2 sm:px-2.5 md:px-3 py-0.5 sm:py-0.5 md:py-1 rounded-full uppercase tracking-wide`}
               >
                 {getTypeLabel(property.property_type)}
               </span>
@@ -230,54 +230,54 @@ export function PropertyCard({
                 </span>
               </div>
             </div>
-            <h3 className="text-lg font-semibold tracking-wide text-slate-800 line-clamp-2 group-hover:text-blue-800 transition-all duration-300 ease-in-out">
+            <h3 className="text-sm sm:text-base md:text-lg font-semibold tracking-wide text-slate-800 line-clamp-2 group-hover:text-blue-800 transition-all duration-300 ease-in-out">
               {property.title}
             </h3>
           </div>
 
           {/* Property Specs - ใช้สไตล์ Clean Minimal */}
-          <div className="flex flex-wrap items-center text-xs text-slate-600 gap-x-4 gap-y-2 mt-auto  ">
-            <div className="flex items-center gap-1.5 ">
+          <div className="flex flex-wrap items-center text-xs text-slate-600 gap-x-3 sm:gap-x-3.5 md:gap-x-4 gap-y-1 sm:gap-y-1.5 md:gap-y-2 mt-auto">
+            <div className="flex items-center gap-1 sm:gap-1 md:gap-1.5">
               <BedDouble
-                className="h-5 w-5 text-slate-400 strokeWidth={1.5}"
+                className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 text-slate-400"
                 strokeWidth={1.5}
               />
-              <span className="text-sm font-semibold text-slate-600">
+              <span className="text-xs sm:text-xs md:text-sm font-semibold text-slate-600">
                 {property.bedrooms || "-"}
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 ">
+            <div className="flex items-center gap-1 md:gap-1.5">
               <Bath
-                className="h-5 w-5 text-slate-400 strokeWidth={1.5}"
+                className="h-4 w-4 md:h-5 md:w-5 text-slate-400"
                 strokeWidth={1.5}
               />
-              <span className="text-sm font-semibold text-slate-600">
+              <span className="text-xs md:text-sm font-semibold text-slate-600">
                 {property.bathrooms || "-"}
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 ">
+            <div className="flex items-center gap-1 md:gap-1.5">
               <Car
-                className="h-5 w-5 text-slate-400 strokeWidth={1.5}"
+                className="h-4 w-4 md:h-5 md:w-5 text-slate-400"
                 strokeWidth={1.5}
               />
-              <span className="text-sm font-semibold text-slate-600">
+              <span className="text-xs md:text-sm font-semibold text-slate-600">
                 {property.parking_slots || "-"}
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5  ">
+            <div className="flex items-center gap-1 md:gap-1.5">
               <Expand
-                className="h-5 w-5 text-slate-400 strokeWidth={1.5}"
+                className="h-4 w-4 md:h-5 md:w-5 text-slate-400"
                 strokeWidth={1.5}
               />
-              <span className="text-sm font-semibold text-slate-600  ">
+              <span className="text-xs md:text-sm font-semibold text-slate-600">
                 {property.size_sqm || "-"}
-                <small className="text-[12px]">
+                <small className="text-[10px] md:text-[12px]">
                   {" "}
                   ม.
-                  <small className="text-[10px] font-medium relative top-[-0.2em] ml-0.5">
+                  <small className="text-[8px] md:text-[10px] font-medium relative top-[-0.2em] ml-0.5">
                     2
                   </small>
                 </small>
@@ -285,9 +285,9 @@ export function PropertyCard({
             </div>
           </div>
 
-          {/* Features Preview */}
+          {/* Features Preview - Visible on tablets and desktop */}
           {property.features && property.features.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2 h-6 overflow-hidden ">
+            <div className="hidden sm:flex flex-wrap gap-1 mt-2 h-6 overflow-hidden">
               {property.features.slice(0, 3).map((f) => (
                 <span
                   key={f.id}
@@ -352,13 +352,13 @@ export function PropertyCard({
         </div>
 
         {/* Footer Section */}
-        <div className="h-28 px-4 py-3 border-t border-slate-200 bg-white/60 flex flex-col justify-between gap-2">
+        <div className="h-auto sm:h-auto md:h-28 px-3 sm:px-3.5 md:px-4 py-2 sm:py-2.5 md:py-3 border-t border-slate-200 bg-white/60 flex flex-col justify-between gap-1 sm:gap-1.5 md:gap-2">
           <div className="min-w-0">
             {property.listing_type === "SALE_AND_RENT" ? (
-              <div className="flex items-center gap-3 divide-x divide-slate-200">
+              <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 divide-x divide-slate-200">
                 {/* SALE PRICE BLOCK */}
-                <div className="flex flex-col  ">
-                  <span className="text-xs font-bold uppercase tracking-tight mb-0.5">
+                <div className="flex flex-col">
+                  <span className="text-[10px] sm:text-[11px] md:text-xs font-bold uppercase tracking-tight mb-0.5">
                     ขาย
                   </span>
                   {property.original_price &&
@@ -381,12 +381,12 @@ export function PropertyCard({
                         </span>
                       </div>
                       {/* Current Price */}
-                      <div className="order-1 text-xl font-bold text-rose-600">
+                      <div className="order-1 text-base sm:text-lg md:text-xl font-bold text-rose-600">
                         {PRICE_FORMATTER.format(property.price)}
                       </div>
                     </div>
                   ) : (
-                    <div className="text-xl font-bold text-slate-900">
+                    <div className="text-base sm:text-lg md:text-xl font-bold text-slate-900">
                       {property.price || property.original_price
                         ? PRICE_FORMATTER.format(
                             property.price || property.original_price!
@@ -397,8 +397,8 @@ export function PropertyCard({
                 </div>
 
                 {/* RENT PRICE BLOCK */}
-                <div className="flex flex-col pl-3">
-                  <span className="text-xs font-bold uppercase tracking-tight mb-0.5">
+                <div className="flex flex-col pl-2 md:pl-3">
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-tight mb-0.5">
                     เช่า
                   </span>
                   {property.original_rental_price &&
@@ -424,22 +424,22 @@ export function PropertyCard({
                         </span>
                       </div>
                       {/* Current Price */}
-                      <div className="order-1 text-xl font-bold text-rose-600">
+                      <div className="order-1 text-base md:text-xl font-bold text-rose-600">
                         {PRICE_FORMATTER.format(property.rental_price)}
-                        <span className="text-xs text-slate-500 font-normal ml-0.5">
+                        <span className="text-[10px] md:text-xs text-slate-500 font-normal ml-0.5">
                           /เดือน
                         </span>
                       </div>
                     </div>
                   ) : (
-                    <div className="text-xl font-bold text-slate-900">
+                    <div className="text-base md:text-xl font-bold text-slate-900">
                       {property.rental_price || property.original_rental_price
                         ? PRICE_FORMATTER.format(
                             property.rental_price ||
                               property.original_rental_price!
                           )
                         : "สอบถามค่าเช่า"}
-                      <span className="text-xs text-slate-400 font-normal ml-0.5">
+                      <span className="text-[10px] md:text-xs text-slate-400 font-normal ml-0.5">
                         /เดือน
                       </span>
                     </div>
@@ -448,10 +448,10 @@ export function PropertyCard({
               </div>
             ) : (
               <>
-                <div className="text-xs text-stone-400 uppercase tracking-tight">
+                <div className="text-[10px] md:text-xs text-stone-400 uppercase tracking-tight">
                   {property.listing_type === "RENT" ? "ค่าเช่า" : "ราคาขาย"}
                 </div>
-                <div className="text-xl font-bold text-[#1B263B] truncate flex items-baseline gap-2">
+                <div className="text-base md:text-xl font-bold text-[#1B263B] truncate flex items-baseline gap-1 md:gap-2">
                   {/* SALE or RENT Discount Logic */}
                   {(property.listing_type === "SALE"
                     ? property.original_price
@@ -497,11 +497,11 @@ export function PropertyCard({
                           </span>
                         </div>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-xl font-bold text-rose-600">
+                          <span className="text-base md:text-xl font-bold text-rose-600">
                             {getDisplayPrice(property)}
                           </span>
                           {property.listing_type === "RENT" && (
-                            <span className="text-xs text-slate-500 font-normal">
+                            <span className="text-[10px] md:text-xs text-slate-500 font-normal">
                               /เดือน
                             </span>
                           )}
@@ -512,7 +512,7 @@ export function PropertyCard({
                     <>
                       {getDisplayPrice(property)}
                       {property.listing_type === "RENT" && (
-                        <span className="text-xs text-slate-500 font-normal">
+                        <span className="text-[10px] md:text-xs text-slate-500 font-normal">
                           /เดือน
                         </span>
                       )}
@@ -528,14 +528,14 @@ export function PropertyCard({
             {(property.listing_type === "RENT" ||
               property.listing_type === "SALE_AND_RENT") &&
               property.min_contract_months && (
-                <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium italic  ">
+                <div className="flex items-center gap-1 text-[9px] md:text-[11px] text-slate-400 font-medium italic">
                   <div className="w-1 h-1 rounded-full bg-slate-300" />
-                  สัญญาขั้นต่ำ {property.min_contract_months} เดือน
+                  สัญญา {property.min_contract_months} ด.
                 </div>
               )}
 
             {/* Update Date (Right) */}
-            <div className="text-[11px] text-stone-400 italic flex ">
+            <div className="text-[10px] md:text-[11px] text-stone-400 italic flex ml-auto">
               {property.updated_at ? (
                 <>
                   <Clock className="h-3 w-3 mr-1" />

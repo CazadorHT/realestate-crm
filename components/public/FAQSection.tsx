@@ -59,7 +59,10 @@ export function FAQSection() {
   };
 
   return (
-    <section id="faq" className="py-24 relative overflow-hidden bg-slate-900">
+    <section
+      id="faq"
+      className="py-12 md:py-16 lg:py-24 px-4 md:px-6 lg:px-8 relative overflow-hidden bg-slate-900"
+    >
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px]" />
@@ -71,22 +74,22 @@ export function FAQSection() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <div
-        className="max-w-screen-xl mx-auto px-4 relative z-10 grid lg:grid-cols-2 gap-12 items-start"
+        className="max-w-screen-xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-12 items-start"
         data-aos="fade-up"
         data-aos-delay="100"
       >
-        <div className="text-left mb-16 w-full">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-blue-400 text-sm font-medium mb-6 backdrop-blur-sm">
-            <Sparkles className="w-4 h-4" />
+        <div className="text-left mb-8 md:mb-12 lg:mb-16 w-full">
+          <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-blue-400 text-xs md:text-sm font-medium mb-4 md:mb-6 backdrop-blur-sm">
+            <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span>Help Center & Support</span>
           </div>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+          <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-white mb-4 md:mb-6 tracking-tight">
             มีคำถาม?{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
               เรามีคำตอบ
             </span>
           </h2>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-400 text-base md:text-lg max-w-2xl leading-relaxed">
             รวมคำถามที่พบบ่อยเกี่ยวกับการซื้อ-ขาย-เช่า และสินเชื่อ
             เพื่อให้คุณมั่นใจในทุกขั้นตอน
           </p>
@@ -95,16 +98,16 @@ export function FAQSection() {
         <Accordion
           type="single"
           collapsible
-          className="w-full space-y-4 min-h-[500px]"
+          className="w-full space-y-3 md:space-y-4 min-h-[300px] md:min-h-[400px] lg:min-h-[500px]"
         >
           {loading
             ? Array.from({ length: 5 }).map((_, idx) => (
-                <div key={idx} className="flex justify-start mb-4">
-                  <div className="flex items-start gap-4 p-5 rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 max-w-2xl">
-                    <Skeleton className="w-10 h-10 rounded-full bg-white/10" />
+                <div key={idx} className="flex justify-start mb-3 md:mb-4">
+                  <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 rounded-xl md:rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 max-w-2xl">
+                    <Skeleton className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10" />
                     <div className="flex-1 space-y-2">
-                      <Skeleton className="h-5 w-full bg-white/10" />
-                      <Skeleton className="h-5 w-3/4 bg-white/10" />
+                      <Skeleton className="h-4 md:h-5 w-full bg-white/10" />
+                      <Skeleton className="h-4 md:h-5 w-3/4 bg-white/10" />
                     </div>
                   </div>
                 </div>
@@ -125,12 +128,12 @@ export function FAQSection() {
                         "[&[data-state=open]>div]:rounded-bl-none [&[data-state=open]>div]:bg-white/10" // Adjust shape/color when open
                       )}
                     >
-                      <div className="flex items-start gap-4 p-5 rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 max-w-2xl text-left group-data-[state=open]:ring-1 group-data-[state=open]:ring-blue-500/50">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20 mt-0.5">
-                          <CircleHelp className="w-5 h-5 text-white" />
+                      <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 rounded-xl md:rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 max-w-2xl text-left group-data-[state=open]:ring-1 group-data-[state=open]:ring-blue-500/50">
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20 mt-0.5">
+                          <CircleHelp className="w-4 h-4 md:w-5 md:h-5 text-white" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-lg font-medium text-white leading-snug">
+                          <p className="text-base md:text-lg font-medium text-white leading-snug">
                             {faq.question}
                           </p>
                         </div>
@@ -139,16 +142,16 @@ export function FAQSection() {
                   </div>
 
                   {/* Answer Bubble (Right) */}
-                  <AccordionContent className="pb-4 pt-2">
-                    <div className="flex justify-end pl-12 md:pl-24">
-                      <div className="flex items-start gap-4 p-6 rounded-2xl rounded-tr-sm bg-gradient-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/10 max-w-2xl backdrop-blur-md">
+                  <AccordionContent className="pb-3 md:pb-4 pt-1 md:pt-2">
+                    <div className="flex justify-end pl-8 md:pl-12 lg:pl-24">
+                      <div className="flex items-start gap-3 md:gap-4 p-4 md:p-6 rounded-xl md:rounded-2xl rounded-tr-sm bg-gradient-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/10 max-w-2xl backdrop-blur-md">
                         <div className="flex-1 text-right">
-                          <p className="text-slate-300 leading-relaxed text-base">
+                          <p className="text-slate-300 leading-relaxed text-sm md:text-base">
                             {faq.answer}
                           </p>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 mt-0.5">
-                          <MessageCircle className="w-5 h-5 text-blue-400" />
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 mt-0.5">
+                          <MessageCircle className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
                         </div>
                       </div>
                     </div>

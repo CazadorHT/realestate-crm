@@ -155,9 +155,9 @@ export default async function PublicPropertyDetailPage(props: {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
       {/* 1. Header & Breadcrumb */}
-      <div className="pt-24  bg-white sticky top-0 z-30 opacity-95 backdrop-blur-sm shadow-sm md:shadow-none md:static">
-        <div className="max-w-7xl mx-auto ">
-          <div className="flex flex-col gap-4">
+      <div className="pt-20 md:pt-24 px-4 md:px-6 lg:px-8 bg-white sticky top-0 z-30 opacity-95 backdrop-blur-sm shadow-sm md:shadow-none md:static">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col gap-3 md:gap-4">
             {/* Back Link */}
             <div className="flex justify-between items-center">
               <Link
@@ -341,9 +341,9 @@ export default async function PublicPropertyDetailPage(props: {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto  mt-6 md:mt-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-4 md:mt-8">
         {/* 2. Gallery (Mosaic) */}
-        <section className="mb-10">
+        <section className="mb-6 md:mb-10">
           <PropertyGallery
             images={images as any[]}
             title={data.title}
@@ -464,9 +464,9 @@ export default async function PublicPropertyDetailPage(props: {
         />
 
         {/* 3. Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] xl:grid-cols-[2fr_1fr] gap-10 lg:gap-16 mb-10 ">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] xl:grid-cols-[2fr_1fr] gap-6 md:gap-10 lg:gap-16 mb-6 md:mb-10">
           {/* Left Content */}
-          <div className="space-y-10">
+          <div className="space-y-6 md:space-y-10">
             {/* Specs Grid */}
             <section>
               <PropertySpecs
@@ -515,10 +515,10 @@ export default async function PublicPropertyDetailPage(props: {
             </section>
             {/* Description */}
             <section>
-              <h2 className="text-xl font-bold text-slate-900 mb-6">
+              <h2 className="text-lg md:text-xl font-bold text-slate-900 mb-4 md:mb-6">
                 รายละเอียดทรัพย์
               </h2>
-              <div className="prose prose-slate max-w-none text-slate-600 leading-8 whitespace-pre-wrap text-md max-h-[400px] overflow-y-scroll">
+              <div className="prose prose-slate max-w-none text-slate-600 leading-7 md:leading-8 whitespace-pre-wrap text-sm md:text-base max-h-[300px] md:max-h-[400px] overflow-y-auto">
                 {data.description || "ไม่มีรายละเอียดเพิ่มเติม"}
               </div>
             </section>
@@ -529,21 +529,21 @@ export default async function PublicPropertyDetailPage(props: {
             {/* Facilities / Highlights */}
             {features.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">
+                <h2 className="text-lg md:text-2xl font-bold text-slate-900 mb-4 md:mb-6">
                   สิ่งอำนวยความสะดวก
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-y-4 md:gap-x-8">
                   {features.map((item: any, i: number) => {
                     const Icon = ICON_MAP[item.icon_key] || DEFAULT_ICON;
                     return (
                       <div
                         key={i}
-                        className="flex items-center gap-3 text-slate-600"
+                        className="flex items-center gap-2 md:gap-3 text-sm md:text-base text-slate-600"
                       >
-                        <div className="p-2 rounded-full bg-blue-50 text-blue-600">
-                          <Icon className="w-4 h-4" />
+                        <div className="p-1.5 md:p-2 rounded-full bg-blue-50 text-blue-600">
+                          <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                         </div>
-                        {item.name}
+                        <span className="truncate">{item.name}</span>
                       </div>
                     );
                   })}
@@ -555,23 +555,23 @@ export default async function PublicPropertyDetailPage(props: {
 
             {/* Map */}
             <section>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">
+              <h2 className="text-lg md:text-2xl font-bold text-slate-900 mb-4 md:mb-6">
                 แผนที่ & ทำเลที่ตั้ง
               </h2>
-              <div className="bg-slate-50 rounded-3xl p-8 flex flex-col items-center justify-center text-slate-400 border border-slate-100 relative overflow-hidden space-y-4">
+              <div className="bg-slate-50 rounded-2xl md:rounded-3xl p-4 md:p-8 flex flex-col items-center justify-center text-slate-400 border border-slate-100 relative overflow-hidden space-y-3 md:space-y-4">
                 {data.google_maps_link ? (
                   <>
-                    <div className="bg-white p-4 rounded-full shadow-sm inline-block">
-                      <MapPin className="h-8 w-8 text-blue-500" />
+                    <div className="bg-white p-3 md:p-4 rounded-full shadow-sm inline-block">
+                      <MapPin className="h-6 w-6 md:h-8 md:w-8 text-blue-500" />
                     </div>
-                    <p className="text-slate-600 font-medium max-w-md text-center">
+                    <p className="text-sm md:text-base text-slate-600 font-medium max-w-md text-center">
                       ดูตำแหน่งที่ตั้งทรัพย์สินนี้บน Google Maps
                     </p>
                     <a
                       href={data.google_maps_link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full font-medium transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-full text-sm md:text-base font-medium transition-colors cursor-pointer"
                     >
                       <MapPin className="w-4 h-4" />
                       เปิดดูใน Google Maps
@@ -579,10 +579,12 @@ export default async function PublicPropertyDetailPage(props: {
                   </>
                 ) : (
                   <div className="text-center space-y-2">
-                    <div className="bg-white p-4 rounded-full shadow-sm inline-block">
-                      <MapPin className="h-8 w-8 text-slate-300" />
+                    <div className="bg-white p-3 md:p-4 rounded-full shadow-sm inline-block">
+                      <MapPin className="h-6 w-6 md:h-8 md:w-8 text-slate-300" />
                     </div>
-                    <p>ไม่พบข้อมูลพิกัดแผนที่</p>
+                    <p className="text-sm md:text-base">
+                      ไม่พบข้อมูลพิกัดแผนที่
+                    </p>
                   </div>
                 )}
               </div>

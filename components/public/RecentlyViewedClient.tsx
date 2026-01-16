@@ -120,9 +120,11 @@ function convertToRecentProperty(prop: RecommendedProperty): RecentProperty {
 export function RecentlyViewedClient({
   recommendedProperties,
   containerClassName,
+  disableAos = false,
 }: {
   recommendedProperties: RecommendedProperty[];
   containerClassName?: string;
+  disableAos?: boolean;
 }) {
   const [items, setItems] = useState<RecentProperty[]>([]);
   const [showingRecommended, setShowingRecommended] = useState(false);
@@ -273,34 +275,34 @@ export function RecentlyViewedClient({
   // If initializing, show skeletons to hold layout
   if (initializing) {
     return (
-      <section className="py-12 bg-slate-50 border-t border-slate-100 overflow-hidden relative z-0">
+      <section className="py-10 md:py-12 px-4 md:px-6 lg:px-8 bg-slate-50 border-t border-slate-100 overflow-hidden relative z-0">
         <SectionBackground pattern="blobs" intensity="low" />
         <div className={cn("max-w-7xl mx-auto", containerClassName)}>
           {/* Header Skeleton */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
             <div className="flex items-center gap-3">
-              <Skeleton className="w-12 h-12 rounded-2xl" />
+              <Skeleton className="w-10 h-10 md:w-12 md:h-12 rounded-2xl" />
               <div className="space-y-2">
-                <Skeleton className="h-8 w-80" />
-                <Skeleton className="h-4 w-64" />
+                <Skeleton className="h-6 md:h-8 w-48 md:w-80" />
+                <Skeleton className="h-3 md:h-4 w-40 md:w-64" />
               </div>
             </div>
           </div>
 
           {/* Navigation Buttons Skeleton */}
-          <div className="flex justify-end gap-2 mb-4">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="flex justify-end gap-2 mb-3 md:mb-4">
+            <Skeleton className="h-8 w-8 md:h-10 md:w-10 rounded-full" />
+            <Skeleton className="h-8 w-8 md:h-10 md:w-10 rounded-full" />
           </div>
 
           {/* Cards Skeleton */}
-          <div className="flex gap-6 overflow-hidden pb-6 px-2 pt-9">
+          <div className="flex gap-4 md:gap-6 overflow-hidden pb-4 md:pb-6 px-1 md:px-2 pt-6 md:pt-9">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="min-w-[300px] w-[300px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden"
+                className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] bg-white rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 overflow-hidden"
               >
-                <Skeleton className="h-44 w-full rounded-none" />
+                <Skeleton className="h-36 md:h-44 w-full rounded-none" />
                 <div className="p-5 space-y-3">
                   <Skeleton className="h-6 w-3/4" />
                   <div className="flex gap-2">
@@ -343,7 +345,7 @@ export function RecentlyViewedClient({
   };
 
   return (
-    <section className="py-12 bg-slate-50 border-t border-slate-100 overflow-hidden relative z-0">
+    <section className="py-10 md:py-12 px-4 md:px-6 lg:px-8 bg-slate-50 border-t border-slate-100 overflow-hidden relative z-0">
       <SectionBackground pattern="blobs" intensity="low" />
       {/* Schema.org Structured Data */}
       <script
@@ -353,24 +355,24 @@ export function RecentlyViewedClient({
       <div className={cn("max-w-7xl mx-auto", containerClassName)}>
         {/* === HEADER WITH CLEAR ACTION === */}
         <div
-          className="flex items-center justify-between "
-          data-aos="fade-up"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2 md:mb-4"
+          {...(!disableAos && { "data-aos": "fade-up" })}
           suppressHydrationWarning
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-start sm:items-center gap-2 md:gap-3">
             <div
-              className={`p-2.5 rounded-2xl ${
+              className={`p-2 md:p-2.5 rounded-xl md:rounded-2xl ${
                 showingRecommended ? "bg-amber-50" : "bg-blue-50"
               }`}
             >
               {showingRecommended ? (
-                <Lightbulb className="h-5 w-5 text-amber-600" />
+                <Lightbulb className="h-4 w-4 md:h-5 md:w-5 text-amber-600" />
               ) : (
-                <History className="h-5 w-5 text-blue-600" />
+                <History className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
               )}
             </div>
             <div>
-              <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
                 {showingRecommended ? (
                   <>
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
@@ -409,22 +411,22 @@ export function RecentlyViewedClient({
           )}
         </div>
         {/* Navigation Buttons - Always visible at right */}
-        <div className="flex justify-end gap-2 mb-4">
+        <div className="flex justify-end gap-2 mb-3 md:mb-4">
           <button
             onClick={scrollPrev}
             disabled={!canScrollLeft}
-            className="h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
+            className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
             aria-label="Previous"
           >
-            <ChevronLeft className="h-5 w-5 text-slate-700 group-hover:text-white" />
+            <ChevronLeft className="h-4 w-4 md:h-5 md:w-5 text-slate-700 group-hover:text-white" />
           </button>
           <button
             onClick={scrollNext}
             disabled={!canScrollRight}
-            className="h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
+            className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
             aria-label="Next"
           >
-            <ChevronRight className="h-5 w-5 text-slate-700 group-hover:text-white" />
+            <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-slate-700 group-hover:text-white" />
           </button>
         </div>
 
@@ -436,7 +438,7 @@ export function RecentlyViewedClient({
             onMouseLeave={handleMouseLeave}
             onMouseUp={handleMouseUp}
             onMouseMove={handleMouseMove}
-            className={`flex gap-6 overflow-x-auto pb-6 scrollbar-hide px-2 select-none ${
+            className={`flex gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-6 scrollbar-hide px-1 md:px-2 select-none ${
               isDragging ? "cursor-grabbing" : "cursor-grab"
             }`}
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -449,8 +451,8 @@ export function RecentlyViewedClient({
                     ? `/properties/${item.slug}`
                     : `/properties/${item.id}`
                 }
-                className="min-w-[300px] w-[300px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-blue-500/10 transition-all duration-500 snap-start flex-shrink-0 group relative isolate hover:-translate-y-1"
-                data-aos="fade-left"
+                className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] bg-white rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-blue-500/10 transition-all duration-500 snap-start flex-shrink-0 group relative isolate hover:-translate-y-1"
+                {...(!disableAos && { "data-aos": "fade-left" })}
                 onClick={(e) => {
                   if (isDragging) e.preventDefault();
                 }}
@@ -476,7 +478,7 @@ export function RecentlyViewedClient({
                   } ${item.price_text}`}
                 />
                 {/* Image Section */}
-                <div className="relative h-44 bg-slate-100 overflow-hidden">
+                <div className="relative h-36 md:h-44 bg-slate-100 overflow-hidden">
                   {item.image_url ? (
                     <Image
                       src={item.image_url}
@@ -514,7 +516,7 @@ export function RecentlyViewedClient({
                 </div>
 
                 {/* Content Section */}
-                <div className="p-5">
+                <div className="p-4 md:p-5">
                   <h3 className="font-bold text-slate-900 truncate mb-2 group-hover:text-blue-600 transition-colors">
                     {item.title}
                   </h3>

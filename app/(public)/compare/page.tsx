@@ -166,11 +166,11 @@ export default function ComparePage() {
           }`}
         >
           {p.price && p.original_price && p.original_price > p.price && (
-            <span className="text-xs text-slate-400 line-through mr-2 block sm:inline">
+            <span className="text-[10px] md:text-xs text-slate-400 line-through mr-1 md:mr-2 block sm:inline">
               {formatMoney(p.original_price)}
             </span>
           )}
-          <span className="text-blue-600 font-bold">
+          <span className="text-blue-600 font-bold text-sm md:text-base">
             {formatMoney(salePrice)}
           </span>
         </div>
@@ -182,11 +182,11 @@ export default function ComparePage() {
           {p.rental_price &&
             p.original_rental_price &&
             p.original_rental_price > p.rental_price && (
-              <span className="text-xs text-slate-400 line-through mr-2 block sm:inline">
+              <span className="text-[10px] md:text-xs text-slate-400 line-through mr-1 md:mr-2 block sm:inline">
                 {formatMoney(p.original_rental_price)}/ด
               </span>
             )}
-          <span className="text-orange-600 font-bold">
+          <span className="text-orange-600 font-bold text-sm md:text-base">
             {formatMoney(rentPrice)}/ด
           </span>
         </div>
@@ -204,76 +204,76 @@ export default function ComparePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 pt-24 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 pb-12 md:pb-20 pt-20 md:pt-24 relative overflow-hidden">
       <SectionBackground pattern="blobs" intensity="low" showDots={true} />
 
-      <div className="max-w-screen-2xl mx-auto px-4 relative z-10">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" asChild className="hover:bg-white/50">
+      <div className="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 relative z-10">
+        <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <Button variant="ghost" asChild className="hover:bg-white/50 w-fit">
               <Link href="/properties">
                 <ArrowLeft className="h-4 w-4 mr-2" /> กลับไปค้นหา
               </Link>
             </Button>
-            <h1 className="text-3xl font-bold text-slate-900 icon-underline">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 icon-underline">
               เปรียบเทียบทรัพย์
             </h1>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6 animate-pulse">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-[400px] bg-white rounded-3xl border border-slate-200"
+                className="h-[300px] md:h-[400px] bg-white rounded-2xl md:rounded-3xl border border-slate-200"
               />
             ))}
           </div>
         ) : properties.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 px-4 bg-white/80 backdrop-blur-sm rounded-3xl border border-slate-200 text-center animate-in fade-in zoom-in duration-500 shadow-sm">
-            <div className="h-24 w-24 rounded-full bg-slate-100 flex items-center justify-center mb-6">
-              <AlertCircle className="h-10 w-10 text-slate-400" />
+          <div className="flex flex-col items-center justify-center py-16 md:py-24 px-4 bg-white/80 backdrop-blur-sm rounded-2xl md:rounded-3xl border border-slate-200 text-center animate-in fade-in zoom-in duration-500 shadow-sm">
+            <div className="h-16 w-16 md:h-24 md:w-24 rounded-full bg-slate-100 flex items-center justify-center mb-4 md:mb-6">
+              <AlertCircle className="h-8 w-8 md:h-10 md:w-10 text-slate-400" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">
+            <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">
               ยังไม่มีรายการเปรียบเทียบ
             </h2>
-            <p className="text-slate-500 max-w-md mb-8">
+            <p className="text-sm md:text-base text-slate-500 max-w-md mb-6 md:mb-8">
               เลือกทรัพย์ที่คุณสนใจจากหน้าค้นหา
               <br />
               กดปุ่ม "เปรียบเทียบ" เพื่อนำข้อมูลมาเทียบกันชัดๆ
             </p>
             <Button
               size="lg"
-              className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:translaty-y-1 transition-all"
+              className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:translaty-y-1 transition-all text-sm md:text-base"
               asChild
             >
               <Link href="/properties">ไปหน้าค้นหาทรัพย์</Link>
             </Button>
           </div>
         ) : (
-          <div className="overflow-x-auto pb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="min-w-[800px] border border-slate-200 rounded-3xl bg-white/90 backdrop-blur-sm overflow-hidden shadow-sm">
+          <div className="overflow-x-auto pb-4 md:pb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="min-w-[600px] md:min-w-[800px] border border-slate-200 rounded-2xl md:rounded-3xl bg-white/90 backdrop-blur-sm overflow-hidden shadow-sm">
               {/* Header Row (Images & Titles) */}
               <div
                 className="grid divide-x divide-slate-100"
                 style={{
-                  gridTemplateColumns: `150px repeat(${properties.length}, 1fr)`,
+                  gridTemplateColumns: `100px repeat(${properties.length}, 1fr)`,
                 }}
               >
-                <div className="p-6 flex items-center font-bold text-slate-900 bg-slate-50/80">
-                  หัวข้อเปรียบเทียบ
+                <div className="p-3 md:p-6 flex items-center font-bold text-xs md:text-sm text-slate-900 bg-slate-50/80">
+                  หัวข้อ
                 </div>
                 {properties.map((p) => (
-                  <div key={p.id} className="p-6 relative group">
+                  <div key={p.id} className="p-3 md:p-6 relative group">
                     <button
                       onClick={() => handleRemove(p.id)}
-                      className="absolute top-2 right-2 p-2 bg-white shadow-sm border border-slate-100 rounded-full hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all opacity-0 group-hover:opacity-100 z-10"
+                      className="absolute top-1 right-1 md:top-2 md:right-2 p-1.5 md:p-2 bg-white shadow-sm border border-slate-100 rounded-full hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all opacity-100 md:opacity-0 group-hover:opacity-100 z-10"
                       title="ลบรายการ"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3 w-3 md:h-4 md:w-4" />
                     </button>
-                    <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 mb-4 border border-slate-100 shadow-inner group-hover:scale-[1.02] transition-transform duration-500">
+                    <div className="relative aspect-[4/3] rounded-xl md:rounded-2xl overflow-hidden bg-slate-100 mb-2 md:mb-4 border border-slate-100 shadow-inner group-hover:scale-[1.02] transition-transform duration-500">
                       {p.image_url ? (
                         <Image
                           src={p.image_url}
@@ -289,7 +289,7 @@ export default function ComparePage() {
                     </div>
                     <Link
                       href={`/properties/${p.id}`}
-                      className="block font-bold text-slate-900 hover:text-blue-600 line-clamp-2 mb-2 transition-colors"
+                      className="block font-bold text-xs md:text-sm text-slate-900 hover:text-blue-600 line-clamp-2 mb-1 md:mb-2 transition-colors"
                     >
                       {p.title}
                     </Link>
@@ -328,12 +328,12 @@ export default function ComparePage() {
                       idx % 2 === 0 ? "bg-slate-50/50" : "bg-white/50"
                     }`}
                     style={{
-                      gridTemplateColumns: `150px repeat(${properties.length}, 1fr)`,
+                      gridTemplateColumns: `100px repeat(${properties.length}, 1fr)`,
                     }}
                   >
-                    <div className="p-4 text-sm font-semibold text-slate-600 flex items-center gap-2">
-                      <row.icon className="h-4 w-4 text-slate-400" />
-                      {row.label}
+                    <div className="p-2 md:p-4 text-xs md:text-sm font-semibold text-slate-600 flex items-center gap-1 md:gap-2">
+                      <row.icon className="h-3 w-3 md:h-4 md:w-4 text-slate-400 flex-shrink-0" />
+                      <span className="truncate">{row.label}</span>
                     </div>
                     {properties.map((p) => {
                       // Check overlap Winner
@@ -350,14 +350,12 @@ export default function ComparePage() {
                       return (
                         <div
                           key={p.id}
-                          className={`p-4 text-sm text-slate-700 leading-relaxed transition-colors duration-500 ${
+                          className={`p-2 md:p-4 text-xs md:text-sm text-slate-700 leading-relaxed transition-colors duration-500 ${
                             isWinner ? "bg-green-50/60 font-medium" : ""
                           }`}
                         >
                           {row.key === "price" ? (
-                            <div className="scale-90 origin-top-left">
-                              {renderPrice(p, true)}
-                            </div>
+                            <div>{renderPrice(p, true)}</div>
                           ) : row.key === "verified" ? (
                             p.verified ? (
                               <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold border border-blue-100">
@@ -368,12 +366,11 @@ export default function ComparePage() {
                             )
                           ) : row.key === "features" ? (
                             p.features && p.features.length > 0 ? (
-                              <div className="grid grid-cols-3 gap-2">
+                              <div className="flex flex-wrap gap-1 md:gap-1.5">
                                 {p.features.map((f) => (
                                   <div
                                     key={f.id}
-                                    className="text-md px-2 py-1 bg-slate-100 rounded text-slate-600 text-center truncate "
-                                    title={f.name}
+                                    className="text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1 bg-slate-100 rounded text-slate-600 whitespace-nowrap"
                                   >
                                     {f.name}
                                   </div>
@@ -484,14 +481,14 @@ export default function ComparePage() {
               <div
                 className="grid divide-x divide-slate-100 bg-white border-t border-slate-100"
                 style={{
-                  gridTemplateColumns: `150px repeat(${properties.length}, 1fr)`,
+                  gridTemplateColumns: `100px repeat(${properties.length}, 1fr)`,
                 }}
               >
-                <div className="p-6"></div>
+                <div className="p-3 md:p-6"></div>
                 {properties.map((p) => (
-                  <div key={p.id} className="p-6">
+                  <div key={p.id} className="p-3 md:p-6">
                     <Button
-                      className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 transition-all hover:scale-105"
+                      className="w-full rounded-lg md:rounded-xl bg-slate-900 hover:bg-slate-800 transition-all hover:scale-105 text-xs md:text-sm py-2 md:py-3"
                       asChild
                     >
                       <Link href={`/properties/${p.id}`}>ดูรายละเอียด</Link>
@@ -504,10 +501,11 @@ export default function ComparePage() {
         )}
       </div>
 
-      <div className="relative z-10 mt-20">
+      <div className="relative z-10 mt-12 md:mt-20">
         <RecentlyViewedClient
           recommendedProperties={[]}
-          containerClassName="max-w-screen-2xl px-4"
+          containerClassName="max-w-screen-2xl px-4 md:px-6 lg:px-8"
+          disableAos
         />
       </div>
     </div>

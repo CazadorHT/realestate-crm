@@ -47,7 +47,7 @@ export function StatsBand() {
   };
 
   return (
-    <section className="relative py-10  overflow-hidden bg-gradient-to-r from-blue-500 to-purple-500">
+    <section className="relative py-8 md:py-10 px-4 md:px-6 lg:px-8 overflow-hidden bg-gradient-to-r from-blue-500 to-purple-500">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
@@ -64,13 +64,14 @@ export function StatsBand() {
       {/* ลายตารางทางสถาปัตยกรรม */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] -z-10" />
 
-      <div className="max-w-screen-2xl mx-auto px-4">
+      <div className="max-w-screen-2xl mx-auto">
         {/* SEO-Critical Heading */}
         <h2 className="sr-only">
-          สถิติความสำเร็จในการขายและให้เช่าอสังหาริมทรัพย์ บ้าน คอนโด สำนักงานออฟฟิศ
+          สถิติความสำเร็จในการขายและให้เช่าอสังหาริมทรัพย์ บ้าน คอนโด
+          สำนักงานออฟฟิศ
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8 sm:px-4 md:px-6 lg:px-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-12">
           {stats.map((stat, index) => (
             <div
               key={index}
@@ -79,7 +80,7 @@ export function StatsBand() {
               data-aos-delay={index * 100}
             >
               {/* Icon Container with Glassmorphism */}
-              <div className="w-14 h-14 rounded-2xl relative overflow-hidden backdrop-blur-md border border-white/10 flex items-center justify-center transition-all duration-500 shadow-xl shadow-blue-900/20 group-hover:scale-110">
+              <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-xl md:rounded-2xl relative overflow-hidden backdrop-blur-md border border-white/10 flex items-center justify-center transition-all duration-500 shadow-xl shadow-blue-900/20 group-hover:scale-110">
                 {/* Base Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 z-0" />
 
@@ -87,20 +88,20 @@ export function StatsBand() {
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
 
                 {/* Icon */}
-                <div className="relative z-10 text-blue-200 group-hover:text-white transition-colors duration-500">
+                <div className="relative z-10 text-blue-200 group-hover:text-white transition-colors duration-500 [&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5 lg:[&>svg]:w-6 lg:[&>svg]:h-6">
                   {stat.icon}
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <div className="text-4xl md:text-5xl font-bold text-white tracking-normal">
+              <div className="space-y-0.5 md:space-y-1">
+                <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-normal">
                   {stat.value}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-blue-100 font-medium text-sm md:text-base">
+                  <span className="text-blue-100 font-medium text-xs sm:text-sm md:text-base leading-tight">
                     {stat.label}
                   </span>
-                  <span className="text-white/30 text-[10px] uppercase tracking-[0.2em] font-semibold">
+                  <span className="text-white/30 text-[8px] sm:text-[10px] uppercase tracking-[0.15em] md:tracking-[0.2em] font-semibold">
                     {stat.subLabel}
                   </span>
                 </div>

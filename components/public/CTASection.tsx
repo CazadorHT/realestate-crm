@@ -20,7 +20,7 @@ export function CTASection() {
   };
 
   return (
-    <section className="py-24 px-4 bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50 relative overflow-hidden z-0">
+    <section className="py-12 md:py-16 lg:py-24 px-4 md:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50 relative overflow-hidden z-0">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
@@ -30,10 +30,10 @@ export function CTASection() {
       {/* Background Pattern */}
       <SectionBackground pattern="blobs" intensity="medium" />
 
-      <div className="max-w-screen-xl mx-auto text-center space-y-8 relative z-10">
+      <div className="max-w-screen-xl mx-auto text-center space-y-6 md:space-y-8 relative z-10">
         {/* Trust Stats */}
         <div
-          className="flex flex-wrap justify-center gap-6 mb-8"
+          className="flex flex-wrap justify-center gap-3 md:gap-6 mb-6 md:mb-8"
           data-aos="fade-up"
         >
           {[
@@ -55,10 +55,12 @@ export function CTASection() {
           ].map((stat, idx) => (
             <div
               key={idx}
-              className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-slate-200"
+              className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-slate-200"
             >
-              <stat.icon className={`w-4 h-4 ${stat.color}`} />
-              <span className="text-sm font-semibold text-slate-700">
+              <stat.icon
+                className={`w-3.5 h-3.5 md:w-4 md:h-4 ${stat.color}`}
+              />
+              <span className="text-xs md:text-sm font-semibold text-slate-700">
                 {stat.label}
               </span>
             </div>
@@ -66,7 +68,7 @@ export function CTASection() {
         </div>
 
         <h2
-          className="text-4xl md:text-5xl font-bold leading-tight"
+          className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight"
           data-aos="fade-up"
           data-aos-delay="100"
         >
@@ -80,7 +82,7 @@ export function CTASection() {
         </h2>
 
         <p
-          className="text-xl text-slate-600 max-w-2xl mx-auto"
+          className="text-base md:text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto"
           data-aos="fade-up"
           data-aos-delay="200"
         >
@@ -92,34 +94,41 @@ export function CTASection() {
         </p>
 
         <div
-          className="flex flex-col sm:flex-row gap-4 justify-center pt-4"
+          className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-2 md:pt-4"
           data-aos="fade-up"
           data-aos-delay="300"
         >
           <Link href="/properties">
             <Button
               size="lg"
-              className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl hover:shadow-2xl transition-all hover:scale-105"
+              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl hover:shadow-2xl transition-all hover:scale-105 w-full sm:w-auto"
             >
-              <Search className="h-5 w-5 mr-2" />
+              <Search className="h-4 w-4 md:h-5 md:w-5 mr-2" />
               เริ่มค้นหาเลย
             </Button>
           </Link>
 
-          <Link href="/contact">
+          <a
+            href="https://line.me/R/ti/p/@your-line-id"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <Button
               size="lg"
               variant="outline"
-              className="text-lg px-8 py-6 border-2 border-slate-300 hover:border-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-all"
+              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 border-2 border-slate-300 hover:border-green-600 hover:bg-green-50 hover:text-green-700 transition-all w-full sm:w-auto"
             >
-              <MessageCircle className="h-5 w-5 mr-2" />
-              ปรึกษาทีมงาน
+              <MessageCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+              ติดต่อ LINE
             </Button>
-          </Link>
+          </a>
         </div>
 
         {/* Small trust message */}
-        <p className="text-sm text-slate-500 pt-4" data-aos="fade-up">
+        <p
+          className="text-xs md:text-sm text-slate-500 pt-2 md:pt-4"
+          data-aos="fade-up"
+        >
           🔒 ข้อมูลของคุณปลอดภัย | 🎯 ไม่มีค่าใช้จ่าย | ⚡ รวดเร็วทันใจ
         </p>
       </div>

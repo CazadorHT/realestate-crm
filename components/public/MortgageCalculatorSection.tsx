@@ -49,7 +49,7 @@ export function MortgageCalculatorSection() {
   };
 
   return (
-    <section className="py-16 bg-gradient-to-br from-blue-50 to-blue-100 relative overflow-hidden z-0">
+    <section className="py-12 md:py-16 px-4 md:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-blue-100 relative overflow-hidden z-0">
       <SectionBackground pattern="icons" intensity="low" />
       {/* Schema.org Structured Data */}
       <script
@@ -58,7 +58,7 @@ export function MortgageCalculatorSection() {
       />
 
       <div className="max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
           {/* Left: SEO-Optimized Text Content */}
           <div className="lg:col-span-5 space-y-4" data-aos="fade-right">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/10 text-blue-700 text-sm font-bold border border-blue-200/50">
@@ -124,7 +124,7 @@ export function MortgageCalculatorSection() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-slate-500">
                     ดอกเบี้ย (%)
@@ -155,21 +155,27 @@ export function MortgageCalculatorSection() {
               </div>
 
               {/* Result Section Inside Card */}
-              <div className="bg-gradient-to-tr from-blue-600 to-blue-500 rounded-2xl p-6 text-white flex justify-between items-center">
+              <div className="bg-gradient-to-tr from-blue-600 to-blue-500 rounded-2xl p-4 md:p-6 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <p className="text-blue-100 text-xs uppercase font-semibold">
                     ยอดผ่อนต่อเดือน
                   </p>
-                  <div className="text-3xl font-bold">
+                  <div className="text-2xl md:text-3xl font-bold">
                     {formatCurrency(monthlyPayment)}
                   </div>
                 </div>
-                <Button
-                  variant="secondary"
-                  className="bg-white text-blue-600 hover:bg-blue-50"
+                <a
+                  href="https://line.me/R/ti/p/@your-line-id"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  ปรึกษาเรา
-                </Button>
+                  <Button
+                    variant="secondary"
+                    className="bg-white text-green-600 hover:bg-green-50 w-full sm:w-auto"
+                  >
+                    ติดต่อ LINE
+                  </Button>
+                </a>
               </div>
             </div>
           </div>

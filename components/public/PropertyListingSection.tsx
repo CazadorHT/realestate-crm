@@ -269,7 +269,7 @@ export function PropertyListingSection() {
   return (
     <section
       id="latest-properties"
-      className="py-20 px-4 bg-white border-y border-slate-100"
+      className="py-12 md:py-16 lg:py-20 px-4 md:px-6 lg:px-8 bg-white border-y border-slate-100"
     >
       {/* Schema.org Structured Data */}
       <script
@@ -278,7 +278,7 @@ export function PropertyListingSection() {
       />
 
       <div className="max-w-screen-2xl mx-auto">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 md:gap-6 mb-8 md:mb-10">
           {/* SEO-Optimized Header */}
           <div className="space-y-3" data-aos="fade-right">
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
@@ -316,14 +316,14 @@ export function PropertyListingSection() {
 
           {/* เลือกประเภททรัพย์ (Scrollable with Arrows) */}
           <div
-            className="w-full lg:w-auto flex flex-col items-end gap-4 text-sm"
+            className="w-full lg:w-auto flex flex-col items-start lg:items-end gap-3 md:gap-4 text-sm"
             data-aos="fade-left"
           >
-            <div className="flex justify-end">
+            <div className="hidden lg:flex justify-end">
               <Button
                 asChild
                 variant="outline"
-                className="h-11 px-6 text-base "
+                className="h-10 md:h-11 px-4 md:px-6 text-sm md:text-base"
               >
                 <Link href="/properties">
                   ดูทรัพย์เพิ่มเติม
@@ -332,7 +332,7 @@ export function PropertyListingSection() {
               </Button>
             </div>
 
-            <div className="flex flex-wrap items-center justify-end gap-14">
+            <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-start lg:justify-end gap-3 md:gap-4 lg:gap-14 w-full lg:w-auto">
               {(areaFilter || provinceFilter) && (
                 <div className="flex items-center gap-4 text-sm">
                   <span className="text-slate-500">ทรัพย์ในย่านทำเล :</span>
@@ -365,11 +365,11 @@ export function PropertyListingSection() {
                 </div>
               )}
 
-              <div className="relative group max-w-[400px] lg:max-w-[400px] select-none">
+              <div className="relative group w-full sm:max-w-[400px] lg:max-w-[400px] select-none">
                 <div
                   id="filter-scroll-container"
                   ref={scrollContainerRef}
-                  className={`flex gap-2 overflow-x-auto whitespace-nowrap py-1 scroll-smooth snap-x snap-mandatory px-12 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing ${
+                  className={`flex gap-2 overflow-x-auto whitespace-nowrap py-1 scroll-smooth snap-x snap-mandatory px-8 sm:px-12 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing ${
                     isDragging ? "snap-none scroll-auto" : ""
                   }`}
                   role="tablist"
@@ -416,7 +416,7 @@ export function PropertyListingSection() {
                     );
                     if (el) el.scrollBy({ left: -200, behavior: "smooth" });
                   }}
-                  className="absolute -left-12 top-1/2 -translate-y-1/2  bg-white/80 backdrop-blur border border-slate-200 rounded-full p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
+                  className="absolute -left-2 sm:-left-12 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur border border-slate-200 rounded-full p-1.5 sm:p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity disabled:opacity-0"
                   aria-label="Previous filters"
                 >
                   <svg
@@ -442,7 +442,7 @@ export function PropertyListingSection() {
                     );
                     if (el) el.scrollBy({ left: 200, behavior: "smooth" });
                   }}
-                  className="absolute -right-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur border border-slate-200 rounded-full p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur border border-slate-200 rounded-full p-1.5 sm:p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   aria-label="Next filters"
                 >
                   <svg
@@ -479,7 +479,7 @@ export function PropertyListingSection() {
           </div>
         ) : isLoading ? (
           <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-h-[600px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 min-h-[400px] md:min-h-[600px]">
               {Array.from({ length: 8 }).map((_, index) => (
                 <PropertyCardSkeleton key={index} />
               ))}
@@ -495,7 +495,7 @@ export function PropertyListingSection() {
           </div>
         ) : (
           <div className="space-y-8 align-center">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 gap-y-6 md:gap-y-8">
               {visibleProperties.map((property, index) => {
                 const hasDiscount =
                   (property.original_price &&
@@ -532,7 +532,7 @@ export function PropertyListingSection() {
               <Button
                 asChild
                 variant="outline"
-                className="h-11 px-6 text-base "
+                className="h-10 md:h-11 px-4 md:px-6 text-sm md:text-base w-full sm:w-auto"
               >
                 <Link href="/properties">
                   ดูทรัพย์เพิ่มเติม

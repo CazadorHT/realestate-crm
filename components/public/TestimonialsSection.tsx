@@ -68,7 +68,7 @@ export function TestimonialsSection() {
   };
 
   return (
-    <section className="py-20 px-4 bg-white relative overflow-hidden z-0">
+    <section className="py-12 md:py-16 lg:py-20 px-4 md:px-6 lg:px-8  bg-white relative overflow-hidden z-0">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
@@ -80,7 +80,10 @@ export function TestimonialsSection() {
 
       <div className="max-w-7xl mx-auto">
         {/* SEO-Optimized Header */}
-        <div className="text-center space-y-4 mb-16" data-aos="fade-up">
+        <div
+          className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"
+          data-aos="fade-up"
+        >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/50">
             <Award className="w-4 h-4 text-amber-600" />
             <span className="text-sm font-bold text-amber-700">
@@ -106,27 +109,29 @@ export function TestimonialsSection() {
           </p>
 
           {/* Trust Stats */}
-          <div className="flex flex-wrap items-center justify-center gap-6 pt-4">
+          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 pt-4">
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
-                    className="h-5 w-5 fill-yellow-400 text-yellow-400"
+                    className="h-4 w-4 md:h-5 md:w-5 fill-yellow-400 text-yellow-400"
                   />
                 ))}
               </div>
-              <span className="text-lg font-bold text-slate-900">5.0/5.0</span>
+              <span className="text-base md:text-lg font-bold text-slate-900">
+                5.0/5.0
+              </span>
             </div>
-            <div className="h-6 w-px bg-slate-300" />
-            <span className="text-slate-600">
+            <div className="h-5 md:h-6 w-px bg-slate-300" />
+            <span className="text-sm md:text-base text-slate-600">
               จาก <span className="font-bold text-slate-900">1,250+</span> รีวิว
             </span>
           </div>
         </div>
 
         {/* Enhanced Testimonial Cards */}
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
           {TESTIMONIALS.map((t, idx) => (
             <div
               key={idx}
@@ -134,7 +139,7 @@ export function TestimonialsSection() {
               data-aos="fade-up"
               data-aos-delay={idx * 100}
             >
-              <div className="relative bg-white rounded-3xl p-8 shadow-lg border border-slate-200 hover:border-amber-200 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+              <div className="relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 shadow-lg border border-slate-200 hover:border-amber-200 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
                 {/* Quote Icon Background */}
                 <div className="absolute top-4 right-4 opacity-5">
                   <Quote className="h-24 w-24 text-amber-600" />
@@ -151,11 +156,11 @@ export function TestimonialsSection() {
                 )}
 
                 {/* Star Rating */}
-                <div className="flex items-center gap-1 mb-4 mt-6">
+                <div className="flex items-center gap-1 mb-3 md:mb-4 mt-4 md:mt-6">
                   {Array.from({ length: t.rating }).map((_, i) => (
                     <Star
                       key={i}
-                      className="h-5 w-5 fill-yellow-400 text-yellow-400 group-hover:scale-110 transition-transform"
+                      className="h-4 w-4 md:h-5 md:w-5 fill-yellow-400 text-yellow-400 group-hover:scale-110 transition-transform"
                       style={{ transitionDelay: `${i * 50}ms` }}
                     />
                   ))}
@@ -195,13 +200,13 @@ export function TestimonialsSection() {
 
         {/* Bottom Trust Signal */}
         <div
-          className="mt-16 text-center"
+          className="mt-10 md:mt-16 text-center"
           data-aos="fade-up"
           data-aos-delay="400"
         >
-          <div className="inline-flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-2xl">
-            <CheckCircle2 className="h-6 w-6 text-green-600" />
-            <span className="text-slate-700">
+          <div className="inline-flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl md:rounded-2xl">
+            <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
+            <span className="text-sm md:text-base text-slate-700">
               รีวิวทั้งหมด
               <span className="font-bold text-slate-900">
                 {" "}

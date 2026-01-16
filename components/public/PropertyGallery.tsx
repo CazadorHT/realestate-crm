@@ -95,11 +95,11 @@ export function PropertyGallery({
       <div className="relative group">
         {/* Floating Hot Badge Overlay */}
         {isHot && (
-          <div className="absolute -top-5 -left-5 z-30 pointer-events-none">
+          <div className="absolute -top-3 -left-3 md:-top-5 md:-left-5 z-30 pointer-events-none">
             <div className="relative">
               <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
-              <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-1 transition-all duration-300 scale-110 ">
-                <Sparkles className="h-6 w-6 fill-yellow-200" />
+              <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-1.5 md:p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-1 transition-all duration-300 scale-100 md:scale-110">
+                <Sparkles className="h-4 w-4 md:h-6 md:w-6 fill-yellow-200" />
               </div>
             </div>
           </div>
@@ -107,30 +107,30 @@ export function PropertyGallery({
 
         {/* Verified Badge - Icon only with hover text */}
         {verified && (
-          <div className="group/verified absolute top-4 left-6 z-50 flex items-center bg-blue-600/90 backdrop-blur-md text-white p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
+          <div className="group/verified absolute top-3 left-3 md:top-4 md:left-6 z-50 flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
             {/* Icon stays visible */}
-            <IoShieldCheckmark className="w-5 h-5" />
+            <IoShieldCheckmark className="w-4 h-4 md:w-5 md:h-5" />
 
             {/* Text expands from 0 width on hover */}
-            <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 group-hover/verified:max-w-[100px] group-hover/verified:opacity-100 group-hover/verified:ml-2">
+            <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 group-hover/verified:max-w-[100px] group-hover/verified:opacity-100 group-hover/verified:ml-2">
               VERIFIED
             </span>
           </div>
         )}
-        <div className="absolute bottom-6 left-6 z-50 flex gap-2">
+        <div className="absolute bottom-3 left-3 md:bottom-6 md:left-6 z-50 flex gap-2">
           {petFriendly && (
-            <Badge className="bg-white/90 backdrop-blur-sm text-orange-600 border border-orange-200 rounded-full px-3 py-1.5 text-xs font-bold gap-1.5 shadow-lg hover:bg-white/90 hover:text-orange-600 hover:border-orange-200">
-              <PawPrint className="w-5 h-5" />
+            <Badge className="bg-white/90 backdrop-blur-sm text-orange-600 border border-orange-200 rounded-full px-2 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-bold gap-1 md:gap-1.5 shadow-lg hover:bg-white/90 hover:text-orange-600 hover:border-orange-200">
+              <PawPrint className="w-3.5 h-3.5 md:w-5 md:h-5" />
               <span className="hidden min-[360px]:inline">Pet Friendly</span>
               <span className="inline min-[360px]:hidden">Pet</span>
             </Badge>
           )}
         </div>
 
-        {/* Mobile Carousel (Visible on Mobile Only) */}
-        <div className="md:hidden relative h-[300px] -mx-4 sm:mx-0">
-          <div className="absolute top-4 right-4 z-20">
-            <Badge className="bg-black/60 text-white hover:bg-black/70 border-none backdrop-blur-md">
+        {/* Mobile Carousel (Visible on Mobile and Small Tablets Only) */}
+        <div className="lg:hidden relative h-[250px] sm:h-[320px] md:h-[380px] -mx-4 sm:mx-0 rounded-none sm:rounded-2xl overflow-hidden">
+          <div className="absolute top-3 right-3 z-20">
+            <Badge className="bg-black/60 text-white hover:bg-black/70 border-none backdrop-blur-md text-[10px] px-2 py-1">
               <ImageIcon className="w-3 h-3 mr-1" />
               {sortedImages.length} รูป
             </Badge>
@@ -166,8 +166,8 @@ export function PropertyGallery({
           </div>
         </div>
 
-        {/* Desktop Grid (Hidden on Mobile) */}
-        <div className="hidden md:grid grid-cols-4 gap-2 h-[450px] rounded-3xl overflow-hidden relative">
+        {/* Desktop Grid (Hidden on Mobile and Small Tablets) */}
+        <div className="hidden lg:grid grid-cols-4 gap-1.5 md:gap-2 h-[350px] lg:h-[400px] xl:h-[450px] rounded-2xl lg:rounded-3xl overflow-hidden relative">
           {/* Main Image (Large Left) */}
           <div
             className="col-span-2 row-span-2 relative cursor-pointer bg-slate-200 group/main"
@@ -221,13 +221,13 @@ export function PropertyGallery({
           </div>
 
           {/* Desktop View All Button */}
-          <div className="absolute bottom-6 right-6">
+          <div className="absolute bottom-4 right-4 lg:bottom-6 lg:right-6">
             <Button
               variant="secondary"
-              className="bg-white/90 hover:bg-white text-slate-900 shadow-lg backdrop-blur-sm h-10 px-4 rounded-xl font-semibold"
+              className="bg-white/90 hover:bg-white text-slate-900 shadow-lg backdrop-blur-sm h-9 lg:h-10 px-3 lg:px-4 rounded-xl text-sm font-semibold"
               onClick={() => setOpen(true)}
             >
-              <ImageIcon className="w-4 h-4 mr-2" />
+              <ImageIcon className="w-4 h-4 mr-1.5 lg:mr-2" />
               ดูรูปทั้งหมด ({sortedImages.length})
             </Button>
           </div>
@@ -294,32 +294,32 @@ export function PropertyGallery({
                   e.stopPropagation();
                   handlePrev();
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50"
+                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50"
               >
-                <ChevronLeft className="h-6 w-6" />
+                <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleNext();
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50"
+                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50"
               >
-                <ChevronRight className="h-6 w-6" />
+                <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
               </button>
             </>
           )}
 
           {/* Thumbnails Strip (Bottom) - Compact */}
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 overflow-x-auto px-4 py-3 no-scrollbar z-50">
+          <div className="absolute bottom-2 md:bottom-4 left-0 right-0 flex justify-center gap-1.5 md:gap-2 overflow-x-auto px-2 md:px-4 py-2 md:py-3 no-scrollbar z-50">
             {sortedImages.map((img, idx) => (
               <button
                 key={img.id}
                 onClick={() => setCurrentIndex(idx)}
                 className={cn(
-                  "relative w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0",
+                  "relative w-12 h-12 md:w-20 md:h-20 rounded-md md:rounded-lg overflow-hidden border-2 transition-all flex-shrink-0",
                   currentIndex === idx
-                    ? "border-white scale-110 shadow-lg"
+                    ? "border-white scale-105 md:scale-110 shadow-lg"
                     : "border-white/30 opacity-60 hover:opacity-100 hover:border-white/60"
                 )}
               >
