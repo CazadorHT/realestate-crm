@@ -1,6 +1,13 @@
 ﻿"use client";
 //property listing section
-import { useEffect, useMemo, useState, useRef, type MouseEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  type MouseEvent,
+  Suspense,
+} from "react";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -83,6 +90,26 @@ function matchesFilter(item: ApiProperty, filter: FilterType) {
 
 // Inside component:
 export function PropertyListingSection() {
+  return (
+    <Suspense
+      fallback={
+        <section className="py-8 md:py-12 px-4 md:px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <PropertyCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        </section>
+      }
+    >
+      <PropertyListingContent />
+    </Suspense>
+  );
+}
+
+function PropertyListingContent() {
   const [filter, setFilter] = useState<FilterType>("ALL");
   const [properties, setProperties] = useState<ApiProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -85,6 +85,20 @@ const COMPARISON_ROWS = [
 ];
 
 export default function ComparePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50 pb-12 md:pb-20 pt-20 md:pt-24 flex items-center justify-center">
+          <div className="animate-pulse text-slate-400">กำลังโหลด...</div>
+        </div>
+      }
+    >
+      <ComparePageContent />
+    </Suspense>
+  );
+}
+
+function ComparePageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const ids = searchParams.get("ids") ?? "";
