@@ -5,7 +5,7 @@
  * - Resizes to max 1600px
  */
 
-import imageCompression from 'browser-image-compression';
+import imageCompression from "browser-image-compression";
 
 export interface CompressionOptions {
   maxSizeMB?: number; // Max file size in MB
@@ -26,7 +26,7 @@ const DEFAULT_OPTIONS: CompressionOptions = {
   maxSizeMB: 0.4, // 400KB target
   maxWidthOrHeight: 1600,
   useWebWorker: true,
-  fileType: 'image/webp',
+  fileType: "image/webp",
   quality: 0.85,
 };
 
@@ -45,12 +45,7 @@ export async function compressImage(
     const compressedFile = await imageCompression(file, mergedOptions);
 
     const compressedSize = compressedFile.size;
-    const compressionRatio = ((1 - compressedSize / originalSize) * 100);
-
-    console.log(`[Compression] ${file.name}:`);
-    console.log(`  Original: ${(originalSize / 1024).toFixed(2)} KB`);
-    console.log(`  Compressed: ${(compressedSize / 1024).toFixed(2)} KB`);
-    console.log(`  Ratio: ${compressionRatio.toFixed(1)}% reduction`);
+    const compressionRatio = (1 - compressedSize / originalSize) * 100;
 
     return {
       compressedFile,
@@ -59,7 +54,7 @@ export async function compressImage(
       compressionRatio,
     };
   } catch (error) {
-    console.error('[Compression] Error:', error);
+    console.error("[Compression] Error:", error);
     // Fallback: return original file
     return {
       compressedFile: file,

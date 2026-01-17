@@ -104,17 +104,6 @@ export function DocumentUpload({
                   type: "application/pdf",
                 });
                 finalSize = compressedSize;
-                console.log(
-                  `PDF compressed: ${file.name} - ${(
-                    originalSize / 1024
-                  ).toFixed(1)}KB → ${(compressedSize / 1024).toFixed(
-                    1
-                  )}KB (${compressionRatio.toFixed(1)}% saved)`
-                );
-              } else {
-                console.log(
-                  `PDF compression skipped (< 5% reduction): ${file.name}`
-                );
               }
             } catch (pdfError) {
               console.error(

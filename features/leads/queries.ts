@@ -157,7 +157,7 @@ export async function getLeadWithActivitiesQuery(
 
     return lead;
   } catch (error) {
-    console.log(error);
+    console.error("getLeadWithActivitiesQuery error:", error);
     return null;
   }
 }

@@ -131,7 +131,6 @@ export function PropertyImageUploader({
   useEffect(() => {
     // Don't sync if we're in the middle of uploading
     if (isUploadingRef.current) {
-      console.log("[PropertyImageUploader] Skipping sync - upload in progress");
       return;
     }
 
@@ -139,7 +138,6 @@ export function PropertyImageUploader({
     if (value.length === 0) {
       if (images.length > 0 && !images.some((img) => img.is_uploading)) {
         // Value was cleared and no uploads in progress, clear images too
-        console.log("[PropertyImageUploader] Clearing images - value is empty");
         setImages([]);
       }
       prevValueRef.current = value;
@@ -163,13 +161,6 @@ export function PropertyImageUploader({
       prevValueRef.current = valuePaths;
       return;
     }
-
-    console.log("[PropertyImageUploader] Syncing value to images:", {
-      valuePaths,
-      currentPaths,
-      hasChanged,
-      changedFromPrev,
-    });
 
     // Regenerate images from value with proper preview URLs
     const { getPublicImageUrl } = require("@/features/properties/image-utils");
@@ -211,10 +202,6 @@ export function PropertyImageUploader({
       (async () => {
         try {
           await cleanupUploadSessionAction(sessionId);
-          console.log(
-            "[PropertyImageUploader] cleaned TEMP upload session:",
-            sessionId
-          );
         } catch (error) {
           console.error(
             "[PropertyImageUploader] cleanup session error:",
@@ -229,23 +216,6 @@ export function PropertyImageUploader({
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (disabled) return;
-
-      console.log("Dropped files:", acceptedFiles);
-      console.log("Current images count:", images.length);
-      console.log("Max files allowed:", maxFiles);
-      console.log("Max file size (MB):", maxFileSizeMB);
-      console.log(
-        acceptedFiles.map((f) => ({
-          name: f.name,
-          sizeMB: (f.size / (1024 * 1024)).toFixed(2),
-          type: f.type,
-        }))
-      );
-      console.log(
-        acceptedFiles[0]?.name,
-        acceptedFiles[0]?.size,
-        acceptedFiles[0]?.type
-      );
       // Validate file count
       const remainingSlots = maxFiles - images.length;
       if (acceptedFiles.length > remainingSlots) {
@@ -299,12 +269,6 @@ export function PropertyImageUploader({
           );
 
           compressedFiles.push(normalized);
-
-          if (result.compressionRatio > 10) {
-            console.log(
-              `📦 ${file.name}: ${result.compressionRatio.toFixed(1)}% smaller`
-            );
-          }
         } catch (error) {
           console.error(`Compression failed for ${file.name}:`, error);
           // fallback: ใช้ไฟล์เดิม (ชื่อถูกแน่นอน)

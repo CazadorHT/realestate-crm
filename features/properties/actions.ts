@@ -101,8 +101,6 @@ async function verifyImagesExist(
   if (paths.length === 0) return [];
 
   // Primary: Check database for uploaded images
-  console.log("[verifyImagesExist] Checking paths:", paths);
-
   const { data: uploadRecords, error: dbError } = await supabase
     .from("property_image_uploads")
     .select("storage_path")
@@ -114,14 +112,10 @@ async function verifyImagesExist(
     return [];
   }
 
-
-
   const foundInDB = new Set(
     (uploadRecords || []).map((r: any) => r.storage_path)
   );
   const notFoundInDB = paths.filter((p) => !foundInDB.has(p));
-
-
 
   // If all paths found in DB, we're done
   if (notFoundInDB.length === 0) {
@@ -129,9 +123,6 @@ async function verifyImagesExist(
   }
 
   // Fallback: For paths not in DB (legacy uploads?), check storage
-  console.log(
-    `[verifyImagesExist] Fallback: Checking ${notFoundInDB.length} paths via storage listing...`
-  );
 
   const missing: string[] = [];
   let storageClient = supabase;
