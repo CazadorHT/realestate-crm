@@ -1,13 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +12,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  ShieldCheck,
   PawPrint,
 } from "lucide-react";
 import { IoShieldCheckmark } from "react-icons/io5";
@@ -53,15 +47,15 @@ export function PropertyGallery({
   const subImages = sortedImages.slice(1, 5); // Take next 4 for grid
   const remainingCount = Math.max(0, sortedImages.length - 5);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % sortedImages.length);
-  };
+  }, [sortedImages.length]);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     setCurrentIndex(
       (prev) => (prev - 1 + sortedImages.length) % sortedImages.length
     );
-  };
+  }, [sortedImages.length]);
 
   // Keyboard Navigation
   useEffect(() => {
@@ -79,7 +73,7 @@ export function PropertyGallery({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, sortedImages.length]);
+  }, [open, handleNext, handlePrev]);
 
   if (!mainImage) {
     return (
@@ -119,7 +113,7 @@ export function PropertyGallery({
         )}
         <div className="absolute bottom-3 left-3 md:bottom-6 md:left-6 z-50 flex gap-2">
           {petFriendly && (
-            <Badge className="bg-white/90 backdrop-blur-sm text-orange-600 border border-orange-200 rounded-full px-2 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-bold gap-1 md:gap-1.5 shadow-lg hover:bg-white/90 hover:text-orange-600 hover:border-orange-200">
+            <Badge className="bg-white backdrop-blur-sm text-orange-600 border border-orange-200 rounded-full px-2 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-bold gap-1 md:gap-1.5 shadow-lg hover:bg-white/90 hover:text-orange-600 hover:border-orange-200">
               <PawPrint className="w-3.5 h-3.5 md:w-5 md:h-5" />
               <span className="hidden min-[360px]:inline">Pet Friendly</span>
               <span className="inline min-[360px]:hidden">Pet</span>

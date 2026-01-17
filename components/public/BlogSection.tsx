@@ -8,6 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SectionBackground } from "./SectionBackground";
 
+// Author type matching database schema (Json field)
+type BlogAuthor = {
+  name?: string;
+  avatar_url?: string;
+} | null;
+
 type BlogPost = {
   id: string;
   title: string;
@@ -17,7 +23,7 @@ type BlogPost = {
   published_at: string;
   reading_time: string | null;
   category: string | null;
-  author: any;
+  author: BlogAuthor;
 };
 
 export function BlogSection() {

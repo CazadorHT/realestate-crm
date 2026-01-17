@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 // import Image from "next/image"; // If you have a LINE icon asset
-import { MessageCircle } from "lucide-react";
 
 export function FloatingSimpleChat() {
   const [isVisible, setIsVisible] = useState(false);

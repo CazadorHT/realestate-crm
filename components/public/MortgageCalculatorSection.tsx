@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Calculator, Banknote, Percent, CalendarClock } from "lucide-react";
+import { Calculator } from "lucide-react";
 import { Slider } from "../ui/slider";
 import { Button } from "@/components/ui/button";
 import { SectionBackground } from "./SectionBackground";

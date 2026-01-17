@@ -1,21 +1,12 @@
-import {
-  getAllDocuments,
-  getDocumentSignedUrl,
-} from "@/features/documents/actions";
+import { getAllDocuments } from "@/features/documents/actions";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   FileText,
-  Eye,
-  Download,
   Calendar,
   User,
-  Upload,
   File,
-  Image,
-  FileArchive,
   HardDrive,
   Search,
   Filter,
@@ -25,22 +16,37 @@ import { th } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { DocumentBtn } from "./DocumentBtn";
 import { UploadDocumentDialog } from "./_components/UploadDocumentDialog";
-import Link from "next/link";
+
+// Type for document with relations
+type DocumentWithRelations = {
+  id: string;
+  file_name: string;
+  size_bytes: number | null;
+  document_type: string | null;
+  storage_path: string;
+  created_at: string;
+  owner_type: string;
+  owner_id: string;
+  property?: { id: string; title: string } | null;
+  lead?: { id: string; full_name: string | null; email: string | null } | null;
+  deal?: { id: string; property: { title: string } | null } | null;
+  rental_contract?: { id: string; property: { title: string } | null } | null;
+};
 
 export default async function DocumentsPage() {
   const { role } = await requireAuthContext();
   assertStaff(role);
 
-  const documents = await getAllDocuments(200);
+  const documents = (await getAllDocuments(200)) as DocumentWithRelations[];
 
   // Calculate statistics
   const totalDocuments = documents?.length || 0;
   const totalSize =
-    documents?.reduce((sum, doc: any) => sum + (doc.size_bytes || 0), 0) || 0;
+    documents?.reduce((sum, doc) => sum + (doc.size_bytes || 0), 0) || 0;
 
   // Group by document type
   const typeGroups =
-    documents?.reduce((acc: any, doc: any) => {
+    documents?.reduce<Record<string, number>>((acc, doc) => {
       const type = doc.document_type || "OTHER";
       acc[type] = (acc[type] || 0) + 1;
       return acc;
@@ -48,7 +54,7 @@ export default async function DocumentsPage() {
 
   // Get most common types
   const topTypes = Object.entries(typeGroups)
-    .sort((a: any, b: any) => b[1] - a[1])
+    .sort((a, b) => (b[1] as number) - (a[1] as number))
     .slice(0, 5);
 
   // Format total size
@@ -146,7 +152,7 @@ export default async function DocumentsPage() {
               </h3>
             </div>
             <div className="flex flex-wrap gap-2">
-              {topTypes.map(([type, count]: any) => (
+              {topTypes.map(([type, count]) => (
                 <Badge
                   key={type}
                   variant="outline"
@@ -181,7 +187,7 @@ export default async function DocumentsPage() {
         {/* Documents Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {documents && documents.length > 0 ? (
-            documents.map((doc: any) => (
+            documents.map((doc) => (
               <Card
                 key={doc.id}
                 className="hover:shadow-lg hover:border-blue-200 transition-all"

@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import { MorphingLoader } from "@/components/ui/MorphingLoader";
 import { FilterBarSkeleton } from "./FilterBarSkeleton";

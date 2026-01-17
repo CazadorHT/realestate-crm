@@ -6,15 +6,10 @@ import {
   BedDouble,
   Bath,
   MapPin,
-  ArrowRight,
-  Scale,
-  Maximize,
   Expand,
   Car,
-  Pen,
   Clock,
   Heart,
-  ShieldCheck,
   PawPrint,
   CheckSquare,
   Square,
@@ -22,14 +17,13 @@ import {
 import { useEffect, useState, MouseEvent } from "react";
 import { toggleCompareId, readCompareIds } from "@/lib/compare-store";
 import { toggleFavoriteId, readFavoriteIds } from "@/lib/favorite-store";
-import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import {
   getTypeLabel,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, MessageCircle, X, Facebook, MessageSquare } from "lucide-react";
+import { Phone, X, Facebook, MessageSquare } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export function FloatingContactDial() {

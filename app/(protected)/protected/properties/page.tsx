@@ -6,12 +6,15 @@ import {
 import { PropertyFilters } from "@/components/properties/PropertyFilters";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Button } from "@/components/ui/button";
-import { Database } from "@/lib/database.types";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
-import { ImageLightbox } from "@/components/properties/ImageLightbox";
 import { getPropertiesDashboardStatsQuery } from "@/features/properties/queries";
 import { PropertiesDashboard } from "@/components/properties/PropertiesDashboard";
+import type { Database } from "@/lib/database.types";
+
+type PropertyStatus = Database["public"]["Enums"]["property_status"];
+type PropertyType = Database["public"]["Enums"]["property_type"];
+type ListingType = Database["public"]["Enums"]["listing_type"];
 
 export default async function PropertiesPage({
   searchParams,
@@ -71,13 +74,13 @@ export default async function PropertiesPage({
 
   // Filters
   if (status) {
-    query = query.eq("status", status as any);
+    query = query.eq("status", status as PropertyStatus);
   }
   if (type) {
-    query = query.eq("property_type", type as any);
+    query = query.eq("property_type", type as PropertyType);
   }
   if (listing) {
-    query = query.eq("listing_type", listing as any);
+    query = query.eq("listing_type", listing as ListingType);
   }
   if (bedrooms) {
     query = query.eq("bedrooms", Number(bedrooms));
@@ -128,9 +131,6 @@ export default async function PropertiesPage({
   }
 
   const propertyIds = properties.map((p) => p.id);
-  const assignedToIds = properties
-    .map((p) => p.assigned_to)
-    .filter(Boolean) as string[];
   const CLOSED_DEAL_STATUSES = ["SIGNED", "CLOSED_WIN"] as const;
   // 2. Fetch Associations in Parallel
   const soldOrRentedIds = properties
@@ -162,9 +162,14 @@ export default async function PropertiesPage({
         `
           )
           .in("property_id", soldOrRentedIds)
-          .in("status", CLOSED_DEAL_STATUSES as any)
+          .in("status", [...CLOSED_DEAL_STATUSES])
           .order("updated_at", { ascending: false })
-      : Promise.resolve({ data: [] as any[] }),
+      : Promise.resolve({
+          data: [] as Array<{
+            property_id: string;
+            lead: { full_name: string | null } | null;
+          }>,
+        }),
   ]);
   // 3. Map Data
   const coverMap = new Map(
@@ -187,9 +192,9 @@ export default async function PropertiesPage({
 
   const closedLeadNameMap = new Map<string, string>();
 
-  (closedLeadsResult.data as any[] | undefined)?.forEach((d) => {
-    const pid = d?.property_id as string | undefined;
-    const name = d?.lead?.full_name as string | undefined;
+  closedLeadsResult.data?.forEach((d) => {
+    const pid = d?.property_id;
+    const name = d?.lead?.full_name;
 
     if (!pid) return;
     if (!closedLeadNameMap.has(pid) && name) {

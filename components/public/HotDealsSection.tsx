@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, Flame, Timer, Sparkles, TrendingDown } from "lucide-react";
+import { ArrowRight, Flame, Sparkles, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PropertyCard, PropertyCardProps } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
@@ -30,7 +30,7 @@ export function HotDealsSection() {
         } else {
           setIsEmpty(true);
         }
-      } catch (error) {
+      } catch (_error) {
         setIsEmpty(true);
       } finally {
         setIsLoading(false);

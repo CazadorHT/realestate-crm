@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
 
 type Partner = {
   id: string;

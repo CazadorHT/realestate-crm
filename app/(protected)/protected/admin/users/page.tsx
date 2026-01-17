@@ -12,9 +12,9 @@ export default async function AdminUsersPage() {
 
   // Calculate statistics
   const totalUsers = users.length;
-  const admins = users.filter((u: any) => u.role === "ADMIN").length;
-  const agents = users.filter((u: any) => u.role === "AGENT").length;
-  const customers = users.filter((u: any) => u.role === "CUSTOMER").length;
+  const admins = users.filter((u) => u.role === "ADMIN").length;
+  const agents = users.filter((u) => u.role === "AGENT").length;
+  const customers = users.filter((u) => u.role === "USER").length;
 
   return (
     <div className="space-y-6">

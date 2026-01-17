@@ -3,24 +3,18 @@
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  toggleFavoriteId,
-  readFavoriteIds,
-  isFavorite,
-} from "@/lib/favorite-store";
+import { toggleFavoriteId, isFavorite } from "@/lib/favorite-store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface FavoriteButtonProps {
   propertyId: string;
-  variant?: "default" | "outline" | "ghost" | "icon";
   className?: string;
   showText?: boolean;
 }
 
 export function FavoriteButton({
   propertyId,
-  variant = "outline",
   className,
   showText = false,
 }: FavoriteButtonProps) {

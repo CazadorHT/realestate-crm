@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { RecommendedProperty } from "@/features/properties/recommended-actions";
 import { getRecommendedProperties } from "@/features/properties/recommended-actions";
-import AOS from "aos";
 import "aos/dist/aos.css";
 import { SectionBackground } from "./SectionBackground";
 
@@ -443,7 +442,7 @@ export function RecentlyViewedClient({
             }`}
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {items.map((item, index) => (
+            {items.map((item, _index) => (
               <Link
                 key={item.id}
                 href={

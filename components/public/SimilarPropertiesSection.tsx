@@ -2,10 +2,24 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { PropertyCard } from "./PropertyCard";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import type { Database } from "@/lib/database.types";
+
+type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
+type PropertyType = Database["public"]["Enums"]["property_type"];
+type PropertyImage = {
+  id: string;
+  image_url: string;
+  is_cover: boolean;
+  sort_order: number;
+};
+type PropertyWithImages = PropertyRow & {
+  property_images: PropertyImage[] | null;
+  property_features: unknown[] | null;
+};
 
 interface SimilarPropertiesSectionProps {
   currentPropertyId: string;
-  propertyType?: string;
+  propertyType?: PropertyType;
   province?: string;
   limit?: number;
 }
@@ -13,7 +27,7 @@ interface SimilarPropertiesSectionProps {
 export async function SimilarPropertiesSection({
   currentPropertyId,
   propertyType,
-  province,
+  province: _province,
   limit = 4,
 }: SimilarPropertiesSectionProps) {
   const supabase = createAdminClient();
@@ -21,7 +35,7 @@ export async function SimilarPropertiesSection({
   if (!propertyType) return null;
 
   // Build query
-  let query = supabase
+  const query = supabase
     .from("properties")
     .select(
       `
@@ -42,7 +56,7 @@ export async function SimilarPropertiesSection({
       )
     `
     )
-    .eq("property_type", propertyType as any)
+    .eq("property_type", propertyType)
     .neq("id", currentPropertyId)
     .eq("status", "ACTIVE") // Ensure only active properties
     .order("created_at", { ascending: false })
@@ -80,14 +94,20 @@ export async function SimilarPropertiesSection({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-        {properties.map((property: any) => {
+        {(properties as PropertyWithImages[]).map((property) => {
           const imageUrl =
-            property.property_images?.find((img: any) => img.is_cover)
-              ?.image_url || property.property_images?.[0]?.image_url;
+            property.property_images?.find((img) => img.is_cover)?.image_url ||
+            property.property_images?.[0]?.image_url;
 
           return (
             <div key={property.id} className="min-w-0 ">
-              <PropertyCard property={{ ...property, image_url: imageUrl }} />
+              <PropertyCard
+                property={{
+                  ...property,
+                  image_url: imageUrl,
+                  verified: property.verified ?? undefined,
+                }}
+              />
             </div>
           );
         })}

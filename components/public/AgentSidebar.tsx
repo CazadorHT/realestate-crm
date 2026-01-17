@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Phone, MessageCircle, BadgeCheck, ShieldCheck } from "lucide-react";
+import { Phone, BadgeCheck, ShieldCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ContactAgentDialog } from "@/components/public/ContactAgentDialog";
 import { FavoriteButton } from "@/components/public/FavoriteButton";

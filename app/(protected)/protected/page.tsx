@@ -26,6 +26,11 @@ import {
   getTodayAgenda,
   getFollowUpLeads,
   getRiskDeals,
+  type DashboardStats,
+  type RevenueChartData,
+  type FunnelData,
+  type PipelineData,
+  type TopAgent,
   type Notification,
   type AgendaEvent,
   type FollowUpLead,
@@ -50,11 +55,11 @@ export default async function DashboardPage() {
 
   // Fetch Dashboard Data only for staff
   let properties: PropertyRow[] = [];
-  let dashboardStats: any = null;
-  let revenueData: any = [];
-  let funnelData: any = [];
-  let pipelineData: any = [];
-  let topAgents: any = [];
+  let dashboardStats: DashboardStats | null = null;
+  let revenueData: RevenueChartData[] = [];
+  let funnelData: FunnelData[] = [];
+  let pipelineData: PipelineData[] = [];
+  let topAgents: TopAgent[] = [];
   let notifications: Notification[] = [];
   let agendaData: AgendaEvent[] = [];
   let followUpLeads: FollowUpLead[] = [];
@@ -124,7 +129,7 @@ export default async function DashboardPage() {
           />
 
           {/* 3. KPI CARDS */}
-          <StatsOverview initialStats={dashboardStats} />
+          {dashboardStats && <StatsOverview initialStats={dashboardStats} />}
 
           {/* 4. MAIN ANALYTICS & OPERATIONS GRID */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

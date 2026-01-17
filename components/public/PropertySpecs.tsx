@@ -19,7 +19,7 @@ export function PropertySpecs({
   sizeSqm,
   landSize,
   floor,
-  type,
+  type: _type,
 }: PropertySpecsProps) {
   const specs = [
     {

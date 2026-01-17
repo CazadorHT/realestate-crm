@@ -12,18 +12,11 @@ import {
 import { getDealsByLeadId } from "@/features/deals/queries";
 import { DealList } from "@/features/deals/components/DealList";
 import { DealFormDialog } from "@/features/deals/components/DealFormDialog";
-import { DocumentList } from "@/features/documents/components/DocumentList";
-import { DocumentUpload } from "@/features/documents/components/DocumentUpload";
 import { DocumentSection } from "@/features/documents/components/DocumentSection";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import type { LeadActivityFormValues } from "@/lib/types/leads";
+import type { Database } from "@/lib/database.types";
+
+type LeadActivity = Database["public"]["Tables"]["lead_activities"]["Row"];
 
 export default async function LeadDetailPage({
   params,
@@ -55,14 +48,14 @@ export default async function LeadDetailPage({
         .limit(50)
     );
 
-  async function onCreateActivity(values: any) {
+  async function onCreateActivity(values: LeadActivityFormValues) {
     "use server";
     const res = await createLeadActivityAction(id, values);
     if (!res.success) throw new Error(res.message);
   }
-  const propertyIds = (lead.lead_activities ?? [])
-    .map((a: any) => a.property_id)
-    .filter(Boolean) as string[];
+  const propertyIds = ((lead.lead_activities as LeadActivity[] | null) ?? [])
+    .map((a) => a.property_id)
+    .filter((id): id is string => id !== null);
 
   const propertiesById = await getPropertySummariesByIdsQuery(propertyIds);
 
@@ -122,7 +115,11 @@ export default async function LeadDetailPage({
           <h2 className="text-lg font-semibold flex items-center gap-2">
             Deals ({deals.length})
           </h2>
-          <DealFormDialog leadId={id} properties={properties || []} refreshOnSuccess />
+          <DealFormDialog
+            leadId={id}
+            properties={properties || []}
+            refreshOnSuccess
+          />
         </div>
         <DealList deals={deals} />
       </div>

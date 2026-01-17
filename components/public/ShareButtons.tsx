@@ -1,19 +1,19 @@
 "use client";
 
-import { Facebook, Link as LinkIcon, Instagram } from "lucide-react";
+import { Link as LinkIcon } from "lucide-react";
 import { FaFacebook } from "react-icons/fa";
 import { AiFillInstagram } from "react-icons/ai";
 import { useState } from "react";
 
 interface ShareButtonsProps {
   url: string;
-  title: string;
+  title?: string;
   variant?: "default" | "icon";
 }
 
 export function ShareButtons({
   url,
-  title,
+  title: _title,
   variant = "default",
 }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);

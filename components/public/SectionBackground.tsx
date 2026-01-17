@@ -8,13 +8,8 @@ import {
   Search,
   Building,
   Calculator,
-  Percent,
   TrendingUp,
   ShieldCheck,
-  Star,
-  Users,
-  FileText,
-  BadgeCheck,
 } from "lucide-react";
 
 type PatternType = "blobs" | "icons" | "grid" | "none";

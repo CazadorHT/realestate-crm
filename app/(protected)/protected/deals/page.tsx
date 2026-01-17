@@ -3,7 +3,6 @@ import { getPropertiesForSelect } from "@/features/properties/queries";
 import { DealsTable } from "@/features/deals/DealsTable";
 import { CreateDealButton } from "./_components/CreateDealButton";
 import { requireAuthContext } from "@/lib/authz";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Handshake,

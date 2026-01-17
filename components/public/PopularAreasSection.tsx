@@ -4,8 +4,6 @@ import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import AOS from "aos";
 import "aos/dist/aos.css";
 

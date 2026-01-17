@@ -64,7 +64,6 @@ const COMMERCIAL_TYPES = new Set(["COMMERCIAL_BUILDING"]);
 const WAREHOUSE_TYPES = new Set(["WAREHOUSE"]);
 
 const MAX_VISIBLE = 8;
-const LOADING_ITEMS = Array.from({ length: MAX_VISIBLE });
 
 function matchesFilter(item: ApiProperty, filter: FilterType) {
   if (filter === "ALL") return true;
@@ -166,7 +165,7 @@ export function PropertyListingSection() {
         const data = (await res.json()) as ApiProperty[];
         setProperties(Array.isArray(data) ? data : []);
       } catch (err) {
-        if ((err as any)?.name === "AbortError") return;
+        if (err instanceof Error && err.name === "AbortError") return;
         setError("ไม่สามารถโหลดข้อมูลทรัพย์ได้ในขณะนี้");
       } finally {
         setIsLoading(false);
@@ -395,7 +394,6 @@ export function PropertyListingSection() {
                         }}
                         role="tab"
                         aria-selected={active}
-                        aria-pressed={active}
                         className={`shrink-0 snap-start px-4 py-2 rounded-full border text-sm font-semibold transition-all pointer-events-auto ${
                           active
                             ? "bg-slate-900 text-white border-slate-900 shadow-md"

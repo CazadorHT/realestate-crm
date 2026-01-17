@@ -5,27 +5,20 @@ import { th } from "date-fns/locale";
 import {
   ChevronLeft,
   MapPin,
-  Phone,
-  Mail,
-  Calendar,
-  Trash2,
   Edit2,
-  FileText,
   BadgeCent,
   ArrowRight,
 } from "lucide-react";
 
 import { getDealById } from "@/features/deals/queries";
-import { deleteDealAction } from "@/features/deals/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DealFormDialog } from "@/features/deals/components/DealFormDialog";
-import { DocumentList } from "@/features/documents/components/DocumentList";
-import { DocumentUpload } from "@/features/documents/components/DocumentUpload";
 import { DocumentSection } from "@/features/documents/components/DocumentSection";
 import { RentalContractSection } from "@/features/rental-contracts/components/RentalContractSection";
 import { Separator } from "@/components/ui/separator";
+import { DeleteDealButton } from "@/features/deals/components/DeleteDealButton";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -135,19 +128,31 @@ export default async function DealDetailPage({ params }: PageProps) {
               <p className="text-sm font-medium text-muted-foreground mb-3">
                 Co-Agent ข้อมูลติดต่อ
               </p>
-              {deal.co_agent_name || deal.co_agent_contact || deal.co_agent_online ? (
+              {deal.co_agent_name ||
+              deal.co_agent_contact ||
+              deal.co_agent_online ? (
                 <div className="bg-muted/50 p-3 rounded-lg flex items-start gap-4 text-sm">
                   <div>
-                    {deal.co_agent_name && <p className="font-semibold">{deal.co_agent_name}</p>}
+                    {deal.co_agent_name && (
+                      <p className="font-semibold">{deal.co_agent_name}</p>
+                    )}
                     {deal.co_agent_contact && (
-                      <p className="text-muted-foreground">เบอร์: {deal.co_agent_contact}</p>
+                      <p className="text-muted-foreground">
+                        เบอร์: {deal.co_agent_contact}
+                      </p>
                     )}
                     {deal.co_agent_online && (
-                      <p className="text-muted-foreground">ช่องทางออนไลน์: {deal.co_agent_online}</p>
+                      <p className="text-muted-foreground">
+                        ช่องทางออนไลน์: {deal.co_agent_online}
+                      </p>
                     )}
-                    {!deal.co_agent_contact && !deal.co_agent_online && !deal.co_agent_name && (
-                      <p className="text-muted-foreground">ไม่มีข้อมูลติดต่อ</p>
-                    )}
+                    {!deal.co_agent_contact &&
+                      !deal.co_agent_online &&
+                      !deal.co_agent_name && (
+                        <p className="text-muted-foreground">
+                          ไม่มีข้อมูลติดต่อ
+                        </p>
+                      )}
                   </div>
                 </div>
               ) : (
@@ -220,7 +225,11 @@ export default async function DealDetailPage({ params }: PageProps) {
               <h3 className="text-lg font-semibold">สัญญาเช่า</h3>
             </div>
             <div className="mt-3">
-              <RentalContractSection dealId={deal.id} dealType={deal.deal_type} defaultRent={deal.property?.rental_price ?? null} />
+              <RentalContractSection
+                dealId={deal.id}
+                dealType={deal.deal_type}
+                defaultRent={deal.property?.rental_price ?? null}
+              />
             </div>
           </div>
         </div>
@@ -263,17 +272,3 @@ function StatusBadge({ status }: { status: string }) {
     </Badge>
   );
 }
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-
-import { DeleteDealButton } from "@/features/deals/components/DeleteDealButton";

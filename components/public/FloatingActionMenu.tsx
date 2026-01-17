@@ -1,23 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  ArrowUp,
-  MoreHorizontal,
-  Phone,
-  MessageCircle,
-  Facebook,
-  User,
-  X,
-  Headset,
-} from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { createClient } from "@/lib/supabase/client";
 
 // Define Agent Type
@@ -32,58 +17,9 @@ type AgentProfile = {
   wechat_id: string | null;
 };
 
-function PhoneRevealButton({ phone }: { phone: string | null }) {
-  const [show, setShow] = useState(false);
-
-  if (!phone) {
-    return (
-      <div className="flex items-center gap-2 text-sm font-medium text-slate-400 cursor-not-allowed">
-        <div className="p-1.5 rounded-full bg-slate-100  text-green-600">
-          <Phone className="h-4 w-4" />
-        </div>
-        ไม่ระบุเบอร์โทร
-      </div>
-    );
-  }
-
-  // Mask logic: take first 2 digits, mask the rest
-  // ex: 0812345678 -> 08x-xxx-xxxx
-  const maskedPhone =
-    phone.length > 3 ? `${phone.substring(0, 3)}x-xxx-xxxx` : "กดเพื่อดูเบอร์";
-
-  if (show) {
-    return (
-      <a
-        href={`tel:${phone}`}
-        className="flex items-center gap-2 text-sm font-medium bg-green-50  rounded-full p-1 text-green-600 hover:text-green-700 transition-colors animate-in fade-in"
-      >
-        <div className="p-1.5 rounded-full   text-green-600">
-          <Phone className="h-4 w-4 " />
-        </div>
-
-        {phone}
-      </a>
-    );
-  }
-
-  return (
-    <button
-      onClick={() => setShow(true)}
-      className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-green-600 transition-colors"
-      title="คลิกเพื่อดูเบอร์โทร"
-    >
-      <div className="p-1.5 rounded-full bg-slate-100  group-hover:bg-green-50 text-green-600">
-        <Phone className="h-4 w-4" />
-      </div>
-      {maskedPhone}
-    </button>
-  );
-}
-
 export function FloatingActionMenu() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [agents, setAgents] = useState<AgentProfile[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
 
   // Scroll visibility logic
@@ -134,8 +70,6 @@ export function FloatingActionMenu() {
         }
       } catch (err) {
         console.error("Failed to load agents", err);
-      } finally {
-        setLoading(false);
       }
     }
 
