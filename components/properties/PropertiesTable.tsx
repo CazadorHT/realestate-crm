@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -36,6 +37,11 @@ import { Eye, Edit3 } from "lucide-react";
 import { DuplicatePropertyButton } from "./DuplicatePropertyButton";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpDown, ArrowUp, ArrowDown, Download } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useTableSelection } from "@/hooks/useTableSelection";
+import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
+import { bulkDeletePropertiesAction } from "@/features/properties/bulk-actions";
+import { toast } from "sonner";
 
 export interface PropertyTableData {
   id: string;
@@ -137,9 +143,32 @@ function SortableHead({
 }
 
 export function PropertiesTable({ data }: PropertiesTableProps) {
+  const allIds = useMemo(() => data.map((p) => p.id), [data]);
+  const {
+    selectedIds,
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    isSelected,
+    isAllSelected,
+    isPartialSelected,
+    selectedCount,
+  } = useTableSelection(allIds);
+
   if (data.length === 0) {
     return <PropertiesEmptyState />;
   }
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    const result = await bulkDeletePropertiesAction(ids);
+    if (result.success) {
+      toast.success(result.message);
+      clearSelection();
+    } else {
+      toast.error(result.message || "เกิดข้อผิดพลาด");
+    }
+  };
 
   const handleExport = () => {
     // CSV Export Logic
@@ -187,6 +216,14 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
 
   return (
     <div className="space-y-4">
+      {/* Bulk Action Toolbar */}
+      <BulkActionToolbar
+        selectedCount={selectedCount}
+        onClear={clearSelection}
+        onDelete={handleBulkDelete}
+        entityName="ทรัพย์"
+      />
+
       <div className="flex justify-end">
         <Button
           variant="outline"
@@ -203,6 +240,18 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
           <TableHeader>
             {/* Rest of the table header content ... */}
             <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={() => toggleSelectAll(allIds)}
+                  aria-label="เลือกทั้งหมด"
+                  className={
+                    isPartialSelected
+                      ? "data-[state=checked]:bg-primary/50"
+                      : ""
+                  }
+                />
+              </TableHead>
               <TableHead className="w-[300px]">
                 <SortableHead label="ทรัพย์สิน" sortKey="created_at" />
               </TableHead>
@@ -232,8 +281,18 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
             {data.map((property) => (
               <TableRow
                 key={property.id}
-                className="group hover:bg-slate-50/50"
+                className={`group hover:bg-slate-50/50 ${
+                  isSelected(property.id) ? "bg-blue-50/50" : ""
+                }`}
               >
+                {/* CHECKBOX */}
+                <TableCell className="w-[50px]">
+                  <Checkbox
+                    checked={isSelected(property.id)}
+                    onCheckedChange={() => toggleSelect(property.id)}
+                    aria-label={`เลือก ${property.title}`}
+                  />
+                </TableCell>
                 {/* PROPERTY NAME & COVER */}
                 <TableCell>
                   <div className="flex items-start gap-4">

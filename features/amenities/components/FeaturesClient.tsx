@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,9 @@ import {
   type FeatureRow,
 } from "../actions";
 import { ICON_MAP, DEFAULT_ICON } from "../icons";
+import { useTableSelection } from "@/hooks/useTableSelection";
+import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
+import { bulkDeleteFeaturesAction } from "../bulk-actions";
 
 interface FeaturesClientProps {
   features: FeatureRow[];
@@ -160,11 +164,38 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
         f.category.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Pagination Logic
   const totalPages = Math.ceil(filteredFeatures.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentFeatures = filteredFeatures.slice(startIndex, endIndex);
+
+  // Bulk selection
+  const allIds = useMemo(
+    () => currentFeatures.map((f) => f.id),
+    [currentFeatures]
+  );
+  const {
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    isSelected,
+    isAllSelected,
+    isPartialSelected,
+    selectedCount,
+    selectedIds,
+  } = useTableSelection(allIds);
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    const result = await bulkDeleteFeaturesAction(ids);
+    if (result.success) {
+      toast.success(result.message);
+      clearSelection();
+      router.refresh();
+    } else {
+      toast.error(result.message || "เกิดข้อผิดพลาด");
+    }
+  };
 
   const prevPage = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
@@ -232,6 +263,14 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
         </Card>
       </div>
 
+      {/* Bulk Action Toolbar */}
+      <BulkActionToolbar
+        selectedCount={selectedCount}
+        onClear={clearSelection}
+        onDelete={handleBulkDelete}
+        entityName="รายการ"
+      />
+
       {/* Filters & Table */}
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
         <div className="p-4 border-b bg-slate-50/50 flex justify-between items-center">
@@ -252,6 +291,18 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50/50">
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={() => toggleSelectAll(allIds)}
+                  aria-label="เลือกทั้งหมด"
+                  className={
+                    isPartialSelected
+                      ? "data-[state=checked]:bg-primary/50"
+                      : ""
+                  }
+                />
+              </TableHead>
               <TableHead className="w-[80px]">ไอคอน</TableHead>
               <TableHead>ชื่อ</TableHead>
               <TableHead>หมวดหมู่</TableHead>
@@ -262,7 +313,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
             {currentFeatures.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={5}
                   className="h-32 text-center text-slate-500"
                 >
                   <div className="flex flex-col items-center gap-2">
@@ -277,8 +328,17 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
                 return (
                   <TableRow
                     key={feature.id}
-                    className="hover:bg-slate-50 transition-colors"
+                    className={`hover:bg-slate-50 transition-colors ${
+                      isSelected(feature.id) ? "bg-blue-50/50" : ""
+                    }`}
                   >
+                    <TableCell className="w-[50px]">
+                      <Checkbox
+                        checked={isSelected(feature.id)}
+                        onCheckedChange={() => toggleSelect(feature.id)}
+                        aria-label={`เลือก ${feature.name}`}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className="p-2 bg-slate-100 rounded-lg w-fit text-slate-600">
                         <Icon className="w-5 h-5" />

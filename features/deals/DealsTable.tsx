@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Eye,
   Edit,
@@ -30,6 +31,10 @@ import { PropertyCombobox } from "@/components/PropertyCombobox";
 import { LeadCombobox } from "./components/LeadCombobox";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
+import { useTableSelection } from "@/hooks/useTableSelection";
+import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
+import { bulkDeleteDealsAction } from "@/features/deals/bulk-actions";
+import { toast } from "sonner";
 
 interface DealsTableProps {
   initialData?: DealWithProperty[];
@@ -61,6 +66,31 @@ export function DealsTable({
   );
   // reloadKey increments to force a refresh of the data effect (useful after create/edit/delete)
   const [reloadKey, setReloadKey] = useState(0);
+
+  // Bulk selection
+  const allIds = useMemo(() => data.map((d) => d.id), [data]);
+  const {
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    isSelected,
+    isAllSelected,
+    isPartialSelected,
+    selectedCount,
+    selectedIds,
+  } = useTableSelection(allIds);
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    const result = await bulkDeleteDealsAction(ids);
+    if (result.success) {
+      toast.success(result.message);
+      clearSelection();
+      setReloadKey((k) => k + 1);
+    } else {
+      toast.error(result.message || "เกิดข้อผิดพลาด");
+    }
+  };
 
   // debounce search
   useEffect(() => {
@@ -159,6 +189,14 @@ export function DealsTable({
 
   return (
     <div className="space-y-6">
+      {/* Bulk Action Toolbar */}
+      <BulkActionToolbar
+        selectedCount={selectedCount}
+        onClear={clearSelection}
+        onDelete={handleBulkDelete}
+        entityName="ดีล"
+      />
+
       {/* Filters Section */}
       <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
         <div className="flex items-center gap-2 mb-3">
@@ -267,6 +305,18 @@ export function DealsTable({
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={() => toggleSelectAll(allIds)}
+                  aria-label="เลือกทั้งหมด"
+                  className={
+                    isPartialSelected
+                      ? "data-[state=checked]:bg-primary/50"
+                      : ""
+                  }
+                />
+              </TableHead>
               <TableHead className="font-semibold">ทรัพย์</TableHead>
               <TableHead className="font-semibold">ลีด</TableHead>
               <TableHead className="font-semibold">ราคา</TableHead>
@@ -280,7 +330,7 @@ export function DealsTable({
           <TableBody>
             {data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-44 text-center">
+                <TableCell colSpan={7} className="h-44 text-center">
                   <div className="flex flex-col items-center justify-center gap-3">
                     <Handshake className="h-12 w-12 text-slate-300" />
                     <div>
@@ -298,7 +348,19 @@ export function DealsTable({
               </TableRow>
             ) : (
               data.map((deal) => (
-                <TableRow key={deal.id} className="hover:bg-slate-50/50">
+                <TableRow
+                  key={deal.id}
+                  className={`hover:bg-slate-50/50 ${
+                    isSelected(deal.id) ? "bg-blue-50/50" : ""
+                  }`}
+                >
+                  <TableCell className="w-[50px]">
+                    <Checkbox
+                      checked={isSelected(deal.id)}
+                      onCheckedChange={() => toggleSelect(deal.id)}
+                      aria-label={`เลือก ${deal.property?.title || deal.id}`}
+                    />
+                  </TableCell>
                   <TableCell>
                     <Link
                       href={`/protected/properties/${deal.property_id}`}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Table,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,9 @@ import {
   deletePopularAreaAction,
   updatePopularAreaAction,
 } from "@/features/admin/popular-areas-actions";
+import { useTableSelection } from "@/hooks/useTableSelection";
+import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
+import { bulkDeletePopularAreasAction } from "@/features/admin/popular-areas-bulk-actions";
 
 type PopularArea = {
   id: string;
@@ -53,6 +57,34 @@ export function PopularAreasTable({
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
   const displayData = data.slice(start, end);
+
+  // Bulk selection
+  const allIds = useMemo(
+    () => displayData.map((item) => item.id),
+    [displayData]
+  );
+  const {
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    isSelected,
+    isAllSelected,
+    isPartialSelected,
+    selectedCount,
+    selectedIds,
+  } = useTableSelection(allIds);
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    const result = await bulkDeletePopularAreasAction(ids);
+    if (result.success) {
+      toast.success(result.message);
+      clearSelection();
+      setData((prev) => prev.filter((p) => !ids.includes(p.id)));
+    } else {
+      toast.error(result.message || "เกิดข้อผิดพลาด");
+    }
+  };
 
   // --- Helpers ---
   const handleOpenDialog = (item?: PopularArea) => {
@@ -108,6 +140,14 @@ export function PopularAreasTable({
 
   return (
     <div className="space-y-4">
+      {/* Bulk Action Toolbar */}
+      <BulkActionToolbar
+        selectedCount={selectedCount}
+        onClear={clearSelection}
+        onDelete={handleBulkDelete}
+        entityName="ทำเล"
+      />
+
       <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <div>
           <h2 className="text-lg font-bold flex items-center gap-2">
@@ -119,7 +159,7 @@ export function PopularAreasTable({
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-           <DialogTrigger asChild>
+          <DialogTrigger asChild>
             <Button onClick={() => handleOpenDialog()}>
               <Plus className="mr-2 h-4 w-4" /> เพิ่มทำเลใหม่
             </Button>
@@ -161,6 +201,18 @@ export function PopularAreasTable({
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={() => toggleSelectAll(allIds)}
+                  aria-label="เลือกทั้งหมด"
+                  className={
+                    isPartialSelected
+                      ? "data-[state=checked]:bg-primary/50"
+                      : ""
+                  }
+                />
+              </TableHead>
               <TableHead className="w-[100px]">No.</TableHead>
               <TableHead>Popular Area Name</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -170,7 +222,7 @@ export function PopularAreasTable({
             {data.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={3}
+                  colSpan={4}
                   className="text-center h-24 text-slate-500"
                 >
                   ยังไม่มีข้อมูล
@@ -178,7 +230,17 @@ export function PopularAreasTable({
               </TableRow>
             ) : (
               displayData.map((item, index) => (
-                <TableRow key={item.id}>
+                <TableRow
+                  key={item.id}
+                  className={isSelected(item.id) ? "bg-blue-50/50" : ""}
+                >
+                  <TableCell className="w-[50px]">
+                    <Checkbox
+                      checked={isSelected(item.id)}
+                      onCheckedChange={() => toggleSelect(item.id)}
+                      aria-label={`เลือก ${item.name}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono text-slate-500">
                     {start + index + 1}
                   </TableCell>

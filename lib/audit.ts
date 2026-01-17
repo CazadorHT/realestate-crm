@@ -7,13 +7,16 @@ export type AuditAction =
   | "property.update"
   | "property.status.update"
   | "property.delete"
+  | "property.bulk_delete"
   | "lead.create"
   | "lead.update"
   | "lead.delete"
+  | "lead.bulk_delete"
   | "lead_activity.create"
   | "owner.create"
   | "owner.update"
   | "owner.delete"
+  | "owner.bulk_delete"
   | "profile.update"
   | "profile.avatar.upload"
   | "user.delete"
@@ -21,9 +24,17 @@ export type AuditAction =
   | "deal.create"
   | "deal.update"
   | "deal.delete"
+  | "deal.bulk_delete"
   | "rental_contract.create"
   | "rental_contract.update"
-  | "rental_contract.delete";
+  | "rental_contract.delete"
+  | "rental_contract.bulk_delete"
+  | "feature.bulk_delete"
+  | "blog.bulk_delete"
+  | "faq.bulk_delete"
+  | "partner.bulk_delete"
+  | "popular_area.bulk_delete"
+  | "document.bulk_delete";
 
 type AuditInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];
 

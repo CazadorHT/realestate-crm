@@ -4,18 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   FileText,
-  Calendar,
-  User,
   File,
   HardDrive,
   Search,
   Filter,
+  Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import { Badge } from "@/components/ui/badge";
-import { DocumentBtn } from "./DocumentBtn";
 import { UploadDocumentDialog } from "./_components/UploadDocumentDialog";
+import { DocumentsGrid } from "@/features/documents/components/DocumentsGrid";
+import { Badge } from "@/components/ui/badge";
 
 // Type for document with relations
 type DocumentWithRelations = {
@@ -185,110 +184,7 @@ export default async function DocumentsPage() {
         </div>
 
         {/* Documents Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {documents && documents.length > 0 ? (
-            documents.map((doc) => (
-              <Card
-                key={doc.id}
-                className="hover:shadow-lg hover:border-blue-200 transition-all"
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between gap-3 mb-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-12 w-12 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0 border border-blue-200">
-                        <FileText className="h-6 w-6" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div
-                          className="font-semibold truncate text-slate-900"
-                          title={doc.file_name}
-                        >
-                          {doc.file_name}
-                        </div>
-                        <div className="text-sm text-slate-500 font-medium">
-                          {formatSize(doc.size_bytes || 0)}
-                        </div>
-                      </div>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className="text-xs shrink-0 bg-blue-50 text-blue-700 border-blue-200"
-                    >
-                      {doc.document_type}
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-2 text-sm text-slate-600 border-t border-slate-100 pt-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-slate-400" />
-                      {format(new Date(doc.created_at), "d MMM yyyy HH:mm", {
-                        locale: th,
-                      })}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-slate-400" />
-                      <span className="text-xs">
-                        {doc.owner_type === "PROPERTY" &&
-                        doc.property?.title ? (
-                          <>
-                            ทรัพย์:{" "}
-                            <span className="font-medium">
-                              {doc.property.title}
-                            </span>
-                          </>
-                        ) : doc.owner_type === "LEAD" && doc.lead ? (
-                          <>
-                            ลีด:{" "}
-                            <span className="font-medium">
-                              {doc.lead.full_name || doc.lead.email}
-                            </span>
-                          </>
-                        ) : doc.owner_type === "DEAL" &&
-                          doc.deal?.property?.title ? (
-                          <>
-                            ดีล:{" "}
-                            <span className="font-medium">
-                              {doc.deal.property.title}
-                            </span>
-                          </>
-                        ) : doc.owner_type === "RENTAL_CONTRACT" &&
-                          doc.rental_contract?.property?.title ? (
-                          <>
-                            สัญญา:{" "}
-                            <span className="font-medium">
-                              {doc.rental_contract.property.title}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            {doc.owner_type}:{" "}
-                            <span className="font-mono text-xs">
-                              {doc.owner_id.slice(0, 12)}...
-                            </span>
-                          </>
-                        )}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-slate-100">
-                    <DocumentBtn storagePath={doc.storage_path} />
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <div className="col-span-full py-20 text-center border-2 border-dashed rounded-xl bg-slate-50/50">
-              <FileText className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500 font-semibold text-lg">
-                ไม่พบเอกสารในระบบ
-              </p>
-              <p className="text-slate-400 text-sm mt-2">
-                อัพโหลดเอกสารแรกของคุณเพื่อเริ่มต้น
-              </p>
-            </div>
-          )}
-        </div>
+        <DocumentsGrid documents={documents || []} />
       </div>
 
       {/* Footer Stats */}
