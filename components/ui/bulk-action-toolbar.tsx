@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Trash2, X, Loader2 } from "lucide-react";
+import { Trash2, X, Loader2, Download } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,11 +14,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface BulkActionToolbarProps {
   selectedCount: number;
   onClear: () => void;
   onDelete: () => Promise<void>;
+  onExport?: () => Promise<{
+    success: boolean;
+    data?: string;
+    filename?: string;
+    message?: string;
+  }>;
   entityName?: string; // เช่น "ทรัพย์", "ลีด", "ดีล"
   className?: string;
 }
@@ -27,11 +34,13 @@ export function BulkActionToolbar({
   selectedCount,
   onClear,
   onDelete,
+  onExport,
   entityName = "รายการ",
   className,
 }: BulkActionToolbarProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   if (selectedCount === 0) return null;
 
@@ -42,6 +51,43 @@ export function BulkActionToolbar({
       setShowDeleteDialog(false);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleExport = async () => {
+    if (!onExport) return;
+    setIsExporting(true);
+    try {
+      const result = await onExport();
+      if (result.success && result.data && result.filename) {
+        // Convert base64 to blob and download
+        const byteCharacters = atob(result.data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = result.filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast.success(`Export สำเร็จ ${selectedCount} ${entityName}`);
+      } else {
+        toast.error(result.message || "Export ไม่สำเร็จ");
+      }
+    } catch (error) {
+      toast.error("เกิดข้อผิดพลาดในการ export");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -60,6 +106,22 @@ export function BulkActionToolbar({
         </div>
 
         <div className="flex items-center gap-2">
+          {onExport && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={isExporting}
+              className="h-8 text-xs bg-white hover:bg-green-50 border-green-200 text-green-700"
+            >
+              {isExporting ? (
+                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5 mr-1" />
+              )}
+              Export Excel
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"

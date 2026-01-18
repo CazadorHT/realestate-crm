@@ -18,6 +18,7 @@ import type { Owner } from "@/features/owners/types";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteOwnersAction } from "@/features/owners/bulk-actions";
+import { exportOwnersAction } from "@/features/owners/export-action";
 import { toast } from "sonner";
 
 interface OwnersTableProps {
@@ -66,6 +67,7 @@ export function OwnersTable({ owners }: OwnersTableProps) {
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
+        onExport={() => exportOwnersAction(Array.from(selectedIds))}
         entityName="เจ้าของ"
       />
 

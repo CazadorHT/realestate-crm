@@ -41,6 +41,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeletePropertiesAction } from "@/features/properties/bulk-actions";
+import { exportPropertiesAction } from "@/features/properties/export-action";
 import { toast } from "sonner";
 
 export interface PropertyTableData {
@@ -170,49 +171,6 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
     }
   };
 
-  const handleExport = () => {
-    // CSV Export Logic
-    const headers = [
-      "ID",
-      "Title",
-      "Type",
-      "Listing Type",
-      "Price",
-      "Rent",
-      "Status",
-      "Leads",
-      "Created At",
-    ];
-
-    const rows = data.map((p) => [
-      p.id,
-      p.title.replace(/"/g, '""'), // escape quotes
-      p.property_type,
-      p.listing_type,
-      p.price || 0,
-      p.rental_price || 0,
-      p.status,
-      p.leads_count,
-      p.created_at,
-    ]);
-
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((r) => r.map((c) => `"${c}"`).join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `properties_export_${new Date().toISOString().slice(0, 10)}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   return (
     <div className="space-y-4">
@@ -221,19 +179,11 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
+        onExport={() => exportPropertiesAction(Array.from(selectedIds))}
         entityName="ทรัพย์"
       />
 
-      <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExport}
-          className="gap-2"
-        >
-          <Download className="h-4 w-4" /> ส่งออก CSV
-        </Button>
-      </div>
+
 
       <div className="rounded-md border shadow-sm bg-card">
         <Table>

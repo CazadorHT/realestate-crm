@@ -34,6 +34,7 @@ import { th } from "date-fns/locale";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteDealsAction } from "@/features/deals/bulk-actions";
+import { exportDealsAction } from "@/features/deals/export-action";
 import { toast } from "sonner";
 
 interface DealsTableProps {
@@ -194,6 +195,7 @@ export function DealsTable({
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
+        onExport={() => exportDealsAction(Array.from(selectedIds))}
         entityName="ดีล"
       />
 

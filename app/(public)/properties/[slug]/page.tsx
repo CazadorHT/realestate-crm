@@ -14,6 +14,7 @@ import {
   Clock,
   ShieldCheck,
   PawPrint,
+  CalendarDays,
 } from "lucide-react";
 import { ShareButtons } from "@/components/public/ShareButtons";
 import { SimilarPropertiesSection } from "@/components/public/SimilarPropertiesSection";
@@ -265,12 +266,12 @@ export default async function PublicPropertyDetailPage(props: {
                               )}
                               <span className="text-xl md:text-2xl font-bold text-rose-600">
                                 {formatPrice(price)}
+                                {isRent && (
+                                  <span className="text-sm font-normal text-slate-500">
+                                    /เดือน
+                                  </span>
+                                )}
                               </span>
-                              {isRent && (
-                                <span className="text-sm text-slate-500">
-                                  /เดือน
-                                </span>
-                              )}
                             </div>
                           </div>
                         );
@@ -286,12 +287,12 @@ export default async function PublicPropertyDetailPage(props: {
                           )}
                           <span className="text-xl md:text-2xl font-bold text-slate-900">
                             {formatPrice(displayPrice)}
+                            {isRent && (
+                              <span className="text-sm font-normal text-slate-500">
+                                /เดือน
+                              </span>
+                            )}
                           </span>
-                          {isRent && (
-                            <span className="text-sm text-slate-500">
-                              /เดือน
-                            </span>
-                          )}
                         </div>
                       );
                     };
@@ -332,6 +333,28 @@ export default async function PublicPropertyDetailPage(props: {
                       false
                     );
                   })()}
+
+                  {/* Contract Duration - Show for RENT and SALE_AND_RENT */}
+                  {(data.listing_type === "RENT" ||
+                    data.listing_type === "SALE_AND_RENT") &&
+                    data.min_contract_months && (
+                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200">
+                        <CalendarDays className="w-4 h-4 text-blue-500" />
+                        <span className="text-sm text-slate-600">
+                          อายุสัญญาขั้นต่ำ{" "}
+                          <strong className="text-slate-900">
+                            {data.min_contract_months} เดือน
+                            {data.min_contract_months >= 12 &&
+                              data.min_contract_months % 12 === 0 && (
+                                <span className="text-slate-500 font-normal">
+                                  {" "}
+                                  หรือ {data.min_contract_months / 12} ปี
+                                </span>
+                              )}
+                          </strong>
+                        </span>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>

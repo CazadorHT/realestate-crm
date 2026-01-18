@@ -21,6 +21,7 @@ import {
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteLeadsAction } from "@/features/leads/bulk-actions";
+import { exportLeadsAction } from "@/features/leads/export-action";
 import { toast } from "sonner";
 
 export function LeadsTable({ leads }: { leads: LeadRow[] }) {
@@ -53,6 +54,7 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
+        onExport={() => exportLeadsAction(Array.from(selectedIds))}
         entityName="ลีด"
       />
 
