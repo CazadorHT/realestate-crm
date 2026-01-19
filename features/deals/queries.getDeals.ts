@@ -1,10 +1,14 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { differenceInMonths } from "date-fns";
 import type { DealWithProperty } from "./types";
+
+import { Deal, DealStatus } from "./types";
 
 type ListArgs = {
   q?: string;
   property_id?: string;
   lead_id?: string;
+  status?: DealStatus;
   page?: number;
   pageSize?: number;
   order?: "created_at" | "transaction_date";
@@ -13,14 +17,15 @@ type ListArgs = {
 
 // Helper interface for the joined result structure
 // Helper interface for the joined result structure
-import { Deal } from "./types";
 
 type RawDealWithJoin = Deal & {
   property: {
     id: string;
     title: string;
     price: number | null;
+    original_price: number | null;
     rental_price: number | null;
+    original_rental_price: number | null;
     property_images: {
       id: string;
       property_id: string;
@@ -40,6 +45,7 @@ export async function getDeals({
   q = "",
   property_id,
   lead_id,
+  status,
   page = 1,
   pageSize = 20,
   order = "created_at",
@@ -57,7 +63,7 @@ export async function getDeals({
     .select(
       `
       *,
-      property:properties ( id, title, price, rental_price, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
+      property:properties ( id, title, price, original_price, rental_price, original_rental_price, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
       lead:leads ( id, full_name, phone )
     `,
       { count: "exact" }
@@ -73,6 +79,7 @@ export async function getDeals({
 
   if (property_id) query = query.eq("property_id", property_id);
   if (lead_id) query = query.eq("lead_id", lead_id);
+  if (status) query = query.eq("status", status);
 
   const from = (pageSafe - 1) * size;
   const to = from + size - 1;
@@ -114,7 +121,7 @@ export async function getDeals({
           .select(
             `
       *,
-      property:properties ( id, title, price, rental_price, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
+      property:properties ( id, title, price, original_price, rental_price, original_rental_price, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
       lead:leads ( id, full_name, phone )
     `,
             { count: "exact" }
@@ -145,16 +152,32 @@ export async function getDeals({
           id: d.property.id,
           title: d.property.title,
           price: d.property.price,
+          original_price: d.property.original_price,
           rental_price: d.property.rental_price,
+          original_rental_price: d.property.original_rental_price,
           images: d.property.property_images ?? [],
         }
       : null;
+
+    // Calculate duration_months for RENT deals
+    let duration_months: number | undefined | null = undefined;
+    if (
+      d.deal_type === "RENT" &&
+      d.transaction_date &&
+      d.transaction_end_date
+    ) {
+      duration_months = differenceInMonths(
+        new Date(d.transaction_end_date),
+        new Date(d.transaction_date)
+      );
+    }
 
     // Return the correctly typed shape
     return {
       ...d,
       property,
       lead: d.lead ? { id: d.lead.id, full_name: d.lead.full_name } : null,
+      duration_months,
     } as DealWithProperty;
   });
 

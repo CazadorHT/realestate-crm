@@ -17,7 +17,9 @@ export async function getDealsByLeadId(
         id,
         title,
         price,
+        original_price,
         rental_price,
+        original_rental_price,
         images
       )
     `
@@ -48,7 +50,9 @@ export async function getDealById(
         id,
         title,
         price,
+        original_price,
         rental_price,
+        original_rental_price,
         images
       )
     `

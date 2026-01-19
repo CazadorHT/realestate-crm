@@ -26,6 +26,7 @@ export function CreateDealButton({ properties }: CreateDealButtonProps) {
       onSuccess={() => {
         router.refresh();
       }}
+      refreshOnSuccess={true}
     />
   );
 }

@@ -32,7 +32,12 @@ export function LeadSelect({ value, onChange }: LeadSelectProps) {
       if (!mounted) return;
       if (res.ok) {
         const payload = await res.json();
-        setOpts((payload.data ?? []).map((l: any) => ({ id: l.id, full_name: l.full_name })));
+        setOpts(
+          (payload.data ?? []).map((l: any) => ({
+            id: l.id,
+            full_name: l.full_name,
+          }))
+        );
       }
       setLoading(false);
     }
@@ -44,12 +49,11 @@ export function LeadSelect({ value, onChange }: LeadSelectProps) {
 
   return (
     <div className="space-y-2">
-      <div className="text-sm text-muted-foreground">เลือกลีด</div>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger>
           <SelectValue placeholder={loading ? "กำลังโหลด..." : "เลือกลีด"} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="max-h-[300px] overflow-y-auto">
           {opts.map((l) => (
             <SelectItem key={l.id} value={l.id}>
               {l.full_name}

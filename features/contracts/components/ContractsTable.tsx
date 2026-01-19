@@ -21,6 +21,7 @@ import {
   XCircle,
   Calendar,
 } from "lucide-react";
+import { differenceInHours } from "date-fns";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteRentalContractsAction } from "@/features/contracts/bulk-actions";
@@ -42,6 +43,7 @@ interface RentalContractWithRelations {
     id: string;
     property: { title: string } | null;
   } | null;
+  created_at?: string;
 }
 
 function getContractStatus(endDate: string) {
@@ -152,11 +154,24 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                       />
                     </TableCell>
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-blue-500" />
-                        <span className="font-mono text-sm">
-                          {contract.contract_number}
-                        </span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-blue-500" />
+                          <span className="font-mono text-sm">
+                            {contract.contract_number}
+                          </span>
+                        </div>
+                        {contract.created_at &&
+                          differenceInHours(
+                            new Date(),
+                            new Date(contract.created_at)
+                          ) < 24 && (
+                            <div className="w-fit">
+                              <div className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">
+                                NEW
+                              </div>
+                            </div>
+                          )}
                       </div>
                     </TableCell>
                     <TableCell>

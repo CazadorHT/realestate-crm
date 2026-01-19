@@ -10,6 +10,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import { getPropertiesForSelect } from "@/features/properties/queries";
 import { getDealById } from "@/features/deals/queries";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ interface PageProps {
 export default async function DealDetailPage({ params }: PageProps) {
   const { id } = await params;
   const deal = await getDealById(id);
+  const properties = await getPropertiesForSelect(); // Added fetch
 
   if (!deal) {
     notFound();
@@ -58,6 +60,7 @@ export default async function DealDetailPage({ params }: PageProps) {
           <DealFormDialog
             leadId={deal.lead_id}
             deal={deal}
+            properties={JSON.parse(JSON.stringify(properties))} // Ensure serializable
             trigger={
               <Button variant="outline" size="sm">
                 <Edit2 className="h-4 w-4 mr-2" />
@@ -191,16 +194,40 @@ export default async function DealDetailPage({ params }: PageProps) {
                 </div>
                 <div className="pt-2">
                   <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-                    ราคาประเมิน/ราคาเสนอ
+                    {deal.deal_type === "RENT" ? "ราคาเช่า" : "ราคาขาย"} (บาท)
                   </p>
-                  <p className="text-xl font-bold">
-                    ฿
-                    {(
-                      deal.property.price ||
-                      deal.property.rental_price ||
-                      0
-                    ).toLocaleString()}
-                  </p>
+                  <div className="flex items-baseline gap-2">
+                    {(() => {
+                      const isRent = deal.deal_type === "RENT";
+                      const rawCurrent = isRent
+                        ? deal.property.rental_price
+                        : deal.property.price;
+                      const rawOriginal = isRent
+                        ? deal.property.original_rental_price
+                        : deal.property.original_price;
+
+                      const current = rawCurrent || 0;
+                      const original = rawOriginal || 0;
+
+                      // Fallback: If current is 0 but original exists, show original as current
+                      const displayPrice =
+                        current === 0 && original > 0 ? original : current;
+                      const showOriginal = current > 0 && original > current;
+
+                      return (
+                        <>
+                          <p className="text-xl font-bold">
+                            ฿{displayPrice.toLocaleString()}
+                          </p>
+                          {showOriginal && (
+                            <span className="text-sm text-muted-foreground line-through">
+                              ฿{original.toLocaleString()}
+                            </span>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
                 <Button variant="outline" className="w-full" asChild>
                   <Link href={`/protected/properties/${deal.property.id}`}>

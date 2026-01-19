@@ -282,23 +282,69 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
               <FormLabel className="text-slate-700 font-semibold">
                 ประเภททรัพย์ <span className="text-red-500">*</span>
               </FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="เลือกประเภททรัพย์สิน" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="CONDO">🏢 คอนโด</SelectItem>
-                  <SelectItem value="HOUSE">🏠 บ้านเดี่ยว</SelectItem>
-                  <SelectItem value="TOWNHOME">🏘️ ทาวน์โฮม</SelectItem>
-                  <SelectItem value="LAND">🌳 ที่ดิน</SelectItem>
-                  <SelectItem value="COMMERCIAL">
-                    🏢 อาคารพาณิชย์/สำนักงาน
-                  </SelectItem>
-                  <SelectItem value="FACTORY">🏭 โรงงาน/โกดัง</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                {[
+                  {
+                    value: "CONDO",
+                    label: "คอนโด",
+                    icon: "🏢",
+                    color: "bg-blue-600 hover:bg-blue-700",
+                    border: "hover:border-blue-300",
+                  },
+                  {
+                    value: "HOUSE",
+                    label: "บ้านเดี่ยว",
+                    icon: "🏠",
+                    color: "bg-emerald-600 hover:bg-emerald-700",
+                    border: "hover:border-emerald-300",
+                  },
+                  {
+                    value: "TOWNHOME",
+                    label: "ทาวน์โฮม",
+                    icon: "🏘️",
+                    color: "bg-indigo-600 hover:bg-indigo-700",
+                    border: "hover:border-indigo-300",
+                  },
+                  {
+                    value: "LAND",
+                    label: "ที่ดิน",
+                    icon: "🌳",
+                    color: "bg-amber-600 hover:bg-amber-700",
+                    border: "hover:border-amber-300",
+                  },
+                  {
+                    value: "COMMERCIAL",
+                    label: "สำนักงาน",
+                    icon: "🏢",
+                    color: "bg-violet-600 hover:bg-violet-700",
+                    border: "hover:border-violet-300",
+                  },
+                  {
+                    value: "FACTORY",
+                    label: "โรงงาน",
+                    icon: "🏭",
+                    color: "bg-slate-700 hover:bg-slate-800",
+                    border: "hover:border-slate-400",
+                  },
+                ].map((option) => (
+                  <Button
+                    key={option.value}
+                    type="button"
+                    variant={
+                      field.value === option.value ? "default" : "outline"
+                    }
+                    className={`h-auto py-3 px-2 flex flex-col gap-1 items-center justify-center text-xs transition-all ${
+                      field.value === option.value
+                        ? `${option.color} text-white shadow-md scale-105`
+                        : `text-slate-600 ${option.border} hover:bg-slate-50`
+                    }`}
+                    onClick={() => field.onChange(option.value)}
+                  >
+                    <span className="text-xl">{option.icon}</span>
+                    <span className="font-semibold">{option.label}</span>
+                  </Button>
+                ))}
+              </div>
               <FormMessage />
             </FormItem>
           )}

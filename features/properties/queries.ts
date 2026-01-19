@@ -125,12 +125,20 @@ export async function getPropertiesForSelect() {
   const { data, error } = await supabase
     .from("properties")
     .select(
-      `id, title, price, rental_price, commission_sale_percentage, commission_rent_months`
+      `id, title, price, original_price, rental_price, original_rental_price, commission_sale_percentage, commission_rent_months, property_images(image_url, is_cover)`
     )
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data ?? [];
+
+  // Map to include cover_image
+  return (data ?? []).map((p) => ({
+    ...p,
+    cover_image:
+      p.property_images?.find((img: any) => img.is_cover)?.image_url ||
+      p.property_images?.[0]?.image_url ||
+      null,
+  }));
 }
 
 export type PropertyStats = {

@@ -15,10 +15,14 @@ export const contractFormSchema = z.object({
     .number()
     .min(0, "เงินประกันต้องไม่ต่ำกว่า 0")
     .optional(),
+  advance_payment_amount: z.coerce
+    .number()
+    .min(0, "เงินล่วงหน้าต้องไม่ต่ำกว่า 0")
+    .optional(),
   lease_term_months: z.coerce.number().min(1, "ระยะเวลาสัญญาขั้นต่ำ 1 เดือน"),
-  payment_cycle: z.string().optional(),
+   payment_cycle: z.string().optional(),
   other_terms: z.string().optional(),
-  status: z.enum(["DRAFT","ACTIVE","TERMINATED"]).optional(),
+  status: z.enum(["DRAFT", "ACTIVE", "TERMINATED"]).optional(),
 });
 
 export type ContractFormInput = z.infer<typeof contractFormSchema>;

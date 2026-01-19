@@ -1045,9 +1045,12 @@ export type Database = {
       }
       rental_contracts: {
         Row: {
+          advance_payment_amount: number | null
           check_in_date: string | null
           check_out_date: string | null
           contract_number: string | null
+          created_at: string
+          created_by: string | null
           deal_id: string
           deposit_amount: number | null
           end_date: string
@@ -1059,11 +1062,16 @@ export type Database = {
           rent_price: number
           start_date: string
           status: string
+          updated_at: string
+          updated_by: string | null
         }
         Insert: {
+          advance_payment_amount?: number | null
           check_in_date?: string | null
           check_out_date?: string | null
           contract_number?: string | null
+          created_at?: string
+          created_by?: string | null
           deal_id: string
           deposit_amount?: number | null
           end_date: string
@@ -1075,11 +1083,16 @@ export type Database = {
           rent_price: number
           start_date: string
           status?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Update: {
+          advance_payment_amount?: number | null
           check_in_date?: string | null
           check_out_date?: string | null
           contract_number?: string | null
+          created_at?: string
+          created_by?: string | null
           deal_id?: string
           deposit_amount?: number | null
           end_date?: string
@@ -1091,6 +1104,8 @@ export type Database = {
           rent_price?: number
           start_date?: string
           status?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: [
           {

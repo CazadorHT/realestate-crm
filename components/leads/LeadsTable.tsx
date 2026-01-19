@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { differenceInHours } from "date-fns";
 import Link from "next/link";
 import {
   Table,
@@ -23,6 +24,7 @@ import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteLeadsAction } from "@/features/leads/bulk-actions";
 import { exportLeadsAction } from "@/features/leads/export-action";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 export function LeadsTable({ leads }: { leads: LeadRow[] }) {
   const allIds = useMemo(() => leads.map((l) => l.id), [leads]);
@@ -98,13 +100,24 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                   />
                 </TableCell>
                 <TableCell>
-                  <div className="font-medium">
-                    <Link
-                      className="underline"
-                      href={`/protected/leads/${l.id}`}
-                    >
-                      {l.full_name}
-                    </Link>
+                  <div className="flex flex-col gap-1">
+                    <div className="font-medium">
+                      <Link
+                        className="underline"
+                        href={`/protected/leads/${l.id}`}
+                      >
+                        {l.full_name}
+                      </Link>
+                    </div>
+                    {l.created_at &&
+                      differenceInHours(new Date(), new Date(l.created_at)) <
+                        24 && (
+                        <div className="w-fit">
+                          <div className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">
+                            NEW
+                          </div>
+                        </div>
+                      )}
                   </div>
                 </TableCell>
                 {/* เบอร์โทร */}

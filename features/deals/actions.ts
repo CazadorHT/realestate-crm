@@ -87,24 +87,27 @@ export async function createDealAction(input: CreateDealInput) {
       "source",
     ] as const;
     _cleanKeys.forEach((k) => {
-      const key = k as keyof typeof dealData;
-      if ((dealData as any)[key] === "" || (dealData as any)[key] === null) {
-        delete (dealData as any)[key];
+      const key = k as keyof typeof insertData;
+      if (
+        (insertData as any)[key] === "" ||
+        (insertData as any)[key] === null
+      ) {
+        delete (insertData as any)[key];
       }
     });
 
     // Remove any keys that are explicitly `undefined` (helpful for partial updates to preserve DB values)
-    Object.keys(dealData).forEach((k) => {
-      const key = k as keyof typeof dealData;
-      if ((dealData as any)[key] === undefined) {
-        delete (dealData as any)[key];
+    Object.keys(insertData).forEach((k) => {
+      const key = k as keyof typeof insertData;
+      if ((insertData as any)[key] === undefined) {
+        delete (insertData as any)[key];
       }
     });
 
     const { data, error } = await supabase
       .from("deals")
       .insert({
-        ...dealData,
+        ...insertData,
         created_by: user.id,
       })
       .select()
@@ -132,6 +135,7 @@ export async function createDealAction(input: CreateDealInput) {
     }
 
     revalidatePath(`/protected/leads/${validated.lead_id}`);
+    revalidatePath("/protected/deals");
     return { success: true, data };
   } catch (error: unknown) {
     console.error("Create Deal Error:", error);
@@ -250,6 +254,7 @@ export async function updateDealAction(input: UpdateDealInput) {
     // Let's fetch the deal to get lead_id for revalidation if needed, or revalidate global leads?
     // Optimization: Just return success and let client router.refresh().
 
+    revalidatePath("/protected/deals");
     return { success: true };
   } catch (error: any) {
     return { success: false, message: error.message };

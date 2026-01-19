@@ -46,39 +46,55 @@ export async function upsertContractAction(
     assertAuthenticated({ userId: user.id, role });
     assertStaff(role);
 
-    const validated = contractFormSchema.parse(input);
-
-    // 1) fetch deal and validate it's a RENT deal
-    const { data: deal, error: dealErr } = await supabase
-      .from("deals")
-      .select("id, deal_type")
-      .eq("id", validated.deal_id)
-      .single();
-
-    if (dealErr || !deal) return { success: false, message: "Deal not found" };
-    if (!["RENT", "SALE"].includes(deal.deal_type))
-      return {
-        success: false,
-        message: "Contracts are allowed only for RENT or SALE deals",
-      };
-
     // 3) Create or update
     let data: RentalContract | null = null;
     let error: any = null;
+    let dealIdForAudit = "";
 
     if (input.id) {
-      // Update
+      // Update - Use partial schema
+      const validatedUpdate = updateContractSchema.parse(input);
+      // Remove id from update payload to avoid primary key update attempt
+      const { id, ...updateData } = validatedUpdate;
+
+      // Try to get deal_id for audit if provided in update
+      dealIdForAudit = validatedUpdate.deal_id || "";
+
       const updateRes = await supabase
         .from("rental_contracts")
-        .update(validated)
-        .eq("id", input.id)
+        .update(updateData)
+        .eq("id", id)
         .select()
         .single();
       data = updateRes.data;
       error = updateRes.error;
+
+      // If dealId wasn't in update, get it from the result for audit
+      if (data && !dealIdForAudit) {
+        dealIdForAudit = data.deal_id;
+      }
     } else {
+      // Create - Use full schema
+      const validatedCreate = contractFormSchema.parse(input);
+      dealIdForAudit = validatedCreate.deal_id;
+
+      // Validate deal type
+      const { data: deal, error: dealErr } = await supabase
+        .from("deals")
+        .select("id, deal_type")
+        .eq("id", validatedCreate.deal_id)
+        .single();
+
+      if (dealErr || !deal)
+        return { success: false, message: "Deal not found" };
+      if (!["RENT", "SALE"].includes(deal.deal_type))
+        return {
+          success: false,
+          message: "Contracts are allowed only for RENT or SALE deals",
+        };
+
       // Create -> auto-generate contract number if not provided
-      const toInsert: any = { ...validated };
+      const toInsert: any = { ...validatedCreate };
       if (!toInsert.contract_number) {
         toInsert.contract_number = `RC-${new Date().getFullYear()}-${Math.random()
           .toString(36)
@@ -110,12 +126,11 @@ export async function upsertContractAction(
 
     // Log audit
     try {
-      // Safe casting for audit helper
       await logAudit({ supabase, user, role } as any, {
         action: input.id ? "rental_contract.update" : "rental_contract.create",
         entity: "rental_contracts",
         entityId: data.id,
-        metadata: { dealId: validated.deal_id },
+        metadata: { dealId: dealIdForAudit },
       });
     } catch (e) {
       // ignore audit errors

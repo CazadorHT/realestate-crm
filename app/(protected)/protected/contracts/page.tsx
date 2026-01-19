@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { ContractsTable } from "@/features/contracts/components/ContractsTable";
+import { CreateContractDialog } from "@/features/contracts/components/CreateContractDialog";
 
 type RentalContractWithRelations = {
   id: string;
@@ -120,11 +121,7 @@ export default async function RentalContractsPage() {
           </h1>
           <p className="text-slate-500 mt-2">จัดการและติดตามสัญญาเช่าทั้งหมด</p>
         </div>
-        <Button asChild>
-          <Link href="/protected/deals">
-            <Plus className="mr-2 h-4 w-4" /> สร้างสัญญาใหม่
-          </Link>
-        </Button>
+        <CreateContractDialog />
       </div>
 
       {/* Statistics Cards */}

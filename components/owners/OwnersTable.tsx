@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { differenceInHours } from "date-fns";
 import {
   Table,
   TableBody,
@@ -13,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { OwnerRowActions } from "@/components/owners/OwnerRowActions";
 import type { Owner } from "@/features/owners/types";
 import { useTableSelection } from "@/hooks/useTableSelection";
@@ -109,7 +111,22 @@ export function OwnersTable({ owners }: OwnersTableProps) {
                   />
                 </TableCell>
                 {/* ชื่อ Owner */}
-                <TableCell className="font-medium">{owner.full_name}</TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1">
+                    <div className="font-medium">{owner.full_name}</div>
+                    {owner.created_at &&
+                      differenceInHours(
+                        new Date(),
+                        new Date(owner.created_at)
+                      ) < 24 && (
+                        <div className="w-fit">
+                          <div className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">
+                            NEW
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                </TableCell>
                 {/* เบอร์โทร */}
                 <TableCell>
                   {owner.phone ? (

@@ -29,7 +29,7 @@ import { DealFormDialog } from "./components/DealFormDialog";
 import { DeleteDealButton } from "./components/DeleteDealButton";
 import { PropertyCombobox } from "@/components/PropertyCombobox";
 import { LeadCombobox } from "./components/LeadCombobox";
-import { format } from "date-fns";
+import { differenceInHours, format } from "date-fns";
 import { th } from "date-fns/locale";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
@@ -58,6 +58,12 @@ export function DealsTable({
   const [data, setData] = useState(initialData);
   const [count, setCount] = useState(initialCount);
   const [loading, setLoading] = useState(false);
+
+  // Sync state with props when Server Components re-render (router.refresh)
+  useEffect(() => {
+    setData(initialData);
+    setCount(initialCount);
+  }, [initialData, initialCount]);
   // filters
   const [selectedPropertyId, setSelectedPropertyId] = useState<
     string | undefined
@@ -319,9 +325,17 @@ export function DealsTable({
                   }
                 />
               </TableHead>
+              <TableHead className="font-semibold">ประเภท</TableHead>
               <TableHead className="font-semibold">ทรัพย์</TableHead>
               <TableHead className="font-semibold">ลีด</TableHead>
-              <TableHead className="font-semibold">ราคา</TableHead>
+              <TableHead className="font-semibold">
+                ราคา{" "}
+                <span className="text-xs font-normal text-muted-foreground">
+                  (เดิม)
+                </span>
+              </TableHead>
+              <TableHead className="font-semibold">ค่าคอม</TableHead>
+              <TableHead className="font-semibold">ระยะสัญญา</TableHead>
               <TableHead className="font-semibold">วันที่</TableHead>
               <TableHead className="font-semibold">สถานะ</TableHead>
               <TableHead className="text-right font-semibold">
@@ -332,7 +346,7 @@ export function DealsTable({
           <TableBody>
             {data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-44 text-center">
+                <TableCell colSpan={10} className="h-44 text-center">
                   <div className="flex flex-col items-center justify-center gap-3">
                     <Handshake className="h-12 w-12 text-slate-300" />
                     <div>
@@ -364,12 +378,35 @@ export function DealsTable({
                     />
                   </TableCell>
                   <TableCell>
-                    <Link
-                      href={`/protected/properties/${deal.property_id}`}
-                      className="font-medium text-slate-900 hover:text-blue-600 hover:underline transition-colors"
+                    <Badge
+                      variant={
+                        deal.deal_type === "RENT" ? "secondary" : "default"
+                      }
+                      className="font-normal w-[60px] justify-center"
                     >
-                      {deal.property?.title || "-"}
-                    </Link>
+                      {deal.deal_type === "RENT" ? "เช่า" : "ขาย"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <Link
+                        href={`/protected/properties/${deal.property_id}`}
+                        className="font-medium text-slate-900 hover:text-blue-600 hover:underline transition-colors line-clamp-1"
+                      >
+                        {deal.property?.title || "-"}
+                      </Link>
+                      {deal.created_at &&
+                        differenceInHours(
+                          new Date(),
+                          new Date(deal.created_at)
+                        ) < 24 && (
+                          <div className="w-fit">
+                            <div className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">
+                              NEW
+                            </div>
+                          </div>
+                        )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Link
@@ -380,13 +417,59 @@ export function DealsTable({
                     </Link>
                   </TableCell>
                   <TableCell className="font-medium text-slate-700">
-                    {deal.deal_type === "RENT"
-                      ? deal.property?.rental_price
-                        ? `${deal.property.rental_price.toLocaleString()} ฿/เดือน`
-                        : "-"
-                      : deal.property?.price
-                      ? `${deal.property.price.toLocaleString()} ฿`
-                      : "-"}
+                    <div className="flex flex-col items-start">
+                      {(() => {
+                        const isRent = deal.deal_type === "RENT";
+                        const rawCurrent = isRent
+                          ? deal.property?.rental_price
+                          : deal.property?.price;
+                        const rawOriginal = isRent
+                          ? deal.property?.original_rental_price
+                          : deal.property?.original_price;
+
+                        const current = rawCurrent || 0;
+                        const original = rawOriginal || 0;
+
+                        // Fallback: If current is 0 but original exists, show original as current
+                        // Logic matching Deal Details page
+                        const displayPrice =
+                          current === 0 && original > 0 ? original : current;
+                        const showOriginal = current > 0 && original > current;
+
+                        if (displayPrice === 0 && original === 0) {
+                          return "-";
+                        }
+
+                        return (
+                          <>
+                            <span>{displayPrice.toLocaleString()} ฿</span>
+                            {showOriginal && (
+                              <span className="text-xs text-muted-foreground line-through">
+                                {original.toLocaleString()}
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {deal.commission_amount ? (
+                      <span className="text-green-600 font-medium">
+                        {deal.commission_amount.toLocaleString()} ฿
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell className="text-slate-600">
+                    {deal.deal_type === "RENT" && deal.duration_months ? (
+                      <span className="text-sm whitespace-nowrap">
+                        {deal.duration_months} เดือน
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">-</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-slate-600">
                     {deal.transaction_date
