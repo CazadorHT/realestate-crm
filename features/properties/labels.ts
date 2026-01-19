@@ -113,14 +113,18 @@ export const POPULAR_AREAS = [
 ] as const;
 
 /** === TRANSIT TYPES === */
-export const TRANSIT_TYPE_ENUM = ["BTS", "MRT", "ARL", "SRT", "OTHER"] as const;
+export const TRANSIT_TYPE_ENUM = ["BTS", "MRT" ,"MRT2", "ARL", "SRT", "SRT2", "SRT3", "OTHER"] as const;
 export type TransitType = (typeof TRANSIT_TYPE_ENUM)[number];
 
 export const TRANSIT_TYPE_LABELS: Record<TransitType, string> = {
   BTS: "BTS",
   MRT: "MRT",
   ARL: "Airport Rail Link",
-  SRT: "รถไฟชานเมือง (สายสีแดง)",
+  SRT: "รถไฟฟ้า (สายสีแดง)",
+  SRT2: "รถไฟฟ้า (สายสีส้ม)",
+  SRT3: "รถไฟฟ้า (สายสีชมพู)",
+  MRT2: "รถไฟฟ้า (สายสีม่วง)",
+
   OTHER: "อื่นๆ",
 };
 

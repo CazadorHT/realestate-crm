@@ -115,7 +115,7 @@ export function Step5Features() {
           <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">
             {category}
           </h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-3">
             {categoryFeatures.map((feature) => {
               const Icon = ICON_MAP[feature.icon_key] || DEFAULT_ICON;
               const isSelected = selectedFeatureIds.includes(feature.id);
@@ -129,7 +129,7 @@ export function Step5Features() {
                     flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-200 group
                     ${
                       isSelected
-                        ? "bg-blue-600 border-blue-600 text-white shadow-md transform scale-[1.02]"
+                        ? "bg-gradient-to-r from-blue-500 to-purple-600  text-white shadow-md transform scale-[1.02]"
                         : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50"
                     }
                   `}

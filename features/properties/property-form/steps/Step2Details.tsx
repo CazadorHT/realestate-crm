@@ -84,6 +84,7 @@ function UnitNumberField({
   placeholder,
   suffix,
   className,
+  labelClassName,
   decimals,
   disabled,
   labelHint,
@@ -96,6 +97,7 @@ function UnitNumberField({
   placeholder?: string;
   suffix: string;
   className?: string;
+  labelClassName?: string;
   decimals?: number;
   disabled?: boolean;
   labelHint?: React.ReactNode;
@@ -108,7 +110,12 @@ function UnitNumberField({
       name={name}
       render={({ field, fieldState }) => (
         <FormItem>
-          <FormLabel className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-700">
+          <FormLabel
+            className={
+              labelClassName ??
+              "flex items-center justify-between gap-3 text-sm font-medium text-slate-600"
+            }
+          >
             <span className="inline-flex items-center gap-2">
               {label}
               {labelHint}
@@ -269,7 +276,7 @@ export function Step2Details({ form, mode }: Step2Props) {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-12">
                   {/* Warning: Invalid Discount */}
                   {showSaleDiscount &&
                     saleOriginal &&
@@ -299,7 +306,7 @@ export function Step2Details({ form, mode }: Step2Props) {
                     )}
 
                   {/* Step 1: ราคาเดิม (Original) */}
-                  <div className="lg:col-span-3">
+                  <div className="lg:col-span-4">
                     <UnitNumberField
                       label="ราคาตั้งขาย (เต็ม)"
                       name="original_price"
@@ -313,9 +320,18 @@ export function Step2Details({ form, mode }: Step2Props) {
                   </div>
 
                   {/* Step 2: Toggle หรือ ราคาลด */}
-                  <div className="lg:col-span-3">
+                  <div className="lg:col-span-4">
                     {!showSaleDiscount ? (
-                      <div className="flex items-end h-full pt-6">
+                      <div className="space-y-2">
+                        <FormLabel className="text-sm font-semibold text-slate-700">
+                          ราคาพิเศษ{" "}
+                          <span className="text-xs text-slate-500">
+                            (ถ้ามี)
+                          </span>
+                        </FormLabel>
+                        <FormDescription className="text-xs text-slate-500">
+                          หากต้องการกรอกราคาพิเศษ คลิกที่นี่
+                        </FormDescription>
                         <Button
                           type="button"
                           variant="outline"
@@ -342,7 +358,6 @@ export function Step2Details({ form, mode }: Step2Props) {
                             type="button"
                             onClick={() => {
                               setShowSaleDiscount(false);
-                              // ลบค่า price ออกจาก database (เซตเป็น null)
                               form.setValue("price", null);
                             }}
                             className="text-[10px] text-slate-400 hover:text-red-600 underline"
@@ -355,9 +370,9 @@ export function Step2Details({ form, mode }: Step2Props) {
                   </div>
 
                   {/* Maintenance fee */}
-                  <div className="lg:col-span-3">
+                  <div className="lg:col-span-4">
                     <UnitNumberField
-                      label="ค่าส่วนกลาง"
+                      label="💰 ค่าส่วนกลาง"
                       name="maintenance_fee"
                       control={form.control}
                       placeholder="0"
@@ -385,7 +400,7 @@ export function Step2Details({ form, mode }: Step2Props) {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-12">
                   {/* Warning: Invalid Rent Discount */}
                   {showRentDiscount &&
                     rentOriginal &&
@@ -413,7 +428,7 @@ export function Step2Details({ form, mode }: Step2Props) {
                     )}
 
                   {/* Step 1: ค่าเช่าเดิม (Original) */}
-                  <div className="lg:col-span-3">
+                  <div className="lg:col-span-4">
                     <UnitNumberField
                       label="ค่าเช่าต่อเดือน (เต็ม)"
                       name="original_rental_price"
@@ -427,9 +442,18 @@ export function Step2Details({ form, mode }: Step2Props) {
                   </div>
 
                   {/* Step 2: Toggle หรือ ค่าเช่าลด */}
-                  <div className="lg:col-span-3">
+                  <div className="lg:col-span-4">
                     {!showRentDiscount ? (
-                      <div className="flex items-end h-full pt-6">
+                      <div className="space-y-2">
+                        <FormLabel className="text-sm font-semibold text-slate-700">
+                          ราคาพิเศษ
+                          <span className="text-xs text-slate-500">
+                            (ถ้ามี)
+                          </span>
+                        </FormLabel>
+                        <FormDescription className="text-xs text-slate-500">
+                          หากต้องการกรอกราคาพิเศษ คลิกที่นี่
+                        </FormDescription>
                         <Button
                           type="button"
                           variant="outline"
@@ -456,7 +480,6 @@ export function Step2Details({ form, mode }: Step2Props) {
                             type="button"
                             onClick={() => {
                               setShowRentDiscount(false);
-                              // ลบค่า rental_price ออกจาก database (เซตเป็น undefined)
                               form.setValue("rental_price", null);
                             }}
                             className="text-[10px] text-slate-400 hover:text-red-600 underline"
@@ -469,16 +492,18 @@ export function Step2Details({ form, mode }: Step2Props) {
                   </div>
 
                   {/* Min Contract - แสดงเฉพาะ RENT / SALE_AND_RENT */}
-                  <div className="lg:col-span-3">
+                  <div className="lg:col-span-4">
                     <FormField
                       control={form.control}
                       name="min_contract_months"
                       render={({ field }) => (
-                        <FormItem className="space-y-3">
+                        <FormItem className="">
                           <FormLabel className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-700">
-                            สัญญาขั้นต่ำ
+                            📅 สัญญาขั้นต่ำ
                           </FormLabel>
-
+                          <FormDescription className="text-xs text-slate-500">
+                            ช่วยกรองลูกค้าเช่าระยะยาว
+                          </FormDescription>
                           <FormControl>
                             <div className="flex items-center">
                               <NumberInput
@@ -488,14 +513,15 @@ export function Step2Details({ form, mode }: Step2Props) {
                                 disabled={isReadOnly}
                                 className="h-11 w-full rounded-l-xl rounded-r-none border-r-0 border-slate-200 bg-white font-semibold focus:border-slate-900 focus:ring-0"
                               />
-                              <span className="h-11 select-none whitespace-nowrap rounded-r-xl border border-l-0 border-slate-200 bg-slate-50 px-3 font-semibold">
+                              <span className="h-11 flex items-center select-none whitespace-nowrap rounded-r-xl border border-l-0 border-slate-200 bg-slate-50 px-3 font-semibold text-slate-600">
                                 เดือน
                               </span>
                             </div>
                           </FormControl>
 
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-6 gap-2">
                             {[
+                              { value: 6, label: "6 ด." },
                               { value: 12, label: "1 ปี" },
                               { value: 24, label: "2 ปี" },
                               { value: 36, label: "3 ปี" },
@@ -509,11 +535,13 @@ export function Step2Details({ form, mode }: Step2Props) {
                                   disabled={isReadOnly}
                                   onClick={() => field.onChange(preset.value)}
                                   className={[
-                                    "h-10 rounded-xl border text-xs font-bold transition",
+                                    "h-9 rounded-lg border text-xs font-bold transition-all",
                                     active
-                                      ? "border-orange-600 bg-orange-600 text-white"
-                                      : "border-orange-100 bg-white text-orange-600 hover:bg-orange-50",
-                                    isReadOnly ? "opacity-60" : "",
+                                      ? "border-orange-500 bg-orange-500 text-white shadow-sm"
+                                      : "border-orange-200 bg-white text-orange-600 hover:bg-orange-50 hover:border-orange-300",
+                                    isReadOnly
+                                      ? "opacity-60 cursor-not-allowed"
+                                      : "",
                                   ].join(" ")}
                                 >
                                   {preset.label}
@@ -522,9 +550,6 @@ export function Step2Details({ form, mode }: Step2Props) {
                             })}
                           </div>
 
-                          <FormDescription className="text-xs text-slate-500">
-                            เช่น 12 เดือน (1 ปี) ช่วยกรองลูกค้าเช่าระยะยาว
-                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -535,7 +560,7 @@ export function Step2Details({ form, mode }: Step2Props) {
             )}
           </div>
           {/* Micro UX: guidance */}
-          <div className="rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <div className="mt-4   rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-sm text-slate-700">
             <span className="font-semibold">ทิป:</span> ถ้าทรัพย์ “ลดแรง”
             ให้กรอก ราคาเต็มด้วย ระบบจะดันความเด่นในหน้า Hot Deals/Price Drop
             ได้ดีขึ้น
@@ -543,12 +568,12 @@ export function Step2Details({ form, mode }: Step2Props) {
         </CardContent>
       </Card>
 
-      {/* ===== SPECS ===== */}
+      {/* ===== SPECS & SIZE ===== */}
       <Card className="border-slate-200/70 bg-white">
         <CardHeader className="space-y-4">
           <SectionHeader
             icon={LayoutGrid}
-            title="สเปกและสัดส่วน"
+            title="สเปกและขนาด"
             desc="ตัวเลขที่ลูกค้าถามบ่อยที่สุด"
             tone="purple"
           />
@@ -556,103 +581,104 @@ export function Step2Details({ form, mode }: Step2Props) {
         </CardHeader>
 
         <CardContent>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[
-              { name: "bedrooms", label: "ห้องนอน", emoji: "🛏️" },
-              { name: "bathrooms", label: "ห้องน้ำ", emoji: "🚿" },
-              { name: "parking_slots", label: "ที่จอดรถ", emoji: "🚗" },
-              { name: "floor", label: "ชั้นที่", emoji: "🏢" },
-            ].map((item) => (
-              <FormField
-                key={item.name}
-                control={form.control}
-                name={item.name as any}
-                render={({ field, fieldState }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-semibold text-slate-600">
-                      {item.emoji} {item.label}
-                    </FormLabel>
-                    <FormControl>
-                      <NumberInput
-                        {...field}
-                        placeholder="0"
-                        disabled={isReadOnly}
-                        className={[
-                          "h-11 rounded-2xl border-slate-200 bg-white text-center",
-                          "font-bold text-slate-900",
-                          "focus:border-slate-900 focus:ring-0",
-                          isReadOnly ? "bg-slate-50 text-slate-500" : "",
-                          fieldState.error ? "border-rose-400" : "",
-                        ].join(" ")}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+          <div className="flex flex-col lg:flex-row lg:gap-8">
+            {/* Specs Zone - Left */}
+            <div className="flex-1 space-y-4 pb-6 lg:pb-0 lg:pr-8 lg:border-r lg:border-slate-200">
+              <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <span className="h-5 w-1 bg-purple-500 rounded-full" />
+                สเปกและสัดส่วน
+              </h4>
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-4">
+                {[
+                  { name: "bedrooms", label: "ห้องนอน", emoji: "🛏️" },
+                  { name: "bathrooms", label: "ห้องน้ำ", emoji: "🚿" },
+                  { name: "parking_slots", label: "ที่จอดรถ", emoji: "🚗" },
+                  { name: "floor", label: "ชั้นที่", emoji: "🏢" },
+                ].map((item) => (
+                  <FormField
+                    key={item.name}
+                    control={form.control}
+                    name={item.name as any}
+                    render={({ field, fieldState }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-slate-600">
+                          {item.emoji} {item.label}
+                        </FormLabel>
+                        <FormControl>
+                          <NumberInput
+                            {...field}
+                            placeholder="0"
+                            disabled={isReadOnly}
+                            className={[
+                              "h-11 rounded-xl border-slate-200 bg-white text-center",
+                              "font-bold text-slate-900",
+                              "focus:border-slate-900 focus:ring-0",
+                              isReadOnly ? "bg-slate-50 text-slate-500" : "",
+                              fieldState.error ? "border-rose-400" : "",
+                            ].join(" ")}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
 
-      {/* ===== SIZE & AREA ===== */}
-      <Card className="border-slate-200/70 bg-white">
-        <CardHeader className="space-y-4">
-          <SectionHeader
-            icon={Maximize2}
-            title="ขนาดและทำเล"
-            desc="ช่วยให้ค้นหา/กรองทรัพย์ได้แม่น"
-            tone="emerald"
-          />
-          <Separator className="bg-slate-200/70" />
-        </CardHeader>
+            {/* Mobile Separator */}
+            <Separator className="bg-slate-200/70 my-6 lg:hidden" />
 
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <UnitNumberField
-              label="พื้นที่ใช้สอย"
-              name="size_sqm"
-              control={form.control}
-              placeholder="0"
-              suffix="ตร.ม."
-              disabled={isReadOnly}
-              emphasize
-            />
+            {/* Size & Area Zone - Right */}
+            <div className="flex-1 space-y-4">
+              <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <span className="h-5 w-1 bg-emerald-500 rounded-full" />
+                ขนาดและทำเล
+              </h4>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <UnitNumberField
+                  label="📐 พื้นที่ใช้สอย"
+                  name="size_sqm"
+                  control={form.control}
+                  placeholder="0"
+                  suffix="ตร.ม."
+                  disabled={isReadOnly}
+                  emphasize
+                />
 
-            <UnitNumberField
-              label="ขนาดที่ดิน"
-              name="land_size_sqwah"
-              control={form.control}
-              placeholder="0"
-              suffix="ตร.ว."
-              disabled={isReadOnly}
-              emphasize
-            />
+                <UnitNumberField
+                  label="🏞️ ขนาดที่ดิน"
+                  name="land_size_sqwah"
+                  control={form.control}
+                  placeholder="0"
+                  suffix="ตร.ว."
+                  disabled={isReadOnly}
+                  emphasize
+                />
 
-            <FormField
-              control={form.control}
-              name="zoning"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-semibold text-slate-700">
-                    ผังสี / Zoning
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isReadOnly}
-                      value={field.value ?? ""}
-                      placeholder="เช่น สีส้ม ย.5-10"
-                      className="h-11 rounded-2xl border-slate-200 bg-white focus:border-slate-900 focus:ring-0"
-                    />
-                  </FormControl>
-                  <FormDescription className="text-xs text-slate-500">
-                    ใส่ถ้ามี จะช่วยงานประเมิน/ลงทุนและลูกค้าองค์กร
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="zoning"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-slate-600">
+                        🗺️ ผังสี / Zoning
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          disabled={isReadOnly}
+                          value={field.value ?? ""}
+                          placeholder="เช่น สีส้ม ย.5-10"
+                          className="h-11 rounded-2xl border-slate-200 bg-white focus:border-slate-900 focus:ring-0"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -680,7 +706,7 @@ export function Step2Details({ form, mode }: Step2Props) {
                       {...field}
                       disabled={isReadOnly}
                       rows={7}
-                      className="resize-none rounded-2xl border-slate-200 bg-slate-50/40 p-4 leading-relaxed transition focus:bg-white focus:border-slate-900 focus:ring-0"
+                      className="resize-y min-h-[350px] rounded-2xl border-slate-200 bg-slate-50/40 p-4 leading-relaxed transition focus:bg-white focus:border-slate-900 focus:ring-0"
                       placeholder={`ตัวอย่าง:\n• จุดเด่น: รีโนเวทใหม่ / วิวโล่ง / ใกล้ BTS\n• เฟอร์นิเจอร์/เครื่องใช้ไฟฟ้า: ...\n• เงื่อนไข: ...`}
                     />
                   </FormControl>

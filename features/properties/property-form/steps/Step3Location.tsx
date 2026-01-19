@@ -106,7 +106,7 @@ export function Step3Location({ form, mode }: Step3Props) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-5">
           <FormField
             control={form.control}
             name="province"
@@ -236,7 +236,7 @@ export function Step3Location({ form, mode }: Step3Props) {
           control={form.control}
           name="google_maps_link"
           render={({ field }) => (
-            <FormItem>
+            <FormItem            >
               <FormLabel className="text-blue-700 font-bold text-xs uppercase tracking-wider mb-1.5 block">
                 พิกัดบน Google Maps
               </FormLabel>
@@ -245,14 +245,14 @@ export function Step3Location({ form, mode }: Step3Props) {
                   {...field}
                   value={field.value ?? ""}
                   placeholder="วางลิงก์จาก Google Maps ที่นี่..."
-                  className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm focus:ring-2 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm"
+                  className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm focus:ring-2 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm "
                 />
               </FormControl>
             </FormItem>
           )}
         />
 
-        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 space-y-6">
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 space-y-6 ">
           <FormField
             control={form.control}
             name="near_transit"
@@ -278,7 +278,7 @@ export function Step3Location({ form, mode }: Step3Props) {
           />
 
           {form.watch("near_transit") && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-slate-200/40 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 pt-6 border-t border-slate-200/40 animate-in fade-in slide-in-from-top-2 duration-300">
               <FormField
                 control={form.control}
                 name="transit_type"
