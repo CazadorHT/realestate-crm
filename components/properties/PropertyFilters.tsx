@@ -120,26 +120,25 @@ export function PropertyFilters() {
     });
   }, [filters]);
   useEffect(() => {
-  const qs = searchParams.toString();
+    const qs = searchParams.toString();
 
-  setFilters((prev) => ({
-    ...prev,
-    q: searchParams.get("q") || "",
-    status: searchParams.get("status") || "ALL",
-    type: searchParams.get("type") || "ALL",
-    listing: searchParams.get("listing") || "ALL",
-    bedrooms: searchParams.get("bedrooms") || "",
-    bathrooms: searchParams.get("bathrooms") || "",
-    province: searchParams.get("province") || "",
-    district: searchParams.get("district") || "",
-    minPrice: searchParams.get("minPrice") || "",
-    maxPrice: searchParams.get("maxPrice") || "",
-    sortBy: searchParams.get("sortBy") || "created_at",
-    sortOrder: searchParams.get("sortOrder") || "desc",
-  }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [searchParams.toString()]);
-
+    setFilters((prev) => ({
+      ...prev,
+      q: searchParams.get("q") || "",
+      status: searchParams.get("status") || "ALL",
+      type: searchParams.get("type") || "ALL",
+      listing: searchParams.get("listing") || "ALL",
+      bedrooms: searchParams.get("bedrooms") || "",
+      bathrooms: searchParams.get("bathrooms") || "",
+      province: searchParams.get("province") || "",
+      district: searchParams.get("district") || "",
+      minPrice: searchParams.get("minPrice") || "",
+      maxPrice: searchParams.get("maxPrice") || "",
+      sortBy: searchParams.get("sortBy") || "created_at",
+      sortOrder: searchParams.get("sortOrder") || "desc",
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams.toString()]);
 
   return (
     <div className="flex items-center gap-2">

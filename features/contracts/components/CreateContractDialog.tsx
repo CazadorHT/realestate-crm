@@ -210,8 +210,8 @@ export function CreateContractDialog() {
                 />
 
                 {selectedDeal && (
-                  <div className="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-lg bg-slate-100 border">
+                  <div className="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 max-w-[600px]">
+                    <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-lg bg-slate-100 border line-clamp-2 whitespace-normal break-words">
                       {selectedDeal.cover_image_url ? (
                         <img
                           src={selectedDeal.cover_image_url}

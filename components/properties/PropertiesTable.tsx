@@ -59,6 +59,7 @@ export interface PropertyTableData {
   created_at: string;
   closed_lead_name: string | null;
   is_hot?: boolean;
+  view_count?: number;
   is_new?: boolean;
   // Optional fields for enhanced table
   subdistrict?: string | null;
@@ -156,6 +157,39 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
     selectedCount,
   } = useTableSelection(allIds);
 
+  const blockedCount = useMemo(() => {
+    return Array.from(selectedIds).filter((id) => {
+      const p = data.find((item) => item.id === id);
+      return p?.status === "SOLD" || p?.status === "RENTED";
+    }).length;
+  }, [selectedIds, data]);
+
+  const confirmMessage = useMemo(() => {
+    const total = selectedCount;
+    const canDelete = total - blockedCount;
+
+    if (blockedCount > 0) {
+      return (
+        <span className="space-y-2 block">
+          <span>
+            คุณกำลังจะลบ <strong className="text-foreground">{total}</strong>{" "}
+            รายการ
+          </span>
+          <span className="block text-amber-600 text-sm bg-amber-50 p-2 rounded border border-amber-200">
+            ⚠️ มี {blockedCount} รายการที่มีสถานะ "ขายแล้ว" หรือ "เช่าแล้ว"
+            ซึ่งจะไม่ถูกลบออกจากระบบ
+          </span>
+          {canDelete > 0 && (
+            <span className="block text-emerald-600 text-sm font-medium">
+              ✅ ระบบจะทำการลบเฉพาะ {canDelete} รายการที่เหลือเท่านั้น
+            </span>
+          )}
+        </span>
+      );
+    }
+    return null;
+  }, [selectedCount, blockedCount]);
+
   if (data.length === 0) {
     return <PropertiesEmptyState />;
   }
@@ -171,7 +205,6 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
     }
   };
 
-
   return (
     <div className="space-y-4">
       {/* Bulk Action Toolbar */}
@@ -181,9 +214,9 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
         onDelete={handleBulkDelete}
         onExport={() => exportPropertiesAction(Array.from(selectedIds))}
         entityName="ทรัพย์"
+        confirmMessage={confirmMessage}
+        actionableCount={selectedCount - blockedCount}
       />
-
-
 
       <div className="rounded-md border shadow-sm bg-card">
         <Table>
@@ -466,8 +499,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                       title="ยอดเข้าชม (Views)"
                     >
                       <Eye className="h-3 w-3" />
-                      {/* Mock views for now */}
-                      <span>{Math.floor(Math.random() * 500) + 10}</span>
+                      <span>{property.view_count || 0}</span>
                     </div>
                   </div>
                 </TableCell>

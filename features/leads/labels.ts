@@ -83,3 +83,26 @@ export function safeEnumLabel(map: Record<string, string>, v: any) {
   if (!v) return "-";
   return map[v] ?? String(v);
 }
+
+export const NATIONALITY_OPTIONS = [
+  "ไทย",
+  "จีน",
+  "ญี่ปุ่น",
+  "เกาหลี",
+  "อเมริกัน",
+  "อังกฤษ",
+  "ฝรั่งเศส",
+  "เยอรมัน",
+  "รัสเซีย",
+  "อินเดีย",
+  "สิงคโปร์",
+  "มาเลเซีย",
+  "พม่า",
+  "กัมพูชา",
+  "ลาว",
+  "เวียดนาม",
+  "ไต้หวัน",
+  "ฮ่องกง",
+  "ออสเตรเลีย",
+  "อื่นๆ",
+] as const;

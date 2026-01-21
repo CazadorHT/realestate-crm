@@ -4,7 +4,13 @@ import { useState } from "react";
 import { DocumentOwnerType } from "../schema";
 import { DocumentList } from "./DocumentList";
 import { DocumentUpload } from "./DocumentUpload";
-import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 
@@ -18,13 +24,20 @@ export function DocumentSection({ ownerId, ownerType }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="space-y-4 rounded-xl border p-4 bg-muted/5">
+    <div className="space-y-4 rounded-xl border bg-card p-5 shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold flex items-center gap-2">Documents</h2>
+        <div>
+          <h3 className="font-semibold text-base flex items-center gap-2">
+            📄 เอกสาร
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            เอกสารที่เกี่ยวข้อง เช่น สัญญา, บัตรประชาชน, หนังสือเดินทาง ฯลฯ
+          </p>
+        </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button size="sm" variant="outline">
-              <Upload className="mr-2 h-4 w-4" /> Upload
+              <Upload className="mr-2 h-4 w-4" /> อัปโหลด
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -44,7 +57,11 @@ export function DocumentSection({ ownerId, ownerType }: Props) {
         </Dialog>
       </div>
 
-      <DocumentList ownerId={ownerId} ownerType={ownerType} refreshTrigger={refreshKey} />
+      <DocumentList
+        ownerId={ownerId}
+        ownerType={ownerType}
+        refreshTrigger={refreshKey}
+      />
     </div>
   );
 }

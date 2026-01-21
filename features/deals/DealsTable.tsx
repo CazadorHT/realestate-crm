@@ -388,10 +388,10 @@ export function DealsTable({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1 max-w-[200px] md:max-w-[400px]">
                       <Link
                         href={`/protected/properties/${deal.property_id}`}
-                        className="font-medium text-slate-900 hover:text-blue-600 hover:underline transition-colors line-clamp-1"
+                        className="font-medium text-slate-900 hover:text-blue-600 hover:underline transition-colors line-clamp-2 whitespace-normal break-words"
                       >
                         {deal.property?.title || "-"}
                       </Link>

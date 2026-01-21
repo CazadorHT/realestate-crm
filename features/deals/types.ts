@@ -15,8 +15,7 @@ export type DealWithProperty = Deal & {
     original_price: number | null;
     rental_price: number | null;
     original_rental_price: number | null;
-    images: {
-      id: string;
+    property_images?: {
       image_url: string;
       is_cover: boolean;
     }[];

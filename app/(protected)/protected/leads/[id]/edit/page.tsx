@@ -25,6 +25,7 @@ export default async function LeadEditPage({
     <div className="space-y-6">
       <h1 className="text-xl font-semibold">แก้ไข Lead</h1>
       <LeadForm
+        leadId={id}
         initialValues={leadRowToFormValues(lead)}
         onSubmitAction={onSubmitAction}
       />

@@ -22,26 +22,37 @@ import {
   Legend,
 } from "recharts";
 import type { PropertyStats } from "@/features/properties/queries";
+import { useRouter } from "next/navigation";
 
-// Thai labels mapping
-const TYPE_LABELS: Record<string, string> = {
-  CONDO: "คอนโด",
-  HOUSE: "บ้านเดี่ยว",
-  TOWNHOUSE: "ทาวน์เฮ้าส์",
-  LAND: "ที่ดิน",
-  COMMERCIAL: "อาคารพาณิชย์",
-  Unknown: "ไม่ระบุ",
+// --- Configuration Maps ---
+
+const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
+  CONDO: { label: "คอนโด", color: "#3b82f6" }, // Blue
+  HOUSE: { label: "บ้านเดี่ยว", color: "#10b981" }, // Green
+  TOWNHOUSE: { label: "ทาวน์เฮ้าส์", color: "#f59e0b" }, // Amber
+  LAND: { label: "ที่ดิน", color: "#8b5cf6" }, // Purple
+  COMMERCIAL: { label: "อาคารพาณิชย์", color: "#06b6d4" }, // Cyan
+  HOTEL: { label: "โรงแรม", color: "#ec4899" }, // Pink
+  APARTMENT: { label: "อพาร์ทเมนท์", color: "#f97316" }, // Orange
+  WAREHOUSE: { label: "โกดัง", color: "#6366f1" }, // Indigo
+  FACTORY: { label: "โรงงาน", color: "#475569" }, // Slate
+  Unknown: { label: "ไม่ระบุ", color: "#cbd5e1" }, // Gray
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  AVAILABLE: "ว่าง (Available)",
-  SOLD: "ขายแล้ว (Sold)",
-  RENTED: "เช่าแล้ว (Rented)",
-  RESERVED: "จองแล้ว (Reserved)",
-  Unknown: "ไม่ระบุ",
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  ACTIVE: { label: "ว่าง (Active)", color: "#10b981" }, // Green
+  AVAILABLE: { label: "ว่าง (Active)", color: "#10b981" }, // Green (Fallback)
+  SOLD: { label: "ขายแล้ว (Sold)", color: "#ef4444" }, // Red
+  RENTED: { label: "เช่าแล้ว (Rented)", color: "#3b82f6" }, // Blue
+  RESERVED: { label: "จองแล้ว (Reserved)", color: "#f59e0b" }, // Amber
+  Biocked: { label: "ระงับชั่วคราว", color: "#6b7280" },
+  DRAFT: { label: "ร่าง (Draft)", color: "#fcd34d" }, // Yellow
+  CLOSED: { label: "ปิดการขาย", color: "#64748b" }, // Slate
+  Unknown: { label: "ไม่ระบุ", color: "#cbd5e1" },
 };
 
-const COLORS = [
+// Fallback color palette
+const DEFAULT_COLORS = [
   "#3b82f6",
   "#10b981",
   "#f59e0b",
@@ -55,16 +66,86 @@ interface PropertiesDashboardProps {
 }
 
 export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
-  // Transform data for charts
-  const typeData = stats.byType.map((item) => ({
-    name: TYPE_LABELS[item.name] || item.name,
-    value: item.value,
-  }));
+  const router = useRouter();
 
-  const statusData = stats.byStatus.map((item) => ({
-    name: STATUS_LABELS[item.name] || item.name,
-    value: item.value,
-  }));
+  // Helper to get config safely
+  const getTypeConfig = (key: string) =>
+    TYPE_CONFIG[key] || {
+      label: key,
+      color: DEFAULT_COLORS[key.length % DEFAULT_COLORS.length],
+    };
+
+  const getStatusConfig = (key: string) =>
+    STATUS_CONFIG[key] || {
+      label: key,
+      color: DEFAULT_COLORS[key.length % DEFAULT_COLORS.length],
+    };
+
+  // Transform data for charts
+  const typeData = stats.byType
+    .map((item) => {
+      const config = getTypeConfig(item.name);
+      return {
+        id: item.name, // keep original key for filtering
+        name: config.label,
+        value: item.value,
+        color: config.color,
+      };
+    })
+    .sort((a, b) => b.value - a.value); // Sort descending
+
+  const statusData = stats.byStatus
+    .map((item) => {
+      const config = getStatusConfig(item.name);
+      return {
+        id: item.name === "AVAILABLE" ? "ACTIVE" : item.name, // Normalize
+        name: config.label,
+        value: item.value,
+        color: config.color,
+      };
+    })
+    .sort((a, b) => b.value - a.value);
+
+  // Interaction Handlers
+  const handleTypeClick = (data: any) => {
+    if (data && data.id) {
+      router.push(`/protected/properties?type=${data.id}`);
+    }
+  };
+
+  const handleStatusClick = (data: any) => {
+    if (data && data.id) {
+      router.push(`/protected/properties?status=${data.id}`);
+    }
+  };
+
+  // Custom Label for Pie Chart
+  const renderCustomLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+  }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return percent > 0.05 ? (
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="text-xs font-bold pointer-events-none"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    ) : null;
+  };
 
   return (
     <div className="space-y-6 mb-8">
@@ -138,7 +219,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
               }).format(stats.totalValue)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              บาท (เฉพาะรายการขาย)
+              บาท (เฉพาะรายการ Active)
             </p>
           </CardContent>
         </Card>
@@ -163,16 +244,21 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
+                    label={renderCustomLabel}
+                    labelLine={false}
+                    onClick={handleTypeClick}
+                    className="cursor-pointer outline-none"
                   >
                     {typeData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
+                        fill={entry.color}
+                        className="hover:opacity-80 transition-opacity"
                       />
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value) => [value, "จำนวน"]}
+                    formatter={(value: number) => [value, "จำนวน"]}
                     contentStyle={{
                       borderRadius: "8px",
                       border: "none",
@@ -197,18 +283,21 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
                 <BarChart
                   data={statusData}
                   layout="vertical"
-                  margin={{ left: 20 }}
+                  margin={{ left: 20, right: 20 }}
+                  onClick={handleStatusClick}
+                  className="cursor-pointer"
                 >
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" hide />
+                  <XAxis type="number" allowDecimals={false} />
                   <YAxis
                     dataKey="name"
                     type="category"
                     width={100}
                     fontSize={12}
+                    tick={{ fill: "#64748b" }}
                   />
                   <Tooltip
-                    cursor={{ fill: "transparent" }}
+                    cursor={{ fill: "rgba(0,0,0,0.05)" }}
                     contentStyle={{
                       borderRadius: "8px",
                       border: "none",
@@ -217,10 +306,18 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
                   />
                   <Bar
                     dataKey="value"
-                    fill="#3b82f6"
                     radius={[0, 4, 4, 0]}
-                    barSize={20}
-                  />
+                    barSize={32}
+                    animationDuration={1000}
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell
+                        key={`cell-status-${index}`}
+                        fill={entry.color}
+                        className="hover:opacity-80 transition-opacity"
+                      />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>

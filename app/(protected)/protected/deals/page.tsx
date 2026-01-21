@@ -37,7 +37,7 @@ export default async function DealsPage() {
     .reduce((sum, d) => sum + (d.commission_amount || 0), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -169,7 +169,7 @@ export default async function DealsPage() {
           )}
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden p-4">
           <DealsTable
             initialData={data.slice(0, 20)}
             initialCount={count}

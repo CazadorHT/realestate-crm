@@ -28,6 +28,8 @@ interface BulkActionToolbarProps {
   }>;
   entityName?: string; // เช่น "ทรัพย์", "ลีด", "ดีล"
   className?: string;
+  confirmMessage?: React.ReactNode;
+  actionableCount?: number;
 }
 
 export function BulkActionToolbar({
@@ -37,10 +39,15 @@ export function BulkActionToolbar({
   onExport,
   entityName = "รายการ",
   className,
+  confirmMessage,
+  actionableCount,
 }: BulkActionToolbarProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Use actionableCount if provided, otherwise fallback to selectedCount
+  const countToDelete = actionableCount ?? selectedCount;
 
   if (selectedCount === 0) return null;
 
@@ -148,11 +155,17 @@ export function BulkActionToolbar({
           <AlertDialogHeader>
             <AlertDialogTitle>ยืนยันการลบ</AlertDialogTitle>
             <AlertDialogDescription>
-              คุณกำลังจะลบ{" "}
-              <strong className="text-foreground">
-                {selectedCount} {entityName}
-              </strong>{" "}
-              การดำเนินการนี้ไม่สามารถย้อนกลับได้
+              {confirmMessage ? (
+                confirmMessage
+              ) : (
+                <>
+                  คุณกำลังจะลบ{" "}
+                  <strong className="text-foreground">
+                    {selectedCount} {entityName}
+                  </strong>{" "}
+                  การดำเนินการนี้ไม่สามารถย้อนกลับได้
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -170,7 +183,7 @@ export function BulkActionToolbar({
               ) : (
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
-                  ลบ {selectedCount} {entityName}
+                  ลบ {countToDelete} {entityName}
                 </>
               )}
             </AlertDialogAction>

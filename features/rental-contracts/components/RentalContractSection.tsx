@@ -1,7 +1,20 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { addMonths, subDays } from "date-fns";
+
+// ... (keep other imports) ...
+
+// ... (keep ContractStatusBadge and getStatusLabel) ...
+
+type Props = {
+  dealId: string;
+  dealType: string;
+  defaultRent?: number | null;
+  defaultLeaseTerm?: number | null;
+};
 import {
   Dialog,
   DialogContent,
@@ -38,12 +51,35 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-type Props = {
-  dealId: string;
-  dealType: string;
-  defaultRent?: number | null;
-  defaultLeaseTerm?: number | null;
-};
+function ContractStatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    DRAFT: "bg-slate-100 text-slate-600 border-slate-200",
+    ACTIVE: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    TERMINATED: "bg-red-100 text-red-600 border-red-200",
+  };
+
+  return (
+    <Badge
+      variant="outline"
+      className={`${styles[status] || ""} font-medium border`}
+    >
+      {getStatusLabel(status)}
+    </Badge>
+  );
+}
+
+function getStatusLabel(status: string) {
+  switch (status) {
+    case "ACTIVE":
+      return "ใช้งาน (Active)";
+    case "TERMINATED":
+      return "สิ้นสุด/ยกเลิก (Terminated)";
+    case "DRAFT":
+      return "ร่างสัญญา (Draft)";
+    default:
+      return status;
+  }
+}
 
 export function RentalContractSection({
   dealId,
@@ -93,22 +129,49 @@ export function RentalContractSection({
 
   const rentPrice = form.watch("rent_price") || 0;
 
+  // Watches for auto-calculation
+  const startDate = form.watch("start_date");
+  const leaseTerm = form.watch("lease_term_months");
+
+  // Auto-calc End Date
+  useEffect(() => {
+    if (startDate && leaseTerm) {
+      const start = new Date(startDate);
+      if (!isNaN(start.getTime()) && leaseTerm > 0) {
+        // Calculate end date: Start Date + Lease Term - 1 Day
+        const end = subDays(addMonths(start, leaseTerm), 1);
+        // Update end_date if it's different to avoid loops (though setValue check might handle it)
+        const currentEnd = form.getValues("end_date");
+        const newEndString = end.toISOString().split("T")[0];
+
+        if (currentEnd !== newEndString) {
+          form.setValue("end_date", newEndString);
+        }
+      }
+    }
+  }, [startDate, leaseTerm, form]);
+
   useEffect(() => {
     // reset when contract changes
+    const initialRent = contract?.rent_price ?? defaultRent ?? 0;
+
     form.reset({
       deal_id: dealId,
       start_date: contract?.start_date ?? today,
       end_date: contract?.end_date ?? undefined,
       rent_price: contract?.rent_price ?? defaultRent ?? undefined,
-      deposit_amount: contract?.deposit_amount ?? undefined,
+      deposit_amount:
+        contract?.deposit_amount ?? (initialRent ? initialRent * 2 : undefined),
       lease_term_months:
         contract?.lease_term_months ?? defaultLeaseTerm ?? undefined,
       payment_cycle: contract?.payment_cycle ?? undefined,
       other_terms: contract?.other_terms ?? undefined,
-      advance_payment_amount: contract?.advance_payment_amount ?? undefined,
+      advance_payment_amount:
+        contract?.advance_payment_amount ??
+        (initialRent ? initialRent * 1 : undefined),
       status: contract?.status ?? "DRAFT",
     });
-  }, [contract, dealId, defaultRent, defaultLeaseTerm]);
+  }, [contract, dealId]); // Removed defaultRent, defaultLeaseTerm to prevent reset on parent re-render
 
   const handleSubmit = async (vals: ContractFormInput) => {
     try {
@@ -171,10 +234,12 @@ export function RentalContractSection({
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                       <CalendarIcon className="h-4 w-4 text-blue-500" />
-                      วันที่เริ่มสัญญา
+                      {dealType === "RENT"
+                        ? "วันที่เริ่มสัญญา"
+                        : "วันที่จดสัญญา"}
                     </Label>
                     <DatePicker
-                      value={form.getValues("start_date")}
+                      value={form.watch("start_date")}
                       onChange={(date) => form.setValue("start_date", date)}
                     />
                   </div>
@@ -182,10 +247,12 @@ export function RentalContractSection({
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                       <CalendarIcon className="h-4 w-4 text-slate-500" />
-                      วันที่สิ้นสุด
+                      {dealType === "RENT"
+                        ? "วันที่สิ้นสุด"
+                        : "วันโอนกรรมสิทธิ์"}
                     </Label>
                     <DatePicker
-                      value={form.getValues("end_date")}
+                      value={form.watch("end_date")}
                       onChange={(date) => form.setValue("end_date", date)}
                       placeholder="เลือกวันที่"
                     />
@@ -194,91 +261,107 @@ export function RentalContractSection({
                   <div className="md:col-span-2 space-y-2">
                     <Label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                       <Wallet className="h-4 w-4 text-emerald-500" />
-                      ราคาค่าเช่า
+                      {dealType === "RENT" ? "ราคาค่าเช่า" : "ราคาซื้อขาย"}
                     </Label>
-                    <PriceInput
-                      value={form.watch("rent_price")}
-                      onChange={(val) => form.setValue("rent_price", val)}
-                    />
+                    {dealType === "RENT" && (
+                      /* Only show Deposit/Advance calculator for RENT */
+                      <PriceInput
+                        value={form.watch("rent_price")}
+                        onChange={(val) => form.setValue("rent_price", val)}
+                      />
+                    )}
+                    {dealType !== "RENT" && (
+                      <PriceInput
+                        value={form.watch("rent_price")}
+                        onChange={(val) => form.setValue("rent_price", val)}
+                      />
+                    )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="flex items-center justify-between text-sm font-semibold text-slate-700">
-                      <span>เงินประกัน</span>
-                      {rentPrice > 0 && (
-                        <div className="flex gap-1">
-                          {[1, 2, 3].map((m) => (
-                            <button
-                              key={m}
-                              type="button"
-                              onClick={() =>
-                                form.setValue("deposit_amount", m * rentPrice)
-                              }
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
-                                form.watch("deposit_amount") === m * rentPrice
-                                  ? "bg-blue-600 text-white shadow-sm scale-110"
-                                  : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                              }`}
-                            >
-                              {m} ด.
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </Label>
-                    <PriceInput
-                      value={form.watch("deposit_amount") ?? 0}
-                      onChange={(val) => form.setValue("deposit_amount", val)}
-                    />
-                  </div>
+                  {dealType === "RENT" && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center justify-between text-sm font-semibold text-slate-700">
+                        <span>เงินประกัน</span>
+                        {rentPrice > 0 && (
+                          <div className="flex gap-1">
+                            {[1, 2, 3].map((m) => (
+                              <button
+                                key={m}
+                                type="button"
+                                onClick={() =>
+                                  form.setValue("deposit_amount", m * rentPrice)
+                                }
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                                  form.watch("deposit_amount") === m * rentPrice
+                                    ? "bg-blue-600 text-white shadow-sm scale-110"
+                                    : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                }`}
+                              >
+                                {m} ด.
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </Label>
+                      <PriceInput
+                        value={form.watch("deposit_amount") ?? 0}
+                        onChange={(val) => form.setValue("deposit_amount", val)}
+                      />
+                    </div>
+                  )}
 
-                  <div className="space-y-2">
-                    <Label className="flex items-center justify-between text-sm font-semibold text-slate-700">
-                      <span>เงินล่วงหน้า</span>
-                      {rentPrice > 0 && (
-                        <div className="flex gap-1">
-                          {[1, 2, 3].map((m) => (
-                            <button
-                              key={m}
-                              type="button"
-                              onClick={() =>
-                                form.setValue(
-                                  "advance_payment_amount",
+                  {dealType === "RENT" && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center justify-between text-sm font-semibold text-slate-700">
+                        <span>เงินล่วงหน้า</span>
+                        {rentPrice > 0 && (
+                          <div className="flex gap-1">
+                            {[1, 2, 3].map((m) => (
+                              <button
+                                key={m}
+                                type="button"
+                                onClick={() =>
+                                  form.setValue(
+                                    "advance_payment_amount",
+                                    m * rentPrice
+                                  )
+                                }
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                                  form.watch("advance_payment_amount") ===
                                   m * rentPrice
-                                )
-                              }
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
-                                form.watch("advance_payment_amount") ===
-                                m * rentPrice
-                                  ? "bg-blue-600 text-white shadow-sm scale-110"
-                                  : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                              }`}
-                            >
-                              {m} ด.
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </Label>
-                    <PriceInput
-                      value={form.watch("advance_payment_amount") ?? 0}
-                      onChange={(val) =>
-                        form.setValue("advance_payment_amount", val)
-                      }
-                    />
-                  </div>
+                                    ? "bg-blue-600 text-white shadow-sm scale-110"
+                                    : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                }`}
+                              >
+                                {m} ด.
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </Label>
+                      <PriceInput
+                        value={form.watch("advance_payment_amount") ?? 0}
+                        onChange={(val) =>
+                          form.setValue("advance_payment_amount", val)
+                        }
+                      />
+                    </div>
+                  )}
 
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-slate-700">
-                      ระยะเวลาสัญญา (เดือน)
-                    </Label>
-                    <Input
-                      type="number"
-                      {...form.register("lease_term_months", {
-                        valueAsNumber: true,
-                      })}
-                    />
-                  </div>
+                  {dealType === "RENT" && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-slate-700">
+                        ระยะเวลาสัญญา (เดือน)
+                      </Label>
+                      <Input
+                        type="number"
+                        disabled
+                        {...form.register("lease_term_months", {
+                          valueAsNumber: true,
+                        })}
+                      />
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-slate-700">
@@ -292,10 +375,14 @@ export function RentalContractSection({
                         <SelectValue placeholder="เลือกสถานะ" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="DRAFT">ร่างสัญญา (Draft)</SelectItem>
-                        <SelectItem value="ACTIVE">ใช้งาน (Active)</SelectItem>
+                        <SelectItem value="DRAFT">
+                          <ContractStatusBadge status="DRAFT" />
+                        </SelectItem>
+                        <SelectItem value="ACTIVE">
+                          <ContractStatusBadge status="ACTIVE" />
+                        </SelectItem>
                         <SelectItem value="TERMINATED">
-                          สิ้นสุด/ยกเลิก (Terminated)
+                          <ContractStatusBadge status="TERMINATED" />
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -309,43 +396,66 @@ export function RentalContractSection({
                       placeholder="เช่น อนุญาตให้เลี้ยงสัตว์ได้, จอดรถฟรี 1 คัน"
                       {...form.register("other_terms")}
                     />
+                    {dealType === "SALE" && (
+                      <div className="flex gap-2 mt-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7"
+                          onClick={() => {
+                            const current = form.getValues("other_terms") || "";
+                            const toAdd = "ค่าโอนคนละครึ่ง (50/50)";
+                            if (!current.includes(toAdd)) {
+                              form.setValue(
+                                "other_terms",
+                                current ? `${current}, ${toAdd}` : toAdd
+                              );
+                            }
+                          }}
+                        >
+                          + ค่าโอน 50/50
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Total Initial Payment Summary */}
-                  <div className="md:col-span-2 bg-slate-50 border border-slate-200 rounded-lg p-4 mt-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-slate-600">
-                        เงินประกัน
-                      </span>
-                      <span className="text-sm font-medium">
-                        {(form.watch("deposit_amount") || 0).toLocaleString()}{" "}
-                        บาท
-                      </span>
+                  {dealType === "RENT" && (
+                    <div className="md:col-span-2 bg-slate-50 border border-slate-200 rounded-lg p-4 mt-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-semibold text-slate-600">
+                          เงินประกัน
+                        </span>
+                        <span className="text-sm font-medium">
+                          {(form.watch("deposit_amount") || 0).toLocaleString()}{" "}
+                          บาท
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-200">
+                        <span className="text-sm font-semibold text-slate-600">
+                          เงินล่วงหน้า
+                        </span>
+                        <span className="text-sm font-medium">
+                          {(
+                            form.watch("advance_payment_amount") || 0
+                          ).toLocaleString()}{" "}
+                          บาท
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-base font-bold text-slate-800">
+                          รวมยอดชำระแรกเข้า
+                        </span>
+                        <span className="text-lg font-bold text-blue-600">
+                          {(
+                            (form.watch("deposit_amount") || 0) +
+                            (form.watch("advance_payment_amount") || 0)
+                          ).toLocaleString()}{" "}
+                          บาท
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-200">
-                      <span className="text-sm font-semibold text-slate-600">
-                        เงินล่วงหน้า
-                      </span>
-                      <span className="text-sm font-medium">
-                        {(
-                          form.watch("advance_payment_amount") || 0
-                        ).toLocaleString()}{" "}
-                        บาท
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-base font-bold text-slate-800">
-                        รวมยอดชำระแรกเข้า
-                      </span>
-                      <span className="text-lg font-bold text-blue-600">
-                        {(
-                          (form.watch("deposit_amount") || 0) +
-                          (form.watch("advance_payment_amount") || 0)
-                        ).toLocaleString()}{" "}
-                        บาท
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="flex gap-2 justify-end">
@@ -379,8 +489,9 @@ export function RentalContractSection({
                     ? `${contract.start_date} — ${contract.end_date ?? ""}`
                     : "ยังไม่ได้กำหนดวันที่"}
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  สถานะ: {contract.status ?? "DRAFT"}
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  สถานะ:{" "}
+                  <ContractStatusBadge status={contract.status ?? "DRAFT"} />
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -406,15 +517,9 @@ export function RentalContractSection({
                         </div>
                         <div>
                           <p className="text-muted-foreground">สถานะ</p>
-                          <p
-                            className={`font-medium ${
-                              contract.status === "ACTIVE"
-                                ? "text-green-600"
-                                : "text-slate-600"
-                            }`}
-                          >
-                            {contract.status}
-                          </p>
+                          <div>
+                            <ContractStatusBadge status={contract.status} />
+                          </div>
                         </div>
                         <div>
                           <p className="text-muted-foreground">วันเริ่มสัญญา</p>
@@ -510,36 +615,6 @@ export function RentalContractSection({
                     >
                       เซ็นสัญญา
                     </Button>
-
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
-                      onClick={async () => {
-                        if (
-                          !confirm("คุณต้องการยกเลิกและลบสัญญานี้ใช่หรือไม่?")
-                        )
-                          return;
-                        try {
-                          const res = await fetch(
-                            `/api/rental-contracts/${dealId}`,
-                            {
-                              method: "DELETE",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ id: contract.id }),
-                            }
-                          );
-                          if (!res.ok) throw new Error("Delete failed");
-                          toast.success("ยกเลิกสัญญาเรียบร้อย");
-                          await fetchContract();
-                        } catch (e) {
-                          toast.error("ล้มเหลวในการยกเลิกสัญญา");
-                        }
-                      }}
-                    >
-                      <XCircle className="h-3.5 w-3.5" />
-                      ยกเลิกสัญญา
-                    </Button>
                   </>
                 )}
 
@@ -551,7 +626,7 @@ export function RentalContractSection({
                     onClick={async () => {
                       if (
                         !confirm(
-                          "คุณต้องการหยุดสัญญานี้ใช่หรือไม่? (สถานะจะเปลี่ยนเป็น TERMINATED)"
+                          "คุณต้องการหยุดสัญญา/ยกเลิกสัญญา นี้ใช่หรือไม่? (สถานะจะเปลี่ยนเป็น TERMINATED )"
                         )
                       )
                         return;
@@ -586,6 +661,39 @@ export function RentalContractSection({
                   onClick={() => setOpen(true)}
                 >
                   แก้ไข
+                </Button>
+
+                {/* Common Delete Button - Disabled unless TERMINATED or DRAFT */}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={!["DRAFT", "TERMINATED"].includes(contract.status)}
+                  className={`gap-1.5 ${
+                    ["DRAFT", "TERMINATED"].includes(contract.status)
+                      ? "text-destructive hover:text-destructive hover:bg-destructive/10"
+                      : "text-muted-foreground"
+                  }`}
+                  onClick={async () => {
+                    if (!confirm("คุณต้องการลบสัญญานี้ใช่หรือไม่?")) return;
+                    try {
+                      const res = await fetch(
+                        `/api/rental-contracts/${dealId}`,
+                        {
+                          method: "DELETE",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ id: contract.id }),
+                        }
+                      );
+                      if (!res.ok) throw new Error("Delete failed");
+                      toast.success("ลบสัญญาเรียบร้อย");
+                      await fetchContract();
+                    } catch (e) {
+                      toast.error("ล้มเหลวในการลบสัญญา");
+                    }
+                  }}
+                >
+                  <XCircle className="h-3.5 w-3.5" />
+                  ลบสัญญา
                 </Button>
               </div>
             </div>

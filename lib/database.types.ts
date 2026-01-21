@@ -662,6 +662,7 @@ export type Database = {
           transit_type: string | null
           updated_at: string
           verified: boolean | null
+          view_count: number | null
           zoning: string | null
         }
         Insert: {
@@ -717,6 +718,7 @@ export type Database = {
           transit_type?: string | null
           updated_at?: string
           verified?: boolean | null
+          view_count?: number | null
           zoning?: string | null
         }
         Update: {
@@ -772,6 +774,7 @@ export type Database = {
           transit_type?: string | null
           updated_at?: string
           verified?: boolean | null
+          view_count?: number | null
           zoning?: string | null
         }
         Relationships: [
@@ -1122,6 +1125,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      increment_property_view: {
+        Args: { property_id: string }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
     }

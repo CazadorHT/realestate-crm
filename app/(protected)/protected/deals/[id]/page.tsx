@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, differenceInMonths } from "date-fns";
+
 import { th } from "date-fns/locale";
 import {
   ChevronLeft,
@@ -35,32 +36,46 @@ export default async function DealDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href={`/protected/leads/${deal.lead_id}`}>
-            <Button variant="ghost" size="icon">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">
-              รายละเอียดการ Deal
-            </h2>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant="secondary">
-                {deal.deal_type === "RENT" ? "ดีลเช่า" : "ดีลซื้อขาย"}
-              </Badge>
-              <StatusBadge status={deal.status} />
-            </div>
+    <div className="flex-1 space-y-6 p-8 pt-6 max-w-6xl mx-auto">
+      {/* Breadcrumb Navigation */}
+      <nav className="flex items-center gap-1 text-sm text-muted-foreground">
+        <Link
+          href="/protected/leads"
+          className="hover:text-primary transition-colors"
+        >
+          ลีด
+        </Link>
+        <span className="text-muted-foreground/50">›</span>
+        <Link
+          href={`/protected/leads/${deal.lead_id}`}
+          className="hover:text-primary transition-colors"
+        >
+          รายละเอียดลีด
+        </Link>
+        <span className="text-muted-foreground/50">›</span>
+        <span className="font-medium text-foreground">ดีล</span>
+      </nav>
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 pb-2 border-b">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold">รายละเอียดการ Deal</h1>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">
+              {deal.deal_type === "RENT" ? "🏠 ดีลเช่า" : "💰 ดีลซื้อขาย"}
+            </Badge>
+            <StatusBadge status={deal.status} />
           </div>
         </div>
 
         <div className="flex items-center gap-2">
+          <Button variant="ghost" asChild>
+            <Link href={`/protected/leads/${deal.lead_id}`}>← ย้อนกลับ</Link>
+          </Button>
           <DealFormDialog
             leadId={deal.lead_id}
             deal={deal}
-            properties={JSON.parse(JSON.stringify(properties))} // Ensure serializable
+            properties={JSON.parse(JSON.stringify(properties))}
             trigger={
               <Button variant="outline" size="sm">
                 <Edit2 className="h-4 w-4 mr-2" />
@@ -176,10 +191,22 @@ export default async function DealDetailPage({ params }: PageProps) {
             {deal.property ? (
               <>
                 <div className="aspect-video bg-muted rounded-lg overflow-hidden border">
-                  {/* We could add image here if needed */}
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                    <BadgeCent className="h-8 w-8" />
-                  </div>
+                  {deal.property.property_images?.[0]?.image_url ? (
+                    <img
+                      src={
+                        deal.property.property_images.find(
+                          (img) => img.is_cover
+                        )?.image_url ||
+                        deal.property.property_images[0].image_url
+                      }
+                      alt={deal.property.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <BadgeCent className="h-8 w-8" />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <Link
@@ -255,7 +282,22 @@ export default async function DealDetailPage({ params }: PageProps) {
               <RentalContractSection
                 dealId={deal.id}
                 dealType={deal.deal_type}
-                defaultRent={deal.property?.rental_price ?? null}
+                defaultRent={
+                  deal.deal_type === "RENT"
+                    ? deal.property?.rental_price ||
+                      deal.property?.original_rental_price ||
+                      null
+                    : deal.property?.original_price ||
+                      null
+                }
+                defaultLeaseTerm={
+                  deal.transaction_date && deal.transaction_end_date
+                    ? differenceInMonths(
+                        new Date(deal.transaction_end_date),
+                        new Date(deal.transaction_date)
+                      )
+                    : null
+                }
               />
             </div>
           </div>

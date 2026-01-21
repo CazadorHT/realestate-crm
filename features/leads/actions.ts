@@ -30,6 +30,9 @@ export async function createLeadAction(
 
     const payload: LeadInsert = {
       ...parsed.data,
+      nationality: Array.isArray(parsed.data.nationality)
+        ? parsed.data.nationality.join(", ")
+        : parsed.data.nationality,
       preferred_locations: parsed.data.preferred_locations ?? null,
       lead_type: parsed.data.lead_type ?? undefined,
       created_by: ctx.user.id,
@@ -87,6 +90,9 @@ export async function updateLeadAction(
     // 2) update
     const payload: LeadUpdate = {
       ...parsed.data,
+      nationality: Array.isArray(parsed.data.nationality)
+        ? parsed.data.nationality.join(", ")
+        : parsed.data.nationality,
       preferred_locations: parsed.data.preferred_locations ?? null,
       lead_type: parsed.data.lead_type ?? undefined,
       updated_at: new Date().toISOString(),

@@ -25,9 +25,17 @@ interface DeleteDealButtonProps {
   onSuccess?: () => void;
   /** optional path to redirect to after delete (client-side) */
   redirectPath?: string;
+  /** Show only icon without text (for compact inline use) */
+  iconOnly?: boolean;
 }
 
-export function DeleteDealButton({ dealId, leadId, onSuccess, redirectPath }: DeleteDealButtonProps) {
+export function DeleteDealButton({
+  dealId,
+  leadId,
+  onSuccess,
+  redirectPath,
+  iconOnly,
+}: DeleteDealButtonProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [open, setOpen] = useState(false);
@@ -60,10 +68,20 @@ export function DeleteDealButton({ dealId, leadId, onSuccess, redirectPath }: De
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="sm">
-          <Trash2 className="h-4 w-4 mr-2" />
-          ลบ
-        </Button>
+        {iconOnly ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button variant="destructive" size="sm">
+            <Trash2 className="h-4 w-4 mr-2" />
+            ลบ
+          </Button>
+        )}
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

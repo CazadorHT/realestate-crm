@@ -888,8 +888,10 @@ export async function deletePropertyAction(formData: FormData) {
         .filter((path): path is string => !!path);
 
       if (pathsToRemove.length > 0) {
-        const { error: storageError } = await supabase.storage
-          .from(PROPERTY_IMAGES_BUCKET) // แนะนำให้ใช้ constant เดียวกัน
+        // Use Admin Client to bypass RLS for storage deletion
+        const adminSupabase = createAdminClient();
+        const { error: storageError } = await adminSupabase.storage
+          .from(PROPERTY_IMAGES_BUCKET)
           .remove(pathsToRemove);
 
         if (storageError) {
@@ -1263,5 +1265,22 @@ export async function duplicatePropertyAction(
   } catch (err) {
     console.error("duplicatePropertyAction → error:", err);
     return authzFail(err);
+  }
+}
+
+/**
+ * Increment property view count
+ * Publicly accessible action (no auth required)
+ */
+export async function incrementPropertyView(propertyId: string) {
+  const supabase = await createClient();
+
+  // Call the secure database function
+  const { error } = await supabase.rpc("increment_property_view", {
+    property_id: propertyId,
+  });
+
+  if (error) {
+    console.error("Error incrementing view count:", error);
   }
 }

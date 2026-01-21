@@ -7,6 +7,7 @@ import { PropertyFilters } from "@/components/properties/PropertyFilters";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PlusCircle } from "lucide-react";
 import { getPropertiesDashboardStatsQuery } from "@/features/properties/queries";
 import { PropertiesDashboard } from "@/components/properties/PropertiesDashboard";
@@ -121,13 +122,18 @@ export default async function PropertiesPage({
 
   const { data: properties, error, count } = await query;
 
-  if (error || !properties) {
+  if (error) {
     console.error("Error fetching properties:", error);
     return (
       <div className="p-8 text-center text-red-500">
         เกิดข้อผิดพลาดในการโหลดข้อมูล
       </div>
     );
+  }
+
+  // Redirect if page is empty and not on first page
+  if (properties.length === 0 && currentPage > 1) {
+    redirect("/protected/properties?page=1");
   }
 
   const propertyIds = properties.map((p) => p.id);
@@ -238,6 +244,7 @@ export default async function PropertiesPage({
       original_price: p.original_price,
       original_rental_price: p.original_rental_price,
       is_new: isNew,
+      view_count: p.view_count || 0,
     };
   });
 

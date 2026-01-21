@@ -1,19 +1,25 @@
 "use client";
 
-import { DealWithProperty } from "../types";
+import { DealWithProperty, DealPropertyOption } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import Link from "next/link";
-import { Home, Eye } from "lucide-react";
+import { Home, Eye, Edit2, Trash2 } from "lucide-react";
+import { DealFormDialog } from "./DealFormDialog";
+import { DeleteDealButton } from "./DeleteDealButton";
+import { useRouter } from "next/navigation";
 
 interface DealListProps {
   deals: DealWithProperty[];
+  properties?: DealPropertyOption[];
 }
 
-export function DealList({ deals }: DealListProps) {
+export function DealList({ deals, properties = [] }: DealListProps) {
+  const router = useRouter();
+
   if (deals.length === 0) {
     return (
       <div className="text-center py-6 text-muted-foreground border rounded-md border-dashed">
@@ -29,10 +35,21 @@ export function DealList({ deals }: DealListProps) {
           <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             {/* Left: Property Info */}
             <div className="flex items-start gap-4">
-              <div className="h-12 w-12 rounded bg-muted flex items-center justify-center shrink-0">
-                <Home className="h-6 w-6 text-muted-foreground" />
-              </div>{" "}
-              {/* Placeholder for image if needed */}
+              {/* Property Cover Image */}
+              {deal.property?.property_images?.[0]?.image_url ? (
+                <img
+                  src={
+                    deal.property.property_images.find((img) => img.is_cover)
+                      ?.image_url || deal.property.property_images[0].image_url
+                  }
+                  alt={deal.property.title || "Property"}
+                  className="h-12 w-12 rounded object-cover shrink-0"
+                />
+              ) : (
+                <div className="h-12 w-12 rounded bg-muted flex items-center justify-center shrink-0">
+                  <Home className="h-6 w-6 text-muted-foreground" />
+                </div>
+              )}
               <div>
                 <Link
                   href={`/protected/properties/${deal.property_id}`}
@@ -66,10 +83,11 @@ export function DealList({ deals }: DealListProps) {
               </div>
             </div>
 
-            {/* Right: Status & Commission */}
+            {/* Right: Status & Commission & Actions */}
             <div className="flex flex-col items-end gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <StatusBadge status={deal.status} />
+                {/* View Button */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -80,6 +98,29 @@ export function DealList({ deals }: DealListProps) {
                     <Eye className="h-4 w-4" />
                   </Link>
                 </Button>
+                {/* Edit Button */}
+                <DealFormDialog
+                  leadId={deal.lead_id}
+                  deal={deal}
+                  properties={properties}
+                  refreshOnSuccess
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-blue-600"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  }
+                />
+                {/* Delete Button (icon only) */}
+                <DeleteDealButton
+                  dealId={deal.id}
+                  leadId={deal.lead_id}
+                  iconOnly
+                  onSuccess={() => router.refresh()}
+                />
               </div>
               {deal.commission_amount && deal.commission_amount > 0 && (
                 <span className="text-xs text-green-600 font-medium">

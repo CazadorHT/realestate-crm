@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { addRecentProperty } from "@/lib/recent-properties";
+import { incrementPropertyView } from "@/features/properties/actions";
 
 export function RecentPropertyTracker({
   property,
@@ -21,6 +22,8 @@ export function RecentPropertyTracker({
 }) {
   useEffect(() => {
     addRecentProperty(property);
+    // Fire and forget view increment
+    incrementPropertyView(property.id);
   }, [property]);
 
   return null;

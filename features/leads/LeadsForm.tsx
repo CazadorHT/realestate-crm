@@ -19,6 +19,7 @@ import {
   LEAD_SOURCE_ORDER,
   LEAD_STAGE_LABELS,
   LEAD_SOURCE_LABELS,
+  NATIONALITY_OPTIONS,
 } from "./labels";
 import {
   UserCircle,
@@ -36,9 +37,11 @@ import {
   Globe,
   MapPin,
   ClipboardList,
+  ChevronLeft,
   ChevronRight,
   Info,
   Calendar,
+  Cigarette,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -53,6 +56,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 type Props = {
+  leadId?: string;
   initialValues?: Partial<LeadFormValues>;
   onSubmitAction: (values: LeadFormValues) => Promise<void>;
 };
@@ -70,7 +74,7 @@ function isNextRedirectError(e: unknown) {
   );
 }
 
-export function LeadForm({ initialValues, onSubmitAction }: Props) {
+export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -128,9 +132,48 @@ export function LeadForm({ initialValues, onSubmitAction }: Props) {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* --- LEFT COLUMN: Contact & Identity --- */}
-        <div className="lg:col-span-2 space-y-6">
+      {/* Breadcrumb Navigation */}
+      <nav className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
+        <Button
+          type="button"
+          variant="link"
+          size="sm"
+          onClick={() => router.push("/protected/leads")}
+          className="p-0 h-auto text-muted-foreground hover:text-primary"
+        >
+          ลีด
+        </Button>
+        <ChevronRight className="h-3 w-3" />
+        {initialValues?.full_name && leadId ? (
+          <>
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              onClick={() => router.push(`/protected/leads/${leadId}`)}
+              className="p-0 h-auto font-medium text-foreground hover:text-primary truncate max-w-[200px]"
+            >
+              {initialValues.full_name}
+            </Button>
+            <ChevronRight className="h-3 w-3" />
+            <span className="text-foreground">แก้ไข</span>
+          </>
+        ) : initialValues?.full_name ? (
+          <>
+            <span className="font-medium text-foreground truncate max-w-[200px]">
+              {initialValues.full_name}
+            </span>
+            <ChevronRight className="h-3 w-3" />
+            <span className="text-foreground">แก้ไข</span>
+          </>
+        ) : (
+          <span className="text-foreground">สร้างใหม่</span>
+        )}
+      </nav>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* --- LEFT COLUMN: Contact & Requirements --- */}
+        <div className="space-y-6">
           <Card className="shadow-md border-slate-200 dark:border-slate-800 overflow-hidden">
             <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b pb-4">
               <div className="flex items-center gap-3">
@@ -212,36 +255,109 @@ export function LeadForm({ initialValues, onSubmitAction }: Props) {
 
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    สัญชาติ
+                    Line ID
+                  </Label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60 flex items-center justify-center">
+                      <span className="font-bold text-[10px]">L</span>
+                    </div>
+                    <Input
+                      className="pl-9 h-10 border-slate-200 dark:border-slate-700"
+                      placeholder="Line ID ของลูกค้า..."
+                      {...form.register("preferences.line_id")}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    ช่องทางติดต่อออนไลน์
                   </Label>
                   <div className="relative">
                     <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" />
                     <Input
                       className="pl-9 h-10 border-slate-200 dark:border-slate-700"
-                      placeholder="เช่น ไทย, อังกฤษ..."
-                      {...form.register("nationality")}
+                      placeholder="เช่น Facebook, WeChat, WhatsApp..."
+                      {...form.register("preferences.online_contact")}
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-lg border bg-slate-50/30 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 self-end h-10">
-                  <Label
-                    htmlFor="is_foreigner"
-                    className="text-sm font-medium cursor-pointer flex items-center gap-2"
-                  >
-                    <PlaneTakeoff className="h-4 w-4 text-blue-500" />{" "}
-                    เป็นชาวต่างชาติไหม?
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    สัญชาติ
                   </Label>
-                  <Switch
-                    id="is_foreigner"
-                    checked={form.watch("is_foreigner") ?? false}
-                    onCheckedChange={(v) => form.setValue("is_foreigner", v)}
-                  />
+                  {/* Nationality Button Grid */}
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 max-h-40 overflow-y-auto">
+                    {NATIONALITY_OPTIONS.map((nat) => {
+                      const currentVal = form.watch("nationality");
+                      const selected = Array.isArray(currentVal)
+                        ? currentVal
+                        : typeof currentVal === "string" &&
+                          currentVal.length > 0
+                        ? currentVal.split(",").map((x) => x.trim())
+                        : [];
+
+                      const isSelected = selected.includes(nat);
+
+                      return (
+                        <button
+                          key={nat}
+                          type="button"
+                          onClick={() => {
+                            let newSelected = [...selected];
+                            if (isSelected) {
+                              newSelected = newSelected.filter(
+                                (x) => x !== nat
+                              );
+                            } else {
+                              newSelected.push(nat);
+                            }
+
+                            form.setValue("nationality", newSelected);
+
+                            // Auto-set is_foreigner logic
+                            const hasThai = newSelected.includes("ไทย");
+                            if (newSelected.length > 0 && !hasThai) {
+                              form.setValue("is_foreigner", true);
+                            } else if (hasThai) {
+                              form.setValue("is_foreigner", false);
+                            }
+                          }}
+                          className={`
+                            flex items-center gap-2 p-2 rounded-lg border text-sm font-medium transition-all
+                            ${
+                              isSelected
+                                ? "bg-blue-600 border-blue-600 text-white shadow-md active:scale-95"
+                                : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50"
+                            }
+                          `}
+                        >
+                          <div
+                            className={`
+                             p-1 rounded-full 
+                             ${
+                               isSelected
+                                 ? "bg-white/20 text-white"
+                                 : "bg-slate-100 text-slate-400"
+                             }
+                          `}
+                          >
+                            <Globe className="h-3 w-3" />
+                          </div>
+                          {nat}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
+        </div>
 
+        {/* --- RIGHT COLUMN: Requirements & Pipeline --- */}
+        <div className="space-y-6">
           <Card className="shadow-md border-slate-200 dark:border-slate-800">
             <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b pb-4">
               <div className="flex items-center gap-3">
@@ -332,9 +448,9 @@ export function LeadForm({ initialValues, onSubmitAction }: Props) {
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 md:col-span-2">
                   <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    ทำเลที่สนใจ (Preferred Locations)
+                    ย่านทำเลที่สนใจ
                   </Label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" />
@@ -343,8 +459,8 @@ export function LeadForm({ initialValues, onSubmitAction }: Props) {
                       name="preferred_locations"
                       render={({ field }) => (
                         <Textarea
-                          className="pl-9 min-h-[42px] py-2 resize-none border-slate-200 dark:border-slate-700"
-                          placeholder="ย่าน, โครงการ (คั่นด้วยจุลภาค)"
+                          className="pl-9 min-h-[60px] py-2 resize-none border-slate-200 dark:border-slate-700"
+                          placeholder="เช่น สุขุมวิท, สีลม, ทองหล่อ, อโศก (คั่นด้วยจุลภาค)"
                           value={
                             Array.isArray(field.value)
                               ? field.value.join(", ")
@@ -407,14 +523,29 @@ export function LeadForm({ initialValues, onSubmitAction }: Props) {
                     />
                   </div>
                 ))}
+
+                {/* Smoking Switch (Stored in preferences JSON) */}
+                <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                  <div className="flex items-center gap-2">
+                    <Cigarette className="h-4 w-4 text-gray-500" />
+                    <span className="text-xs font-medium">สูบบุหรี่</span>
+                  </div>
+                  <Switch
+                    checked={!!form.watch("preferences")?.is_smoker}
+                    onCheckedChange={(checked) => {
+                      const current = form.getValues("preferences") || {};
+                      form.setValue("preferences", {
+                        ...current,
+                        is_smoker: checked,
+                      });
+                    }}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* --- RIGHT COLUMN: Pipeline & Summary --- */}
-        <div className="space-y-6">
-          <Card className="shadow-md border-slate-200 dark:border-slate-800 sticky top-6">
+          <Card className="shadow-md border-slate-200 dark:border-slate-800">
             <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Search className="h-5 w-5 text-indigo-500" />
