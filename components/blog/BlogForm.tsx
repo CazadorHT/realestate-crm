@@ -3,10 +3,18 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, Save } from "lucide-react";
+import {
+  Loader2,
+  Save,
+  FileJson,
+  Calendar as CalendarIcon,
+  Clock,
+  Globe,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +34,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FileJson } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,7 +44,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 import { blogPostSchema } from "@/features/blog/schema";
 import { BlogPostInput, BlogPostRow } from "@/features/blog/types";
@@ -47,6 +69,7 @@ import {
 } from "@/features/blog/actions";
 import { TiptapEditor } from "./TiptapEditor";
 import { CategoryDialog } from "./CategoryDialog";
+import { BlogImageUploader } from "./BlogImageUploader";
 
 interface BlogFormProps {
   initialData?: BlogPostRow;
@@ -96,18 +119,35 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     defaultValues,
   });
 
+  const { watch, setValue } = form;
+  const watchedTitle = watch("title");
+  const watchedContent = watch("content");
+  const watchedExcerpt = watch("excerpt");
+  const watchedSlug = watch("slug");
+  const watchedIsPublished = watch("is_published");
+
   // Auto-generate slug from title
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const title = e.target.value;
-    form.setValue("title", title);
+    setValue("title", title);
     if (!initialData) {
       const slug = title
         .toLowerCase()
         .replace(/ /g, "-")
         .replace(/[^\w-]+/g, "");
-      form.setValue("slug", slug);
+      setValue("slug", slug);
     }
   };
+
+  // Auto-calculate reading time
+  useEffect(() => {
+    if (watchedContent) {
+      const text = watchedContent.replace(/<[^>]*>?/gm, ""); // Strip HTML
+      const wordCount = text.trim().split(/\s+/).length;
+      const readingTime = Math.ceil(wordCount / 200); // ~200 words per minute
+      setValue("reading_time", `${readingTime} min read`);
+    }
+  }, [watchedContent, setValue]);
 
   const [importJsonOpen, setImportJsonOpen] = useState(false);
   const [jsonInput, setJsonInput] = useState("");
@@ -115,24 +155,20 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   const handleImport = () => {
     try {
       const data = JSON.parse(jsonInput);
+      // ... (Same import logic as before)
+      Object.keys(data).forEach((key) => {
+        // @ts-ignore
+        if (defaultValues[key] !== undefined) {
+          // @ts-ignore
+          setValue(key, data[key]);
+        }
+      });
 
-      if (data.title) form.setValue("title", data.title);
-      if (data.slug) form.setValue("slug", data.slug);
-      if (data.excerpt) form.setValue("excerpt", data.excerpt);
-      if (data.content) form.setValue("content", data.content);
-      if (data.category) form.setValue("category", data.category);
-      if (data.cover_image) form.setValue("cover_image", data.cover_image);
-      if (data.reading_time) form.setValue("reading_time", data.reading_time);
-      if (data.tags) form.setValue("tags", data.tags);
-      if (typeof data.is_published === "boolean")
-        form.setValue("is_published", data.is_published);
-
-      if (data.structured_data) {
-        const sd =
-          typeof data.structured_data === "object"
-            ? JSON.stringify(data.structured_data, null, 2)
-            : data.structured_data;
-        form.setValue("structured_data", sd);
+      if (data.structured_data && typeof data.structured_data === "object") {
+        setValue(
+          "structured_data",
+          JSON.stringify(data.structured_data, null, 2)
+        );
       }
 
       toast.success("Data imported successfully");
@@ -140,6 +176,22 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     } catch (e) {
       toast.error("Invalid JSON format");
     }
+  };
+
+  const generateJsonLd = () => {
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: watchedTitle,
+      description: watchedExcerpt,
+      datePublished: new Date().toISOString(),
+      author: {
+        "@type": "Person",
+        name: "Admin", // Or current user name
+      },
+    };
+    setValue("structured_data", JSON.stringify(jsonLd, null, 2));
+    toast.success("JSON-LD Generated");
   };
 
   async function onSubmit(data: BlogPostInput) {
@@ -168,81 +220,112 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="flex justify-between items-center">
-          <Dialog open={importJsonOpen} onOpenChange={setImportJsonOpen}>
-            <DialogTrigger asChild>
-              <Button type="button" variant="secondary" className="gap-2">
-                <FileJson className="h-4 w-4" />
-                Import JSON
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Import from JSON</DialogTitle>
-                <DialogDescription>
-                  Paste a JSON object to autofill the form. Existing data will
-                  be overwritten.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <Textarea
-                  placeholder='{ "title": "...", "content": "..." }'
-                  className="font-mono min-h-[300px]"
-                  value={jsonInput}
-                  onChange={(e) => setJsonInput(e.target.value)}
-                />
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setImportJsonOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="button" onClick={handleImport}>
-                    Import
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <div className="flex gap-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-20">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b py-4 -mx-6 px-6 mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => router.back()}
+              className="text-muted-foreground"
             >
-              Cancel
+              Back
             </Button>
+            <div>
+              <h1 className="text-lg font-semibold leading-none">
+                {initialData ? "Edit Article" : "Create New Article"}
+              </h1>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                {watchedIsPublished ? (
+                  <Badge
+                    variant="default"
+                    className="bg-green-500 hover:bg-green-600"
+                  >
+                    Published
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">Draft</Badge>
+                )}
+                <span>•</span>
+                {watch("reading_time")}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Dialog open={importJsonOpen} onOpenChange={setImportJsonOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="hidden sm:flex gap-2"
+                >
+                  <FileJson className="h-4 w-4" />
+                  Import
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Import from JSON</DialogTitle>
+                  <DialogDescription>
+                    Paste JSON object to autofill.
+                  </DialogDescription>
+                </DialogHeader>
+                {/* ... Import content ... */}
+                <div className="space-y-4 py-4">
+                  <Textarea
+                    placeholder='{ "title": "...", "content": "..." }'
+                    className="font-mono min-h-[300px]"
+                    value={jsonInput}
+                    onChange={(e) => setJsonInput(e.target.value)}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setImportJsonOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="button" onClick={handleImport}>
+                      Import
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               <Save className="mr-2 h-4 w-4" />
-              {initialData ? "Update Post" : "Create Post"}
+              Save Changes
             </Button>
           </div>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-3">
-          {/* Main Content (Left, 2 cols) */}
-          <div className="md:col-span-2 space-y-8">
+        <div className="grid gap-8 md:grid-cols-[1fr_350px]">
+          {/* Main Content (Left) */}
+          <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Article Details</CardTitle>
+                <CardTitle>Content</CardTitle>
+                <CardDescription>Write your masterpiece.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <FormField
                   control={form.control}
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>Article Title</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Article Title"
+                          placeholder="Enter a catchy title..."
+                          className="text-lg font-medium"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
@@ -260,30 +343,18 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                   name="slug"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Slug (URL Friendly)</FormLabel>
+                      <FormLabel>Slug</FormLabel>
                       <FormControl>
-                        <Input placeholder="article-title-slug" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Unique identifier for the URL (e.g. /blog/my-post)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="excerpt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Excerpt</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Brief summary for the card preview..."
-                          className="h-20 resize-none"
-                          {...field}
-                        />
+                        <div className="flex">
+                          <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 bg-muted text-muted-foreground text-sm">
+                            /blog/
+                          </span>
+                          <Input
+                            {...field}
+                            className="rounded-l-none font-mono text-sm"
+                            placeholder="post-url-slug"
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -295,7 +366,6 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                   name="content"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Content (Rich Text)</FormLabel>
                       <FormControl>
                         <TiptapEditor
                           value={field.value || ""}
@@ -303,6 +373,15 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                         />
                       </FormControl>
                       <FormMessage />
+                      <div className="flex justify-end items-center text-xs text-muted-foreground gap-4">
+                        <span>
+                          {watchedContent
+                            ? watchedContent.replace(/<[^>]*>?/gm, "").length
+                            : 0}{" "}
+                          characters
+                        </span>
+                        <span>{watch("reading_time")}</span>
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -311,21 +390,38 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
             <Card>
               <CardHeader>
-                <CardTitle>Structured Data (JSON-LD)</CardTitle>
-                <FormDescription>
-                  Paste JSON schema for SEO here.
-                </FormDescription>
+                <CardTitle>SEO & Metadata</CardTitle>
+                <CardDescription>Optimize for search engines.</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-6">
+                <div className="bg-muted/50 p-4 rounded-lg space-y-2 border">
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Google Search Preview
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-[18px] text-[#1a0dab] hover:underline cursor-pointer truncate font-medium">
+                      {watchedTitle || "Article Title"}
+                    </div>
+                    <div className="text-sm text-[#006621] truncate">
+                      https://yoursite.com/blog/{watchedSlug || "slug"}
+                    </div>
+                    <div className="text-sm text-[#545454] line-clamp-2">
+                      {watchedExcerpt ||
+                        "Please enter an excerpt to see how it looks on Google search results."}
+                    </div>
+                  </div>
+                </div>
+
                 <FormField
                   control={form.control}
-                  name="structured_data"
+                  name="excerpt"
                   render={({ field }) => (
                     <FormItem>
+                      <FormLabel>Excerpt / Meta Description</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder='{ "@context": "https://schema.org", "@type": "Article", ... }'
-                          className="font-mono text-xs min-h-[150px]"
+                          placeholder="Brief summary (150-160 chars recommended)"
+                          className="h-24 resize-none"
                           {...field}
                         />
                       </FormControl>
@@ -333,38 +429,121 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                     </FormItem>
                   )}
                 />
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <FormLabel>Structured Data (JSON-LD)</FormLabel>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={generateJsonLd}
+                      className="h-7 text-xs"
+                    >
+                      Generate Default
+                    </Button>
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="structured_data"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            placeholder='{ "@context": "..." }'
+                            className="font-mono text-xs min-h-[150px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Sidebar (Right, 1 col) */}
-          <div className="space-y-8">
+          {/* Sidebar (Right) */}
+          <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Settings</CardTitle>
+                <CardTitle>Publishing</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
                   control={form.control}
                   name="is_published"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Published</FormLabel>
+                        <FormDescription>Visible to public?</FormDescription>
+                      </div>
                       <FormControl>
                         <Checkbox
                           checked={field.value}
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Publish immediately</FormLabel>
-                        <FormDescription>
-                          Make this post visible on the public site.
-                        </FormDescription>
-                      </div>
                     </FormItem>
                   )}
                 />
 
+                <FormField
+                  control={form.control}
+                  name="published_at"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Schedule Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
+                            onSelect={(date) =>
+                              field.onChange(date?.toISOString())
+                            }
+                            disabled={(date) => date < new Date("1900-01-01")}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        If set in future, post is scheduled.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Organization</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <FormField
                   control={form.control}
                   name="category"
@@ -402,48 +581,36 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
                 <FormField
                   control={form.control}
-                  name="reading_time"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Reading Time</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. 5 min read" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="tags"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tags (Comma separated)</FormLabel>
+                      <FormLabel>Tags</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Condo, Investment, 2026"
-                          {...field}
-                        />
+                        <Input placeholder="News, Tips, 2024" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>Featured Image</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <FormField
                   control={form.control}
                   name="cover_image"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cover Image URL</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://..." {...field} />
+                        <BlogImageUploader
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                        />
                       </FormControl>
-                      <FormDescription className="text-xs">
-                        Paste a URL from Unsplash or upload to storage and paste
-                        link here.
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

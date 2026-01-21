@@ -295,7 +295,7 @@ function PropertyListingContent() {
   return (
     <section
       id="latest-properties"
-      className="py-12 md:py-16 lg:py-20 px-4 md:px-6 lg:px-8 bg-white border-y border-slate-100"
+      className="py-12 md:py-16 lg:py-20  bg-white border-y border-slate-100"
     >
       {/* Schema.org Structured Data */}
       <script
@@ -303,10 +303,14 @@ function PropertyListingContent() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
-      <div className="max-w-screen-2xl mx-auto">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 md:gap-6 mb-8 md:mb-10">
+      <div className="max-w-screen-2xl px-4 md:px-6 lg:px-8 mx-auto">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 md:gap-6 mb-8 md:mb-10 ">
           {/* SEO-Optimized Header */}
-          <div className="space-y-3" data-aos="fade-right">
+          <div
+            className="space-y-3 "
+            data-aos="fade-right"
+            suppressHydrationWarning
+          >
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600">
                 บ้าน คอนโด สำนักงานออฟฟิศ
@@ -344,6 +348,7 @@ function PropertyListingContent() {
           <div
             className="w-full lg:w-auto flex flex-col items-start lg:items-end gap-3 md:gap-4 text-sm"
             data-aos="fade-left"
+            suppressHydrationWarning
           >
             <div className="hidden lg:flex justify-end">
               <Button
@@ -536,6 +541,7 @@ function PropertyListingContent() {
                     data-aos="fade-up"
                     data-aos-delay={index * 50}
                     className="relative group"
+                    suppressHydrationWarning
                   >
                     {hasDiscount && (
                       <div className="absolute -top-6 -left-6 z-30">

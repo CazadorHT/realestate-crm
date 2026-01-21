@@ -38,7 +38,11 @@ export async function createBlogPostAction(
     cover_image: input.cover_image || null,
     reading_time: input.reading_time || "5 min read",
     is_published: input.is_published,
-    published_at: input.is_published ? new Date().toISOString() : null,
+    published_at:
+      input.published_at ||
+      (input.is_published && !input.published_at
+        ? new Date().toISOString()
+        : null),
     tags: tagsArray,
     author: {
       name: user.full_name || "Admin",
@@ -89,9 +93,10 @@ export async function updateBlogPostAction(
       reading_time: input.reading_time,
       is_published: input.is_published,
       published_at:
-        input.is_published && !input.published_at
+        input.published_at ||
+        (input.is_published && !input.published_at
           ? new Date().toISOString()
-          : input.published_at,
+          : input.published_at),
       tags: tagsArray,
       structured_data: input.structured_data
         ? JSON.parse(input.structured_data)
@@ -130,6 +135,66 @@ export async function deleteBlogPostAction(
 
   revalidatePath("/protected/blogs");
   return { success: true, message: "Blog post deleted successfully" };
+}
+
+// Image Actions
+
+export async function uploadBlogImageAction(
+  formData: FormData
+): Promise<ActionResponse> {
+  const supabase = await createClient();
+  const user = await getCurrentProfile();
+
+  if (!user || !["ADMIN", "AGENT", "MANAGER"].includes(user.role)) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+  const file = formData.get("file") as File | null;
+  if (!file) {
+    return { success: false, message: "No file provided" };
+  }
+
+  // Basic validation
+  if (file.size > 5 * 1024 * 1024) {
+    return { success: false, message: "File too large (max 5MB)" };
+  }
+
+  const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  if (!validTypes.includes(file.type)) {
+    return { success: false, message: "Invalid file type" };
+  }
+
+  // Upload to "properties" bucket under "blog" folder
+  // Path: properties/blog/{year}/{month}/{random}-{filename}
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const randomId = Math.random().toString(36).substring(2, 10);
+  const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "");
+  const path = `blog/${year}/${month}/${randomId}-${safeName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("property-images") // Reusing existing bucket
+    .upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error("Upload blog image error:", uploadError);
+    return { success: false, message: "Failed to upload image" };
+  }
+
+  // Get Public URL
+  const { data: publicUrlData } = supabase.storage
+    .from("property-images")
+    .getPublicUrl(path);
+
+  return {
+    success: true,
+    message: "Image uploaded successfully",
+    data: { publicUrl: publicUrlData.publicUrl },
+  };
 }
 
 // Category Actions
