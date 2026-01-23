@@ -113,7 +113,16 @@ export const POPULAR_AREAS = [
 ] as const;
 
 /** === TRANSIT TYPES === */
-export const TRANSIT_TYPE_ENUM = ["BTS", "MRT" ,"MRT2", "ARL", "SRT", "SRT2", "SRT3", "OTHER"] as const;
+export const TRANSIT_TYPE_ENUM = [
+  "BTS",
+  "MRT",
+  "MRT2",
+  "ARL",
+  "SRT",
+  "SRT2",
+  "SRT3",
+  "OTHER",
+] as const;
 export type TransitType = (typeof TRANSIT_TYPE_ENUM)[number];
 
 export const TRANSIT_TYPE_LABELS: Record<TransitType, string> = {
@@ -138,3 +147,13 @@ export const PROPERTY_TYPE_GRADIENTS = {
   COMMERCIAL_BUILDING: "from-indigo-500 to-indigo-600",
   OTHER: "from-slate-500 to-slate-600",
 } satisfies Record<PropertyType, string>;
+
+export const NEARBY_PLACE_CATEGORIES = [
+  { value: "School", label: "โรงเรียน / มหาวิทยาลัย" },
+  { value: "Mall", label: "ห้างสรรพสินค้า / ตลาด" },
+  { value: "Hospital", label: "โรงพยาบาล" },
+  { value: "Transport", label: "ขนส่งสาธารณะ (BTS/MRT/ทางด่วน)" },
+  { value: "Park", label: "สวนสาธารณะ" },
+  { value: "Office", label: "สถานที่ทำงาน" },
+  { value: "Other", label: "อื่นๆ" },
+] as const;

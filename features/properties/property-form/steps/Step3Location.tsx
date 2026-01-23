@@ -21,8 +21,12 @@ import { useThaiAddress } from "@/hooks/useThaiAddress";
 import {
   TRANSIT_TYPE_LABELS,
   TRANSIT_TYPE_ENUM,
+  NEARBY_PLACE_CATEGORIES,
 } from "@/features/properties/labels";
 import type { Step3Props } from "../types";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { useFieldArray } from "react-hook-form";
 
 // Util function for parsing numbers
 const parseNumber = (s: string) => {
@@ -48,6 +52,11 @@ export function Step3Location({ form, mode }: Step3Props) {
   const watchedProvince = form.watch("province");
   const watchedDistrict = form.watch("district");
   const watchedSubDistrict = form.watch("subdistrict");
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "nearby_places",
+  });
 
   // Load dependent data when needed
   React.useEffect(() => {
@@ -86,7 +95,7 @@ export function Step3Location({ form, mode }: Step3Props) {
   React.useEffect(() => {
     if (watchedSubDistrict && activeDistrictId) {
       const sub = subDistrictOptions.find(
-        (s) => s.name_th === watchedSubDistrict
+        (s) => s.name_th === watchedSubDistrict,
       );
       if (sub) {
         form.setValue("postal_code", String(sub.zip_code));
@@ -236,7 +245,7 @@ export function Step3Location({ form, mode }: Step3Props) {
           control={form.control}
           name="google_maps_link"
           render={({ field }) => (
-            <FormItem            >
+            <FormItem>
               <FormLabel className="text-blue-700 font-bold text-xs uppercase tracking-wider mb-1.5 block">
                 พิกัดบน Google Maps
               </FormLabel>
@@ -353,6 +362,145 @@ export function Step3Location({ form, mode }: Step3Props) {
                   </FormItem>
                 )}
               />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* [NEW] Nearby Places Section */}
+      <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100/60 space-y-6">
+        <div className="flex items-center justify-between border-b border-slate-50 pb-4">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">
+              สถานที่ใกล้เคียง
+            </h3>
+            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mt-1">
+              เพิ่มจุดเด่นรอบๆ ทรัพย์สิน (เช่น โรงเรียน, ห้าง, โรงพยาบาล)
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              append({ category: "Other", name: "", distance: "", time: "" })
+            }
+            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+          >
+            + เพิ่มสถานที่
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          {fields.map((field, index) => (
+            <div
+              key={field.id}
+              className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end p-4 rounded-xl bg-slate-50 relative group"
+            >
+              {/* Category */}
+              <div className="md:col-span-3">
+                <FormLabel className="text-[10px] uppercase font-bold text-slate-400">
+                  ประเภท
+                </FormLabel>
+                <FormField
+                  control={form.control}
+                  name={`nearby_places.${index}.category`}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="mt-1 h-9 bg-white border-slate-200">
+                          <SelectValue placeholder="เลือก..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {NEARBY_PLACE_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+
+              {/* Name */}
+              <div className="md:col-span-4">
+                <FormLabel className="text-[10px] uppercase font-bold text-slate-400">
+                  ชื่อสถานที่
+                </FormLabel>
+                <FormField
+                  control={form.control}
+                  name={`nearby_places.${index}.name`}
+                  render={({ field }) => (
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="เช่น Central Ladprao"
+                        className="mt-1 h-9 bg-white border-slate-200"
+                      />
+                    </FormControl>
+                  )}
+                />
+              </div>
+
+              {/* Distance */}
+              <div className="md:col-span-2">
+                <FormLabel className="text-[10px] uppercase font-bold text-slate-400">
+                  ระยะทาง
+                </FormLabel>
+                <FormField
+                  control={form.control}
+                  name={`nearby_places.${index}.distance`}
+                  render={({ field }) => (
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="เช่น 1 กิโลเมตร หรือ 0.5 กิโลเมตร"
+                        className="mt-1 h-9 bg-white border-slate-200"
+                      />
+                    </FormControl>
+                  )}
+                />
+              </div>
+
+              {/* Time */}
+              <div className="md:col-span-2">
+                <FormLabel className="text-[10px] uppercase font-bold text-slate-400">
+                  เวลา (นาที)
+                </FormLabel>
+                <FormField
+                  control={form.control}
+                  name={`nearby_places.${index}.time`}
+                  render={({ field }) => (
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="เช่น 5 นาที"
+                        className="mt-1 h-9 bg-white border-slate-200"
+                      />
+                    </FormControl>
+                  )}
+                />
+              </div>
+
+              {/* Remove */}
+              <div className="md:col-span-1 flex justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-slate-400 hover:text-red-500"
+                  onClick={() => remove(index)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+          {fields.length === 0 && (
+            <div className="text-center py-8 text-slate-400 text-sm border-2 border-dashed border-slate-100 rounded-xl">
+              ยังไม่มีสถานที่ใกล้เคียง
             </div>
           )}
         </div>

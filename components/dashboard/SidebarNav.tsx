@@ -35,7 +35,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
     setOpenGroups((prev) =>
       prev.includes(groupId)
         ? prev.filter((id) => id !== groupId)
-        : [...prev, groupId]
+        : [...prev, groupId],
     );
   };
 
@@ -214,7 +214,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
           </div>
           <div>
             <h1 className="text-xl font-medium tracking-tight text-slate-700 dark:text-slate-200 uppercase">
-              SabaiCaza
+              OMA ASSET
             </h1>
             <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-bold">
               Real Estate CRM
@@ -231,7 +231,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
             "flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all duration-300 font-bold text-sm relative overflow-hidden group",
             pathname === "/protected"
               ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm"
-              : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
+              : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800",
           )}
         >
           {pathname === "/protected" && (
@@ -242,7 +242,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
               "h-5 w-5 transition-colors",
               pathname === "/protected"
                 ? "text-blue-600 dark:text-blue-400"
-                : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
+                : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300",
             )}
           />
           แดชบอร์ด
@@ -262,7 +262,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
                   "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition-all duration-300 font-semibold text-xs uppercase tracking-wider",
                   hasActiveItem
                     ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
-                    : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800",
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -287,7 +287,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
                         "flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-300 text-sm relative overflow-hidden group",
                         item.active
                           ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-semibold"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium"
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium",
                       )}
                     >
                       {item.active && (
@@ -298,7 +298,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
                           "h-4 w-4 transition-colors",
                           item.active
                             ? "text-blue-600 dark:text-blue-400"
-                            : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
+                            : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300",
                         )}
                       />
                       {item.title}

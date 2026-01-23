@@ -72,7 +72,7 @@ function validatePropertyImagePaths(paths: string[]) {
       typeof p !== "string" ||
       !p.startsWith("properties/") || // บังคับต้องอยู่ใต้โฟลเดอร์นี้
       p.includes("..") || // กัน path traversal
-      p.startsWith("/") // กัน absolute-ish
+      p.startsWith("/"), // กัน absolute-ish
   );
 
   if (invalid.length > 0) {
@@ -96,7 +96,7 @@ function validatePropertyImagePaths(paths: string[]) {
 async function verifyImagesExist(
   supabase: any,
   bucket: string,
-  paths: string[]
+  paths: string[],
 ): Promise<string[]> {
   if (paths.length === 0) return [];
 
@@ -113,7 +113,7 @@ async function verifyImagesExist(
   }
 
   const foundInDB = new Set(
-    (uploadRecords || []).map((r: any) => r.storage_path)
+    (uploadRecords || []).map((r: any) => r.storage_path),
   );
   const notFoundInDB = paths.filter((p) => !foundInDB.has(p));
 
@@ -134,13 +134,13 @@ async function verifyImagesExist(
   } catch (err) {
     console.warn(
       "[verifyImagesExist] Admin client unavailable, using user client:",
-      err
+      err,
     );
   }
 
   // Group by folder
   const folders = new Set(
-    notFoundInDB.map((p) => p.substring(0, p.lastIndexOf("/")))
+    notFoundInDB.map((p) => p.substring(0, p.lastIndexOf("/"))),
   );
 
   for (const folder of folders) {
@@ -155,7 +155,7 @@ async function verifyImagesExist(
     if (error || !data) {
       console.warn(
         `[verifyImagesExist] Storage list failed for ${folder} (Admin: ${usingAdmin}). Assuming files exist (Fail Open).`,
-        error
+        error,
       );
       // Fail open: assume existence
       continue;
@@ -163,7 +163,7 @@ async function verifyImagesExist(
 
     const existingNames = new Set(data.map((f: any) => f.name));
     const pathsInFolder = notFoundInDB.filter((p) =>
-      p.startsWith(folder + "/")
+      p.startsWith(folder + "/"),
     );
 
     for (const p of pathsInFolder) {
@@ -251,7 +251,7 @@ export async function uploadPropertyImageAction(formData: FormData) {
 
     // 3) Simple per-user rate limit based on property_image_uploads
     const cutoffIso = new Date(
-      Date.now() - UPLOAD_RATE_WINDOW_MS
+      Date.now() - UPLOAD_RATE_WINDOW_MS,
     ).toISOString();
     const { count: recentCount, error: rateErr } = await supabase
       .from("property_image_uploads")
@@ -306,7 +306,7 @@ export async function uploadPropertyImageAction(formData: FormData) {
  */
 export async function createPropertyAction(
   values: PropertyFormValues,
-  sessionId: string
+  sessionId: string,
 ): Promise<CreatePropertyResult> {
   try {
     // ✅ Step 1.2: require auth context (แทน getUser แบบเดิม)
@@ -370,7 +370,7 @@ export async function createPropertyAction(
     // Merge SEO keywords with our custom tags if SEO generated keywords don't include them (or just append)
     // Actually seoData.metaKeywords is usually string[]. We can combine them.
     const mergedKeywords = Array.from(
-      new Set([...(seoData.metaKeywords || []), ...finalKeywords])
+      new Set([...(seoData.metaKeywords || []), ...finalKeywords]),
     );
 
     const { data: property, error } = await supabase
@@ -495,7 +495,7 @@ export async function createPropertyAction(
           imagesCount: images?.length ?? 0,
           sessionId,
         },
-      }
+      },
     );
     revalidatePath("/protected/properties");
     return { success: true, propertyId: property.id };
@@ -511,7 +511,7 @@ export async function createPropertyAction(
 export async function updatePropertyAction(
   id: string,
   values: PropertyFormValues,
-  sessionId: string
+  sessionId: string,
 ): Promise<CreatePropertyResult> {
   try {
     const { supabase, user, role } = await requireAuthContext();
@@ -587,7 +587,7 @@ export async function updatePropertyAction(
     });
 
     const mergedKeywords = Array.from(
-      new Set([...(seoData.metaKeywords || []), ...finalKeywords])
+      new Set([...(seoData.metaKeywords || []), ...finalKeywords]),
     );
 
     // 5) Update property data + SEO
@@ -633,7 +633,7 @@ export async function updatePropertyAction(
       const missing = await verifyImagesExist(
         supabase,
         PROPERTY_IMAGES_BUCKET,
-        images
+        images,
       );
       if (missing.length > 0) {
         return {
@@ -682,7 +682,7 @@ export async function updatePropertyAction(
               image_url: img.image_url,
               is_cover: img.is_cover,
               sort_order: img.sort_order,
-            }))
+            })),
           );
         }
 
@@ -700,12 +700,12 @@ export async function updatePropertyAction(
     // E) ลบไฟล์จริงออกจาก Storage (เฉพาะไฟล์ที่ถูกถอดออก)
     if (oldImages && oldImages.length > 0) {
       const oldPaths = new Set(
-        oldImages.map((x) => x.storage_path).filter(Boolean)
+        oldImages.map((x) => x.storage_path).filter(Boolean),
       );
       const newPaths = new Set((images ?? []).filter(Boolean));
 
       const removed = [...oldPaths].filter(
-        (p): p is string => typeof p === "string" && !newPaths.has(p)
+        (p): p is string => typeof p === "string" && !newPaths.has(p),
       );
 
       if (removed.length > 0) {
@@ -772,7 +772,7 @@ export async function updatePropertyAction(
           imagesCount: images?.length ?? 0,
           sessionId,
         },
-      }
+      },
     );
     revalidatePath("/protected/properties");
     revalidatePath(`/protected/properties/${id}`);
@@ -815,7 +815,7 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
  * Get property with images
  */
 export async function getPropertyWithImages(
-  id: string
+  id: string,
 ): Promise<PropertyWithImages> {
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
@@ -834,7 +834,7 @@ export async function getPropertyWithImages(
         sort_order,
         created_at
       )
-    `
+    `,
     )
     .eq("id", id)
     .single();
@@ -875,6 +875,18 @@ export async function deletePropertyAction(formData: FormData) {
     // 0.1) Authorization
     assertAuthenticated({ userId: user.id, role });
 
+    // 0.2) Check for dependencies that block deletion (like active Deals)
+    const { count: dealCount, error: dealErr } = await supabase
+      .from("deals")
+      .select("id", { count: "exact", head: true })
+      .eq("property_id", id);
+
+    if (dealCount && dealCount > 0) {
+      throw new Error(
+        "ไม่สามารถลบทรัพย์ที่มีการทำ Deal ไปแล้วได้ (กรุณาใช้การ Archive แทน)",
+      );
+    }
+
     // 1) Get all images to delete from storage
     const { data: images } = await supabase
       .from("property_images")
@@ -900,10 +912,41 @@ export async function deletePropertyAction(formData: FormData) {
       }
     }
 
-    // 3) Delete property (cascade will delete property_images records)
+    // 3) Manual Cleanup of Dependencies (Fix for Foreign Key Constraint 23503)
+    // Even if DB has ON DELETE CASCADE, doing it here explicitly is safer if migration key is missing.
+
+    // 3.1 Unlink Leads (don't delete leads, just remove association)
+    await supabase
+      .from("leads")
+      .update({ property_id: null })
+      .eq("property_id", id);
+
+    // 3.2 Delete Sub-tables
+    await supabase.from("property_features").delete().eq("property_id", id);
+    await supabase.from("property_agents").delete().eq("property_id", id);
+    await supabase.from("property_matches").delete().eq("property_id", id);
+    await supabase
+      .from("property_image_uploads")
+      .delete()
+      .eq("property_id", id);
+
+    // Explicitly delete property_images rows (DB) to be sure
+    await supabase.from("property_images").delete().eq("property_id", id);
+
+    // 4) Delete property
     const { error } = await supabase.from("properties").delete().eq("id", id);
-    if (error) throw error;
-    // 4) Audit log delete
+
+    if (error) {
+      // Catch specific FK error to give better message
+      if (error.code === "23503") {
+        throw new Error(
+          "ลบไม่สำเร็จ: ข้อมูลมีการใช้งานอยู่ในส่วนอื่น (กรุณาแจ้ง Admin หรือลอง Archive แทน)",
+        );
+      }
+      throw error;
+    }
+
+    // 5) Audit log delete
     await logAudit(
       { supabase, user, role },
       {
@@ -913,14 +956,16 @@ export async function deletePropertyAction(formData: FormData) {
         metadata: {
           // ใส่ได้ตามต้องการ เช่นจำนวนรูปที่ลบจริง (ถ้าคำนวณไว้)
         },
-      }
+      },
     );
 
+    // Clean up TEMP uploads (legacy logic, keep it)
     await supabase
       .from("property_image_uploads")
       .delete()
       .eq("user_id", user.id)
       .eq("status", "TEMP");
+
     revalidatePath("/protected/properties");
   } catch (error) {
     console.error("deletePropertyAction → error:", error);
@@ -955,7 +1000,7 @@ export async function deletePropertyImageFromStorage(storagePath: string) {
   if (storageErr) {
     console.error(
       "deletePropertyImageFromStorage → storage error:",
-      storageErr
+      storageErr,
     );
     throw storageErr;
   }
@@ -976,7 +1021,7 @@ export async function deletePropertyImageFromStorage(storagePath: string) {
   if (trackErr) {
     console.error(
       "deletePropertyImageFromStorage → tracking delete error:",
-      trackErr
+      trackErr,
     );
     // จะ throw หรือไม่ throw ก็ได้; แนะนำไม่ throw เพราะ storage ลบไปแล้ว
   }
@@ -1021,7 +1066,7 @@ export async function cleanupUploadSessionAction(sessionId: string) {
  * Get all popular areas from database
  */
 export async function getPopularAreasAction(
-  params: { onlyActive?: boolean } = { onlyActive: true }
+  params: { onlyActive?: boolean } = { onlyActive: true },
 ) {
   // Allow public access (no auth required)
   const supabase = await createAdminClient();
@@ -1120,7 +1165,7 @@ export async function updatePropertyStatusAction(input: {
         entity: "properties",
         entityId: input.id,
         metadata: { status: input.status },
-      }
+      },
     );
 
     // protected pages
@@ -1142,7 +1187,7 @@ export async function updatePropertyStatusAction(input: {
  * Duplicate property
  */
 export async function duplicatePropertyAction(
-  id: string
+  id: string,
 ): Promise<DuplicatePropertyResult> {
   try {
     const { supabase, user, role } = await requireAuthContext();
@@ -1255,7 +1300,7 @@ export async function duplicatePropertyAction(
         entity: "properties",
         entityId: newPropertyId,
         metadata: { duplicated_from: id },
-      }
+      },
     );
 
     revalidatePath("/protected/properties");

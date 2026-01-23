@@ -69,7 +69,7 @@ export default async function PropertiesPage({
   // Search
   if (q) {
     query = query.or(
-      `title.ilike.%${q}%,description.ilike.%${q}%,address_line1.ilike.%${q}%`
+      `title.ilike.%${q}%,description.ilike.%${q}%,address_line1.ilike.%${q}%`,
     );
   }
 
@@ -165,7 +165,7 @@ export default async function PropertiesPage({
           status,
           updated_at,
           lead:leads(full_name)
-        `
+        `,
           )
           .in("property_id", soldOrRentedIds)
           .in("status", [...CLOSED_DEAL_STATUSES])
@@ -179,7 +179,7 @@ export default async function PropertiesPage({
   ]);
   // 3. Map Data
   const coverMap = new Map(
-    imagesResult.data?.map((img) => [img.property_id, img.image_url])
+    imagesResult.data?.map((img) => [img.property_id, img.image_url]),
   );
 
   // Count leads per property
@@ -189,7 +189,7 @@ export default async function PropertiesPage({
     if (lead.property_id) {
       leadsCountMap.set(
         lead.property_id,
-        (leadsCountMap.get(lead.property_id) || 0) + 1
+        (leadsCountMap.get(lead.property_id) || 0) + 1,
       );
     }
   });
@@ -250,36 +250,120 @@ export default async function PropertiesPage({
 
   const stats = await getPropertiesDashboardStatsQuery();
 
+  // Check if truly empty (no properties at all, not just filtered)
+  const isEmptyState = properties.length === 0 && currentPage === 1;
+
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">ทรัพย์ทั้งหมด ({count || 0})</h1>
-          <p className="text-muted-foreground">
-            จัดการและติดตามทรัพย์สินของคุณ
-          </p>
+      {/* Premium Header Section */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-8 shadow-xl">
+        {/* Decorative Elements */}
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-white/5 rounded-full blur-xl" />
+
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
+                <PlusCircle className="h-6 w-6 text-white" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">
+                ทรัพย์ทั้งหมด
+              </h1>
+            </div>
+            <p className="text-blue-100 text-sm md:text-base max-w-md">
+              จัดการและติดตามทรัพย์สินของคุณ • มีทั้งหมด{" "}
+              <span className="font-bold text-white">{count || 0}</span> รายการ
+            </p>
+          </div>
+
+          <Button
+            asChild
+            size="lg"
+            className="bg-white text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+          >
+            <Link href="/protected/properties/new">
+              <PlusCircle className="h-5 w-5 mr-2" />
+              เพิ่มทรัพย์ใหม่
+            </Link>
+          </Button>
         </div>
-        <Button asChild>
-          <Link href="/protected/properties/new">
-            <PlusCircle className="h-4 w-4 mr-2" />
-            เพิ่มทรัพย์
-          </Link>
-        </Button>
       </div>
 
       <PropertiesDashboard stats={stats} />
 
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold border-l-4 border-blue-500 pl-3">
-          รายการทรัพย์สิน
-        </h2>
+        {/* Enhanced Section Title */}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg blur-sm opacity-50" />
+            <div className="relative w-1.5 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-800">
+              รายการทรัพย์สิน
+            </h2>
+            <p className="text-xs text-slate-400 font-medium">
+              คลิกที่แถวเพื่อดูรายละเอียดหรือแก้ไข
+            </p>
+          </div>
+        </div>
+
         <PropertyFilters />
-        <PropertiesTable data={tableData} />
-        <PaginationControls
-          totalCount={count ?? 0}
-          pageSize={PAGE_SIZE}
-          currentPage={currentPage}
-        />
+
+        {/* Empty State UI */}
+        {isEmptyState ? (
+          <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-gradient-to-br from-slate-50 to-white p-12">
+            {/* Decorative Background */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute top-10 left-10 w-20 h-20 border-4 border-slate-400 rounded-xl rotate-12" />
+              <div className="absolute bottom-10 right-10 w-16 h-16 border-4 border-slate-400 rounded-full" />
+              <div className="absolute top-1/2 left-1/3 w-12 h-12 border-4 border-slate-400 rounded-lg -rotate-6" />
+            </div>
+
+            <div className="relative flex flex-col items-center justify-center text-center space-y-6">
+              {/* Icon */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl scale-150" />
+                <div className="relative p-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/30">
+                  <PlusCircle className="h-12 w-12 text-white" />
+                </div>
+              </div>
+
+              {/* Text */}
+              <div className="space-y-2 max-w-md">
+                <h3 className="text-2xl font-bold text-slate-800">
+                  ยังไม่มีทรัพย์ในระบบ
+                </h3>
+                <p className="text-slate-500 leading-relaxed">
+                  เริ่มต้นสร้างรายการทรัพย์สินแรกของคุณเลย! ระบบจะช่วยจัดการ
+                  ติดตาม และนำเสนอทรัพย์ของคุณอย่างมืออาชีพ
+                </p>
+              </div>
+
+              {/* CTA Button */}
+              <Button
+                asChild
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8"
+              >
+                <Link href="/protected/properties/new">
+                  <PlusCircle className="h-5 w-5 mr-2" />
+                  เพิ่มทรัพย์แรกของคุณ
+                </Link>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <PropertiesTable data={tableData} />
+            <PaginationControls
+              totalCount={count ?? 0}
+              pageSize={PAGE_SIZE}
+              currentPage={currentPage}
+            />
+          </>
+        )}
       </div>
     </div>
   );

@@ -8,6 +8,9 @@ import { LeadsFilters } from "@/components/leads/LeadsFilters";
 import { LeadsTable } from "@/components/leads/LeadsTable";
 import { LeadsKanban } from "@/features/leads/LeadsKanban";
 import { LeadsStats } from "@/components/leads/LeadsStats";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { SectionTitle } from "@/components/dashboard/SectionTitle";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 
 export default async function LeadsPage({
   searchParams,
@@ -65,39 +68,45 @@ export default async function LeadsPage({
   /* Fetch Dashboard Stats */
   const stats = await getLeadsDashboardStatsQuery();
 
+  const isEmptyState =
+    listLeads.length === 0 && page === 1 && !sp.q && !sp.stage;
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">ลีด (Leads)</h1>
-        <div className="flex items-center gap-2">
-          {/* View Toggles */}
-          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border">
-            <Link
-              href={toggleViewHref("list")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                view === "list"
-                  ? "bg-white dark:bg-slate-950 shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              รายการ
-            </Link>
-            <Link
-              href={toggleViewHref("kanban")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                view === "kanban"
-                  ? "bg-white dark:bg-slate-950 shadow-sm active:scale-95"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              กระดานงาน
-            </Link>
-          </div>
+    <div className="p-6 space-y-6">
+      {/* Premium Header */}
+      <PageHeader
+        title="ลีด (Leads)"
+        subtitle="จัดการและติดตามลูกค้าที่สนใจ"
+        count={count}
+        icon="users"
+        actionLabel="สร้างลีดใหม่"
+        actionHref="/protected/leads/new"
+        actionIcon="userPlus"
+        gradient="emerald"
+      />
+
+      {/* View Toggles */}
+      <div className="flex justify-end">
+        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border shadow-sm">
           <Link
-            className="rounded-md bg-primary px-3 py-2 text-sm text-white hover:bg-primary/90 transition-colors"
-            href="/protected/leads/new"
+            href={toggleViewHref("list")}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+              view === "list"
+                ? "bg-white dark:bg-slate-950 shadow-sm text-slate-900"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
-            + สร้างลีดใหม่
+            📋 รายการ
+          </Link>
+          <Link
+            href={toggleViewHref("kanban")}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+              view === "kanban"
+                ? "bg-white dark:bg-slate-950 shadow-sm text-slate-900"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            📊 กระดานงาน
           </Link>
         </div>
       </div>
@@ -106,34 +115,56 @@ export default async function LeadsPage({
       <LeadsStats stats={stats} />
 
       {view === "list" ? (
-        <>
-          <LeadsFilters />
-          <LeadsTable leads={listLeads} />
+        <div className="space-y-4">
+          <SectionTitle
+            title="รายการลีดทั้งหมด"
+            subtitle="คลิกที่แถวเพื่อดูรายละเอียด"
+            color="emerald"
+          />
 
-          <div className="flex items-center justify-between text-sm">
-            <div className="text-muted-foreground">
-              ทั้งหมด {count} รายการ • หน้า {page} จาก {totalPages}
-            </div>
-            <div className="flex gap-2">
-              <Link
-                className={`rounded-md border px-3 py-1 ${
-                  page <= 1 ? "pointer-events-none opacity-50" : ""
-                }`}
-                href={makeHref(page - 1)}
-              >
-                ก่อนหน้า
-              </Link>
-              <Link
-                className={`rounded-md border px-3 py-1 ${
-                  page >= totalPages ? "pointer-events-none opacity-50" : ""
-                }`}
-                href={makeHref(page + 1)}
-              >
-                ถัดไป
-              </Link>
-            </div>
-          </div>
-        </>
+          <LeadsFilters />
+
+          {isEmptyState ? (
+            <EmptyState
+              icon="users"
+              title="ยังไม่มีลีดในระบบ"
+              description="เริ่มต้นสร้างลีดแรกของคุณเพื่อติดตามลูกค้าที่สนใจทรัพย์"
+              actionLabel="สร้างลีดแรก"
+              actionHref="/protected/leads/new"
+              actionIcon="userPlus"
+            />
+          ) : (
+            <>
+              <LeadsTable leads={listLeads} />
+
+              <div className="flex items-center justify-between text-sm bg-slate-50 rounded-xl p-4 border">
+                <div className="text-slate-600 font-medium">
+                  ทั้งหมด <span className="text-slate-900">{count}</span> รายการ
+                  • หน้า <span className="text-slate-900">{page}</span> จาก{" "}
+                  <span className="text-slate-900">{totalPages}</span>
+                </div>
+                <div className="flex gap-2">
+                  <Link
+                    className={`rounded-lg border bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
+                      page <= 1 ? "pointer-events-none opacity-50" : ""
+                    }`}
+                    href={makeHref(page - 1)}
+                  >
+                    ← ก่อนหน้า
+                  </Link>
+                  <Link
+                    className={`rounded-lg border bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
+                      page >= totalPages ? "pointer-events-none opacity-50" : ""
+                    }`}
+                    href={makeHref(page + 1)}
+                  >
+                    ถัดไป →
+                  </Link>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       ) : (
         <div className="pt-2">
           <LeadsKanban initialLeads={kanbanLeads} />

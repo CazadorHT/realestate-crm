@@ -12,6 +12,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BlogsTable } from "@/features/blogs/components/BlogsTable";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { SectionTitle } from "@/components/dashboard/SectionTitle";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 
 export default async function BlogListPage() {
   const posts = await getAllBlogPosts();
@@ -24,7 +27,7 @@ export default async function BlogListPage() {
   // Posts scheduled in the future
   const now = new Date();
   const scheduledPosts = posts.filter(
-    (p) => p.published_at && new Date(p.published_at) > now
+    (p) => p.published_at && new Date(p.published_at) > now,
   ).length;
 
   // Recent posts (published in last 7 days)
@@ -34,37 +37,47 @@ export default async function BlogListPage() {
     (p) =>
       p.is_published &&
       p.published_at &&
-      new Date(p.published_at) > sevenDaysAgo
+      new Date(p.published_at) > sevenDaysAgo,
   ).length;
 
   // Get unique categories
   const categories = new Set(posts.map((p) => p.category).filter(Boolean));
 
+  const isEmptyState = totalPosts === 0;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            บทความ
-          </h1>
-          <p className="text-slate-500 mt-2">จัดการบทความและเนื้อหาทั้งหมด</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" asChild>
-            <Link href="/protected/blogs/categories">
-              <Tag className="mr-2 h-4 w-4" />
-              จัดการหมวดหมู่
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/protected/blogs/new">
-              <Plus className="mr-2 h-4 w-4" />
-              สร้างบทความใหม่
-            </Link>
-          </Button>
-        </div>
-      </div>
+    <div className="p-6 space-y-6">
+      {/* Premium Header */}
+      <PageHeader
+        title="บทความ (Blogs)"
+        subtitle="จัดการบทความและเนื้อหาทั้งหมด"
+        count={totalPosts}
+        icon="fileText"
+        gradient="purple"
+        actionSlot={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              asChild
+              className="bg-white/80 hover:bg-white shadow-sm"
+            >
+              <Link href="/protected/blogs/categories">
+                <Tag className="mr-2 h-4 w-4" />
+                จัดการหมวดหมู่
+              </Link>
+            </Button>
+            <Button
+              asChild
+              className="bg-white text-slate-800 hover:bg-white/90 shadow-lg font-semibold"
+            >
+              <Link href="/protected/blogs/new">
+                <Plus className="mr-2 h-4 w-4" />
+                สร้างบทความใหม่
+              </Link>
+            </Button>
+          </div>
+        }
+      />
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">

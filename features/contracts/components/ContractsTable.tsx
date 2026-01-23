@@ -164,7 +164,7 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                         {contract.created_at &&
                           differenceInHours(
                             new Date(),
-                            new Date(contract.created_at)
+                            new Date(contract.created_at),
                           ) < 24 && (
                             <div className="w-fit">
                               <div className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">
@@ -200,7 +200,7 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                             day: "2-digit",
                             month: "short",
                             year: "numeric",
-                          }
+                          },
                         )}
                       </div>
                       <div className="text-sm">
@@ -210,7 +210,7 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                             day: "2-digit",
                             month: "short",
                             year: "numeric",
-                          }
+                          },
                         )}
                       </div>
                       {contract.duration_months && (
@@ -283,16 +283,36 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
               })
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={8}
-                  className="h-32 text-center text-muted-foreground"
-                >
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <FileText className="h-12 w-12 text-slate-300" />
-                    <p className="text-sm font-medium">ไม่มีสัญญาเช่าในระบบ</p>
-                    <p className="text-xs text-slate-400">
-                      สร้างสัญญาใหม่จากหน้า Deals
-                    </p>
+                <TableCell colSpan={8} className="h-auto py-0 border-0">
+                  {/* Premium Empty State */}
+                  <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-gradient-to-br from-slate-50 to-white p-12 my-4">
+                    {/* Decorative Background */}
+                    <div className="absolute inset-0 opacity-5">
+                      <div className="absolute top-10 left-10 w-20 h-20 border-4 border-slate-400 rounded-xl rotate-12" />
+                      <div className="absolute bottom-10 right-10 w-16 h-16 border-4 border-slate-400 rounded-full" />
+                      <div className="absolute top-1/2 left-1/3 w-12 h-12 border-4 border-slate-400 rounded-lg -rotate-6" />
+                    </div>
+
+                    <div className="relative flex flex-col items-center justify-center text-center space-y-6">
+                      {/* Icon */}
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl scale-150" />
+                        <div className="relative p-6 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-xl shadow-emerald-500/30">
+                          <FileText className="h-12 w-12 text-white" />
+                        </div>
+                      </div>
+
+                      {/* Text */}
+                      <div className="space-y-2 max-w-md">
+                        <h3 className="text-2xl font-bold text-slate-800">
+                          ยังไม่มีสัญญาเช่าในระบบ
+                        </h3>
+                        <p className="text-slate-500 leading-relaxed">
+                          สร้างสัญญาเช่าใหม่จากหน้าดีลที่มีสถานะ "เซ็นสัญญา"
+                          หรือ "สำเร็จ"
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </TableCell>
               </TableRow>

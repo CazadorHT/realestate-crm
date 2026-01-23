@@ -1,10 +1,7 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   FileText,
-  Plus,
   AlertTriangle,
   CheckCircle2,
   XCircle,
@@ -13,6 +10,9 @@ import {
 } from "lucide-react";
 import { ContractsTable } from "@/features/contracts/components/ContractsTable";
 import { CreateContractDialog } from "@/features/contracts/components/CreateContractDialog";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { SectionTitle } from "@/components/dashboard/SectionTitle";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 
 type RentalContractWithRelations = {
   id: string;
@@ -38,7 +38,7 @@ function getContractStatus(endDate: string) {
   const now = new Date();
   const end = new Date(endDate);
   const daysUntilExpiry = Math.ceil(
-    (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
   );
 
   if (daysUntilExpiry < 0) {
@@ -79,7 +79,7 @@ export default async function RentalContractsPage() {
         id,
         property:properties(title)
       )
-    `
+    `,
     )
     .order("start_date", { ascending: false });
 
@@ -96,33 +96,35 @@ export default async function RentalContractsPage() {
   // Calculate statistics
   const totalContracts = contracts.length;
   const activeContracts = contracts.filter(
-    (c) => getContractStatus(c.end_date).status === "active"
+    (c) => getContractStatus(c.end_date).status === "active",
   ).length;
   const expiringSoonContracts = contracts.filter(
-    (c) => getContractStatus(c.end_date).status === "expiring-soon"
+    (c) => getContractStatus(c.end_date).status === "expiring-soon",
   ).length;
   const expiredContracts = contracts.filter(
-    (c) => getContractStatus(c.end_date).status === "expired"
+    (c) => getContractStatus(c.end_date).status === "expired",
   ).length;
 
   const totalMonthlyRevenue = contracts
     .filter(
-      (c) => getContractStatus(c.end_date).status === "active" && c.monthly_rent
+      (c) =>
+        getContractStatus(c.end_date).status === "active" && c.monthly_rent,
     )
     .reduce((sum, c) => sum + (c.monthly_rent || 0), 0);
 
+  const isEmptyState = totalContracts === 0;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            สัญญาเช่า
-          </h1>
-          <p className="text-slate-500 mt-2">จัดการและติดตามสัญญาเช่าทั้งหมด</p>
-        </div>
-        <CreateContractDialog />
-      </div>
+    <div className="p-6 space-y-6">
+      {/* Premium Header */}
+      <PageHeader
+        title="สัญญาเช่า (Contracts)"
+        subtitle="จัดการและติดตามสัญญาเช่าทั้งหมด"
+        count={totalContracts}
+        icon="fileText"
+        gradient="emerald"
+        actionSlot={<CreateContractDialog />}
+      />
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">

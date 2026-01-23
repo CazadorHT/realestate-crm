@@ -1,6 +1,7 @@
 import { Home, Mail, Phone, Facebook, Instagram, MapPin } from "lucide-react";
 import { FaLine } from "react-icons/fa";
 import Link from "next/link";
+import Image from "next/image";
 
 export function PublicFooter() {
   // Schema.org Organization for SEO
@@ -92,12 +93,20 @@ export function PublicFooter() {
             itemType="https://schema.org/RealEstateAgent"
           >
             <div className="flex items-center gap-2 text-white">
-              <div className="p-1.5 md:p-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg">
-                <Home className="h-4 w-4 md:h-5 md:w-5" />
-              </div>
-              <span className="text-lg md:text-xl font-bold" itemProp="name">
-                Real Estate CRM
-              </span>
+              <Link
+                  href="/"
+                  className="hover:scale-105 transition-transform block"
+                >
+                  <Image
+                    // src="/images/oma-asset-logo.svg"
+                    src="/images/brand-logo-dark.svg"
+                    alt="OMA ASSET Logo"
+                    width={220}
+                    height={70}
+                    className="h-[100px] w-auto"
+                    priority
+                  />
+                </Link>
             </div>
             <p
               className="text-xs md:text-sm leading-relaxed"

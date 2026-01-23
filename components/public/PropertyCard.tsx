@@ -66,9 +66,15 @@ export type PropertyCardProps = {
 export function PropertyCard({
   property,
   priority = false,
+  compareWith,
 }: {
   property: PropertyCardProps;
   priority?: boolean;
+  compareWith?: {
+    price: number | null;
+    size: number | null;
+    date: string | null;
+  };
 }) {
   const [isInCompare, setIsInCompare] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -119,6 +125,46 @@ export function PropertyCard({
     .filter(Boolean)
     .join(" • ");
 
+  // Comparison Logic
+  const comparisonBadges = [];
+  if (compareWith) {
+    // Price Check (Cheaper)
+    const currentPrice =
+      property.listing_type === "RENT" ? property.rental_price : property.price;
+    const comparePrice = compareWith.price;
+
+    if (currentPrice && comparePrice && currentPrice < comparePrice) {
+      comparisonBadges.push({
+        label: "ประหยัดกว่า",
+        color: "bg-green-100 text-green-700",
+      });
+    }
+
+    // Size Check (Larger)
+    if (
+      property.size_sqm &&
+      compareWith.size &&
+      property.size_sqm > compareWith.size
+    ) {
+      comparisonBadges.push({
+        label: "พื้นที่ใหญ่กว่า",
+        color: "bg-blue-100 text-blue-700",
+      });
+    }
+
+    // Date Check (Newer)
+    if (
+      property.created_at &&
+      compareWith.date &&
+      new Date(property.created_at) > new Date(compareWith.date)
+    ) {
+      comparisonBadges.push({
+        label: "ใหม่กว่า",
+        color: "bg-purple-100 text-purple-700",
+      });
+    }
+  }
+
   return (
     <div className="group relative isolate rounded-2xl sm:rounded-2xl md:rounded-3xl w-full max-w-[350px] mx-auto bg-white overflow-hidden shadow-md h-full flex flex-col transition-[transform,box-shadow] duration-300 hover:shadow-xl hover:-translate-y-1 focus-within:outline-none focus-within:ring-2 before:content-[''] before:absolute before:inset-0 before:rounded-2xl sm:before:rounded-2xl md:before:rounded-3xl before:ring-inset before:pointer-events-none before:z-10">
       <Link
@@ -136,8 +182,8 @@ export function PropertyCard({
                 property.listing_type === "SALE"
                   ? "ขาย"
                   : property.listing_type === "RENT"
-                  ? "เช่า"
-                  : "ขาย-เช่า"
+                    ? "เช่า"
+                    : "ขาย-เช่า"
               }${getTypeLabel(property.property_type)} - ${property.title}${
                 areaProvince ? ` ทำเล${areaProvince}` : ""
               }`}
@@ -155,18 +201,31 @@ export function PropertyCard({
 
           <div className="pointer-events-none absolute inset-0 rounded-t-2xl md:rounded-t-3xl bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-          {/* Verified Badge */}
-          {property.verified && (
-            <div className="group/verified absolute top-3 left-3 flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 rounded-full shadow-lg z-20 transition-all duration-300 hover:pr-3 cursor-default">
-              {/* Icon stays visible */}
-              <IoShieldCheckmark className="w-5 h-5" />
+          {/* Badge Overlay Container */}
+          <div className="absolute top-3 left-3 flex flex-wrap gap-2 z-20">
+            {/* Verified Badge */}
+            {property.verified && (
+              <div className="group/verified flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 rounded-full shadow-lg transition-all duration-300 hover:pr-3 cursor-default">
+                {/* Icon stays visible */}
+                <IoShieldCheckmark className="w-5 h-5" />
 
-              {/* Text expands from 0 width */}
-              <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 group-hover/verified:max-w-[100px] group-hover/verified:opacity-100 group-hover/verified:ml-1.5">
-                VERIFIED
-              </span>
-            </div>
-          )}
+                {/* Text expands from 0 width */}
+                <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 group-hover/verified:max-w-[100px] group-hover/verified:opacity-100 group-hover/verified:ml-1.5">
+                  VERIFIED
+                </span>
+              </div>
+            )}
+
+            {/* Comparison Badges */}
+            {comparisonBadges.map((badge, idx) => (
+              <div
+                key={idx}
+                className={`flex items-center px-2 py-1 rounded-md shadow-sm border border-white/20 text-[10px] font-bold ${badge.color} backdrop-blur-md`}
+              >
+                {badge.label}
+              </div>
+            ))}
+          </div>
 
           {property.meta_keywords?.includes("Pet Friendly") && (
             <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md text-orange-600 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm z-20 ">
@@ -369,7 +428,7 @@ export function PropertyCard({
                           {Math.round(
                             ((property.original_price - property.price) /
                               property.original_price) *
-                              100
+                              100,
                           )}
                           %
                         </span>
@@ -383,7 +442,7 @@ export function PropertyCard({
                     <div className="text-base sm:text-lg md:text-xl font-bold text-slate-900">
                       {property.price || property.original_price
                         ? PRICE_FORMATTER.format(
-                            property.price || property.original_price!
+                            property.price || property.original_price!,
                           )
                         : "สอบถามราคา"}
                     </div>
@@ -403,7 +462,7 @@ export function PropertyCard({
                       <div className="order-2 flex items-center gap-1">
                         <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
                           {PRICE_FORMATTER.format(
-                            property.original_rental_price
+                            property.original_rental_price,
                           )}
                         </span>
                         <span className="text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-100 px-1 rounded-sm">
@@ -412,7 +471,7 @@ export function PropertyCard({
                             ((property.original_rental_price -
                               property.rental_price) /
                               property.original_rental_price) *
-                              100
+                              100,
                           )}
                           %
                         </span>
@@ -430,7 +489,7 @@ export function PropertyCard({
                       {property.rental_price || property.original_rental_price
                         ? PRICE_FORMATTER.format(
                             property.rental_price ||
-                              property.original_rental_price!
+                              property.original_rental_price!,
                           )
                         : "สอบถามค่าเช่า"}
                       <span className="text-[10px] md:text-xs text-slate-400 font-normal ml-0.5">
@@ -470,7 +529,7 @@ export function PropertyCard({
                             }).format(
                               property.listing_type === "SALE"
                                 ? property.original_price!
-                                : property.original_rental_price!
+                                : property.original_rental_price!,
                             )}
                           </span>
                           <span className="text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
@@ -485,7 +544,7 @@ export function PropertyCard({
                                 (property.listing_type === "SALE"
                                   ? property.original_price!
                                   : property.original_rental_price!)) *
-                                100
+                                100,
                             )}
                             %
                           </span>

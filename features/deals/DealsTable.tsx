@@ -69,7 +69,7 @@ export function DealsTable({
     string | undefined
   >(undefined);
   const [selectedLeadId, setSelectedLeadId] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   // reloadKey increments to force a refresh of the data effect (useful after create/edit/delete)
   const [reloadKey, setReloadKey] = useState(0);
@@ -231,7 +231,7 @@ export function DealsTable({
                   if (id === null) {
                     setSelectedPropertyId(undefined);
                     import("sonner").then(({ toast }) =>
-                      toast.info("การกรองด้วย 'ไม่ผูกทรัพย์' ยังไม่รองรับ")
+                      toast.info("การกรองด้วย 'ไม่ผูกทรัพย์' ยังไม่รองรับ"),
                     );
                   } else {
                     setSelectedPropertyId(id ?? undefined);
@@ -346,18 +346,38 @@ export function DealsTable({
           <TableBody>
             {data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="h-44 text-center">
-                  <div className="flex flex-col items-center justify-center gap-3">
-                    <Handshake className="h-12 w-12 text-slate-300" />
-                    <div>
-                      <p className="text-sm font-medium text-slate-600">
-                        {hasActiveFilters ? "ไม่พบดีลที่ค้นหา" : "ยังไม่มีดีล"}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-1">
-                        {hasActiveFilters
-                          ? "ลองปรับตัวกรองใหม่"
-                          : "สร้างดีลแรกของคุณเพื่อเริ่มต้น"}
-                      </p>
+                <TableCell colSpan={10} className="h-auto py-0 border-0">
+                  {/* Premium Empty State */}
+                  <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-gradient-to-br from-slate-50 to-white p-12 my-4">
+                    {/* Decorative Background */}
+                    <div className="absolute inset-0 opacity-5">
+                      <div className="absolute top-10 left-10 w-20 h-20 border-4 border-slate-400 rounded-xl rotate-12" />
+                      <div className="absolute bottom-10 right-10 w-16 h-16 border-4 border-slate-400 rounded-full" />
+                      <div className="absolute top-1/2 left-1/3 w-12 h-12 border-4 border-slate-400 rounded-lg -rotate-6" />
+                    </div>
+
+                    <div className="relative flex flex-col items-center justify-center text-center space-y-6">
+                      {/* Icon */}
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-xl scale-150" />
+                        <div className="relative p-6 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl shadow-xl shadow-amber-500/30">
+                          <Handshake className="h-12 w-12 text-white" />
+                        </div>
+                      </div>
+
+                      {/* Text */}
+                      <div className="space-y-2 max-w-md">
+                        <h3 className="text-2xl font-bold text-slate-800">
+                          {hasActiveFilters
+                            ? "ไม่พบดีลที่ค้นหา"
+                            : "ยังไม่มีดีลในระบบ"}
+                        </h3>
+                        <p className="text-slate-500 leading-relaxed">
+                          {hasActiveFilters
+                            ? "ลองปรับตัวกรองใหม่หรือค้นหาด้วยคำอื่น"
+                            : "เริ่มต้นสร้างดีลแรกของคุณเพื่อติดตามการขายและการเช่าทรัพย์"}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </TableCell>
@@ -398,7 +418,7 @@ export function DealsTable({
                       {deal.created_at &&
                         differenceInHours(
                           new Date(),
-                          new Date(deal.created_at)
+                          new Date(deal.created_at),
                         ) < 24 && (
                           <div className="w-fit">
                             <div className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">

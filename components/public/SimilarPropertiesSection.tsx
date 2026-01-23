@@ -22,6 +22,11 @@ interface SimilarPropertiesSectionProps {
   propertyType?: PropertyType;
   province?: string;
   limit?: number;
+  compareData?: {
+    price: number | null;
+    size: number | null;
+    date: string | null;
+  };
 }
 
 export async function SimilarPropertiesSection({
@@ -29,6 +34,7 @@ export async function SimilarPropertiesSection({
   propertyType,
   province: _province,
   limit = 4,
+  compareData,
 }: SimilarPropertiesSectionProps) {
   const supabase = createAdminClient();
 
@@ -54,7 +60,7 @@ export async function SimilarPropertiesSection({
           category
         )
       )
-    `
+    `,
     )
     .eq("property_type", propertyType)
     .neq("id", currentPropertyId)
@@ -107,6 +113,7 @@ export async function SimilarPropertiesSection({
                   image_url: imageUrl,
                   verified: property.verified ?? undefined,
                 }}
+                compareWith={compareData}
               />
             </div>
           );

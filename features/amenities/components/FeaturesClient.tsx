@@ -64,6 +64,7 @@ import { ICON_MAP, DEFAULT_ICON } from "../icons";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteFeaturesAction } from "../bulk-actions";
+import { SectionTitle } from "@/components/dashboard/SectionTitle";
 
 interface FeaturesClientProps {
   features: FeatureRow[];
@@ -95,7 +96,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
   // Calculate Stats
   const totalFeatures = features.length;
   const uniqueCategories = new Set(
-    features.map((f) => f.category).filter(Boolean)
+    features.map((f) => f.category).filter(Boolean),
   ).size;
   const iconCount = Object.keys(ICON_MAP).length;
 
@@ -161,7 +162,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
     (f) =>
       f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (f.category &&
-        f.category.toLowerCase().includes(searchTerm.toLowerCase()))
+        f.category.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   const totalPages = Math.ceil(filteredFeatures.length / itemsPerPage);
@@ -172,7 +173,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
   // Bulk selection
   const allIds = useMemo(
     () => currentFeatures.map((f) => f.id),
-    [currentFeatures]
+    [currentFeatures],
   );
   const {
     toggleSelect,
@@ -206,24 +207,38 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header & Stats */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            สิ่งอำนวยความสะดวก (Features)
-          </h1>
-          <p className="text-slate-500 mt-2">
-            จัดการรายการสิ่งอำนวยความสะดวก ไอคอน และหมวดหมู่
-          </p>
+    <div className="p-6 space-y-6">
+      {/* Premium Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-8 shadow-xl">
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-white/5 rounded-full blur-xl" />
+
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Box className="h-6 w-6 text-white" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">
+                สิ่งอำนวยความสะดวก (Features)
+              </h1>
+            </div>
+            <p className="text-white/80 text-sm md:text-base max-w-md">
+              จัดการรายการสิ่งอำนวยความสะดวก ไอคอน และหมวดหมู่ • มีทั้งหมด{" "}
+              <span className="font-bold text-white">{totalFeatures}</span>{" "}
+              รายการ
+            </p>
+          </div>
+
+          <Button
+            onClick={handleAddNew}
+            size="lg"
+            className="bg-white text-slate-800 hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            เพิ่มรายการใหม่
+          </Button>
         </div>
-        <Button
-          onClick={handleAddNew}
-          className="bg-blue-600 hover:bg-blue-700 shadow-sm"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          เพิ่มรายการใหม่
-        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -511,7 +526,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
                                     </span>
                                   </div>
                                 </SelectItem>
-                              )
+                              ),
                             )}
                           </div>
                         </SelectContent>

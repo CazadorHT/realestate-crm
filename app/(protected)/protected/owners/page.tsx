@@ -1,12 +1,13 @@
-import { Button } from "@/components/ui/button";
 import { OwnersTable } from "@/components/owners/OwnersTable";
-import { PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { OwnersStats } from "@/components/owners/OwnersStats";
 import {
   getOwnersQuery,
   getOwnersDashboardStatsQuery,
 } from "@/features/owners/queries";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { SectionTitle } from "@/components/dashboard/SectionTitle";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 
 type PageProps = {
   searchParams: Promise<{
@@ -39,51 +40,73 @@ export default async function OwnersPage({ searchParams }: PageProps) {
     return `/protected/owners?${params.toString()}`;
   };
 
+  const isEmptyState = owners.length === 0 && page === 1 && !q;
+
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">เจ้าของทรัพย์</h1>
-          <p className="text-muted-foreground">
-            จัดการข้อมูลเจ้าของทรัพย์และผู้ติดต่อ
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/protected/owners/new">
-            <PlusCircle className="h-4 w-4 mr-2" />
-            เพิ่มเจ้าของ
-          </Link>
-        </Button>
-      </div>
+      {/* Premium Header */}
+      <PageHeader
+        title="เจ้าของทรัพย์"
+        subtitle="จัดการข้อมูลเจ้าของทรัพย์และผู้ติดต่อ"
+        count={count}
+        icon="userCircle"
+        actionLabel="เพิ่มเจ้าของ"
+        actionHref="/protected/owners/new"
+        actionIcon="userPlus"
+        gradient="purple"
+      />
 
       <OwnersStats stats={stats} />
 
-      <OwnersTable owners={owners} />
+      <div className="space-y-4">
+        <SectionTitle
+          title="รายการเจ้าของทั้งหมด"
+          subtitle="คลิกที่แถวเพื่อดูรายละเอียด"
+          color="purple"
+        />
 
-      <div className="flex items-center justify-between text-sm border-t pt-4">
-        <div className="text-muted-foreground">
-          ทั้งหมด {count} รายการ • หน้า {page} จาก {totalPages}
-        </div>
-        <div className="flex gap-2">
-          <Link
-            className={`rounded-md border px-3 py-1 hover:bg-muted ${
-              page <= 1 ? "pointer-events-none opacity-50" : ""
-            }`}
-            href={makeHref(page - 1)}
-            aria-disabled={page <= 1}
-          >
-            ก่อนหน้า
-          </Link>
-          <Link
-            className={`rounded-md border px-3 py-1 hover:bg-muted ${
-              page >= totalPages ? "pointer-events-none opacity-50" : ""
-            }`}
-            href={makeHref(page + 1)}
-            aria-disabled={page >= totalPages}
-          >
-            ถัดไป
-          </Link>
-        </div>
+        {isEmptyState ? (
+          <EmptyState
+            icon="userCircle"
+            title="ยังไม่มีเจ้าของในระบบ"
+            description="เริ่มต้นเพิ่มเจ้าของทรัพย์คนแรกเพื่อจัดการข้อมูลผู้ติดต่อ"
+            actionLabel="เพิ่มเจ้าของคนแรก"
+            actionHref="/protected/owners/new"
+            actionIcon="userPlus"
+          />
+        ) : (
+          <>
+            <OwnersTable owners={owners} />
+
+            <div className="flex items-center justify-between text-sm bg-slate-50 rounded-xl p-4 border">
+              <div className="text-slate-600 font-medium">
+                ทั้งหมด <span className="text-slate-900">{count}</span> รายการ •
+                หน้า <span className="text-slate-900">{page}</span> จาก{" "}
+                <span className="text-slate-900">{totalPages}</span>
+              </div>
+              <div className="flex gap-2">
+                <Link
+                  className={`rounded-lg border bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
+                    page <= 1 ? "pointer-events-none opacity-50" : ""
+                  }`}
+                  href={makeHref(page - 1)}
+                  aria-disabled={page <= 1}
+                >
+                  ← ก่อนหน้า
+                </Link>
+                <Link
+                  className={`rounded-lg border bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
+                    page >= totalPages ? "pointer-events-none opacity-50" : ""
+                  }`}
+                  href={makeHref(page + 1)}
+                  aria-disabled={page >= totalPages}
+                >
+                  ถัดไป →
+                </Link>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

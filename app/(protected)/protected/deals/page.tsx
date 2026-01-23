@@ -12,6 +12,9 @@ import {
   Clock,
   DollarSign,
 } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { SectionTitle } from "@/components/dashboard/SectionTitle";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 
 export const metadata = {
   title: "Deals | จัดการดีล",
@@ -26,7 +29,7 @@ export default async function DealsPage() {
   // Calculate statistics
   const totalDeals = data.length;
   const activeDeals = data.filter(
-    (d) => d.status === "NEGOTIATING" || d.status === "SIGNED"
+    (d) => d.status === "NEGOTIATING" || d.status === "SIGNED",
   ).length;
   const wonDeals = data.filter((d) => d.status === "CLOSED_WIN").length;
   const lostDeals = data.filter((d) => d.status === "CLOSED_LOSS").length;
@@ -36,20 +39,19 @@ export default async function DealsPage() {
     .filter((d) => d.status === "CLOSED_WIN" && d.commission_amount)
     .reduce((sum, d) => sum + (d.commission_amount || 0), 0);
 
+  const isEmptyState = data.length === 0;
+
   return (
-    <div className="space-y-6 ">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            ดีล
-          </h1>
-          <p className="text-slate-500 mt-2">
-            จัดการและติดตามดีลการขายและเช่าทั้งหมด
-          </p>
-        </div>
-        <CreateDealButton properties={properties} />
-      </div>
+    <div className="p-6 space-y-6">
+      {/* Premium Header */}
+      <PageHeader
+        title="ดีล (Deals)"
+        subtitle="จัดการและติดตามดีลการขายและเช่า"
+        count={count}
+        icon="handshake"
+        gradient="amber"
+        actionSlot={<CreateDealButton properties={properties} />}
+      />
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">

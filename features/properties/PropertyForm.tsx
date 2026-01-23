@@ -73,6 +73,7 @@ const EMPTY_VALUES: PropertyFormValues = {
   co_agent_rent_commission_months: undefined,
   is_pet_friendly: false,
   feature_ids: [],
+  nearby_places: [],
 };
 
 type Props = {
@@ -88,7 +89,7 @@ type Props = {
 // Helper: Convert DB row to form values
 function mapRowToFormValues(
   row: PropertyRow,
-  images?: string[]
+  images?: string[],
 ): PropertyFormValues {
   const structuredData = row.structured_data as unknown as {
     is_co_agent?: boolean;
@@ -150,9 +151,11 @@ function mapRowToFormValues(
       structuredData?.co_agent_rent_commission_months || undefined,
 
     // Tags
+    // Tags
     verified: row.verified ?? false,
     is_pet_friendly: (row.meta_keywords || []).includes("Pet Friendly"),
     feature_ids: [],
+    nearby_places: (row.nearby_places as any[]) || [],
   };
 }
 
@@ -254,7 +257,7 @@ export function PropertyForm({
   const [isQuickInfoOpen, setIsQuickInfoOpen] = React.useState(false);
 
   const uploadSessionId = useRef<string>(
-    typeof crypto !== "undefined" ? crypto.randomUUID() : "fallback"
+    typeof crypto !== "undefined" ? crypto.randomUUID() : "fallback",
   ).current;
 
   const form = useForm<PropertyFormValues>({
@@ -263,7 +266,7 @@ export function PropertyForm({
       mode === "edit" && defaultValues
         ? mapRowToFormValues(
             defaultValues,
-            initialImages?.map((img) => img.storage_path) ?? []
+            initialImages?.map((img) => img.storage_path) ?? [],
           )
         : {
             ...EMPTY_VALUES,
@@ -296,7 +299,7 @@ export function PropertyForm({
         const areasData = await getPopularAreasAction({ onlyActive: false });
         // Merge DB areas with hardcoded defaults to ensure we have a good list
         const combinedAreas = Array.from(
-          new Set([...areasData, ...(POPULAR_AREAS as unknown as string[])])
+          new Set([...areasData, ...(POPULAR_AREAS as unknown as string[])]),
         ).sort();
 
         setPopularAreas(combinedAreas);
@@ -465,7 +468,7 @@ export function PropertyForm({
         result = await updatePropertyAction(
           defaultValues!.id,
           { ...values },
-          uploadSessionId
+          uploadSessionId,
         );
       }
 
@@ -500,7 +503,7 @@ export function PropertyForm({
         }
 
         toast.success(
-          mode === "create" ? "เพิ่มทรัพย์ใหม่สำเร็จ" : "บันทึกข้อมูลสำเร็จ"
+          mode === "create" ? "เพิ่มทรัพย์ใหม่สำเร็จ" : "บันทึกข้อมูลสำเร็จ",
         );
         setPersistImages(true);
         form.reset(EMPTY_VALUES);
@@ -522,7 +525,7 @@ export function PropertyForm({
     try {
       const result: CreatePropertyResult = await createPropertyAction(
         pendingSubmit,
-        uploadSessionId
+        uploadSessionId,
       );
 
       if (result.success) {

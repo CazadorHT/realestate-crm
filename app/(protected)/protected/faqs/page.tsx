@@ -1,7 +1,5 @@
 import { getFaqs } from "@/features/admin/faqs-actions";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
 import {
   Plus,
   HelpCircle,
@@ -10,6 +8,9 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { FAQsTable } from "@/features/admin/components/FAQsTable";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { SectionTitle } from "@/components/dashboard/SectionTitle";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 
 export default async function FAQsPage() {
   const faqs = await getFaqs();
@@ -21,23 +22,21 @@ export default async function FAQsPage() {
   const categories = [...new Set(faqs?.map((f) => f.category).filter(Boolean))];
   const totalCategories = categories.length;
 
+  const isEmptyState = totalFaqs === 0;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            จัดการคำถามที่พบบ่อย
-          </h1>
-          <p className="text-slate-500 mt-2">จัดการคำถามและคำตอบสำหรับลูกค้า</p>
-        </div>
-        <Link href="/protected/faqs/new">
-          <Button className="hover:shadow-md transition-shadow">
-            <Plus className="w-4 h-4 mr-2" />
-            เพิ่มคำถามใหม่
-          </Button>
-        </Link>
-      </div>
+    <div className="p-6 space-y-6">
+      {/* Premium Header */}
+      <PageHeader
+        title="คำถามที่พบบ่อย (FAQs)"
+        subtitle="จัดการคำถามและคำตอบสำหรับลูกค้า"
+        count={totalFaqs}
+        icon="helpCircle"
+        actionLabel="เพิ่มคำถามใหม่"
+        actionHref="/protected/faqs/new"
+        actionIcon="plus"
+        gradient="blue"
+      />
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

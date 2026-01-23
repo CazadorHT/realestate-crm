@@ -82,7 +82,7 @@ export function AgentSidebar({
               rel="noopener noreferrer"
             >
               <FaLine className="w-6 h-6 mr-2" />
-              ทักไลน์ (LINE)
+              นัดดูบ้าน (ไม่มีค่าใช้จ่าย)
             </a>
           </Button>
 

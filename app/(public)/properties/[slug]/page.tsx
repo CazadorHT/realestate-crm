@@ -20,6 +20,9 @@ import { ShareButtons } from "@/components/public/ShareButtons";
 import { SimilarPropertiesSection } from "@/components/public/SimilarPropertiesSection";
 import { FavoriteButton } from "@/components/public/FavoriteButton";
 import { MobilePropertyActions } from "@/components/public/MobilePropertyActions";
+import { KeySellingPoints } from "@/components/public/KeySellingPoints";
+import { PropertySuitability } from "@/components/public/PropertySuitability";
+import { NearbyPlaces } from "@/components/public/NearbyPlaces";
 import { Database } from "@/lib/database.types";
 import { Metadata } from "next";
 
@@ -78,7 +81,7 @@ export default async function PublicPropertyDetailPage(props: {
             category
           )
         )
-      `
+      `,
   );
 
   if (UUID_RE.test(slug)) {
@@ -148,6 +151,9 @@ export default async function PublicPropertyDetailPage(props: {
     },
   };
 
+  // Generate Key Selling Points (Mock logic)
+  const keySellingPoints = features.map((f) => f.name).slice(0, 4);
+
   const shareUrl = `https://your-domain.com/properties/${data.slug || slug}`;
 
   return (
@@ -195,13 +201,18 @@ export default async function PublicPropertyDetailPage(props: {
                   {data.title}
                 </h2>
 
-                {/* Location */}
                 <div className="flex items-center text-slate-600 gap-2 font-normal text-sm">
                   <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0" />
                   <span className="line-clamp-1">
                     {locationParts || "ไม่ระบุทำเล"}
                   </span>
                 </div>
+
+                {/* [NEW] Key Selling Points */}
+                <KeySellingPoints
+                  points={keySellingPoints}
+                  listingType={data.listing_type || "SALE"}
+                />
               </div>
               {/* Price Section */}
               <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4 md:p-6">
@@ -211,7 +222,7 @@ export default async function PublicPropertyDetailPage(props: {
                       price: number | null,
                       originalPrice: number | null,
                       label: string,
-                      isRent: boolean
+                      isRent: boolean,
                     ) => {
                       const displayPrice = price ?? originalPrice;
 
@@ -242,7 +253,7 @@ export default async function PublicPropertyDetailPage(props: {
 
                       if (hasDiscount) {
                         const discountPercent = Math.round(
-                          ((originalPrice! - price!) / originalPrice!) * 100
+                          ((originalPrice! - price!) / originalPrice!) * 100,
                         );
 
                         return (
@@ -304,13 +315,13 @@ export default async function PublicPropertyDetailPage(props: {
                             data.price,
                             data.original_price,
                             "ราคาขาย",
-                            false
+                            false,
                           )}
                           {renderPriceBlock(
                             data.rental_price,
                             data.original_rental_price,
                             "ค่าเช่า",
-                            true
+                            true,
                           )}
                         </>
                       );
@@ -321,7 +332,7 @@ export default async function PublicPropertyDetailPage(props: {
                         data.rental_price,
                         data.original_rental_price,
                         "ค่าเช่า",
-                        true
+                        true,
                       );
                     }
 
@@ -330,7 +341,7 @@ export default async function PublicPropertyDetailPage(props: {
                       data.price,
                       data.original_price,
                       "ราคาขาย",
-                      false
+                      false,
                     );
                   })()}
 
@@ -402,10 +413,10 @@ export default async function PublicPropertyDetailPage(props: {
                   const discountPercent = Math.round(
                     ((data.original_price! - data.price!) /
                       data.original_price!) *
-                      100
+                      100,
                   );
                   parts.push(
-                    `฿${data.original_price!.toLocaleString()} (-${discountPercent}%)`
+                    `฿${data.original_price!.toLocaleString()} (-${discountPercent}%)`,
                   );
                 } else if (data.price) {
                   parts.push(formatPrice(data.price));
@@ -422,10 +433,10 @@ export default async function PublicPropertyDetailPage(props: {
                   const discountPercent = Math.round(
                     ((data.original_rental_price! - data.rental_price!) /
                       data.original_rental_price!) *
-                      100
+                      100,
                   );
                   parts.push(
-                    `฿${data.original_rental_price!.toLocaleString()}/ด (-${discountPercent}%)`
+                    `฿${data.original_rental_price!.toLocaleString()}/ด (-${discountPercent}%)`,
                   );
                 } else if (data.rental_price) {
                   parts.push(`${formatPrice(data.rental_price)}/ด`);
@@ -446,7 +457,7 @@ export default async function PublicPropertyDetailPage(props: {
                   const discountPercent = Math.round(
                     ((data.original_price! - data.price!) /
                       data.original_price!) *
-                      100
+                      100,
                   );
                   return `฿${data.original_price!.toLocaleString()} (-${discountPercent}%)`;
                 } else if (data.price) {
@@ -466,7 +477,7 @@ export default async function PublicPropertyDetailPage(props: {
                   const discountPercent = Math.round(
                     ((data.original_rental_price! - data.rental_price!) /
                       data.original_rental_price!) *
-                      100
+                      100,
                   );
                   return `฿${data.original_rental_price!.toLocaleString()}/ด (-${discountPercent}%)`;
                 } else if (data.rental_price) {
@@ -529,6 +540,14 @@ export default async function PublicPropertyDetailPage(props: {
               <div className="prose prose-slate max-w-none text-slate-600 leading-7 md:leading-8 whitespace-pre-wrap text-sm md:text-base max-h-[300px] md:max-h-[400px] overflow-y-auto">
                 {data.description || "ไม่มีรายละเอียดเพิ่มเติม"}
               </div>
+            </section>
+
+            {/* [NEW] Nearby Places */}
+            <section>
+              <NearbyPlaces
+                location={data.popular_area || undefined}
+                data={(data.nearby_places as any[]) || []}
+              />
             </section>
 
             <hr className="border-slate-100" />
@@ -600,7 +619,14 @@ export default async function PublicPropertyDetailPage(props: {
           </div>
 
           {/* Right Sidebar (Sticky) */}
-          <aside className="relative">
+          <aside className="relative space-y-6">
+            {/* [NEW] Suitability / Rent vs Buy */}
+            <PropertySuitability
+              listingType={data.listing_type || "SALE"}
+              price={data.price}
+              rentalPrice={data.rental_price}
+            />
+
             <AgentSidebar
               agentName={agent?.full_name}
               agentImage={agent?.avatar_url}
@@ -618,6 +644,12 @@ export default async function PublicPropertyDetailPage(props: {
           currentPropertyId={data.id}
           propertyType={data.property_type}
           province={data.province || undefined}
+          compareData={{
+            price:
+              data.listing_type === "RENT" ? data.rental_price : data.price,
+            size: data.size_sqm,
+            date: data.created_at,
+          }}
         />
       </div>
 
@@ -642,7 +674,7 @@ export async function generateMetadata(props: {
   let query = supabase
     .from("properties")
     .select(
-      "title, description, slug, listing_type, province, property_images(image_url, is_cover)"
+      "title, description, slug, listing_type, province, property_images(image_url, is_cover)",
     );
 
   if (UUID_RE.test(slug)) {

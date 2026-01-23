@@ -1,6 +1,7 @@
 "use client";
 
 import { Home, Heart, Menu, X, Search, Key } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -55,7 +56,7 @@ export function PublicNav() {
   // Smooth scroll handler
   const handleNavClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
-    href: string
+    href: string,
   ) => {
     if (href.startsWith("#")) {
       e.preventDefault();
@@ -113,15 +114,21 @@ export function PublicNav() {
             <div className="flex justify-between items-center h-16">
               {/* Logo */}
               <div>
-                <Link
+                 <Link
                   href="/"
-                  className="text-xl flex items-center gap-2 font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:scale-105 transition-transform"
+                  className="hover:scale-105 transition-transform block"
                 >
-                  <div className="p-1.5 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg">
-                    <Home className="h-5 w-5 text-white" />
-                  </div>
-                  SABAICAZA
-                </Link>
+                  <Image
+                    // src="/images/oma-asset-logo.svg"
+                    src="/images/Frame 85.svg"
+                    alt="OMA ASSET Logo"
+                    width={220}
+                    height={70}
+                    className="h-12 w-auto"
+                    priority
+                  />
+                </Link> 
+                
               </div>
 
               {/* Desktop Navigation */}

@@ -82,6 +82,19 @@ export const FormSchema = z
     verified: z.boolean().default(false),
     is_pet_friendly: z.boolean().default(false),
     feature_ids: z.array(z.string()).default([]),
+
+    // Nearby Places (JSONB)
+    nearby_places: z
+      .array(
+        z.object({
+          category: z.string().min(1, "Required"),
+          name: z.string().min(1, "Required"),
+          distance: z.string().optional(),
+          time: z.string().optional(),
+        }),
+      )
+      .optional()
+      .default([]),
   })
   .superRefine((data, ctx) => {
     const priceMissing =

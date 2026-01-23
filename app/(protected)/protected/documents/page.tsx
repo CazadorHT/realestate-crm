@@ -15,6 +15,9 @@ import { th } from "date-fns/locale";
 import { UploadDocumentDialog } from "./_components/UploadDocumentDialog";
 import { DocumentsGrid } from "@/features/documents/components/DocumentsGrid";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { SectionTitle } from "@/components/dashboard/SectionTitle";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 
 // Type for document with relations
 type DocumentWithRelations = {
@@ -68,20 +71,19 @@ export default async function DocumentsPage() {
     return `${bytes} B`;
   };
 
+  const isEmptyState = totalDocuments === 0;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            เอกสาร
-          </h1>
-          <p className="text-slate-500 mt-2">
-            จัดการเอกสารและไฟล์แนบทั้งหมดในระบบ
-          </p>
-        </div>
-        <UploadDocumentDialog />
-      </div>
+    <div className="p-6 space-y-6">
+      {/* Premium Header */}
+      <PageHeader
+        title="เอกสาร (Documents)"
+        subtitle="จัดการเอกสารและไฟล์แนบทั้งหมดในระบบ"
+        count={totalDocuments}
+        icon="fileText"
+        gradient="blue"
+        actionSlot={<UploadDocumentDialog />}
+      />
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

@@ -640,6 +640,7 @@ export type Database = {
           meta_title: string | null
           min_contract_months: number | null
           near_transit: boolean | null
+          nearby_places: Json | null
           original_price: number | null
           original_rental_price: number | null
           owner_id: string | null
@@ -696,6 +697,7 @@ export type Database = {
           meta_title?: string | null
           min_contract_months?: number | null
           near_transit?: boolean | null
+          nearby_places?: Json | null
           original_price?: number | null
           original_rental_price?: number | null
           owner_id?: string | null
@@ -752,6 +754,7 @@ export type Database = {
           meta_title?: string | null
           min_contract_months?: number | null
           near_transit?: boolean | null
+          nearby_places?: Json | null
           original_price?: number | null
           original_rental_price?: number | null
           owner_id?: string | null
