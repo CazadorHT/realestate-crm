@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import type { Metadata } from "next";
 import Link from "next/link";
+import DOMPurify from "isomorphic-dompurify";
 
 interface BlogPostPageProps {
   params: Promise<{
@@ -283,7 +284,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {/* Main Content Render */}
               <div
                 className="prose prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline"
-                dangerouslySetInnerHTML={{ __html: post.content || "" }}
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(post.content || ""),
+                }}
                 itemProp="articleBody"
               />
 
