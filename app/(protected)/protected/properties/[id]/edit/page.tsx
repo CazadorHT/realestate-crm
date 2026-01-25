@@ -18,12 +18,10 @@ export default async function EditPropertyPage({
   }));
 
   return (
-    <div className="p-6">
       <PropertyForm
         mode="edit"
         defaultValues={property}
         initialImages={initialImages}
       />
-    </div>
   );
 }

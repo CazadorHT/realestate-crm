@@ -22,7 +22,7 @@ export function CancelButton({ sessionId }: { sessionId: string }) {
       variant="cancel"
       onClick={onCancel}
       type="button"
-      className="h-14 px-10 rounded-xl font-bold"
+      className="h-14 px-10 rounded-xl font-medium"
     >
       ยกเลิก
     </Button>

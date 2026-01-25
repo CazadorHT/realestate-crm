@@ -148,6 +148,29 @@ export const PROPERTY_TYPE_GRADIENTS = {
   OTHER: "from-slate-500 to-slate-600",
 } satisfies Record<PropertyType, string>;
 
+// Icons
+import {
+  Home,
+  Building2,
+  Hotel,
+  Map,
+  Briefcase,
+  Warehouse,
+  Store,
+  MoreHorizontal,
+} from "lucide-react";
+
+export const PROPERTY_TYPE_ICONS = {
+  HOUSE: Home,
+  CONDO: Building2,
+  TOWNHOME: Hotel,
+  LAND: Map,
+  OFFICE_BUILDING: Briefcase,
+  WAREHOUSE: Warehouse,
+  COMMERCIAL_BUILDING: Store,
+  OTHER: MoreHorizontal,
+} as const;
+
 export const NEARBY_PLACE_CATEGORIES = [
   { value: "School", label: "โรงเรียน / มหาวิทยาลัย" },
   { value: "Mall", label: "ห้างสรรพสินค้า / ตลาด" },

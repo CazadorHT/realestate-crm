@@ -8,6 +8,8 @@ import {
   PROPERTY_TYPE_LABELS,
   LISTING_TYPE_ORDER,
   PROPERTY_TYPE_ORDER,
+  PROPERTY_TYPE_ICONS,
+  PROPERTY_TYPE_GRADIENTS,
 } from "@/features/properties/labels";
 import { QuickInfoSection } from "@/features/properties/property-form/sections/QuickInfoSection";
 import type { Step1Props } from "../types";
@@ -33,11 +35,14 @@ function Step1BasicInfoComponent({
   const propertyTypeError = form.formState.errors.property_type;
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ">
-      <section className=" bg-white  rounded-2xl shadow-sm border border-slate-100/60  grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4  p-4  ">
+    <div
+      className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 origin-top"
+      style={{ zoom: "0.80" }}
+    >
+      <section className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4   ">
         {/* Section : Listing Type */}
         <div
-          className={`space-y-5 shadow-xl p-4 rounded-xl ${listingTypeError ? "ring-2 ring-red-400 bg-red-50/30" : ""}`}
+          className={`space-y-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300 ${listingTypeError ? "ring-2 ring-red-400 bg-red-50/30" : ""}`}
         >
           <div className="flex items-center gap-3">
             <div
@@ -47,12 +52,12 @@ function Step1BasicInfoComponent({
             </div>
             <div>
               <h3
-                className={`text-lg font-bold tracking-tight ${listingTypeError ? "text-red-600" : "text-slate-900"}`}
+                className={`text-lg font-medium tracking-tight ${listingTypeError ? "text-red-600" : "text-slate-900"}`}
               >
                 ประเภทประกาศ <span className="text-red-500">*</span>
               </h3>
               <p
-                className={`text-sm font-medium ${listingTypeError ? "text-red-500" : "text-slate-500"}`}
+                className={`text-sm  ${listingTypeError ? "text-red-500" : "text-slate-500"}`}
               >
                 {listingTypeError
                   ? "กรุณาเลือกรูปแบบประกาศ"
@@ -72,33 +77,33 @@ function Step1BasicInfoComponent({
                       key={type}
                       type="button"
                       onClick={() => field.onChange(type)}
-                      className={`p-2 rounded-xl border transition-all duration-300 text-left relative group flex items-center gap-2 ${
+                      className={`p-2 rounded-xl  transition-all duration-300 text-left relative group flex flex-col items-center gap-2 ${
                         field.value === type
-                          ? "border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-100"
+                          ? "border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-100 scale-105 "
                           : listingTypeError
                             ? "border-red-300 bg-red-50 hover:border-red-400 hover:bg-white hover:shadow-md shadow-md"
-                            : "border-slate-100 bg-slate-50 hover:border-blue-200 hover:bg-white hover:shadow-md shadow-md"
+                            : " bg-slate-50  hover:bg-white hover:shadow-md shadow-md"
                       }`}
                     >
                       <div
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${
+                        className={`p-3 rounded-full transition-all duration-300 flex items-center justify-center shrink-0 ${
                           field.value === type
                             ? "bg-white/20 text-white"
-                            : "bg-white text-slate-400 group-hover:text-blue-500 border border-slate-100"
+                            : "bg-white text-slate-400 group-hover:text-blue-500  "
                         }`}
                       >
                         {type === "SALE" ? (
-                          <TrendingUp className="w-5 h-5" />
+                          <TrendingUp className="w-6 h-6" />
                         ) : type === "RENT" ? (
-                          <PlusCircle className="w-5 h-5" />
+                          <PlusCircle className="w-6 h-6" />
                         ) : (
-                          <Home className="w-5 h-5" />
+                          <Home className="w-6 h-6" />
                         )}
                       </div>
 
                       <div>
                         <div
-                          className={`text-base font-bold transition-colors ${
+                          className={`text-base font-medium transition-colors text-center ${
                             field.value === type
                               ? "text-white"
                               : "text-slate-800"
@@ -106,19 +111,7 @@ function Step1BasicInfoComponent({
                         >
                           {LISTING_TYPE_LABELS[type]}
                         </div>
-                        <div
-                          className={`text-[10px] uppercase tracking-wider mt-0.5 transition-colors ${
-                            field.value === type
-                              ? "text-blue-100"
-                              : "text-slate-400"
-                          }`}
-                        >
-                          {type === "SALE"
-                            ? "เปิดขาย"
-                            : type === "RENT"
-                              ? "ปล่อยเช่า"
-                              : "ทั้งขายและเช่า"}
-                        </div>
+                        
                       </div>
 
                       {field.value === type && (
@@ -136,7 +129,7 @@ function Step1BasicInfoComponent({
         </div>
         {/* Section : Property Type */}
         <div
-          className={`border-t border-slate-50 lg:col-span-2 px-4 shadow-xl rounded-xl p-4 ${propertyTypeError ? "ring-2 ring-red-400 bg-red-50/30" : ""}`}
+          className={`lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300 ${propertyTypeError ? "ring-2 ring-red-400 bg-red-50/30" : ""}`}
         >
           <div className="flex items-center gap-3">
             <div
@@ -146,12 +139,12 @@ function Step1BasicInfoComponent({
             </div>
             <div>
               <h3
-                className={`text-lg font-bold tracking-tight ${propertyTypeError ? "text-red-600" : "text-slate-900"}`}
+                className={`text-lg font-medium tracking-tight ${propertyTypeError ? "text-red-600" : "text-slate-900"}`}
               >
                 ประเภทอสังหาฯ <span className="text-red-500">*</span>
               </h3>
               <p
-                className={`text-sm font-medium ${propertyTypeError ? "text-red-500" : "text-slate-500"}`}
+                className={`text-sm  ${propertyTypeError ? "text-red-500" : "text-slate-500"}`}
               >
                 {propertyTypeError
                   ? "กรุณาเลือกประเภททรัพย์"
@@ -165,28 +158,43 @@ function Step1BasicInfoComponent({
             name="property_type"
             render={({ field }) => (
               <FormItem>
-                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
-                  {PROPERTY_TYPE_ORDER.map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => {
-                        field.onChange(type);
-                        setIsQuickInfoOpen(true);
-                      }}
-                      className={`rounded-lg border transition-all duration-300 flex items-center justify-center group ${
-                        field.value === type
-                          ? "border-blue-600 bg-blue-600 text-white shadow-xl shadow-blue-100"
-                          : propertyTypeError
-                            ? "border-red-300 bg-red-50 text-red-500 shadow-md hover:border-red-400 hover:bg-white"
-                            : "border-slate-100 bg-slate-50 text-slate-500 shadow-md hover:border-blue-200 hover:bg-white hover:text-blue-600"
-                      }`}
-                    >
-                      <span className="text-sm font-medium uppercase tracking-wider text-center truncate w-full py-5">
-                        {PROPERTY_TYPE_LABELS[type]}
-                      </span>
-                    </button>
-                  ))}
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-8 gap-4 mt-4">
+                  {PROPERTY_TYPE_ORDER.map((type) => {
+                    const Icon = PROPERTY_TYPE_ICONS[type];
+                    const gradient = PROPERTY_TYPE_GRADIENTS[type];
+                    const isActive = field.value === type;
+
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          field.onChange(type);
+                          setIsQuickInfoOpen(true);
+                        }}
+                        className={`rounded-xl border transition-all duration-300 flex flex-col items-center justify-center gap-3 p-2 group ${
+                          isActive
+                            ? `bg-gradient-to-br ${gradient} text-white shadow-xl scale-105 border-transparent`
+                            : propertyTypeError
+                              ? "border-red-300 bg-red-50 text-red-500 shadow-md hover:border-red-400 hover:bg-white"
+                              : "border-slate-100 bg-slate-50 text-slate-500 shadow-md hover:bg-white hover:text-blue-600 hover:shadow-lg hover:border-blue-200"
+                        }`}
+                      >
+                        <div
+                          className={`p-3 rounded-full transition-all duration-300 ${
+                            isActive
+                              ? "bg-white/20 shadow-inner"
+                              : "bg-white shadow-sm "
+                          }`}
+                        >
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        <span className="text-sm   uppercase tracking-wider text-center w-full">
+                          {PROPERTY_TYPE_LABELS[type]}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
                 <FormMessage className="text-red-500 text-sm font-medium mt-2" />
               </FormItem>
