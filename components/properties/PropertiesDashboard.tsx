@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   TrendingUp,
   DollarSign,
+  Coins,
 } from "lucide-react";
 import {
   BarChart,
@@ -188,7 +189,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              ปิดการขายแล้ว
+              คอมมิชชั่นปิดได้
             </CardTitle>
             <div className="p-2 bg-purple-100 rounded-lg">
               <CheckCircle2 className="h-4 w-4 text-purple-600" />
@@ -196,30 +197,55 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {stats.soldOrRented}
+              {new Intl.NumberFormat("th-TH", {
+                notation: "compact",
+                maximumFractionDigits: 1,
+              }).format(stats.totalRealizedCommission || 0)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Sold & Rented</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              บาท (จาก Sold & Rented)
+            </p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              มูลค่าพอร์ต (ว่าง)
+              คอมมิชชั่นคาดการณ์
             </CardTitle>
             <div className="p-2 bg-amber-100 rounded-lg">
-              <DollarSign className="h-4 w-4 text-amber-600" />
+              <Coins className="h-4 w-4 text-amber-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600">
-              {new Intl.NumberFormat("th-TH", {
-                notation: "compact",
-                maximumFractionDigits: 1,
-              }).format(stats.totalValue)}
+            <div className="space-y-2 mt-1">
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                    ขาย (Sale)
+                  </p>
+                  <div className="text-xl font-bold text-amber-600">
+                    {new Intl.NumberFormat("th-TH", {
+                      notation: "compact",
+                      maximumFractionDigits: 1,
+                    }).format(stats.totalSaleCommission || 0)}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                    เช่า (Rent)
+                  </p>
+                  <div className="text-xl font-bold text-blue-600">
+                    {new Intl.NumberFormat("th-TH", {
+                      notation: "compact",
+                      maximumFractionDigits: 1,
+                    }).format(stats.totalRentCommission || 0)}
+                  </div>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              บาท (เฉพาะรายการ Active)
+            <p className="text-[10px] text-muted-foreground mt-2 text-center bg-slate-50 py-1 rounded">
+              จากทรัพย์ Active ทั้งหมด
             </p>
           </CardContent>
         </Card>

@@ -37,7 +37,7 @@ export type PublicPropertyWithImages = PropertyRow & {
  * - ไม่ require auth
  */
 export async function getPublicPropertyWithImagesBySlug(
-  slug: string
+  slug: string,
 ): Promise<PublicPropertyWithImages | null> {
   const supabase = await createClient();
 
@@ -54,7 +54,7 @@ export async function getPublicPropertyWithImagesBySlug(
         sort_order,
         created_at
       )
-    `
+    `,
     )
     .eq("slug", slug)
     .eq("status", "ACTIVE")
@@ -65,7 +65,7 @@ export async function getPublicPropertyWithImagesBySlug(
 
   if (data.property_images) {
     data.property_images.sort(
-      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
     );
   }
 
@@ -78,7 +78,7 @@ export async function getPublicPropertyWithImagesBySlug(
  * - query ด้วย id
  */
 export async function getProtectedPropertyWithImagesById(
-  id: string
+  id: string,
 ): Promise<PropertyWithImages> {
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
@@ -97,7 +97,7 @@ export async function getProtectedPropertyWithImagesById(
         sort_order,
         created_at
       )
-    `
+    `,
     )
     .eq("id", id)
     .single();
@@ -108,7 +108,7 @@ export async function getProtectedPropertyWithImagesById(
 
   if (data.property_images) {
     data.property_images.sort(
-      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
     );
   }
 
@@ -125,7 +125,7 @@ export async function getPropertiesForSelect() {
   const { data, error } = await supabase
     .from("properties")
     .select(
-      `id, title, price, original_price, rental_price, original_rental_price, commission_sale_percentage, commission_rent_months, property_images(image_url, is_cover)`
+      `id, title, price, original_price, rental_price, original_rental_price, commission_sale_percentage, commission_rent_months, property_images(image_url, is_cover)`,
     )
     .order("created_at", { ascending: false });
 
@@ -146,6 +146,9 @@ export type PropertyStats = {
   available: number;
   soldOrRented: number;
   totalValue: number;
+  totalSaleCommission: number;
+  totalRentCommission: number;
+  totalRealizedCommission: number;
   byType: { name: string; value: number }[];
   byStatus: { name: string; value: number }[];
 };
@@ -155,7 +158,9 @@ export async function getPropertiesDashboardStatsQuery(): Promise<PropertyStats>
 
   const { data, error } = await supabase
     .from("properties")
-    .select("id, status, price, property_type, listing_type");
+    .select(
+      "id, status, price, rental_price, original_price, original_rental_price, property_type, listing_type, commission_sale_percentage, commission_rent_months",
+    );
 
   if (error || !data) {
     return {
@@ -163,6 +168,9 @@ export async function getPropertiesDashboardStatsQuery(): Promise<PropertyStats>
       available: 0,
       soldOrRented: 0,
       totalValue: 0,
+      totalSaleCommission: 0,
+      totalRentCommission: 0,
+      totalRealizedCommission: 0,
       byType: [],
       byStatus: [],
     };
@@ -172,13 +180,67 @@ export async function getPropertiesDashboardStatsQuery(): Promise<PropertyStats>
   // Change "AVAILABLE/FOR_SALE/FOR_RENT" to actual enum "ACTIVE"
   const active = data.filter((p) => p.status === "ACTIVE").length;
   const soldOrRented = data.filter((p) =>
-    ["SOLD", "RENTED"].includes(p.status)
+    ["SOLD", "RENTED"].includes(p.status),
   ).length;
 
-  // Sum price of ACTIVE properties
+  // Sum price of ACTIVE properties (fallback to original_price if price is missing)
   const totalValue = data
     .filter((p) => p.status === "ACTIVE")
-    .reduce((sum, p) => sum + (p.price || 0), 0);
+    .reduce((sum, p) => sum + (p.price || p.original_price || 0), 0);
+
+  // Calculate Commissions separately
+  let totalSaleCommission = 0;
+  let totalRentCommission = 0;
+  let totalRealizedCommission = 0;
+
+  data.forEach((p) => {
+    // Determine effective prices (use original if current is missing)
+    const salePrice = (p.price || 0) > 0 ? p.price : p.original_price || 0;
+    const rentPrice =
+      (p.rental_price || 0) > 0 ? p.rental_price : p.original_rental_price || 0;
+
+    // 1. Sale/Rent Potential Calculation (Only for ACTIVE)
+    if (p.status === "ACTIVE") {
+      // Sale Potential
+      if (
+        (p.listing_type === "SALE" || p.listing_type === "SALE_AND_RENT") &&
+        salePrice &&
+        salePrice > 0
+      ) {
+        totalSaleCommission +=
+          (salePrice * (p.commission_sale_percentage || 3)) / 100;
+      }
+
+      // Rent Potential
+      if (
+        (p.listing_type === "RENT" || p.listing_type === "SALE_AND_RENT") &&
+        rentPrice &&
+        rentPrice > 0
+      ) {
+        totalRentCommission += rentPrice * (p.commission_rent_months || 1);
+      }
+    }
+
+    // 2. Realized Commission Calculation (SOLD or RENTED)
+    if (p.status === "SOLD") {
+      // For sold items, prefer price, fallback to original
+      const finalPrice = (p.price || 0) > 0 ? p.price : p.original_price || 0;
+      if (finalPrice && finalPrice > 0) {
+        totalRealizedCommission +=
+          (finalPrice * (p.commission_sale_percentage || 3)) / 100;
+      }
+    } else if (p.status === "RENTED") {
+      // For rented items, prefer rental_price
+      const finalRentPrice =
+        (p.rental_price || 0) > 0
+          ? p.rental_price
+          : p.original_rental_price || 0;
+      if (finalRentPrice && finalRentPrice > 0) {
+        totalRealizedCommission +=
+          finalRentPrice * (p.commission_rent_months || 1);
+      }
+    }
+  });
 
   // Group by Type
   const typeMap = new Map<string, number>();
@@ -209,6 +271,9 @@ export async function getPropertiesDashboardStatsQuery(): Promise<PropertyStats>
     // but logically it represents ACTIVE.
     soldOrRented,
     totalValue,
+    totalSaleCommission,
+    totalRentCommission,
+    totalRealizedCommission,
     byType,
     byStatus,
   };
