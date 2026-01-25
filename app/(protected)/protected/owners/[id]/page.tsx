@@ -155,31 +155,102 @@ export default async function OwnerPage({ params }: PageProps) {
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-medium group-hover:text-primary transition-colors mb-1">
+                      <h4 className="font-medium group-hover:text-primary transition-colors mb-1 truncate max-w-[500px]">
                         {prop.title || "ไม่ระบุชื่อโครงการ"}
                       </h4>
                       <p className="text-sm text-muted-foreground mb-2">
-                        {prop.listing_type === "SALE" ? "ขาย" : "เช่า"} •{" "}
-                        {prop.property_type}
+                        {prop.listing_type === "SALE"
+                          ? "ขาย"
+                          : prop.listing_type === "RENT"
+                            ? "เช่า"
+                            : "ขาย / เช่า"}{" "}
+                        • {prop.property_type}
                       </p>
-                      <div className="flex gap-2 text-xs text-muted-foreground">
+                      <div className="flex gap-2 text-xs text-muted-foreground flex-wrap">
+                        {prop.popular_area && (
+                          <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-medium">
+                            📍 {prop.popular_area}
+                          </span>
+                        )}
                         {prop.address_line1 && (
-                          <span>บ้านเลขที่ {prop.address_line1}</span>
+                          <span>| บ้านเลขที่ {prop.address_line1}</span>
                         )}
-                        {prop.subdistrict && (
-                          <span>ต.{prop.subdistrict}</span>
-                        )}
+                        {prop.subdistrict && <span>ต.{prop.subdistrict}</span>}
                         {prop.district && <span>อ.{prop.district}</span>}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-primary">
-                        {new Intl.NumberFormat("th-TH", {
-                          style: "currency",
-                          currency: "THB",
-                          maximumFractionDigits: 0,
-                        }).format(prop.price || 0)}
-                      </p>
+                    <div className="text-right flex flex-col items-end gap-1">
+                      {/* Price Display */}
+                      <div className="flex flex-col items-end">
+                        {/* Sale Price Section */}
+                        {(prop.listing_type === "SALE" ||
+                          prop.listing_type === "SALE_AND_RENT" ||
+                          (prop.listing_type as any) === "SALE_RENT") &&
+                          ((prop.price || 0) > 0 ||
+                            (prop.original_price || 0) > 0) && (
+                            <div className="flex flex-col items-end">
+                              {prop.original_price &&
+                                (prop.price || 0) > 0 &&
+                                prop.original_price > prop.price! && (
+                                  <span className="text-xs text-muted-foreground line-through">
+                                    {new Intl.NumberFormat("th-TH", {
+                                      style: "currency",
+                                      currency: "THB",
+                                      maximumFractionDigits: 0,
+                                    }).format(prop.original_price)}
+                                  </span>
+                                )}
+                              <p className="font-bold text-primary">
+                                {new Intl.NumberFormat("th-TH", {
+                                  style: "currency",
+                                  currency: "THB",
+                                  maximumFractionDigits: 0,
+                                }).format(
+                                  (prop.price || 0) > 0
+                                    ? prop.price!
+                                    : prop.original_price || 0,
+                                )}
+                              </p>
+                            </div>
+                          )}
+
+                        {/* Rental Price Section */}
+                        {(prop.listing_type === "RENT" ||
+                          prop.listing_type === "SALE_AND_RENT" ||
+                          (prop.listing_type as any) === "SALE_RENT") &&
+                          ((prop.rental_price || 0) > 0 ||
+                            (prop.original_rental_price || 0) > 0) && (
+                            <div className="flex flex-col items-end mt-1">
+                              {prop.original_rental_price &&
+                                (prop.rental_price || 0) > 0 &&
+                                prop.original_rental_price >
+                                  prop.rental_price! && (
+                                  <span className="text-xs text-muted-foreground line-through">
+                                    {new Intl.NumberFormat("th-TH", {
+                                      style: "currency",
+                                      currency: "THB",
+                                      maximumFractionDigits: 0,
+                                    }).format(prop.original_rental_price)}
+                                  </span>
+                                )}
+                              <p className="font-bold text-primary text-sm">
+                                {new Intl.NumberFormat("th-TH", {
+                                  style: "currency",
+                                  currency: "THB",
+                                  maximumFractionDigits: 0,
+                                }).format(
+                                  (prop.rental_price || 0) > 0
+                                    ? prop.rental_price!
+                                    : prop.original_rental_price || 0,
+                                )}
+                                <span className="text-xs font-normal text-muted-foreground ml-1">
+                                  /เดือน
+                                </span>
+                              </p>
+                            </div>
+                          )}
+                      </div>
+
                       <span
                         className={`text-[10px] px-2 py-0.5 rounded-full ${
                           prop.status === "ACTIVE"
