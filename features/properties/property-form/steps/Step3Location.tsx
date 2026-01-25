@@ -39,7 +39,8 @@ const parseNumber = (s: string) => {
  * Address fields and transit information
  * Compact Refactor
  */
-export function Step3Location({ form, mode }: Step3Props) {
+export const Step3Location = React.memo(Step3LocationComponent);
+function Step3LocationComponent({ form, mode }: Step3Props) {
   const {
     provinces,
     getDistricts,

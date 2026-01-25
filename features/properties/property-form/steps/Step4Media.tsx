@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   FormField,
   FormItem,
@@ -33,7 +34,8 @@ import type { Step4Props } from "../types";
  * Images, owner, status, agents, and property source
  * Compact Refactor
  */
-export function Step4Media({
+export const Step4Media = React.memo(Step4MediaComponent);
+function Step4MediaComponent({
   form,
   mode,
   owners,
@@ -347,7 +349,7 @@ export function Step4Media({
                           value={field.value ?? ""}
                           onChange={(e) =>
                             field.onChange(
-                              e.target.value ? Number(e.target.value) : null
+                              e.target.value ? Number(e.target.value) : null,
                             )
                           }
                           className="h-10 rounded-lg bg-white border border-slate-200 font-bold px-4 text-sm"
@@ -377,7 +379,7 @@ export function Step4Media({
                           value={field.value ?? ""}
                           onChange={(e) =>
                             field.onChange(
-                              e.target.value ? Number(e.target.value) : null
+                              e.target.value ? Number(e.target.value) : null,
                             )
                           }
                           className="h-10 rounded-lg bg-white border border-slate-200 font-bold px-4 text-sm"

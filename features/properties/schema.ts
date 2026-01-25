@@ -106,30 +106,33 @@ export const FormSchema = z
     if (data.listing_type === "SALE" && priceMissing) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["price"],
-        message: "คุณยังไม่ได้กรอกราคาขายสำหรับประกาศขาย",
+        path: ["original_price"],
+        message: "กรุณากรอกราคาตั้งขาย",
       });
     }
     if (data.listing_type === "RENT" && rentMissing) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["rental_price"],
-        message: "คุณยังไม่ได้กรอกราคาเช่าสำหรับประกาศเช่า",
+        path: ["original_rental_price"],
+        message: "กรุณากรอกค่าเช่าต่อเดือน",
       });
     }
-    // If listing type is SALE_AND_RENT, at least one of price or rental_price should be present
-    if (data.listing_type === "SALE_AND_RENT" && priceMissing && rentMissing) {
-      const msg = "คุณยังไม่ได้กรอกราคาขายหรือราคาเช่าอย่างน้อยหนึ่งค่า";
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["price"],
-        message: msg,
-      });
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["rental_price"],
-        message: msg,
-      });
+    // If listing type is SALE_AND_RENT, require BOTH prices
+    if (data.listing_type === "SALE_AND_RENT") {
+      if (priceMissing) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["original_price"],
+          message: "กรุณากรอกราคาตั้งขาย",
+        });
+      }
+      if (rentMissing) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["original_rental_price"],
+          message: "กรุณากรอกค่าเช่าต่อเดือน",
+        });
+      }
     }
 
     // Commission validation: require commission fields when listing type includes the corresponding mode

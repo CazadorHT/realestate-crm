@@ -90,6 +90,8 @@ function UnitNumberField({
   labelHint,
   description,
   emphasize,
+  required,
+  size = "default",
 }: {
   label: string;
   name: any;
@@ -103,7 +105,15 @@ function UnitNumberField({
   labelHint?: React.ReactNode;
   description?: string;
   emphasize?: boolean;
+  required?: boolean;
+  size?: "default" | "sm";
 }) {
+  const isSmall = size === "sm";
+  const heightClass = isSmall ? "h-9" : "h-11";
+  const roundLeft = isSmall ? "rounded-l-lg" : "rounded-l-xl";
+  const roundRight = isSmall ? "rounded-r-lg" : "rounded-r-xl";
+  const textSize = isSmall ? "text-sm" : "text-base";
+
   return (
     <FormField
       control={control}
@@ -111,13 +121,17 @@ function UnitNumberField({
       render={({ field, fieldState }) => (
         <FormItem>
           <FormLabel
-            className={
+            className={[
               labelClassName ??
-              "flex items-center justify-between gap-3 text-sm font-medium text-slate-600"
-            }
+                `flex items-center justify-between gap-3 font-medium ${
+                  isSmall ? "text-xs" : "text-sm"
+                }`,
+              fieldState.error ? "text-red-600" : "text-slate-600",
+            ].join(" ")}
           >
             <span className="inline-flex items-center gap-2">
               {label}
+              {required && <span className="text-red-500">*</span>}
               {labelHint}
             </span>
             {fieldState.error ? (
@@ -128,35 +142,54 @@ function UnitNumberField({
           </FormLabel>
 
           {description ? (
-            <FormDescription className="text-xs text-slate-500">
-              {description}
+            <FormDescription
+              className={
+                fieldState.error
+                  ? "text-red-500 text-xs"
+                  : "text-xs text-slate-500"
+              }
+            >
+              {fieldState.error ? "กรุณากรอกข้อมูลนี้" : description}
             </FormDescription>
           ) : null}
           {/*  แก้ไข Input ได้ที่นี้  */}
           <FormControl>
-            <div className="flex items-center ">
+            <div
+              className={[
+                "flex items-center",
+                fieldState.error
+                  ? `ring-2 ring-red-400 ${
+                      isSmall ? "rounded-lg" : "rounded-xl"
+                    }`
+                  : "",
+              ].join(" ")}
+            >
               <NumberInput
                 {...field}
                 decimals={decimals}
                 placeholder={placeholder}
                 disabled={disabled}
                 className={[
-                  "h-11 w-full rounded-l-xl rounded-r-none border-r-0 bg-white",
-                  "border-slate-200 focus:border-slate-900 focus:ring-0",
+                  `${heightClass} w-full ${roundLeft} rounded-r-none border-r-0 bg-white`,
+                  fieldState.error ? "border-red-400" : "border-slate-200",
+                  "focus:border-slate-900 focus:ring-0",
                   "text-slate-900 align-middle",
-                  emphasize ? "font-medium text-sm" : "font-semibold",
+                  emphasize ? `font-medium ${textSize}` : "font-medium",
                   disabled ? "bg-slate-50 text-slate-500" : "",
                   className ?? "",
                 ].join(" ")}
               />
               <span
                 className={[
-                  "h-11 select-none whitespace-nowrap rounded-r-xl border border-l-0 border-slate-200  ",
-                  "bg-slate-50 px-3  ",
-                  disabled ? "text-slate-400 " : "",
+                  `${heightClass} flex items-center select-none whitespace-nowrap ${roundRight} border border-l-0`,
+                  fieldState.error
+                    ? "border-red-400 bg-red-50"
+                    : "border-slate-200 bg-slate-50",
+                  "px-3",
+                  disabled ? "text-slate-400" : "",
                   emphasize
-                    ? "font-medium text-xs text-slate-600 "
-                    : "font-semibold",
+                    ? `font-medium text-xs text-slate-600`
+                    : "font-medium text-sm text-slate-600",
                 ].join(" ")}
               >
                 {suffix}
@@ -172,7 +205,8 @@ function UnitNumberField({
   );
 }
 
-export function Step2Details({ form, mode }: Step2Props) {
+export const Step2Details = React.memo(Step2DetailsComponent);
+function Step2DetailsComponent({ form, mode }: Step2Props) {
   const listingType = form.watch("listing_type");
   const isReadOnly =
     mode === ("view" as any) ||
@@ -213,7 +247,7 @@ export function Step2Details({ form, mode }: Step2Props) {
       ? {
           amount: saleOriginal - salePrice,
           percent: Math.round(
-            ((saleOriginal - salePrice) / saleOriginal) * 100
+            ((saleOriginal - salePrice) / saleOriginal) * 100,
           ),
         }
       : null;
@@ -223,10 +257,32 @@ export function Step2Details({ form, mode }: Step2Props) {
       ? {
           amount: rentOriginal - rentPrice,
           percent: Math.round(
-            ((rentOriginal - rentPrice) / rentOriginal) * 100
+            ((rentOriginal - rentPrice) / rentOriginal) * 100,
           ),
         }
       : null;
+
+  // Commission Preview Calculations
+  const commissionSalePercent = form.watch("commission_sale_percentage");
+  const commissionRentMonths = form.watch("commission_rent_months");
+
+  const saleCommissionPreview = useMemo(() => {
+    const price = saleOriginal || salePrice;
+    const percent = commissionSalePercent;
+    if (price && percent && price > 0 && percent > 0) {
+      return (price * percent) / 100;
+    }
+    return null;
+  }, [saleOriginal, salePrice, commissionSalePercent]);
+
+  const rentCommissionPreview = useMemo(() => {
+    const rent = rentOriginal || rentPrice;
+    const months = commissionRentMonths;
+    if (rent && months && rent > 0 && months > 0) {
+      return rent * months;
+    }
+    return null;
+  }, [rentOriginal, rentPrice, commissionRentMonths]);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-6 duration-500 grid ">
@@ -315,6 +371,7 @@ export function Step2Details({ form, mode }: Step2Props) {
                       suffix="฿"
                       disabled={isReadOnly}
                       emphasize
+                      required
                       description="📌 กรอกอันนี้ก่อน - ราคาเดิมที่ยังไม่ลด"
                     />
                   </div>
@@ -437,6 +494,7 @@ export function Step2Details({ form, mode }: Step2Props) {
                       suffix="฿ / ด."
                       disabled={isReadOnly}
                       emphasize
+                      required
                       description="📌 กรอกอันนี้ก่อน - ค่าเช่าเดิมที่ยังไม่ลด"
                     />
                   </div>
@@ -601,17 +659,17 @@ export function Step2Details({ form, mode }: Step2Props) {
                     name={item.name as any}
                     render={({ field, fieldState }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-slate-600">
+                        <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                           {item.emoji} {item.label}
                         </FormLabel>
                         <FormControl>
                           <NumberInput
                             {...field}
-                            placeholder="0"
+                            placeholder="-"
                             disabled={isReadOnly}
                             className={[
-                              "h-11 rounded-xl border-slate-200 bg-white text-center",
-                              "font-bold text-slate-900",
+                              "h-9 rounded-lg border-slate-200 bg-white text-center text-sm",
+                              "font-medium text-slate-900",
                               "focus:border-slate-900 focus:ring-0",
                               isReadOnly ? "bg-slate-50 text-slate-500" : "",
                               fieldState.error ? "border-rose-400" : "",
@@ -644,6 +702,7 @@ export function Step2Details({ form, mode }: Step2Props) {
                   suffix="ตร.ม."
                   disabled={isReadOnly}
                   emphasize
+                  size="sm"
                 />
 
                 <UnitNumberField
@@ -654,6 +713,7 @@ export function Step2Details({ form, mode }: Step2Props) {
                   suffix="ตร.ว."
                   disabled={isReadOnly}
                   emphasize
+                  size="sm"
                 />
 
                 <FormField
@@ -661,7 +721,7 @@ export function Step2Details({ form, mode }: Step2Props) {
                   name="zoning"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-slate-600">
+                      <FormLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                         🗺️ ผังสี / Zoning
                       </FormLabel>
                       <FormControl>
@@ -670,7 +730,7 @@ export function Step2Details({ form, mode }: Step2Props) {
                           disabled={isReadOnly}
                           value={field.value ?? ""}
                           placeholder="เช่น สีส้ม ย.5-10"
-                          className="h-11 rounded-2xl border-slate-200 bg-white focus:border-slate-900 focus:ring-0"
+                          className="h-9 rounded-lg border-slate-200 bg-white focus:border-slate-900 focus:ring-0 text-sm font-medium"
                         />
                       </FormControl>
                       <FormMessage />
@@ -875,6 +935,27 @@ export function Step2Details({ form, mode }: Step2Props) {
                   <FormDescription className="text-xs text-blue-700/70">
                     เลือก preset เพื่อกรอกเร็ว ลดการพิมพ์
                   </FormDescription>
+
+                  {/* Commission Preview */}
+                  <div className="mt-2 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-3">
+                    <p className="text-xs font-bold text-emerald-700 flex items-center gap-2">
+                      💰 ค่าคอมมิชชั่นที่จะได้รับ:
+                      {saleCommissionPreview !== null ? (
+                        <span className="text-lg font-extrabold text-emerald-600">
+                          {new Intl.NumberFormat("th-TH", {
+                            style: "currency",
+                            currency: "THB",
+                            maximumFractionDigits: 0,
+                          }).format(saleCommissionPreview)}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-slate-500 font-normal">
+                          กรอกราคาและ % เพื่อดูตัวอย่าง
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -935,6 +1016,27 @@ export function Step2Details({ form, mode }: Step2Props) {
                   <FormDescription className="text-xs text-blue-700/70">
                     ค่านิยมทั่วไป: 1 เดือน (ขึ้นกับตลาด/ทำเล)
                   </FormDescription>
+
+                  {/* Commission Preview */}
+                  <div className="mt-2 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-3">
+                    <p className="text-xs font-bold text-emerald-700 flex items-center gap-2">
+                      💰 ค่าคอมมิชชั่นที่จะได้รับ:
+                      {rentCommissionPreview !== null ? (
+                        <span className="text-lg font-extrabold text-emerald-600">
+                          {new Intl.NumberFormat("th-TH", {
+                            style: "currency",
+                            currency: "THB",
+                            maximumFractionDigits: 0,
+                          }).format(rentCommissionPreview)}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-slate-500 font-normal">
+                          กรอกค่าเช่าและเดือนเพื่อดูตัวอย่าง
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
                   <FormMessage />
                 </FormItem>
               )}

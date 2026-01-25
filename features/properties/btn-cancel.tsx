@@ -18,7 +18,12 @@ export function CancelButton({ sessionId }: { sessionId: string }) {
   };
 
   return (
-    <Button variant="outline" onClick={onCancel} type="button">
+    <Button
+      variant="cancel"
+      onClick={onCancel}
+      type="button"
+      className="h-14 px-10 rounded-xl font-bold"
+    >
       ยกเลิก
     </Button>
   );

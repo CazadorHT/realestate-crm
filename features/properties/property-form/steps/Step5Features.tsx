@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { createClient } from "@/lib/supabase/client";
@@ -15,7 +16,8 @@ type Feature = {
   category: string | null;
 };
 
-export function Step5Features() {
+export const Step5Features = React.memo(Step5FeaturesComponent);
+function Step5FeaturesComponent() {
   const { watch, setValue } = useFormContext<PropertyFormValues>();
   const [features, setFeatures] = useState<Feature[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,12 +89,15 @@ export function Step5Features() {
   }
 
   // Group by category
-  const groupedFeatures = features.reduce((acc, feature) => {
-    const cat = feature.category || "General";
-    if (!acc[cat]) acc[cat] = [];
-    acc[cat].push(feature);
-    return acc;
-  }, {} as Record<string, Feature[]>);
+  const groupedFeatures = features.reduce(
+    (acc, feature) => {
+      const cat = feature.category || "General";
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(feature);
+      return acc;
+    },
+    {} as Record<string, Feature[]>,
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

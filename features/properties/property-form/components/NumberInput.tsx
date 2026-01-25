@@ -42,7 +42,7 @@ export function NumberInput({
   };
 
   const [display, setDisplay] = React.useState<string>(() =>
-    formatNumber(value, decimals)
+    formatNumber(value, decimals),
   );
   const [isFocused, setIsFocused] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
@@ -117,18 +117,69 @@ export function NumberInput({
         setDisplay(formatNumber(parsed, decimals));
       }}
       onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          // Commit immediately on Enter
-          if (commitTimer.current) window.clearTimeout(commitTimer.current);
-          const parsed = parseNumber((e.target as HTMLInputElement).value);
-          if (
-            (parsed === undefined && value !== undefined) ||
-            (parsed != null && parsed !== value)
-          ) {
-            onChange(parsed);
-          }
-          (e.target as HTMLInputElement).blur();
+        // Block non-numeric characters from being typed
+        const allowedKeys = [
+          "Backspace",
+          "Delete",
+          "Tab",
+          "Escape",
+          "Enter",
+          "ArrowLeft",
+          "ArrowRight",
+          "ArrowUp",
+          "ArrowDown",
+          "Home",
+          "End",
+        ];
+
+        // Allow: Ctrl/Cmd+A, Ctrl/Cmd+C, Ctrl/Cmd+V, Ctrl/Cmd+X
+        if (
+          (e.ctrlKey || e.metaKey) &&
+          ["a", "c", "v", "x"].includes(e.key.toLowerCase())
+        ) {
+          return;
         }
+
+        // Allow: navigation and editing keys
+        if (allowedKeys.includes(e.key)) {
+          // Handle Enter key - commit value
+          if (e.key === "Enter") {
+            if (commitTimer.current) window.clearTimeout(commitTimer.current);
+            const parsed = parseNumber((e.target as HTMLInputElement).value);
+            if (
+              (parsed === undefined && value !== undefined) ||
+              (parsed != null && parsed !== value)
+            ) {
+              onChange(parsed);
+            }
+            (e.target as HTMLInputElement).blur();
+          }
+          return;
+        }
+
+        // Allow: numbers 0-9
+        if (/^[0-9]$/.test(e.key)) {
+          return;
+        }
+
+        // Allow: decimal point (.) if decimals > 0 and not already present
+        if (decimals > 0 && e.key === ".") {
+          const currentValue = (e.target as HTMLInputElement).value;
+          if (!currentValue.includes(".")) {
+            return;
+          }
+        }
+
+        // Allow: minus sign (-) if allowNegative and at start
+        if (allowNegative && e.key === "-") {
+          const el = e.target as HTMLInputElement;
+          if (el.selectionStart === 0 && !el.value.includes("-")) {
+            return;
+          }
+        }
+
+        // Block everything else
+        e.preventDefault();
       }}
       placeholder={placeholder}
     />
