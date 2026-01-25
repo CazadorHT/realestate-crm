@@ -33,8 +33,8 @@ import { Step5Features } from "./property-form/steps/Step5Features";
 const EMPTY_VALUES: PropertyFormValues = {
   title: "",
   description: "",
-  property_type: "HOUSE",
-  listing_type: "SALE",
+  property_type: undefined as any,
+  listing_type: undefined as any,
   status: "DRAFT",
   price: undefined,
   original_price: undefined,
