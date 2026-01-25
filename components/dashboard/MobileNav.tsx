@@ -23,6 +23,8 @@ import {
   Settings,
   Menu,
   Box,
+  History,
+  CalendarDays,
 } from "lucide-react";
 import { isStaff, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -96,6 +98,12 @@ export function MobileNav({ role }: { role: UserRole }) {
       icon: Box,
       active: pathname?.startsWith("/protected/features") ?? false,
     },
+    {
+      title: "ปฏิทิน",
+      href: "/protected/calendar",
+      icon: CalendarDays,
+      active: pathname?.startsWith("/protected/calendar") ?? false,
+    },
   ];
 
   const documentsItems: NavItem[] = [
@@ -153,6 +161,13 @@ export function MobileNav({ role }: { role: UserRole }) {
       href: "/protected/settings/users",
       icon: Shield,
       active: pathname?.startsWith("/protected/settings/users") ?? false,
+      roles: ["ADMIN"],
+    },
+    {
+      title: "Audit Logs",
+      href: "/protected/admin/audit-logs",
+      icon: History,
+      active: pathname?.startsWith("/protected/admin/audit-logs") ?? false,
       roles: ["ADMIN"],
     },
   ];

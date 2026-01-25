@@ -22,6 +22,8 @@ import {
   FileStack,
   Settings,
   Box,
+  History,
+  CalendarDays,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -87,6 +89,12 @@ export function SidebarNav({ role }: { role: UserRole }) {
       icon: Box,
       active: pathname?.startsWith("/protected/features") ?? false,
     },
+    {
+      title: "ปฏิทิน",
+      href: "/protected/calendar",
+      icon: CalendarDays,
+      active: pathname?.startsWith("/protected/calendar") ?? false,
+    },
   ];
 
   // Documents Group
@@ -147,6 +155,13 @@ export function SidebarNav({ role }: { role: UserRole }) {
       href: "/protected/settings/users",
       icon: Shield,
       active: pathname?.startsWith("/protected/settings/users") ?? false,
+      roles: ["ADMIN"],
+    },
+    {
+      title: "Audit Logs",
+      href: "/protected/admin/audit-logs",
+      icon: History,
+      active: pathname?.startsWith("/protected/admin/audit-logs") ?? false,
       roles: ["ADMIN"],
     },
   ];

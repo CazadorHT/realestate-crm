@@ -39,6 +39,9 @@ import {
 import { TopAgents } from "@/components/dashboard/TopAgents";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { isStaff } from "@/lib/authz";
+import { getCalendarEvents } from "@/features/calendar/queries";
+import { UpcomingEvents } from "@/features/dashboard/components/UpcomingEvents";
+import { addDays } from "date-fns";
 
 import type { Database } from "@/lib/database.types";
 type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
@@ -64,6 +67,7 @@ export default async function DashboardPage() {
   let agendaData: AgendaEvent[] = [];
   let followUpLeads: FollowUpLead[] = [];
   let riskDeals: RiskDeal[] = [];
+  let upcomingEvents: any[] = [];
 
   if (staff) {
     const [
@@ -77,6 +81,7 @@ export default async function DashboardPage() {
       agenda,
       followUp,
       risks,
+      upcomingEventsResult,
     ] = await Promise.all([
       supabase
         .from("properties")
@@ -92,6 +97,7 @@ export default async function DashboardPage() {
       getTodayAgenda(),
       getFollowUpLeads(),
       getRiskDeals(),
+      getCalendarEvents(new Date(), addDays(new Date(), 7)),
     ]);
 
     properties = (recentPropertiesResult.data ?? []) as PropertyRow[];
@@ -102,10 +108,10 @@ export default async function DashboardPage() {
     pipelineData = pipeline || [];
     topAgents = agents;
     notifications = notifs;
-    notifications = notifs;
     agendaData = agenda;
     followUpLeads = followUp;
     riskDeals = risks;
+    upcomingEvents = upcomingEventsResult;
   }
 
   return (
@@ -161,8 +167,9 @@ export default async function DashboardPage() {
             {/* RIGHT COLUMN (1/3 width) */}
             <div className="flex flex-col gap-6">
               <QuickActions />
-              <AgendaList agenda={agendaData} />
+              <UpcomingEvents events={upcomingEvents} />
               <NotificationCenter notifications={notifications} />
+              <AgendaList agenda={agendaData} />
             </div>
           </div>
 
