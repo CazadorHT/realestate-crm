@@ -59,12 +59,12 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
     selectedYear === "all"
       ? "รายได้ทั้งหมด (แบ่งตามปี)"
       : selectedYear === "month"
-      ? "รายได้เดือนนี้"
-      : selectedYear === "6months"
-      ? "รายได้ 6 เดือนล่าสุด"
-      : selectedYear === "year"
-      ? `รายได้ปี ${currentYear}`
-      : `รายได้ปี ${selectedYear}`;
+        ? "รายได้เดือนนี้"
+        : selectedYear === "6months"
+          ? "รายได้ 6 เดือนล่าสุด"
+          : selectedYear === "year"
+            ? `รายได้ปี ${currentYear}`
+            : `รายได้ปี ${selectedYear}`;
 
   return (
     <Card className="shadow-sm h-full">
@@ -96,7 +96,12 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
             </div>
           )}
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+            minHeight={0}
+            minWidth={0}
+          >
             <BarChart data={data}>
               <XAxis
                 dataKey="name"

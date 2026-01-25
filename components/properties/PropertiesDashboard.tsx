@@ -272,7 +272,12 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
           </CardHeader>
           <CardContent className="pt-4">
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                minHeight={0}
+                minWidth={0}
+              >
                 <PieChart>
                   <defs>
                     {typeData.map((entry, index) => (
@@ -375,7 +380,12 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
           </CardHeader>
           <CardContent className="pt-4">
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                minHeight={0}
+                minWidth={0}
+              >
                 <BarChart
                   data={statusData}
                   layout="vertical"

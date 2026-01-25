@@ -24,7 +24,12 @@ export function FunnelChart({ data }: FunnelChartProps) {
       </CardHeader>
       <CardContent>
         <div className="h-[250px] w-full flex">
-          <ResponsiveContainer width="70%" height="100%">
+          <ResponsiveContainer
+            width="70%"
+            height="100%"
+            minHeight={0}
+            minWidth={0}
+          >
             <BarChart
               data={data}
               layout="vertical"
