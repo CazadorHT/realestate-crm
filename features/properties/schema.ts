@@ -81,6 +81,14 @@ export const FormSchema = z
     // Tags
     verified: z.boolean().default(false),
     is_pet_friendly: z.boolean().default(false),
+    is_foreigner_quota: z.boolean().default(false),
+    allow_smoking: z.boolean().default(false),
+    is_renovated: z.boolean().default(false),
+    is_unfurnished: z.boolean().default(false),
+    is_fully_furnished: z.boolean().default(false),
+    is_corner_unit: z.boolean().default(false),
+    has_private_pool: z.boolean().default(false),
+    is_selling_with_tenant: z.boolean().default(false),
     feature_ids: z.array(z.string()).default([]),
 
     // Nearby Places (JSONB)

@@ -111,7 +111,6 @@ function Step1BasicInfoComponent({
                         >
                           {LISTING_TYPE_LABELS[type]}
                         </div>
-                        
                       </div>
 
                       {field.value === type && (
@@ -212,7 +211,6 @@ function Step1BasicInfoComponent({
               newArea={newArea}
               setNewArea={setNewArea}
               onAddArea={onAddArea}
-              // compact={true} - removed to fix lint
             />
           </div>
         )}

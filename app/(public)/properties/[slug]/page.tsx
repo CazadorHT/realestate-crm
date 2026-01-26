@@ -15,6 +15,14 @@ import {
   ShieldCheck,
   PawPrint,
   CalendarDays,
+  Globe,
+  Cigarette,
+  Home, // Renovated
+  PackageX, // Unfurnished
+  PackageCheck, // Fully Furnished
+  LayoutDashboard, // Corner Unit
+  Waves, // Pool
+  Users, // Tenant
 } from "lucide-react";
 import { ShareButtons } from "@/components/public/ShareButtons";
 import { SimilarPropertiesSection } from "@/components/public/SimilarPropertiesSection";
@@ -25,6 +33,7 @@ import { PropertySuitability } from "@/components/public/PropertySuitability";
 import { NearbyPlaces } from "@/components/public/NearbyPlaces";
 import { Database } from "@/lib/database.types";
 import { Metadata } from "next";
+import DOMPurify from "isomorphic-dompurify";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -515,15 +524,78 @@ export default async function PublicPropertyDetailPage(props: {
               {/* Badges and Meta in horizontal layout */}
               <div className="flex items-center justify-between gap-4 flex-wrap border-b border-slate-100 pb-4">
                 {/* Listing Type Badge */}
-                <Badge
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-                    data.listing_type === "SALE"
-                      ? "bg-emerald-600"
-                      : "bg-blue-600"
-                  }`}
-                >
-                  {data.listing_type === "SALE" ? "ขาย" : "เช่า"}
-                </Badge>
+                <div className="flex flex-wrap gap-2 text-sm">
+                  <Badge
+                    className={`rounded-full px-4 py-1.5 font-medium whitespace-nowrap ${
+                      data.listing_type === "SALE"
+                        ? "bg-emerald-600"
+                        : "bg-blue-600"
+                    }`}
+                  >
+                    {data.listing_type === "SALE" ? "ขาย" : "เช่า"}
+                  </Badge>
+
+                  {/* Special Features Badges */}
+                  {(data.meta_keywords || []).includes("Pet Friendly") && (
+                    <Badge className="rounded-full px-4 py-1.5 font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 border-none whitespace-nowrap gap-1.5">
+                      <PawPrint className="w-3.5 h-3.5" />
+                      Pet Friendly
+                    </Badge>
+                  )}
+                  {(data.meta_keywords || []).includes(
+                    "Foreigner Friendly",
+                  ) && (
+                    <Badge className="rounded-full px-4 py-1.5 font-medium bg-indigo-100 text-indigo-800 hover:bg-indigo-200 border-none whitespace-nowrap gap-1.5">
+                      <Globe className="w-3.5 h-3.5" />
+                      รับชาวต่างชาติ
+                    </Badge>
+                  )}
+                  {(data.meta_keywords || []).includes("Smoking Allowed") && (
+                    <Badge className="rounded-full px-4 py-1.5 font-medium bg-rose-100 text-rose-800 hover:bg-rose-200 border-none whitespace-nowrap gap-1.5">
+                      <Cigarette className="w-3.5 h-3.5" />
+                      สูบบุหรี่ได้
+                    </Badge>
+                  )}
+                  {/* New Features Badges */}
+                  {(data.meta_keywords || []).includes("Renovated") && (
+                    <Badge className="rounded-full px-4 py-1.5 font-medium bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none whitespace-nowrap gap-1.5">
+                      <Home className="w-3.5 h-3.5" />
+                      รีโนเวทใหม่
+                    </Badge>
+                  )}
+                  {(data.meta_keywords || []).includes("Fully Furnished") && (
+                    <Badge className="rounded-full px-4 py-1.5 font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 border-none whitespace-nowrap gap-1.5">
+                      <PackageCheck className="w-3.5 h-3.5" />
+                      เฟอร์ฯ ครบ
+                    </Badge>
+                  )}
+                  {(data.meta_keywords || []).includes("Unfurnished") && (
+                    <Badge className="rounded-full px-4 py-1.5 font-medium bg-slate-100 text-slate-800 hover:bg-slate-200 border-none whitespace-nowrap gap-1.5">
+                      <PackageX className="w-3.5 h-3.5" />
+                      ห้องเปล่า
+                    </Badge>
+                  )}
+                  {(data.meta_keywords || []).includes("Corner Unit") && (
+                    <Badge className="rounded-full px-4 py-1.5 font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 border-none whitespace-nowrap gap-1.5">
+                      <LayoutDashboard className="w-3.5 h-3.5" />
+                      ห้องมุม/หลังมุม
+                    </Badge>
+                  )}
+                  {(data.meta_keywords || []).includes("Private Pool") && (
+                    <Badge className="rounded-full px-4 py-1.5 font-medium bg-cyan-100 text-cyan-800 hover:bg-cyan-200 border-none whitespace-nowrap gap-1.5">
+                      <Waves className="w-3.5 h-3.5" />
+                      สระส่วนตัว
+                    </Badge>
+                  )}
+                  {(data.meta_keywords || []).includes(
+                    "Selling with Tenant",
+                  ) && (
+                    <Badge className="rounded-full px-4 py-1.5 font-medium bg-green-100 text-green-800 hover:bg-green-200 border-none whitespace-nowrap gap-1.5">
+                      <Users className="w-3.5 h-3.5" />
+                      ขายพร้อมผู้เช่า
+                    </Badge>
+                  )}
+                </div>
 
                 {/* Created Date */}
                 <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
@@ -537,9 +609,14 @@ export default async function PublicPropertyDetailPage(props: {
               <h2 className="text-lg md:text-xl font-bold text-slate-900 mb-4 md:mb-6">
                 รายละเอียดทรัพย์
               </h2>
-              <div className="prose prose-slate max-w-none text-slate-600 leading-7 md:leading-8 whitespace-pre-wrap text-sm md:text-base max-h-[300px] md:max-h-[400px] overflow-y-auto">
-                {data.description || "ไม่มีรายละเอียดเพิ่มเติม"}
-              </div>
+              <div
+                className="prose prose-slate max-w-none text-slate-600 leading-7 md:leading-8 text-sm md:text-base max-h-[300px] md:max-h-[400px] overflow-y-auto"
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(
+                    data.description || "ไม่มีรายละเอียดเพิ่มเติม",
+                  ),
+                }}
+              />
             </section>
 
             {/* [NEW] Nearby Places */}

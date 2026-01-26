@@ -27,7 +27,7 @@ export function UnitNumberField({
   maxLength,
   action,
 }: {
-  label: string;
+  label: string | React.ReactNode;
   name: any;
   control: any;
   placeholder?: string;

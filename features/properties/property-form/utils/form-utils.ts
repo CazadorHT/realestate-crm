@@ -43,6 +43,14 @@ export const EMPTY_VALUES: PropertyFormValues = {
   co_agent_sale_commission_percent: undefined,
   co_agent_rent_commission_months: undefined,
   is_pet_friendly: false,
+  is_foreigner_quota: false, // Default
+  allow_smoking: false, // Default
+  is_renovated: false,
+  is_unfurnished: false,
+  is_fully_furnished: false,
+  is_corner_unit: false,
+  has_private_pool: false,
+  is_selling_with_tenant: false,
   feature_ids: [],
   nearby_places: [],
 };
@@ -144,6 +152,18 @@ export function mapRowToFormValues(
     // Tags
     verified: row.verified ?? false,
     is_pet_friendly: (row.meta_keywords || []).includes("Pet Friendly"),
+    is_foreigner_quota: (row.meta_keywords || []).includes(
+      "Foreigner Friendly",
+    ),
+    allow_smoking: (row.meta_keywords || []).includes("Smoking Allowed"),
+    is_renovated: (row.meta_keywords || []).includes("Renovated"),
+    is_unfurnished: (row.meta_keywords || []).includes("Unfurnished"),
+    is_fully_furnished: (row.meta_keywords || []).includes("Fully Furnished"),
+    is_corner_unit: (row.meta_keywords || []).includes("Corner Unit"),
+    has_private_pool: (row.meta_keywords || []).includes("Private Pool"),
+    is_selling_with_tenant: (row.meta_keywords || []).includes(
+      "Selling with Tenant",
+    ),
     feature_ids: [],
     nearby_places: (row.nearby_places as any[]) || [],
   };

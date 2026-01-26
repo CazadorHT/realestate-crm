@@ -326,8 +326,15 @@ export async function createPropertyAction(
     }
     const safeValues = parsed.data;
 
-    const { images, agent_ids, feature_ids, is_pet_friendly, ...propertyData } =
-      safeValues;
+    const {
+      images,
+      agent_ids,
+      feature_ids,
+      is_pet_friendly,
+      is_foreigner_quota,
+      allow_smoking,
+      ...propertyData
+    } = safeValues;
 
     // ✅ image paths ต้องอยู่ภายใต้ properties/
     if (images?.length) {
@@ -350,6 +357,19 @@ export async function createPropertyAction(
     if (safeValues.is_pet_friendly) {
       finalKeywords.push("Pet Friendly");
     }
+    if (safeValues.is_foreigner_quota) {
+      finalKeywords.push("Foreigner Friendly");
+    }
+    if (safeValues.allow_smoking) {
+      finalKeywords.push("Smoking Allowed");
+    }
+    if (safeValues.is_renovated) finalKeywords.push("Renovated");
+    if (safeValues.is_unfurnished) finalKeywords.push("Unfurnished");
+    if (safeValues.is_fully_furnished) finalKeywords.push("Fully Furnished");
+    if (safeValues.is_corner_unit) finalKeywords.push("Corner Unit");
+    if (safeValues.has_private_pool) finalKeywords.push("Private Pool");
+    if (safeValues.is_selling_with_tenant)
+      finalKeywords.push("Selling with Tenant");
 
     const seoData = generatePropertySEO({
       title: propertyData.title,
@@ -527,8 +547,21 @@ export async function updatePropertyAction(
       };
     }
     const safeValues = parsed.data;
-    const { images, agent_ids, feature_ids, is_pet_friendly, ...propertyData } =
-      safeValues;
+    const {
+      images,
+      agent_ids,
+      feature_ids,
+      is_pet_friendly,
+      is_foreigner_quota,
+      allow_smoking,
+      is_renovated,
+      is_unfurnished,
+      is_fully_furnished,
+      is_corner_unit,
+      has_private_pool,
+      is_selling_with_tenant,
+      ...propertyData
+    } = safeValues;
 
     // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ
     // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ
@@ -568,6 +601,71 @@ export async function updatePropertyAction(
     } else {
       // Remove if unchecked (optional logic, but safe to filter out)
       finalKeywords = finalKeywords.filter((k) => k !== "Pet Friendly");
+    }
+
+    // Foreigner Friendly
+    if (safeValues.is_foreigner_quota) {
+      if (!finalKeywords.includes("Foreigner Friendly")) {
+        finalKeywords.push("Foreigner Friendly");
+      }
+    } else {
+      finalKeywords = finalKeywords.filter((k) => k !== "Foreigner Friendly");
+    }
+
+    // Smoking Allowed
+    if (safeValues.allow_smoking) {
+      if (!finalKeywords.includes("Smoking Allowed")) {
+        finalKeywords.push("Smoking Allowed");
+      }
+    } else {
+      finalKeywords = finalKeywords.filter((k) => k !== "Smoking Allowed");
+    }
+
+    // Renovated
+    if (safeValues.is_renovated) {
+      if (!finalKeywords.includes("Renovated")) finalKeywords.push("Renovated");
+    } else {
+      finalKeywords = finalKeywords.filter((k) => k !== "Renovated");
+    }
+
+    // Unfurnished
+    if (safeValues.is_unfurnished) {
+      if (!finalKeywords.includes("Unfurnished"))
+        finalKeywords.push("Unfurnished");
+    } else {
+      finalKeywords = finalKeywords.filter((k) => k !== "Unfurnished");
+    }
+
+    // Fully Furnished
+    if (safeValues.is_fully_furnished) {
+      if (!finalKeywords.includes("Fully Furnished"))
+        finalKeywords.push("Fully Furnished");
+    } else {
+      finalKeywords = finalKeywords.filter((k) => k !== "Fully Furnished");
+    }
+
+    // Corner Unit
+    if (safeValues.is_corner_unit) {
+      if (!finalKeywords.includes("Corner Unit"))
+        finalKeywords.push("Corner Unit");
+    } else {
+      finalKeywords = finalKeywords.filter((k) => k !== "Corner Unit");
+    }
+
+    // Private Pool
+    if (safeValues.has_private_pool) {
+      if (!finalKeywords.includes("Private Pool"))
+        finalKeywords.push("Private Pool");
+    } else {
+      finalKeywords = finalKeywords.filter((k) => k !== "Private Pool");
+    }
+
+    // Selling with Tenant
+    if (safeValues.is_selling_with_tenant) {
+      if (!finalKeywords.includes("Selling with Tenant"))
+        finalKeywords.push("Selling with Tenant");
+    } else {
+      finalKeywords = finalKeywords.filter((k) => k !== "Selling with Tenant");
     }
 
     const seoData = generatePropertySEO({
