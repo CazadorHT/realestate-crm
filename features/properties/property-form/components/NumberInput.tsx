@@ -12,6 +12,7 @@ interface NumberInputProps {
   allowNegative?: boolean;
   className?: string;
   disabled?: boolean;
+  maxLength?: number;
 }
 
 /**
@@ -27,6 +28,7 @@ export function NumberInput({
   allowNegative = false,
   className,
   disabled,
+  maxLength,
 }: NumberInputProps) {
   const formatNumber = (val: number | undefined, decimals = 0) =>
     val == null
@@ -181,6 +183,7 @@ export function NumberInput({
         // Block everything else
         e.preventDefault();
       }}
+      maxLength={maxLength}
       placeholder={placeholder}
     />
   );

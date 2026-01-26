@@ -107,19 +107,22 @@ export function PropertyForm({
     if (mode === "create") {
       const draft = checkAndRestoreDraft();
       if (draft) {
-        toast("พบข้อมูลที่บันทึกไว้ล่าสุด", {
-          description: `บันทึกเมื่อ: ${new Date(draft.timestamp).toLocaleString(
-            "th-TH",
-          )}`,
-          action: {
-            label: "กู้คืน",
-            onClick: () => {
-              form.reset(draft.values);
-              toast.success("กู้คืนข้อมูลเรียบร้อย");
+        toast(
+          `พบข้อมูลที่บันทึกไว้ล่าสุด โครงการ : "${draft.values.title || "ไม่มีชื่อ"}"`,
+          {
+            description: `บันทึกเมื่อ: ${new Date(
+              draft.timestamp,
+            ).toLocaleString("th-TH")}`,
+            action: {
+              label: "กู้คืน",
+              onClick: () => {
+                form.reset(draft.values);
+                toast.success("กู้คืนข้อมูลเรียบร้อย");
+              },
             },
+            duration: 8000,
           },
-          duration: 8000,
-        });
+        );
       }
     }
   }, [mode, checkAndRestoreDraft, form]);

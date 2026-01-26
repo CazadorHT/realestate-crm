@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AuthLayout } from "@/components/auth-layout";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 export function SignUpForm({
   className,
@@ -23,6 +25,8 @@ export function SignUpForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -34,7 +38,7 @@ export function SignUpForm({
     setError(null);
 
     if (password !== repeatPassword) {
-      setError("Passwords do not match");
+      setError("รหัสผ่านไม่ตรงกัน");
       setIsLoading(false);
       return;
     }
@@ -50,71 +54,168 @@ export function SignUpForm({
       if (error) throw error;
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : "เกิดข้อผิดพลาด");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+    <AuthLayout
+      greeting={
+        <>
+          เริ่มต้นการใช้งาน
+          <br />
+          PropertyHub CRM
+        </>
+      }
+      subtitle="สมัครสมาชิกเพื่อเริ่มจัดการธุรกิจอสังหาริมทรัพย์ของคุณอย่างมืออาชีพ"
+      features={[
+        "ทดลองใช้งานฟรีครบทุกฟีเจอร์",
+        "ไม่จำเป็นต้องผูกบัตรเครดิต",
+        "ทีมซัพพอร์ตพร้อมดูแลตลอด 24 ชม.",
+      ]}
+    >
+      <Card className="border-none shadow-xl">
+        <CardHeader className="space-y-2 pb-6">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            สมัครสมาชิก
+          </CardTitle>
+          <CardDescription className="text-base">
+            สร้างบัญชีใหม่เพื่อเข้าใช้งานระบบ
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignUp}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+          <form onSubmit={handleSignUp} className="space-y-6">
+            {/* Email Field */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium">
+                อีเมล
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="example@email.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 h-12 bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                </div>
+            </div>
+
+            {/* Password Field */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium">
+                รหัสผ่าน
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 pr-10 h-12 bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
-                </div>
+            </div>
+
+            {/* Repeat Password Field */}
+            <div className="space-y-2">
+              <Label htmlFor="repeat-password" className="text-sm font-medium">
+                ยืนยันรหัสผ่าน
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <Input
                   id="repeat-password"
-                  type="password"
+                  type={showRepeatPassword ? "text" : "password"}
                   required
                   value={repeatPassword}
                   onChange={(e) => setRepeatPassword(e.target.value)}
+                  className="pl-10 pr-10 h-12 bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowRepeatPassword(!showRepeatPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showRepeatPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
-              </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
-                Login
-              </Link>
+
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                <p className="text-sm text-red-600 flex items-center gap-2">
+                  <span className="text-red-500">⚠️</span>
+                  {error}
+                </p>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  กำลังสมัครสมาชิก...
+                </span>
+              ) : (
+                "สมัครสมาชิก"
+              )}
+            </Button>
+
+            {/* Login Link */}
+            <div className="text-center pt-4 border-t border-slate-200">
+              <p className="text-sm text-slate-600">
+                มีบัญชีอยู่แล้ว?{" "}
+                <Link
+                  href="/auth/login"
+                  className="font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+                >
+                  เข้าสู่ระบบ
+                </Link>
+              </p>
             </div>
           </form>
         </CardContent>
       </Card>
-    </div>
+
+      {/* Help Text */}
+      <p className="text-center text-sm text-slate-500">
+        มีปัญหาในการสมัครสมาชิก?{" "}
+        <Link
+          href="mailto:support@propertyhub.com"
+          className="text-blue-600 hover:underline"
+        >
+          ติดต่อเรา
+        </Link>
+      </p>
+    </AuthLayout>
   );
 }
