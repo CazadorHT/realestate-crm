@@ -42,7 +42,7 @@ const pendingRequests: Record<string, Promise<any>> = {};
 export class ThaiAddressService {
   private static async fetchWithFallback<T>(
     endpoint: string,
-    schema: z.ZodSchema<T>
+    schema: z.ZodSchema<T>,
   ): Promise<T[]> {
     // 1. Try Direct GitHub
     try {
@@ -58,7 +58,7 @@ export class ThaiAddressService {
     } catch (error) {
       console.warn(
         `[ThaiAddressService] Direct fetch failed for ${endpoint}, switching to proxy.`,
-        error
+        error,
       );
 
       // 2. Fallback to Proxy
@@ -70,7 +70,7 @@ export class ThaiAddressService {
       } catch (proxyError) {
         console.error(
           `[ThaiAddressService] All fetch methods failed for ${endpoint}`,
-          proxyError
+          proxyError,
         );
         throw proxyError;
       }
@@ -84,7 +84,7 @@ export class ThaiAddressService {
 
     const promise = this.fetchWithFallback(
       ENDPOINTS.provinces,
-      provinceSchema
+      provinceSchema,
     ).then((data) => {
       cache.provinces = data;
       delete pendingRequests["provinces"];
@@ -107,7 +107,7 @@ export class ThaiAddressService {
 
     const promise = this.fetchWithFallback(
       ENDPOINTS.districts,
-      districtSchema
+      districtSchema,
     ).then((data) => {
       cache.districts = data;
       // Build Index Map
@@ -134,7 +134,7 @@ export class ThaiAddressService {
 
     const promise = this.fetchWithFallback(
       ENDPOINTS.subDistricts,
-      subDistrictSchema
+      subDistrictSchema,
     ).then((data) => {
       cache.subDistricts = data;
       // Build Index Map
@@ -179,5 +179,56 @@ export class ThaiAddressService {
     cache.subDistricts = null;
     cache.districtsByProvince = null;
     cache.subDistrictsByDistrict = null;
+  }
+
+  static async searchByZipCode(zipCode: string): Promise<
+    {
+      subDistrict: SubDistrict;
+      district: District;
+      province: Province;
+    }[]
+  > {
+    // Ensure all data is loaded
+    await Promise.all([
+      this.getProvinces(),
+      this.getDistricts(true),
+      this.getSubDistricts(),
+    ]);
+
+    if (!cache.subDistricts || !cache.districts || !cache.provinces) {
+      return [];
+    }
+
+    const query = Number(zipCode);
+    if (isNaN(query)) return [];
+
+    const matches = cache.subDistricts.filter((s) => s.zip_code === query);
+
+    const results = matches
+      .map((sub) => {
+        const dist = cache.districts?.find((d) => d.id === sub.district_id);
+        const prov = dist
+          ? cache.provinces?.find((p) => p.id === dist.province_id)
+          : undefined;
+
+        if (sub && dist && prov) {
+          return {
+            subDistrict: sub,
+            district: dist,
+            province: prov,
+          };
+        }
+        return null;
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    return results;
+  }
+  static isDistrictsLoaded(): boolean {
+    return !!cache.districts;
+  }
+
+  static isSubDistrictsLoaded(): boolean {
+    return !!cache.subDistricts;
   }
 }

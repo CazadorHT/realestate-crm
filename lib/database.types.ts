@@ -641,6 +641,7 @@ export type Database = {
           min_contract_months: number | null
           near_transit: boolean | null
           nearby_places: Json | null
+          nearby_transits: Json | null
           original_price: number | null
           original_rental_price: number | null
           owner_id: string | null
@@ -698,6 +699,7 @@ export type Database = {
           min_contract_months?: number | null
           near_transit?: boolean | null
           nearby_places?: Json | null
+          nearby_transits?: Json | null
           original_price?: number | null
           original_rental_price?: number | null
           owner_id?: string | null
@@ -755,6 +757,7 @@ export type Database = {
           min_contract_months?: number | null
           near_transit?: boolean | null
           nearby_places?: Json | null
+          nearby_transits?: Json | null
           original_price?: number | null
           original_rental_price?: number | null
           owner_id?: string | null

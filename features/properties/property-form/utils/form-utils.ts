@@ -53,6 +53,7 @@ export const EMPTY_VALUES: PropertyFormValues = {
   is_selling_with_tenant: false,
   feature_ids: [],
   nearby_places: [],
+  nearby_transits: [],
 };
 
 export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
@@ -166,5 +167,6 @@ export function mapRowToFormValues(
     ),
     feature_ids: [],
     nearby_places: (row.nearby_places as any[]) || [],
+    nearby_transits: ((row as any).nearby_transits as any[]) || [],
   };
 }

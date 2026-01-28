@@ -69,6 +69,18 @@ export const FormSchema = z
     transit_type: z.enum(TRANSIT_TYPE_ENUM).optional().nullable(),
     transit_distance_meters: z.coerce.number().optional().nullable(),
 
+    // Multiple Transit Stations (JSONB)
+    nearby_transits: z
+      .array(
+        z.object({
+          type: z.enum(TRANSIT_TYPE_ENUM),
+          station_name: z.string().min(1, "Required"),
+          distance_meters: z.coerce.number().optional(),
+        }),
+      )
+      .optional()
+      .default([]),
+
     // Co-Agent Logic
     is_co_agent: z.boolean().default(false),
     co_agent_name: z.string().optional().nullable(),

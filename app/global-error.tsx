@@ -26,7 +26,13 @@ export default function GlobalError({
               We apologize for the inconvenience. A critical error occurred.
             </p>
             <button
-              onClick={() => reset()}
+              onClick={() => {
+                if (typeof reset === "function") {
+                  reset();
+                } else {
+                  window.location.reload();
+                }
+              }}
               className="px-4 py-2 bg-slate-900 text-white rounded-md hover:bg-slate-800 transition-colors"
             >
               Try again

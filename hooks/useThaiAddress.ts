@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ThaiAddressService } from "@/lib/thai-address/service";
 import type { Province, District, SubDistrict } from "@/lib/thai-address/types";
 
@@ -12,6 +12,10 @@ export function useThaiAddress() {
   const [allSubDistricts, setAllSubDistricts] = useState<SubDistrict[]>([]);
 
   const [isReady, setIsReady] = useState(false);
+
+  // Use refs to track if data is already loaded (avoids callback recreations)
+  const districtsLoadedRef = useRef(false);
+  const subDistrictsLoadedRef = useRef(false);
 
   // Initial Load (Provinces)
   useEffect(() => {
@@ -27,7 +31,7 @@ export function useThaiAddress() {
       } catch (err) {
         if (mounted)
           setError(
-            err instanceof Error ? err.message : "Failed to load provinces"
+            err instanceof Error ? err.message : "Failed to load provinces",
           );
       } finally {
         if (mounted) setLoading(false);
@@ -40,34 +44,32 @@ export function useThaiAddress() {
     };
   }, []);
 
-  // Helper to ensure dependent data is loaded
+  // Helper to ensure dependent data is loaded (stable callback using refs)
   const ensureDistrictsLoaded = useCallback(async () => {
-    if (allDistricts.length > 0) return; // Already loaded in state
+    if (districtsLoadedRef.current) return; // Already loaded
+    districtsLoadedRef.current = true; // Mark as loading/loaded
     try {
-      setLoading(true);
       const data = await ThaiAddressService.getDistricts(true);
       setAllDistricts(data);
     } catch (err) {
+      districtsLoadedRef.current = false; // Reset on error
       setError(err instanceof Error ? err.message : "Failed to load districts");
-    } finally {
-      setLoading(false);
     }
-  }, [allDistricts.length]);
+  }, []); // Empty deps - callback never changes
 
   const ensureSubDistrictsLoaded = useCallback(async () => {
-    if (allSubDistricts.length > 0) return; // Already loaded in state
+    if (subDistrictsLoadedRef.current) return; // Already loaded
+    subDistrictsLoadedRef.current = true; // Mark as loading/loaded
     try {
-      setLoading(true);
       const data = await ThaiAddressService.getSubDistricts();
       setAllSubDistricts(data);
     } catch (err) {
+      subDistrictsLoadedRef.current = false; // Reset on error
       setError(
-        err instanceof Error ? err.message : "Failed to load sub-districts"
+        err instanceof Error ? err.message : "Failed to load sub-districts",
       );
-    } finally {
-      setLoading(false);
     }
-  }, [allSubDistricts.length]);
+  }, []); // Empty deps - callback never changes
 
   // Synchronous Getters (Memoized using state)
   // We use the Service's logic for filtering but rely on local state "trigger" to ensure we have data.
@@ -77,14 +79,14 @@ export function useThaiAddress() {
     (provinceId: number) => {
       return allDistricts.filter((d) => d.province_id === provinceId);
     },
-    [allDistricts]
+    [allDistricts],
   );
 
   const getSubDistricts = useCallback(
     (districtId: number) => {
       return allSubDistricts.filter((d) => d.district_id === districtId);
     },
-    [allSubDistricts]
+    [allSubDistricts],
   );
 
   const getZipCode = useCallback(
@@ -92,7 +94,7 @@ export function useThaiAddress() {
       const found = allSubDistricts.find((s) => s.id === subDistrictId);
       return found ? String(found.zip_code) : null;
     },
-    [allSubDistricts]
+    [allSubDistricts],
   );
 
   const reload = useCallback(async () => {
@@ -114,6 +116,18 @@ export function useThaiAddress() {
     }
   }, []);
 
+  const searchAddress = useCallback(async (zipCode: string) => {
+    try {
+      setLoading(true);
+      return await ThaiAddressService.searchByZipCode(zipCode);
+    } catch (err) {
+      console.error(err);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     provinces,
     loading,
@@ -125,5 +139,6 @@ export function useThaiAddress() {
     getSubDistricts,
     getZipCode,
     reload,
+    searchAddress,
   };
 }

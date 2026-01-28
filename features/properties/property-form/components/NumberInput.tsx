@@ -103,7 +103,7 @@ export function NumberInput({
         commitTimer.current = window.setTimeout(() => {
           commitValue(val);
           commitTimer.current = null;
-        }, 1000);
+        }, 300);
       }}
       onBlur={(e) => {
         setIsFocused(false);

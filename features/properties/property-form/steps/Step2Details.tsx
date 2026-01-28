@@ -8,7 +8,7 @@ import { DescriptionSection } from "../components/step2-parts/DescriptionSection
 import { SpecialFeaturesSection } from "../components/step2-parts/SpecialFeaturesSection";
 import { CommissionSection } from "../components/step2-parts/CommissionSection";
 
-export const Step2Details = React.memo(Step2DetailsComponent);
+export const Step2Details = Step2DetailsComponent;
 
 function Step2DetailsComponent({ form, mode }: Step2Props) {
   const listingType = form.watch("listing_type");

@@ -199,7 +199,10 @@ export function PriceSection({
                             type="button"
                             onClick={() => {
                               setShowSaleDiscount(false);
-                              form.setValue("price", null);
+                              form.setValue("price", null, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
                             }}
                             className="text-xs text-slate-400 hover:text-red-500 flex items-center gap-1 transition-colors"
                           >
@@ -255,7 +258,10 @@ export function PriceSection({
                             type="button"
                             onClick={() => {
                               setShowCommonFee(false);
-                              form.setValue("maintenance_fee", null);
+                              form.setValue("maintenance_fee", null, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
                             }}
                             className="text-xs text-slate-400 hover:text-red-500 flex items-center gap-1 transition-colors"
                           >
@@ -393,7 +399,10 @@ export function PriceSection({
                             type="button"
                             onClick={() => {
                               setShowRentDiscount(false);
-                              form.setValue("rental_price", null);
+                              form.setValue("rental_price", null, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
                             }}
                             className="text-xs text-slate-400 hover:text-red-500 flex items-center gap-1 transition-colors"
                           >

@@ -36,24 +36,37 @@ export function CommissionSection({
   const commissionSalePercent = form.watch("commission_sale_percentage");
   const commissionRentMonths = form.watch("commission_rent_months");
 
-  // Calculations
-  const saleCommissionPreview = useMemo(() => {
-    const price = saleOriginal || salePrice;
-    const percent = commissionSalePercent;
-    if (price && percent && price > 0 && percent > 0) {
-      return (price * percent) / 100;
+  // Robust parser for form values that might be strings/numbers/undefined
+  const parseValue = (val: any) => {
+    if (val === undefined || val === null || val === "") return 0;
+    if (typeof val === "number") return val;
+    if (typeof val === "string") {
+      // Remove commas, spaces, and anything not a number or dot or minus
+      const clean = val.replace(/[^0-9.-]/g, "");
+      return Number(clean) || 0;
     }
-    return null;
-  }, [saleOriginal, salePrice, commissionSalePercent]);
+    return 0;
+  };
 
-  const rentCommissionPreview = useMemo(() => {
-    const rent = rentOriginal || rentPrice;
-    const months = commissionRentMonths;
-    if (rent && months && rent > 0 && months > 0) {
-      return rent * months;
-    }
-    return null;
-  }, [rentOriginal, rentPrice, commissionRentMonths]);
+  // Calculations - Direct calculation (no memo) to ensure responsiveness
+  const netPrice = parseValue(saleOriginal);
+  const specialPrice = parseValue(salePrice);
+  const salePercent = parseValue(commissionSalePercent);
+
+  // Use Special Price if > 0, else Net Price
+  const baseSalePrice = specialPrice > 0 ? specialPrice : netPrice;
+  const saleCommissionCalc =
+    baseSalePrice > 0 && salePercent > 0
+      ? (baseSalePrice * salePercent) / 100
+      : null;
+
+  const netRent = parseValue(rentOriginal);
+  const specialRent = parseValue(rentPrice);
+  const rentMonths = parseValue(commissionRentMonths);
+
+  const baseRentPrice = specialRent > 0 ? specialRent : netRent;
+  const rentCommissionCalc =
+    baseRentPrice > 0 && rentMonths > 0 ? baseRentPrice * rentMonths : null;
 
   if (!showSale && !showRent) return null;
 
@@ -151,14 +164,14 @@ export function CommissionSection({
                 <span className="text-xs font-medium text-emerald-700">
                   รับจริงประมาณ
                 </span>
-                {saleCommissionPreview !== null ? (
+                {saleCommissionCalc !== null ? (
                   <span className="text-base font-bold text-emerald-600 flex items-center gap-2">
                     <Coins className="h-5 w-5 text-emerald-500" />
                     {new Intl.NumberFormat("th-TH", {
                       style: "currency",
                       currency: "THB",
                       maximumFractionDigits: 0,
-                    }).format(saleCommissionPreview)}
+                    }).format(saleCommissionCalc)}
                   </span>
                 ) : (
                   <span className="text-xs text-slate-400">-</span>
@@ -243,14 +256,14 @@ export function CommissionSection({
                 <span className="text-xs font-medium text-indigo-700">
                   รับจริงประมาณ
                 </span>
-                {rentCommissionPreview !== null ? (
+                {rentCommissionCalc !== null ? (
                   <span className="text-base font-bold text-indigo-600 flex items-center gap-2">
                     <Banknote className="h-5 w-5 text-indigo-500" />
                     {new Intl.NumberFormat("th-TH", {
                       style: "currency",
                       currency: "THB",
                       maximumFractionDigits: 0,
-                    }).format(rentCommissionPreview)}
+                    }).format(rentCommissionCalc)}
                   </span>
                 ) : (
                   <span className="text-xs text-slate-400">-</span>
