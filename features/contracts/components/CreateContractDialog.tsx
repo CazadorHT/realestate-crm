@@ -11,7 +11,7 @@ import {
   FileText,
   CheckCircle2,
 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -58,7 +58,7 @@ export function CreateContractDialog() {
   const defaultEndDate = format(addMonths(new Date(), 12), "yyyy-MM-dd");
 
   const form = useForm<ContractFormInput>({
-    resolver: zodResolver(contractFormSchema),
+    resolver: zodResolver(contractFormSchema) as unknown as Resolver<any>,
     defaultValues: {
       start_date: todayStr,
       end_date: defaultEndDate,
@@ -173,9 +173,9 @@ export function CreateContractDialog() {
                               // Fallback logic for price auto-fill
                               const price =
                                 picked.deal_type === "RENT"
-                                  ? picked.rental_price ??
-                                    picked.original_rental_price
-                                  : picked.price ?? picked.original_price;
+                                  ? (picked.rental_price ??
+                                    picked.original_rental_price)
+                                  : (picked.price ?? picked.original_price);
 
                               if (price !== undefined && price !== null) {
                                 form.setValue("rent_price", price);
@@ -185,7 +185,7 @@ export function CreateContractDialog() {
                                   form.setValue("deposit_amount", price * 2);
                                   form.setValue(
                                     "advance_payment_amount",
-                                    price * 1
+                                    price * 1,
                                   );
                                 }
                               }
@@ -197,7 +197,7 @@ export function CreateContractDialog() {
                               } else {
                                 form.setValue(
                                   "lease_term_months",
-                                  picked.duration_months || 12
+                                  picked.duration_months || 12,
                                 );
                               }
                             }
@@ -211,7 +211,7 @@ export function CreateContractDialog() {
 
                 {selectedDeal && (
                   <div className="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 max-w-[600px]">
-                    <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-lg bg-slate-100 border line-clamp-2 whitespace-normal break-words">
+                    <div className="relative w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-slate-100 border line-clamp-2 whitespace-normal wrap-break-word">
                       {selectedDeal.cover_image_url ? (
                         <img
                           src={selectedDeal.cover_image_url}
@@ -228,7 +228,7 @@ export function CreateContractDialog() {
                           "absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider",
                           selectedDeal.deal_type === "RENT"
                             ? "bg-indigo-600 text-white"
-                            : "bg-emerald-600 text-white"
+                            : "bg-emerald-600 text-white",
                         )}
                       >
                         {selectedDeal.deal_type === "RENT" ? "เช่า" : "ขาย"}
@@ -399,7 +399,7 @@ export function CreateContractDialog() {
                                   "h-8 text-[11px] flex-1 font-bold tracking-tight",
                                   field.value === v
                                     ? "bg-blue-600 shadow-sm"
-                                    : "text-slate-500"
+                                    : "text-slate-500",
                                 )}
                                 onClick={() => field.onChange(v)}
                               >
@@ -439,7 +439,7 @@ export function CreateContractDialog() {
                                         "px-2 py-0.5 rounded text-[10px] font-bold transition-all",
                                         field.value === m * rentPrice
                                           ? "bg-blue-600 text-white shadow-sm scale-110"
-                                          : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                          : "bg-slate-100 text-slate-500 hover:bg-slate-200",
                                       )}
                                     >
                                       {m} ด.
@@ -479,7 +479,7 @@ export function CreateContractDialog() {
                                         "px-2 py-0.5 rounded text-[10px] font-bold transition-all",
                                         field.value === m * rentPrice
                                           ? "bg-blue-600 text-white shadow-sm scale-110"
-                                          : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                          : "bg-slate-100 text-slate-500 hover:bg-slate-200",
                                       )}
                                     >
                                       {m} ด.
@@ -523,7 +523,7 @@ export function CreateContractDialog() {
                                   field.onChange(
                                     field.value
                                       ? `${field.value}, ${term}`
-                                      : term
+                                      : term,
                                   );
                                 }
                               }}

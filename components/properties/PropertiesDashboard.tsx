@@ -254,7 +254,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Type Distribution - Pie Chart */}
-        <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-white to-slate-50">
+        <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-linear-to-br from-white to-slate-50">
           <CardHeader className="pb-2 border-b border-slate-100/60">
             <div className="flex items-center justify-between">
               <div>
@@ -328,7 +328,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number, name: string) => [
+                    formatter={(value: any, name: any) => [
                       <span key="val" className="font-bold">
                         {value} รายการ
                       </span>,
@@ -362,7 +362,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
         </Card>
 
         {/* Status Distribution - Bar Chart */}
-        <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-white to-slate-50">
+        <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-linear-to-br from-white to-slate-50">
           <CardHeader className="pb-2 border-b border-slate-100/60">
             <div className="flex items-center justify-between">
               <div>
@@ -440,7 +440,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
                   />
                   <Tooltip
                     cursor={{ fill: "rgba(59, 130, 246, 0.05)", radius: 8 }}
-                    formatter={(value: number) => [
+                    formatter={(value: any) => [
                       <span key="val" className="font-bold">
                         {value} รายการ
                       </span>,

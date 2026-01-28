@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.ts";
 
 @layer base {
   :root {
@@ -110,9 +109,9 @@
   .animate-shimmer {
     background: linear-gradient(
       90deg,
-      theme("colors.slate.100") 0%,
-      theme("colors.slate.200") 50%,
-      theme("colors.slate.100") 100%
+      theme("--color-slate-100") 0%,
+      theme("--color-slate-200") 50%,
+      theme("--color-slate-100") 100%
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;

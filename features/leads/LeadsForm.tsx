@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { leadFormSchema, type LeadFormValues } from "./types";
@@ -80,7 +80,7 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<LeadFormValues>({
-    resolver: zodResolver(leadFormSchema),
+    resolver: zodResolver(leadFormSchema) as unknown as Resolver<any>,
     defaultValues: {
       full_name: "",
       stage: "NEW",
@@ -210,7 +210,7 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                     onValueChange={(v) =>
                       form.setValue(
                         "lead_type",
-                        v as "INDIVIDUAL" | "COMPANY" | "JURISTIC_PERSON"
+                        v as "INDIVIDUAL" | "COMPANY" | "JURISTIC_PERSON",
                       )
                     }
                   >
@@ -294,9 +294,9 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                       const selected = Array.isArray(currentVal)
                         ? currentVal
                         : typeof currentVal === "string" &&
-                          currentVal.length > 0
-                        ? currentVal.split(",").map((x) => x.trim())
-                        : [];
+                            currentVal.length > 0
+                          ? currentVal.split(",").map((x) => x.trim())
+                          : [];
 
                       const isSelected = selected.includes(nat);
 
@@ -308,7 +308,7 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                             let newSelected = [...selected];
                             if (isSelected) {
                               newSelected = newSelected.filter(
-                                (x) => x !== nat
+                                (x) => x !== nat,
                               );
                             } else {
                               newSelected.push(nat);
@@ -514,7 +514,7 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                     <Switch
                       checked={
                         (form.watch(
-                          item.id as keyof LeadFormValues
+                          item.id as keyof LeadFormValues,
                         ) as boolean) ?? false
                       }
                       onCheckedChange={(v) =>
@@ -568,7 +568,7 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                           | "CONTACTED"
                           | "VIEWED"
                           | "NEGOTIATING"
-                          | "CLOSED"
+                          | "CLOSED",
                       )
                     }
                   >
@@ -583,8 +583,8 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                               s === "NEW"
                                 ? "default"
                                 : s === "CLOSED"
-                                ? "secondary"
-                                : "outline"
+                                  ? "secondary"
+                                  : "outline"
                             }
                             className="mr-2 h-4 text-[10px] px-1.5"
                           >

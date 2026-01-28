@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { useRef, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -78,7 +78,7 @@ export function PropertyForm({
   ).current;
 
   const form = useForm<PropertyFormValues>({
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(FormSchema) as unknown as Resolver<any>,
     mode: "onChange",
     defaultValues:
       mode === "edit" && defaultValues

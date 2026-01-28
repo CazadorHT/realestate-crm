@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { differenceInMonths } from "date-fns";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createDealSchema, CreateDealInput } from "../schema";
 import { createDealAction, updateDealAction } from "../actions";
@@ -66,7 +66,7 @@ export function DealFormDialog({
   const isEditing = !!deal;
 
   const form = useForm<CreateDealInput>({
-    resolver: zodResolver(createDealSchema),
+    resolver: zodResolver(createDealSchema) as unknown as Resolver<any>,
     defaultValues: {
       lead_id: leadId || "",
       deal_type: deal?.deal_type || "RENT",
@@ -79,7 +79,7 @@ export function DealFormDialog({
         deal?.transaction_date && deal?.transaction_end_date
           ? differenceInMonths(
               new Date(deal.transaction_end_date),
-              new Date(deal.transaction_date)
+              new Date(deal.transaction_date),
             )
           : 12, // Default 1 year
       property_id: deal?.property_id || "",
@@ -129,7 +129,7 @@ export function DealFormDialog({
       ) {
         sanitized.duration_months = differenceInMonths(
           new Date(sanitized.transaction_end_date),
-          new Date(sanitized.transaction_date)
+          new Date(sanitized.transaction_date),
         );
       }
 
@@ -178,7 +178,7 @@ export function DealFormDialog({
         "percentage=",
         percentage,
         "commission=",
-        calculatedCommission
+        calculatedCommission,
       );
     } else if (dealType === "RENT") {
       // Use rental_price, fallback to original_rental_price
@@ -194,7 +194,7 @@ export function DealFormDialog({
         "months=",
         months,
         "commission=",
-        calculatedCommission
+        calculatedCommission,
       );
     }
 
@@ -276,7 +276,7 @@ export function DealFormDialog({
                         />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="max-h-[400px] w-[var(--radix-select-trigger-width)]">
+                    <SelectContent className="max-h-[400px] w-(--radix-select-trigger-width)">
                       {properties.map((p) => (
                         <SelectItem
                           key={p.id}
@@ -320,7 +320,7 @@ export function DealFormDialog({
                             <span className="text-slate-500">ค่าเช่า:</span>{" "}
                             <span className="font-bold text-blue-700">
                               {new Intl.NumberFormat("th-TH").format(
-                                rentalPrice
+                                rentalPrice,
                               )}{" "}
                               ฿/ด.
                             </span>

@@ -38,8 +38,8 @@ export const leadFormSchema = z.object({
   assigned_to: z.string().uuid().optional().nullable(),
 
   // Use robust nullableNumber for optional numeric fields
-  budget_min: nullableNumber,
-  budget_max: nullableNumber,
+  budget_min: nullableNumber.optional(),
+  budget_max: nullableNumber.optional(),
 
   note: z.string().optional().nullable(),
 
@@ -62,16 +62,16 @@ export const leadFormSchema = z.object({
     .nullable(),
   preferred_locations: z.array(z.string()).optional().nullable(),
 
-  min_bedrooms: nullableNumber,
-  min_bathrooms: nullableNumber,
-  min_size_sqm: nullableNumber,
-  max_size_sqm: nullableNumber,
-  num_occupants: nullableNumber,
+  min_bedrooms: nullableNumber.optional(),
+  min_bathrooms: nullableNumber.optional(),
+  min_size_sqm: nullableNumber.optional(),
+  max_size_sqm: nullableNumber.optional(),
+  num_occupants: nullableNumber.optional(),
 
   has_pets: z.coerce.boolean().optional().nullable(),
   need_company_registration: z.coerce.boolean().optional().nullable(),
   allow_airbnb: z.coerce.boolean().optional().nullable(),
-  preferences: z.record(z.any()).optional().nullable(),
+  preferences: z.record(z.string(), z.any()).optional().nullable(),
 });
 
 export type LeadFormValues = z.infer<typeof leadFormSchema>;

@@ -54,7 +54,7 @@ export default function FAQFormPage({
   const [saving, setSaving] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       question: "",
       answer: "",

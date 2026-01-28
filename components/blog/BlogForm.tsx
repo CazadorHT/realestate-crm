@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -115,7 +115,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
       };
 
   const form = useForm<BlogPostInput>({
-    resolver: zodResolver(blogPostSchema),
+    resolver: zodResolver(blogPostSchema) as unknown as Resolver<any>,
     defaultValues,
   });
 
@@ -167,7 +167,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
       if (data.structured_data && typeof data.structured_data === "object") {
         setValue(
           "structured_data",
-          JSON.stringify(data.structured_data, null, 2)
+          JSON.stringify(data.structured_data, null, 2),
         );
       }
 
@@ -503,7 +503,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                               variant={"outline"}
                               className={cn(
                                 "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
+                                !field.value && "text-muted-foreground",
                               )}
                             >
                               {field.value ? (

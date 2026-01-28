@@ -111,7 +111,7 @@ export function RentalContractSection({
   }, [dealId, dealType]);
 
   const form = useForm<ContractFormInput>({
-    resolver: zodResolver(contractFormSchema),
+    resolver: zodResolver(contractFormSchema) as any,
     defaultValues: {
       deal_id: dealId,
       start_date: contract?.start_date ?? today,
@@ -209,8 +209,8 @@ export function RentalContractSection({
           {dealType === "RENT"
             ? "สัญญาเช่า"
             : dealType === "SALE"
-            ? "สัญญาซื้อขาย"
-            : "สัญญา"}
+              ? "สัญญาซื้อขาย"
+              : "สัญญา"}
         </h3>
         <div>
           <Dialog open={open} onOpenChange={setOpen}>
@@ -323,7 +323,7 @@ export function RentalContractSection({
                                 onClick={() =>
                                   form.setValue(
                                     "advance_payment_amount",
-                                    m * rentPrice
+                                    m * rentPrice,
                                   )
                                 }
                                 className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
@@ -409,7 +409,7 @@ export function RentalContractSection({
                             if (!current.includes(toAdd)) {
                               form.setValue(
                                 "other_terms",
-                                current ? `${current}, ${toAdd}` : toAdd
+                                current ? `${current}, ${toAdd}` : toAdd,
                               );
                             }
                           }}
@@ -563,7 +563,7 @@ export function RentalContractSection({
                             </p>
                             <p className="font-medium">
                               {Number(
-                                contract.advance_payment_amount
+                                contract.advance_payment_amount,
                               ).toLocaleString()}{" "}
                               บาท
                             </p>
@@ -600,7 +600,7 @@ export function RentalContractSection({
                                 id: contract.id,
                                 status: "ACTIVE",
                               }),
-                            }
+                            },
                           );
                           const payload = await res.json();
                           if (!res.ok)
@@ -626,7 +626,7 @@ export function RentalContractSection({
                     onClick={async () => {
                       if (
                         !confirm(
-                          "คุณต้องการหยุดสัญญา/ยกเลิกสัญญา นี้ใช่หรือไม่? (สถานะจะเปลี่ยนเป็น TERMINATED )"
+                          "คุณต้องการหยุดสัญญา/ยกเลิกสัญญา นี้ใช่หรือไม่? (สถานะจะเปลี่ยนเป็น TERMINATED )",
                         )
                       )
                         return;
@@ -640,7 +640,7 @@ export function RentalContractSection({
                               id: contract.id,
                               status: "TERMINATED",
                             }),
-                          }
+                          },
                         );
                         if (!res.ok) throw new Error("Terminate failed");
                         toast.success("หยุดสัญญาเรียบร้อย");
@@ -682,7 +682,7 @@ export function RentalContractSection({
                           method: "DELETE",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({ id: contract.id }),
-                        }
+                        },
                       );
                       if (!res.ok) throw new Error("Delete failed");
                       toast.success("ลบสัญญาเรียบร้อย");

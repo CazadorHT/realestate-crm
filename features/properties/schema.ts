@@ -20,10 +20,10 @@ export const FormSchema = z
     description: z.string().optional(),
 
     property_type: z.enum(PROPERTY_TYPE_ENUM, {
-      errorMap: () => ({ message: "คุณยังไม่ได้เลือกประเภททรัพย์" }),
+      message: "คุณยังไม่ได้เลือกประเภททรัพย์",
     }),
     listing_type: z.enum(LISTING_TYPE_ENUM, {
-      errorMap: () => ({ message: "คุณยังไม่ได้เลือกรูปแบบประกาศ" }),
+      message: "คุณยังไม่ได้เลือกรูปแบบประกาศ",
     }),
     status: z.enum(PROPERTY_STATUS_ENUM).default("DRAFT"),
 

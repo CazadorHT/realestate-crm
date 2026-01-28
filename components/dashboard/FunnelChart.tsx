@@ -45,7 +45,7 @@ export function FunnelChart({ data }: FunnelChartProps) {
               />
               <Tooltip
                 cursor={{ fill: "transparent" }}
-                formatter={(value: number) => [value, "จำนวน"]}
+                formatter={(value: any) => [value, "จำนวน"]}
               />
               <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={24}>
                 {data.map((entry, index) => (

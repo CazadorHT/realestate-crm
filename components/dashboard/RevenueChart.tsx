@@ -124,7 +124,7 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
                   border: "none",
                   boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 }}
-                formatter={(value: number) => [
+                formatter={(value: any) => [
                   `฿${value.toLocaleString()}`,
                   "รายได้",
                 ]}
