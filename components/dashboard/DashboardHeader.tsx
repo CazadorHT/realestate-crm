@@ -13,7 +13,7 @@ export function DashboardHeader({ email }: DashboardHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+        <h2 className="text-3xl font-bold tracking-tight bg-linear-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
           {greeting}, {email?.split("@")[0]} 👋
         </h2>
         <p className="text-slate-500 dark:text-slate-400 mt-1">

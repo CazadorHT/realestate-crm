@@ -64,14 +64,14 @@ export function DepositPropertySection() {
       {/* Background Decor */}
       <SectionBackground pattern="blobs" intensity="medium" />
 
-      <div className="max-w-screen-xl mx-auto relative z-10">
+      <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 lg:gap-12 items-center">
           {/* Left Content */}
           <div
             className="space-y-4 md:space-y-6 text-center lg:text-left"
             data-aos="fade-right"
           >
-            <div className="inline-flex items-center rounded-full border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold text-blue-700 backdrop-blur-sm mx-auto lg:mx-0 shadow-sm">
+            <div className="inline-flex items-center rounded-full border border-blue-200 bg-linear-to-r from-blue-50 to-purple-50 px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold text-blue-700 backdrop-blur-sm mx-auto lg:mx-0 shadow-sm">
               <Key className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
               บริการฝากทรัพย์สิน
             </div>
@@ -79,7 +79,7 @@ export function DepositPropertySection() {
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold tracking-tight leading-tight">
               <span className="text-slate-900">ฝากขาย ฝากเช่า</span>
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
                 บ้าน คอนโด ออฟฟิศ
               </span>
             </h2>
@@ -102,7 +102,7 @@ export function DepositPropertySection() {
                   key={item.step}
                   className="flex items-center gap-2 md:gap-3 justify-center lg:justify-start group"
                 >
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm md:text-base font-bold shadow-md group-hover:scale-110 transition-transform">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm md:text-base font-bold shadow-md group-hover:scale-110 transition-transform">
                     {item.step}
                   </div>
                   <span className="text-sm md:text-base text-slate-700 font-medium">
@@ -135,7 +135,7 @@ export function DepositPropertySection() {
             data-aos="fade-left"
           >
             {/* Card gradient decoration */}
-            <div className="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50 -z-10"></div>
+            <div className="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-linear-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50 -z-10"></div>
 
             <div className="mb-4 md:mb-6 relative z-10">
               <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-1.5 md:mb-2">
@@ -148,10 +148,10 @@ export function DepositPropertySection() {
 
             {isSuccess ? (
               <div className="text-center py-12 space-y-4 animate-in fade-in zoom-in">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <div className="w-16 h-16 bg-linear-to-br from-green-100 to-green-200 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                   <Home className="h-8 w-8" />
                 </div>
-                <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">
+                <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-green-600 to-emerald-600">
                   ขอบคุณสำหรับข้อมูล
                 </h3>
                 <p className="text-slate-600">
@@ -197,7 +197,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
       const res = await createDepositLeadAction(values);
       if (res.success) {
         toast.success(
-          "บันทึกข้อมูลเรียบร้อย เจ้าหน้าที่จะติดต่อกลับโดยเร็วที่สุด"
+          "บันทึกข้อมูลเรียบร้อย เจ้าหน้าที่จะติดต่อกลับโดยเร็วที่สุด",
         );
         form.reset();
         onSuccess();
@@ -373,7 +373,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
         <div className="pt-2">
           <Button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-5 md:py-6 text-base md:text-lg shadow-lg hover:shadow-xl transition-all"
+            className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-5 md:py-6 text-base md:text-lg shadow-lg hover:shadow-xl transition-all"
             disabled={isLoading}
           >
             {isLoading ? (

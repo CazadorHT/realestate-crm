@@ -134,7 +134,7 @@ function Step5FeaturesComponent() {
                     flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-200 group
                     ${
                       isSelected
-                        ? "bg-gradient-to-r from-blue-500 to-purple-600  text-white shadow-md transform scale-[1.02]"
+                        ? "bg-linear-to-r from-blue-500 to-purple-600  text-white shadow-md transform scale-[1.02]"
                         : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50"
                     }
                   `}

@@ -84,7 +84,7 @@ export function TestimonialsSection() {
           className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"
           data-aos="fade-up"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/50">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200/50">
             <Award className="w-4 h-4 text-amber-600" />
             <span className="text-sm font-bold text-amber-700">
               รีวิวจากลูกค้าจริง
@@ -94,7 +94,7 @@ export function TestimonialsSection() {
           <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
             ลูกค้าของเรา
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-600 via-orange-600 to-amber-600">
               พึงพอใจในบริการ
             </span>
           </h2>
@@ -192,7 +192,7 @@ export function TestimonialsSection() {
                 </div>
 
                 {/* Gradient Overlay on Hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
+                <div className="absolute inset-0 bg-linear-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
               </div>
             </div>
           ))}
@@ -204,7 +204,7 @@ export function TestimonialsSection() {
           data-aos="fade-up"
           data-aos-delay="400"
         >
-          <div className="inline-flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl md:rounded-2xl">
+          <div className="inline-flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 bg-linear-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl md:rounded-2xl">
             <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
             <span className="text-sm md:text-base text-slate-700">
               รีวิวทั้งหมด

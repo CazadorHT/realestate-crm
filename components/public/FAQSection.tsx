@@ -74,7 +74,7 @@ export function FAQSection() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <div
-        className="max-w-screen-xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-12 items-start"
+        className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-12 items-start"
         data-aos="fade-up"
         data-aos-delay="100"
       >
@@ -85,7 +85,7 @@ export function FAQSection() {
           </div>
           <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-white mb-4 md:mb-6 tracking-tight">
             มีคำถาม?{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">
               เรามีคำตอบ
             </span>
           </h2>
@@ -125,11 +125,11 @@ export function FAQSection() {
                     <AccordionTrigger
                       className={cn(
                         "hover:no-underline py-0 inline-flex",
-                        "[&[data-state=open]>div]:rounded-bl-none [&[data-state=open]>div]:bg-white/10" // Adjust shape/color when open
+                        "[&[data-state=open]>div]:rounded-bl-none [&[data-state=open]>div]:bg-white/10", // Adjust shape/color when open
                       )}
                     >
                       <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 rounded-xl md:rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 max-w-2xl text-left group-data-[state=open]:ring-1 group-data-[state=open]:ring-blue-500/50">
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20 mt-0.5">
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20 mt-0.5">
                           <CircleHelp className="w-4 h-4 md:w-5 md:h-5 text-white" />
                         </div>
                         <div className="flex-1">
@@ -144,7 +144,7 @@ export function FAQSection() {
                   {/* Answer Bubble (Right) */}
                   <AccordionContent className="pb-3 md:pb-4 pt-1 md:pt-2">
                     <div className="flex justify-end pl-8 md:pl-12 lg:pl-24">
-                      <div className="flex items-start gap-3 md:gap-4 p-4 md:p-6 rounded-xl md:rounded-2xl rounded-tr-sm bg-gradient-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/10 max-w-2xl backdrop-blur-md">
+                      <div className="flex items-start gap-3 md:gap-4 p-4 md:p-6 rounded-xl md:rounded-2xl rounded-tr-sm bg-linear-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/10 max-w-2xl backdrop-blur-md">
                         <div className="flex-1 text-right">
                           <p className="text-slate-300 leading-relaxed text-sm md:text-base">
                             {faq.answer}

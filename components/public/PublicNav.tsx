@@ -114,7 +114,7 @@ export function PublicNav() {
             <div className="flex justify-between items-center h-16">
               {/* Logo */}
               <div>
-                 <Link
+                <Link
                   href="/"
                   className="hover:scale-105 transition-transform block"
                 >
@@ -127,8 +127,7 @@ export function PublicNav() {
                     className="h-12 w-auto"
                     priority
                   />
-                </Link> 
-                
+                </Link>
               </div>
 
               {/* Desktop Navigation */}
@@ -141,7 +140,7 @@ export function PublicNav() {
                     className="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm relative group"
                   >
                     {link.name}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-linear-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
                   </a>
                 ))}
 
@@ -166,7 +165,7 @@ export function PublicNav() {
                       }`}
                     />
                     {favoriteCount > 0 && (
-                      <span className="absolute -top-2 -right-2 h-5 w-5 bg-gradient-to-br from-pink-500 to-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                      <span className="absolute -top-2 -right-2 h-5 w-5 bg-linear-to-br from-pink-500 to-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
                         {favoriteCount > 99 ? "99+" : favoriteCount}
                       </span>
                     )}
@@ -191,7 +190,7 @@ export function PublicNav() {
                   >
                     <Button
                       size="lg"
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md"
+                      className="bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md"
                     >
                       <Key className="h-4 w-4 mr-1" />
                       ฝากทรัพย์
@@ -216,7 +215,7 @@ export function PublicNav() {
                     }`}
                   />
                   {favoriteCount > 0 && (
-                    <span className="absolute -top-2 -right-2 h-5 w-5 bg-gradient-to-br from-pink-500 to-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm border border-white">
+                    <span className="absolute -top-2 -right-2 h-5 w-5 bg-linear-to-br from-pink-500 to-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm border border-white">
                       {favoriteCount > 99 ? "99+" : favoriteCount}
                     </span>
                   )}
@@ -274,7 +273,7 @@ export function PublicNav() {
                   >
                     <Button
                       size="lg"
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base"
+                      className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base"
                     >
                       <Key className="h-5 w-5 mr-2" />
                       ฝากทรัพย์

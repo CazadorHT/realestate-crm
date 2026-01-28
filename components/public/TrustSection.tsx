@@ -81,7 +81,7 @@ export function TrustSection() {
 
           <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
             บริการ
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
               บ้าน คอนโด สำนักงานออฟฟิศ
             </span>
             <br />
@@ -110,7 +110,7 @@ export function TrustSection() {
             >
               {/* Gradient Background on Hover */}
               <div
-                className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
+                className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
               />
 
               <div className="relative z-10">
@@ -124,7 +124,7 @@ export function TrustSection() {
                 </div>
 
                 {/* Content */}
-                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
+                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
                   {feature.title}
                 </h3>
                 <p className="text-sm md:text-base text-slate-600 leading-relaxed">
@@ -133,7 +133,7 @@ export function TrustSection() {
               </div>
 
               {/* Decorative Corner */}
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute top-0 right-0 w-20 h-20 bg-linear-to-br from-blue-500/5 to-purple-500/5 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </div>
           ))}
         </div>
@@ -144,7 +144,7 @@ export function TrustSection() {
           data-aos="fade-up"
           data-aos-delay="300"
         >
-          <div className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/50 rounded-full">
+          <div className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200/50 rounded-full">
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star

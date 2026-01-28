@@ -58,9 +58,9 @@ export default async function BlogListingPage() {
         {/* Premium Hero Section */}
         <section className="relative pt-32 pb-20 overflow-hidden">
           {/* Background Pattern */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 z-0">
+          <div className="absolute inset-0 bg-linear-to-br from-blue-900 via-indigo-900 to-slate-900 z-0">
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2073&auto=format&fit=crop')] opacity-10 bg-cover bg-center mix-blend-overlay"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-transparent"></div>
+            <div className="absolute inset-0 bg-linear-to-t from-slate-900/90 via-slate-900/50 to-transparent"></div>
           </div>
 
           <div className="container mx-auto relative z-10 px-4 md:px-6 text-center text-white">
@@ -71,7 +71,7 @@ export default async function BlogListingPage() {
 
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 animate-in fade-in slide-in-from-bottom-5 duration-700 delay-100">
               เคล็ดลับ{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-purple-400 to-blue-400">
                 บ้าน คอนโด ออฟฟิศ
               </span>
             </h1>
@@ -94,7 +94,7 @@ export default async function BlogListingPage() {
           {featuredPost && (
             <div className="mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
               <div className="flex items-center gap-2 mb-4">
-                <div className="h-6 w-1 bg-gradient-to-b from-blue-600 to-purple-600 rounded-full"></div>
+                <div className="h-6 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
                 <h2 className="text-xl font-bold text-white">บทความแนะนำ</h2>
               </div>
               <div
@@ -124,15 +124,15 @@ export default async function BlogListingPage() {
                       itemProp="image"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-400">
+                    <div className="w-full h-full bg-linear-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-400">
                       <BookOpen className="w-16 h-16 opacity-20" />
                     </div>
                   )}
-                  <div className="absolute top-4 left-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                  <div className="absolute top-4 left-4 bg-linear-to-r from-blue-600 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                     Featured
                   </div>
                   {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-blue-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute inset-0 bg-linear-to-t from-blue-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </Link>
                 <div className="p-8 lg:p-10 flex flex-col justify-center">
                   <div className="flex items-center gap-3 mb-4">
@@ -147,7 +147,7 @@ export default async function BlogListingPage() {
                   </div>
                   <Link href={`/blog/${featuredPost.slug}`} className="block">
                     <h3
-                      className="text-xl lg:text-2xl font-bold text-slate-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all leading-tight"
+                      className="text-xl lg:text-2xl font-bold text-slate-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all leading-tight"
                       itemProp="name"
                     >
                       {featuredPost.title}
@@ -192,7 +192,7 @@ export default async function BlogListingPage() {
                               >
                                 {featuredPost.published_at
                                   ? new Date(
-                                      featuredPost.published_at
+                                      featuredPost.published_at,
                                     ).toLocaleDateString("th-TH")
                                   : ""}
                               </time>
@@ -211,7 +211,7 @@ export default async function BlogListingPage() {
             {/* Main Content */}
             <div className="lg:col-span-8">
               <div className="flex items-center gap-2 mb-6">
-                <div className="h-6 w-1 bg-gradient-to-b from-slate-700 to-slate-900 rounded-full"></div>
+                <div className="h-6 w-1 bg-linear-to-b from-slate-700 to-slate-900 rounded-full"></div>
                 <h2 className="text-xl font-bold text-slate-900">
                   บทความล่าสุด
                 </h2>
@@ -242,7 +242,7 @@ export default async function BlogListingPage() {
                 {/* Categories */}
                 <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="h-5 w-1 bg-gradient-to-b from-blue-600 to-purple-600 rounded-full"></div>
+                    <div className="h-5 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
                     <h3 className="text-lg font-bold text-slate-900">
                       หมวดหมู่
                     </h3>
@@ -255,7 +255,7 @@ export default async function BlogListingPage() {
                         if (post.category) {
                           categoryMap.set(
                             post.category,
-                            (categoryMap.get(post.category) || 0) + 1
+                            (categoryMap.get(post.category) || 0) + 1,
                           );
                         }
                       });
@@ -274,7 +274,7 @@ export default async function BlogListingPage() {
                       return categories.map(([cat, count]) => (
                         <button
                           key={cat}
-                          className="w-full text-left px-4 py-3 rounded-xl bg-slate-50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 text-slate-700 hover:text-blue-700 font-medium transition-all duration-300 border border-transparent hover:border-blue-200 flex items-center justify-between group"
+                          className="w-full text-left px-4 py-3 rounded-xl bg-slate-50 hover:bg-linear-to-r hover:from-blue-50 hover:to-purple-50 text-slate-700 hover:text-blue-700 font-medium transition-all duration-300 border border-transparent hover:border-blue-200 flex items-center justify-between group"
                         >
                           <span>{cat}</span>
                           <span className="text-xs bg-slate-200 group-hover:bg-blue-100 group-hover:text-blue-700 px-2 py-0.5 rounded-full transition-colors">
@@ -287,9 +287,9 @@ export default async function BlogListingPage() {
                 </div>
 
                 {/* Tags Cloud */}
-                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100 shadow-sm">
+                <div className="bg-linear-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100 shadow-sm">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="h-5 w-1 bg-gradient-to-b from-blue-600 to-purple-600 rounded-full"></div>
+                    <div className="h-5 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
                     <h3 className="text-lg font-bold text-slate-900">
                       ป้ายยอดนิยม
                     </h3>
@@ -300,7 +300,7 @@ export default async function BlogListingPage() {
                       const allTags = posts.flatMap((post) => post.tags || []);
                       const uniqueTags = Array.from(new Set(allTags)).slice(
                         0,
-                        12
+                        12,
                       );
 
                       if (uniqueTags.length === 0) {
@@ -314,7 +314,7 @@ export default async function BlogListingPage() {
                       return uniqueTags.map((tag, idx) => (
                         <button
                           key={idx}
-                          className="px-3 py-1.5 text-sm font-medium bg-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 text-slate-700 hover:text-white rounded-full border border-slate-200 hover:border-transparent transition-all duration-300 hover:shadow-md hover:scale-105"
+                          className="px-3 py-1.5 text-sm font-medium bg-white hover:bg-linear-to-r hover:from-blue-600 hover:to-purple-600 text-slate-700 hover:text-white rounded-full border border-slate-200 hover:border-transparent transition-all duration-300 hover:shadow-md hover:scale-105"
                         >
                           #{tag}
                         </button>
@@ -324,7 +324,7 @@ export default async function BlogListingPage() {
                 </div>
 
                 {/* Newsletter (Optional) */}
-                <div className="bg-gradient-to-br from-slate-900 to-blue-900 rounded-2xl p-6 text-white">
+                <div className="bg-linear-to-br from-slate-900 to-blue-900 rounded-2xl p-6 text-white">
                   <h3 className="text-lg font-bold mb-2">รับข่าวสารใหม่ๆ</h3>
                   <p className="text-sm text-slate-300 mb-4">
                     รับบทความใหม่ก่อนใคร ทุกสัปดาห์

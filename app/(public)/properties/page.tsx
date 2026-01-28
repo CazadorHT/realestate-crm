@@ -24,11 +24,8 @@ export default function PublicPropertiesPage() {
   return (
     <>
       {/* Schema.org Structured Data */}
-     
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-       
-
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50">
         <PropertySearchPage />
       </div>
     </>

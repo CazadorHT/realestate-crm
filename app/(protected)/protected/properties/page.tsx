@@ -256,7 +256,7 @@ export default async function PropertiesPage({
   return (
     <div className="p-6 space-y-6">
       {/* Premium Header Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-8 shadow-xl">
         {/* Decorative Elements */}
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
         <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-white/5 rounded-full blur-xl" />
@@ -296,8 +296,8 @@ export default async function PropertiesPage({
         {/* Enhanced Section Title */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg blur-sm opacity-50" />
-            <div className="relative w-1.5 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full" />
+            <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-indigo-500 rounded-lg blur-sm opacity-50" />
+            <div className="relative w-1.5 h-8 bg-linear-to-b from-blue-500 to-indigo-600 rounded-full" />
           </div>
           <div>
             <h2 className="text-lg font-bold text-slate-800">
@@ -313,7 +313,7 @@ export default async function PropertiesPage({
 
         {/* Empty State UI */}
         {isEmptyState ? (
-          <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-gradient-to-br from-slate-50 to-white p-12">
+          <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50 to-white p-12">
             {/* Decorative Background */}
             <div className="absolute inset-0 opacity-5">
               <div className="absolute top-10 left-10 w-20 h-20 border-4 border-slate-400 rounded-xl rotate-12" />
@@ -325,7 +325,7 @@ export default async function PropertiesPage({
               {/* Icon */}
               <div className="relative">
                 <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl scale-150" />
-                <div className="relative p-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/30">
+                <div className="relative p-6 bg-linear-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/30">
                   <PlusCircle className="h-12 w-12 text-white" />
                 </div>
               </div>
@@ -345,7 +345,7 @@ export default async function PropertiesPage({
               <Button
                 asChild
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8"
+                className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8"
               >
                 <Link href="/protected/properties/new">
                   <PlusCircle className="h-5 w-5 mr-2" />

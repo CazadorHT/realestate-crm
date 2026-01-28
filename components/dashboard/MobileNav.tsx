@@ -236,7 +236,7 @@ export function MobileNav({ role }: { role: UserRole }) {
         <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
         <div className="p-6 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/30">
+            <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/30">
               <Building2 className="text-white h-6 w-6" />
             </div>
             <div>

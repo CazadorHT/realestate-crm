@@ -20,10 +20,10 @@ export function ShareButtons({
 
   const shareLinks = {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-      url
+      url,
     )}`,
     line: `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(
-      url
+      url,
     )}`,
   };
 
@@ -67,7 +67,7 @@ export function ShareButtons({
           href={`https://www.instagram.com/`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white rounded-full transition-colors"
+          className="flex items-center justify-center w-10 h-10 bg-linear-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white rounded-full transition-colors"
         >
           <AiFillInstagram className="w-5 h-5" />
         </a>
@@ -112,7 +112,7 @@ export function ShareButtons({
         href={`https://www.instagram.com/`}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white rounded-xl transition-colors font-medium text-sm"
+        className="flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white rounded-xl transition-colors font-medium text-sm"
       >
         <AiFillInstagram className="w-5 h-5" />
         Instagram

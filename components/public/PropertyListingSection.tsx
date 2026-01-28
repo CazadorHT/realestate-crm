@@ -217,10 +217,10 @@ function PropertyListingContent() {
         type === "OFFICE_BUILDING"
           ? "OFFICE"
           : type === "COMMERCIAL_BUILDING"
-          ? "COMMERCIAL"
-          : type === "WAREHOUSE"
-          ? "WAREHOUSE"
-          : (type as FilterType);
+            ? "COMMERCIAL"
+            : type === "WAREHOUSE"
+              ? "WAREHOUSE"
+              : (type as FilterType);
 
       if ((Object.keys(FILTER_LABELS) as string[]).includes(mapped)) {
         setFilter(mapped as FilterType);
@@ -240,13 +240,13 @@ function PropertyListingContent() {
 
     return [...items].sort(
       (a, b) =>
-        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
     );
   }, [filter, properties, areaFilter, provinceFilter]);
 
   const visibleProperties = useMemo(
     () => filteredProperties.slice(0, MAX_VISIBLE),
-    [filteredProperties]
+    [filteredProperties],
   );
 
   const hasMore = filteredProperties.length > MAX_VISIBLE;
@@ -312,7 +312,7 @@ function PropertyListingContent() {
             suppressHydrationWarning
           >
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
                 บ้าน คอนโด สำนักงานออฟฟิศ
               </span>
               <br />
@@ -442,7 +442,7 @@ function PropertyListingContent() {
                 <button
                   onClick={() => {
                     const el = document.getElementById(
-                      "filter-scroll-container"
+                      "filter-scroll-container",
                     );
                     if (el) el.scrollBy({ left: -200, behavior: "smooth" });
                   }}
@@ -468,7 +468,7 @@ function PropertyListingContent() {
                 <button
                   onClick={() => {
                     const el = document.getElementById(
-                      "filter-scroll-container"
+                      "filter-scroll-container",
                     );
                     if (el) el.scrollBy({ left: 200, behavior: "smooth" });
                   }}
@@ -547,7 +547,7 @@ function PropertyListingContent() {
                       <div className="absolute -top-6 -left-6 z-30">
                         <div className="relative">
                           <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
-                          <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0  group-hover:scale-110 transition-all duration-300 ">
+                          <div className="relative bg-linear-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0  group-hover:scale-110 transition-all duration-300 ">
                             <Sparkles className="h-6 w-6 fill-yellow-200" />
                           </div>
                         </div>

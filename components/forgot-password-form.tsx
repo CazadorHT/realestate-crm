@@ -98,7 +98,7 @@ export function ForgotPasswordForm({
         <>
           <Card className="border-none shadow-xl">
             <CardHeader className="space-y-2 pb-6">
-              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <CardTitle className="text-3xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 ลืมรหัสผ่าน?
               </CardTitle>
               <CardDescription className="text-base">
@@ -136,7 +136,7 @@ export function ForgotPasswordForm({
 
                 <Button
                   type="submit"
-                  className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
+                  className="w-full h-12 text-base font-medium bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
                   disabled={isLoading}
                 >
                   {isLoading ? (

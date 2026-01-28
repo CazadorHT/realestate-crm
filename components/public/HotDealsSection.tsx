@@ -81,13 +81,13 @@ export function HotDealsSection() {
       />
 
       {/* Glassmorphism Overlay Texture */}
-      <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px] z-[1]"></div>
+      <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px] z-1"></div>
 
       {/* Subtle Grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:32px_32px] z-[2]"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-size-[32px_32px] z-2"></div>
 
       {/* Decorative Elements */}
-      <div className="absolute top-20 left-10 opacity-30 animate-pulse-slow z-[3]">
+      <div className="absolute top-20 left-10 opacity-30 animate-pulse-slow z-3">
         <Sparkles className="h-12 w-12 text-white" />
       </div>
 
@@ -97,7 +97,7 @@ export function HotDealsSection() {
           <div className="space-y-4 max-w-screen-2xl">
             {/* Badge ที่ดู Modern ขึ้น */}
             <div
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white pl-2 pr-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/60 transform hover:scale-105 transition-all animate-pulse-scale"
+              className="inline-flex items-center gap-2 bg-linear-to-r from-red-500 to-orange-500 text-white pl-2 pr-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/60 transform hover:scale-105 transition-all animate-pulse-scale"
               data-aos="fade-right"
             >
               <div className="bg-white/20 p-1 rounded-full">
@@ -117,7 +117,7 @@ export function HotDealsSection() {
                 บ้าน คอนโด สำนักงาน
               </span>
               <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-orange-400 to-amber-400 drop-shadow-sm mt-1 block">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-red-400 via-orange-400 to-amber-400 drop-shadow-sm mt-1 block">
                 ลดราคาพิเศษ ขาย-เช่า
               </span>
             </h2>
@@ -128,7 +128,7 @@ export function HotDealsSection() {
               data-aos="fade-up"
               data-aos-delay="200"
             >
-              <TrendingDown className="h-5 w-5  md:h-6 md:w-6 text-red-500 mt-0.5 md:mt-1 flex-shrink-0" />
+              <TrendingDown className="h-5 w-5  md:h-6 md:w-6 text-red-500 mt-0.5 md:mt-1 shrink-0" />
               <p>
                 คัดเฉพาะทรัพย์สินคุณภาพ{" "}
                 <span className="font-bold text-white decoration-red-500/30 underline decoration-4 underline-offset-4">
@@ -163,7 +163,7 @@ export function HotDealsSection() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="min-w-[260px] sm:min-w-[280px] md:min-w-0 flex-shrink-0"
+                className="min-w-[260px] sm:min-w-[280px] md:min-w-0 shrink-0"
               >
                 <PropertyCardSkeleton />
               </div>
@@ -178,7 +178,7 @@ export function HotDealsSection() {
             {properties.slice(0, 4).map((property, index) => (
               <div
                 key={property.id}
-                className="min-w-[260px] sm:min-w-[280px] md:min-w-0 snap-start flex-shrink-0 relative group"
+                className="min-w-[260px] sm:min-w-[280px] md:min-w-0 snap-start shrink-0 relative group"
                 data-aos="fade-up"
                 data-aos-delay={index * 100}
               >
@@ -186,14 +186,14 @@ export function HotDealsSection() {
                 <div className="absolute -top-5 -left-3 md:-top-7 md:-left-5 z-30 hidden md:block">
                   <div className="relative">
                     <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
-                    <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-2 md:p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.1)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-5 transition-all duration-300 scale-100 md:scale-110">
+                    <div className="relative bg-linear-to-br from-red-500 to-orange-600 text-white p-2 md:p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.1)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-5 transition-all duration-300 scale-100 md:scale-110">
                       <Sparkles className="h-5 w-5 md:h-6 md:w-6 fill-yellow-200" />
                     </div>
                   </div>
                 </div>
 
                 {/* Card Wrapper with Premium Glow Effect */}
-                <div className="rounded-2xl md:rounded-[1.5rem] p-1 md:p-1 bg-gradient-to-b from-white/80 to-white/40 shadow-xl shadow-orange-900/5 group-hover:shadow-orange-600/20 transition-all duration-500 ">
+                <div className="rounded-2xl md:rounded-[1.5rem] p-1 md:p-1 bg-linear-to-b from-white/80 to-white/40 shadow-xl shadow-orange-900/5 group-hover:shadow-orange-600/20 transition-all duration-500 ">
                   <div className="md:group-hover:scale-[1.02] transition-all duration-500 ">
                     <PropertyCard property={property} priority={index === 0} />
                   </div>
@@ -205,7 +205,7 @@ export function HotDealsSection() {
 
         {/* Small Decorative Footer */}
         <div className="mt-8 md:mt-16 flex justify-center">
-          <div className="h-1 w-40 md:min-w-80 bg-gradient-to-r from-transparent via-orange-300 to-transparent rounded-full opacity-50"></div>
+          <div className="h-1 w-40 md:min-w-80 bg-linear-to-r from-transparent via-orange-300 to-transparent rounded-full opacity-50"></div>
         </div>
       </div>
     </section>

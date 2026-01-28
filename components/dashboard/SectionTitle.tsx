@@ -29,10 +29,10 @@ export function SectionTitle({
     <div className="flex items-center gap-3">
       <div className="relative">
         <div
-          className={`absolute inset-0 bg-gradient-to-r ${BLUR_COLOR_MAP[color]} rounded-lg blur-sm opacity-50`}
+          className={`absolute inset-0 bg-linear-to-r ${BLUR_COLOR_MAP[color]} rounded-lg blur-sm opacity-50`}
         />
         <div
-          className={`relative w-1.5 h-8 bg-gradient-to-b ${COLOR_MAP[color]} rounded-full`}
+          className={`relative w-1.5 h-8 bg-linear-to-b ${COLOR_MAP[color]} rounded-full`}
         />
       </div>
       <div>

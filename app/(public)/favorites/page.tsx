@@ -105,7 +105,7 @@ export default function FavoritesPage() {
             </Link>
 
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-pink-500 to-red-500 flex items-center justify-center shadow-lg shadow-pink-500/20">
+              <div className="h-12 w-12 rounded-2xl bg-linear-to-br from-pink-500 to-red-500 flex items-center justify-center shadow-lg shadow-pink-500/20">
                 <Heart className="h-6 w-6 text-white fill-white" />
               </div>
               <div>
@@ -156,7 +156,7 @@ export default function FavoritesPage() {
             <Link href="/properties">
               <Button
                 size="lg"
-                className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                className="rounded-xl bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all hover:scale-105"
               >
                 <Home className="h-5 w-5 mr-2" />
                 <span>ไปที่หน้าค้นหาทรัพย์</span>

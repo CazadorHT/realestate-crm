@@ -44,7 +44,7 @@ export function QuickInfoSection({
 
   return (
     <div
-      className={`animate-in fade-in slide-in-from-top-4 duration-500 bg-gradient-to-br from-white via-blue-50/50 to-indigo-50/50 p-6 md:p-8 rounded-2xl border space-y-6 ${
+      className={`animate-in fade-in slide-in-from-top-4 duration-500 bg-linear-to-br from-white via-blue-50/50 to-indigo-50/50 p-6 md:p-8 rounded-2xl border space-y-6 ${
         hasTitleError
           ? "border-red-200 bg-red-50/30"
           : "border-blue-100/50 shadow-sm"
@@ -96,8 +96,8 @@ export function QuickInfoSection({
                       onChange={(e) => field.onChange(e.target.value)}
                       className={`h-14 rounded-2xl bg-white font-medium pl-12 pr-6 ${
                         fieldState.error
-                          ? "border-red-300 focus-visible:!ring-red-300"
-                          : "border-slate-200 focus-visible:!ring-blue-200"
+                          ? "border-red-300 focus-visible:ring-red-300!"
+                          : "border-slate-200 focus-visible:ring-blue-200!"
                       }`}
                       placeholder="เช่น Ideo Sukhumvit 93 ห้องมุม ห้องสวย แต่งครบ"
                     />
@@ -136,7 +136,7 @@ export function QuickInfoSection({
                       </SelectTrigger>
                     </FormControl>
 
-                    <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px] p-4 min-w-[var(--radix-select-trigger-width)]">
+                    <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px] p-4 min-w-(--radix-select-trigger-width)">
                       <SelectGroup>
                         <SelectItem
                           value="none"

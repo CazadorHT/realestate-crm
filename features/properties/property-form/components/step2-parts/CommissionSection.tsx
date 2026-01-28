@@ -58,7 +58,7 @@ export function CommissionSection({
   if (!showSale && !showRent) return null;
 
   return (
-    <Card className="border-blue-200 shadow-sm bg-gradient-to-br from-blue-50/50 via-white to-blue-50/20">
+    <Card className="border-blue-200 shadow-sm bg-linear-to-br from-blue-50/50 via-white to-blue-50/20">
       <CardHeader className="pb-4 border-b border-blue-100">
         <SectionHeader
           icon={Percent}

@@ -44,11 +44,11 @@ export function PropertyFormStepper({
     <div className="bg-white py-6 rounded-2xl shadow-sm border border-slate-100 mb-6 px-4">
       <div className="relative w-full max-w-5xl mx-auto">
         {/* Background Line */}
-        <div className="absolute top-5 left-[10%] w-[80%] h-0.5 bg-slate-100 -z-0" />
+        <div className="absolute top-5 left-[10%] w-[80%] h-0.5 bg-slate-100 z-0" />
 
         {/* Active Line */}
         <div
-          className="absolute top-5 left-[10%] h-0.5 bg-blue-600 transition-all duration-700 ease-in-out -z-0"
+          className="absolute top-5 left-[10%] h-0.5 bg-blue-600 transition-all duration-700 ease-in-out z-0"
           style={{ width: `${(currentStep - 1) * 20}%` }}
         />
 

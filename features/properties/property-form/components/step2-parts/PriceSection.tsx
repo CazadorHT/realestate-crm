@@ -137,7 +137,7 @@ export function PriceSection({
                   salePrice &&
                   saleOriginal <= salePrice && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm flex gap-3 text-amber-800">
-                      <Info className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                      <Info className="h-5 w-5 shrink-0 mt-0.5" />
                       <div>
                         <p className="font-bold">ตรวจสอบราคา</p>
                         <p className="text-xs opacity-90">
@@ -312,7 +312,7 @@ export function PriceSection({
                   rentPrice &&
                   rentOriginal <= rentPrice && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm flex gap-3 text-amber-800">
-                      <Info className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                      <Info className="h-5 w-5 shrink-0 mt-0.5" />
                       <div>
                         <p className="font-bold">ตรวจสอบราคา</p>
                         <p className="text-xs opacity-90">
@@ -367,7 +367,7 @@ export function PriceSection({
                         rentPrice &&
                         rentOriginal <= rentPrice && (
                           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm flex gap-3 text-amber-800 animate-in fade-in slide-in-from-top-1">
-                            <Info className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                            <Info className="h-5 w-5 shrink-0 mt-0.5" />
                             <div>
                               <p className="font-bold">ตรวจสอบราคา</p>
                               <p className="text-xs opacity-90">
@@ -480,7 +480,7 @@ export function PriceSection({
 
         {/* Tips Footer */}
         <div className="mt-8 rounded-xl bg-slate-50 p-4 border border-slate-100 flex gap-3 text-slate-600">
-          <Sparkles className="h-5 w-5 text-yellow-500 flex-shrink-0" />
+          <Sparkles className="h-5 w-5 text-yellow-500 shrink-0" />
           <p className="text-xs leading-relaxed">
             <span className="font-semibold text-slate-800">Tips:</span>{" "}
             การใส่ส่วนลด (ราคาพิเศษ) จะช่วยให้ประกาศของคุณติดป้าย{" "}

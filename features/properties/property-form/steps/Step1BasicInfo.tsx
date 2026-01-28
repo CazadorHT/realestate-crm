@@ -173,7 +173,7 @@ function Step1BasicInfoComponent({
                         }}
                         className={`rounded-xl border transition-all duration-300 flex flex-col items-center justify-center gap-3 p-2 group ${
                           isActive
-                            ? `bg-gradient-to-br ${gradient} text-white shadow-xl scale-105 border-transparent`
+                            ? `bg-linear-to-br ${gradient} text-white shadow-xl scale-105 border-transparent`
                             : propertyTypeError
                               ? "border-red-300 bg-red-50 text-red-500 shadow-md hover:border-red-400 hover:bg-white"
                               : "border-slate-100 bg-slate-50 text-slate-500 shadow-md hover:bg-white hover:text-blue-600 hover:shadow-lg hover:border-blue-200"

@@ -123,7 +123,7 @@ export default async function DealsPage() {
 
       {/* Win Rate Card */}
       {totalDeals > 0 && (
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-100">
+        <Card className="bg-linear-to-r from-blue-50 to-purple-50 border-blue-100">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">

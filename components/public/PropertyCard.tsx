@@ -174,7 +174,7 @@ export function PropertyCard({
       >
         {/* Image Section */}
 
-        <div className="relative aspect-[4/3] sm:aspect-[4/3] md:aspect-square h-auto sm:h-auto md:h-[300px] w-full overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5">
+        <div className="relative aspect-4/3 sm:aspect-4/3 md:aspect-square h-auto sm:h-auto md:h-[300px] w-full overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5">
           {property.image_url ? (
             <Image
               src={property.image_url}
@@ -189,7 +189,7 @@ export function PropertyCard({
               }`}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-              className="object-cover object-top  transform-gpu [will-change:transform] group-hover:scale-125 group:hover:object-contain transition-transform duration-1000 "
+              className="object-cover object-top  transform-gpu will-change-transform group-hover:scale-125 group:hover:object-contain transition-transform duration-1000 "
               priority={priority}
               loading={priority ? "eager" : "lazy"}
             />
@@ -199,7 +199,7 @@ export function PropertyCard({
             </div>
           )}
 
-          <div className="pointer-events-none absolute inset-0 rounded-t-2xl md:rounded-t-3xl bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          <div className="pointer-events-none absolute inset-0 rounded-t-2xl md:rounded-t-3xl bg-linear-to-t from-black/50 via-transparent to-transparent" />
 
           {/* Badge Overlay Container */}
           <div className="absolute top-3 left-3 flex flex-wrap gap-2 z-20">
@@ -264,7 +264,7 @@ export function PropertyCard({
         </div>
 
         {/* Content Section */}
-        <div className="pt-2 pb-4 sm:pb-5 md:pb-6 px-4 sm:px-5 md:px-6 mt-2 sm:mt-2 md:mt-3 gap-y-2 sm:gap-y-2 md:gap-y-3 flex-grow min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col">
+        <div className="pt-2 pb-4 sm:pb-5 md:pb-6 px-4 sm:px-5 md:px-6 mt-2 sm:mt-2 md:mt-3 gap-y-2 sm:gap-y-2 md:gap-y-3 grow min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col">
           <div className="space-y-1 mb-3">
             <div className="flex justify-between items-center mb-2">
               <span

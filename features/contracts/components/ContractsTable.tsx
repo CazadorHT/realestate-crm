@@ -285,7 +285,7 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
               <TableRow>
                 <TableCell colSpan={8} className="h-auto py-0 border-0">
                   {/* Premium Empty State */}
-                  <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-gradient-to-br from-slate-50 to-white p-12 my-4">
+                  <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50 to-white p-12 my-4">
                     {/* Decorative Background */}
                     <div className="absolute inset-0 opacity-5">
                       <div className="absolute top-10 left-10 w-20 h-20 border-4 border-slate-400 rounded-xl rotate-12" />
@@ -297,7 +297,7 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                       {/* Icon */}
                       <div className="relative">
                         <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl scale-150" />
-                        <div className="relative p-6 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-xl shadow-emerald-500/30">
+                        <div className="relative p-6 bg-linear-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-xl shadow-emerald-500/30">
                           <FileText className="h-12 w-12 text-white" />
                         </div>
                       </div>

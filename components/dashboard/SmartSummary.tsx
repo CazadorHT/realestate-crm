@@ -2,7 +2,7 @@ import { Sparkles } from "lucide-react";
 
 export function SmartSummary({ text }: { text?: string }) {
   return (
-    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border border-indigo-100 dark:border-indigo-900 rounded-lg p-4 flex items-start gap-3 shadow-sm">
+    <div className="bg-linear-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border border-indigo-100 dark:border-indigo-900 rounded-lg p-4 flex items-start gap-3 shadow-sm">
       <div className="bg-white dark:bg-indigo-900 p-2 rounded-full shadow-sm mt-0.5">
         <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
       </div>

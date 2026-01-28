@@ -49,7 +49,7 @@ export function MortgageCalculatorSection() {
   };
 
   return (
-    <section className="py-12 md:py-16 px-4 md:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-blue-100 relative overflow-hidden z-0">
+    <section className="py-12 md:py-16 px-4 md:px-6 lg:px-8 bg-linear-to-br from-blue-50 to-blue-100 relative overflow-hidden z-0">
       <SectionBackground pattern="icons" intensity="low" />
       {/* Schema.org Structured Data */}
       <script
@@ -66,7 +66,7 @@ export function MortgageCalculatorSection() {
             </div>
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
               คำนวณ
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
                 สินเชื่อบ้าน
               </span>
               <br />
@@ -155,7 +155,7 @@ export function MortgageCalculatorSection() {
               </div>
 
               {/* Result Section Inside Card */}
-              <div className="bg-gradient-to-tr from-blue-600 to-blue-500 rounded-2xl p-4 md:p-6 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="bg-linear-to-tr from-blue-600 to-blue-500 rounded-2xl p-4 md:p-6 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <p className="text-blue-100 text-xs uppercase font-semibold">
                     ยอดผ่อนต่อเดือน

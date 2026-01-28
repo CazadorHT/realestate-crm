@@ -144,7 +144,7 @@ export default async function DocumentsPage() {
 
       {/* Type Distribution */}
       {topTypes.length > 0 && (
-        <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-100">
+        <Card className="bg-linear-to-r from-purple-50 to-blue-50 border-purple-100">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <Filter className="h-5 w-5 text-purple-600" />

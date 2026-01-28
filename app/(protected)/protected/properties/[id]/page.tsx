@@ -57,7 +57,7 @@ export default async function PropertyDetailsPage({
           category
         )
       )
-    `
+    `,
     )
     .eq("id", id)
     .single();
@@ -72,7 +72,7 @@ export default async function PropertyDetailsPage({
 
   // Process Images (from join)
   const images = (property.property_images || []).sort(
-    (a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    (a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
   );
 
   // Create similar structure for Lightbox if needed, or PropertyGallery
@@ -121,7 +121,7 @@ export default async function PropertyDetailsPage({
     const { data: dealData } = await supabase
       .from("deals")
       .select(
-        "id, deal_type, commission_amount, commission_percent, created_by, status, lead:leads(id, full_name)"
+        "id, deal_type, commission_amount, commission_percent, created_by, status, lead:leads(id, full_name)",
       )
       .eq("property_id", id)
       .eq("status", "CLOSED_WIN")
@@ -145,8 +145,8 @@ export default async function PropertyDetailsPage({
     ? relatedDeal.commission_amount != null
       ? `฿${Number(relatedDeal.commission_amount).toLocaleString()}`
       : relatedDeal.commission_percent != null
-      ? `${Number(relatedDeal.commission_percent).toLocaleString()}%`
-      : "-"
+        ? `${Number(relatedDeal.commission_percent).toLocaleString()}%`
+        : "-"
     : "-";
 
   return (
@@ -179,7 +179,7 @@ export default async function PropertyDetailsPage({
             </div>
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div className="space-y-3 flex-grow min-w-0 max-w-[800px]">
+              <div className="space-y-3 grow min-w-0 max-w-[800px]">
                 {/* Badge and ID in one line */}
                 <div className="flex items-center gap-3">
                   <Badge
@@ -207,7 +207,7 @@ export default async function PropertyDetailsPage({
 
                 {/* Location */}
                 <div className="flex items-center text-slate-600 gap-2 font-normal text-sm">
-                  <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                  <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
                   <span className="line-clamp-1">
                     {locationParts || "ไม่ระบุทำเล"}
                   </span>
@@ -222,7 +222,7 @@ export default async function PropertyDetailsPage({
                       price: number | null,
                       originalPrice: number | null,
                       label: string,
-                      isRent: boolean
+                      isRent: boolean,
                     ) => {
                       const displayPrice = price ?? originalPrice;
 
@@ -242,7 +242,7 @@ export default async function PropertyDetailsPage({
 
                       if (hasDiscount) {
                         const discountPercent = Math.round(
-                          ((originalPrice! - price!) / originalPrice!) * 100
+                          ((originalPrice! - price!) / originalPrice!) * 100,
                         );
 
                         return (
@@ -304,13 +304,13 @@ export default async function PropertyDetailsPage({
                             property.price,
                             property.original_price,
                             "ราคาขาย",
-                            false
+                            false,
                           )}
                           {renderPriceBlock(
                             property.rental_price,
                             property.original_rental_price,
                             "ค่าเช่า",
-                            true
+                            true,
                           )}
                         </>
                       );
@@ -321,7 +321,7 @@ export default async function PropertyDetailsPage({
                         property.rental_price,
                         property.original_rental_price,
                         "ค่าเช่า",
-                        true
+                        true,
                       );
                     }
 
@@ -330,7 +330,7 @@ export default async function PropertyDetailsPage({
                       property.price,
                       property.original_price,
                       "ราคาขาย",
-                      false
+                      false,
                     );
                   })()}
                 </div>

@@ -94,19 +94,19 @@ export function PublicFooter() {
           >
             <div className="flex items-center gap-2 text-white">
               <Link
-                  href="/"
-                  className="hover:scale-105 transition-transform block"
-                >
-                  <Image
-                    // src="/images/oma-asset-logo.svg"
-                    src="/images/brand-logo-dark.svg"
-                    alt="OMA ASSET Logo"
-                    width={220}
-                    height={70}
-                    className="h-[100px] w-auto"
-                    priority
-                  />
-                </Link>
+                href="/"
+                className="hover:scale-105 transition-transform block"
+              >
+                <Image
+                  // src="/images/oma-asset-logo.svg"
+                  src="/images/brand-logo-dark.svg"
+                  alt="OMA ASSET Logo"
+                  width={220}
+                  height={70}
+                  className="h-[100px] w-auto"
+                  priority
+                />
+              </Link>
             </div>
             <p
               className="text-xs md:text-sm leading-relaxed"
@@ -220,7 +220,7 @@ export function PublicFooter() {
                   />
                   <Mail className="absolute left-2.5 md:left-3 top-2.5 md:top-3 h-3 w-3 md:h-4 md:w-4 text-slate-500" />
                 </div>
-                <button className="w-full py-2 md:py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold text-white shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                <button className="w-full py-2 md:py-2.5 bg-linear-to-r from-blue-600 to-purple-600 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold text-white shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
                   สมัครรับข่าวสาร
                 </button>
               </div>

@@ -96,10 +96,10 @@ const businessHours = [
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <main className="min-h-screen bg-linear-to-b from-slate-50 to-white">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-blue-500 text-white py-16 md:py-24">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="bg-linear-to-r from-blue-600 to-blue-500 text-white py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
               ติดต่อเรา
@@ -113,7 +113,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 pb-20">
         {/* Contact Info Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           {contactInfo.map((info, index) => (
@@ -219,7 +219,7 @@ export default function ContactPage() {
             </Card>
 
             {/* Quick Contact CTA */}
-            <Card className="bg-gradient-to-br from-blue-600 to-blue-500 text-white">
+            <Card className="bg-linear-to-br from-blue-600 to-blue-500 text-white">
               <CardContent className="p-6">
                 <h3 className="font-semibold mb-2">ต้องการคำตอบด่วน?</h3>
                 <p className="text-sm text-blue-50 mb-4">

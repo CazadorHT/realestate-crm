@@ -5,7 +5,7 @@ export function HotDealsSkeleton() {
   return (
     <section className="py-28 relative overflow-hidden">
       {/* Background placeholder */}
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-rose-50 -z-20" />
+      <div className="absolute inset-0 bg-linear-to-br from-orange-50 via-white to-rose-50 -z-20" />
 
       <div className="max-w-screen-2xl mx-auto px-4 relative z-10">
         {/* === HEADER SECTION === */}
@@ -35,11 +35,8 @@ export function HotDealsSkeleton() {
         {/* === CARDS SECTION === */}
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 ">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="rounded-[2.5rem] p-1.5 border border-white/50 "
-            >
-              <div className="rounded-[2rem] overflow-hidden bg-white ">
+            <div key={i} className="rounded-4xl p-1.5 border border-white/50 ">
+              <div className="rounded-4xl overflow-hidden bg-white ">
                 <PropertyCardSkeleton />
               </div>
             </div>

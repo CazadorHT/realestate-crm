@@ -43,10 +43,10 @@ function convertToRecentProperty(prop: RecommendedProperty): RecentProperty {
         prop.original_price && prop.original_price > prop.price;
       if (hasDiscount) {
         const discountPercent = Math.round(
-          ((prop.original_price! - prop.price) / prop.original_price!) * 100
+          ((prop.original_price! - prop.price) / prop.original_price!) * 100,
         );
         parts.push(
-          `${formatPrice(prop.original_price!)} (-${discountPercent}%)`
+          `${formatPrice(prop.original_price!)} (-${discountPercent}%)`,
         );
       } else {
         parts.push(formatPrice(prop.price));
@@ -60,10 +60,10 @@ function convertToRecentProperty(prop: RecommendedProperty): RecentProperty {
         const discountPercent = Math.round(
           ((prop.original_rental_price! - prop.rental_price) /
             prop.original_rental_price!) *
-            100
+            100,
         );
         parts.push(
-          `${formatPrice(prop.original_rental_price!)}/ด (-${discountPercent}%)`
+          `${formatPrice(prop.original_rental_price!)}/ด (-${discountPercent}%)`,
         );
       } else {
         parts.push(`${formatPrice(prop.rental_price)}/ด`);
@@ -75,10 +75,10 @@ function convertToRecentProperty(prop: RecommendedProperty): RecentProperty {
       prop.original_price && prop.price && prop.original_price > prop.price;
     if (hasDiscount) {
       const discountPercent = Math.round(
-        ((prop.original_price! - prop.price!) / prop.original_price!) * 100
+        ((prop.original_price! - prop.price!) / prop.original_price!) * 100,
       );
       price_text = `${formatPrice(
-        prop.original_price!
+        prop.original_price!,
       )} (-${discountPercent}%)`;
     } else if (prop.price) {
       price_text = formatPrice(prop.price);
@@ -92,10 +92,10 @@ function convertToRecentProperty(prop: RecommendedProperty): RecentProperty {
       const discountPercent = Math.round(
         ((prop.original_rental_price! - prop.rental_price!) /
           prop.original_rental_price!) *
-          100
+          100,
       );
       price_text = `${formatPrice(
-        prop.original_rental_price!
+        prop.original_rental_price!,
       )}/ด (-${discountPercent}%)`;
     } else if (prop.rental_price) {
       price_text = `${formatPrice(prop.rental_price)}/ด`;
@@ -299,7 +299,7 @@ export function RecentlyViewedClient({
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] bg-white rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 overflow-hidden"
+                className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] bg-white rounded-[1.5rem] md:rounded-4xl border border-slate-100 overflow-hidden"
               >
                 <Skeleton className="h-36 md:h-44 w-full rounded-none" />
                 <div className="p-5 space-y-3">
@@ -374,7 +374,7 @@ export function RecentlyViewedClient({
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
                 {showingRecommended ? (
                   <>
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
+                    <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-600 to-orange-600">
                       บ้าน คอนโด สำนักงานออฟฟิศ
                     </span>
                     <br className="hidden md:block" />
@@ -382,7 +382,7 @@ export function RecentlyViewedClient({
                   </>
                 ) : (
                   <>
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                    <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
                       บ้าน คอนโด สำนักงานออฟฟิศ
                     </span>
                     <br className="hidden md:block" />
@@ -450,7 +450,7 @@ export function RecentlyViewedClient({
                     ? `/properties/${item.slug}`
                     : `/properties/${item.id}`
                 }
-                className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] bg-white rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-blue-500/10 transition-all duration-500 snap-start flex-shrink-0 group relative isolate hover:-translate-y-1"
+                className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] bg-white rounded-[1.5rem] md:rounded-4xl border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-blue-500/10 transition-all duration-500 snap-start shrink-0 group relative isolate hover:-translate-y-1"
                 {...(!disableAos && { "data-aos": "fade-left" })}
                 onClick={(e) => {
                   if (isDragging) e.preventDefault();
@@ -537,15 +537,15 @@ export function RecentlyViewedClient({
                           item.listing_type === "SALE"
                             ? "bg-green-600 text-white"
                             : item.listing_type === "RENT"
-                            ? "bg-orange-600 text-white"
-                            : "bg-blue-600 text-white"
+                              ? "bg-orange-600 text-white"
+                              : "bg-blue-600 text-white"
                         }`}
                       >
                         {item.listing_type === "SALE"
                           ? "ขาย"
                           : item.listing_type === "RENT"
-                          ? "เช่า"
-                          : "ขาย/เช่า"}
+                            ? "เช่า"
+                            : "ขาย/เช่า"}
                       </span>
                     )}
                   </div>

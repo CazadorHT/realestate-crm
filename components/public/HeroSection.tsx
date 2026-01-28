@@ -31,7 +31,7 @@ export function HeroSection() {
   return (
     <div className="relative pt-16 sm:pt-18 lg:pt-20 min-h-screen bg-[url('/images/hero-realestate.png')] bg-cover bg-center bg-no-repeat overflow-x-hidden">
       {/* Gradient Overlay สำหรับความคมของ text */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+      <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/70" />
 
       {/* Optional Vignette Effect */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
@@ -68,7 +68,7 @@ export function HeroSection() {
                 <Link href="/properties">
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:brightness-125 transition-all duration-500 animate-in fade-in-0 slide-in-from-bottom-4"
+                    className="w-full sm:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl shadow-lg hover:shadow-xl bg-linear-to-r from-blue-600 to-blue-500 hover:brightness-125 transition-all duration-500 animate-in fade-in-0 slide-in-from-bottom-4"
                   >
                     เริ่มค้นหาบ้านในฝัน
                     <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />

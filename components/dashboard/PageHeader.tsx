@@ -65,7 +65,7 @@ export function PageHeader({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${GRADIENT_MAP[gradient]} p-6 md:p-8 shadow-xl`}
+      className={`relative overflow-hidden rounded-2xl bg-linear-to-r ${GRADIENT_MAP[gradient]} p-6 md:p-8 shadow-xl`}
     >
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />

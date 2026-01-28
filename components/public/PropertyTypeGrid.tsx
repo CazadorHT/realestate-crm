@@ -53,14 +53,14 @@ export function PropertyTypeCard({
       <div className="group relative bg-white rounded-2xl py-6 px-4 shadow-lg border border-slate-100 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
         {/* Gradient Background on Hover */}
         <div
-          className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-5 transition-opacity`}
+          className={`absolute inset-0 bg-linear-to-br ${gradient} opacity-0 group-hover:opacity-5 transition-opacity`}
         ></div>
 
         {/* Content */}
         <div className="relative z-10">
           {/* Icon */}
           <div
-            className={`w-16 h-16 mx-auto rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
+            className={`w-16 h-16 mx-auto rounded-xl bg-linear-to-br ${gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
           >
             <Icon className="h-8 w-8 text-white" />
           </div>
@@ -189,7 +189,7 @@ export function PropertyTypeGrid({
         <div className="text-center mb-10" data-aos="fade-up">
           <h2 className="text-2xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
             ค้นหา{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
               บ้าน คอนโด สำนักงานออฟฟิศ
             </span>{" "}
             ตามประเภท

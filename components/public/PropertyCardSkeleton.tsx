@@ -5,7 +5,7 @@ export function PropertyCardSkeleton() {
       <div className="relative h-[300px] w-full animate-pulse bg-slate-200" />
 
       {/* Content Section Skeleton */}
-      <div className="pt-4 pb-6 px-6 space-y-4 flex-grow min-h-[250px]">
+      <div className="pt-4 pb-6 px-6 space-y-4 grow min-h-[250px]">
         {/* Badge & Price Row */}
         <div className="flex justify-between items-start">
           {/* Badge Type */}
@@ -38,7 +38,7 @@ export function PropertyCardSkeleton() {
       </div>
 
       {/* Footer Section Skeleton */}
-      <div className="h-28 px-4 py-3 border-t border-slate-100 bg-slate-50 flex-shrink-0 flex flex-col justify-between">
+      <div className="h-28 px-4 py-3 border-t border-slate-100 bg-slate-50 shrink-0 flex flex-col justify-between">
         {/* Price/Type Section */}
         <div className="space-y-2">
           <div className="h-3 w-10 bg-slate-200 rounded animate-pulse" />

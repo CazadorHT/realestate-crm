@@ -20,7 +20,7 @@ export function CTASection() {
   };
 
   return (
-    <section className="py-12 md:py-16 lg:py-24 px-4 md:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50 relative overflow-hidden z-0">
+    <section className="py-12 md:py-16 lg:py-24 px-4 md:px-6 lg:px-8 bg-linear-to-br from-blue-50 via-purple-50 to-blue-50 relative overflow-hidden z-0">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
@@ -30,7 +30,7 @@ export function CTASection() {
       {/* Background Pattern */}
       <SectionBackground pattern="blobs" intensity="medium" />
 
-      <div className="max-w-screen-xl mx-auto text-center space-y-6 md:space-y-8 relative z-10">
+      <div className="max-w-7xl mx-auto text-center space-y-6 md:space-y-8 relative z-10">
         {/* Trust Stats */}
         <div
           className="flex flex-wrap justify-center gap-3 md:gap-6 mb-6 md:mb-8"
@@ -74,7 +74,7 @@ export function CTASection() {
         >
           <span className="text-slate-900">พร้อมค้นหา</span>
           <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600">
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
             บ้าน คอนโด ออฟฟิศ
           </span>
           <br />
@@ -101,7 +101,7 @@ export function CTASection() {
           <Link href="/properties">
             <Button
               size="lg"
-              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl hover:shadow-2xl transition-all hover:scale-105 w-full sm:w-auto"
+              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl hover:shadow-2xl transition-all hover:scale-105 w-full sm:w-auto"
             >
               <Search className="h-4 w-4 md:h-5 md:w-5 mr-2" />
               เริ่มค้นหาเลย

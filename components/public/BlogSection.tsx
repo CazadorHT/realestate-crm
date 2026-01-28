@@ -89,7 +89,7 @@ export function BlogSection() {
         {/* SEO-Optimized Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 md:mb-8 gap-3">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100 mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-linear-to-r from-blue-50 to-purple-50 border border-blue-100 mb-2">
               <BookOpen className="w-3.5 h-3.5 text-blue-600" />
               <span className="text-xs font-bold text-blue-700">
                 บทความอสังหาริมทรัพย์
@@ -97,7 +97,7 @@ export function BlogSection() {
             </div>
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
               เคล็ดลับ
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
                 {" "}
                 บ้าน คอนโด ออฟฟิศ
               </span>
@@ -180,7 +180,7 @@ export function BlogSection() {
                           itemProp="image"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-300 bg-gradient-to-br from-slate-50 to-slate-100">
+                        <div className="w-full h-full flex items-center justify-center text-slate-300 bg-linear-to-br from-slate-50 to-slate-100">
                           <BookOpen className="w-12 h-12 opacity-20" />
                         </div>
                       )}
@@ -190,7 +190,7 @@ export function BlogSection() {
                         </Badge>
                       )}
                       {/* Gradient overlay on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute inset-0 bg-linear-to-t from-blue-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
 
                     {/* Content */}
@@ -208,7 +208,7 @@ export function BlogSection() {
                                 year: "numeric",
                                 month: "long",
                                 day: "numeric",
-                              }
+                              },
                             )}
                           </time>
                         </div>
@@ -218,7 +218,7 @@ export function BlogSection() {
                       </div>
 
                       <h3
-                        className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300"
+                        className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300"
                         itemProp="name"
                       >
                         {post.title}

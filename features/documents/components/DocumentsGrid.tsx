@@ -109,7 +109,7 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                       onCheckedChange={() => toggleSelect(doc.id)}
                       aria-label={`เลือก ${doc.file_name}`}
                     />
-                    <div className="h-12 w-12 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0 border border-blue-200">
+                    <div className="h-12 w-12 bg-linear-to-br from-blue-50 to-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0 border border-blue-200">
                       <FileText className="h-6 w-6" />
                     </div>
                     <div className="min-w-0 flex-1">

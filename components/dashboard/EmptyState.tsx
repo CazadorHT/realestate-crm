@@ -47,7 +47,7 @@ export function EmptyState({
   const ActionIcon = ICON_MAP[actionIcon] || PlusCircle;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-gradient-to-br from-slate-50 to-white p-12">
+    <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50 to-white p-12">
       {/* Decorative Background */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-10 left-10 w-20 h-20 border-4 border-slate-400 rounded-xl rotate-12" />
@@ -59,7 +59,7 @@ export function EmptyState({
         {/* Icon */}
         <div className="relative">
           <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl scale-150" />
-          <div className="relative p-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/30">
+          <div className="relative p-6 bg-linear-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/30">
             <Icon className="h-12 w-12 text-white" />
           </div>
         </div>
@@ -75,7 +75,7 @@ export function EmptyState({
           <Button
             asChild
             size="lg"
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8"
+            className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8"
           >
             <Link href={actionHref}>
               <ActionIcon className="h-5 w-5 mr-2" />

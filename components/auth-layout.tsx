@@ -20,7 +20,7 @@ export function AuthLayout({
   return (
     <div className="min-h-screen flex animate-in fade-in duration-500">
       {/* Left Side - Branding & Visual */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-purple-600 to-blue-700 p-12 flex-col justify-between relative overflow-hidden animate-in slide-in-from-left duration-1000 ease-in-out">
+      <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-blue-600 via-purple-600 to-blue-700 p-12 flex-col justify-between relative overflow-hidden animate-in slide-in-from-left duration-1000 ease-in-out">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl animate-[blob_7s_infinite]"></div>

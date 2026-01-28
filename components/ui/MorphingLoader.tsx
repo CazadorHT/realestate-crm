@@ -1,8 +1,4 @@
-
-
-
-
-"use client"
+"use client";
 
 import { useEffect, useState } from "react";
 import {
@@ -39,7 +35,7 @@ export function MorphingLoader({ className }: { className?: string }) {
     <div
       className={cn(
         "flex flex-col items-center justify-center min-h-[400px] w-full",
-        className
+        className,
       )}
     >
       <div className="relative flex items-center justify-center h-24 w-24">
@@ -48,12 +44,12 @@ export function MorphingLoader({ className }: { className?: string }) {
         <div className="absolute inset-0 rounded-full border-4 border-slate-100" />
 
         {/* Gradient Background */}
-        <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-slate-50 to-white shadow-sm flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-2 rounded-full bg-linear-to-tr from-slate-50 to-white shadow-sm flex items-center justify-center overflow-hidden">
           <CurrentIcon
             className={cn(
               "h-10 w-10 transition-all duration-500 transform",
               currentColor,
-              "animate-in zoom-in-50 fade-in-0 slide-in-from-bottom-2"
+              "animate-in zoom-in-50 fade-in-0 slide-in-from-bottom-2",
             )}
             key={index} // Force re-render for animation
           />

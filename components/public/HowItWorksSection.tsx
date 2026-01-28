@@ -10,21 +10,21 @@ import { SectionBackground } from "./SectionBackground";
 
 const STEP_TONES = {
   blue: {
-    badge: "bg-gradient-to-r from-blue-500 to-blue-600",
+    badge: "bg-linear-to-r from-blue-500 to-blue-600",
     iconWrap: "bg-blue-50 group-hover:bg-blue-100",
     icon: "text-blue-600",
     cta: "text-blue-600",
     connector: "from-blue-200 to-purple-200",
   },
   purple: {
-    badge: "bg-gradient-to-r from-purple-500 to-purple-600",
+    badge: "bg-linear-to-r from-purple-500 to-purple-600",
     iconWrap: "bg-purple-50 group-hover:bg-purple-100",
     icon: "text-purple-600",
     cta: "text-purple-600",
     connector: "from-purple-200 to-green-200",
   },
   green: {
-    badge: "bg-gradient-to-r from-green-500 to-green-600",
+    badge: "bg-linear-to-r from-green-500 to-green-600",
     iconWrap: "bg-green-50 group-hover:bg-green-100",
     icon: "text-green-600",
     cta: "text-green-600",
@@ -105,7 +105,7 @@ export function HowItWorksSection() {
           className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"
           data-aos="fade-up"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-blue-50 to-purple-50 border border-blue-100">
             <Sparkles className="w-4 h-4 text-blue-600" />
             <span className="text-sm font-bold text-blue-700">
               ง่ายเพียง 3 ขั้นตอน
@@ -115,7 +115,7 @@ export function HowItWorksSection() {
           <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
             วิธีค้นหาและซื้อ
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
               บ้าน คอนโด สำนักงานออฟฟิศ
             </span>
           </h2>
@@ -135,8 +135,8 @@ export function HowItWorksSection() {
           {/* Connector Lines (Desktop only) */}
           <div className="hidden md:block absolute top-20 left-0 right-0 h-1">
             <div className="absolute left-[16.66%] right-[16.66%] h-full flex">
-              <div className="flex-1 bg-gradient-to-r from-blue-200 to-purple-200 mx-8" />
-              <div className="flex-1 bg-gradient-to-r from-purple-200 to-green-200 mx-8" />
+              <div className="flex-1 bg-linear-to-r from-blue-200 to-purple-200 mx-8" />
+              <div className="flex-1 bg-linear-to-r from-purple-200 to-green-200 mx-8" />
             </div>
           </div>
 
@@ -170,7 +170,7 @@ export function HowItWorksSection() {
                     </div>
 
                     {/* Content */}
-                    <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
                       {item.title}
                     </h3>
                     <p className="text-sm md:text-base text-slate-600 leading-relaxed mb-3 md:mb-4">
@@ -187,9 +187,9 @@ export function HowItWorksSection() {
 
                     {/* Decorative gradient overlay */}
                     <div
-                      className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${t.badge.replace(
-                        "bg-gradient-to-r",
-                        "bg-gradient-to-br"
+                      className={`absolute top-0 right-0 w-32 h-32 bg-linear-to-br ${t.badge.replace(
+                        "bg-linear-to-r",
+                        "bg-linear-to-br",
                       )} opacity-0 group-hover:opacity-5 rounded-bl-full transition-opacity duration-500`}
                     />
                   </div>
@@ -208,7 +208,7 @@ export function HowItWorksSection() {
           <p className="text-sm md:text-base text-slate-600 mb-3 md:mb-4">
             พร้อมเริ่มต้นค้นหาทรัพย์สินในฝันแล้วหรือยัง?
           </p>
-          <button className="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm md:text-base font-bold rounded-xl md:rounded-2xl hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105">
+          <button className="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-linear-to-r from-blue-600 to-purple-600 text-white text-sm md:text-base font-bold rounded-xl md:rounded-2xl hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105">
             เริ่มต้นเลย
             <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
           </button>

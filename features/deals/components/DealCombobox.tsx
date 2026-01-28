@@ -54,7 +54,7 @@ export function DealCombobox({
 
   const selected = useMemo(
     () => items.find((x) => x.id === value) ?? null,
-    [items, value]
+    [items, value],
   );
 
   async function fetchPage(nextPage = 1, currentQ = q) {
@@ -94,7 +94,7 @@ export function DealCombobox({
 
       setHasMore(
         (payload.data ?? []).length === pageSize &&
-          items.length + pageItems.length < (payload.count ?? 0)
+          items.length + pageItems.length < (payload.count ?? 0),
       );
       setPage(nextPage);
     } catch (err) {
@@ -133,7 +133,7 @@ export function DealCombobox({
             variant="outline"
             className={cn(
               "w-full justify-between h-auto py-2.5 px-3 text-left border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-200 shadow-sm",
-              value && "pr-10 border-blue-200 bg-blue-50/20"
+              value && "pr-10 border-blue-200 bg-blue-50/20",
             )}
           >
             <div className="flex flex-col items-start truncate overflow-hidden">
@@ -153,7 +153,7 @@ export function DealCombobox({
               )}
             </div>
             {!value && (
-              <ChevronsUpDown className="h-4 w-4 opacity-40 flex-shrink-0 ml-2 text-slate-500" />
+              <ChevronsUpDown className="h-4 w-4 opacity-40 shrink-0 ml-2 text-slate-500" />
             )}
           </Button>
         </PopoverTrigger>

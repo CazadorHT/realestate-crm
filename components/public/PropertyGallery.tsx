@@ -53,7 +53,7 @@ export function PropertyGallery({
 
   const handlePrev = useCallback(() => {
     setCurrentIndex(
-      (prev) => (prev - 1 + sortedImages.length) % sortedImages.length
+      (prev) => (prev - 1 + sortedImages.length) % sortedImages.length,
     );
   }, [sortedImages.length]);
 
@@ -92,7 +92,7 @@ export function PropertyGallery({
           <div className="absolute -top-3 -left-3 md:-top-5 md:-left-5 z-30 pointer-events-none">
             <div className="relative">
               <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
-              <div className="relative bg-gradient-to-br from-red-500 to-orange-600 text-white p-1.5 md:p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-1 transition-all duration-300 scale-100 md:scale-110">
+              <div className="relative bg-linear-to-br from-red-500 to-orange-600 text-white p-1.5 md:p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-1 transition-all duration-300 scale-100 md:scale-110">
                 <Sparkles className="h-4 w-4 md:h-6 md:w-6 fill-yellow-200" />
               </div>
             </div>
@@ -142,7 +142,7 @@ export function PropertyGallery({
             {sortedImages.map((img, idx) => (
               <div
                 key={img.id}
-                className="flex-shrink-0 w-full h-full snap-center relative bg-slate-200"
+                className="shrink-0 w-full h-full snap-center relative bg-slate-200"
                 onClick={() => {
                   setCurrentIndex(idx);
                   setOpen(true);
@@ -210,7 +210,7 @@ export function PropertyGallery({
             {Array.from({ length: Math.max(0, 4 - subImages.length) }).map(
               (_, i) => (
                 <div key={`empty-${i}`} className="bg-slate-50" />
-              )
+              ),
             )}
           </div>
 
@@ -232,15 +232,15 @@ export function PropertyGallery({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           className="
-              !fixed !inset-0
-              !left-0 !top-0
-              !translate-x-0 !translate-y-0
-              !w-screen !h-screen
-              !max-w-none
-              !rounded-none
+              fixed! inset-0!
+              left-0! top-0!
+              translate-x-0! translate-y-0!
+              w-screen! h-screen!
+              max-w-none!
+              rounded-none!
               p-0 border-none bg-black/85
               flex flex-col items-center justify-center
-              z-[100]"
+              z-100"
           showCloseButton={false}
         >
           <VisuallyHidden>
@@ -311,10 +311,10 @@ export function PropertyGallery({
                 key={img.id}
                 onClick={() => setCurrentIndex(idx)}
                 className={cn(
-                  "relative w-12 h-12 md:w-20 md:h-20 rounded-md md:rounded-lg overflow-hidden border-2 transition-all flex-shrink-0",
+                  "relative w-12 h-12 md:w-20 md:h-20 rounded-md md:rounded-lg overflow-hidden border-2 transition-all shrink-0",
                   currentIndex === idx
                     ? "border-white scale-105 md:scale-110 shadow-lg"
-                    : "border-white/30 opacity-60 hover:opacity-100 hover:border-white/60"
+                    : "border-white/30 opacity-60 hover:opacity-100 hover:border-white/60",
                 )}
               >
                 <Image

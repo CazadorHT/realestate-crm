@@ -188,7 +188,7 @@ export default async function PublicPropertyDetailPage(props: {
             </div>
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div className="space-y-3 flex-grow min-w-0 max-w-[800px]">
+              <div className="space-y-3 grow min-w-0 max-w-[800px]">
                 {/* Badge and ID in one line */}
                 <div className="flex items-center gap-3">
                   <Badge
@@ -211,7 +211,7 @@ export default async function PublicPropertyDetailPage(props: {
                 </h2>
 
                 <div className="flex items-center text-slate-600 gap-2 font-normal text-sm">
-                  <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                  <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
                   <span className="line-clamp-1">
                     {locationParts || "ไม่ระบุทำเล"}
                   </span>

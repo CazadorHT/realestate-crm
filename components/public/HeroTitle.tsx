@@ -29,12 +29,12 @@ export function HeroTitle() {
         <div className="inline-block ml-2 sm:ml-3 relative">
           <span
             key={index}
-            className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-8 duration-700 flex items-center h-full leading-normal"
+            className="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-8 duration-700 flex items-center h-full leading-normal"
           >
             {words[index]}
           </span>
         </div>
-        <div className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent leading-normal">
+        <div className="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent leading-normal">
           ที่ใช่สำหรับคุณ
         </div>
       </h1>

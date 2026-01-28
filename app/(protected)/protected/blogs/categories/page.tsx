@@ -21,7 +21,7 @@ export default async function CategoriesPage() {
     categories?.map((cat) => {
       const postCount = posts.filter((p) => p.category === cat.name).length;
       const publishedCount = posts.filter(
-        (p) => p.category === cat.name && p.is_published
+        (p) => p.category === cat.name && p.is_published,
       ).length;
       return {
         ...cat,
@@ -163,10 +163,10 @@ export default async function CategoriesPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-blue-100">
+          <Card className="bg-linear-to-br from-blue-50 to-purple-50 border-blue-100">
             <CardContent className="pt-6">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
                   <Tag className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>

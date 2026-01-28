@@ -66,7 +66,7 @@ export function PartnerSection() {
         {/* SEO-Optimized Header Section */}
         <div className="text-center mb-8 md:mb-10 lg:mb-12" data-aos="fade-up">
           <h2 className="text-2xl md:text-4xl font-bold text-slate-900 mb-3">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
               พันธมิตร
             </span>
             อสังหาริมทรัพย์ชั้นนำ
@@ -101,7 +101,7 @@ export function PartnerSection() {
           style={{ "--gap": "3rem" } as React.CSSProperties}
         >
           <div className="flex w-full overflow-hidden mask-linear-fade">
-            <div className="flex min-w-full shrink-0 animate-marquee items-center justify-around gap-[var(--gap)] py-4">
+            <div className="flex min-w-full shrink-0 animate-marquee items-center justify-around gap-(--gap) py-4">
               {loading
                 ? Array.from({ length: 8 }).map((_, idx) => (
                     <div
@@ -124,8 +124,8 @@ export function PartnerSection() {
                           partner.category === "bank"
                             ? " ธนาคารสินเชื่อบ้าน"
                             : partner.category === "developer"
-                            ? " ผู้พัฒนาโครงการ"
-                            : ""
+                              ? " ผู้พัฒนาโครงการ"
+                              : ""
                         }`}
                         title={partner.name}
                         className="h-16 w-auto md:h-20 object-contain hover:scale-110 transition-transform duration-300 "
@@ -136,7 +136,7 @@ export function PartnerSection() {
             {/* Duplicate for seamless loop */}
             <div
               aria-hidden="true"
-              className="flex min-w-full shrink-0 animate-marquee items-center justify-around gap-[var(--gap)] py-4 ml-[var(--gap)]
+              className="flex min-w-full shrink-0 animate-marquee items-center justify-around gap-(--gap) py-4 ml-(--gap)
               "
             >
               {loading
@@ -161,8 +161,8 @@ export function PartnerSection() {
                           partner.category === "bank"
                             ? " ธนาคารสินเชื่อบ้าน"
                             : partner.category === "developer"
-                            ? " ผู้พัฒนาโครงการ"
-                            : ""
+                              ? " ผู้พัฒนาโครงการ"
+                              : ""
                         }`}
                         title={partner.name}
                         className="h-16 w-auto md:h-20 object-contain hover:scale-110 transition-transform duration-300 "

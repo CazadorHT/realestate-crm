@@ -45,9 +45,8 @@ export function SmartMatchWizard() {
   useEffect(() => {
     async function loadAreas() {
       try {
-        const { getPopularAreasAction } = await import(
-          "@/features/properties/actions"
-        );
+        const { getPopularAreasAction } =
+          await import("@/features/properties/actions");
         const data = await getPopularAreasAction();
         if (data.length > 0) {
           setPopularAreas(data);
@@ -75,14 +74,14 @@ export function SmartMatchWizard() {
     step === 1
       ? 0
       : step === 1.5
-      ? 1
-      : step === 2
-      ? 2
-      : step === 2.5
-      ? 3
-      : step === 3
-      ? 4
-      : 5;
+        ? 1
+        : step === 2
+          ? 2
+          : step === 2.5
+            ? 3
+            : step === 3
+              ? 4
+              : 5;
   const totalSteps = 5;
 
   const handleSearch = async () => {
@@ -284,7 +283,7 @@ interface QuizQuestionProps {
 function QuizQuestion({ title, options, onSelect }: QuizQuestionProps) {
   return (
     <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex flex-col h-full">
-      <h2 className="text-2xl sm:text-3xl font-medium md:text-2xl mb-4 sm:mb-6 text-slate-900 flex-shrink-0">
+      <h2 className="text-2xl sm:text-3xl font-medium md:text-2xl mb-4 sm:mb-6 text-slate-900 shrink-0">
         {title}
       </h2>
       <div className="overflow-y-auto pr-2 flex-1 custom-scrollbar">
@@ -331,7 +330,7 @@ function ResultsContainer({
 }) {
   const [showForm, setShowForm] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<PropertyMatch | null>(
-    null
+    null,
   );
 
   if (matches.length === 0) {
@@ -363,7 +362,7 @@ function ResultsContainer({
 
   return (
     <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex-1 flex flex-col min-h-0">
-      <div className="bg-green-50 text-green-700 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-4 border border-green-200 flex-shrink-0">
+      <div className="bg-green-50 text-green-700 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-4 border border-green-200 shrink-0">
         <span className="text-lg">🏆</span>
         พบ {matches.length} ทรัพย์สินที่เหมาะกับคุณ
       </div>
@@ -386,7 +385,7 @@ function ResultsContainer({
 
       <button
         onClick={onReset}
-        className="w-full mt-auto text-sm text-slate-500 hover:text-blue-600 transition-colors flex-shrink-0 pt-4"
+        className="w-full mt-auto text-sm text-slate-500 hover:text-blue-600 transition-colors shrink-0 pt-4"
       >
         ← ค้นหาใหม่อีกครั้ง
       </button>
@@ -421,7 +420,7 @@ function ResultCard({
         className="block"
       >
         <div className="flex gap-4">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden shrink-0 bg-slate-200">
             <img
               src={match.image_url}
               alt={match.title}
@@ -522,7 +521,7 @@ function ResultCard({
 
       <Button
         onClick={onSelect}
-        className="w-full mt-4 h-9 text-xs bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+        className="w-full mt-4 h-9 text-xs bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
       >
         สนใจนัดชม/สอบถามข้อมูล
       </Button>
@@ -548,7 +547,7 @@ function LeadForm({
     lineId: "",
   });
   const [errors, setErrors] = useState<{ fullName?: boolean; phone?: boolean }>(
-    {}
+    {},
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -625,7 +624,7 @@ function LeadForm({
         </div>
 
         <div className="bg-slate-50 rounded-xl p-3 mb-6 flex gap-3 border border-slate-100">
-          <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-200">
+          <div className="w-24 h-24 rounded-lg overflow-hidden shrink-0 bg-slate-200">
             <img
               src={match.image_url}
               className="w-full h-full object-cover"
@@ -729,7 +728,7 @@ function LeadForm({
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg mt-4"
+            className="w-full h-11 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg mt-4"
           >
             {isSubmitting
               ? "กำลังส่งข้อมูล..."

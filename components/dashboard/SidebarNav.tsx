@@ -224,7 +224,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
     <aside className="hidden w-72 flex-col border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 sm:flex shadow-sm z-40 h-screen sticky top-0">
       <div className="p-8 pb-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/30">
+          <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/30">
             <Building2 className="text-white h-6 w-6" />
           </div>
           <div>

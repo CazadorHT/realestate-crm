@@ -41,7 +41,7 @@ export default async function ProfilePage() {
     <div className="mx-auto p-4 md:p-6 space-y-6">
       {/* Header */}
       <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent">
           โปรไฟล์ของฉัน
         </h1>
         <p className="text-muted-foreground text-sm sm:text-base">
@@ -56,7 +56,7 @@ export default async function ProfilePage() {
         <div className="lg:col-span-4 space-y-6">
           {/* Identity Card */}
           <Card className="overflow-hidden border-slate-200 dark:border-slate-700 shadow-sm">
-            <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90"></div>
+            <div className="h-24 bg-linear-to-r from-blue-600 to-indigo-600 opacity-90"></div>
             <CardContent className="pt-0 relative px-6 pb-6">
               <div className="-mt-12 mb-4 flex justify-center">
                 <ProfileAvatar

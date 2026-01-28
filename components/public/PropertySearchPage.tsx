@@ -121,7 +121,7 @@ export function PropertySearchPage() {
           p.title.toLowerCase().includes(k) ||
           (p.description || "").toLowerCase().includes(k) ||
           (p.popular_area || "").toLowerCase().includes(k) ||
-          (p.province || "").toLowerCase().includes(k)
+          (p.province || "").toLowerCase().includes(k),
       );
     }
 
@@ -135,12 +135,14 @@ export function PropertySearchPage() {
       if (listingType === "SALE") {
         // Show SALE or SALE_AND_RENT
         result = result.filter(
-          (p) => p.listing_type === "SALE" || p.listing_type === "SALE_AND_RENT"
+          (p) =>
+            p.listing_type === "SALE" || p.listing_type === "SALE_AND_RENT",
         );
       } else if (listingType === "RENT") {
         // Show RENT or SALE_AND_RENT
         result = result.filter(
-          (p) => p.listing_type === "RENT" || p.listing_type === "SALE_AND_RENT"
+          (p) =>
+            p.listing_type === "RENT" || p.listing_type === "SALE_AND_RENT",
         );
       } else if (listingType === "SALE_AND_RENT") {
         // Show strictly SALE_AND_RENT
@@ -282,16 +284,16 @@ export function PropertySearchPage() {
                 <SheetTrigger asChild>
                   <Button
                     variant="outline"
-                    className="h-12 w-12 p-0 rounded-xl border-slate-200 bg-white shadow-sm flex-shrink-0"
+                    className="h-12 w-12 p-0 rounded-xl border-slate-200 bg-white shadow-sm shrink-0"
                   >
                     <SlidersHorizontal className="h-5 w-5 text-slate-600" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent
                   side="bottom"
-                  className="h-[90vh] rounded-t-[2rem] flex flex-col p-0 bg-slate-50"
+                  className="h-[90vh] rounded-t-4xl flex flex-col p-0 bg-slate-50"
                 >
-                  <SheetHeader className="px-6 py-4 border-b border-slate-100 bg-white rounded-t-[2rem]">
+                  <SheetHeader className="px-6 py-4 border-b border-slate-100 bg-white rounded-t-4xl">
                     <SheetTitle>ตัวกรองค้นหา</SheetTitle>
                   </SheetHeader>
                   <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -378,7 +380,7 @@ export function PropertySearchPage() {
                           <button
                             key={bed}
                             onClick={() => setBedrooms(bed)}
-                            className={`h-10 min-w-[3rem] px-3 rounded-xl border transition-all font-medium text-sm flex-shrink-0 ${
+                            className={`h-10 min-w-12 px-3 rounded-xl border transition-all font-medium text-sm shrink-0 ${
                               bedrooms === bed
                                 ? "bg-indigo-600 text-white border-indigo-600 shadow-md"
                                 : "bg-white text-slate-700 border-slate-200"
@@ -441,7 +443,7 @@ export function PropertySearchPage() {
 
                   <SheetFooter className="p-6 border-t border-slate-100 bg-white pb-8">
                     <SheetClose asChild>
-                      <Button className="w-full h-12 text-lg rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-200/50">
+                      <Button className="w-full h-12 text-lg rounded-xl bg-linear-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-200/50">
                         ดูผลลัพธ์ ({filtered.length} รายการ)
                       </Button>
                     </SheetClose>
