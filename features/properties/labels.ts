@@ -26,7 +26,7 @@ export const LISTING_TYPE_LABELS = {
 
 export const PROPERTY_STATUS_LABELS = {
   DRAFT: "ร่าง",
-  ACTIVE: "ใช้งาน",
+  ACTIVE: "ใช้งาน (แสดงหน้าเว็บ)",
   ARCHIVED: "เก็บถาวร",
   UNDER_OFFER: "ติดจอง/มีข้อเสนอ",
   RESERVED: "จองแล้ว",

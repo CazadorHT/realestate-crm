@@ -205,7 +205,7 @@ export function PropertyImageUploader({
         } catch (error) {
           console.error(
             "[PropertyImageUploader] cleanup session error:",
-            error
+            error,
           );
         }
       })();
@@ -265,7 +265,7 @@ export function PropertyImageUploader({
           // ✅ สำคัญ: normalize ชื่อไฟล์หลังบีบอัด ให้ไม่กลายเป็น "blob" ไม่มี extension
           const normalized = normalizeImageFileName(
             result.compressedFile,
-            file.name
+            file.name,
           );
 
           compressedFiles.push(normalized);
@@ -309,8 +309,8 @@ export function PropertyImageUploader({
                     preview_url: result.publicUrl,
                     is_uploading: false,
                   }
-                : img
-            )
+                : img,
+            ),
           );
 
           toast.success(`อัปโหลด ${item.file!.name} สำเร็จ`);
@@ -333,7 +333,7 @@ export function PropertyImageUploader({
       // Mark upload as complete
       isUploadingRef.current = false;
     },
-    [disabled, images.length, maxFiles, maxFileSizeMB, sessionId]
+    [disabled, images.length, maxFiles, maxFileSizeMB, sessionId],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -348,32 +348,37 @@ export function PropertyImageUploader({
   const handleRemove = async (index: number) => {
     const imageToRemove = images[index];
 
-    // ✅ ลบจาก storage เฉพาะ temp ที่อัปโหลดใน session นี้เท่านั้น
-    if (
-      imageToRemove.origin === "temp" &&
-      imageToRemove.storage_path &&
-      !imageToRemove.is_uploading
-    ) {
-      try {
-        await deletePropertyImageFromStorage(imageToRemove.storage_path);
-      } catch (error) {
-        console.error("Failed to delete from storage:", error);
-        toast.error("ลบรูปจาก storage ไม่สำเร็จ");
-        return;
-      }
-    }
-
-    if (imageToRemove.preview_url.startsWith("blob:")) {
-      URL.revokeObjectURL(imageToRemove.preview_url);
-    }
-
+    // 1. Optimistic Update: Update UI Immediately
     const newImages = images.filter((_, i) => i !== index);
+
+    // If we removed the cover image, set the first available image as cover
     if (imageToRemove.is_cover && newImages.length > 0) {
       newImages[0].is_cover = true;
     }
 
     setImages(newImages);
-    toast.success("ลบรูปสำเร็จ");
+    toast.success("ลบรูปสำเร็จ"); // Show success immediately
+
+    // 2. Cleanup Resources (Blob URLs)
+    if (imageToRemove.preview_url.startsWith("blob:")) {
+      URL.revokeObjectURL(imageToRemove.preview_url);
+    }
+
+    // 3. Background Action: Delete from storage if it's a temp file
+    // We don't await this to block the UI
+    if (
+      imageToRemove.origin === "temp" &&
+      imageToRemove.storage_path &&
+      !imageToRemove.is_uploading
+    ) {
+      deletePropertyImageFromStorage(imageToRemove.storage_path).catch(
+        (error) => {
+          console.error("Failed to delete from storage:", error);
+          // We silently fail here or just log, because strictly speaking the user doesn't need to know
+          // that the background cleanup failed, as long as it's gone from their form.
+        },
+      );
+    }
   };
 
   const handleSetCover = (index: number) => {
@@ -406,7 +411,7 @@ export function PropertyImageUploader({
             isDragActive
               ? "border-primary bg-primary/5"
               : "border-border hover:border-primary/50",
-            disabled && "opacity-50 cursor-not-allowed"
+            disabled && "opacity-50 cursor-not-allowed",
           )}
         >
           <input {...getInputProps()} />
@@ -457,7 +462,7 @@ export function PropertyImageUploader({
                             "relative group aspect-square bg-muted rounded-lg overflow-hidden border-2",
                             snapshot.isDragging && "border-primary shadow-lg",
                             image.is_cover &&
-                              "border-primary ring-2 ring-primary/20"
+                              "border-primary ring-2 ring-primary/20",
                           )}
                         >
                           <div className="relative w-full h-full">
