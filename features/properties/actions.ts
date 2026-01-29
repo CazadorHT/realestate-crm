@@ -333,6 +333,12 @@ export async function createPropertyAction(
       is_pet_friendly,
       is_foreigner_quota,
       allow_smoking,
+      is_renovated,
+      is_unfurnished,
+      is_fully_furnished,
+      is_corner_unit,
+      has_private_pool,
+      is_selling_with_tenant,
       ...propertyData
     } = safeValues;
 

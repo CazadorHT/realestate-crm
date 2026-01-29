@@ -4,16 +4,42 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, Box } from "lucide-react";
-import { ICON_MAP, DEFAULT_ICON } from "../../../amenities/icons";
+import {
+  Loader2,
+  Box,
+  Shield,
+  Zap,
+  Armchair,
+  Utensils,
+  Bath,
+  Trees,
+  Wifi,
+  Dumbbell,
+  MapPin,
+  MoreHorizontal,
+} from "lucide-react";
 import { FeaturesManagementDialog } from "@/features/amenities/components/FeaturesManagementDialog";
 import { PropertyFormValues } from "../../schema";
+import { DynamicIcon } from "@/components/dynamic-icon";
 
 type Feature = {
   id: string;
   name: string;
   icon_key: string;
   category: string | null;
+};
+
+const CATEGORY_ICONS: Record<string, any> = {
+  "ความปลอดภัย (Security)": Shield,
+  "ความสะดวกสบาย (Comfort)": Armchair,
+  "ครัว (Kitchen)": Utensils,
+  "ห้องน้ำ (Bathroom)": Bath,
+  "ภายนอก (Exterior)": Trees,
+  "เทคโนโลยี (Tech)": Wifi,
+  "สันทนาการ (Recreation)": Dumbbell,
+  "สถานที่ใกล้เคียง (Nearby)": MapPin,
+  "ทั่วไป (General)": Box,
+  "อื่นๆ (Other)": MoreHorizontal,
 };
 
 export const Step5Features = React.memo(Step5FeaturesComponent);
@@ -49,7 +75,7 @@ function Step5FeaturesComponent() {
 
   const reloadFeatures = async () => {
     // Manually reload features called by Dialog callback
-    setLoading(true);
+    // Don't set loading(true) here to avoid unmounting the Dialog
     try {
       const supabase = createClient();
       const { data, error } = await supabase
@@ -62,8 +88,6 @@ function Step5FeaturesComponent() {
       setFeatures(data || []);
     } catch (err) {
       console.error("Error reloading features:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -115,55 +139,64 @@ function Step5FeaturesComponent() {
         </div>
       </div>
 
-      {Object.entries(groupedFeatures).map(([category, categoryFeatures]) => (
-        <div key={category} className="space-y-3">
-          <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">
-            {category}
-          </h4>
-          <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-3">
-            {categoryFeatures.map((feature) => {
-              const Icon = ICON_MAP[feature.icon_key] || DEFAULT_ICON;
-              const isSelected = selectedFeatureIds.includes(feature.id);
+      {Object.entries(groupedFeatures).map(([category, categoryFeatures]) => {
+        const CategoryIcon = CATEGORY_ICONS[category] || Box;
+        return (
+          <div key={category} className="space-y-3">
+            <h4 className="flex items-center gap-2 text-sm font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">
+              <CategoryIcon className="w-4 h-4 text-slate-400" />
+              {category}
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-10 gap-4">
+              {categoryFeatures.map((feature) => {
+                const isSelected = selectedFeatureIds.includes(feature.id);
 
-              return (
-                <button
-                  key={feature.id}
-                  type="button"
-                  onClick={() => toggleFeature(feature.id)}
-                  className={`
-                    flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-200 group
-                    ${
-                      isSelected
-                        ? "bg-linear-to-r from-blue-500 to-purple-600  text-white shadow-md transform scale-[1.02]"
-                        : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50"
-                    }
-                  `}
-                >
-                  <div
+                return (
+                  <button
+                    key={feature.id}
+                    type="button"
+                    onClick={() => toggleFeature(feature.id)}
                     className={`
-                    p-2 rounded-lg transition-colors
+                    relative flex items-center gap-3 p-4 rounded-xl border text-left transition-all duration-200 group
                     ${
                       isSelected
-                        ? "bg-white/20 text-white"
-                        : "bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-blue-500"
+                        ? "bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500 shadow-sm"
+                        : "bg-white border-slate-200 hover:border-emerald-300 hover:shadow-md hover:bg-slate-50/50"
                     }
                   `}
                   >
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <span
-                    className={`text-sm font-medium ${
-                      isSelected ? "text-white" : "text-slate-700"
-                    }`}
-                  >
-                    {feature.name}
-                  </span>
-                </button>
-              );
-            })}
+                    <div
+                      className={`
+                    p-2.5 rounded-lg transition-colors shrink-0
+                    ${
+                      isSelected
+                        ? "bg-emerald-100 text-emerald-600"
+                        : "bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-emerald-500"
+                    }
+                  `}
+                    >
+                      <DynamicIcon
+                        name={feature.icon_key}
+                        className="w-5 h-5"
+                      />
+                    </div>
+                    <span
+                      className={`text-sm font-medium line-clamp-2 ${
+                        isSelected ? "text-emerald-900" : "text-slate-700"
+                      }`}
+                    >
+                      {feature.name}
+                    </span>
+                    {isSelected && (
+                      <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full animate-in zoom-in" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {features.length === 0 && (
         <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border-dashed border-2 border-slate-200">

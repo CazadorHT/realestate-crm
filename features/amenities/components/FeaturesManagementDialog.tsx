@@ -41,7 +41,9 @@ import {
   getFeatures,
   type FeatureRow,
 } from "../actions";
-import { ICON_MAP, DEFAULT_ICON } from "../icons";
+import { DEFAULT_ICON } from "../icons";
+import { IconPicker } from "@/components/icon-picker";
+import { DynamicIcon } from "@/components/dynamic-icon";
 
 const CATEGORIES = [
   "ทั่วไป (General)",
@@ -107,9 +109,19 @@ export function FeaturesManagementDialog({
 
       if (result.success) {
         toast.success(result.message);
-        setIsFormOpen(false);
-        setEditingFeature(null);
-        form.reset({ name: "", category: "", icon_key: "box" });
+
+        if (editingFeature) {
+          // If editing, close the dialog
+          setIsFormOpen(false);
+          setEditingFeature(null);
+        } else {
+          // If adding new, keep dialog open but reset form
+          // Don't close setIsFormOpen(false)
+          // Just reset to defaults
+          form.reset({ name: "", category: values.category, icon_key: "box" });
+          // Note: preserving category might be helpful for bulk entry
+        }
+
         loadData(); // Reload local list
         onUpdate?.(); // Notify parent
       } else {
@@ -151,7 +163,7 @@ export function FeaturesManagementDialog({
     (f) =>
       f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (f.category &&
-        f.category.toLowerCase().includes(searchTerm.toLowerCase()))
+        f.category.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   return (
@@ -166,7 +178,7 @@ export function FeaturesManagementDialog({
           จัดการสิ่งอำนวยความสะดวก
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[60vw] h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="p-6 pb-4 border-b bg-white z-10">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -215,17 +227,16 @@ export function FeaturesManagementDialog({
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {filteredFeatures.map((feature) => {
-                    const Icon = ICON_MAP[feature.icon_key] || DEFAULT_ICON;
                     return (
                       <div
                         key={feature.id}
-                        className="group relative bg-white border border-slate-200 rounded-xl p-3 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer flex flex-col items-center text-center gap-2 aspect-square justify-center"
+                        className="group relative bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer flex flex-col items-center text-center gap-3"
                         onClick={() => handleEdit(feature)}
                       >
                         <div
-                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <ConfirmDialog
@@ -238,26 +249,29 @@ export function FeaturesManagementDialog({
                               handleDelete(feature.id, feature.name)
                             }
                             trigger={
-                              <div className="h-6 w-6 rounded-full bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-600 flex items-center justify-center transition-colors">
-                                <X className="w-3 h-3" />
+                              <div className="h-8 w-8 rounded-full bg-white shadow-sm border border-slate-200 hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-500 flex items-center justify-center transition-all">
+                                <X className="w-4 h-4" />
                               </div>
                             }
                           />
                         </div>
 
-                        <div className="p-2.5 bg-slate-50 rounded-lg text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                          <Icon className="w-6 h-6" />
+                        <div className="p-3 bg-slate-50 rounded-xl text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                          <DynamicIcon
+                            name={feature.icon_key}
+                            className="w-6 h-6"
+                          />
                         </div>
-                        <div className="w-full">
+                        <div className="w-full space-y-1">
                           <h4
-                            className="font-medium text-slate-700 text-sm truncate px-1"
+                            className="font-medium text-slate-700 text-sm  px-1 group-hover:text-emerald-900 transition-colors"
                             title={feature.name}
                           >
                             {feature.name}
                           </h4>
                           {feature.category && (
-                            <div className="mt-1">
-                              <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full inline-block max-w-full truncate">
+                            <div>
+                              <span className="text-[10px] text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-full inline-block max-w-full truncate border border-slate-100 uppercase tracking-wide">
                                 {feature.category.split("(")[0].trim()}
                               </span>
                             </div>
@@ -336,33 +350,12 @@ export function FeaturesManagementDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>ไอคอน</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="h-10 w-full">
-                            <SelectValue placeholder="เลือกไอคอน" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="max-h-[300px]">
-                          <div className="grid grid-cols-6 gap-2 p-2">
-                            {Object.entries(ICON_MAP).map(
-                              ([key, IconComponent]) => (
-                                <SelectItem
-                                  key={key}
-                                  value={key}
-                                  className="flex justify-center cursor-pointer rounded-md p-2 hover:bg-slate-100 focus:bg-slate-100 data-[state=checked]:bg-blue-50 data-[state=checked]:border-blue-200 border border-transparent"
-                                >
-                                  <div className="flex flex-col items-center justify-center w-6 h-6">
-                                    <IconComponent className="w-5 h-5 text-slate-600" />
-                                  </div>
-                                </SelectItem>
-                              )
-                            )}
-                          </div>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <IconPicker
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

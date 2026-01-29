@@ -14,6 +14,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { ShieldCheck, Activity, User } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "../../../schema";
 import {
@@ -59,16 +60,43 @@ export const ManagementSection = ({
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-11 rounded-lg bg-white border border-slate-200 font-normal px-4 text-sm focus:ring-emerald-500/20">
+                    <SelectTrigger
+                      className={cn(
+                        "h-11 rounded-lg border px-4 text-sm font-medium transition-colors",
+                        field.value === "ACTIVE" &&
+                          "bg-emerald-500 text-white border-emerald-600 hover:bg-emerald-600",
+                        field.value === "DRAFT" &&
+                          "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200",
+                        field.value === "ARCHIVED" &&
+                          "bg-slate-800 text-slate-100 border-slate-900 hover:bg-slate-900",
+                        (field.value === "SOLD" || field.value === "RENTED") &&
+                          "bg-red-500 text-white border-red-600 hover:bg-red-600",
+                        (field.value === "UNDER_OFFER" ||
+                          field.value === "RESERVED") &&
+                          "bg-amber-500 text-white border-amber-600 hover:bg-amber-600",
+                      )}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-white rounded-xl border-none shadow-lg">
                     {PROPERTY_STATUS_ORDER.map((s) => (
-                      <SelectItem key={s} value={s} className="py-3 text-sm">
+                      <SelectItem
+                        key={s}
+                        value={s}
+                        className="py-3 text-sm focus:bg-slate-50 cursor-pointer"
+                      >
                         <span className="flex items-center gap-2">
                           <span
-                            className={`w-2 h-2 rounded-full ${s === "ACTIVE" ? "bg-green-500" : "bg-slate-300"}`}
+                            className={cn(
+                              "w-2.5 h-2.5 rounded-full shrink-0",
+                              s === "ACTIVE" && "bg-emerald-500",
+                              s === "DRAFT" && "bg-slate-400",
+                              s === "ARCHIVED" && "bg-slate-800",
+                              (s === "SOLD" || s === "RENTED") && "bg-red-500",
+                              (s === "UNDER_OFFER" || s === "RESERVED") &&
+                                "bg-amber-500",
+                            )}
                           />
                           {PROPERTY_STATUS_LABELS[s]}
                         </span>
