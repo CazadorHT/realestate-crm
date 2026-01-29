@@ -10,13 +10,13 @@ interface DynamicIconProps extends LucideProps {
 }
 
 export const DynamicIcon = ({ name, ...props }: DynamicIconProps) => {
+  const iconName = name as keyof typeof dynamicIconImports;
+
   const Icon = useMemo(() => {
-    const iconName = name as keyof typeof dynamicIconImports;
-    // Fallback if icon doesn't exist in registry
     if (!dynamicIconImports[iconName]) {
-      // Return a default or null. Using 'box' as safe fallback or just null to avoid hydration errors if mismatch
       return null;
     }
+
     return dynamic(dynamicIconImports[iconName], {
       loading: () => (
         <div
@@ -24,14 +24,14 @@ export const DynamicIcon = ({ name, ...props }: DynamicIconProps) => {
           style={{ width: props.size || 24, height: props.size || 24 }}
         />
       ),
+      ssr: true, // Ensure it's handled correctly by SSR
     });
-  }, [name]);
+  }, [iconName, props.size]); // Use iconName instead of name for better stability
 
   if (!Icon) {
-    // Fallback UI or empty
     return (
       <div
-        className={`bg-slate-100 ${props.className}`}
+        className={`bg-slate-100 ${props.className || ""}`}
         style={{ width: props.size || 24, height: props.size || 24 }}
       />
     );

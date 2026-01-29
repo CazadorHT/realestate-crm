@@ -18,6 +18,11 @@ import {
   PlusCircleIcon,
   Sparkles,
   TrendingDown,
+  Droplets,
+  Zap,
+  Clock,
+  Car,
+  ArrowLeftRight,
 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
@@ -65,6 +70,31 @@ export function PriceSection({
   const salePrice = form.watch("price");
   const rentPrice = form.watch("rental_price");
   const maintenanceFee = form.watch("maintenance_fee");
+  const propertyType = form.watch("property_type");
+  const sizeSqm = form.watch("size_sqm");
+  const landSizeSqwah = form.watch("land_size_sqwah");
+  const rentPricePerSqm = form.watch("rent_price_per_sqm");
+
+  // State for price unit toggle
+  const [priceUnit, setPriceUnit] = useState<"sqm" | "sqwah">("sqm");
+
+  // Auto-calculate rent price for Office and Land
+  useEffect(() => {
+    if (propertyType === "OFFICE_BUILDING" || propertyType === "LAND") {
+      if (rentPricePerSqm) {
+        const size = priceUnit === "sqm" ? sizeSqm : landSizeSqwah;
+        if (size) {
+          const calculated = Math.round(rentPricePerSqm * size);
+          if (form.getValues("original_rental_price") !== calculated) {
+            form.setValue("original_rental_price", calculated, {
+              shouldValidate: true,
+              shouldDirty: true,
+            });
+          }
+        }
+      }
+    }
+  }, [propertyType, sizeSqm, landSizeSqwah, rentPricePerSqm, priceUnit, form]);
 
   useEffect(() => {
     // เปิดเฉพาะเมื่อมี original_price และ มากกว่า price (มีส่วนลดจริง)
@@ -154,16 +184,17 @@ export function PriceSection({
                   }
                   name="original_price"
                   control={form.control}
-                  placeholder="0"
+                  placeholder="กรุณากรอกราคาเต็ม"
                   suffix="฿"
                   disabled={isReadOnly}
                   emphasize={!showSaleDiscount} // Emphasize if it's the only price
                   required
                   size="default"
+                  labelClassName="mb-2"
                   className={
                     showSaleDiscount
                       ? "text-slate-500 bg-slate-50/50"
-                      : "text-md font-medium "
+                      : "text-sm font-medium "
                   }
                 />
 
@@ -187,7 +218,7 @@ export function PriceSection({
                         label="ราคาพิเศษ (โชว์หน้าเว็บ)"
                         name="price"
                         control={form.control}
-                        placeholder="0"
+                        placeholder="กรุณากรอกราคาพิเศษ"
                         suffix="฿"
                         disabled={isReadOnly || !showSaleDiscount}
                         emphasize
@@ -328,27 +359,82 @@ export function PriceSection({
                     </div>
                   )}
 
-                {/* Main Rent Price */}
-                <UnitNumberField
-                  label={
-                    showRentDiscount
-                      ? "ค่าเช่าเต็ม (ก่อนลด)"
-                      : "ค่าเช่าต่อเดือน"
-                  }
-                  name="original_rental_price"
-                  control={form.control}
-                  placeholder="0"
-                  suffix="฿"
-                  disabled={isReadOnly}
-                  emphasize={!showRentDiscount}
-                  required
-                  size="default"
+                <div
                   className={
-                    showRentDiscount
-                      ? "text-slate-500 bg-slate-50/50"
-                      : "text-md font-medium"
+                    propertyType === "OFFICE_BUILDING" ||
+                    propertyType === "LAND"
+                      ? "grid grid-cols-1 md:grid-cols-2 gap-4"
+                      : "space-y-6"
                   }
-                />
+                >
+                  {/* Price per Unit (Only for Office/Land) */}
+                  {(propertyType === "OFFICE_BUILDING" ||
+                    propertyType === "LAND") && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                      <UnitNumberField
+                        label={
+                          <div
+                            className="flex items-center gap-2 group cursor-pointer select-none"
+                            onClick={() =>
+                              setPriceUnit((prev) =>
+                                prev === "sqm" ? "sqwah" : "sqm",
+                              )
+                            }
+                            title="คลิกเพื่อสลับหน่วย"
+                          >
+                            <span className="hover:text-blue-600 transition-colors">
+                              ราคาเช่า ต่อ{" "}
+                              {priceUnit === "sqm" ? "ตร.ม." : "ตร.ว."}
+                            </span>
+                            <div className="p-1 rounded-md bg-blue-50 text-blue-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-all duration-200 group-active:scale-90 shadow-sm border border-blue-100/50">
+                              <ArrowLeftRight
+                                className={`h-3.5 w-3.5 transition-transform duration-500 ease-in-out ${
+                                  priceUnit === "sqwah"
+                                    ? "rotate-180"
+                                    : "rotate-0"
+                                }`}
+                              />
+                            </div>
+                          </div>
+                        }
+                        name="rent_price_per_sqm"
+                        control={form.control}
+                        placeholder="0"
+                        suffix={priceUnit === "sqm" ? "฿ / ตร.ม." : "฿ / ตร.ว."}
+                        disabled={isReadOnly}
+                        size="default"
+                        className="text-sm font-medium  text-slate-700 border-blue-100 focus:border-blue-300"
+                      />
+                    </div>
+                  )}
+
+                  {/* Main Rent Price */}
+                  <UnitNumberField
+                    label={
+                      showRentDiscount
+                        ? "ค่าเช่าเต็ม (ก่อนลด)"
+                        : "ค่าเช่าต่อเดือน"
+                    }
+                    name="original_rental_price"
+                    control={form.control}
+                    placeholder={
+                      propertyType === "OFFICE_BUILDING" ||
+                      propertyType === "LAND"
+                        ? "คำนวณอัตโนมัติเมื่อกรอก ราคาต่อ ตร.ม."
+                        : "0"
+                    }
+                    suffix="฿"
+                    disabled={isReadOnly}
+                    emphasize={!showRentDiscount}
+                    required
+                    size="default"
+                    className={
+                      showRentDiscount
+                        ? "text-slate-500 bg-slate-50/50"
+                        : "text-md font-medium"
+                    }
+                  />
+                </div>
 
                 {/* Discount Section */}
                 <div className="space-y-1">
@@ -486,6 +572,8 @@ export function PriceSection({
             </div>
           )}
         </div>
+
+       
 
         {/* Tips Footer */}
         <div className="mt-8 rounded-xl bg-slate-50 p-4 border border-slate-100 flex gap-3 text-slate-600">

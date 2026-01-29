@@ -83,12 +83,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
       icon: LayoutDashboard,
       active: pathname?.startsWith("/protected/deals") ?? false,
     },
-    {
-      title: "สิ่งอำนวยความสะดวก",
-      href: "/protected/features",
-      icon: Box,
-      active: pathname?.startsWith("/protected/features") ?? false,
-    },
+
     {
       title: "ปฏิทิน",
       href: "/protected/calendar",

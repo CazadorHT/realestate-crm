@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import {
   Bold,
@@ -11,9 +12,16 @@ import {
   ListOrdered,
   Sparkles,
   Smile,
-  Type,
   LayoutTemplate,
   ChevronDown,
+  Heading2,
+  Heading3,
+  Link as LinkIcon,
+  Undo,
+  Redo,
+  Unlink,
+  Trash2,
+  ArrowUpDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +49,7 @@ const TEMPLATES = [
   {
     label: "คอนโด (ปล่อยเช่า)",
     content: `
-      <p><strong>🔥 ปล่อยเช่าคอนโด [ชื่อโครงการ] แต่งสวย พร้อมอยู่!</strong></p>
+      <h3>🔥 ปล่อยเช่าคอนโด [ชื่อโครงการ] แต่งสวย พร้อมอยู่!</h3>
       <p>📍 ทำเลดี ใกล้ BTS/MRT [สถานี...] เดินทางสะดวก</p>
       <ul>
         <li>🛏️ รูปแบบ: [1 Bedroom] ขนาด [35 ตร.ม.]</li>
@@ -55,7 +63,7 @@ const TEMPLATES = [
   {
     label: "คอนโด (ขาย)",
     content: `
-      <p><strong>🔥 ขายคอนโด [ชื่อโครงการ] ห้องสวย ราคาดี กู้ได้เต็ม!</strong></p>
+      <h3>🔥 ขายคอนโด [ชื่อโครงการ] ห้องสวย ราคาดี กู้ได้เต็ม!</h3>
       <p>📍 ทำเลศักยภาพ ใกล้ [ห้าง/รถไฟฟ้า] เหมาะทั้งอยู่เองและลงทุน</p>
       <ul>
         <li>🛏️ รูปแบบ: [2 Bedroom] ขนาด [55 ตร.ม.]</li>
@@ -69,7 +77,7 @@ const TEMPLATES = [
   {
     label: "บ้านเดี่ยว (ขาย)",
     content: `
-      <p><strong>🏘️ ขายบ้านเดี่ยว [ชื่อหมู่บ้าน] สภาพนางฟ้า ทำเลทอง</strong></p>
+      <h3>🏘️ ขายบ้านเดี่ยว [ชื่อหมู่บ้าน] สภาพนางฟ้า ทำเลทอง</h3>
       <p>✨ จุดเด่น: บ้านหลังมุม พื้นที่เยอะ รีโนเวทใหม่ทั้งหลัง</p>
       <ul>
         <li>📐 พื้นที่ใช้สอย: [200 ตร.ม.] | เนื้อที่ [60 ตร.ว.]</li>
@@ -84,7 +92,7 @@ const TEMPLATES = [
   {
     label: "ทาวน์โฮม (ขาย/โฮมออฟฟิศ)",
     content: `
-      <p><strong>🏢 ขายทาวน์โฮม [ชื่อโครงการ] หน้ากว้าง [5.7] เมตร ต่อเติมครบ</strong></p>
+      <h3>🏢 ขายทาวน์โฮม [ชื่อโครงการ] หน้ากว้าง [5.7] เมตร ต่อเติมครบ</h3>
       <p>✨ เหมาะสำหรับทำโฮมออฟฟิศ หรืออยู่อาศัย สภาพดีมาก</p>
       <ul>
         <li>📐 เนื้อที่ [20 ตร.ว.] พื้นที่ใช้สอย [130 ตร.ม.]</li>
@@ -106,22 +114,49 @@ export function SmartEditor({
   onAiGenerate,
 }: SmartEditorProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [lineHeight, setLineHeight] = useState("leading-relaxed");
 
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        defaultProtocol: "https",
+      }),
+    ],
     content: value,
-    immediatelyRender: false, // Fix hydration mismatch
+    immediatelyRender: false,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
     editorProps: {
       attributes: {
-        class:
-          "prose prose-sm max-w-none p-4 focus:outline-none focus:ring-0 leading-relaxed",
+        class: `prose prose-sm max-w-none p-4 focus:outline-none focus:ring-0 min-h-[800px] ${lineHeight}`,
       },
     },
     editable: !disabled,
   });
+
+  // Sync editor content when value changes externally
+  React.useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value);
+    }
+  }, [value, editor]);
+
+  // Update line height dynamically
+  React.useEffect(() => {
+    if (editor) {
+      editor.setOptions({
+        editorProps: {
+          attributes: {
+            class: `prose prose-sm max-w-none p-4 focus:outline-none focus:ring-0 min-h-[800px] ${lineHeight}`,
+          },
+        },
+      });
+    }
+  }, [lineHeight, editor]);
 
   if (!editor) {
     return null;
@@ -131,24 +166,41 @@ export function SmartEditor({
     editor.commands.insertContent(content);
   };
 
+  const setLink = () => {
+    const previousUrl = editor.getAttributes("link").href;
+    const url = window.prompt("URL", previousUrl);
+
+    // cancelled
+    if (url === null) {
+      return;
+    }
+
+    // empty
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+
+    // update
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  };
+
   const handleAiGenerate = async () => {
     setIsAiLoading(true);
 
     try {
       if (onAiGenerate) {
-        // Wait a bit to simulate "thinking" to feel more AI-like
         await new Promise((resolve) => setTimeout(resolve, 800));
         const content = await onAiGenerate();
         if (content) {
           editor.commands.setContent(content);
         }
       } else {
-        // Fallback Mock AI generation
         setTimeout(() => {
           editor.commands.insertContent(`
-            <p>✨ <strong>(AI Draft) จุดเด่นที่น่าสนใจ:</strong></p>
+            <h3>✨ จุดเด่นที่น่าสนใจ (AI Draft)</h3>
             <ul>
-                <li>ทำเลศักยภาพ เดินทางสะดวก ข้าถึงสิ่งอำนวยความสะดวกได้ง่าย</li>
+                <li>ทำเลศักยภาพ เดินทางสะดวก เข้าถึงสิ่งอำนวยความสะดวกได้ง่าย</li>
                 <li>การตกแต่งทันสมัย วัสดุพรีเมียม ตอบโจทย์ทุกไลฟ์สไตล์</li>
                 <li>ราคาคุ้มค่า เหมาะสำหรับอยู่อาศัยเองหรือลงทุนปล่อยเช่า</li>
             </ul>
@@ -163,17 +215,83 @@ export function SmartEditor({
   };
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm transition-[border,box-shadow] duration-200 focus-within:border-slate-200 focus-within:shadow-md resize-y h-[400px] overflow-auto">
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm transition-[border,box-shadow] duration-200 focus-within:border-slate-300 focus-within:shadow-md h-[650px] flex flex-col">
       {/* Toolbar */}
-      <div className="bg-slate-50/80 border-b border-slate-100 p-2 flex flex-wrap items-center gap-1.5 sticky top-0 z-10">
-        {/* Formatting */}
+      <div className="bg-slate-50/80 border-b border-slate-200 p-2 flex flex-wrap items-center gap-1.5 backdrop-blur-sm z-10 sticky top-0 rounded-t-xl">
+        {/* History */}
+        <div className="flex bg-white rounded-lg border border-slate-200 p-0.5 shadow-sm">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo() || disabled}
+            className="h-7 w-7 p-0"
+            title="Undo"
+          >
+            <Undo className="h-3.5 w-3.5 text-slate-500" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().redo() || disabled}
+            className="h-7 w-7 p-0"
+            title="Redo"
+          >
+            <Redo className="h-3.5 w-3.5 text-slate-500" />
+          </Button>
+        </div>
+
+        <Separator orientation="vertical" className="h-5 mx-0.5 bg-slate-200" />
+
+        {/* Headings */}
+        <div className="flex bg-white rounded-lg border border-slate-200 p-0.5 shadow-sm">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            }
+            className={`h-7 w-7 p-0 rounded-md ${
+              editor.isActive("heading", { level: 2 })
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-500"
+            }`}
+            disabled={disabled}
+            title="Heading 2"
+          >
+            <Heading2 className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+            }
+            className={`h-7 w-7 p-0 rounded-md ${
+              editor.isActive("heading", { level: 3 })
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-500"
+            }`}
+            disabled={disabled}
+            title="Heading 3"
+          >
+            <Heading3 className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Text Style */}
         <div className="flex bg-white rounded-lg border border-slate-200 p-0.5 shadow-sm">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={`h-8 w-8 p-0 rounded-md ${
+            className={`h-7 w-7 p-0 rounded-md ${
               editor.isActive("bold")
                 ? "bg-slate-100 text-slate-900"
                 : "text-slate-500"
@@ -181,14 +299,14 @@ export function SmartEditor({
             disabled={disabled}
             title="Bold"
           >
-            <Bold className="h-4 w-4" />
+            <Bold className="h-3.5 w-3.5" />
           </Button>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={`h-8 w-8 p-0 rounded-md ${
+            className={`h-7 w-7 p-0 rounded-md ${
               editor.isActive("italic")
                 ? "bg-slate-100 text-slate-900"
                 : "text-slate-500"
@@ -196,8 +314,36 @@ export function SmartEditor({
             disabled={disabled}
             title="Italic"
           >
-            <Italic className="h-4 w-4" />
+            <Italic className="h-3.5 w-3.5" />
           </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={setLink}
+            className={`h-7 w-7 p-0 rounded-md ${
+              editor.isActive("link")
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-500"
+            }`}
+            disabled={disabled}
+            title="Link"
+          >
+            <LinkIcon className="h-3.5 w-3.5" />
+          </Button>
+          {editor.isActive("link") && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().unsetLink().run()}
+              className="h-7 w-7 p-0 rounded-md text-slate-500 hover:text-red-500"
+              disabled={disabled}
+              title="Remove Link"
+            >
+              <Unlink className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </div>
 
         {/* Lists */}
@@ -207,7 +353,7 @@ export function SmartEditor({
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={`h-8 w-8 p-0 rounded-md ${
+            className={`h-7 w-7 p-0 rounded-md ${
               editor.isActive("bulletList")
                 ? "bg-slate-100 text-slate-900"
                 : "text-slate-500"
@@ -215,14 +361,14 @@ export function SmartEditor({
             disabled={disabled}
             title="Bullet List"
           >
-            <List className="h-4 w-4" />
+            <List className="h-3.5 w-3.5" />
           </Button>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={`h-8 w-8 p-0 rounded-md ${
+            className={`h-7 w-7 p-0 rounded-md ${
               editor.isActive("orderedList")
                 ? "bg-slate-100 text-slate-900"
                 : "text-slate-500"
@@ -230,11 +376,11 @@ export function SmartEditor({
             disabled={disabled}
             title="Ordered List"
           >
-            <ListOrdered className="h-4 w-4" />
+            <ListOrdered className="h-3.5 w-3.5" />
           </Button>
         </div>
 
-        <Separator orientation="vertical" className="h-6 mx-1" />
+        <Separator orientation="vertical" className="h-5 mx-0.5 bg-slate-200" />
 
         {/* Templates */}
         <DropdownMenu>
@@ -243,7 +389,7 @@ export function SmartEditor({
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 gap-2 text-xs font-medium text-slate-600 bg-white"
+              className="h-7 gap-1.5 text-xs font-medium text-slate-600 bg-white px-2"
             >
               <LayoutTemplate className="h-3.5 w-3.5" />
               Templates
@@ -271,14 +417,14 @@ export function SmartEditor({
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0 rounded-full bg-white text-slate-600 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-200"
+              className="h-7 w-7 p-0 rounded-md bg-white text-slate-600 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-200"
               title="Add Emoji"
             >
-              <Smile className="h-4 w-4" />
+              <Smile className="h-3.5 w-3.5" />
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-full p-0 border-none shadow-xl"
+            className="w-full p-0 border-none shadow-xl z-50"
             align="start"
           >
             <EmojiPicker
@@ -294,7 +440,58 @@ export function SmartEditor({
           </PopoverContent>
         </Popover>
 
+        {/* Line Height Control */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild disabled={disabled}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 rounded-md text-slate-500"
+              title="Line Height"
+            >
+              <ArrowUpDown className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => setLineHeight("leading-none")}>
+              None (1.0)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLineHeight("leading-tight")}>
+              Tight (1.25)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLineHeight("leading-snug")}>
+              Snug (1.375)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLineHeight("leading-normal")}>
+              Normal (1.5)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLineHeight("leading-relaxed")}>
+              Relaxed (1.625)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLineHeight("leading-loose")}>
+              Loose (2.0)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <div className="flex-1" />
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            if (window.confirm("Are you sure you want to clear the content?")) {
+              editor.commands.clearContent();
+            }
+          }}
+          disabled={disabled}
+          className="h-7 w-7 p-0 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 mr-1"
+          title="Clear Content"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
 
         {/* AI Generate Button */}
         <Button
@@ -303,11 +500,11 @@ export function SmartEditor({
           onClick={handleAiGenerate}
           disabled={disabled || isAiLoading}
           className={`
-            h-8 gap-1.5 text-xs font-medium transition-all
+            h-7 gap-1.5 text-xs font-medium transition-all px-3
             ${
               isAiLoading
                 ? "bg-slate-100 text-slate-400"
-                : "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-600 hover:to-fuchsia-600 shadow-sm"
+                : "bg-linear-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-600 hover:to-fuchsia-600 shadow-sm"
             }
           `}
         >
@@ -318,8 +515,16 @@ export function SmartEditor({
         </Button>
       </div>
 
-      {/* Editor Content */}
-      <EditorContent editor={editor} className="bg-white min-h-[200px]" />
+      {/* Editor Content Scroll Container */}
+      <div className="overflow-y-auto flex-1 bg-slate-50/20">
+        <EditorContent editor={editor} className="min-h-full" />
+      </div>
+
+      {/* Footer Info (Optional) */}
+      <div className="px-3 py-1 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-400 flex justify-between rounded-b-xl">
+        <span>{editor.storage.characterCount?.words?.() ?? 0} words</span>
+        <span>Markdown supported</span>
+      </div>
     </div>
   );
 }

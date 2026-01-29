@@ -9,7 +9,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
 import { AuditLogWithUser } from "../queries";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -51,9 +50,9 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
             data.map((log) => (
               <TableRow key={log.id}>
                 <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                  {format(new Date(log.created_at), "d MMM yy HH:mm", {
-                    locale: th,
-                  })}
+                  <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    {format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}
+                  </TableCell>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -124,8 +123,7 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
                             </span>{" "}
                             {format(
                               new Date(log.created_at),
-                              "d MMMM yyyy HH:mm:ss",
-                              { locale: th },
+                              "dd/MM/yyyy HH:mm:ss",
                             )}
                           </div>
                         </div>

@@ -3,8 +3,18 @@ import * as React from "react";
 import { useRef, useEffect } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { useRouter } from "next/navigation";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ExternalLink, List } from "lucide-react";
 import { FormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
 import type { PropertyRow } from "@/features/properties/types";
@@ -36,6 +46,7 @@ import { Step2Details } from "./property-form/steps/Step2Details";
 import { Step3Location } from "./property-form/steps/Step3Location";
 import { Step4Media } from "./property-form/steps/Step4Media";
 import { Step5Features } from "./property-form/steps/Step5Features";
+import { Step6Review } from "./property-form/steps/Step6Review";
 
 // Hooks
 import { usePropertyFormDraft } from "./hooks/usePropertyFormDraft";
@@ -60,6 +71,14 @@ export function PropertyForm({
 
   // === STATE & ORCHESTRATION ===
   const [persistImages, setPersistImages] = React.useState(false);
+
+  // Success Dialog State
+  const [successData, setSuccessData] = React.useState<{
+    id: string;
+    slug?: string;
+  } | null>(null);
+
+  // Redirect if not staff
   const [currentStep, setCurrentStep] = React.useState(1);
 
   // Duplicate check state
@@ -213,7 +232,7 @@ export function PropertyForm({
   const handleNext = async () => {
     const isStepValid = await validateStep(currentStep);
     if (isStepValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, 5));
+      setCurrentStep((prev) => Math.min(prev + 1, 6));
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -298,7 +317,11 @@ export function PropertyForm({
         clearDraft();
         setPersistImages(true);
         form.reset(EMPTY_VALUES);
-        router.push("/protected/properties");
+        // router.push("/protected/properties");
+        setSuccessData({
+          id: propertyId,
+          slug: (result as any).slug,
+        });
       } else {
         toast.error(result.message || "เกิดข้อผิดพลาด");
         console.error(result.message);
@@ -323,7 +346,11 @@ export function PropertyForm({
         toast.success("เพิ่มทรัพย์ใหม่สำเร็จ (ยืนยันข้อมูลซ้ำ)");
         setPersistImages(true);
         form.reset(EMPTY_VALUES);
-        router.push("/protected/properties");
+        // router.push("/protected/properties");
+        setSuccessData({
+          id: result.propertyId!,
+          slug: (result as any).slug,
+        });
       } else {
         toast.error(result.message || "เกิดข้อผิดพลาด");
         console.error(result.message);
@@ -336,12 +363,60 @@ export function PropertyForm({
   };
 
   const onInvalid = (errors: FieldErrors<PropertyFormValues>) => {
-    const firstKey = Object.keys(errors)[0];
-    if (firstKey) {
-      const el = document.querySelector(`[data-field="${firstKey}"]`);
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    // 1. Find the first error field
+    const errorKeys = Object.keys(errors) as (keyof PropertyFormValues)[];
+    const firstErrorKey = errorKeys[0];
+
+    if (!firstErrorKey) return;
+
+    // 2. Find which step matches this error
+    let errorStep = 1;
+    for (const [step, fields] of Object.entries(STEP_FIELDS)) {
+      if (fields.includes(firstErrorKey)) {
+        errorStep = Number(step);
+        break;
+      }
     }
-    toast.error("กรุณาตรวจสอบข้อมูลให้ครบถ้วน");
+
+    // 3. Fallback: Check if it's a field not in STEP_FIELDS (e.g., hidden logic)
+    // Common issues: 'address_line1' etc. might not be in STEP_FIELDS
+    if (!Object.values(STEP_FIELDS).flat().includes(firstErrorKey)) {
+      if (["address_line1"].includes(firstErrorKey)) errorStep = 3;
+      // Add more manual mappings if needed
+    }
+
+    // 4. Navigate to that step
+    setCurrentStep(errorStep);
+
+    // 5. Scroll to field after small delay (to allow render)
+    setTimeout(() => {
+      const el = document.querySelector(`[data-field="${firstErrorKey}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 100);
+
+    // 6. Show detailed toast
+    const errorMessages = errorKeys
+      .map((key) => FIELD_LABELS[key] || key)
+      .join(", ");
+
+    toast.error(
+      <div className="space-y-1">
+        <p className="font-bold">บันทึกไม่สำเร็จ: ข้อมูลไม่ครบถ้วน</p>
+        <p className="text-sm opacity-90">
+          กรุณาตรวจสอบ: {errorMessages} (ขั้นตอนที่ {errorStep})
+        </p>
+      </div>,
+      { duration: 10000 },
+    );
+
+    console.error("Form Validation Failed:", {
+      keys: errorKeys,
+      errors: errors,
+    });
   };
 
   const submitNow = form.handleSubmit(onSubmit, onInvalid);
@@ -429,10 +504,12 @@ export function PropertyForm({
 
           {currentStep === 5 && <Step5Features />}
 
+          {currentStep === 6 && <Step6Review form={form} mode={mode} />}
+
           {/* Navigation Buttons: Fixed Layout */}
           <PropertyFormNavigation
             currentStep={currentStep}
-            totalSteps={5}
+            totalSteps={6}
             mode={mode}
             uploadSessionId={uploadSessionId}
             isDirty={form.formState.isDirty}
@@ -453,6 +530,66 @@ export function PropertyForm({
             setPendingSubmit(null);
           }}
         />
+
+        {/* Success Navigation Dialog */}
+        <Dialog
+          open={!!successData}
+          onOpenChange={(open) => {
+            if (!open) {
+              // If closed without choice, default to list
+              router.push("/protected/properties");
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md bg-white border-0 shadow-xl rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3 text-emerald-600 text-xl">
+                <div className="p-2 bg-emerald-100 rounded-full">
+                  <ExternalLink className="w-6 h-6" />
+                </div>
+                บันทึกข้อมูลสำเร็จ
+              </DialogTitle>
+              <DialogDescription className="text-base text-slate-600 pt-2">
+                คุณต้องการทำรายการใดต่อ?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 py-4">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200 hover:bg-slate-50 hover:text-slate-900 rounded-xl"
+                onClick={() => {
+                  if (successData?.slug) {
+                    window.open(`/properties/${successData.slug}`, "_blank");
+                    router.push("/protected/properties"); // Go back to list in current tab logic
+                  } else {
+                    toast.error("ไม่พบข้อมูล Slug สำหรับเปิดหน้าเว็บ");
+                  }
+                }}
+              >
+                <ExternalLink className="w-5 h-5 text-blue-600" />
+                <div className="flex flex-col items-start">
+                  <span>ดูหน้าเว็บไซต์ (Public Page)</span>
+                  <span className="text-xs text-slate-400 font-normal">
+                    เปิดแท็บใหม่เพื่อดูตัวอย่าง
+                  </span>
+                </div>
+              </Button>
+
+              <Button
+                className="w-full justify-start gap-3 h-14 text-base font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-xl"
+                onClick={() => router.push("/protected/properties")}
+              >
+                <List className="w-5 h-5" />
+                <div className="flex flex-col items-start">
+                  <span>กลับหน้ารายการ (CRM)</span>
+                  <span className="text-xs text-slate-400/80 font-normal">
+                    จัดการทรัพย์อื่นต่อ
+                  </span>
+                </div>
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </Form>
     </div>
   );

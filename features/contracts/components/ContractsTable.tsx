@@ -22,6 +22,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { differenceInHours } from "date-fns";
+import { formatDate } from "@/lib/utils";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteRentalContractsAction } from "@/features/contracts/bulk-actions";
@@ -194,24 +195,10 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {new Date(contract.start_date).toLocaleDateString(
-                          "th-TH",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          },
-                        )}
+                        {formatDate(contract.start_date)}
                       </div>
                       <div className="text-sm">
-                        {new Date(contract.end_date).toLocaleDateString(
-                          "th-TH",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          },
-                        )}
+                        {formatDate(contract.end_date)}
                       </div>
                       {contract.duration_months && (
                         <div className="text-xs text-slate-500 mt-1">

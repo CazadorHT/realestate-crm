@@ -24,7 +24,7 @@ export function PropertyFormHeader({
           <h1 className="text-xl font-medium text-slate-900">
             {mode === "edit" ? "แก้ไขข้อมูลทรัพย์สิน" : "สร้างประกาศใหม่"}
           </h1>
-          <p className="text-md font-light text-slate-600 hidden sm:block max-w-[700px] line-clamp-1 break-words truncate">
+          <p className="text-md font-light text-slate-600 hidden sm:block max-w-[700px] line-clamp-1 word-break truncate">
             {mode === "edit"
               ? `โครงการ : ${title || "-"}`
               : "กรอกข้อมูลให้ครบถ้วนเพื่อสร้างประกาศ"}

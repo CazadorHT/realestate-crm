@@ -38,22 +38,29 @@ export function PropertyFormStepper({
     { step: 3, label: "ทำเลที่ตั้ง" },
     { step: 4, label: "รูปภาพ" },
     { step: 5, label: "สิ่งอำนวยความสะดวก" },
+    { step: 6, label: "ตรวจสอบ" },
   ];
 
   return (
     <div className="bg-white py-6 rounded-2xl shadow-sm border border-slate-100 mb-6 px-4">
       <div className="relative w-full max-w-5xl mx-auto">
         {/* Background Line */}
-        <div className="absolute top-5 left-[10%] w-[80%] h-0.5 bg-slate-100 z-0" />
+        <div
+          className="absolute top-5 h-0.5 bg-slate-100 z-0"
+          style={{ left: "8.3333%", width: "83.3333%" }}
+        />
 
         {/* Active Line */}
         <div
-          className="absolute top-5 left-[10%] h-0.5 bg-blue-600 transition-all duration-700 ease-in-out z-0"
-          style={{ width: `${(currentStep - 1) * 20}%` }}
+          className="absolute top-5 h-0.5 bg-blue-600 transition-all duration-700 ease-in-out z-0"
+          style={{
+            left: "8.3333%",
+            width: `${((currentStep - 1) / 5) * 83.3333}%`,
+          }}
         />
 
         <div
-          className="grid grid-cols-5 relative"
+          className="grid grid-cols-6 relative"
           role="tablist"
           aria-label="Progress"
         >

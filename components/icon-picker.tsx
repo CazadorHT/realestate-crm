@@ -33,7 +33,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
   }, [search]);
 
   // Infinite scroll state
-  const [limit, setLimit] = React.useState(100);
+  const [limit, setLimit] = React.useState(300); // Start with more icons
   const observerTarget = React.useRef<HTMLDivElement>(null);
 
   const displayedIcons = React.useMemo(() => {
@@ -42,17 +42,17 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
 
   React.useEffect(() => {
     // Reset limit when search changes
-    setLimit(100);
+    setLimit(300);
   }, [search]);
 
   React.useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setLimit((prev) => Math.min(prev + 100, filteredIcons.length));
+          setLimit((prev) => Math.min(prev + 200, filteredIcons.length));
         }
       },
-      { threshold: 0.5, rootMargin: "100px" },
+      { threshold: 0.1, rootMargin: "500px" }, // Aggressive pre-load
     );
 
     if (observerTarget.current) {
@@ -60,7 +60,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
     }
 
     return () => observer.disconnect();
-  }, [filteredIcons.length]);
+  }, [filteredIcons]); // Fix dependency to array content, not just length
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -125,9 +125,10 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
           {limit < filteredIcons.length && (
             <div
               ref={observerTarget}
-              className="py-2 text-center text-xs text-slate-400 border-t mt-2"
+              className="py-2 text-center text-xs text-slate-400 border-t mt-2 cursor-pointer hover:bg-slate-50"
+              onClick={() => setLimit((prev) => prev + 50)}
             >
-              Loading more...
+              คลิกเพื่อโหลดไอคอนเพิ่มเติม
             </div>
           )}
         </div>

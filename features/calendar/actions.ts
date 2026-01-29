@@ -13,6 +13,8 @@ export async function createAppointment(formData: FormData) {
   const time = formData.get("time") as string; // HH:mm
   const note = formData.get("note") as string;
 
+  const activityType = (formData.get("activityType") as string) || "VIEWING";
+
   if (!leadId || !date || !time) {
     throw new Error("Missing required fields");
   }
@@ -25,7 +27,7 @@ export async function createAppointment(formData: FormData) {
   const { error } = await supabase.from("lead_activities").insert({
     lead_id: leadId,
     property_id: propertyId === "none" ? null : propertyId,
-    activity_type: "VIEWING",
+    activity_type: activityType as any, // Cast to enum
     created_at: isoString, // Use created_at as the "Event Time" for now based on schema
     note: note,
   });

@@ -25,7 +25,7 @@ export function PropertyTypeSection({
 
   return (
     <div
-      className={`lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300 ${
+      className={`lg:col-span-2 space-y-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300 ${
         propertyTypeError ? "ring-2 ring-red-400 bg-red-50/30" : ""
       }`}
     >
@@ -64,7 +64,7 @@ export function PropertyTypeSection({
         name="property_type"
         render={({ field }) => (
           <FormItem>
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-8 gap-4 mt-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-8 gap-4 ">
               {PROPERTY_TYPE_ORDER.map((type) => {
                 const Icon = PROPERTY_TYPE_ICONS[type];
                 const gradient = PROPERTY_TYPE_GRADIENTS[type];

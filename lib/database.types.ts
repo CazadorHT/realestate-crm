@@ -374,6 +374,7 @@ export type Database = {
           id: string
           is_foreigner: boolean
           lead_type: Database["public"]["Enums"]["lead_type"]
+          line_id: string | null
           max_size_sqm: number | null
           min_bathrooms: number | null
           min_bedrooms: number | null
@@ -406,6 +407,7 @@ export type Database = {
           id?: string
           is_foreigner?: boolean
           lead_type?: Database["public"]["Enums"]["lead_type"]
+          line_id?: string | null
           max_size_sqm?: number | null
           min_bathrooms?: number | null
           min_bedrooms?: number | null
@@ -438,6 +440,7 @@ export type Database = {
           id?: string
           is_foreigner?: boolean
           lead_type?: Database["public"]["Enums"]["lead_type"]
+          line_id?: string | null
           max_size_sqm?: number | null
           min_bathrooms?: number | null
           min_bedrooms?: number | null
@@ -611,9 +614,11 @@ export type Database = {
       properties: {
         Row: {
           address_line1: string | null
+          allow_smoking: boolean | null
           assigned_to: string | null
           bathrooms: number | null
           bedrooms: number | null
+          ceiling_height: number | null
           co_agent_contact_channel: string | null
           co_agent_contact_id: string | null
           co_agent_name: string | null
@@ -627,11 +632,42 @@ export type Database = {
           currency: string | null
           description: string | null
           district: string | null
+          electricity_charge: string | null
+          facing_east: boolean | null
+          facing_north: boolean | null
+          facing_south: boolean | null
+          facing_west: boolean | null
           floor: number | null
           google_maps_link: string | null
+          has_247_access: boolean | null
+          has_city_view: boolean | null
+          has_fiber_optic: boolean | null
+          has_garden_view: boolean | null
+          has_multi_parking: boolean | null
+          has_pool_view: boolean | null
+          has_private_pool: boolean | null
+          has_raised_floor: boolean | null
+          has_river_view: boolean | null
+          has_unblocked_view: boolean | null
           id: string
           images: Json | null
+          is_bare_shell: boolean | null
+          is_central_air: boolean | null
           is_co_agent: boolean | null
+          is_column_free: boolean | null
+          is_corner_unit: boolean | null
+          is_exclusive: boolean | null
+          is_foreigner_quota: boolean | null
+          is_fully_furnished: boolean | null
+          is_grade_a: boolean | null
+          is_grade_b: boolean | null
+          is_grade_c: boolean | null
+          is_high_ceiling: boolean | null
+          is_pet_friendly: boolean | null
+          is_renovated: boolean | null
+          is_selling_with_tenant: boolean | null
+          is_split_air: boolean | null
+          is_tax_registered: boolean | null
           land_size_sqwah: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           maintenance_fee: number | null
@@ -642,16 +678,22 @@ export type Database = {
           near_transit: boolean | null
           nearby_places: Json | null
           nearby_transits: Json | null
+          orientation: string | null
           original_price: number | null
           original_rental_price: number | null
           owner_id: string | null
+          parking_fee_additional: number | null
           parking_slots: number | null
+          parking_type: string | null
           popular_area: string | null
           postal_code: string | null
           price: number | null
+          price_per_sqm: number | null
           property_source: string | null
           property_type: Database["public"]["Enums"]["property_type"]
           province: string | null
+          rent_free_period_days: number | null
+          rent_price_per_sqm: number | null
           rental_price: number | null
           size_sqm: number | null
           slug: string | null
@@ -665,13 +707,16 @@ export type Database = {
           updated_at: string
           verified: boolean | null
           view_count: number | null
+          water_charge: string | null
           zoning: string | null
         }
         Insert: {
           address_line1?: string | null
+          allow_smoking?: boolean | null
           assigned_to?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
+          ceiling_height?: number | null
           co_agent_contact_channel?: string | null
           co_agent_contact_id?: string | null
           co_agent_name?: string | null
@@ -685,11 +730,42 @@ export type Database = {
           currency?: string | null
           description?: string | null
           district?: string | null
+          electricity_charge?: string | null
+          facing_east?: boolean | null
+          facing_north?: boolean | null
+          facing_south?: boolean | null
+          facing_west?: boolean | null
           floor?: number | null
           google_maps_link?: string | null
+          has_247_access?: boolean | null
+          has_city_view?: boolean | null
+          has_fiber_optic?: boolean | null
+          has_garden_view?: boolean | null
+          has_multi_parking?: boolean | null
+          has_pool_view?: boolean | null
+          has_private_pool?: boolean | null
+          has_raised_floor?: boolean | null
+          has_river_view?: boolean | null
+          has_unblocked_view?: boolean | null
           id?: string
           images?: Json | null
+          is_bare_shell?: boolean | null
+          is_central_air?: boolean | null
           is_co_agent?: boolean | null
+          is_column_free?: boolean | null
+          is_corner_unit?: boolean | null
+          is_exclusive?: boolean | null
+          is_foreigner_quota?: boolean | null
+          is_fully_furnished?: boolean | null
+          is_grade_a?: boolean | null
+          is_grade_b?: boolean | null
+          is_grade_c?: boolean | null
+          is_high_ceiling?: boolean | null
+          is_pet_friendly?: boolean | null
+          is_renovated?: boolean | null
+          is_selling_with_tenant?: boolean | null
+          is_split_air?: boolean | null
+          is_tax_registered?: boolean | null
           land_size_sqwah?: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           maintenance_fee?: number | null
@@ -700,16 +776,22 @@ export type Database = {
           near_transit?: boolean | null
           nearby_places?: Json | null
           nearby_transits?: Json | null
+          orientation?: string | null
           original_price?: number | null
           original_rental_price?: number | null
           owner_id?: string | null
+          parking_fee_additional?: number | null
           parking_slots?: number | null
+          parking_type?: string | null
           popular_area?: string | null
           postal_code?: string | null
           price?: number | null
+          price_per_sqm?: number | null
           property_source?: string | null
           property_type: Database["public"]["Enums"]["property_type"]
           province?: string | null
+          rent_free_period_days?: number | null
+          rent_price_per_sqm?: number | null
           rental_price?: number | null
           size_sqm?: number | null
           slug?: string | null
@@ -723,13 +805,16 @@ export type Database = {
           updated_at?: string
           verified?: boolean | null
           view_count?: number | null
+          water_charge?: string | null
           zoning?: string | null
         }
         Update: {
           address_line1?: string | null
+          allow_smoking?: boolean | null
           assigned_to?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
+          ceiling_height?: number | null
           co_agent_contact_channel?: string | null
           co_agent_contact_id?: string | null
           co_agent_name?: string | null
@@ -743,11 +828,42 @@ export type Database = {
           currency?: string | null
           description?: string | null
           district?: string | null
+          electricity_charge?: string | null
+          facing_east?: boolean | null
+          facing_north?: boolean | null
+          facing_south?: boolean | null
+          facing_west?: boolean | null
           floor?: number | null
           google_maps_link?: string | null
+          has_247_access?: boolean | null
+          has_city_view?: boolean | null
+          has_fiber_optic?: boolean | null
+          has_garden_view?: boolean | null
+          has_multi_parking?: boolean | null
+          has_pool_view?: boolean | null
+          has_private_pool?: boolean | null
+          has_raised_floor?: boolean | null
+          has_river_view?: boolean | null
+          has_unblocked_view?: boolean | null
           id?: string
           images?: Json | null
+          is_bare_shell?: boolean | null
+          is_central_air?: boolean | null
           is_co_agent?: boolean | null
+          is_column_free?: boolean | null
+          is_corner_unit?: boolean | null
+          is_exclusive?: boolean | null
+          is_foreigner_quota?: boolean | null
+          is_fully_furnished?: boolean | null
+          is_grade_a?: boolean | null
+          is_grade_b?: boolean | null
+          is_grade_c?: boolean | null
+          is_high_ceiling?: boolean | null
+          is_pet_friendly?: boolean | null
+          is_renovated?: boolean | null
+          is_selling_with_tenant?: boolean | null
+          is_split_air?: boolean | null
+          is_tax_registered?: boolean | null
           land_size_sqwah?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           maintenance_fee?: number | null
@@ -758,16 +874,22 @@ export type Database = {
           near_transit?: boolean | null
           nearby_places?: Json | null
           nearby_transits?: Json | null
+          orientation?: string | null
           original_price?: number | null
           original_rental_price?: number | null
           owner_id?: string | null
+          parking_fee_additional?: number | null
           parking_slots?: number | null
+          parking_type?: string | null
           popular_area?: string | null
           postal_code?: string | null
           price?: number | null
+          price_per_sqm?: number | null
           property_source?: string | null
           property_type?: Database["public"]["Enums"]["property_type"]
           province?: string | null
+          rent_free_period_days?: number | null
+          rent_price_per_sqm?: number | null
           rental_price?: number | null
           size_sqm?: number | null
           slug?: string | null
@@ -781,6 +903,7 @@ export type Database = {
           updated_at?: string
           verified?: boolean | null
           view_count?: number | null
+          water_charge?: string | null
           zoning?: string | null
         }
         Relationships: [

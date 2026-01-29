@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useFormStatus } from "react-dom";
 import {
   Plus,
   Calendar,
@@ -9,6 +8,10 @@ import {
   User,
   Building2,
   StickyNote,
+  Briefcase,
+  Phone,
+  MessageCircle,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,11 +34,28 @@ import {
 import { createAppointment } from "@/features/calendar/actions";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"; // Rename import to avoid conflict with Lucide icon
+import { cn, formatDate } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface CreateEventDialogProps {
   leads: { id: string; full_name: string }[];
   properties: { id: string; title: string }[];
 }
+
+// Helper to generate time slots
+const timeOptions = Array.from({ length: 96 }).map((_, i) => {
+  const hour = Math.floor(i / 4);
+  const minute = (i % 4) * 15;
+  return `${hour.toString().padStart(2, "0")}:${minute
+    .toString()
+    .padStart(2, "0")}`;
+});
 
 export function CreateEventDialog({
   leads,
@@ -43,6 +63,7 @@ export function CreateEventDialog({
 }: CreateEventDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [date, setDate] = useState<Date>();
 
   const handleSubmit = (formData: FormData) => {
     startTransition(async () => {
@@ -50,6 +71,7 @@ export function CreateEventDialog({
         await createAppointment(formData);
         toast.success("สร้างนัดหมายสำเร็จ");
         setOpen(false);
+        setDate(undefined); // Reset date
       } catch (error) {
         toast.error("เกิดข้อผิดพลาดในการสร้างนัดหมาย");
       }
@@ -109,18 +131,93 @@ export function CreateEventDialog({
             </Select>
           </div>
 
+          <div className="grid gap-2">
+            <Label htmlFor="activityType" className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4 text-indigo-500" /> ประเภทนัดหมาย
+            </Label>
+            <Select name="activityType" defaultValue="VIEWING">
+              <SelectTrigger>
+                <SelectValue placeholder="เลือกประเภท..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="VIEWING">
+                  <div className="flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-blue-500" />
+                    <span>เยี่ยมชมทรัพย์ (Viewing)</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="FOLLOW_UP">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-amber-500" />
+                    <span>ติดตามผล / เจรจา (Follow up / Deal)</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="CALL">
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-green-500" />
+                    <span>โทรศัพท์ (Call)</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="LINE_CHAT">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4 text-green-600" />
+                    <span>ไลน์ (Line Chat)</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="date" className="flex items-center gap-2">
+              <Label className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-green-500" /> วันที่
               </Label>
-              <Input type="date" name="date" required />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !date && "text-muted-foreground",
+                    )}
+                  >
+                    {date ? formatDate(date) : <span>เลือกวันที่</span>}
+                    <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <input
+                type="hidden"
+                name="date"
+                value={date ? format(date, "yyyy-MM-dd") : ""}
+                required
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="time" className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-purple-500" /> เวลา
               </Label>
-              <Input type="time" name="time" required />
+              <Select name="time" required>
+                <SelectTrigger>
+                  <SelectValue placeholder="เลือกเวลา..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-[200px]">
+                  {timeOptions.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time} น.
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

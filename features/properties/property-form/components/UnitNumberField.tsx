@@ -26,6 +26,8 @@ export function UnitNumberField({
   size = "default",
   maxLength,
   action,
+  suffixClassName,
+  footer,
 }: {
   label: string | React.ReactNode;
   name: any;
@@ -43,6 +45,8 @@ export function UnitNumberField({
   size?: "default" | "sm";
   maxLength?: number;
   action?: React.ReactNode;
+  suffixClassName?: string;
+  footer?: React.ReactNode;
 }) {
   const isSmall = size === "sm";
   const heightClass = isSmall ? "h-9" : "h-11";
@@ -120,7 +124,7 @@ export function UnitNumberField({
               />
               <span
                 className={[
-                  `${heightClass} flex items-center select-none whitespace-nowrap ${roundRight} border border-l-0`,
+                  `${heightClass} flex items-center shadow-sm select-none whitespace-nowrap ${roundRight} border border-l-0`,
                   fieldState.error
                     ? "border-red-400 bg-red-50"
                     : "border-slate-200 bg-slate-50",
@@ -129,12 +133,14 @@ export function UnitNumberField({
                   emphasize
                     ? `font-medium text-xs text-slate-600`
                     : "font-medium text-sm text-slate-600",
+                  suffixClassName ?? "font-normal",
                 ].join(" ")}
               >
                 {suffix}
               </span>
             </div>
           </FormControl>
+          {footer && <div className="mt-1.5">{footer}</div>}
 
           {/* keep FormMessage to align RHF errors if you prefer default rendering */}
           <FormMessage className="hidden" />

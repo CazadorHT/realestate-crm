@@ -29,8 +29,8 @@ import { DealFormDialog } from "./components/DealFormDialog";
 import { DeleteDealButton } from "./components/DeleteDealButton";
 import { PropertyCombobox } from "@/components/PropertyCombobox";
 import { LeadCombobox } from "./components/LeadCombobox";
-import { differenceInHours, format } from "date-fns";
-import { th } from "date-fns/locale";
+import { differenceInHours } from "date-fns";
+import { formatDate } from "@/lib/utils";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteDealsAction } from "@/features/deals/bulk-actions";
@@ -493,9 +493,7 @@ export function DealsTable({
                   </TableCell>
                   <TableCell className="text-slate-600">
                     {deal.transaction_date
-                      ? format(new Date(deal.transaction_date), "d MMM yy", {
-                          locale: th,
-                        })
+                      ? formatDate(deal.transaction_date)
                       : "-"}
                   </TableCell>
                   <TableCell>

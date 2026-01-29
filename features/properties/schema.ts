@@ -44,6 +44,19 @@ export const FormSchema = z
     maintenance_fee: z.coerce.number().optional().nullable(),
     parking_slots: z.coerce.number().optional().nullable(),
     zoning: z.string().optional().nullable(),
+    ceiling_height: z.coerce.number().optional().nullable(),
+    electricity_charge: z.string().optional().nullable(),
+    water_charge: z.string().optional().nullable(),
+    rent_free_period_days: z.coerce.number().optional().nullable(),
+    parking_type: z.enum(["COMMON", "FIXED", "AUTO"]).optional().nullable(),
+    parking_fee_additional: z.coerce.number().optional().nullable(),
+    orientation: z
+      .enum(["N", "S", "E", "W", "NE", "NW", "SE", "SW"])
+      .optional()
+      .nullable(),
+
+    price_per_sqm: z.coerce.number().optional().nullable(),
+    rent_price_per_sqm: z.coerce.number().optional().nullable(),
 
     currency: z.string().default("THB"),
 
@@ -96,11 +109,37 @@ export const FormSchema = z
     is_foreigner_quota: z.boolean().default(false),
     allow_smoking: z.boolean().default(false),
     is_renovated: z.boolean().default(false),
-    is_unfurnished: z.boolean().default(false),
+    // is_unfurnished: z.boolean().default(false), // Removed in favor of is_bare_shell
     is_fully_furnished: z.boolean().default(false),
     is_corner_unit: z.boolean().default(false),
     has_private_pool: z.boolean().default(false),
     is_selling_with_tenant: z.boolean().default(false),
+    is_bare_shell: z.boolean().default(false),
+    is_exclusive: z.boolean().default(false),
+
+    // New Requested Features
+    has_garden_view: z.boolean().default(false),
+    has_pool_view: z.boolean().default(false),
+    has_city_view: z.boolean().default(false),
+    has_unblocked_view: z.boolean().default(false),
+    has_river_view: z.boolean().default(false),
+    facing_east: z.boolean().default(false),
+    facing_north: z.boolean().default(false),
+    facing_south: z.boolean().default(false),
+    facing_west: z.boolean().default(false),
+    has_multi_parking: z.boolean().default(false),
+    is_grade_a: z.boolean().default(false),
+    is_grade_b: z.boolean().default(false),
+    is_grade_c: z.boolean().default(false),
+    is_column_free: z.boolean().default(false),
+    is_central_air: z.boolean().default(false),
+    is_split_air: z.boolean().default(false),
+    has_247_access: z.boolean().default(false),
+    has_fiber_optic: z.boolean().default(false),
+    is_tax_registered: z.boolean().default(false),
+    has_raised_floor: z.boolean().default(false),
+    is_high_ceiling: z.boolean().default(false),
+
     feature_ids: z.array(z.string()).default([]),
 
     // Nearby Places (JSONB)

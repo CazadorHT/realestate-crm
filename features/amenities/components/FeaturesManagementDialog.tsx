@@ -50,11 +50,13 @@ const CATEGORIES = [
   "ความปลอดภัย (Security)",
   "ความสะดวกสบาย (Comfort)",
   "ครัว (Kitchen)",
+  "สำหรับเด็ก (Kids)",
   "ห้องน้ำ (Bathroom)",
   "ภายนอก (Exterior)",
   "เทคโนโลยี (Tech)",
   "สันทนาการ (Recreation)",
   "สถานที่ใกล้เคียง (Nearby)",
+  "บริการ (Services)",
   "อื่นๆ (Other)",
 ];
 
@@ -323,22 +325,24 @@ export function FeaturesManagementDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>หมวดหมู่</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            placeholder="เลือก..."
-                            {...field}
-                            value={field.value || ""}
-                            list="categories-list"
-                            className="text-sm"
-                          />
-                          <datalist id="categories-list">
-                            {CATEGORIES.map((c) => (
-                              <option key={c} value={c} />
-                            ))}
-                          </datalist>
-                        </div>
-                      </FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value || undefined}
+                        value={field.value || undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="เลือกหมวดหมู่..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {CATEGORIES.map((c) => (
+                            <SelectItem key={c} value={c}>
+                              {c}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

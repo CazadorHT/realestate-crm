@@ -35,6 +35,73 @@ const parseNumber = (s: string) => {
   return cleaned === "" ? undefined : Number(cleaned);
 };
 
+const KilometerInput = ({
+  value,
+  onChange,
+  className,
+  placeholder,
+}: {
+  value?: number | null;
+  onChange: (val?: number) => void;
+  className?: string;
+  placeholder?: string;
+}) => {
+  // Store the user's input string locally to allow things like "0." or "1.0"
+  const [displayValue, setDisplayValue] = React.useState(() => {
+    if (value === undefined || value === null) return "";
+    return (value / 1000).toString();
+  });
+
+  // Sync from external value changes (e.g. form reset, loaded data)
+  // We check if the external value (meters) matches our current display (km)
+  // to avoid overwriting while the user is typing valid numbers.
+  React.useEffect(() => {
+    const currentMeters = value ?? undefined;
+    const inputMeters =
+      displayValue === "" ? undefined : parseFloat(displayValue) * 1000;
+
+    // If they are effectively equal, do nothing (preserve user string like "1.00")
+    if (currentMeters === inputMeters) return;
+    // If undefined/null match
+    if (
+      (currentMeters === undefined || currentMeters === null) &&
+      displayValue === ""
+    )
+      return;
+
+    // Otherwise, external changed significantly (or initialization)
+    setDisplayValue(
+      currentMeters !== undefined && currentMeters !== null
+        ? (currentMeters / 1000).toString()
+        : "",
+    );
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVal = e.target.value;
+    setDisplayValue(newVal); // Always update display text
+
+    if (newVal === "") {
+      onChange(undefined);
+      return;
+    }
+
+    const parsed = parseFloat(newVal);
+    if (!isNaN(parsed)) {
+      onChange(parsed * 1000); // Send meters to parent
+    }
+  };
+
+  return (
+    <Input
+      value={displayValue}
+      onChange={handleChange}
+      className={className}
+      placeholder={placeholder}
+    />
+  );
+};
+
 interface TransitSectionProps {
   form: UseFormReturn<PropertyFormValues>;
 }
@@ -176,18 +243,14 @@ export function TransitSection({ form }: TransitSectionProps) {
                     <FormItem className="w-[120px]">
                       <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-xs uppercase tracking-wide">
                         <Ruler className="h-3.5 w-3.5 text-blue-500" />
-                        ระยะ (ม.)
+                        ระยะ (กม.)
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          value={field.value ?? ""}
+                        <KilometerInput
+                          value={field.value}
+                          onChange={field.onChange}
                           className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium text-xs text-center focus:ring-0 focus:border-blue-400"
-                          placeholder="350"
-                          onChange={(e) =>
-                            field.onChange(parseNumber(e.target.value))
-                          }
+                          placeholder="1 กิโลเมตร / 0.5 กิโลเมตร"
                         />
                       </FormControl>
                     </FormItem>

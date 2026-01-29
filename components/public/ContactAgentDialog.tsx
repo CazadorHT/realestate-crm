@@ -23,6 +23,8 @@ interface ContactAgentDialogProps {
   propertyId?: string;
   propertyTitle?: string;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 function SubmitButton() {
@@ -53,16 +55,48 @@ export function ContactAgentDialog({
   propertyId,
   propertyTitle,
   trigger,
+  open: controlledOpen,
+  onOpenChange,
 }: ContactAgentDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [state, setState] = useState<LeadState>({});
+  const [phone, setPhone] = useState("");
+
+  // Support both controlled and uncontrolled modes
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = (value: boolean) => {
+    if (onOpenChange) onOpenChange(value);
+    if (!isControlled) setInternalOpen(value);
+  };
+
+  // Auto-format phone number: xxx-xxx-xxxx
+  const formatPhoneNumber = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 10);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(formatPhoneNumber(e.target.value));
+  };
 
   async function clientAction(formData: FormData) {
+    if (propertyId === "preview-id") {
+      // Mock success for Step 6 Preview
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.success("ส่งข้อมูลสำเร็จ (Preview Mode)");
+      setOpen(false);
+      return;
+    }
+
     const result = await submitInquiryAction({}, formData);
     if (result.success) {
       toast.success("ส่งข้อมูลเรียบร้อยแล้ว เจ้าหน้าที่จะรีบติดต่อกลับครับ");
       setOpen(false);
       setState({}); // Reset state
+      setPhone(""); // Reset phone
     } else {
       toast.error(result.error || "ไม่สามารถส่งข้อมูลได้");
       setState(result);
@@ -115,11 +149,15 @@ export function ContactAgentDialog({
             <Label htmlFor="phone" className="text-right">
               เบอร์โทรศัพท์ <span className="text-red-500">*</span>
             </Label>
+            {/* Hidden input sends raw digits without dashes */}
+            <input type="hidden" name="phone" value={phone.replace(/-/g, "")} />
             <Input
               id="phone"
-              name="phone"
               type="tel"
               placeholder="0xx-xxx-xxxx"
+              value={phone}
+              onChange={handlePhoneChange}
+              maxLength={12}
               className={state.errors?.phone ? "border-red-500 bg-red-50" : ""}
               required
             />

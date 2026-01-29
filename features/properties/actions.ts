@@ -29,6 +29,7 @@ import { PROPERTY_STATUS_ENUM } from "./labels";
 export type CreatePropertyResult = {
   success: boolean;
   propertyId?: string;
+  slug?: string;
   message?: string;
   errors?: unknown;
 };
@@ -330,15 +331,35 @@ export async function createPropertyAction(
       images,
       agent_ids,
       feature_ids,
-      is_pet_friendly,
-      is_foreigner_quota,
-      allow_smoking,
-      is_renovated,
-      is_unfurnished,
-      is_fully_furnished,
-      is_corner_unit,
-      has_private_pool,
-      is_selling_with_tenant,
+      // is_pet_friendly,
+      // is_foreigner_quota,
+      // allow_smoking,
+      // is_renovated,
+      // is_unfurnished, removed
+      // is_fully_furnished,
+      // is_corner_unit,
+      // has_private_pool,
+      // is_selling_with_tenant,
+      // price_per_sqm, // Don't exclude, save to DB
+      // rent_price_per_sqm, // Don't exclude, save to DB
+      // has_garden_view,
+      // has_pool_view,
+      // has_city_view,
+      // facing_east,
+      // facing_north,
+      // has_multi_parking,
+      // is_grade_a,
+      // is_grade_b,
+      // is_grade_c,
+      // is_column_free,
+      // is_central_air,
+      // is_split_air,
+      // has_247_access,
+      // has_fiber_optic,
+      // is_tax_registered,
+      // is_bare_shell, // Save to DB directly
+      // is_exclusive, // Save to DB directly
+      // has_raised_floor, // Save to DB directly
       ...propertyData
     } = safeValues;
 
@@ -370,12 +391,43 @@ export async function createPropertyAction(
       finalKeywords.push("Smoking Allowed");
     }
     if (safeValues.is_renovated) finalKeywords.push("Renovated");
-    if (safeValues.is_unfurnished) finalKeywords.push("Unfurnished");
+    // is_unfurnished removed
     if (safeValues.is_fully_furnished) finalKeywords.push("Fully Furnished");
     if (safeValues.is_corner_unit) finalKeywords.push("Corner Unit");
     if (safeValues.has_private_pool) finalKeywords.push("Private Pool");
     if (safeValues.is_selling_with_tenant)
       finalKeywords.push("Selling with Tenant");
+
+    // New Feature Keywords
+    if (safeValues.has_garden_view) finalKeywords.push("Garden View");
+    if (safeValues.has_pool_view) finalKeywords.push("Pool View");
+    if (safeValues.has_city_view) finalKeywords.push("City View");
+    if (safeValues.has_unblocked_view) finalKeywords.push("Unblocked View");
+    if (safeValues.has_river_view) finalKeywords.push("River View");
+    if (safeValues.facing_east) finalKeywords.push("East Facing");
+    if (safeValues.facing_north) finalKeywords.push("North Facing");
+    if (safeValues.facing_south) finalKeywords.push("South Facing");
+    if (safeValues.facing_west) finalKeywords.push("West Facing");
+    if (safeValues.is_high_ceiling) finalKeywords.push("High Ceiling");
+    if (safeValues.has_multi_parking) finalKeywords.push("Multi-Parking");
+    if (safeValues.is_grade_a) finalKeywords.push("Grade A Building");
+    if (safeValues.is_grade_b) finalKeywords.push("Grade B Building");
+    if (safeValues.is_grade_c) finalKeywords.push("Grade C Building");
+    if (safeValues.is_column_free) finalKeywords.push("Column-Free");
+    if (safeValues.is_central_air) finalKeywords.push("Central Air-con");
+    if (safeValues.is_split_air) finalKeywords.push("Split Air-con");
+    if (safeValues.has_247_access) finalKeywords.push("24/7 Access");
+    if (safeValues.has_fiber_optic)
+      finalKeywords.push("High-Speed Fiber Optic");
+    if (safeValues.is_tax_registered) finalKeywords.push("Tax Registered");
+    // Removed is_bare_shell, is_exclusive, has_raised_floor from keywords as they are now columns
+
+    if (safeValues.ceiling_height)
+      finalKeywords.push(`High Ceiling ${safeValues.ceiling_height}m`);
+    if (safeValues.orientation)
+      finalKeywords.push(`Facing ${safeValues.orientation}`);
+    if (safeValues.parking_type)
+      finalKeywords.push(`${safeValues.parking_type} Parking`);
 
     const seoData = generatePropertySEO({
       title: propertyData.title,
@@ -524,7 +576,7 @@ export async function createPropertyAction(
       },
     );
     revalidatePath("/protected/properties");
-    return { success: true, propertyId: property.id };
+    return { success: true, propertyId: property.id, slug: seoData.slug };
   } catch (err) {
     console.error("createPropertyAction → error:", err);
     return authzFail(err);
@@ -557,15 +609,35 @@ export async function updatePropertyAction(
       images,
       agent_ids,
       feature_ids,
-      is_pet_friendly,
-      is_foreigner_quota,
-      allow_smoking,
-      is_renovated,
-      is_unfurnished,
-      is_fully_furnished,
-      is_corner_unit,
-      has_private_pool,
-      is_selling_with_tenant,
+      // is_pet_friendly,
+      // is_foreigner_quota,
+      // allow_smoking,
+      // is_renovated,
+      // is_unfurnished removed
+      // is_fully_furnished,
+      // is_corner_unit,
+      // has_private_pool,
+      // is_selling_with_tenant,
+      // price_per_sqm, // Don't exclude, save to DB
+      // rent_price_per_sqm, // Don't exclude, save to DB
+      // has_garden_view,
+      // has_pool_view,
+      // has_city_view,
+      // facing_east,
+      // facing_north,
+      // has_multi_parking,
+      // is_grade_a,
+      // is_grade_b,
+      // is_grade_c,
+      // is_column_free,
+      // is_central_air,
+      // is_split_air,
+      // has_247_access,
+      // has_fiber_optic,
+      // is_tax_registered,
+      // is_bare_shell,
+      // is_exclusive,
+      // has_raised_floor,
       ...propertyData
     } = safeValues;
 
@@ -634,13 +706,7 @@ export async function updatePropertyAction(
       finalKeywords = finalKeywords.filter((k) => k !== "Renovated");
     }
 
-    // Unfurnished
-    if (safeValues.is_unfurnished) {
-      if (!finalKeywords.includes("Unfurnished"))
-        finalKeywords.push("Unfurnished");
-    } else {
-      finalKeywords = finalKeywords.filter((k) => k !== "Unfurnished");
-    }
+    // is_unfurnished removed, consolidated with is_bare_shell (column)
 
     // Fully Furnished
     if (safeValues.is_fully_furnished) {
@@ -674,6 +740,52 @@ export async function updatePropertyAction(
       finalKeywords = finalKeywords.filter((k) => k !== "Selling with Tenant");
     }
 
+    // Helper for new keywords
+    const toggleKeyword = (condition: boolean | undefined, kw: string) => {
+      if (condition) {
+        if (!finalKeywords.includes(kw)) finalKeywords.push(kw);
+      } else {
+        finalKeywords = finalKeywords.filter((k) => k !== kw);
+      }
+    };
+
+    toggleKeyword(safeValues.has_garden_view, "Garden View");
+    toggleKeyword(safeValues.has_pool_view, "Pool View");
+    toggleKeyword(safeValues.has_city_view, "City View");
+    toggleKeyword(safeValues.has_unblocked_view, "Unblocked View");
+    toggleKeyword(safeValues.has_river_view, "River View");
+    toggleKeyword(safeValues.facing_east, "East Facing");
+    toggleKeyword(safeValues.facing_north, "North Facing");
+    toggleKeyword(safeValues.facing_south, "South Facing");
+    toggleKeyword(safeValues.facing_west, "West Facing");
+    toggleKeyword(safeValues.is_high_ceiling, "High Ceiling");
+    toggleKeyword(safeValues.has_multi_parking, "Multi-Parking");
+    toggleKeyword(safeValues.is_grade_a, "Grade A Building");
+    toggleKeyword(safeValues.is_grade_b, "Grade B Building");
+    toggleKeyword(safeValues.is_grade_c, "Grade C Building");
+    toggleKeyword(safeValues.is_column_free, "Column-Free");
+    toggleKeyword(safeValues.is_central_air, "Central Air-con");
+    toggleKeyword(safeValues.is_split_air, "Split Air-con");
+    toggleKeyword(safeValues.has_247_access, "24/7 Access");
+    toggleKeyword(safeValues.has_fiber_optic, "High-Speed Fiber Optic");
+    toggleKeyword(safeValues.is_tax_registered, "Tax Registered");
+    // is_bare_shell, is_exclusive, has_raised_floor handled as columns now
+
+    if (safeValues.ceiling_height) {
+      finalKeywords = finalKeywords.filter(
+        (k) => !k.startsWith("High Ceiling "),
+      );
+      finalKeywords.push(`High Ceiling ${safeValues.ceiling_height}m`);
+    }
+    if (safeValues.orientation) {
+      finalKeywords = finalKeywords.filter((k) => !k.startsWith("Facing "));
+      finalKeywords.push(`Facing ${safeValues.orientation}`);
+    }
+    if (safeValues.parking_type) {
+      finalKeywords = finalKeywords.filter((k) => !k.endsWith(" Parking"));
+      finalKeywords.push(`${safeValues.parking_type} Parking`);
+    }
+
     const seoData = generatePropertySEO({
       title: propertyData.title,
       property_type: propertyData.property_type,
@@ -699,6 +811,9 @@ export async function updatePropertyAction(
       .from("properties")
       .update({
         ...propertyData,
+        is_bare_shell: safeValues.is_bare_shell,
+        is_exclusive: safeValues.is_exclusive,
+        has_raised_floor: safeValues.has_raised_floor,
         price: propertyData.price, // Force include (allow null)
         rental_price: propertyData.rental_price, // Force include (allow null)
         original_price: propertyData.original_price, // Force include
@@ -880,7 +995,7 @@ export async function updatePropertyAction(
     );
     revalidatePath("/protected/properties");
     revalidatePath(`/protected/properties/${id}`);
-    return { success: true, propertyId: id };
+    return { success: true, propertyId: id, slug: seoData.slug };
   } catch (err) {
     return authzFail(err);
   }

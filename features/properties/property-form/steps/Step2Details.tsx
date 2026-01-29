@@ -5,7 +5,7 @@ import type { Step2Props } from "../types";
 import { PriceSection } from "../components/step2-parts/PriceSection";
 import { SpecsSection } from "../components/step2-parts/SpecsSection";
 import { DescriptionSection } from "../components/step2-parts/DescriptionSection";
-import { SpecialFeaturesSection } from "../components/step2-parts/SpecialFeaturesSection";
+import { SpecialFeaturesSection } from "@/features/properties/property-form/components/step2-parts/SpecialFeaturesSection";
 import { CommissionSection } from "../components/step2-parts/CommissionSection";
 
 export const Step2Details = Step2DetailsComponent;
@@ -33,7 +33,7 @@ function Step2DetailsComponent({ form, mode }: Step2Props) {
       <SpecsSection form={form} isReadOnly={isReadOnly} />
 
       {/* Description & Special Features */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         <DescriptionSection form={form} isReadOnly={isReadOnly} />
         <SpecialFeaturesSection form={form} isReadOnly={isReadOnly} />
       </div>

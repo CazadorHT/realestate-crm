@@ -37,6 +37,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { EventDetailsDialog } from "./EventDetailsDialog";
+
 interface CalendarViewProps {
   initialDate: Date;
   events: CalendarEvent[];
@@ -53,6 +55,11 @@ export function CalendarView({
   const [currentDate, setCurrentDate] = useState(initialDate);
   const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"month" | "year">("month");
+
+  // Dialog State
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+    null,
+  );
 
   // Filter State
   const [selectedProperty, setSelectedProperty] = useState(
@@ -280,6 +287,10 @@ export function CalendarView({
                     {dayEvents.map((event) => (
                       <div
                         key={event.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedEvent(event);
+                        }}
                         className={cn(
                           "text-[10px] px-1.5 py-1 rounded truncate font-medium border-l-2 cursor-pointer shadow-sm hover:opacity-80 transition-opacity",
                           event.type === "viewing" &&
@@ -321,6 +332,13 @@ export function CalendarView({
           })}
         </div>
       )}
+
+      {/* Details Dialog */}
+      <EventDetailsDialog
+        open={!!selectedEvent}
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+      />
     </div>
   );
 }

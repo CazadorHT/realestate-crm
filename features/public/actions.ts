@@ -47,7 +47,7 @@ Details: ${data.details || "-"}`,
 
 export async function submitInquiryAction(
   prevState: LeadState,
-  formData: FormData
+  formData: FormData,
 ): Promise<LeadState> {
   const supabase = createAdminClient();
 
@@ -68,16 +68,16 @@ export async function submitInquiryAction(
   }
 
   const { data } = validatedFields;
+
   try {
     const { error } = await supabase.from("leads").insert({
       full_name: data.fullName,
       phone: data.phone,
-      // @ts-ignore
       line_id: data.lineId || null,
       note: data.message || null,
       property_id: data.propertyId || null,
       source: "WEBSITE",
-      stage: "NEW", // Use 'stage' not 'lead_stage' based on database types seen earlier (leads: stage: lead_stage enum)
+      stage: "NEW",
     });
 
     if (error) {

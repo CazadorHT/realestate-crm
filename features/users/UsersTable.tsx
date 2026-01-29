@@ -15,8 +15,15 @@ import { UserRoleSelect } from "./UserRoleSelect";
 import { UserDeleteDialog } from "./UserDeleteDialog";
 import { UsersFilters } from "./UsersFilters";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th } from "date-fns/locale"; // Keep for other uses if any, or remove if unused. UsersTable doesn't seem to use it elsewhere.
+// Actually lines 17-18 are:
+// import { format } from "date-fns";
+// import { th } from "date-fns/locale";
+// I will just replace them with formatDate import if format is unused elsewhere.
+// Looking at the file, format is ONLY used for date display.
+// So I can replace the import.
 import { type UserRole } from "@/lib/auth-shared";
+import { formatDate } from "@/lib/utils";
 
 interface Profile {
   id: string;
@@ -113,9 +120,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                         <UserRoleBadge role={user.role} />
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {format(new Date(user.created_at), "d MMM yyyy", {
-                          locale: th,
-                        })}
+                        {formatDate(user.created_at)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">

@@ -107,7 +107,7 @@ export function NearbyPlaces({ location, data = [] }: NearbyPlacesProps) {
                     key={i}
                     className="flex justify-between items-start text-sm gap-2"
                   >
-                    <span className="text-slate-600 mr-auto break-words leading-tight">
+                    <span className="text-slate-600 mr-auto wrap-break-word leading-tight">
                       {item.name}
                     </span>
                     <div className="flex items-center gap-1 shrink-0 mt-0.5">

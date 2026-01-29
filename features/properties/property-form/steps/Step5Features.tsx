@@ -17,6 +17,8 @@ import {
   Dumbbell,
   MapPin,
   MoreHorizontal,
+  Baby, // Kids
+  ConciergeBell, // Services
 } from "lucide-react";
 import { FeaturesManagementDialog } from "@/features/amenities/components/FeaturesManagementDialog";
 import { PropertyFormValues } from "../../schema";
@@ -40,6 +42,26 @@ const CATEGORY_ICONS: Record<string, any> = {
   "สถานที่ใกล้เคียง (Nearby)": MapPin,
   "ทั่วไป (General)": Box,
   "อื่นๆ (Other)": MoreHorizontal,
+  "สำหรับเด็ก (Kids)": Baby,
+  "บริการ (Services)": ConciergeBell,
+};
+
+const CATEGORY_MAPPING: Record<string, string> = {
+  EXTERIOR: "ภายนอก (Exterior)",
+  INTERIOR: "ภายใน (Interior)",
+  FACILITIES: "ความสะดวกสบาย (Comfort)",
+  COMFORT: "ความสะดวกสบาย (Comfort)",
+  GENERAL: "ทั่วไป (General)",
+  SECURITY: "ความปลอดภัย (Security)",
+  KITCHEN: "ครัว (Kitchen)",
+  BATHROOM: "ห้องน้ำ (Bathroom)",
+  TECH: "เทคโนโลยี (Tech)",
+  TECHNOLOGY: "เทคโนโลยี (Tech)",
+  RECREATION: "สันทนาการ (Recreation)",
+  NEARBY: "สถานที่ใกล้เคียง (Nearby)",
+  OTHER: "อื่นๆ (Other)",
+  KIDS: "สำหรับเด็ก (Kids)",
+  SERVICES: "บริการ (Services)",
 };
 
 export const Step5Features = React.memo(Step5FeaturesComponent);
@@ -115,7 +137,12 @@ function Step5FeaturesComponent() {
   // Group by category
   const groupedFeatures = features.reduce(
     (acc, feature) => {
-      const cat = feature.category || "General";
+      // Normalize category key
+      const rawCat = feature.category || "General";
+      const upperCat = rawCat.toUpperCase();
+      // Try to find a mapped Thai Name, otherwise use raw
+      const cat = CATEGORY_MAPPING[upperCat] || rawCat;
+
       if (!acc[cat]) acc[cat] = [];
       acc[cat].push(feature);
       return acc;
@@ -147,7 +174,7 @@ function Step5FeaturesComponent() {
               <CategoryIcon className="w-4 h-4 text-slate-400" />
               {category}
             </h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-10 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-4">
               {categoryFeatures.map((feature) => {
                 const isSelected = selectedFeatureIds.includes(feature.id);
 

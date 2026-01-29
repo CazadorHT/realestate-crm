@@ -10,7 +10,14 @@ export type CalendarEvent = {
   start: string; // ISO String
   end?: string; // ISO String
   type: EventType;
-  meta?: any;
+  meta?: {
+    leadId?: string;
+    note?: string;
+    propertyTitle?: string;
+    propertyImage?: string | null;
+    contractNumber?: string;
+    type?: string;
+  };
   color?: string; // For UI
 };
 
@@ -37,7 +44,8 @@ export async function getCalendarEvents(
       lead_id,
       note,
       leads ( full_name ),
-      property_id
+      property_id,
+      properties ( title, images:property_images(image_url) )
     `,
     )
     .eq("activity_type", "VIEWING")
@@ -58,7 +66,12 @@ export async function getCalendarEvents(
         start: v.created_at,
         type: "viewing",
         color: "bg-blue-500",
-        meta: { leadId: v.lead_id, note: v.note },
+        meta: {
+          leadId: v.lead_id,
+          note: v.note,
+          propertyTitle: v.properties?.title,
+          propertyImage: v.properties?.images?.[0]?.image_url || null,
+        },
       });
     });
   }
@@ -73,7 +86,10 @@ export async function getCalendarEvents(
       contract_number,
       deals!inner (
          property_id,
-         property:properties ( title )
+         property:properties (
+           title,
+           images:property_images(image_url)
+         )
       )
     `,
     )
@@ -90,13 +106,19 @@ export async function getCalendarEvents(
   if (contracts) {
     contracts.forEach((c: any) => {
       const propertyTitle = c.deals?.property?.title || "Unknown Property";
+      const propertyImage = c.deals?.property?.images?.[0]?.image_url || null; // Access nested image
+
       events.push({
         id: c.id,
         title: `Contract Expire: ${propertyTitle}`,
         start: c.end_date,
         type: "contract_end",
         color: "bg-red-500",
-        meta: { contractNumber: c.contract_number },
+        meta: {
+          contractNumber: c.contract_number,
+          propertyTitle,
+          propertyImage,
+        },
       });
     });
   }
@@ -110,7 +132,10 @@ export async function getCalendarEvents(
       transaction_date,
       deal_type,
       property_id,
-      property:properties ( title )
+      property:properties (
+        title,
+        images:property_images(image_url)
+      )
     `,
     )
     .gte("transaction_date", startIso)
@@ -131,7 +156,11 @@ export async function getCalendarEvents(
         start: d.transaction_date,
         type: "deal_closing",
         color: "bg-green-500",
-        meta: { type: d.deal_type },
+        meta: {
+          type: d.deal_type,
+          propertyTitle: d.property?.title,
+          propertyImage: d.property?.images?.[0]?.image_url || null,
+        },
       });
     });
   }
