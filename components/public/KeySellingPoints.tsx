@@ -1,7 +1,13 @@
 import { Check, Star } from "lucide-react";
+import { DynamicIcon } from "@/components/dynamic-icon";
+
+export interface KeySellingPoint {
+  name: string;
+  icon?: string;
+}
 
 interface KeySellingPointsProps {
-  points?: string[];
+  points?: KeySellingPoint[];
   listingType: "SALE" | "RENT" | "SALE_AND_RENT";
 }
 
@@ -10,28 +16,35 @@ export function KeySellingPoints({
   listingType,
 }: KeySellingPointsProps) {
   // Default points if none provided (Fallbacks for now)
-  const defaultPoints = [
-    "ทำเลศักยภาพ เดินทางสะดวก",
-    "ตกแต่งครบ พร้อมเข้าอยู่",
-    "เหมาะสำหรับทุกคนในครอบครัว",
+  const defaultPoints: KeySellingPoint[] = [
+    { name: "ทำเลศักยภาพ เดินทางสะดวก", icon: "map-pin" },
+    { name: "ตกแต่งครบ พร้อมเข้าอยู่", icon: "armchair" },
+    { name: "เหมาะสำหรับทุกคนในครอบครัว", icon: "users" },
   ];
 
   const displayPoints = points.length > 0 ? points : defaultPoints;
 
   return (
-    <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 my-4">
+    <div className="bg-blue-50/50 border border-blue-100 rounded-xl px-4 py-6 my-4">
       <div className="flex items-center gap-2 mb-3">
         <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-        <h3 className="font-semibold text-slate-800">จุดเด่นทรัพย์นี้</h3>
+        <h3 className="font-semibold text-slate-800">คุณสมบัติพิเศษ</h3>
       </div>
       <div className="flex flex-col sm:flex-row flex-wrap gap-x-6 gap-y-2">
         {displayPoints.map((point, index) => (
           <div
             key={index}
-            className="flex items-center gap-2 text-slate-700 text-sm"
+            className="flex items-center gap-2 text-slate-700 text-sm py-2"
           >
-            <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-            <span>{point}</span>
+            {point.icon ? (
+              <DynamicIcon
+                name={point.icon}
+                className="w-4 h-4 text-blue-500 shrink-0"
+              />
+            ) : (
+              <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+            )}
+            <span>{point.name}</span>
           </div>
         ))}
       </div>

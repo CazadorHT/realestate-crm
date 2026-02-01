@@ -178,7 +178,7 @@ export function PublicNav() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                      className="border-blue-600 cursor-pointer text-blue-600 hover:bg-linear-to-r hover:from-sky-500 hover:to-blue-500 hover:text-white hover:border-sky-500 duration-300 transition-all"
                     >
                       <Search className="h-4 w-4 mr-1" />
                       ค้นหาทรัพย์
@@ -190,7 +190,7 @@ export function PublicNav() {
                   >
                     <Button
                       size="lg"
-                      className="bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md"
+                      className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md"
                     >
                       <Key className="h-4 w-4 mr-1" />
                       ฝากทรัพย์
@@ -260,7 +260,7 @@ export function PublicNav() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-base"
+                      className="w-full cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-base"
                     >
                       <Search className="h-5 w-5 mr-2" />
                       ค้นหาทรัพย์
@@ -273,7 +273,7 @@ export function PublicNav() {
                   >
                     <Button
                       size="lg"
-                      className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base"
+                      className="w-full cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base"
                     >
                       <Key className="h-5 w-5 mr-2" />
                       ฝากทรัพย์

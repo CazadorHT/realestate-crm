@@ -7,39 +7,122 @@ config({ path: resolve(process.cwd(), ".env.local") });
 import { createAdminClient } from "../lib/supabase/admin";
 
 /**
- * Generate a URL-friendly slug from a Thai/English title
- * Preserves Thai characters (consonants, vowels, tone marks), English, and numbers
+ * EXTREME SEO v4 Slug Generation (Synced with lib/seo-utils.ts)
  */
-function generateSlug(title: string): string {
-  return (
-    title
-      .toLowerCase()
-      .trim()
-      // Remove emojis and special symbols (but keep Thai, English, numbers, spaces, slashes, underscores)
-      .replace(/[^\u0E00-\u0E7Fa-zA-Z0-9\s\/_-]/g, "")
-      // Replace spaces, slashes, underscores with hyphens
-      .replace(/[\s\/_]+/g, "-")
-      // Remove multiple consecutive hyphens
-      .replace(/-+/g, "-")
-      // Remove leading/trailing hyphens
-      .replace(/^-+|-+$/g, "")
-      // Limit length to 100 characters
-      .slice(0, 100)
-  );
+function generateExtremeSlug(property: any): string {
+  const typeMap: Record<string, string> = {
+    HOUSE: "บ้านเดี่ยว",
+    CONDO: "คอนโด",
+    TOWNHOME: "ทาวน์โฮม",
+    LAND: "ที่ดิน",
+    OFFICE_BUILDING: "อาคารสำนักงานออฟฟิศ",
+    COMMERCIAL_BUILDING: "อาคารพาณิชย์",
+    WAREHOUSE: "โกดัง",
+  };
+  const typeLabel = property.property_type
+    ? typeMap[property.property_type]
+    : "";
+
+  // Calculate special flags
+  const is_hot_sale =
+    (property.original_price &&
+      property.price &&
+      property.original_price > property.price) ||
+    (property.original_rental_price &&
+      property.rental_price &&
+      property.original_rental_price > property.rental_price);
+
+  const near_transit = ((property.nearby_transits as any[])?.length || 0) > 0;
+
+  // SEO Keywords mapping
+  const seoKeywords = [
+    is_hot_sale && "ราคาถูก-ลดราคาพิเศษ",
+    near_transit && "ใกล้รถไฟฟ้า",
+    property.is_pet_friendly && "เลี้ยงสัตว์ได้",
+    property.is_corner_unit && "ห้องมุม",
+    property.is_renovated && "รีโนเวทใหม่",
+    property.is_fully_furnished && "แต่งครบ-พร้อมอยู่",
+    property.is_selling_with_tenant && "พร้อมผู้เช่า-ลงทุนคุ้ม",
+    property.is_foreigner_quota && "ต่างชาติซื้อได้",
+  ].filter(Boolean);
+
+  // Extract Top 2 Nearby Places (Priority: Transit > Others)
+  const nearbyKeywords: string[] = [];
+  const allPlaces = [
+    ...(property.nearby_transits || []),
+    ...(property.nearby_places || []),
+  ];
+  if (allPlaces.length > 0) {
+    const sorted = allPlaces.sort((a, b) => {
+      const aName = a.name || "";
+      const bName = b.name || "";
+      const isTransit = (t: string) =>
+        t.includes("BTS") || t.includes("MRT") || t.includes("สายสี");
+      if (isTransit(aName) && !isTransit(bName)) return -1;
+      if (!isTransit(aName) && isTransit(bName)) return 1;
+      return 0;
+    });
+    sorted.slice(0, 2).forEach((place) => {
+      if (place.name) nearbyKeywords.push(`ใกล้-${place.name}`);
+    });
+  }
+
+  // Extract Top 2 Special Features (from property_features relation)
+  const featureKeywords: string[] = [];
+  if (property.property_features && property.property_features.length > 0) {
+    property.property_features.slice(0, 2).forEach((pf: any) => {
+      if (pf.features?.name) featureKeywords.push(pf.features.name);
+    });
+  }
+
+  const parts = [
+    property.title,
+    ...featureKeywords,
+    ...nearbyKeywords,
+    ...seoKeywords,
+    property.bedrooms && `${property.bedrooms} นอน`,
+    property.bathrooms && `${property.bathrooms} น้ำ`,
+    property.size_sqm && `${property.size_sqm} ตรม`,
+    typeLabel,
+    property.popular_area,
+    property.subdistrict,
+    property.district,
+    property.province,
+  ].filter(Boolean);
+
+  const rawString = parts.join(" ");
+
+  // Manual Cleaning: Keep Thai, English, Numbers, Space, Hyphens
+  const cleaned = rawString
+    .replace(/[^\u0E00-\u0E7Fa-zA-Z0-9\s_-]/g, " ")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s/_]+/g, "-") // Replace spaces and slashes with hyphens
+    .replace(/-+/g, "-"); // Remove duplicate hyphens
+
+  // Add random suffix for uniqueness
+  const suffix = Date.now().toString(36).slice(-4);
+  return `${cleaned.slice(0, 220)}-${suffix}`; // Allowed longer URLs for Extreme SEO
 }
 
-/**
- * FORCE re-generate ALL slugs (even if they already exist)
- */
 async function forceRegenerateSlugs() {
   const supabase = createAdminClient();
 
-  console.log("🔥 Force re-generating ALL slugs...\n");
+  console.log("🔥 Force re-generating ALL slugs with EXTREME SEO v4...\n");
 
-  // Fetch ALL properties
-  const { data: properties, error: fetchError } = await supabase
-    .from("properties")
-    .select("id, title, slug");
+  // Fetch ALL properties with associated data
+  const { data: properties, error: fetchError } = await supabase.from(
+    "properties",
+  ).select(`
+      id, title, slug, bedrooms, bathrooms, size_sqm, property_type, district, province, popular_area, subdistrict, 
+      original_price, price, original_rental_price, rental_price, nearby_transits, nearby_places,
+      is_pet_friendly, is_corner_unit, is_renovated, is_fully_furnished, is_selling_with_tenant, is_foreigner_quota,
+      property_features (
+        features (
+          name
+        )
+      )
+    `);
 
   if (fetchError) {
     console.error("❌ Error fetching properties:", fetchError);
@@ -53,35 +136,19 @@ async function forceRegenerateSlugs() {
 
   console.log(`📊 Found ${properties.length} properties\n`);
 
-  // Generate new slugs
-  const slugMap = new Map<string, number>();
   const updates: { id: string; oldSlug: string | null; newSlug: string }[] = [];
 
   for (const property of properties) {
-    let baseSlug = generateSlug(property.title);
-
-    // Handle duplicates
-    if (slugMap.has(baseSlug)) {
-      const count = slugMap.get(baseSlug)! + 1;
-      slugMap.set(baseSlug, count);
-      baseSlug = `${baseSlug}-${count}`;
-    } else {
-      slugMap.set(baseSlug, 1);
-    }
-
+    let newSlug = generateExtremeSlug(property);
     updates.push({
       id: property.id,
       oldSlug: property.slug,
-      newSlug: baseSlug,
+      newSlug: newSlug,
     });
   }
 
-  // Update database
   console.log("💾 Updating database...\n");
   let successCount = 0;
-  let errorCount = 0;
-  let changedCount = 0;
-
   for (const update of updates) {
     const { error } = await supabase
       .from("properties")
@@ -90,47 +157,19 @@ async function forceRegenerateSlugs() {
 
     if (error) {
       console.error(`❌ Failed to update ${update.id}:`, error.message);
-      errorCount++;
     } else {
       successCount++;
-      if (update.oldSlug !== update.newSlug) {
-        changedCount++;
-      }
-      if (successCount % 10 === 0) {
-        console.log(
-          `   ✓ Updated ${successCount}/${updates.length} properties...`
-        );
-      }
     }
   }
 
-  // Summary
-  console.log("\n" + "=".repeat(50));
-  console.log(`✅ Re-generation complete!`);
-  console.log(`   Total:   ${properties.length}`);
-  console.log(`   Success: ${successCount}`);
-  console.log(`   Changed: ${changedCount}`);
-  console.log(`   Errors:  ${errorCount}`);
-  console.log("=".repeat(50));
-
-  // Show examples of changes
-  console.log("\n📋 Examples of slug changes:");
-  const changed = updates.filter((u) => u.oldSlug !== u.newSlug).slice(0, 5);
-  changed.forEach((u, i) => {
-    const original = properties.find((p) => p.id === u.id);
-    console.log(`   ${i + 1}. "${original?.title}"`);
-    console.log(`      OLD: "${u.oldSlug}"`);
-    console.log(`      NEW: "${u.newSlug}"`);
-  });
+  console.log(
+    `✅ Re-generation complete! Success: ${successCount}/${properties.length}`,
+  );
 }
 
-// Run the migration
 forceRegenerateSlugs()
-  .then(() => {
-    console.log("\n🎉 Done!");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("\n💥 Fatal error:", error);
+  .then(() => process.exit(0))
+  .catch((e) => {
+    console.error(e);
     process.exit(1);
   });

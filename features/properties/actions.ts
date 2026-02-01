@@ -707,11 +707,34 @@ export async function updatePropertyAction(
       size_sqm: propertyData.size_sqm ?? undefined,
       price: propertyData.price ?? undefined,
       rental_price: propertyData.rental_price ?? undefined,
-      district: propertyData.district,
-      province: propertyData.province,
-      address_line1: propertyData.address_line1,
-      postal_code: propertyData.postal_code,
-      description: propertyData.description,
+      popular_area: propertyData.popular_area ?? undefined,
+      subdistrict: propertyData.subdistrict ?? undefined,
+      district: propertyData.district ?? undefined,
+      province: propertyData.province ?? undefined,
+      address_line1: propertyData.address_line1 ?? undefined,
+      postal_code: propertyData.postal_code ?? undefined,
+      description: propertyData.description ?? undefined,
+      // SEO Flags
+      is_pet_friendly: !!propertyData.is_pet_friendly,
+      is_corner_unit: !!propertyData.is_corner_unit,
+      is_renovated: !!propertyData.is_renovated,
+      is_fully_furnished: !!propertyData.is_fully_furnished,
+      is_selling_with_tenant: !!propertyData.is_selling_with_tenant,
+      is_foreigner_quota: !!propertyData.is_foreigner_quota,
+      is_hot_sale: !!(
+        (propertyData.original_price &&
+          propertyData.price &&
+          propertyData.original_price > propertyData.price) ||
+        (propertyData.original_rental_price &&
+          propertyData.rental_price &&
+          propertyData.original_rental_price > propertyData.rental_price)
+      ),
+      near_transit: !!(
+        ((propertyData.nearby_transits as any[])?.length || 0) > 0 ||
+        (propertyData as any).near_transit
+      ),
+      nearby_places: (propertyData as any).nearby_places || [],
+      features: (propertyData as any).features || [],
     });
 
     const mergedKeywords = Array.from(

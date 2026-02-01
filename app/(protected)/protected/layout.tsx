@@ -8,6 +8,8 @@ import { UserNav } from "@/components/dashboard/UserNav";
 import { MobileNav } from "@/components/dashboard/MobileNav";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
+import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
+
 export default async function ProtectedLayout({
   children,
 }: {
@@ -54,7 +56,10 @@ export default async function ProtectedLayout({
           </div>
         </header>
 
-        <main className="flex-1 p-6 md:p-8  mx-auto w-full">{children}</main>
+        <main className="flex-1 p-6 md:p-8 mx-auto w-full">
+          <AppBreadcrumbs className="mb-6" />
+          {children}
+        </main>
       </div>
     </div>
   );

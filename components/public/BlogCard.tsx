@@ -28,9 +28,9 @@ export function BlogCard({ post, className }: BlogCardProps) {
       href={`/blog/${post.slug}`}
       className={cn("group block h-full", className)}
     >
-      <article className="flex flex-col h-full overflow-hidden rounded-2xl border bg-card transition-all duration-300 hover:shadow-card hover:-translate-y-1">
+      <article className="flex flex-col h-full overflow-hidden rounded-2xl border border-slate-200 bg-card transition-all duration-300 hover:shadow-card hover:-translate-y-1">
         {/* Image Container */}
-        <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+        <div className="relative aspect-16/10 overflow-hidden bg-muted">
           {post.cover_image ? (
             <Image
               src={post.cover_image}

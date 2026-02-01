@@ -16,7 +16,7 @@ export default function Loading() {
             </div>
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div className="space-y-3 flex-grow min-w-0 max-w-[800px]">
+              <div className="space-y-3 grow min-w-0 max-w-[800px]">
                 {/* Badge and ID */}
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-16 bg-slate-200 rounded-full" />
@@ -133,7 +133,7 @@ export default function Loading() {
             <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-xl sticky top-24 animate-pulse">
               {/* Agent Info */}
               <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
-                <div className="h-16 w-16 bg-slate-200 rounded-full flex-shrink-0" />
+                <div className="h-16 w-16 bg-slate-200 rounded-full shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 w-20 bg-slate-200 rounded" />
                   <div className="h-5 w-32 bg-slate-200 rounded" />

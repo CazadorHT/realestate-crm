@@ -11,6 +11,7 @@ import {
   TRANSIT_TYPE_LABELS,
   TRANSIT_TYPE_STYLES,
 } from "@/features/properties/labels";
+import { MdOutlineExplore } from "react-icons/md";
 
 export interface NearbyPlaceItem {
   category: string;
@@ -102,9 +103,9 @@ export function NearbyPlaces({
   const transitTypes = Object.keys(groupedTransits);
 
   return (
-    <div className="mt-8">
-      <h3 className="text-lg font-bold text-slate-900 mb-4">
-        สถานที่สำคัญใกล้เคียง
+    <div className="mt-10">
+      <h3 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+       <MdOutlineExplore className="w-5 h-5 text-blue-600" /> สถานที่สำคัญใกล้เคียง
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
         {/* Nearby Places Categories (Transport = ทางด่วน) */}

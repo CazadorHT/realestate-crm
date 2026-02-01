@@ -3,6 +3,7 @@ import { PropertyCard } from "./PropertyCard";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Database } from "@/lib/database.types";
+import { MdMapsHomeWork } from "react-icons/md";
 
 type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 type PropertyType = Database["public"]["Enums"]["property_type"];
@@ -83,8 +84,8 @@ export async function SimilarPropertiesSection({
     <section className="py-8 md:py-12 border-t border-slate-100">
       <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6 md:mb-8">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900">
-            ทรัพย์สินที่คล้ายกัน
+          <h2 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+           <MdMapsHomeWork className="w-5 h-5 text-blue-600" /> ทรัพย์สินที่คล้ายกัน
           </h2>
           <p className="text-slate-500 text-sm mt-1">
             อสังหาริมทรัพย์ประเภทเดียกันที่คุณอาจสนใจ

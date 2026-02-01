@@ -29,7 +29,7 @@ export function HeroSection() {
   };
 
   return (
-    <div className="relative pt-16 sm:pt-18 lg:pt-20 min-h-screen bg-[url('/images/hero-realestate.png')] bg-cover bg-center bg-no-repeat overflow-x-hidden">
+    <div className="relative min-h-screen bg-[url('/images/hero-realestate.png')] bg-cover bg-center bg-no-repeat overflow-x-hidden">
       {/* Gradient Overlay สำหรับความคมของ text */}
       <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/70" />
 

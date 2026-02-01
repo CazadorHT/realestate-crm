@@ -5,6 +5,8 @@ import { FloatingActionMenu } from "@/components/public/FloatingActionMenu";
 import { FloatingContactDial } from "@/components/public/FloatingContactDial";
 import { PublicFooter } from "@/components/public/PublicFooter";
 
+import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
+
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <>
@@ -13,7 +15,6 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
       <FloatingContactDial />
       <FloatingActionMenu />
       <CompareBar />
-
 
       <PublicFooter />
     </>

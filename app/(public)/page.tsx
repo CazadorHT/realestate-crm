@@ -74,7 +74,6 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       {/* Awareness (ช่วงต้น: ดึงดูดสายตาและสร้างความเชื่อมั่นทันที) */}
-      <PublicNav />
       <HeroSection />
       <PropertyTypeGrid />
       <StatsBand />
