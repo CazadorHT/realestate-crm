@@ -1,18 +1,10 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  FileText,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  TrendingUp,
-} from "lucide-react";
+import { Clock } from "lucide-react";
 import { ContractsTable } from "@/features/contracts/components/ContractsTable";
 import { CreateContractDialog } from "@/features/contracts/components/CreateContractDialog";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { SectionTitle } from "@/components/dashboard/SectionTitle";
-import { EmptyState } from "@/components/dashboard/EmptyState";
+import { ContractStats } from "@/features/contracts/components/ContractStats";
+import { getContractStatus } from "@/features/contracts/utils";
 
 type RentalContractWithRelations = {
   id: string;
@@ -33,37 +25,6 @@ type RentalContractWithRelations = {
     } | null;
   } | null;
 };
-
-function getContractStatus(endDate: string) {
-  const now = new Date();
-  const end = new Date(endDate);
-  const daysUntilExpiry = Math.ceil(
-    (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-  );
-
-  if (daysUntilExpiry < 0) {
-    return {
-      status: "expired",
-      label: "หมดอายุ",
-      variant: "destructive" as const,
-      days: daysUntilExpiry,
-    };
-  } else if (daysUntilExpiry <= 30) {
-    return {
-      status: "expiring-soon",
-      label: "ใกล้หมดอายุ",
-      variant: "default" as const,
-      days: daysUntilExpiry,
-    };
-  } else {
-    return {
-      status: "active",
-      label: "ใช้งาน",
-      variant: "default" as const,
-      days: daysUntilExpiry,
-    };
-  }
-}
 
 export default async function RentalContractsPage() {
   const { supabase, role } = await requireAuthContext();
@@ -92,27 +53,9 @@ export default async function RentalContractsPage() {
   }
 
   const contracts = (data as unknown as RentalContractWithRelations[]) || [];
-
-  // Calculate statistics
-  const totalContracts = contracts.length;
-  const activeContracts = contracts.filter(
-    (c) => getContractStatus(c.end_date).status === "active",
-  ).length;
   const expiringSoonContracts = contracts.filter(
     (c) => getContractStatus(c.end_date).status === "expiring-soon",
   ).length;
-  const expiredContracts = contracts.filter(
-    (c) => getContractStatus(c.end_date).status === "expired",
-  ).length;
-
-  const totalMonthlyRevenue = contracts
-    .filter(
-      (c) =>
-        getContractStatus(c.end_date).status === "active" && c.monthly_rent,
-    )
-    .reduce((sum, c) => sum + (c.monthly_rent || 0), 0);
-
-  const isEmptyState = totalContracts === 0;
 
   return (
     <div className="p-6 space-y-6">
@@ -120,81 +63,14 @@ export default async function RentalContractsPage() {
       <PageHeader
         title="สัญญาเช่า (Contracts)"
         subtitle="จัดการและติดตามสัญญาเช่าทั้งหมด"
-        count={totalContracts}
+        count={contracts.length}
         icon="fileText"
         gradient="emerald"
         actionSlot={<CreateContractDialog />}
       />
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">สัญญาทั้งหมด</CardTitle>
-            <FileText className="h-4 w-4 text-slate-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalContracts}</div>
-            <p className="text-xs text-slate-500 mt-1">Total contracts</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">ใช้งานอยู่</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {activeContracts}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">Active contracts</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">ใกล้หมดอายุ</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {expiringSoonContracts}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">Expiring in 30 days</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">หมดอายุแล้ว</CardTitle>
-            <XCircle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {expiredContracts}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">Expired contracts</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">รายได้/เดือน</CardTitle>
-            <TrendingUp className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {new Intl.NumberFormat("th-TH", {
-                style: "currency",
-                currency: "THB",
-                maximumFractionDigits: 0,
-              }).format(totalMonthlyRevenue)}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">From active contracts</p>
-          </CardContent>
-        </Card>
-      </div>
+      <ContractStats contracts={contracts} />
 
       {/* Contracts Table */}
       <ContractsTable contracts={contracts} />

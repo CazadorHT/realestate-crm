@@ -17,6 +17,10 @@ import { DocumentSection } from "@/features/documents/components/DocumentSection
 import type { LeadActivityFormValues } from "@/lib/types/leads";
 import type { Database } from "@/lib/database.types";
 
+// Components
+import { LeadContactCard } from "@/features/leads/components/LeadContactCard";
+import { LeadRequirementsCard } from "@/features/leads/components/LeadRequirementsCard";
+
 type LeadActivity = Database["public"]["Tables"]["lead_activities"]["Row"];
 
 export default async function LeadDetailPage({
@@ -32,7 +36,7 @@ export default async function LeadDetailPage({
   // Fetch Deals
   const deals = await getDealsByLeadId(id);
 
-  // Fetch properties for the dropdown with all fields needed for DealFormDialog
+  // Fetch properties for dropdown
   const { data: propertiesRaw } = await (await import("@/lib/supabase/server"))
     .createClient()
     .then((c) =>
@@ -46,7 +50,6 @@ export default async function LeadDetailPage({
         .limit(50),
     );
 
-  // Map to include cover_image for DealPropertyOption compatibility
   const properties = (propertiesRaw ?? []).map((p: any) => ({
     id: p.id,
     title: p.title,
@@ -123,191 +126,8 @@ export default async function LeadDetailPage({
 
       {/* Top Row - Contact & Requirements (2 columns) */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Contact Card */}
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm space-y-4">
-          <div className="border-b border-slate-200 px-5 py-4">
-            <h3 className="font-semibold text-base flex items-center gap-2  text-slate-800">
-              📞 ข้อมูลติดต่อ
-            </h3>
-          </div>
-          <div className="p-5">
-            <div className="grid gap-3 text-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">สถานะลูกค้า</span>
-                <span className="font-medium bg-slate-100 px-2.5 py-1 rounded-md text-xs">
-                  {leadStageLabelNullable(lead.stage)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">เบอร์โทรศัพท์</span>
-                <span className="font-medium">
-                  {lead.phone ? (
-                    <a
-                      href={`tel:${lead.phone}`}
-                      className="hover:underline text-blue-600"
-                    >
-                      {lead.phone}
-                    </a>
-                  ) : (
-                    "-"
-                  )}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">อีเมล</span>
-                <span className="font-medium truncate max-w-[200px]">
-                  {lead.email ? (
-                    <a
-                      href={`mailto:${lead.email}`}
-                      className="hover:underline text-blue-600"
-                    >
-                      {lead.email}
-                    </a>
-                  ) : (
-                    "-"
-                  )}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Line ID</span>
-                <span className="font-medium">
-                  {(lead.preferences as any)?.line_id ? (
-                    <span className="text-emerald-600 font-bold">
-                      {(lead.preferences as any).line_id}
-                    </span>
-                  ) : (
-                    "-"
-                  )}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">ติดต่อออนไลน์</span>
-                <span className="font-medium">
-                  {(lead.preferences as any)?.online_contact || "-"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">สัญชาติ</span>
-                <span className="font-medium">
-                  {lead.nationality
-                    ? `${lead.nationality} ${
-                        lead.is_foreigner ? "(ต่างชาติ)" : "(ไทย)"
-                      }`
-                    : lead.is_foreigner
-                      ? "ต่างชาติ"
-                      : "ไทย"}
-                </span>
-              </div>
-              {lead.note && (
-                <div className="pt-3 border-t border-slate-200 mt-2">
-                  <span className="text-muted-foreground text-xs uppercase tracking-wider block mb-1.5">
-                    บันทึกเพิ่มเติม
-                  </span>
-                  <p className="text-sm bg-slate-50 p-3 rounded-lg text-slate-600">
-                    {lead.note}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Requirements Card */}
-        <div className="rounded-xl border border-slate-200 bg-white  shadow-sm space-y-4">
-          <div className="border-b border-slate-200 px-5 py-4">
-            <h3 className="font-semibold text-base flex items-center gap-2 text-slate-800">
-              🎯 ความต้องการ
-            </h3>
-          </div>
-          <div className="p-5">
-            <div className="grid gap-3 text-sm">
-              <div className="flex justify-between items-start">
-                <span className="text-muted-foreground">ทำเลที่สนใจ</span>
-                <span className="font-medium text-right max-w-[60%] leading-snug">
-                  {lead.preferred_locations &&
-                  lead.preferred_locations.length > 0
-                    ? lead.preferred_locations.join(", ")
-                    : "-"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">งบประมาณ</span>
-                <span className="font-semibold text-green-600">
-                  {lead.budget_min || lead.budget_max ? (
-                    <>
-                      {lead.budget_min
-                        ? `฿${lead.budget_min.toLocaleString()}`
-                        : "0"}
-                      {" - "}
-                      {lead.budget_max
-                        ? `฿${lead.budget_max.toLocaleString()}`
-                        : "∞"}
-                    </>
-                  ) : (
-                    "-"
-                  )}
-                </span>
-              </div>
-
-              {/* Room Requirements */}
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <div className="bg-slate-50 p-3 rounded-lg flex flex-col items-center">
-                  <span className="text-xs text-muted-foreground">
-                    ห้องนอน (ขั้นต่ำ)
-                  </span>
-                  <span className="font-bold text-xl text-slate-800">
-                    {lead.min_bedrooms ?? "-"}
-                  </span>
-                </div>
-                <div className="bg-slate-50 p-3 rounded-lg flex flex-col items-center">
-                  <span className="text-xs text-muted-foreground">
-                    ห้องน้ำ (ขั้นต่ำ)
-                  </span>
-                  <span className="font-bold text-xl text-slate-800">
-                    {lead.min_bathrooms ?? "-"}
-                  </span>
-                </div>
-              </div>
-
-              {(lead.min_size_sqm || lead.max_size_sqm) && (
-                <div className="flex justify-between items-center pt-1">
-                  <span className="text-muted-foreground">ขนาดพื้นที่</span>
-                  <span className="font-medium">
-                    {lead.min_size_sqm ?? 0} - {lead.max_size_sqm ?? "∞"} ตร.ม.
-                  </span>
-                </div>
-              )}
-              <div className="flex justify-between items-center pt-6">
-                <span className="text-muted-foreground">ผู้พักอาศัย</span>
-                <span className="font-medium">
-                  {lead.num_occupants ? `${lead.num_occupants} คน` : "-"}
-                </span>
-              </div>
-
-              {/* Preferences */}
-              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200 ">
-                <div className="bg-slate-50 p-3 rounded-lg text-center">
-                  <span className="text-xs text-muted-foreground block mb-1">
-                    เลี้ยงสัตว์
-                  </span>
-                  <span className="font-medium text-sm">
-                    {lead.has_pets ? "✅ เลี้ยงได้" : "❌ ไม่เลี้ยง"}
-                  </span>
-                </div>
-                <div className="bg-slate-50 p-3 rounded-lg text-center">
-                  <span className="text-xs text-muted-foreground block mb-1">
-                    สูบบุหรี่
-                  </span>
-                  <span className="font-medium text-sm">
-                    {(lead.preferences as any)?.is_smoker
-                      ? "✅ สูบ"
-                      : "❌ ไม่สูบ"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <LeadContactCard lead={lead} />
+        <LeadRequirementsCard lead={lead} />
       </div>
 
       {/* Main Content - 3 Column Grid */}
@@ -332,7 +152,7 @@ export default async function LeadDetailPage({
           </div>
         </div>
 
-        {/* Documents Section - uses its own wrapper */}
+        {/* Documents Section */}
         <DocumentSection ownerId={id} ownerType="LEAD" />
 
         {/* Timeline */}

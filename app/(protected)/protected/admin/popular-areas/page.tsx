@@ -1,12 +1,10 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getPopularAreasAction } from "@/features/admin/popular-areas-actions";
 import { PopularAreasTable } from "@/features/admin/components/PopularAreasTable";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Map, TrendingUp } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/dashboard/PageHeader";
-import { SectionTitle } from "@/components/dashboard/SectionTitle";
 import { CreatePopularAreaButton } from "@/features/admin/components/CreatePopularAreaButton";
+import { PopularAreasStats } from "@/features/admin/components/PopularAreasStats";
 
 export default async function AdminPopularAreasPage() {
   const { role } = await requireAuthContext();
@@ -53,44 +51,10 @@ export default async function AdminPopularAreasPage() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">ทำเลทั้งหมด</CardTitle>
-            <MapPin className="h-4 w-4 text-slate-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalAreas}</div>
-            <p className="text-xs text-slate-500 mt-1">Popular areas</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">ทรัพย์ในทำเล</CardTitle>
-            <Map className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {totalProperties}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">Properties with area</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">เฉลี่ยต่อทำเล</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {totalAreas > 0 ? Math.round(totalProperties / totalAreas) : 0}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">Avg properties/area</p>
-          </CardContent>
-        </Card>
-      </div>
+      <PopularAreasStats
+        totalAreas={totalAreas}
+        totalProperties={totalProperties}
+      />
 
       {/* Popular Areas Table */}
       <div className="rounded-xl border border-slate-200   bg-white shadow-sm overflow-hidden">
