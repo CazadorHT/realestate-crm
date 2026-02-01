@@ -43,7 +43,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
   const isEmptyState = owners.length === 0 && page === 1 && !q;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 animate-fade-in">
       {/* Premium Header */}
       <PageHeader
         title="เจ้าของทรัพย์"

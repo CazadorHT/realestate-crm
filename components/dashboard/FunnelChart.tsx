@@ -25,7 +25,7 @@ export function FunnelChart({ data }: FunnelChartProps) {
       <CardContent>
         <div className="h-[250px] w-full flex">
           <ResponsiveContainer
-            width="70%"
+            width="99%"
             height="100%"
             minHeight={0}
             minWidth={0}

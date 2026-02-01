@@ -65,9 +65,6 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
 
         try {
           fileToUpload = await imageCompression(file, options);
-          console.log(
-            `Compressed from ${(file.size / 1024 / 1024).toFixed(2)}MB to ${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB`,
-          );
         } catch (compressionError) {
           console.error(
             "Compression failed, trying original if size permits",

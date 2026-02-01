@@ -50,6 +50,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
 function ContractStatusBadge({ status }: { status: string }) {
@@ -93,6 +103,9 @@ export function RentalContractSection({
     dealStatus === "CLOSED_WIN" || dealStatus === "SIGNED";
   const [contract, setContract] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isActionPending, setIsActionPending] = useState(false);
+  const [showStopDialog, setShowStopDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const [open, setOpen] = useState(false);
   const today = new Date().toISOString().slice(0, 10);
@@ -644,37 +657,64 @@ export function RentalContractSection({
                     size="sm"
                     variant="outline"
                     className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-1.5"
-                    onClick={async () => {
-                      if (
-                        !confirm(
-                          "คุณต้องการหยุดสัญญา/ยกเลิกสัญญา นี้ใช่หรือไม่? (สถานะจะเปลี่ยนเป็น TERMINATED )",
-                        )
-                      )
-                        return;
-                      try {
-                        const res = await fetch(
-                          `/api/rental-contracts/${dealId}`,
-                          {
-                            method: "PUT",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                              id: contract.id,
-                              status: "TERMINATED",
-                            }),
-                          },
-                        );
-                        if (!res.ok) throw new Error("Terminate failed");
-                        toast.success("หยุดสัญญาเรียบร้อย");
-                        await fetchContract();
-                      } catch (e) {
-                        toast.error("ล้มเหลวในการหยุดสัญญา");
-                      }
-                    }}
+                    onClick={() => setShowStopDialog(true)}
                   >
                     <Ban className="h-3.5 w-3.5" />
                     หยุดสัญญา
                   </Button>
                 )}
+
+                <AlertDialog
+                  open={showStopDialog}
+                  onOpenChange={setShowStopDialog}
+                >
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>ยืนยันการหยุดสัญญา</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        คุณต้องการหยุดสัญญา/ยกเลิกสัญญานี้ใช่หรือไม่?
+                        สถานะจะเปลี่ยนเป็น TERMINATED และไม่สามารถย้อนกลับเป็น
+                        ACTIVE ได้ง่ายๆ
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={isActionPending}>
+                        ยกเลิก
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        disabled={isActionPending}
+                        className="bg-amber-600 hover:bg-amber-700"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          setIsActionPending(true);
+                          try {
+                            const res = await fetch(
+                              `/api/rental-contracts/${dealId}`,
+                              {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  id: contract.id,
+                                  status: "TERMINATED",
+                                }),
+                              },
+                            );
+                            if (!res.ok) throw new Error("Terminate failed");
+                            toast.success("หยุดสัญญาเรียบร้อย");
+                            await fetchContract();
+                            setShowStopDialog(false);
+                          } catch (e) {
+                            toast.error("ล้มเหลวในการหยุดสัญญา");
+                          } finally {
+                            setIsActionPending(false);
+                          }
+                        }}
+                      >
+                        ยืนยันการหยุดสัญญา
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
 
                 <Button
                   size="sm"
@@ -684,7 +724,6 @@ export function RentalContractSection({
                   แก้ไข
                 </Button>
 
-                {/* Common Delete Button - Disabled unless TERMINATED or DRAFT */}
                 <Button
                   size="sm"
                   variant="ghost"
@@ -694,28 +733,59 @@ export function RentalContractSection({
                       ? "text-destructive hover:text-destructive hover:bg-destructive/10"
                       : "text-muted-foreground"
                   }`}
-                  onClick={async () => {
-                    if (!confirm("คุณต้องการลบสัญญานี้ใช่หรือไม่?")) return;
-                    try {
-                      const res = await fetch(
-                        `/api/rental-contracts/${dealId}`,
-                        {
-                          method: "DELETE",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ id: contract.id }),
-                        },
-                      );
-                      if (!res.ok) throw new Error("Delete failed");
-                      toast.success("ลบสัญญาเรียบร้อย");
-                      await fetchContract();
-                    } catch (e) {
-                      toast.error("ล้มเหลวในการลบสัญญา");
-                    }
-                  }}
+                  onClick={() => setShowDeleteDialog(true)}
                 >
                   <XCircle className="h-3.5 w-3.5" />
                   ลบสัญญา
                 </Button>
+
+                <AlertDialog
+                  open={showDeleteDialog}
+                  onOpenChange={setShowDeleteDialog}
+                >
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>ยืนยันการลบสัญญา</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        คุณแน่ใจหรือไม่ว่าต้องการลบสัญญานี้?
+                        ข้อมูลสัญญาและเอกสารที่เกี่ยวข้องในส่วนของสัญญานี้จะถูกลบออกจากระบบเป็นการถาวร
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={isActionPending}>
+                        ยกเลิก
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        disabled={isActionPending}
+                        className="bg-destructive hover:bg-destructive/90 text-white"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          setIsActionPending(true);
+                          try {
+                            const res = await fetch(
+                              `/api/rental-contracts/${dealId}`,
+                              {
+                                method: "DELETE",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ id: contract.id }),
+                              },
+                            );
+                            if (!res.ok) throw new Error("Delete failed");
+                            toast.success("ลบสัญญาเรียบร้อย");
+                            await fetchContract();
+                            setShowDeleteDialog(false);
+                          } catch (e) {
+                            toast.error("ล้มเหลวในการลบสัญญา");
+                          } finally {
+                            setIsActionPending(false);
+                          }
+                        }}
+                      >
+                        ยืนยันการลบ
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
 

@@ -20,6 +20,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Plus, Pencil, Trash2, Loader2, MapPin } from "lucide-react";
 import { toast } from "sonner";
@@ -48,6 +58,8 @@ export function PopularAreasTable({
   const [editingItem, setEditingItem] = useState<PopularArea | null>(null);
   const [itemName, setItemName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
 
   // Pagination
   const searchParams = useSearchParams();
@@ -110,31 +122,28 @@ export function PopularAreasTable({
     }
     setIsLoading(false);
 
-    if (res?.error) {
-      toast.error(res.error);
+    if (res?.success === false) {
+      toast.error(res.message || "เกิดข้อผิดพลาด");
     } else {
-      toast.success(editingItem ? "แก้ไขสำเร็จ" : "เพิ่มสำเร็จ");
+      toast.success(
+        res?.message || (editingItem ? "แก้ไขสำเร็จ" : "เพิ่มสำเร็จ"),
+      );
       setIsDialogOpen(false);
-
-      // Ideally we should sync data from server revalidation
-      // But for simplicity, we force a reload or we could manually update 'data'
-      // Optimistic update isn't strictly needed for this admin tool
       window.location.reload();
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`ยืนยันลบทำเล "${name}"?`)) return;
-
+  const handleDelete = async (id: string) => {
     setIsLoading(true);
     const res = await deletePopularAreaAction(id);
     setIsLoading(false);
 
-    if (res?.error) {
-      toast.error(res.error);
+    if (res?.success === false) {
+      toast.error(res.message || "เกิดข้อผิดพลาด");
     } else {
-      toast.success("ลบสำเร็จ");
+      toast.success(res?.message || "ลบสำเร็จ");
       setData((prev) => prev.filter((p) => p.id !== id));
+      clearSelection();
     }
   };
 
@@ -260,7 +269,10 @@ export function PopularAreasTable({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                      onClick={() => handleDelete(item.id, item.name)}
+                      onClick={() => {
+                        setDeleteConfirmId(item.id);
+                        setDeleteConfirmName(item.name);
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -271,6 +283,43 @@ export function PopularAreasTable({
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog
+        open={!!deleteConfirmId}
+        onOpenChange={(open) => !open && setDeleteConfirmId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการลบทำเล</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณแน่ใจหรือไม่ว่าต้องการลบทำเล "
+              <strong className="text-foreground">{deleteConfirmName}</strong>"?
+              การดำเนินการนี้ไม่สามารถย้อนกลับได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLoading}>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isLoading}
+              onClick={(e) => {
+                e.preventDefault();
+                if (deleteConfirmId) handleDelete(deleteConfirmId);
+                setDeleteConfirmId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  กำลังลบ...
+                </>
+              ) : (
+                "ยืนยันการลบ"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <PaginationControls
         totalCount={data.length}

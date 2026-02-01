@@ -2,6 +2,7 @@ import { getAdminUsersAction } from "@/features/admin/actions";
 import { UsersTable } from "@/features/admin/components/UsersTable";
 import { requireAuthContext, assertAdmin } from "@/lib/authz";
 import { UserStats } from "@/features/admin/components/UserStats";
+import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 
 export default async function AdminUsersPage() {
   const { role } = await requireAuthContext();
@@ -38,22 +39,30 @@ export default async function AdminUsersPage() {
 
       {/* Footer Stats */}
       {users.length > 0 && (
-        <div className="flex items-center justify-between text-sm text-slate-500 px-2">
-          <div className="flex items-center gap-4">
-            <span>แสดงทั้งหมด {totalUsers} ผู้ใช้</span>
-            {admins > 0 && (
-              <span className="text-red-600 font-medium">{admins} Admin</span>
-            )}
-            {agents > 0 && (
-              <span className="text-blue-600 font-medium">{agents} Agent</span>
-            )}
-          </div>
-          <div className="text-right">
-            <p className="text-xs">
-              อัพเดทล่าสุด: {new Date().toLocaleDateString("th-TH")}
-            </p>
-          </div>
-        </div>
+        <TableFooterStats
+          totalCount={totalUsers}
+          unitLabel="ผู้ใช้"
+          secondaryStats={[
+            ...(admins > 0
+              ? [
+                  {
+                    label: "Admin",
+                    value: admins,
+                    color: "red" as const,
+                  },
+                ]
+              : []),
+            ...(agents > 0
+              ? [
+                  {
+                    label: "Agent",
+                    value: agents,
+                    color: "blue" as const,
+                  },
+                ]
+              : []),
+          ]}
+        />
       )}
     </div>
   );

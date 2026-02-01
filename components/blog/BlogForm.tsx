@@ -314,7 +314,15 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                       </span>
                       <Switch
                         checked={field.value}
-                        onCheckedChange={field.onChange}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          toast.success(
+                            checked
+                              ? "เปิดเผยแพร่บทความสำเร็จ"
+                              : "ปิดการเผยแพร่บทความสำเร็จ",
+                          );
+                        }}
+                        className="data-[state=checked]:bg-blue-600"
                       />
                     </div>
                   )}

@@ -25,7 +25,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { PartnerForm } from "./PartnerForm";
 
 interface Partner {
@@ -43,6 +54,9 @@ interface PartnersTableProps {
 
 export function PartnersTable({ partners }: PartnersTableProps) {
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
+  const [deleteConfirmPartner, setDeleteConfirmPartner] =
+    useState<Partner | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const allIds = useMemo(() => partners?.map((p) => p.id) || [], [partners]);
   const {
     toggleSelect,
@@ -68,14 +82,20 @@ export function PartnersTable({ partners }: PartnersTableProps) {
   };
 
   const handleDelete = async (partner: Partner) => {
-    if (!confirm(`ยืนยันการลบพาร์ทเนอร์ "${partner.name}"?`)) return;
-
+    setIsDeleting(true);
     try {
-      await deletePartner(partner.id);
-      toast.success("ลบพาร์ทเนอร์สำเร็จ");
-      window.location.reload();
+      const res = await deletePartner(partner.id);
+      if (res.success) {
+        toast.success(res.message);
+        window.location.reload();
+      } else {
+        toast.error(res.message || "เกิดข้อผิดพลาดในการลบ");
+      }
     } catch (error: any) {
       toast.error(error.message || "เกิดข้อผิดพลาดในการลบ");
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmPartner(null);
     }
   };
 
@@ -194,7 +214,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                         variant="ghost"
                         size="icon"
                         className="hover:bg-rose-50 hover:text-rose-600"
-                        onClick={() => handleDelete(partner)}
+                        onClick={() => setDeleteConfirmPartner(partner)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -206,6 +226,44 @@ export function PartnersTable({ partners }: PartnersTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog
+        open={!!deleteConfirmPartner}
+        onOpenChange={(open) => !open && setDeleteConfirmPartner(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการลบพาร์ทเนอร์</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณแน่ใจหรือไม่ว่าต้องการลบพาร์ทเนอร์{" "}
+              <strong className="text-foreground">
+                "{deleteConfirmPartner?.name}"
+              </strong>
+              ? การดำเนินการนี้ไม่สามารถย้อนกลับได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                if (deleteConfirmPartner) handleDelete(deleteConfirmPartner);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  กำลังลบ...
+                </>
+              ) : (
+                "ยืนยันการลบ"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog
         open={!!editingPartner}

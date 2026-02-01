@@ -60,7 +60,7 @@ function buildLocation(row: PropertyRow) {
 }
 
 function pickCoverImage(
-  images: PropertyRow["property_images"] | undefined | null
+  images: PropertyRow["property_images"] | undefined | null,
 ) {
   if (!images || images.length === 0) return null;
 
@@ -68,7 +68,7 @@ function pickCoverImage(
   if (cover?.image_url) return cover.image_url;
 
   const sorted = [...images].sort(
-    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
   );
 
   return sorted[0]?.image_url ?? null;
@@ -125,7 +125,7 @@ export async function GET(request: Request) {
       transit_station_name,
       transit_distance_meters,
       google_maps_link
-    `
+    `,
     )
 
     .eq("status", "ACTIVE");
@@ -151,7 +151,7 @@ export async function GET(request: Request) {
   if (error) {
     return NextResponse.json(
       { error: "Failed to load public properties" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -219,8 +219,6 @@ export async function GET(request: Request) {
       }
       return true;
     });
-
-  console.log(`🔥 Hot Deals: Found ${items.length} properties with discounts`);
 
   return NextResponse.json(items);
 }

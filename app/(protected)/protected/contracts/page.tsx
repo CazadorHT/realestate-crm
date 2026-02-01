@@ -1,30 +1,11 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
-import { Clock } from "lucide-react";
 import { ContractsTable } from "@/features/contracts/components/ContractsTable";
 import { CreateContractDialog } from "@/features/contracts/components/CreateContractDialog";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { ContractStats } from "@/features/contracts/components/ContractStats";
 import { getContractStatus } from "@/features/contracts/utils";
-
-type RentalContractWithRelations = {
-  id: string;
-  contract_number: string;
-  tenant_name: string;
-  tenant_phone: string | null;
-  tenant_email: string | null;
-  start_date: string;
-  end_date: string;
-  duration_months: number | null;
-  monthly_rent: number | null;
-  deposit_amount: number | null;
-  deal_id: string;
-  deal: {
-    id: string;
-    property: {
-      title: string;
-    } | null;
-  } | null;
-};
+import { RentalContractWithRelations } from "@/features/contracts/types";
+import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 
 export default async function RentalContractsPage() {
   const { supabase, role } = await requireAuthContext();
@@ -58,7 +39,7 @@ export default async function RentalContractsPage() {
   ).length;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 animate-fade-in">
       {/* Premium Header */}
       <PageHeader
         title="สัญญาเช่า (Contracts)"
@@ -77,22 +58,22 @@ export default async function RentalContractsPage() {
 
       {/* Quick Stats Footer */}
       {contracts.length > 0 && (
-        <div className="flex items-center justify-between text-sm text-slate-500 px-2">
-          <div className="flex items-center gap-4">
-            <span>แสดงทั้งหมด {contracts.length} สัญญา</span>
-            {expiringSoonContracts > 0 && (
-              <span className="flex items-center gap-1 text-orange-600 font-medium">
-                <Clock className="h-4 w-4" />
-                {expiringSoonContracts} สัญญาใกล้หมดอายุ
-              </span>
-            )}
-          </div>
-          <div className="text-right">
-            <p className="text-xs">
-              อัพเดทล่าสุด: {new Date().toLocaleDateString("th-TH")}
-            </p>
-          </div>
-        </div>
+        <TableFooterStats
+          totalCount={contracts.length}
+          unitLabel="สัญญา"
+          secondaryStats={
+            expiringSoonContracts > 0
+              ? [
+                  {
+                    label: "สัญญาใกล้หมดอายุ",
+                    value: expiringSoonContracts,
+                    color: "orange",
+                    icon: "clock",
+                  },
+                ]
+              : []
+          }
+        />
       )}
     </div>
   );

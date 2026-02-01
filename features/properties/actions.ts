@@ -87,96 +87,7 @@ function validatePropertyImagePaths(paths: string[]) {
 
   return { ok: true as const };
 }
-/**
- * Verify that images exist by checking the property_image_uploads table.
- * This is more reliable than listing files from storage, especially when
- * RLS or permissions might block the list operation.
- *
- * Fallback to storage listing only for paths not found in DB (legacy images).
- */
-async function verifyImagesExist(
-  supabase: any,
-  bucket: string,
-  paths: string[],
-): Promise<string[]> {
-  if (paths.length === 0) return [];
 
-  // Primary: Check database for uploaded images
-  const { data: uploadRecords, error: dbError } = await supabase
-    .from("property_image_uploads")
-    .select("storage_path")
-    .in("storage_path", paths);
-
-  if (dbError) {
-    console.error("[verifyImagesExist] DB query failed:", dbError);
-    // Fail open: if DB check fails, assume images exist to not block user
-    return [];
-  }
-
-  const foundInDB = new Set(
-    (uploadRecords || []).map((r: any) => r.storage_path),
-  );
-  const notFoundInDB = paths.filter((p) => !foundInDB.has(p));
-
-  // If all paths found in DB, we're done
-  if (notFoundInDB.length === 0) {
-    return [];
-  }
-
-  // Fallback: For paths not in DB (legacy uploads?), check storage
-
-  const missing: string[] = [];
-  let storageClient = supabase;
-  let usingAdmin = false;
-
-  try {
-    storageClient = createAdminClient();
-    usingAdmin = true;
-  } catch (err) {
-    console.warn(
-      "[verifyImagesExist] Admin client unavailable, using user client:",
-      err,
-    );
-  }
-
-  // Group by folder
-  const folders = new Set(
-    notFoundInDB.map((p) => p.substring(0, p.lastIndexOf("/"))),
-  );
-
-  for (const folder of folders) {
-    const { data, error } = await storageClient.storage
-      .from(bucket)
-      .list(folder, {
-        limit: 100,
-        offset: 0,
-        sortBy: { column: "name", order: "asc" },
-      });
-
-    if (error || !data) {
-      console.warn(
-        `[verifyImagesExist] Storage list failed for ${folder} (Admin: ${usingAdmin}). Assuming files exist (Fail Open).`,
-        error,
-      );
-      // Fail open: assume existence
-      continue;
-    }
-
-    const existingNames = new Set(data.map((f: any) => f.name));
-    const pathsInFolder = notFoundInDB.filter((p) =>
-      p.startsWith(folder + "/"),
-    );
-
-    for (const p of pathsInFolder) {
-      const fileName = p.split("/").pop();
-      if (!fileName || !existingNames.has(fileName)) {
-        missing.push(p);
-      }
-    }
-  }
-
-  return missing;
-}
 // ✅ สำเร็จแล้ว ลบ session ที่ไม่ใช้ คือ session ที่ไม่มีไฟล์ที่ใช้
 async function finalizeUploadSession(params: {
   supabase: Awaited<ReturnType<typeof createClient>>;
@@ -491,21 +402,7 @@ export async function createPropertyAction(
       // 2) Verify images exist (DB-first, then storage fallback)
       // TEMPORARILY DISABLED - debugging cleanup issue
       /*
-      const missing = await verifyImagesExist(
-        supabase,
-        PROPERTY_IMAGES_BUCKET,
-        images
-      );
-      // ถ้ามีไฟล์หาย ให้ลบ property ที่สร้างไปแล้ว
-      if (missing.length > 0) {
-        await supabase.from("properties").delete().eq("id", property.id);
-        return {
-          success: false,
-          message: `Some images are missing in storage: ${missing
-            .slice(0, 3)
-            .join(", ")}${missing.length > 3 ? "..." : ""}`,
-        };
-      }
+
       */
 
       // 3) Insert rows
@@ -872,21 +769,6 @@ export async function updatePropertyAction(
       const newImages = images.filter((path) => !existingPaths.has(path));
 
       // Only verify truly new images
-      if (newImages.length > 0) {
-        const missing = await verifyImagesExist(
-          supabase,
-          PROPERTY_IMAGES_BUCKET,
-          newImages,
-        );
-        if (missing.length > 0) {
-          return {
-            success: false,
-            message: `Some images are missing in storage: ${missing
-              .slice(0, 3)
-              .join(", ")}${missing.length > 3 ? "..." : ""}`,
-          };
-        }
-      }
     }
 
     // C) ลบรูปเดิม (ถ้าผู้ใช้ตั้งใจลบทั้งหมด images อาจว่าง → ก็ลบให้หมดได้)

@@ -97,7 +97,7 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
             </div>
           )}
           <ResponsiveContainer
-            width="100%"
+            width="99%"
             height="100%"
             minHeight={0}
             minWidth={0}

@@ -256,7 +256,7 @@ export default async function PropertiesPage({
   const isEmptyState = properties.length === 0 && currentPage === 1;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 animate-fade-in">
       {/* Premium Header Section */}
       <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-8 shadow-xl">
         {/* Decorative Elements */}

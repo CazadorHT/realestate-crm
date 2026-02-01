@@ -72,7 +72,7 @@ export default async function LeadsPage({
     listLeads.length === 0 && page === 1 && !sp.q && !sp.stage;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 animate-fade-in">
       {/* Premium Header */}
       <PageHeader
         title="ลีด (Leads)"

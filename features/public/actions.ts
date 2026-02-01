@@ -49,7 +49,7 @@ export async function submitInquiryAction(
   prevState: LeadState,
   formData: FormData,
 ): Promise<LeadState> {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   const validatedFields = inquiryLeadSchema.safeParse({
     fullName: formData.get("fullName"),

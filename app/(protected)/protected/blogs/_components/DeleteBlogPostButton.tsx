@@ -30,7 +30,7 @@ export function DeleteBlogPostButton({ id }: { id: string }) {
         toast.error(res.message);
       }
     } catch {
-      toast.error("Failed to delete");
+      toast.error("เกิดข้อผิดพลาดในการลบ");
     } finally {
       setIsDeleting(false);
     }
@@ -43,29 +43,30 @@ export function DeleteBlogPostButton({ id }: { id: string }) {
           variant="ghost"
           size="icon"
           className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          title="ลบ"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogTitle>ยืนยันการลบ?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the blog
-            post.
+            การดำเนินการนี้ไม่สามารถย้อนกลับได้
+            บทความนี้จะถูกลบออกจากระบบอย่างถาวร
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            className="bg-destructive hover:bg-destructive/90"
+            className="bg-destructive hover:bg-destructive/90 text-white"
             disabled={isDeleting}
           >
             {isDeleting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
-            Delete
+            ลบบทความ
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

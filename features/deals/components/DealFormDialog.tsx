@@ -160,8 +160,6 @@ export function DealFormDialog({
     if (!propertyId || !dealType) return;
 
     const selectedProperty = properties.find((p) => p.id === propertyId);
-    console.log("[DealFormDialog] Selected Property:", selectedProperty);
-    console.log("[DealFormDialog] Deal Type:", dealType);
     if (!selectedProperty) return;
 
     let calculatedCommission = 0;
@@ -172,14 +170,6 @@ export function DealFormDialog({
         selectedProperty.price || selectedProperty.original_price || 0;
       const percentage = selectedProperty.commission_sale_percentage || 3; // Default 3%
       calculatedCommission = (price * percentage) / 100;
-      console.log(
-        "[DealFormDialog] SALE: price=",
-        price,
-        "percentage=",
-        percentage,
-        "commission=",
-        calculatedCommission,
-      );
     } else if (dealType === "RENT") {
       // Use rental_price, fallback to original_rental_price
       const rentalPrice =
@@ -188,14 +178,6 @@ export function DealFormDialog({
         0;
       const months = selectedProperty.commission_rent_months || 1; // Default 1 month
       calculatedCommission = rentalPrice * months;
-      console.log(
-        "[DealFormDialog] RENT: rental=",
-        rentalPrice,
-        "months=",
-        months,
-        "commission=",
-        calculatedCommission,
-      );
     }
 
     form.setValue("commission_amount", calculatedCommission);

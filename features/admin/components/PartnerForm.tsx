@@ -265,7 +265,14 @@ export function PartnerForm({
                     <FormControl>
                       <Switch
                         checked={field.value}
-                        onCheckedChange={field.onChange}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          toast.success(
+                            checked
+                              ? "เปิดเผยแพร่พาร์ทเนอร์สำเร็จ"
+                              : "ปิดการเผยแพร่พาร์ทเนอร์สำเร็จ",
+                          );
+                        }}
                         className="data-[state=checked]:bg-emerald-500 shadow-sm"
                       />
                     </FormControl>

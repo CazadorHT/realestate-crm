@@ -19,6 +19,18 @@ import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteFaqsAction } from "@/features/admin/faqs-bulk-actions";
 import { deleteFaq } from "@/features/admin/faqs-actions";
 import { toast } from "sonner";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
 
 interface FAQ {
   id: string;
@@ -34,6 +46,8 @@ interface FAQsTableProps {
 }
 
 export function FAQsTable({ faqs }: FAQsTableProps) {
+  const [deleteConfirmFaq, setDeleteConfirmFaq] = useState<FAQ | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const allIds = useMemo(() => faqs?.map((f) => f.id) || [], [faqs]);
   const {
     toggleSelect,
@@ -59,14 +73,20 @@ export function FAQsTable({ faqs }: FAQsTableProps) {
   };
 
   const handleDelete = async (faq: FAQ) => {
-    if (!confirm(`ยืนยันการลบคำถาม "${faq.question}"?`)) return;
-
+    setIsDeleting(true);
     try {
-      await deleteFaq(faq.id);
-      toast.success("ลบคำถามสำเร็จ");
-      window.location.reload();
+      const res = await deleteFaq(faq.id);
+      if (res.success) {
+        toast.success(res.message);
+        window.location.reload();
+      } else {
+        toast.error(res.message || "เกิดข้อผิดพลาดในการลบคำถาม");
+      }
     } catch (error: any) {
       toast.error(error.message || "เกิดข้อผิดพลาดในการลบคำถาม");
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmFaq(null);
     }
   };
 
@@ -173,7 +193,7 @@ export function FAQsTable({ faqs }: FAQsTableProps) {
                         variant="ghost"
                         size="icon"
                         className="hover:bg-rose-50 hover:text-rose-600"
-                        onClick={() => handleDelete(faq)}
+                        onClick={() => setDeleteConfirmFaq(faq)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -185,6 +205,44 @@ export function FAQsTable({ faqs }: FAQsTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog
+        open={!!deleteConfirmFaq}
+        onOpenChange={(open) => !open && setDeleteConfirmFaq(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการลบคำถาม</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณแน่ใจหรือไม่ว่าต้องการลบคำถาม{" "}
+              <strong className="text-foreground">
+                "{deleteConfirmFaq?.question}"
+              </strong>
+              ? การดำเนินการนี้ไม่สามารถย้อนกลับได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                if (deleteConfirmFaq) handleDelete(deleteConfirmFaq);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  กำลังลบ...
+                </>
+              ) : (
+                "ยืนยันการลบ"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
   Star,
   CheckCircle2,
@@ -85,7 +86,14 @@ export function SpecialFeaturesSection({
               <FormControl>
                 <Switch
                   checked={field.value}
-                  onCheckedChange={field.onChange}
+                  onCheckedChange={(checked) => {
+                    field.onChange(checked);
+                    toast.success(
+                      checked
+                        ? "เปิด Verified Listing สำเร็จ"
+                        : "ปิด Verified Listing สำเร็จ",
+                    );
+                  }}
                   disabled={isReadOnly}
                   className="data-[state=checked]:bg-blue-600"
                 />

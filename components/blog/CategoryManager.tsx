@@ -120,7 +120,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
                   colSpan={3}
                   className="text-center py-6 text-muted-foreground"
                 >
-                  No categories found
+                  ไม่พบหมวดหมู่
                 </TableCell>
               </TableRow>
             )}

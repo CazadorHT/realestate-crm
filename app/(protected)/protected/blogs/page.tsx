@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BlogsTable } from "@/features/blogs/components/BlogsTable";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { BlogStats } from "@/features/blogs/components/BlogStats";
+import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 
 export default async function BlogListPage() {
   const posts = await getAllBlogPosts();
@@ -56,27 +57,31 @@ export default async function BlogListPage() {
 
       {/* Footer Stats */}
       {posts.length > 0 && (
-        <div className="flex items-center justify-between text-sm text-slate-500 px-2">
-          <div className="flex items-center gap-4">
-            <span>แสดงทั้งหมด {posts.length} บทความ</span>
-            {draftPosts > 0 && (
-              <span className="flex items-center gap-1 text-orange-600 font-medium">
-                <AlertCircle className="h-4 w-4" />
-                {draftPosts} แบบร่างรอเผยแพร่
-              </span>
-            )}
-            {categories.size > 0 && (
-              <span className="text-slate-400">
-                {categories.size} categories
-              </span>
-            )}
-          </div>
-          <div className="text-right">
-            <p className="text-xs">
-              อัพเดทล่าสุด: {new Date().toLocaleDateString("th-TH")}
-            </p>
-          </div>
-        </div>
+        <TableFooterStats
+          totalCount={posts.length}
+          unitLabel="บทความ"
+          secondaryStats={[
+            ...(draftPosts > 0
+              ? [
+                  {
+                    label: "แบบร่างรอเผยแพร่",
+                    value: draftPosts,
+                    color: "orange" as const,
+                    icon: "clock" as const,
+                  },
+                ]
+              : []),
+            ...(categories.size > 0
+              ? [
+                  {
+                    label: "หมวดหมู่",
+                    value: categories.size,
+                    color: "slate" as const,
+                  },
+                ]
+              : []),
+          ]}
+        />
       )}
     </div>
   );

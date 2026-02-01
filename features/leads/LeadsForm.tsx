@@ -133,45 +133,6 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
         </div>
       ) : null}
 
-      {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          onClick={() => router.push("/protected/leads")}
-          className="p-0 h-auto text-muted-foreground hover:text-primary"
-        >
-          ลีด
-        </Button>
-        <ChevronRight className="h-3 w-3" />
-        {initialValues?.full_name && leadId ? (
-          <>
-            <Button
-              type="button"
-              variant="link"
-              size="sm"
-              onClick={() => router.push(`/protected/leads/${leadId}`)}
-              className="p-0 h-auto font-medium text-foreground hover:text-primary truncate max-w-[200px]"
-            >
-              {initialValues.full_name}
-            </Button>
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-foreground">แก้ไข</span>
-          </>
-        ) : initialValues?.full_name ? (
-          <>
-            <span className="font-medium text-foreground truncate max-w-[200px]">
-              {initialValues.full_name}
-            </span>
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-foreground">แก้ไข</span>
-          </>
-        ) : (
-          <span className="text-foreground">สร้างใหม่</span>
-        )}
-      </nav>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* --- LEFT COLUMN: Contact & Requirements --- */}
         <div className="space-y-6">
@@ -523,9 +484,14 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                           item.id as keyof LeadFormValues,
                         ) as boolean) ?? false
                       }
-                      onCheckedChange={(v) =>
-                        form.setValue(item.id as keyof LeadFormValues, v)
-                      }
+                      onCheckedChange={(checked) => {
+                        form.setValue(item.id as keyof LeadFormValues, checked);
+                        toast.success(
+                          checked
+                            ? `เปิด ${item.label} สำเร็จ`
+                            : `ปิด ${item.label} สำเร็จ`,
+                        );
+                      }}
                     />
                   </div>
                 ))}
@@ -693,7 +659,6 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
 
       {/* Action Buttons */}
       <div className="pt-6 mt-6 border-t border-slate-200 flex flex-col-reverse sm:flex-row sm:justify-start gap-3">
-        
         <Button
           className="h-11 px-8 text-md font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all min-w-[200px]"
           type="submit"

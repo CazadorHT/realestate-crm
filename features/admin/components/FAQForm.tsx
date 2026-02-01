@@ -282,7 +282,14 @@ export function FAQForm({ initialData, faqId, isNew }: FAQFormProps) {
                             <FormControl>
                               <Switch
                                 checked={field.value}
-                                onCheckedChange={field.onChange}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  toast.success(
+                                    checked
+                                      ? "เปิดเผยแพร่คำถามสำเร็จ"
+                                      : "ปิดการเผยแพร่คำถามสำเร็จ",
+                                  );
+                                }}
                                 className="data-[state=checked]:bg-blue-600"
                               />
                             </FormControl>

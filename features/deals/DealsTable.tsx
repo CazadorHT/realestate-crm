@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -154,7 +154,12 @@ export function DealsTable({
 
   const totalPages = Math.max(1, Math.ceil(count / pageSize));
 
-  const StatusBadge = ({ status }: { status: string }) => {
+  const hasActiveFilters = useMemo(
+    () => !!(selectedPropertyId || selectedLeadId || debouncedQ),
+    [selectedPropertyId, selectedLeadId, debouncedQ],
+  );
+
+  const StatusBadge = React.memo(({ status }: { status: string }) => {
     const styleMap: Record<
       string,
       { bg: string; text: string; icon?: string }
@@ -190,9 +195,8 @@ export function DealsTable({
         {labelMap[status] || status}
       </Badge>
     );
-  };
-
-  const hasActiveFilters = selectedPropertyId || selectedLeadId || q;
+  });
+  StatusBadge.displayName = "StatusBadge";
 
   return (
     <div className="space-y-6">
@@ -226,7 +230,7 @@ export function DealsTable({
           <div className="flex items-center gap-2">
             <div className="flex-1">
               <PropertyCombobox
-                value={selectedPropertyId ?? (undefined as any)}
+                value={selectedPropertyId ?? null}
                 onChange={(id) => {
                   if (id === null) {
                     setSelectedPropertyId(undefined);

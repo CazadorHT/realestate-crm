@@ -68,7 +68,9 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
     if (!activeLead) return;
 
     // Check if we are over a column or another card
-    const isOverAColumn = LEAD_STAGES.includes(overId as any);
+    const isOverAColumn = LEAD_STAGES.includes(
+      overId as (typeof LEAD_STAGES)[number],
+    );
     const isOverACard = leads.some((l) => l.id === overId);
 
     let newStage: string | undefined;
@@ -84,7 +86,7 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
       setLeads((prev) => {
         return prev.map((l) => {
           if (l.id === activeId) {
-            return { ...l, stage: newStage as any };
+            return { ...l, stage: newStage as LeadRow["stage"] };
           }
           return l;
         });
@@ -159,7 +161,7 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
   );
 }
 
-function KanbanColumn({
+const KanbanColumn = React.memo(function KanbanColumn({
   id,
   title,
   leads,
@@ -208,9 +210,13 @@ function KanbanColumn({
       </div>
     </div>
   );
-}
+});
 
-function SortableLeadCard({ lead }: { lead: LeadRow }) {
+const SortableLeadCard = React.memo(function SortableLeadCard({
+  lead,
+}: {
+  lead: LeadRow;
+}) {
   const {
     attributes,
     listeners,
@@ -231,16 +237,16 @@ function SortableLeadCard({ lead }: { lead: LeadRow }) {
       <LeadCard lead={lead} />
     </div>
   );
-}
+});
 
-function LeadCard({ lead, isOverlay }: { lead: LeadRow; isOverlay?: boolean }) {
+const LeadCard = React.memo(function LeadCard({
+  lead,
+  isOverlay,
+}: {
+  lead: LeadRow;
+  isOverlay?: boolean;
+}) {
   const router = useRouter();
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    // If it's a drag event, listeners will handle it.
-    // This is basically a fallback for mobile or quick clicks.
-    // But since we use listeners on the card, we might need a separate click area or just handle click vs drag.
-  };
 
   return (
     <Card
@@ -306,4 +312,4 @@ function LeadCard({ lead, isOverlay }: { lead: LeadRow; isOverlay?: boolean }) {
       </CardContent>
     </Card>
   );
-}
+});

@@ -85,7 +85,16 @@ export default async function DashboardPage() {
     ] = await Promise.all([
       supabase
         .from("properties")
-        .select("*")
+        .select(
+          `
+          *,
+          property_images (
+             image_url,
+             is_cover,
+             sort_order
+          )
+        `,
+        )
         .order("created_at", { ascending: false })
         .limit(5),
       getDashboardStats(),
@@ -100,7 +109,14 @@ export default async function DashboardPage() {
       getCalendarEvents(new Date(), addDays(new Date(), 7)),
     ]);
 
-    properties = (recentPropertiesResult.data ?? []) as PropertyRow[];
+    // Manually cast to include property_images in the type
+    properties = (recentPropertiesResult.data ?? []).map((p: any) => ({
+      ...p,
+      // Sort images by sort_order
+      property_images: p.property_images?.sort(
+        (a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+      ),
+    })) as unknown as PropertyRow[];
     dashboardStats = stats;
     revenueData = revenue;
     funnelData = funnel;
@@ -117,7 +133,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-6 p-2 pb-20">
       {/* 1. HEADER & SEARCH */}
-      <DashboardHeader email={user?.email} />
+      <DashboardHeader email={user?.email} name={profile?.full_name} />
 
       {!staff ? (
         <PendingApprovalCard />

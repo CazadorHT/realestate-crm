@@ -29,6 +29,7 @@ import {
 import { useEffect } from "react";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { PropertyFormValues } from "../../../schema";
+import { toast } from "sonner";
 
 interface AdditionalSectionProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -183,7 +184,12 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
             <FormControl>
               <Switch
                 checked={field.value}
-                onCheckedChange={field.onChange}
+                onCheckedChange={(checked) => {
+                  field.onChange(checked);
+                  toast.success(
+                    checked ? "เปิด Co-Agent สำเร็จ" : "ปิด Co-Agent สำเร็จ",
+                  );
+                }}
                 className="data-[state=checked]:bg-blue-600"
               />
             </FormControl>

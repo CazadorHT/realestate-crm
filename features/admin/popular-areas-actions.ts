@@ -26,16 +26,16 @@ export async function createPopularAreaAction(name: string) {
 
   const parsed = schema.safeParse({ name });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0].message };
+    return { success: false, message: parsed.error.issues[0].message };
   }
 
   const { error } = await supabase
     .from("popular_areas")
     .insert({ name: parsed.data.name });
 
-  if (error) return { error: error.message };
+  if (error) return { success: false, message: error.message };
   revalidatePath("/protected/admin/popular-areas");
-  return { success: true };
+  return { success: true, message: "เพิ่มทำเลสำเร็จ" };
 }
 
 export async function updatePopularAreaAction(id: string, name: string) {
@@ -44,7 +44,7 @@ export async function updatePopularAreaAction(id: string, name: string) {
 
   const parsed = schema.safeParse({ name });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0].message };
+    return { success: false, message: parsed.error.issues[0].message };
   }
 
   const { error } = await supabase
@@ -52,9 +52,9 @@ export async function updatePopularAreaAction(id: string, name: string) {
     .update({ name: parsed.data.name })
     .eq("id", id);
 
-  if (error) return { error: error.message };
+  if (error) return { success: false, message: error.message };
   revalidatePath("/protected/admin/popular-areas");
-  return { success: true };
+  return { success: true, message: "แก้ไขทำเลสำเร็จ" };
 }
 
 export async function deletePopularAreaAction(id: string) {
@@ -63,7 +63,7 @@ export async function deletePopularAreaAction(id: string) {
 
   const { error } = await supabase.from("popular_areas").delete().eq("id", id);
 
-  if (error) return { error: error.message };
+  if (error) return { success: false, message: error.message };
   revalidatePath("/protected/admin/popular-areas");
-  return { success: true };
+  return { success: true, message: "ลบทำเลสำเร็จ" };
 }

@@ -4,7 +4,11 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Command,
   CommandEmpty,
@@ -13,7 +17,10 @@ import {
   CommandList,
 } from "@/components/ui/command";
 
-import { searchPropertiesAction, type PropertyPickItem } from "@/features/leads/actions";
+import {
+  searchPropertiesAction,
+  type PropertyPickItem,
+} from "@/features/leads/actions";
 
 type Props = {
   value: string | null;
@@ -71,17 +78,15 @@ export function PropertyCombobox({
           variant="outline"
           className="w-full justify-between"
         >
-          <span className="truncate">
-            {selected?.title ?? placeholder}
-          </span>
+          <span className="truncate">{selected?.title ?? placeholder}</span>
           <ChevronsUpDown className="h-4 w-4 opacity-60" />
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[420px] p-0 bg-white" align="start" >
+      <PopoverContent className="w-[420px] p-0 bg-white" align="start">
         <Command>
-          <CommandInput 
-          className="p-2 "
+          <CommandInput
+            className="p-2 "
             placeholder="ค้นหาชื่อทรัพย์..."
             value={q}
             onValueChange={setQ}
@@ -96,11 +101,13 @@ export function PropertyCombobox({
               value="__all__"
               onSelect={() => {
                 // select 'all' -> clear filter (undefined) so caller can treat as no filter
-                onChange(undefined as any, null);
+                onChange(null, null);
                 setOpen(false);
               }}
             >
-              <Check className={`mr-2 h-4 w-4 ${value === undefined ? "opacity-100" : "opacity-0"}`} />
+              <Check
+                className={`mr-2 h-4 w-4 ${value === undefined ? "opacity-100" : "opacity-0"}`}
+              />
               (ทั้งหมด) แสดงทรัพย์ทั้งหมด
             </CommandItem>
 
@@ -115,7 +122,9 @@ export function PropertyCombobox({
                   setOpen(false);
                 }}
               >
-                <Check className={`mr-2 h-4 w-4 ${value === item.id ? "opacity-100" : "opacity-0"}`} />
+                <Check
+                  className={`mr-2 h-4 w-4 ${value === item.id ? "opacity-100" : "opacity-0"}`}
+                />
                 <span className="truncate">{item.title}</span>
               </CommandItem>
             ))}

@@ -74,46 +74,61 @@ async function resequencePartners() {
 }
 
 export async function createPartner(input: CreatePartnerInput) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("partners").insert([input]);
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("partners").insert([input]);
 
-  if (error) throw new Error(error.message);
+    if (error) return { success: false, message: error.message };
 
-  // Clean up order after insert
-  await resequencePartners();
+    // Clean up order after insert
+    await resequencePartners();
 
-  revalidatePath("/admin/partners");
-  revalidatePath("/");
+    revalidatePath("/admin/partners");
+    revalidatePath("/");
+    return { success: true, message: "สร้างพาร์ทเนอร์สำเร็จ" };
+  } catch (error: any) {
+    return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
+  }
 }
 
 export async function updatePartner(input: UpdatePartnerInput) {
-  const supabase = await createClient();
-  const { id, ...updates } = input;
+  try {
+    const supabase = await createClient();
+    const { id, ...updates } = input;
 
-  const { error } = await supabase
-    .from("partners")
-    .update(updates)
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+    const { error } = await supabase
+      .from("partners")
+      .update(updates)
+      .eq("id", id);
+    if (error) return { success: false, message: error.message };
 
-  // Clean up order after update
-  await resequencePartners();
+    // Clean up order after update
+    await resequencePartners();
 
-  revalidatePath("/admin/partners");
-  revalidatePath("/");
+    revalidatePath("/admin/partners");
+    revalidatePath("/");
+    return { success: true, message: "แก้ไขพาร์ทเนอร์สำเร็จ" };
+  } catch (error: any) {
+    return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
+  }
 }
 
 export async function deletePartner(id: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("partners").delete().eq("id", id);
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("partners").delete().eq("id", id);
 
-  if (error) throw new Error(error.message);
+    if (error) return { success: false, message: error.message };
 
-  // Re-sequence after delete to fill gaps
-  await resequencePartners();
+    // Re-sequence after delete to fill gaps
+    await resequencePartners();
 
-  revalidatePath("/admin/partners");
-  revalidatePath("/");
+    revalidatePath("/admin/partners");
+    revalidatePath("/");
+    return { success: true, message: "ลบพาร์ทเนอร์สำเร็จ" };
+  } catch (error: any) {
+    return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
+  }
 }
 
 export async function getPartnersDashboardStats() {

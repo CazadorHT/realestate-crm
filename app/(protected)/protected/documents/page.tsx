@@ -6,22 +6,8 @@ import { UploadDocumentDialog } from "./_components/UploadDocumentDialog";
 import { DocumentsGrid } from "@/features/documents/components/DocumentsGrid";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { DocumentStats } from "@/features/documents/components/DocumentStats";
-
-// Type for document with relations
-type DocumentWithRelations = {
-  id: string;
-  file_name: string;
-  size_bytes: number | null;
-  document_type: string | null;
-  storage_path: string;
-  created_at: string;
-  owner_type: string;
-  owner_id: string;
-  property?: { id: string; title: string } | null;
-  lead?: { id: string; full_name: string | null; email: string | null } | null;
-  deal?: { id: string; property: { title: string } | null } | null;
-  rental_contract?: { id: string; property: { title: string } | null } | null;
-};
+import { DocumentWithRelations } from "@/features/documents/types";
+import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 
 export default async function DocumentsPage() {
   const { role } = await requireAuthContext();
@@ -44,7 +30,7 @@ export default async function DocumentsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 animate-fade-in">
       {/* Premium Header */}
       <PageHeader
         title="เอกสาร (Documents)"
@@ -82,19 +68,18 @@ export default async function DocumentsPage() {
 
       {/* Footer Stats */}
       {documents && documents.length > 0 && (
-        <div className="flex items-center justify-between text-sm text-slate-500 px-2">
-          <div className="flex items-center gap-4">
-            <span>แสดงทั้งหมด {totalDocuments} ไฟล์</span>
-            <span className="text-blue-600 font-medium">
-              {formatSize(totalSize)} รวม
-            </span>
-          </div>
-          <div className="text-right">
-            <p className="text-xs">
-              อัพเดทล่าสุด: {new Date().toLocaleDateString("th-TH")}
-            </p>
-          </div>
-        </div>
+        <TableFooterStats
+          totalCount={totalDocuments}
+          unitLabel="ไฟล์"
+          secondaryStats={[
+            {
+              label: "รวม",
+              value: formatSize(totalSize),
+              color: "blue",
+              icon: "info",
+            },
+          ]}
+        />
       )}
     </div>
   );

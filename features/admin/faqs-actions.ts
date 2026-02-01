@@ -43,29 +43,44 @@ export async function getFaq(id: string) {
 }
 
 export async function createFaq(input: CreateFaqInput) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("faqs").insert([input]);
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("faqs").insert([input]);
 
-  if (error) throw new Error(error.message);
-  revalidatePath("/admin/faqs");
-  revalidatePath("/"); // Update public page
+    if (error) return { success: false, message: error.message };
+    revalidatePath("/admin/faqs");
+    revalidatePath("/"); // Update public page
+    return { success: true, message: "สร้างคำถามสำเร็จ" };
+  } catch (error: any) {
+    return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
+  }
 }
 
 export async function updateFaq(input: UpdateFaqInput) {
-  const supabase = await createClient();
-  const { id, ...updates } = input;
-  const { error } = await supabase.from("faqs").update(updates).eq("id", id);
+  try {
+    const supabase = await createClient();
+    const { id, ...updates } = input;
+    const { error } = await supabase.from("faqs").update(updates).eq("id", id);
 
-  if (error) throw new Error(error.message);
-  revalidatePath("/admin/faqs");
-  revalidatePath("/");
+    if (error) return { success: false, message: error.message };
+    revalidatePath("/admin/faqs");
+    revalidatePath("/");
+    return { success: true, message: "แก้ไขคำถามสำเร็จ" };
+  } catch (error: any) {
+    return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
+  }
 }
 
 export async function deleteFaq(id: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("faqs").delete().eq("id", id);
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("faqs").delete().eq("id", id);
 
-  if (error) throw new Error(error.message);
-  revalidatePath("/admin/faqs");
-  revalidatePath("/");
+    if (error) return { success: false, message: error.message };
+    revalidatePath("/admin/faqs");
+    revalidatePath("/");
+    return { success: true, message: "ลบคำถามสำเร็จ" };
+  } catch (error: any) {
+    return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
+  }
 }

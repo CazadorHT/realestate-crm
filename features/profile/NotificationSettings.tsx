@@ -69,6 +69,10 @@ export function NotificationSettings({
   ];
 
   const handleToggle = async (id: string, current: boolean) => {
+    // Find the label for toast
+    const item = definition.find((d) => d.id === id);
+    const label = item?.label || id;
+
     // Optimistic Update
     const nextSettings = { ...settings, [id]: !current };
     setSettings(nextSettings);
@@ -76,7 +80,9 @@ export function NotificationSettings({
 
     try {
       const result = await updateNotificationSettings(nextSettings);
-      if (!result.success) {
+      if (result.success) {
+        toast.success(`${!current ? "เปิด" : "ปิด"}${label} สำเร็จ`);
+      } else {
         // Revert on failure
         setSettings({ ...settings, [id]: current });
         toast.error("บันทึกการตั้งค่าไม่สำเร็จ: " + result.message);

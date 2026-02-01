@@ -5,6 +5,7 @@ import { MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CreatePopularAreaButton } from "@/features/admin/components/CreatePopularAreaButton";
 import { PopularAreasStats } from "@/features/admin/components/PopularAreasStats";
+import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 
 export default async function AdminPopularAreasPage() {
   const { role } = await requireAuthContext();
@@ -63,19 +64,17 @@ export default async function AdminPopularAreasPage() {
 
       {/* Footer Stats */}
       {totalAreas > 0 && (
-        <div className="flex items-center justify-between text-sm text-slate-500 px-2">
-          <div className="flex items-center gap-4">
-            <span>แสดงทั้งหมด {totalAreas} ทำเล</span>
-            <span className="text-blue-600 font-medium">
-              {totalProperties} ทรัพย์
-            </span>
-          </div>
-          <div className="text-right">
-            <p className="text-xs">
-              อัพเดทล่าสุด: {new Date().toLocaleDateString("th-TH")}
-            </p>
-          </div>
-        </div>
+        <TableFooterStats
+          totalCount={totalAreas}
+          unitLabel="ทำเล"
+          secondaryStats={[
+            {
+              label: "ทรัพย์",
+              value: totalProperties,
+              color: "blue",
+            },
+          ]}
+        />
       )}
     </div>
   );

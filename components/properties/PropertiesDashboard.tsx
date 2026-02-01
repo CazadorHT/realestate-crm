@@ -109,26 +109,28 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
 
   // Interaction Handlers
   const handleTypeClick = (data: any) => {
+    // Recharts onClick payload can be complex, usually contains the payload data
     if (data && data.id) {
       router.push(`/protected/properties?type=${data.id}`);
+    } else if (data && data.payload && data.payload.id) {
+      router.push(`/protected/properties?type=${data.payload.id}`);
     }
   };
 
   const handleStatusClick = (data: any) => {
     if (data && data.id) {
       router.push(`/protected/properties?status=${data.id}`);
+    } else if (data && data.activePayload && data.activePayload[0]) {
+      // Bar chart might pass different structure
+      const id = data.activePayload[0].payload.id;
+      if (id) router.push(`/protected/properties?status=${id}`);
     }
   };
 
-  // Custom Label for Pie Chart
-  const renderCustomLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-  }: any) => {
+  // Custom Label for Pie Chart, strictly typed props would require a complex interface,
+  // keeping it simple but safe is key.
+  const renderCustomLabel = (props: any) => {
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -272,7 +274,12 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
           </CardHeader>
           <CardContent className="pt-4">
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer
+                width="99%"
+                height="100%"
+                minWidth={0}
+                minHeight={0}
+              >
                 <PieChart>
                   <defs>
                     {typeData.map((entry, index) => (
@@ -375,7 +382,12 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
           </CardHeader>
           <CardContent className="pt-4">
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer
+                width="99%"
+                height="100%"
+                minWidth={0}
+                minHeight={0}
+              >
                 <BarChart
                   data={statusData}
                   layout="vertical"
