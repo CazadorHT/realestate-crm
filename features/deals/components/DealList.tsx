@@ -31,11 +31,10 @@ export function DealList({ deals, properties = [] }: DealListProps) {
   return (
     <div className="space-y-4">
       {deals.map((deal) => (
-        <Card key={deal.id} className="overflow-hidden">
-          <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            {/* Left: Property Info */}
-            <div className="flex items-start gap-4">
-              {/* Property Cover Image */}
+        <Card key={deal.id} className="overflow-hidden border border-slate-200">
+          <CardContent className="p-3 flex flex-col md:flex-row gap-4 items-start md:items-center">
+            {/* Property Cover Image */}
+            <div className="shrink-0">
               {deal.property?.property_images?.[0]?.image_url ? (
                 <img
                   src={
@@ -43,62 +42,69 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                       ?.image_url || deal.property.property_images[0].image_url
                   }
                   alt={deal.property.title || "Property"}
-                  className="h-12 w-12 rounded object-cover shrink-0"
+                  className="h-16 w-16 rounded-lg object-cover border transition-all duration-300 border-slate-100 dark:border-slate-800"
                 />
               ) : (
-                <div className="h-12 w-12 rounded bg-muted flex items-center justify-center shrink-0">
-                  <Home className="h-6 w-6 text-muted-foreground" />
+                <div className="h-14 w-14 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 text-slate-400">
+                  <Home className="h-6 w-6" />
                 </div>
               )}
-              <div>
-                <Link
-                  href={`/protected/properties/${deal.property_id}`}
-                  className="font-semibold hover:underline text-primary"
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0 space-y-1">
+              <Link
+                href={`/protected/properties/${deal.property_id}`}
+                className="font-semibold text-sm hover:underline text-primary break-all line-clamp-2"
+                title={deal.property?.title || "ทรัพย์ไม่ระบุชื่อ"}
+              >
+                {deal.property?.title || "ทรัพย์ไม่ระบุชื่อ"}
+              </Link>
+              <div className="text-sm text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 items-center">
+                <Badge
+                  variant="secondary"
+                  className="font-medium text-xs px-1.5 py-0 h-5"
                 >
-                  {deal.property?.title || "ทรัพย์ไม่ระบุชื่อ"}
-                </Link>
-                <div className="text-sm text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
-                  <span className="font-medium text-foreground">
-                    {deal.deal_type === "RENT" ? "เช่า" : "ซื้อ"}
+                  {deal.deal_type === "RENT" ? "เช่า" : "ซื้อ-ขาย"}
+                </Badge>
+                {deal.transaction_date && (
+                  <span className="flex items-center gap-1 text-xs">
+                    {deal.deal_type === "RENT" ? "เริ่ม: " : "โอน: "}
+                    {format(new Date(deal.transaction_date), "d MMM yy", {
+                      locale: th,
+                    })}
                   </span>
-                  {deal.transaction_date && (
-                    <span className="flex items-center gap-1">
-                      {deal.deal_type === "RENT"
-                        ? "วันเริ่มสัญญา: "
-                        : "วันที่โอน: "}
-                      {format(new Date(deal.transaction_date), "d MMM yy", {
-                        locale: th,
-                      })}
-                    </span>
-                  )}
-                  {deal.deal_type === "RENT" && deal.transaction_end_date && (
-                    <span className="flex items-center gap-1">
-                      ถึง:{" "}
-                      {format(new Date(deal.transaction_end_date), "d MMM yy", {
-                        locale: th,
-                      })}
-                    </span>
-                  )}
-                </div>
+                )}
+                {deal.deal_type === "RENT" && deal.transaction_end_date && (
+                  <span className="flex items-center gap-1 text-xs">
+                    ถึง:{" "}
+                    {format(new Date(deal.transaction_end_date), "d MMM yy", {
+                      locale: th,
+                    })}
+                  </span>
+                )}
               </div>
             </div>
 
-            {/* Right: Status & Commission & Actions */}
-            <div className="flex flex-col items-end gap-2">
-              <div className="flex items-center gap-1">
+            {/* Right: Status & Actions */}
+            <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center w-full md:w-auto gap-3 md:pl-4 md:border-l border-slate-100 dark:border-slate-800 ml-0 md:ml-auto shrink-0">
+              <div className="flex items-center gap-2 order-2 md:order-1">
                 <StatusBadge status={deal.status} />
+              </div>
+
+              <div className="flex items-center gap-1 order-3 md:order-2">
                 {/* View Button */}
                 <Button
                   variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-primary"
+                  size="sm"
+                  className="h-8 w-8 text-muted-foreground hover:text-primary p-0"
                   asChild
                 >
                   <Link href={`/protected/deals/${deal.id}`}>
                     <Eye className="h-4 w-4" />
                   </Link>
                 </Button>
-                {/* Edit Button */}
+
                 <DealFormDialog
                   leadId={deal.lead_id}
                   deal={deal}
@@ -107,14 +113,14 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                   trigger={
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-blue-600"
+                      size="sm"
+                      className="h-8 w-8 text-muted-foreground hover:text-blue-600 p-0"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
                   }
                 />
-                {/* Delete Button (icon only) */}
+
                 <DeleteDealButton
                   dealId={deal.id}
                   leadId={deal.lead_id}
@@ -122,10 +128,13 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                   onSuccess={() => router.refresh()}
                 />
               </div>
+
               {deal.commission_amount && deal.commission_amount > 0 && (
-                <span className="text-xs text-green-600 font-medium">
-                  คอมฯ: {deal.commission_amount.toLocaleString()} ฿
-                </span>
+                <div className="order-1 md:order-3 md:mt-1">
+                  <span className="text-xs text-emerald-600 font-medium bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+                    ค่าคอม + {deal.commission_amount.toLocaleString()}
+                  </span>
+                </div>
               )}
             </div>
           </CardContent>

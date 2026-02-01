@@ -130,7 +130,7 @@ export function CalendarView({
   return (
     <div className="space-y-4">
       {/* Header controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white rounded-lg border shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
         {/* Left: Navigation & Title */}
         <div className="flex items-center justify-between w-full md:w-auto md:gap-4">
           <div className="flex items-center gap-2">
@@ -239,7 +239,31 @@ export function CalendarView({
 
       {/* View Content */}
       {viewMode === "month" ? (
-        <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+          {/* Event Legend */}
+          <div className="p-3 bg-slate-50 border-b border-slate-200 flex flex-wrap gap-3 text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+              <span className="text-slate-600">นัดชม</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              <span className="text-slate-600">เริ่มสัญญา</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+              <span className="text-slate-600">สิ้นสุดสัญญา</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+              <span className="text-slate-600">ยุติก่อนกำหนด</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+              <span className="text-slate-600">ปิดดีล</span>
+            </div>
+          </div>
+
           {events.filter((e) => isSameMonth(new Date(e.start), currentDate))
             .length === 0 && (
             <div className="p-2 bg-slate-50 text-center text-sm text-muted-foreground border-b">
@@ -247,7 +271,7 @@ export function CalendarView({
             </div>
           )}
 
-          <div className="grid grid-cols-7 border-b bg-slate-50">
+          <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
             {["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."].map((day) => (
               <div
                 key={day}
@@ -295,10 +319,14 @@ export function CalendarView({
                           "text-[10px] px-1.5 py-1 rounded truncate font-medium border-l-2 cursor-pointer shadow-sm hover:opacity-80 transition-opacity",
                           event.type === "viewing" &&
                             "bg-blue-50 text-blue-700 border-blue-500",
+                          event.type === "contract_start" &&
+                            "bg-emerald-50 text-emerald-700 border-emerald-500",
                           event.type === "contract_end" &&
                             "bg-red-50 text-red-700 border-red-500",
+                          event.type === "early_termination" &&
+                            "bg-orange-50 text-orange-700 border-orange-500",
                           event.type === "deal_closing" &&
-                            "bg-green-50 text-green-700 border-green-500",
+                            "bg-purple-50 text-purple-700 border-purple-500",
                         )}
                         title={event.title}
                       >
@@ -319,7 +347,7 @@ export function CalendarView({
               <button
                 key={monthIndex}
                 onClick={() => switchToMonth(monthIndex)}
-                className="p-4 bg-white border rounded-lg shadow-sm hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col gap-2 min-h-[100px]"
+                className="p-4 bg-white border border-slate-200 rounded-lg shadow-sm hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col gap-2 min-h-[100px]"
               >
                 <span className="font-semibold text-lg text-slate-700">
                   {format(tempDate, "MMMM", { locale: th })}

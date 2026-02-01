@@ -25,7 +25,7 @@ export function RiskAlerts({ deals = [] }: RiskAlertsProps) {
             deals.map((deal) => (
               <div
                 key={deal.id}
-                className="flex flex-col bg-white dark:bg-card p-2 rounded border shadow-sm"
+                className="flex flex-col bg-white dark:bg-card p-2 rounded border border-red-200 dark:border-red-900 shadow-sm"
               >
                 <span className="text-sm font-medium truncate">
                   {deal.title}

@@ -13,11 +13,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Edit, ExternalLink, Users } from "lucide-react";
+import { Edit, ExternalLink, Users, Trash2 } from "lucide-react";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeletePartnersAction } from "@/features/admin/partners-bulk-actions";
+import { deletePartner } from "@/features/admin/partners-actions";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useState } from "react";
+import { PartnerForm } from "./PartnerForm";
 
 interface Partner {
   id: string;
@@ -33,6 +42,7 @@ interface PartnersTableProps {
 }
 
 export function PartnersTable({ partners }: PartnersTableProps) {
+  const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
   const allIds = useMemo(() => partners?.map((p) => p.id) || [], [partners]);
   const {
     toggleSelect,
@@ -57,6 +67,23 @@ export function PartnersTable({ partners }: PartnersTableProps) {
     }
   };
 
+  const handleDelete = async (partner: Partner) => {
+    if (!confirm(`ยืนยันการลบพาร์ทเนอร์ "${partner.name}"?`)) return;
+
+    try {
+      await deletePartner(partner.id);
+      toast.success("ลบพาร์ทเนอร์สำเร็จ");
+      window.location.reload();
+    } catch (error: any) {
+      toast.error(error.message || "เกิดข้อผิดพลาดในการลบ");
+    }
+  };
+
+  const handleEditSuccess = () => {
+    setEditingPartner(null);
+    window.location.reload();
+  };
+
   return (
     <div className="space-y-4">
       <BulkActionToolbar
@@ -66,7 +93,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
         entityName="พาร์ทเนอร์"
       />
 
-      <div className="bg-white rounded-lg border shadow-sm">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>
@@ -82,7 +109,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                   }
                 />
               </TableHead>
-              <TableHead className="w-[80px]">ลำดับ</TableHead>
+              <TableHead className="w-[80px]">ลำดับการแสดง</TableHead>
               <TableHead className="w-[120px]">โลโก้</TableHead>
               <TableHead>ชื่อพาร์ทเนอร์</TableHead>
               <TableHead>เว็บไซต์</TableHead>
@@ -154,11 +181,24 @@ export function PartnersTable({ partners }: PartnersTableProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link href={`/protected/partners/${partner.id}`}>
-                      <Button variant="ghost" size="icon">
-                        <Edit className="w-4 h-4 text-blue-600" />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hover:bg-blue-50 hover:text-blue-600"
+                        onClick={() => setEditingPartner(partner)}
+                      >
+                        <Edit className="w-4 h-4 " />
                       </Button>
-                    </Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hover:bg-rose-50 hover:text-rose-600"
+                        onClick={() => handleDelete(partner)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -166,6 +206,26 @@ export function PartnersTable({ partners }: PartnersTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog
+        open={!!editingPartner}
+        onOpenChange={(open) => !open && setEditingPartner(null)}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>แก้ไขข้อมูลพาร์ทเนอร์</DialogTitle>
+          </DialogHeader>
+          <div className="pt-4">
+            {editingPartner && (
+              <PartnerForm
+                initialData={editingPartner}
+                onSuccess={handleEditSuccess}
+                onCancel={() => setEditingPartner(null)}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -431,7 +431,7 @@ export function PriceSection({
                     className={
                       showRentDiscount
                         ? "text-slate-500 bg-slate-50/50"
-                        : "text-md font-medium"
+                        : "text-sm font-medium"
                     }
                   />
                 </div>

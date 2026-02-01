@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
+import Link from "next/link";
 
 interface AuditLogTableProps {
   data: AuditLogWithUser[];
@@ -28,14 +29,14 @@ interface AuditLogTableProps {
 
 export function AuditLogTable({ data }: AuditLogTableProps) {
   return (
-    <div className="rounded-md border bg-white shadow-sm">
+    <div className="rounded-md border border-slate-200 bg-white shadow-sm overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-slate-50/50">
             <TableHead className="w-[180px]">เวลา</TableHead>
-            <TableHead className="w-[250px]">ผู้ใช้งาน</TableHead>
+            <TableHead className="w-[280px]">ผู้ใช้งาน</TableHead>
             <TableHead>กิจกรรม (Action)</TableHead>
-            <TableHead>Entity</TableHead>
+            <TableHead>หมวดหมู่ (Entity)</TableHead>
             <TableHead className="text-right">รายละเอียด</TableHead>
           </TableRow>
         </TableHeader>
@@ -48,30 +49,38 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
             </TableRow>
           ) : (
             data.map((log) => (
-              <TableRow key={log.id}>
-                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                  <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                    {format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}
-                  </TableCell>
+              <TableRow
+                key={log.id}
+                className="group hover:bg-slate-50/30 transition-colors"
+              >
+                <TableCell className="text-[12px] text-muted-foreground whitespace-nowrap font-medium">
+                  {format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
+                  <Link
+                    href={
+                      log.user?.id
+                        ? `/protected/settings/users/${log.user.id}`
+                        : "#"
+                    }
+                    className="flex items-center gap-3 w-fit group/user transition-all"
+                  >
+                    <Avatar className="h-9 w-9 border border-slate-100 shadow-xs group-hover/user:ring-2 group-hover/user:ring-blue-500/20 group-hover/user:border-blue-200 transition-all">
                       <AvatarImage src={log.user?.avatar_url || ""} />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-slate-50 text-slate-400 text-xs font-bold">
                         {log.user?.full_name?.substring(0, 2).toUpperCase() ||
                           "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium">
+                      <span className="text-sm font-bold text-slate-700 group-hover/user:text-blue-600 transition-colors">
                         {log.user?.full_name || "Unknown User"}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[11px] text-slate-400 font-medium">
                         {log.user?.email}
                       </span>
                     </div>
-                  </div>
+                  </Link>
                 </TableCell>
                 <TableCell>
                   <FormatActionBadge action={log.action} />

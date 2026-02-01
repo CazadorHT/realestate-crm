@@ -13,6 +13,8 @@ export type AuditAction =
   | "lead.delete"
   | "lead.bulk_delete"
   | "lead_activity.create"
+  | "lead_activity.update"
+  | "lead_activity.delete"
   | "owner.create"
   | "owner.update"
   | "owner.delete"
@@ -45,7 +47,7 @@ export async function logAudit(
     entity: string;
     entityId?: string | null;
     metadata?: Record<string, unknown>;
-  }
+  },
 ) {
   const row: AuditInsert = {
     user_id: ctx.user.id,

@@ -60,7 +60,7 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
         entityName="ลีด"
       />
 
-      <div className="rounded-xl border">
+      <div className="rounded-xl border border-gray-200">
         <Table>
           <TableHeader>
             <TableRow>
@@ -101,7 +101,7 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
-                    <div className="font-medium">
+                    <div className="font-medium text-blue-700">
                       <Link
                         className="underline"
                         href={`/protected/leads/${l.id}`}

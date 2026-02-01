@@ -408,10 +408,10 @@ export function DealsTable({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col gap-1 max-w-[200px] md:max-w-[400px]">
+                    <div className="flex gap-2 max-w-[200px] md:max-w-[400px]">
                       <Link
                         href={`/protected/properties/${deal.property_id}`}
-                        className="font-medium text-slate-900 hover:text-blue-600 hover:underline transition-colors line-clamp-2 whitespace-normal wrap-break-word"
+                        className="font-medium text-blue-600 hover:text-blue-500 hover:underline transition-colors line-clamp-2 whitespace-normal wrap-break-word"
                       >
                         {deal.property?.title || "-"}
                       </Link>
@@ -521,7 +521,7 @@ export function DealsTable({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="hover:bg-purple-50 hover:text-purple-600"
+                            className="hover:bg-purple-50 hover:text-purple-600 cursor-pointer"
                             title="แก้ไข"
                           >
                             <Edit className="h-4 w-4" />

@@ -67,9 +67,9 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-input bg-transparent">
+    <div className="flex flex-col gap-2 rounded-md border  border-input bg-transparent">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 border-b p-2">
+      <div className="flex flex-wrap items-center gap-1 border-b border-gray-200 p-2">
         <Toggle
           size="sm"
           pressed={editor.isActive("bold")}
@@ -84,7 +84,7 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         >
           <Italic className="h-4 w-4" />
         </Toggle>
-        <div className="w-px h-6 bg-border mx-1" />
+        <div className="w-px h-6 bg-border  mx-1" />
         <Toggle
           size="sm"
           pressed={editor.isActive("heading", { level: 2 })}

@@ -2,7 +2,7 @@ import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { DealWithProperty } from "./types";
 
 export async function getDealsByLeadId(
-  leadId: string
+  leadId: string,
 ): Promise<DealWithProperty[]> {
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
@@ -22,7 +22,7 @@ export async function getDealsByLeadId(
         original_rental_price,
         property_images(image_url, is_cover)
       )
-    `
+    `,
     )
     .eq("lead_id", leadId)
     .order("created_at", { ascending: false });
@@ -36,7 +36,7 @@ export async function getDealsByLeadId(
 }
 
 export async function getDealById(
-  dealId: string
+  dealId: string,
 ): Promise<DealWithProperty | null> {
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
@@ -54,8 +54,15 @@ export async function getDealById(
         rental_price,
         original_rental_price,
         property_images(image_url, is_cover)
+      ),
+      lead:leads (
+        id,
+        full_name,
+        email,
+        phone,
+        stage
       )
-    `
+    `,
     )
     .eq("id", dealId)
     .single();

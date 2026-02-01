@@ -26,8 +26,9 @@ export function DuplicatePropertyButton({
         return;
       }
       toast.success("สร้างสำเนาเรียบร้อย");
-      router.push(`/protected/properties/${res.propertyId}/edit`);
-      router.refresh();
+      // Use window.location for reliable navigation after server action
+      // Add #table hash to scroll to the table section
+      window.location.href = `/protected/properties#table`;
     });
 
   return (

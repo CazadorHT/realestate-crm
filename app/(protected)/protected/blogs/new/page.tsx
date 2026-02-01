@@ -1,8 +1,8 @@
 import { BlogForm } from "@/components/blog/BlogForm";
 import { getCategoriesAction } from "@/features/blog/actions";
-import { ArrowLeft, FileText } from "lucide-react";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { FileText } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export default async function NewBlogPostPage() {
   const { categories } = await getCategoriesAction();
@@ -11,23 +11,13 @@ export default async function NewBlogPostPage() {
     <div className="space-y-6">
       {/* Header with Breadcrumb */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/protected/blogs">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <nav className="flex items-center gap-2 text-sm text-slate-500">
-            <Link
-              href="/protected/blogs"
-              className="hover:text-slate-900 transition-colors"
-            >
-              Blogs
-            </Link>
-            <span>/</span>
-            <span className="text-slate-900 font-medium">สร้างบทความใหม่</span>
-          </nav>
-        </div>
+        <Breadcrumb
+          backHref="/protected/blogs"
+          items={[
+            { label: "Blogs", href: "/protected/blogs" },
+            { label: "สร้างบทความใหม่" },
+          ]}
+        />
 
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -45,7 +35,7 @@ export default async function NewBlogPostPage() {
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-xl border shadow-sm p-6">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <BlogForm categories={categories || []} />
       </div>
     </div>

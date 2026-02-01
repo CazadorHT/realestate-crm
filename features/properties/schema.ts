@@ -48,6 +48,14 @@ export const FormSchema = z
     electricity_charge: z.string().optional().nullable(),
     water_charge: z.string().optional().nullable(),
     rent_free_period_days: z.coerce.number().optional().nullable(),
+
+    // 🏢 Stock Management
+    total_units: z.coerce
+      .number()
+      .min(1, "จำนวนยูนิตต้องอย่างน้อย 1")
+      .default(1),
+    sold_units: z.coerce.number().min(0).default(0),
+
     parking_type: z.enum(["COMMON", "FIXED", "AUTO"]).optional().nullable(),
     parking_fee_additional: z.coerce.number().optional().nullable(),
     orientation: z
@@ -89,6 +97,7 @@ export const FormSchema = z
           type: z.enum(TRANSIT_TYPE_ENUM),
           station_name: z.string().min(1, "Required"),
           distance_meters: z.coerce.number().optional(),
+          time: z.string().optional(), // เวลาเดินทาง (นาที)
         }),
       )
       .optional()

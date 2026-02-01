@@ -5,7 +5,12 @@ import {
   Stethoscope,
   Bus,
   Building2,
+  TrainFront,
 } from "lucide-react";
+import {
+  TRANSIT_TYPE_LABELS,
+  TRANSIT_TYPE_STYLES,
+} from "@/features/properties/labels";
 
 export interface NearbyPlaceItem {
   category: string;
@@ -14,9 +19,17 @@ export interface NearbyPlaceItem {
   time?: string;
 }
 
+export interface TransitItem {
+  type: string;
+  station_name: string;
+  distance_meters?: number;
+  time?: string;
+}
+
 interface NearbyPlacesProps {
   location?: string;
   data?: NearbyPlaceItem[];
+  transits?: TransitItem[];
 }
 
 const ICON_MAP: Record<string, any> = {
@@ -33,14 +46,18 @@ const CATEGORY_LABEL_MAP: Record<string, string> = {
   School: "สถานศึกษา",
   Mall: "ห้างสรรพสินค้า / ตลาด",
   Hospital: "โรงพยาบาล",
-  Transport: "การเดินทาง / ขนส่ง",
+  Transport: "ทางด่วน",
   Park: "สวนสาธารณะ",
   Office: "อาคารสำนักงาน",
   Other: "สถานที่อื่นๆ",
 };
 
-export function NearbyPlaces({ location, data = [] }: NearbyPlacesProps) {
-  // Group data by category
+export function NearbyPlaces({
+  location,
+  data = [],
+  transits = [],
+}: NearbyPlacesProps) {
+  // Group nearby places by category (NOT including transits)
   const grouped = data.reduce(
     (acc, item) => {
       const cat = item.category || "Other";
@@ -51,33 +68,38 @@ export function NearbyPlaces({ location, data = [] }: NearbyPlacesProps) {
     {} as Record<string, NearbyPlaceItem[]>,
   );
 
-  const hasRealData = data.length > 0;
+  // Group transits by type (BTS, MRT, etc.) - SEPARATE from nearby_places
+  const groupedTransits = transits.reduce(
+    (acc, item) => {
+      const type = item.type || "OTHER";
+      if (!acc[type]) acc[type] = [];
+      acc[type].push(item);
+      return acc;
+    },
+    {} as Record<string, TransitItem[]>,
+  );
 
-  // Use real data if available, otherwise show empty or fallback (user wanted "Real Data", so let's stick to real)
-  if (!hasRealData) {
-    // Optional: Return null or keep mock?
-    // Plan said "Replace hardcoded mock data".
-    // But if empty, maybe better to hide section?
-    // Let's hide if empty to be clean.
+  const hasNearbyPlaces = data.length > 0;
+  const hasTransits = transits.length > 0;
+
+  if (!hasNearbyPlaces && !hasTransits) {
     return null;
   }
 
-  // Helper to format distance behavior
-  const formatDistance = (val?: string) => {
+  // Helper to format distance
+  const formatDistance = (val?: string | number) => {
     if (!val) return null;
-    const num = parseFloat(val);
-    if (isNaN(num)) return val; // Return original if not a number
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    if (isNaN(num)) return String(val);
 
     if (num < 1) {
-      // Less than 1 km -> convert to meters (e.g. 0.5 -> 500 ม.)
       return `${Math.round(num * 1000)} ม.`;
     }
-    // 1 km or more -> show as km (e.g. 1.2 -> 1.2 กม.)
     return `${num} กม.`;
   };
 
-  // Sort categories by predefined order or just keys
   const categories = Object.keys(grouped);
+  const transitTypes = Object.keys(groupedTransits);
 
   return (
     <div className="mt-8">
@@ -85,6 +107,7 @@ export function NearbyPlaces({ location, data = [] }: NearbyPlacesProps) {
         สถานที่สำคัญใกล้เคียง
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+        {/* Nearby Places Categories (Transport = ทางด่วน) */}
         {categories.map((catKey) => {
           const items = grouped[catKey];
           const Icon = ICON_MAP[catKey] || Map;
@@ -128,6 +151,60 @@ export function NearbyPlaces({ location, data = [] }: NearbyPlacesProps) {
             </div>
           );
         })}
+
+        {/* Transit - Single card called "รถไฟฟ้า" */}
+        {transits.length > 0 && (
+          <div className="bg-blue-50 border border-slate-100 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <TrainFront className="w-5 h-5 text-blue-500" />
+              <h4 className="font-semibold text-sm text-slate-700">รถไฟฟ้า</h4>
+            </div>
+            <ul className="space-y-2">
+              {transits.map((transit, i) => {
+                const typeLabel =
+                  TRANSIT_TYPE_LABELS[
+                    transit.type as keyof typeof TRANSIT_TYPE_LABELS
+                  ] || transit.type;
+                const styles =
+                  TRANSIT_TYPE_STYLES[
+                    transit.type as keyof typeof TRANSIT_TYPE_STYLES
+                  ] || TRANSIT_TYPE_STYLES.OTHER;
+                const distanceKm = transit.distance_meters
+                  ? transit.distance_meters / 1000
+                  : null;
+                return (
+                  <li
+                    key={i}
+                    className="flex justify-between items-start text-sm gap-2"
+                  >
+                    <div className="flex items-center gap-2 mr-auto">
+                      <span
+                        className={`text-xs font-semibold px-2 py-1 rounded ${styles.bg} ${styles.text}`}
+                      >
+                        {typeLabel}
+                      </span>
+                      <span className="text-slate-600 leading-tight">
+                        {transit.station_name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                      {distanceKm && (
+                        <span className="text-xs font-medium text-slate-400 whitespace-nowrap bg-white px-2 py-1 rounded-md border border-slate-100">
+                          {formatDistance(distanceKm)}
+                        </span>
+                      )}
+                      {transit.time && (
+                        <span className="text-xs font-medium text-slate-400 whitespace-nowrap bg-white px-2 py-1 rounded-md border border-slate-100">
+                          {transit.time} นาที
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

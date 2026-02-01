@@ -108,7 +108,7 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
         entityName="สัญญา"
       />
 
-      <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>
@@ -290,15 +290,29 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                       </div>
 
                       {/* Text */}
-                      <div className="space-y-2 max-w-md">
+                      <div className="space-y-2 ">
                         <h3 className="text-2xl font-bold text-slate-800">
                           ยังไม่มีสัญญาเช่าในระบบ
                         </h3>
                         <p className="text-slate-500 leading-relaxed">
-                          สร้างสัญญาเช่าใหม่จากหน้าดีลที่มีสถานะ "เซ็นสัญญา"
-                          หรือ "สำเร็จ"
+                          การสร้างสัญญาเช่าต้องมีดีลที่มีสถานะ{" "}
+                          <span className="font-semibold text-emerald-600">
+                            "สำเร็จ"
+                          </span>{" "}
+                          เท่านั้น กรุณาไปหน้าดีลเพื่อปิดการขาย/เช่าก่อน
                         </p>
                       </div>
+
+                      {/* Button */}
+                      <Button
+                        asChild
+                        className="mt-2 gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20"
+                      >
+                        <Link href="/protected/deals">
+                          ไปหน้าดีล
+                          <ArrowUpRight className="h-4 w-4" />
+                        </Link>
+                      </Button>
                     </div>
                   </div>
                 </TableCell>

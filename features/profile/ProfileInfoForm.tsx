@@ -86,7 +86,7 @@ export function ProfileInfoForm({
 
       if (result.success) {
         toast.success("บันทึกข้อมูลโปรไฟล์สำเร็จ");
-        router.refresh();
+        router.push("/protected");
       } else {
         toast.error(result.message || "เกิดข้อผิดพลาด");
       }

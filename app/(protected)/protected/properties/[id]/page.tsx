@@ -1,7 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Edit, MapPin, Clock, CalendarDays } from "lucide-react";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import {
+  ArrowLeft,
+  Edit,
+  MapPin,
+  Clock,
+  CalendarDays,
+  User,
+  Phone,
+  TrainFront,
+} from "lucide-react";
+import { FaLine } from "react-icons/fa";
 import { PropertyStatusBadge } from "@/components/properties/PropertyStatusBadge";
 import { PropertyTypeBadge } from "@/components/properties/PropertyTypeBadge";
 import { Separator } from "@/components/ui/separator";
@@ -10,6 +21,9 @@ import { PropertyGallery } from "@/components/public/PropertyGallery";
 import { PropertySpecs } from "@/components/public/PropertySpecs";
 import { Badge } from "@/components/ui/badge";
 import { ICON_MAP, DEFAULT_ICON } from "@/features/amenities/icons";
+import { NearbyPlaces } from "@/components/public/NearbyPlaces";
+import { TRANSIT_TYPE_LABELS } from "@/features/properties/labels";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default async function PropertyDetailsPage({
   params,
@@ -157,19 +171,14 @@ export default async function PropertyDetailsPage({
           <div className="flex flex-col gap-3 md:gap-4">
             {/* Back Link & Edit Actions */}
             <div className="flex justify-between items-center mb-2">
-              <nav className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Link
-                  href="/protected/properties"
-                  className="hover:text-primary transition-colors flex items-center gap-1"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  ทรัพย์
-                </Link>
-                <span className="text-muted-foreground/50">›</span>
-                <span className="font-medium text-foreground truncate max-w-[200px] md:max-w-[400px]">
-                  {property.title}
-                </span>
-              </nav>
+              <Breadcrumb
+                backHref="/protected/properties"
+                backLabel="ทรัพย์"
+                items={[
+                  { label: "ทรัพย์", href: "/protected/properties" },
+                  { label: property.title || "รายละเอียด" },
+                ]}
+              />
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/protected/properties/${property.id}/edit`}>
                   <Edit className="h-4 w-4 mr-2" />
@@ -367,10 +376,10 @@ export default async function PropertyDetailsPage({
           />
         </section>
 
-        {/* 3. Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 md:gap-10 lg:gap-16 mb-6 md:mb-10">
+        {/* 3. Main Flex Layout */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-6 md:mb-10">
           {/* Left Content */}
-          <div className="space-y-6 md:space-y-10">
+          <div className="flex-1 space-y-6 md:space-y-8">
             {/* Specs Grid */}
             <section>
               <PropertySpecs
@@ -397,12 +406,30 @@ export default async function PropertyDetailsPage({
             </section>
 
             {/* Description */}
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-slate-900 mb-4 md:mb-6">
-                รายละเอียดทรัพย์
-              </h2>
-              <div className="prose prose-slate max-w-none text-slate-600 leading-7 md:leading-8 whitespace-pre-wrap text-sm md:text-base max-h-[200px] overflow-y-auto">
-                {property.description || "ไม่มีรายละเอียดเพิ่มเติม"}
+            <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-5 py-4  flex items-center gap-3 border-b border-slate-200">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Edit className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="flex flex-col ">
+                  <h2 className="font-semibold text-slate-900">
+                    รายละเอียดทรัพย์
+                  </h2>
+                  <p className="text-sm text-slate-500">ข้อมูลเพิ่มเติม</p>
+                </div>
+              </div>
+              <div className="p-5">
+                {property.description ? (
+                  <div
+                    className="prose prose-slate prose-sm max-w-none text-slate-600 max-h-[500px] overflow-y-auto
+                      prose-headings:text-slate-900 prose-headings:font-semibold
+                      prose-p:my-2 prose-ul:my-2 prose-li:my-0.5
+                      prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline"
+                    dangerouslySetInnerHTML={{ __html: property.description }}
+                  />
+                ) : (
+                  <p className="text-slate-500">ไม่มีรายละเอียดเพิ่มเติม</p>
+                )}
               </div>
             </section>
 
@@ -432,6 +459,13 @@ export default async function PropertyDetailsPage({
                 </div>
               </section>
             )}
+
+            {/* Nearby Places & Transportation (merged) */}
+            <NearbyPlaces
+              location={property.popular_area || undefined}
+              data={(property.nearby_places as any[]) || []}
+              transits={(property.nearby_transits as any[]) || []}
+            />
 
             <hr className="border-slate-100" />
 
@@ -463,61 +497,6 @@ export default async function PropertyDetailsPage({
                 )}
               </div>
             </section>
-
-            {/* Owner Contact - CRM Only */}
-            {property.owner && (
-              <section className="bg-orange-50/50 border border-orange-200 rounded-xl p-6">
-                <h3 className="font-semibold text-lg border-b border-orange-200 pb-2 mb-4 flex items-center justify-between text-orange-800">
-                  <span>ข้อมูลเจ้าของทรัพย์</span>
-                  <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded border border-orange-200">
-                    🔒 CRM Only
-                  </span>
-                </h3>
-                <div className="grid md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="block text-muted-foreground mb-1">
-                      ชื่อเจ้าของ
-                    </span>
-                    <span className="font-semibold text-base">
-                      {property.owner.full_name}
-                    </span>
-                  </div>
-                  {property.owner.phone && (
-                    <div>
-                      <span className="block text-muted-foreground mb-1">
-                        เบอร์โทร
-                      </span>
-                      <a
-                        href={`tel:${property.owner.phone}`}
-                        className="font-semibold text-blue-600 hover:underline"
-                      >
-                        {property.owner.phone}
-                      </a>
-                    </div>
-                  )}
-                  {property.owner.line_id && (
-                    <div>
-                      <span className="block text-muted-foreground mb-1">
-                        Line ID
-                      </span>
-                      <span className="font-medium">
-                        {property.owner.line_id}
-                      </span>
-                    </div>
-                  )}
-                  {property.property_source && (
-                    <div>
-                      <span className="block text-muted-foreground mb-1">
-                        แหล่งที่มาทรัพย์
-                      </span>
-                      <span className="font-medium">
-                        {property.property_source}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </section>
-            )}
 
             {/* Deal & Contracts (CRM only, after SOLD/RENTED) */}
             {isClosed && relatedDeal && (
@@ -588,6 +567,102 @@ export default async function PropertyDetailsPage({
                   </div>
                 </div>
               </section>
+            )}
+          </div>
+
+          {/* Right Sidebar - Owner & Agent Cards */}
+          <div className="w-full lg:w-80 xl:w-96 shrink-0 space-y-4 lg:sticky lg:top-6 lg:self-start">
+            {/* Owner Card */}
+            {property.owner && (
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="px-5 py-4 bg-orange-500 flex items-center gap-3">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <User className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">เจ้าของทรัพย์</h3>
+                    <p className="text-sm text-orange-100">🔒 CRM Only</p>
+                  </div>
+                </div>
+                <div className="p-5 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-full bg-linear-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white font-bold text-lg">
+                      {property.owner.full_name?.charAt(0).toUpperCase() || "O"}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">
+                        {property.owner.full_name}
+                      </p>
+                      {property.property_source && (
+                        <p className="text-sm text-slate-500">
+                          แหล่งที่มา: {property.property_source}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    {property.owner.phone && (
+                      <a
+                        href={`tel:${property.owner.phone}`}
+                        className="flex items-center gap-2 text-slate-700 hover:text-blue-600 transition-colors"
+                      >
+                        <Phone className="h-4 w-4 text-blue-500" />
+                        <span>{property.owner.phone}</span>
+                      </a>
+                    )}
+                    {property.owner.line_id && (
+                      <div className="flex items-center gap-2 text-slate-700">
+                        <FaLine className="h-4 w-4 text-[#06C755]" />
+                        <span>{property.owner.line_id}</span>
+                      </div>
+                    )}
+                  </div>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link href={`/protected/owners/${property.owner.id}`}>
+                      ดูข้อมูลเจ้าของ
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Agent Card */}
+            {property.agent && (
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="px-5 py-4 bg-linear-to-r from-slate-800 to-slate-900 flex items-center gap-3">
+                  <div className="p-2 bg-white/10 rounded-lg">
+                    <User className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">ผู้รับผิดชอบ</h3>
+                    <p className="text-sm text-slate-300">Agent</p>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-11 w-11 border border-border/50">
+                      <AvatarImage
+                        src={property.agent.avatar_url || ""}
+                        alt={property.agent.full_name || ""}
+                      />
+                      <AvatarFallback className="bg-linear-to-br from-blue-500 to-indigo-600 text-white font-bold">
+                        {property.agent.full_name?.charAt(0).toUpperCase() ||
+                          "A"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold text-slate-900">
+                        {property.agent.full_name}
+                      </p>
+                      {property.agent.phone && (
+                        <p className="text-sm text-slate-500">
+                          {property.agent.phone}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>

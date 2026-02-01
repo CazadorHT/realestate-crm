@@ -70,7 +70,7 @@ export function BlogsTable({ posts }: BlogsTableProps) {
         entityName="บทความ"
       />
 
-      <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>
@@ -134,9 +134,11 @@ export function BlogsTable({ posts }: BlogsTableProps) {
                     </TableCell>
                     <TableCell className="font-medium">
                       <div className="flex flex-col">
-                        <span className="line-clamp-1">{post.title}</span>
+                        <Link href={`/protected/blogs/${post.id}`}>
+                          <span className="line-clamp-1 text-blue-600 underline">{post.title}</span>
+                        </Link>
                         <span className="text-xs text-slate-500 font-mono">
-                          /{post.slug}
+                          URL : /{post.slug}
                         </span>
                       </div>
                     </TableCell>

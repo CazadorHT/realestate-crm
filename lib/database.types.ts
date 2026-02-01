@@ -572,6 +572,7 @@ export type Database = {
           full_name: string | null
           id: string
           line_id: string | null
+          notification_preferences: Json | null
           other_contact: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
@@ -587,6 +588,7 @@ export type Database = {
           full_name?: string | null
           id: string
           line_id?: string | null
+          notification_preferences?: Json | null
           other_contact?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -602,6 +604,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           line_id?: string | null
+          notification_preferences?: Json | null
           other_contact?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -697,10 +700,12 @@ export type Database = {
           rental_price: number | null
           size_sqm: number | null
           slug: string | null
+          sold_units: number
           status: Database["public"]["Enums"]["property_status"]
           structured_data: Json | null
           subdistrict: string | null
           title: string
+          total_units: number
           transit_distance_meters: number | null
           transit_station_name: string | null
           transit_type: string | null
@@ -795,10 +800,12 @@ export type Database = {
           rental_price?: number | null
           size_sqm?: number | null
           slug?: string | null
+          sold_units?: number
           status?: Database["public"]["Enums"]["property_status"]
           structured_data?: Json | null
           subdistrict?: string | null
           title: string
+          total_units?: number
           transit_distance_meters?: number | null
           transit_station_name?: string | null
           transit_type?: string | null
@@ -893,10 +900,12 @@ export type Database = {
           rental_price?: number | null
           size_sqm?: number | null
           slug?: string | null
+          sold_units?: number
           status?: Database["public"]["Enums"]["property_status"]
           structured_data?: Json | null
           subdistrict?: string | null
           title?: string
+          total_units?: number
           transit_distance_meters?: number | null
           transit_station_name?: string | null
           transit_type?: string | null

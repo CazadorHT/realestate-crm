@@ -17,6 +17,7 @@ import { Edit, Trash2, HelpCircle } from "lucide-react";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteFaqsAction } from "@/features/admin/faqs-bulk-actions";
+import { deleteFaq } from "@/features/admin/faqs-actions";
 import { toast } from "sonner";
 
 interface FAQ {
@@ -57,6 +58,18 @@ export function FAQsTable({ faqs }: FAQsTableProps) {
     }
   };
 
+  const handleDelete = async (faq: FAQ) => {
+    if (!confirm(`ยืนยันการลบคำถาม "${faq.question}"?`)) return;
+
+    try {
+      await deleteFaq(faq.id);
+      toast.success("ลบคำถามสำเร็จ");
+      window.location.reload();
+    } catch (error: any) {
+      toast.error(error.message || "เกิดข้อผิดพลาดในการลบคำถาม");
+    }
+  };
+
   return (
     <div className="space-y-4">
       <BulkActionToolbar
@@ -66,7 +79,7 @@ export function FAQsTable({ faqs }: FAQsTableProps) {
         entityName="คำถาม"
       />
 
-      <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50">
@@ -156,6 +169,14 @@ export function FAQsTable({ faqs }: FAQsTableProps) {
                           <Edit className="w-4 h-4" />
                         </Button>
                       </Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hover:bg-rose-50 hover:text-rose-600"
+                        onClick={() => handleDelete(faq)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

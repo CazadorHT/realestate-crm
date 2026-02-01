@@ -114,7 +114,9 @@ export default async function ProfilePage() {
           </Card>
 
           {/* Section 3: Notification Preferences */}
-          <NotificationSettings />
+          <NotificationSettings
+            initialSettings={profile.notification_preferences}
+          />
         </div>
       </div>
     </div>

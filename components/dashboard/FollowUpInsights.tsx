@@ -27,7 +27,7 @@ export function FollowUpInsights({ leads = [] }: FollowUpInsightsProps) {
             leads.map((lead) => (
               <div
                 key={lead.id}
-                className="flex items-center justify-between bg-white dark:bg-card p-2 rounded border shadow-sm"
+                className="flex items-center justify-between bg-white dark:bg-card p-2 rounded border border-stone-200 shadow-sm"
               >
                 <div>
                   <p className="text-sm font-medium">{lead.name}</p>

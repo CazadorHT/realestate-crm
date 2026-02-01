@@ -48,7 +48,7 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const columns = LEAD_STAGES;
@@ -122,7 +122,7 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
           toast.success(
             `อัปเดตสถานะเป็น ${
               LEAD_STAGE_LABELS[newStage as keyof typeof LEAD_STAGE_LABELS]
-            }`
+            }`,
           );
         }
       } catch (error) {
@@ -142,7 +142,7 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-6 h-[calc(100vh-250px)]">
+      <div className="flex gap-3 overflow-x-auto pb-4 h-[calc(100vh-250px)] px-2 ">
         {columns.map((stage) => (
           <KanbanColumn
             key={stage}
@@ -173,9 +173,9 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className="flex flex-col bg-slate-100/50 dark:bg-slate-900/50 rounded-xl w-80 min-w-80 border overflow-hidden"
+      className="flex flex-col bg-slate-100/50 dark:bg-slate-900/50 rounded-xl w-[280px] min-w-[280px]  border border-slate-200  overflow-hidden "
     >
-      <div className="p-4 border-b bg-white dark:bg-slate-950 flex items-center justify-between sticky top-0 z-10">
+      <div className="p-4 border-b border-slate-200 bg-white dark:bg-slate-950 flex items-center justify-between sticky top-0 z-10">
         <h3 className="font-bold flex items-center gap-2">
           {title}
           <Badge
@@ -248,7 +248,7 @@ function LeadCard({ lead, isOverlay }: { lead: LeadRow; isOverlay?: boolean }) {
         isOverlay ? "border-primary shadow-xl rotate-3" : ""
       }`}
     >
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="p-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
             <UserCircle className="h-4 w-4 text-primary" />
@@ -259,7 +259,7 @@ function LeadCard({ lead, isOverlay }: { lead: LeadRow; isOverlay?: boolean }) {
           <button
             onMouseDown={(e) => e.stopPropagation()} // Prevent drag when clicking the view button
             onClick={() => router.push(`/protected/leads/${lead.id}`)}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-100 rounded transition-all"
+            className="opacity-0 group-hover:opacity-100 p-1  rounded transition-all"
             title="ดูรายละเอียด"
           >
             <Badge
@@ -292,7 +292,7 @@ function LeadCard({ lead, isOverlay }: { lead: LeadRow; isOverlay?: boolean }) {
           )}
         </div>
 
-        <div className="pt-2 border-t flex justify-between items-center text-[10px] text-muted-foreground">
+        <div className="pt-2 border-t border-slate-200 flex justify-between items-center text-[10px] text-muted-foreground">
           <span>{new Date(lead.created_at).toLocaleDateString("th-TH")}</span>
           {lead.lead_type && (
             <Badge

@@ -21,7 +21,7 @@ export type UploadAvatarResult = {
  */
 
 export async function updateProfileAction(
-  formData: FormData
+  formData: FormData,
 ): Promise<UpdateProfileResult> {
   try {
     const ctx = await requireAuthContext();
@@ -89,7 +89,7 @@ export async function updateProfileAction(
  * อัปโหลดรูปโปรไฟล์
  */
 export async function uploadAvatarAction(
-  formData: FormData
+  formData: FormData,
 ): Promise<UploadAvatarResult> {
   const file = formData.get("file") as File | null;
 
@@ -99,7 +99,7 @@ export async function uploadAvatarAction(
 
   const ctx = await requireAuthContext();
 
-  // ลบรูปเก่าก่อน (ถ้ามี)
+  // 1. ดึงข้อมูลโปรไฟล์เพื่อหารูปเก่า
   const { data: currentProfile } = await ctx.supabase
     .from("profiles")
     .select("avatar_url")
@@ -107,39 +107,56 @@ export async function uploadAvatarAction(
     .single();
 
   if (currentProfile?.avatar_url) {
-    // Extract path from URL if it's a full URL, or use as-is if it's already a path
-    const oldPath = currentProfile.avatar_url.includes("avatars/")
-      ? currentProfile.avatar_url.split("avatars/")[1]
-      : currentProfile.avatar_url;
-
-    if (oldPath && !oldPath.startsWith("http")) {
-      await ctx.supabase.storage.from("avatars").remove([`avatars/${oldPath}`]);
+    try {
+      // พยายามดึง path ของไฟล์จาก URL
+      // รูปแบบ URL: .../storage/v1/object/public/property-images/user-profiles/[path]
+      const urlParts = currentProfile.avatar_url.split("/property-images/");
+      if (urlParts.length > 1) {
+        const oldStoragePath = urlParts[urlParts.length - 1];
+        if (oldStoragePath) {
+          // ลบไฟล์เก่าออกจาก Storage (ใช้ client ของ user จะเช็คสิทธิ์ตาม RLS ของ Storage)
+          await ctx.supabase.storage
+            .from("property-images")
+            .remove([oldStoragePath]);
+        }
+      }
+    } catch (removeError) {
+      console.error("Error removing old avatar:", removeError);
+      // ไม่ต้อง throw error เพราะต้องการให้อัปโหลดใหม่ต่อได้
     }
   }
 
-  // อัปโหลดรูปใหม่
-  const ext = file.name.split(".").pop() || "jpg";
-  const fileName = `${ctx.user.id}_${randomUUID()}.${ext}`;
-  const filePath = `avatars/${fileName}`;
+  // 2. เตรียมไฟล์ใหม่
+  const originalName = file.name || "avatar.jpg";
+  const fileNameParts = originalName.split(".");
+  const ext =
+    fileNameParts.length > 1 ? fileNameParts.pop()?.toLowerCase() : "jpg";
 
+  // ใช้ UUID เพื่อความ unique และป้องกันการเดาชื่อไฟล์
+  const fileName = `${ctx.user.id}_${randomUUID()}.${ext || "jpg"}`;
+  const filePath = `user-profiles/${fileName}`; // เก็บไว้ในโฟลเดอร์ user-profiles ภายใน bucket property-images
+
+  // 3. อัปโหลดรูปใหม่ (ใช้ client ของ user ปกติ - RLS จะทำงาน)
   const { error: uploadError } = await ctx.supabase.storage
-    .from("avatars")
+    .from("property-images")
     .upload(filePath, file, {
       contentType: file.type,
+      cacheControl: "3600",
       upsert: true,
     });
 
   if (uploadError) {
-    console.error("Avatar upload error:", uploadError);
-    throw new Error("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
+    console.error("Avatar upload error details:", uploadError);
+    // แจ้ง Error ละเอียดขึ้นใน Console ของ Server
+    throw new Error(`อัปโหลดไม่สำเร็จ: ${uploadError.message}`);
   }
 
-  // สร้าง public URL
+  // 4. สร้าง public URL
   const {
     data: { publicUrl },
-  } = ctx.supabase.storage.from("avatars").getPublicUrl(filePath);
+  } = ctx.supabase.storage.from("property-images").getPublicUrl(filePath);
 
-  // อัปเดต avatar_url ในฐานข้อมูล
+  // 5. อัปเดต avatar_url ในฐานข้อมูล (ใช้ client ปกติเพื่อรักษา session)
   const { error: updateError } = await ctx.supabase
     .from("profiles")
     .update({ avatar_url: publicUrl })
@@ -147,18 +164,60 @@ export async function uploadAvatarAction(
 
   if (updateError) {
     console.error("Avatar URL update error:", updateError);
-    throw new Error("เกิดข้อผิดพลาดในการบันทึก URL รูปภาพ");
+    throw new Error("บันทึกข้อมูลรูปภาพไม่สำเร็จ");
   }
 
   await logAudit(ctx, {
     action: "profile.avatar.upload",
     entity: "profiles",
     entityId: ctx.user.id,
-    metadata: { filePath },
+    metadata: { filePath, publicUrl },
   });
 
   revalidatePath("/protected/profile");
   revalidatePath("/protected");
 
   return { path: filePath, publicUrl };
+}
+
+/**
+ * Update Notification Settings
+ */
+export async function updateNotificationSettings(
+  settings: Record<string, boolean>,
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const ctx = await requireAuthContext();
+
+    // Validate input (basic check)
+    if (!settings || typeof settings !== "object") {
+      throw new Error("Invalid settings format");
+    }
+
+    const { error } = await ctx.supabase
+      .from("profiles")
+      .update({ notification_preferences: settings })
+      .eq("id", ctx.user.id);
+
+    if (error) {
+      console.error("Error updating notification settings:", error);
+      return { success: false, message: "Failed to update settings" };
+    }
+
+    /* 
+    // Optional: Log Audit if needed, but might be too noisy for toggles
+    await logAudit(ctx, {
+      action: "profile.notification.update",
+      entity: "profiles",
+      entityId: ctx.user.id,
+      metadata: settings,
+    });
+    */
+
+    revalidatePath("/protected/profile");
+    return { success: true };
+  } catch (error) {
+    console.error("updateNotificationSettings error:", error);
+    return { success: false, message: "Unauthorized or Error" };
+  }
 }

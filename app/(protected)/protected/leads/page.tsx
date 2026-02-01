@@ -83,33 +83,32 @@ export default async function LeadsPage({
         actionHref="/protected/leads/new"
         actionIcon="userPlus"
         gradient="emerald"
-      />
-
-      {/* View Toggles */}
-      <div className="flex justify-end">
-        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border shadow-sm">
-          <Link
-            href={toggleViewHref("list")}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-              view === "list"
-                ? "bg-white dark:bg-slate-950 shadow-sm text-slate-900"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            📋 รายการ
-          </Link>
-          <Link
-            href={toggleViewHref("kanban")}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-              view === "kanban"
-                ? "bg-white dark:bg-slate-950 shadow-sm text-slate-900"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            📊 กระดานงาน
-          </Link>
+      >
+        <div className="flex justify-end">
+          <div className="flex bg-white/10 dark:bg-slate-800/10 p-1 rounded-xl border border-white/20 shadow-sm backdrop-blur-sm">
+            <Link
+              href={toggleViewHref("list")}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                view === "list"
+                  ? "bg-white shadow-sm text-slate-900"
+                  : "text-white/70 hover:text-white"
+              }`}
+            >
+              📋 รายการ
+            </Link>
+            <Link
+              href={toggleViewHref("kanban")}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                view === "kanban"
+                  ? "bg-white shadow-sm text-slate-900"
+                  : "text-white/70 hover:text-white"
+              }`}
+            >
+              📊 กระดานงาน
+            </Link>
+          </div>
         </div>
-      </div>
+      </PageHeader>
 
       {/* Stats Section */}
       <LeadsStats stats={stats} />
@@ -137,7 +136,7 @@ export default async function LeadsPage({
             <>
               <LeadsTable leads={listLeads} />
 
-              <div className="flex items-center justify-between text-sm bg-slate-50 rounded-xl p-4 border">
+              <div className="flex items-center justify-between text-sm bg-slate-50 rounded-xl p-4 border border-slate-200 shadow-sm">
                 <div className="text-slate-600 font-medium">
                   ทั้งหมด <span className="text-slate-900">{count}</span> รายการ
                   • หน้า <span className="text-slate-900">{page}</span> จาก{" "}
@@ -145,7 +144,7 @@ export default async function LeadsPage({
                 </div>
                 <div className="flex gap-2">
                   <Link
-                    className={`rounded-lg border bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
+                    className={`rounded-lg border border-slate-200 bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
                       page <= 1 ? "pointer-events-none opacity-50" : ""
                     }`}
                     href={makeHref(page - 1)}
@@ -153,7 +152,7 @@ export default async function LeadsPage({
                     ← ก่อนหน้า
                   </Link>
                   <Link
-                    className={`rounded-lg border bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
+                    className={`rounded-lg border border-slate-200 bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
                       page >= totalPages ? "pointer-events-none opacity-50" : ""
                     }`}
                     href={makeHref(page + 1)}

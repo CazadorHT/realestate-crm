@@ -10,11 +10,23 @@ import {
   Calendar as CalendarIcon,
   Clock,
   Globe,
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Tag,
+  Image as ImageIcon,
+  FileText,
+  Search,
+  ChevronRight,
+  Sparkles,
+  Type,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { th } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,7 +48,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -45,13 +57,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -59,7 +64,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { blogPostSchema } from "@/features/blog/schema";
 import { BlogPostInput, BlogPostRow } from "@/features/blog/types";
@@ -79,6 +84,7 @@ interface BlogFormProps {
 export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("content");
 
   // Convert JSONB structured_data to string for the form
   const initialStructuredData = initialData?.structured_data
@@ -125,6 +131,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   const watchedExcerpt = watch("excerpt");
   const watchedSlug = watch("slug");
   const watchedIsPublished = watch("is_published");
+  const watchedCoverImage = watch("cover_image");
 
   // Auto-generate slug from title
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,23 +146,12 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     }
   };
 
-  // Auto-calculate reading time
-  useEffect(() => {
-    if (watchedContent) {
-      const text = watchedContent.replace(/<[^>]*>?/gm, ""); // Strip HTML
-      const wordCount = text.trim().split(/\s+/).length;
-      const readingTime = Math.ceil(wordCount / 200); // ~200 words per minute
-      setValue("reading_time", `${readingTime} min read`);
-    }
-  }, [watchedContent, setValue]);
-
   const [importJsonOpen, setImportJsonOpen] = useState(false);
   const [jsonInput, setJsonInput] = useState("");
 
   const handleImport = () => {
     try {
       const data = JSON.parse(jsonInput);
-      // ... (Same import logic as before)
       Object.keys(data).forEach((key) => {
         // @ts-ignore
         if (defaultValues[key] !== undefined) {
@@ -171,10 +167,10 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
         );
       }
 
-      toast.success("Data imported successfully");
+      toast.success("นำเข้าข้อมูลสำเร็จ");
       setImportJsonOpen(false);
     } catch (e) {
-      toast.error("Invalid JSON format");
+      toast.error("รูปแบบ JSON ไม่ถูกต้อง");
     }
   };
 
@@ -187,11 +183,11 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
       datePublished: new Date().toISOString(),
       author: {
         "@type": "Person",
-        name: "Admin", // Or current user name
+        name: "Admin",
       },
     };
     setValue("structured_data", JSON.stringify(jsonLd, null, 2));
-    toast.success("JSON-LD Generated");
+    toast.success("สร้าง JSON-LD สำเร็จ");
   };
 
   async function onSubmit(data: BlogPostInput) {
@@ -212,394 +208,286 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
         toast.error(res.message);
       }
     } catch {
-      toast.error("Something went wrong");
+      toast.error("เกิดข้อผิดพลาด");
     } finally {
       setIsSubmitting(false);
     }
   }
 
+  const characterCount = watchedContent
+    ? watchedContent.replace(/<[^>]*>?/gm, "").length
+    : 0;
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-20">
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b py-4 -mx-6 px-6 mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => router.back()}
-              className="text-muted-foreground"
-            >
-              Back
-            </Button>
-            <div>
-              <h1 className="text-lg font-semibold leading-none">
-                {initialData ? "Edit Article" : "Create New Article"}
-              </h1>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                {watchedIsPublished ? (
-                  <Badge
-                    variant="default"
-                    className="bg-green-500 hover:bg-green-600"
-                  >
-                    Published
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary">Draft</Badge>
-                )}
-                <span>•</span>
-                {watch("reading_time")}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Dialog open={importJsonOpen} onOpenChange={setImportJsonOpen}>
-              <DialogTrigger asChild>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="pb-20">
+        {/* Premium Sticky Header */}
+        <div className="sticky top-0 z-50 -mx-6 px-6 mb-6">
+          <div className="bg-white/95 backdrop-blur-md border-b border-slate-200 rounded-b-xl shadow-sm py-4 px-6 -mx-6">
+            <div className="flex items-center justify-between">
+              {/* Left - Back & Title */}
+              <div className="flex items-center gap-4">
                 <Button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  className="hidden sm:flex gap-2"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => router.back()}
+                  className="hover:bg-slate-100 rounded-full"
                 >
-                  <FileJson className="h-4 w-4" />
-                  Import
+                  <ArrowLeft className="h-5 w-5" />
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Import from JSON</DialogTitle>
-                  <DialogDescription>
-                    Paste JSON object to autofill.
-                  </DialogDescription>
-                </DialogHeader>
-                {/* ... Import content ... */}
-                <div className="space-y-4 py-4">
-                  <Textarea
-                    placeholder='{ "title": "...", "content": "..." }'
-                    className="font-mono min-h-[300px]"
-                    value={jsonInput}
-                    onChange={(e) => setJsonInput(e.target.value)}
-                  />
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setImportJsonOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="button" onClick={handleImport}>
-                      Import
-                    </Button>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-xl font-bold text-slate-900">
+                      {initialData ? "แก้ไขบทความ" : "สร้างบทความใหม่"}
+                    </h1>
+                    {watchedIsPublished ? (
+                      <Badge className="bg-emerald-500 hover:bg-emerald-600 gap-1">
+                        <Eye className="h-3 w-3" />
+                        เผยแพร่แล้ว
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="gap-1">
+                        <EyeOff className="h-3 w-3" />
+                        แบบร่าง
+                      </Badge>
+                    )}
                   </div>
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    {characterCount.toLocaleString()} ตัวอักษร
+                  </p>
                 </div>
-              </DialogContent>
-            </Dialog>
+              </div>
 
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              <Save className="mr-2 h-4 w-4" />
-              Save Changes
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid gap-8 md:grid-cols-[1fr_350px]">
-          {/* Main Content (Left) */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Content</CardTitle>
-                <CardDescription>Write your masterpiece.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Article Title</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter a catchy title..."
-                          className="text-lg font-medium"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleTitleChange(e);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="slug"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Slug</FormLabel>
-                      <FormControl>
-                        <div className="flex">
-                          <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 bg-muted text-muted-foreground text-sm">
-                            /blog/
-                          </span>
-                          <Input
-                            {...field}
-                            className="rounded-l-none font-mono text-sm"
-                            placeholder="post-url-slug"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="content"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <TiptapEditor
-                          value={field.value || ""}
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                      <div className="flex justify-end items-center text-xs text-muted-foreground gap-4">
-                        <span>
-                          {watchedContent
-                            ? watchedContent.replace(/<[^>]*>?/gm, "").length
-                            : 0}{" "}
-                          characters
-                        </span>
-                        <span>{watch("reading_time")}</span>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>SEO & Metadata</CardTitle>
-                <CardDescription>Optimize for search engines.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="bg-muted/50 p-4 rounded-lg space-y-2 border">
-                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Google Search Preview
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-[18px] text-[#1a0dab] hover:underline cursor-pointer truncate font-medium">
-                      {watchedTitle || "Article Title"}
-                    </div>
-                    <div className="text-sm text-[#006621] truncate">
-                      https://yoursite.com/blog/{watchedSlug || "slug"}
-                    </div>
-                    <div className="text-sm text-[#545454] line-clamp-2">
-                      {watchedExcerpt ||
-                        "Please enter an excerpt to see how it looks on Google search results."}
-                    </div>
-                  </div>
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="excerpt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Excerpt / Meta Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Brief summary (150-160 chars recommended)"
-                          className="h-24 resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <FormLabel>Structured Data (JSON-LD)</FormLabel>
+              {/* Right - Actions */}
+              <div className="flex items-center gap-3">
+                <Dialog open={importJsonOpen} onOpenChange={setImportJsonOpen}>
+                  <DialogTrigger asChild>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={generateJsonLd}
-                      className="h-7 text-xs"
+                      className="hidden md:flex gap-2"
                     >
-                      Generate Default
+                      <FileJson className="h-4 w-4" />
+                      นำเข้า JSON
                     </Button>
-                  </div>
-                  <FormField
-                    control={form.control}
-                    name="structured_data"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Textarea
-                            placeholder='{ "@context": "..." }'
-                            className="font-mono text-xs min-h-[150px]"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>นำเข้าข้อมูลจาก JSON</DialogTitle>
+                      <DialogDescription>
+                        วาง JSON object เพื่อกรอกข้อมูลอัตโนมัติ
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <Textarea
+                        placeholder='{ "title": "...", "content": "..." }'
+                        className="font-mono min-h-[300px]"
+                        value={jsonInput}
+                        onChange={(e) => setJsonInput(e.target.value)}
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setImportJsonOpen(false)}
+                        >
+                          ยกเลิก
+                        </Button>
+                        <Button type="button" onClick={handleImport}>
+                          นำเข้า
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
-          {/* Sidebar (Right) */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Publishing</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                {/* Publish Toggle */}
                 <FormField
                   control={form.control}
                   name="is_published"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Published</FormLabel>
-                        <FormDescription>Visible to public?</FormDescription>
-                      </div>
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100">
+                      <span className="text-sm font-medium text-slate-600">
+                        เผยแพร่
+                      </span>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </div>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="gap-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  บันทึก
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content with Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6 p-1 bg-slate-100 rounded-xl h-12">
+            <TabsTrigger
+              value="content"
+              className="gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">เนื้อหา</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="media"
+              className="gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <ImageIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">รูปภาพ & หมวดหมู่</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="seo"
+              className="gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden sm:inline">SEO</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Tab 1: Content */}
+          <TabsContent value="content" className="space-y-6">
+            {/* Title & Slug Section */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Type className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900">
+                    ข้อมูลพื้นฐาน
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    หัวข้อและ URL ของบทความ
+                  </p>
+                </div>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-700 font-medium">
+                      หัวข้อบทความ <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="เขียนหัวข้อที่น่าสนใจ..."
+                        className="text-lg font-medium h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          handleTitleChange(e);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="slug"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
+                      <Link2 className="h-4 w-4" />
+                      URL Slug
+                    </FormLabel>
+                    <FormControl>
+                      <div className="flex">
+                        <span className="inline-flex items-center px-4 rounded-l-lg border border-r-0 border-slate-200 bg-slate-50 text-slate-500 text-sm">
+                          /blog/
+                        </span>
+                        <Input
+                          {...field}
+                          className="rounded-l-none font-mono text-sm border-slate-200"
+                          placeholder="post-url-slug"
                         />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="published_at"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Schedule Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground",
-                              )}
-                            >
-                              {field.value ? (
-                                format(new Date(field.value), "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={
-                              field.value ? new Date(field.value) : undefined
-                            }
-                            onSelect={(date) =>
-                              field.onChange(date?.toISOString())
-                            }
-                            disabled={(date) => date < new Date("1900-01-01")}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormDescription>
-                        If set in future, post is scheduled.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Organization</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {categories.length > 0 ? (
-                            categories.map((cat) => (
-                              <SelectItem key={cat.id} value={cat.name}>
-                                {cat.name}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="General">General</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <div className="pt-2">
-                        <CategoryDialog categories={categories} />
                       </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormControl>
+                    <FormDescription className="text-slate-500">
+                      URL จะถูกสร้างอัตโนมัติจากหัวข้อ
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-                <FormField
-                  control={form.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tags</FormLabel>
-                      <FormControl>
-                        <Input placeholder="News, Tips, 2024" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
+            {/* Content Editor */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <FileText className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900">
+                    เนื้อหาบทความ
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    เขียนเนื้อหาด้วย Rich Text Editor
+                  </p>
+                </div>
+              </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Featured Image</CardTitle>
-              </CardHeader>
-              <CardContent>
+              <FormField
+                control={form.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <TiptapEditor
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </TabsContent>
+
+          {/* Tab 2: Media & Categories */}
+          <TabsContent value="media" className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Featured Image */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <ImageIcon className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">
+                      รูปภาพหน้าปก
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      รูปภาพหลักของบทความ
+                    </p>
+                  </div>
+                </div>
+
                 <FormField
                   control={form.control}
                   name="cover_image"
@@ -615,10 +503,271 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                     </FormItem>
                   )}
                 />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+              </div>
+
+              {/* Category & Tags */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <Tag className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">
+                      หมวดหมู่และแท็ก
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      จัดระเบียบบทความของคุณ
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-slate-700 font-medium">
+                          หมวดหมู่
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-11 border-slate-200">
+                              <SelectValue placeholder="เลือกหมวดหมู่" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {categories.length > 0 ? (
+                              categories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.name}>
+                                  {cat.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="General">ทั่วไป</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <div className="pt-2">
+                          <CategoryDialog categories={categories} />
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="tags"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-slate-700 font-medium">
+                          แท็ก
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="ข่าว, เคล็ดลับ, 2024 (คั่นด้วยเครื่องหมายจุลภาค)"
+                            className="h-11 border-slate-200"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription className="text-slate-500">
+                          ใส่แท็กคั่นด้วยเครื่องหมายจุลภาค (,)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Schedule */}
+                  <FormField
+                    control={form.control}
+                    name="published_at"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-slate-700 font-medium">
+                          กำหนดการเผยแพร่
+                        </FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full h-11 pl-3 text-left font-normal border-slate-200",
+                                  !field.value && "text-muted-foreground",
+                                )}
+                              >
+                                {field.value ? (
+                                  format(new Date(field.value), "PPP", {
+                                    locale: th,
+                                  })
+                                ) : (
+                                  <span>เลือกวันที่</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={
+                                field.value ? new Date(field.value) : undefined
+                              }
+                              onSelect={(date) =>
+                                field.onChange(date?.toISOString())
+                              }
+                              disabled={(date) => date < new Date("1900-01-01")}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormDescription className="text-slate-500">
+                          หากเลือกวันในอนาคต บทความจะถูกตั้งเวลาเผยแพร่
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Tab 3: SEO */}
+          <TabsContent value="seo" className="space-y-6">
+            {/* Google Preview */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Globe className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900">
+                    ตัวอย่างบน Google
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    ดูว่าบทความจะแสดงอย่างไรในผลการค้นหา
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <div className="space-y-1">
+                  <div className="text-[18px] text-[#1a0dab] hover:underline cursor-pointer truncate font-medium">
+                    {watchedTitle || "หัวข้อบทความ"}
+                  </div>
+                  <div className="text-sm text-[#006621] truncate">
+                    https://yoursite.com/blog/{watchedSlug || "slug"}
+                  </div>
+                  <div className="text-sm text-[#545454] line-clamp-2">
+                    {watchedExcerpt ||
+                      "กรุณาใส่ข้อความสรุปเพื่อดูตัวอย่างการแสดงผลบน Google"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Meta Description */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <Search className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900">
+                    Meta Description
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    ข้อความสรุปสำหรับ SEO
+                  </p>
+                </div>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="excerpt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-700 font-medium">
+                      ข้อความสรุป (Excerpt)
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="สรุปเนื้อหาบทความสั้นๆ (แนะนำ 150-160 ตัวอักษร)"
+                        className="min-h-[100px] resize-none border-slate-200"
+                        {...field}
+                      />
+                    </FormControl>
+                    <div className="flex justify-between">
+                      <FormMessage />
+                      <span
+                        className={cn(
+                          "text-xs",
+                          (field.value?.length || 0) > 160
+                            ? "text-red-500"
+                            : "text-slate-500",
+                        )}
+                      >
+                        {field.value?.length || 0}/160
+                      </span>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Structured Data */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-violet-100 rounded-lg">
+                    <Sparkles className="h-5 w-5 text-violet-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">
+                      Structured Data (JSON-LD)
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      ข้อมูล Schema.org สำหรับ SEO
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={generateJsonLd}
+                  className="gap-2"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  สร้างอัตโนมัติ
+                </Button>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="structured_data"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Textarea
+                        placeholder='{ "@context": "https://schema.org", ... }'
+                        className="font-mono text-xs min-h-[200px] border-slate-200"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
       </form>
     </Form>
   );

@@ -2,9 +2,8 @@ import { BlogForm } from "@/components/blog/BlogForm";
 import { createClient } from "@/lib/supabase/server";
 import { getCategoriesAction } from "@/features/blog/actions";
 import { notFound } from "next/navigation";
-import { ArrowLeft, FileText, Calendar } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { FileText, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
@@ -35,23 +34,13 @@ export default async function EditBlogPostPage({
     <div className="space-y-6">
       {/* Header with Breadcrumb */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/protected/blogs">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <nav className="flex items-center gap-2 text-sm text-slate-500">
-            <Link
-              href="/protected/blogs"
-              className="hover:text-slate-900 transition-colors"
-            >
-              Blogs
-            </Link>
-            <span>/</span>
-            <span className="text-slate-900 font-medium">แก้ไขบทความ</span>
-          </nav>
-        </div>
+        <Breadcrumb
+          backHref="/protected/blogs"
+          items={[
+            { label: "Blogs", href: "/protected/blogs" },
+            { label: "แก้ไขบทความ" },
+          ]}
+        />
 
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -95,7 +84,7 @@ export default async function EditBlogPostPage({
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-xl border shadow-sm p-6">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <BlogForm initialData={post} categories={categories || []} />
       </div>
     </div>

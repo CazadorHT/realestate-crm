@@ -6,16 +6,27 @@ import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { PropertyCombobox } from "../PropertyCombobox";
 
 import type { LeadActivityFormValues } from "@/lib/types/leads";
-import { LEAD_ACTIVITY_TYPE_ORDER, LEAD_ACTIVITY_TYPE_LABELS } from "@/features/leads/labels";
+import {
+  LEAD_ACTIVITY_TYPE_ORDER,
+  LEAD_ACTIVITY_TYPE_LABELS,
+} from "@/features/leads/labels";
 
 export function LeadActivityForm({
   onSubmitAction,
+  defaultValues,
 }: {
   onSubmitAction: (values: LeadActivityFormValues) => Promise<void>;
+  defaultValues?: Partial<LeadActivityFormValues>;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -23,9 +34,9 @@ export function LeadActivityForm({
 
   const form = useForm<LeadActivityFormValues>({
     defaultValues: {
-      activity_type: "CALL",
-      note: "",
-      property_id: null,
+      activity_type: defaultValues?.activity_type ?? "CALL",
+      note: defaultValues?.note ?? "",
+      property_id: defaultValues?.property_id ?? null,
     },
   });
 
@@ -43,7 +54,10 @@ export function LeadActivityForm({
   };
 
   return (
-    <form className="rounded-xl border p-4 space-y-3" onSubmit={form.handleSubmit(submit)}>
+    <form
+      className="rounded-xl border border-gray-300 p-4 space-y-3"
+      onSubmit={form.handleSubmit(submit)}
+    >
       <div className="font-medium">Add activity</div>
 
       {error ? (
@@ -83,7 +97,11 @@ export function LeadActivityForm({
 
       <div className="space-y-2">
         <div className="text-sm font-medium">รายละเอียด</div>
-        <Textarea rows={4} {...form.register("note")} placeholder="รายละเอียดกิจกรรม..." />
+        <Textarea
+          rows={4}
+          {...form.register("note")}
+          placeholder="รายละเอียดกิจกรรม..."
+        />
       </div>
 
       <Button type="submit" disabled={isPending}>

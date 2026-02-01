@@ -10,6 +10,7 @@ export type AuditLogWithUser = {
   created_at: string;
   user_id: string;
   user: {
+    id: string;
     full_name: string | null;
     avatar_url: string | null;
     email: string | null;
@@ -129,4 +130,24 @@ export async function getAuditLogs({
     data: formattedData,
     count: count || 0,
   };
+}
+
+export async function autoPurgeOldLogs() {
+  const supabase = await createClient();
+
+  // Calculate the date 30 days ago
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 30);
+  const dateString = ninetyDaysAgo.toISOString();
+
+  try {
+    const { error } = await supabase
+      .from("audit_logs")
+      .delete()
+      .lt("created_at", dateString);
+
+    if (error) console.error("Auto-purge logs error:", error);
+  } catch (err) {
+    console.error("Auto-purge systemic error:", err);
+  }
 }

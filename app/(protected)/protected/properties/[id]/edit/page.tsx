@@ -1,5 +1,6 @@
 import { PropertyForm } from "@/features/properties/PropertyForm";
 import { getPropertyWithImages } from "@/features/properties/actions";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export default async function EditPropertyPage({
   params,
@@ -18,10 +19,23 @@ export default async function EditPropertyPage({
   }));
 
   return (
+    <div className="space-y-4 p-6">
+      <Breadcrumb
+        backHref={`/protected/properties/${id}`}
+        items={[
+          { label: "ทรัพย์", href: "/protected/properties" },
+          {
+            label: property.title || "รายละเอียด",
+            href: `/protected/properties/${id}`,
+          },
+          { label: "แก้ไข" },
+        ]}
+      />
       <PropertyForm
         mode="edit"
         defaultValues={property}
         initialImages={initialImages}
       />
+    </div>
   );
 }

@@ -2,7 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import { addDays, formatISO } from "date-fns";
 
-export type EventType = "viewing" | "contract_end" | "deal_closing";
+export type EventType =
+  | "viewing"
+  | "contract_start"
+  | "contract_end"
+  | "early_termination"
+  | "deal_closing";
 
 export type CalendarEvent = {
   id: string;
@@ -17,6 +22,10 @@ export type CalendarEvent = {
     propertyImage?: string | null;
     contractNumber?: string;
     type?: string;
+    leaseTermMonths?: number;
+    rentPrice?: number;
+    startDate?: string;
+    endDate?: string;
   };
   color?: string; // For UI
 };
@@ -62,7 +71,7 @@ export async function getCalendarEvents(
     viewings.forEach((v: any) => {
       events.push({
         id: v.id,
-        title: `Viewing: ${v.leads?.full_name || "Unknown Lead"}`,
+        title: `นัดชม: ${v.leads?.full_name || "Unknown Lead"}`,
         start: v.created_at,
         type: "viewing",
         color: "bg-blue-500",
@@ -76,14 +85,71 @@ export async function getCalendarEvents(
     });
   }
 
-  // 2. Fetch Contract Expirations
+  // 2. Fetch Contract Start Dates
+  let contractStartQuery = supabase
+    .from("rental_contracts")
+    .select(
+      `
+      id,
+      start_date,
+      end_date,
+      contract_number,
+      lease_term_months,
+      rent_price,
+      deals!inner (
+         property_id,
+         property:properties (
+           title,
+           images:property_images(image_url)
+         )
+      )
+    `,
+    )
+    .gte("start_date", startIso)
+    .lte("start_date", endIso)
+    .neq("status", "TERMINATED");
+
+  if (propertyId && propertyId !== "ALL") {
+    contractStartQuery = contractStartQuery.eq("deals.property_id", propertyId);
+  }
+
+  const { data: contractStarts } = await contractStartQuery;
+
+  if (contractStarts) {
+    contractStarts.forEach((c: any) => {
+      const propertyTitle = c.deals?.property?.title || "Unknown Property";
+      const propertyImage = c.deals?.property?.images?.[0]?.image_url || null;
+
+      events.push({
+        id: `${c.id}-start`,
+        title: `เริ่มสัญญา: ${propertyTitle}`,
+        start: c.start_date,
+        type: "contract_start",
+        color: "bg-emerald-500",
+        meta: {
+          contractNumber: c.contract_number,
+          propertyTitle,
+          propertyImage,
+          leaseTermMonths: c.lease_term_months,
+          rentPrice: c.rent_price,
+          startDate: c.start_date,
+          endDate: c.end_date,
+        },
+      });
+    });
+  }
+
+  // 3. Fetch Contract Expirations
   let contractsQuery = supabase
     .from("rental_contracts")
     .select(
       `
       id,
+      start_date,
       end_date,
       contract_number,
+      lease_term_months,
+      rent_price,
       deals!inner (
          property_id,
          property:properties (
@@ -106,11 +172,11 @@ export async function getCalendarEvents(
   if (contracts) {
     contracts.forEach((c: any) => {
       const propertyTitle = c.deals?.property?.title || "Unknown Property";
-      const propertyImage = c.deals?.property?.images?.[0]?.image_url || null; // Access nested image
+      const propertyImage = c.deals?.property?.images?.[0]?.image_url || null;
 
       events.push({
-        id: c.id,
-        title: `Contract Expire: ${propertyTitle}`,
+        id: `${c.id}-end`,
+        title: `สิ้นสุดสัญญา: ${propertyTitle}`,
         start: c.end_date,
         type: "contract_end",
         color: "bg-red-500",
@@ -118,12 +184,72 @@ export async function getCalendarEvents(
           contractNumber: c.contract_number,
           propertyTitle,
           propertyImage,
+          leaseTermMonths: c.lease_term_months,
+          rentPrice: c.rent_price,
+          startDate: c.start_date,
+          endDate: c.end_date,
         },
       });
     });
   }
 
-  // 3. Fetch Deal Closings
+  // 4. Fetch Early Terminations
+  let terminatedQuery = supabase
+    .from("rental_contracts")
+    .select(
+      `
+      id,
+      start_date,
+      end_date,
+      check_out_date,
+      contract_number,
+      lease_term_months,
+      rent_price,
+      deals!inner (
+         property_id,
+         property:properties (
+           title,
+           images:property_images(image_url)
+         )
+      )
+    `,
+    )
+    .eq("status", "TERMINATED")
+    .not("check_out_date", "is", null)
+    .gte("check_out_date", startIso)
+    .lte("check_out_date", endIso);
+
+  if (propertyId && propertyId !== "ALL") {
+    terminatedQuery = terminatedQuery.eq("deals.property_id", propertyId);
+  }
+
+  const { data: terminated } = await terminatedQuery;
+
+  if (terminated) {
+    terminated.forEach((c: any) => {
+      const propertyTitle = c.deals?.property?.title || "Unknown Property";
+      const propertyImage = c.deals?.property?.images?.[0]?.image_url || null;
+
+      events.push({
+        id: `${c.id}-terminated`,
+        title: `ยุติสัญญา: ${propertyTitle}`,
+        start: c.check_out_date,
+        type: "early_termination",
+        color: "bg-orange-500",
+        meta: {
+          contractNumber: c.contract_number,
+          propertyTitle,
+          propertyImage,
+          leaseTermMonths: c.lease_term_months,
+          rentPrice: c.rent_price,
+          startDate: c.start_date,
+          endDate: c.end_date,
+        },
+      });
+    });
+  }
+
+  // 5. Fetch Deal Closings
   let dealsQuery = supabase
     .from("deals")
     .select(
@@ -152,10 +278,10 @@ export async function getCalendarEvents(
       if (!d.transaction_date) return;
       events.push({
         id: d.id,
-        title: `Deal Closing: ${d.property?.title}`,
+        title: `ปิดดีล: ${d.property?.title}`,
         start: d.transaction_date,
         type: "deal_closing",
-        color: "bg-green-500",
+        color: "bg-purple-500",
         meta: {
           type: d.deal_type,
           propertyTitle: d.property?.title,

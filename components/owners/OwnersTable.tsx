@@ -73,7 +73,7 @@ export function OwnersTable({ owners }: OwnersTableProps) {
         entityName="เจ้าของ"
       />
 
-      <div className="border rounded-lg">
+      <div className="border border-gray-200 rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
@@ -113,7 +113,14 @@ export function OwnersTable({ owners }: OwnersTableProps) {
                 {/* ชื่อ Owner */}
                 <TableCell>
                   <div className="flex flex-col gap-1">
-                    <div className="font-medium">{owner.full_name}</div>
+                    <div className="font-medium text-blue-700">
+                      <Link
+                        className="underline"
+                        href={`/protected/owners/${owner.id}`}
+                      >
+                        {owner.full_name}
+                      </Link>
+                    </div>
                     {owner.created_at &&
                       differenceInHours(
                         new Date(),

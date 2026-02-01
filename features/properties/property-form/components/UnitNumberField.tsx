@@ -66,7 +66,7 @@ export function UnitNumberField({
                 `flex items-center justify-between gap-3 font-medium ${
                   isSmall ? "text-xs" : "text-sm"
                 }`,
-              fieldState.error ? "text-red-600" : "text-slate-600",
+              fieldState.error ? "text-red-600" : "text-slate-500",
             ].join(" ")}
           >
             <span className="inline-flex items-center gap-2">

@@ -1,5 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Users, Shield, UserCheck, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface UsersStatsSummaryProps {
   totalUsers: number;
@@ -19,47 +20,88 @@ export function UsersStatsSummary({
       title: "ผู้ใช้ทั้งหมด",
       value: totalUsers,
       icon: Users,
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10",
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-100",
+      description: "รวมทุกบทบาท",
     },
     {
-      title: "Admin",
+      title: "ผู้ดูแลระบบ (Admin)",
       value: totalAdmins,
       icon: Shield,
-      color: "text-purple-500",
-      bgColor: "bg-purple-500/10",
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50",
+      borderColor: "border-indigo-100",
+      description: "สิทธิ์การเข้าถึงสูงสุด",
     },
     {
-      title: "Agent",
+      title: "เอเจนท์ (Agent)",
       value: totalAgents,
       icon: UserCheck,
-      color: "text-green-500",
-      bgColor: "bg-green-500/10",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50",
+      borderColor: "border-emerald-100",
+      description: "ทีมงานขายและดูแลลีด",
     },
     {
-      title: "รออนุมัติ",
+      title: "รอการตรวจสอบ",
       value: totalUsersWaiting,
       icon: Clock,
-      color: "text-orange-500",
-      bgColor: "bg-orange-500/10",
+      color: "text-amber-600",
+      bgColor: "bg-amber-50",
+      borderColor: "border-amber-100",
+      description: "ต้องกำหนดบทบาท",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat) => (
-        <Card key={stat.title}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {stat.title}
-            </CardTitle>
-            <div className={`p-2 rounded-full ${stat.bgColor}`}>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+        <Card
+          key={stat.title}
+          className={cn(
+            "border-none shadow-sm overflow-hidden group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 active:scale-95",
+            stat.bgColor,
+          )}
+        >
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <p
+                  className={cn(
+                    "text-xs font-bold uppercase tracking-widest opacity-70",
+                    stat.color,
+                  )}
+                >
+                  {stat.title}
+                </p>
+                <div className="text-4xl font-semibold text-slate-900 tracking-tight leading-none pt-2">
+                  {stat.value}
+                </div>
+              </div>
+              <div className="p-3 bg-white/40 backdrop-blur-md rounded-2xl transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-sm border border-white/20">
+                <stat.icon className={cn("h-6 w-6", stat.color)} />
+              </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stat.value}</div>
+
+            <div className="mt-4 flex items-center gap-2">
+              <div
+                className={cn(
+                  "h-1.5 w-1.5 rounded-full animate-pulse",
+                  stat.color.replace("text-", "bg-"),
+                )}
+              />
+              <p className="text-xs text-slate-700 font-medium uppercase tracking-tighter opacity-60">
+                {stat.description}
+              </p>
+            </div>
           </CardContent>
+          <div
+            className={cn(
+              "h-1 w-full opacity-30",
+              stat.color.replace("text-", "bg-"),
+            )}
+          />
         </Card>
       ))}
     </div>

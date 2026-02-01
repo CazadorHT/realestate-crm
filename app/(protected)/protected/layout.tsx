@@ -6,6 +6,7 @@ import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { isStaff } from "@/lib/auth-shared";
 import { UserNav } from "@/components/dashboard/UserNav";
 import { MobileNav } from "@/components/dashboard/MobileNav";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
 export default async function ProtectedLayout({
   children,
@@ -46,6 +47,7 @@ export default async function ProtectedLayout({
             </h1>
           </div>
           <div className="ml-auto flex items-center gap-4">
+            <NotificationBell />
             <ThemeToggle />
             <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2 hidden sm:block" />
             <UserNav profile={profile} />

@@ -4,6 +4,7 @@ import { getLeadByIdQuery } from "@/features/leads/queries";
 import { updateLeadAction } from "@/features/leads/actions";
 import { leadRowToFormValues } from "@/features/leads/mapper";
 import { LeadFormValues } from "@/features/leads/types";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export default async function LeadEditPage({
   params,
@@ -22,7 +23,18 @@ export default async function LeadEditPage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
+      <Breadcrumb
+        backHref={`/protected/leads/${id}`}
+        items={[
+          { label: "ลีด", href: "/protected/leads" },
+          {
+            label: lead.full_name || "รายละเอียด",
+            href: `/protected/leads/${id}`,
+          },
+          { label: "แก้ไข" },
+        ]}
+      />
       <h1 className="text-xl font-semibold">แก้ไข Lead</h1>
       <LeadForm
         leadId={id}

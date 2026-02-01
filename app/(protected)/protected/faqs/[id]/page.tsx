@@ -7,8 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import {
+  Save,
+  Loader2,
+  HelpCircle,
+  MessageCircle,
+  FileText,
+  Settings,
+  LayoutGrid,
+  ListOrdered,
+} from "lucide-react";
 import Link from "next/link";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -29,6 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   question: z.string().min(1, "กรุณาระบุคำถาม"),
@@ -110,142 +121,232 @@ export default function FAQFormPage({
   }
 
   return (
-    <div className="container mx-auto py-10 max-w-2xl">
-      <div className="mb-8">
-        <Link
-          href="/protected/faqs"
-          className="text-slate-500 hover:text-blue-600 flex items-center gap-1 mb-4 text-sm"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          กลับหน้ารวม
-        </Link>
-        <h1 className="text-3xl font-bold">
-          {isNew ? "เพิ่มคำถามใหม่" : "แก้ไขคำถาม"}
-        </h1>
+    <div className="container mx-auto  max-w-full px-4 md:px-0">
+      {/* Header section with Premium feel */}
+      <div className="mb-8 space-y-4">
+        <Breadcrumb
+          backHref="/protected/faqs"
+          items={[
+            { label: "FAQs", href: "/protected/faqs" },
+            { label: isNew ? "เพิ่มคำถามใหม่" : "แก้ไขคำถาม" },
+          ]}
+        />
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
+            <HelpCircle className="h-7 w-7" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 leading-none">
+              {isNew ? "เพิ่มคำถามใหม่" : "แก้ไขคำถาม"}
+            </h1>
+            <p className="text-slate-500 mt-2 text-sm">
+              {isNew
+                ? "สร้างคู่มือคำถามที่พบบ่อยเพื่อให้ลูกค้าช่วยเหลือตนเองได้รวดเร็วขึ้น"
+                : "แก้ไขรายละเอียดคำถามและคำตอบเพื่อให้ข้อมูลที่ถูกต้องแก่ลูกค้า"}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border shadow-sm">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="question"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>คำถาม</FormLabel>
-                  <FormControl>
-                    <Input placeholder="เช่น วิธีการจองทรัพย์..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
+        {/* Card Header with Gradient */}
+        <div className="bg-linear-to-r from-slate-800 to-slate-900 px-8 py-6">
+          <div className="flex items-center gap-3">
+            <Settings className="h-5 w-5 text-blue-400" />
+            <h2 className="text-lg font-semibold text-white">
+              รายละเอียดข้อมูลคำถาม
+            </h2>
+          </div>
+          <p className="text-slate-400 text-sm mt-1 ml-8 italic">
+            กรุณากรอกข้อมูลให้ครบถ้วนเพื่อผลลัพธ์ที่ดีที่สุดบนหน้าเว็บไซต์
+          </p>
+        </div>
 
-            <FormField
-              control={form.control}
-              name="answer"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>คำตอบ</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="รายละเอียดคำตอบ..."
-                      className="min-h-[120px]"
-                      {...field}
+        <div className="p-8">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column: Main Content (70%) */}
+                <div className="lg:col-span-2 space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="question"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <MessageCircle className="h-4 w-4 text-blue-600" />
+                          <FormLabel className="text-base font-semibold">
+                            คำถามที่พบบ่อย
+                          </FormLabel>
+                        </div>
+                        <FormControl>
+                          <Input
+                            placeholder="เช่น รูปแบบการชำระเงินมีอะไรบ้าง?"
+                            className="h-12 text-base border-slate-200 focus:border-blue-400 focus:ring-blue-400 transition-all"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="answer"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <FileText className="h-4 w-4 text-blue-600" />
+                          <FormLabel className="text-base font-semibold">
+                            คำตอบ (Answer)
+                          </FormLabel>
+                        </div>
+                        <FormControl>
+                          <Textarea
+                            placeholder="อธิบายรายละเอียดคำตอบของคุณที่นี่..."
+                            className="min-h-[150px] text-base border-slate-200 focus:border-blue-400 focus:ring-blue-400 transition-all resize-none"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Right Column: Settings & Meta (30%) */}
+                <div className="lg:col-span-1 space-y-6">
+                  <div className="bg-slate-50/50 rounded-xl border border-slate-100 p-6 space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <LayoutGrid className="h-4 w-4 text-blue-600" />
+                            <FormLabel className="text-base font-semibold">
+                              หมวดหมู่
+                            </FormLabel>
+                          </div>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-12 border-slate-200 bg-white focus:border-blue-400 focus:ring-blue-400 transition-all">
+                                <SelectValue placeholder="เลือกหมวดหมู่ที่เหมาะสม" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="General">
+                                ทั่วไป (General)
+                              </SelectItem>
+                              <SelectItem value="Buying">
+                                การซื้อ (Buying)
+                              </SelectItem>
+                              <SelectItem value="Selling">
+                                การขาย (Selling)
+                              </SelectItem>
+                              <SelectItem value="Renting">
+                                การเช่า (Renting)
+                              </SelectItem>
+                              <SelectItem value="Loans">
+                                สินเชื่อ (Loans)
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            <div className="grid grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>หมวดหมู่</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="เลือกหมวดหมู่" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="General">
-                          ทั่วไป (General)
-                        </SelectItem>
-                        <SelectItem value="Buying">การซื้อ (Buying)</SelectItem>
-                        <SelectItem value="Selling">
-                          การขาย (Selling)
-                        </SelectItem>
-                        <SelectItem value="Renting">
-                          การเช่า (Renting)
-                        </SelectItem>
-                        <SelectItem value="Loans">สินเชื่อ (Loans)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    <FormField
+                      control={form.control}
+                      name="sort_order"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <ListOrdered className="h-4 w-4 text-blue-600" />
+                            <FormLabel className="text-base font-semibold">
+                              ลำดับการแสดงผล
+                            </FormLabel>
+                          </div>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              className="h-12 border-slate-200 bg-white focus:border-blue-400 focus:ring-blue-400 transition-all"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription className="text-xs italic">
+                            ตัวเลขน้อยจะแสดงก่อนบนหน้าเว็บไซต์
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-              <FormField
-                control={form.control}
-                name="sort_order"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ลำดับการแสดงผล</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormDescription>ตัวเลขน้อยจะแสดงก่อน</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="is_active"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 space-y-0">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">สถานะใช้งาน</FormLabel>
-                    <FormDescription>
-                      แสดงบนหน้าเว็บไซต์เมื่อเปิดใช้งาน
-                    </FormDescription>
+                    <div className="pt-4 border-t border-slate-200">
+                      <FormField
+                        control={form.control}
+                        name="is_active"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between space-y-0">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base font-bold text-slate-900">
+                                เผยแพร่
+                              </FormLabel>
+                              <FormDescription className="text-xs">
+                                แสดงบนหน้าเว็บไซต์ทันที
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                className="data-[state=checked]:bg-blue-600"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+                </div>
+              </div>
 
-            <div className="flex justify-end gap-4 pt-4">
-              <Link href="/protected/faqs">
-                <Button variant="outline" type="button">
-                  ยกเลิก
+              {/* Action Buttons */}
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-4 pt-10 border-t border-slate-100">
+                <Link href="/protected/faqs">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    className="w-full sm:w-32 h-11 border-slate-200 hover:bg-slate-50 transition-all"
+                  >
+                    ยกเลิก
+                  </Button>
+                </Link>
+                <Button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full sm:w-48 h-11 bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg transition-all gap-2"
+                >
+                  {saving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  {isNew ? "สร้างคำถามใหม่" : "บันทึกการเปลี่ยนแปลง"}
                 </Button>
-              </Link>
-              <Button type="submit" disabled={saving} className="bg-blue-600">
-                {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                <Save className="w-4 h-4 mr-2" />
-                บันทึกข้อมูล
-              </Button>
-            </div>
-          </form>
-        </Form>
+              </div>
+            </form>
+          </Form>
+        </div>
       </div>
+
+      {/* Visual background element */}
+      <div className="fixed top-0 right-0 -z-10 w-1/2 h-full bg-linear-to-l from-blue-50/20 to-transparent pointer-events-none" />
     </div>
   );
 }

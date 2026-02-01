@@ -15,37 +15,54 @@ import {
 } from "./schema";
 import { logAudit } from "@/lib/audit";
 
-async function updatePropertyStatusFromDeals(
+// Helper: Adjust property stock and auto-update status
+async function adjustPropertyStock(
   supabase: Awaited<ReturnType<typeof requireAuthContext>>["supabase"],
-  propertyId: string
+  propertyId: string,
+  adjustment: number, // +1 or -1
 ) {
   if (!propertyId) return;
 
-  const { data, error } = await supabase
-    .from("deals")
-    .select("deal_type")
-    .eq("property_id", propertyId)
-    .eq("status", "CLOSED_WIN")
-    .order("created_at", { ascending: false })
-    .limit(1);
+  // 1. Get current stock
+  const { data: prop, error } = await supabase
+    .from("properties")
+    .select("id, total_units, sold_units, status")
+    .eq("id", propertyId)
+    .single();
 
-  if (error) {
-    console.error("updatePropertyStatusFromDeals error:", error);
+  if (error || !prop) {
+    console.error("adjustPropertyStock error:", error);
     return;
   }
 
-  if (!data || data.length === 0) {
-    await supabase
-      .from("properties")
-      .update({ status: "ACTIVE" })
-      .eq("id", propertyId);
-    return;
+  // 2. Calculate new sold units
+  const currentSold = prop.sold_units || 0;
+  const total = prop.total_units || 1;
+  let newSold = currentSold + adjustment;
+
+  // Safety bounds
+  if (newSold < 0) newSold = 0;
+  // We allow sold > total?? Ideally no, but let's just cap logic to status.
+  // Actually, if they over-sell, it might be an issue, but let's allow it but warn or just handle status.
+
+  // 3. Determine new status
+  let newStatus = prop.status;
+  if (newSold >= total) {
+    newStatus = "SOLD";
+  } else {
+    // If it was SOLD but now we have stock, revert to ACTIVE
+    // But we should verify if it should be SOLD or RENTED based on deal type?
+    // For simplicity, if stock is available, it's ACTIVE (available for sale/rent).
+    newStatus = "ACTIVE";
   }
 
-  const newStatus = data[0].deal_type === "SALE" ? "SOLD" : "RENTED";
+  // 4. Update DB
   await supabase
     .from("properties")
-    .update({ status: newStatus })
+    .update({
+      sold_units: newSold,
+      status: newStatus,
+    })
     .eq("id", propertyId);
 }
 
@@ -69,7 +86,7 @@ export async function createDealAction(input: CreateDealInput) {
     ) {
       dealData.transaction_end_date = addMonths(
         new Date(dealData.transaction_date),
-        dealData.duration_months
+        dealData.duration_months,
       ).toISOString();
     }
 
@@ -122,16 +139,12 @@ export async function createDealAction(input: CreateDealInput) {
         entity: "deals",
         entityId: data.id,
         metadata: validated,
-      }
+      },
     );
 
-    // Auto-update property status if deal is closed
+    // Auto-update stock if deal is WON
     if (validated.status === "CLOSED_WIN" && validated.property_id) {
-      const newStatus = validated.deal_type === "SALE" ? "SOLD" : "RENTED";
-      await supabase
-        .from("properties")
-        .update({ status: newStatus })
-        .eq("id", validated.property_id);
+      await adjustPropertyStock(supabase, validated.property_id, 1);
     }
 
     revalidatePath(`/protected/leads/${validated.lead_id}`);
@@ -167,11 +180,9 @@ export async function updateDealAction(input: UpdateDealInput) {
 
     const prevStatus = currentDeal.status;
     const prevPropertyId = currentDeal.property_id;
-    const prevDealType = currentDeal.deal_type;
 
     const nextStatus = validated.status ?? prevStatus;
     const nextPropertyId = validated.property_id ?? prevPropertyId;
-    const nextDealType = validated.deal_type ?? prevDealType;
 
     // Calculate end date for RENT deals if duration is updated
     const dealData = { ...validated };
@@ -182,7 +193,7 @@ export async function updateDealAction(input: UpdateDealInput) {
     ) {
       dealData.transaction_end_date = addMonths(
         new Date(dealData.transaction_date),
-        dealData.duration_months
+        dealData.duration_months,
       ).toISOString();
     }
     // Cleanup virtual field
@@ -226,33 +237,39 @@ export async function updateDealAction(input: UpdateDealInput) {
         entity: "deals",
         entityId: validated.id,
         metadata: validated,
-      }
+      },
     );
 
-    // Auto-update property status if deal is closed
-    if (nextStatus === "CLOSED_WIN" && nextPropertyId && nextDealType) {
-      const newStatus = nextDealType === "SALE" ? "SOLD" : "RENTED";
-      await supabase
-        .from("properties")
-        .update({ status: newStatus })
-        .eq("id", nextPropertyId);
+    // --- Stock Management Logic ---
+    // 1. If ID Changed:
+    //    - If Prev was WON: Decrement Prev Prop
+    //    - If Next is WON: Increment Next Prop
+    // 2. If ID Same:
+    //    - If Prev != WON && Next == WON: Increment (+1)
+    //    - If Prev == WON && Next != WON: Decrement (-1)
+
+    // Handle Property Change first (Complex case)
+    if (prevPropertyId !== nextPropertyId) {
+      // Revert old property if it was maintained by this deal
+      if (prevStatus === "CLOSED_WIN" && prevPropertyId) {
+        await adjustPropertyStock(supabase, prevPropertyId, -1);
+      }
+      // Apply to new property if this deal is winning
+      if (nextStatus === "CLOSED_WIN" && nextPropertyId) {
+        await adjustPropertyStock(supabase, nextPropertyId, 1);
+      }
+    } else {
+      // Same Property, just Status Change
+      if (nextPropertyId) {
+        if (prevStatus !== "CLOSED_WIN" && nextStatus === "CLOSED_WIN") {
+          // Won!
+          await adjustPropertyStock(supabase, nextPropertyId, 1);
+        } else if (prevStatus === "CLOSED_WIN" && nextStatus !== "CLOSED_WIN") {
+          // Lost/Cancelled!
+          await adjustPropertyStock(supabase, nextPropertyId, -1);
+        }
+      }
     }
-
-    const shouldRecomputePrev =
-      prevStatus === "CLOSED_WIN" &&
-      prevPropertyId &&
-      (nextStatus !== "CLOSED_WIN" || nextPropertyId !== prevPropertyId);
-
-    if (shouldRecomputePrev) {
-      await updatePropertyStatusFromDeals(supabase, prevPropertyId);
-    }
-
-    // We don't have lead_id in input easily unless passed, creating separate revalidate often
-    // But typically we are on lead detail page, so we need to know lead_id to revalidate correctly
-    // Since we don't strictly have it in partial update, we might rely on client refresh or fetch lead_id first.
-    // For MVPs, revalidatePath for specific lead might be tricky without fetching.
-    // Let's fetch the deal to get lead_id for revalidation if needed, or revalidate global leads?
-    // Optimization: Just return success and let client router.refresh().
 
     revalidatePath("/protected/deals");
     return { success: true };
@@ -267,7 +284,6 @@ export async function deleteDealAction(dealId: string, leadId: string) {
 
     assertAuthenticated({ userId: user.id, role });
     assertStaff(role);
-    // TODO: Add refined ownership check if needed (only owner/admin can delete)
 
     const { data: existingDeal, error: fetchErr } = await supabase
       .from("deals")
@@ -290,13 +306,14 @@ export async function deleteDealAction(dealId: string, leadId: string) {
         entity: "deals",
         entityId: dealId,
         metadata: { leadId },
-      }
+      },
     );
 
     revalidatePath(`/protected/leads/${leadId}`);
 
+    // If deleting a WON deal, release the stock
     if (existingDeal.status === "CLOSED_WIN" && existingDeal.property_id) {
-      await updatePropertyStatusFromDeals(supabase, existingDeal.property_id);
+      await adjustPropertyStock(supabase, existingDeal.property_id, -1);
     }
 
     return { success: true };

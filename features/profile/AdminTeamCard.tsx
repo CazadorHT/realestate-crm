@@ -46,7 +46,7 @@ export function AdminTeamCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="p-4 border rounded-lg bg-background">
+        <div className="p-4 border border-primary/20 rounded-lg bg-background">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
               <div className="p-2 rounded-full bg-blue-500/10">

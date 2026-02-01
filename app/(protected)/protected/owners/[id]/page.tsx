@@ -1,9 +1,24 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { getOwnerById } from "@/features/owners/queries";
-import { Edit, Phone, MessageCircle, Facebook, User } from "lucide-react";
+import {
+  Edit,
+  Phone,
+  MessageCircle,
+  Facebook,
+  User,
+  ArrowLeft,
+  Building2,
+  Plus,
+  MapPin,
+  Tag,
+  ExternalLink,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { Badge } from "@/components/ui/badge";
+import { FaFacebook, FaLine } from "react-icons/fa";
 
 interface PageProps {
   params: Promise<{
@@ -30,247 +45,264 @@ export default async function OwnerPage({ params }: PageProps) {
     notFound();
   }
 
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("th-TH", {
+      style: "currency",
+      currency: "THB",
+      maximumFractionDigits: 0,
+    }).format(amount);
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return (
+          <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+            พร้อมขาย/เช่า
+          </Badge>
+        );
+      case "SOLD":
+        return (
+          <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+            ขายแล้ว
+          </Badge>
+        );
+      case "RENTED":
+        return (
+          <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100">
+            ให้เช่าแล้ว
+          </Badge>
+        );
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
   return (
-    <div className="container mx-auto py-6 max-w-5xl space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <User className="h-8 w-8 text-primary" />
-          {owner.full_name}
-        </h1>
-        <Button asChild>
-          <Link href={`/protected/owners/${id}/edit`}>
-            <Edit className="mr-2 h-4 w-4" />
-            แก้ไขข้อมูล
-          </Link>
-        </Button>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Contact Info Card */}
-        <div className="md:col-span-1 space-y-6">
-          <div className="bg-card rounded-xl border shadow-sm p-6 space-y-4">
-            <h3 className="font-semibold text-lg border-b pb-2">
-              ข้อมูลการติดต่อ
-            </h3>
-
-            <div className="space-y-3">
-              {owner.phone && (
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <Phone className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">
-                      เบอร์โทรศัพท์
-                    </p>
-                    <a
-                      href={`tel:${owner.phone}`}
-                      className="font-medium hover:underline"
-                    >
-                      {owner.phone}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {owner.line_id && (
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="h-8 w-8 rounded-full bg-[#06C755]/10 flex items-center justify-center text-[#06C755]">
-                    <MessageCircle className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Line ID</p>
-                    <p className="font-medium">{owner.line_id}</p>
-                  </div>
-                </div>
-              )}
-
-              {owner.facebook_url && (
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="h-8 w-8 rounded-full bg-[#1877F2]/10 flex items-center justify-center text-[#1877F2]">
-                    <Facebook className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Facebook</p>
-                    <a
-                      href={owner.facebook_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium hover:underline truncate max-w-[200px] block"
-                    >
-                      ดูโปรไฟล์
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {!owner.phone && !owner.line_id && !owner.facebook_url && (
-                <div className="text-center py-4 text-muted-foreground text-sm">
-                  ไม่มีข้อมูลการติดต่อ
-                </div>
-              )}
-
-              {owner.other_contact && (
-                <div className="pt-2 border-t mt-2">
-                  <p className="text-muted-foreground text-xs mb-1">
-                    ช่องทางอื่น ๆ
-                  </p>
-                  <p className="text-sm bg-muted/50 p-2 rounded-md">
-                    {owner.other_contact}
-                  </p>
-                </div>
-              )}
+    <div className="p-6 space-y-6 max-w-6xl mx-auto">
+      {/* Premium Header */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-linear-to-r from-slate-800 to-slate-900 px-6 py-8">
+          {/* Breadcrumb */}
+          <Breadcrumb
+            variant="on-dark"
+            backHref="/protected/owners"
+            backLabel="เจ้าของทรัพย์"
+            items={[
+              { label: "เจ้าของทรัพย์", href: "/protected/owners" },
+              { label: owner.full_name || "รายละเอียด" },
+            ]}
+            className="mb-6"
+          />
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                {owner.full_name?.charAt(0).toUpperCase() || "O"}
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">
+                  {owner.full_name}
+                </h1>
+                <p className="text-slate-300 text-sm mt-1">
+                  เจ้าของทรัพย์ • {properties.length} ทรัพย์ในระบบ
+                </p>
+              </div>
             </div>
-          </div>
-
-          <div className="bg-muted/30 rounded-xl border p-4 text-center">
-            <p className="text-3xl font-bold text-primary">
-              {properties.length}
-            </p>
-            <p className="text-muted-foreground text-sm">ทรัพย์ในระบบ</p>
-          </div>
-        </div>
-
-        {/* Properties List */}
-        <div className="md:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-lg">
-              รายการทรัพย์ ({properties.length})
-            </h3>
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/protected/properties/new?owner_id=${owner.id}`}>
-                + เพิ่มทรัพย์
+            <Button asChild variant="secondary" className="gap-2 shadow-lg">
+              <Link href={`/protected/owners/${id}/edit`}>
+                <Edit className="h-4 w-4" />
+                แก้ไขข้อมูล
               </Link>
             </Button>
           </div>
+        </div>
 
-          {properties.length > 0 ? (
-            <div className="grid gap-4">
-              {properties.map((prop) => (
-                <Link
-                  key={prop.id}
-                  href={`/protected/properties/${prop.id}`}
-                  className="group block bg-card border rounded-lg p-4 hover:shadow-md transition-all hover:border-primary/50"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-medium group-hover:text-primary transition-colors mb-1 truncate max-w-[500px]">
+        {/* Contact Info Strip */}
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap gap-6">
+          {owner.phone && (
+            <a
+              href={`tel:${owner.phone}`}
+              className="flex items-center gap-2 text-sm hover:text-blue-600 transition-colors group"
+            >
+              <div className="p-2 rounded-full bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <Phone className="h-4 w-4" />
+              </div>
+              <span className="font-medium">{owner.phone}</span>
+            </a>
+          )}
+
+          {owner.line_id && (
+            <div className="flex items-center gap-2 text-sm">
+              <div className="p-2 rounded-full bg-[#06C755]/10 text-[#06C755]">
+                <FaLine className="h-5 w-5" />
+              </div>
+              <span className="font-medium">{owner.line_id}</span>
+            </div>
+          )}
+
+          {owner.facebook_url && (
+            <a
+              href={owner.facebook_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm hover:text-blue-600 transition-colors group"
+            >
+              <div className="p-2 rounded-full bg-[#1877F2]/10 text-[#1877F2] group-hover:bg-[#1877F2] group-hover:text-white transition-colors">
+                <FaFacebook className="h-5 w-5" />
+              </div>
+              <span className="font-medium">Facebook</span>
+              <ExternalLink className="h-3 w-3 opacity-50" />
+            </a>
+          )}
+
+          {owner.other_contact && (
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+              <span className="text-slate-400">อื่นๆ:</span>
+              <span>{owner.other_contact}</span>
+            </div>
+          )}
+
+          {!owner.phone && !owner.line_id && !owner.facebook_url && (
+            <p className="text-sm text-slate-400">ไม่มีข้อมูลการติดต่อ</p>
+          )}
+        </div>
+      </div>
+
+      {/* Properties Section */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Building2 className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-slate-900">รายการทรัพย์</h2>
+              <p className="text-sm text-slate-500">
+                ทั้งหมด {properties.length} รายการ
+              </p>
+            </div>
+          </div>
+          <Button asChild size="sm" className="gap-2">
+            <Link href={`/protected/properties/new?owner_id=${owner.id}`}>
+              <Plus className="h-4 w-4" />
+              เพิ่มทรัพย์
+            </Link>
+          </Button>
+        </div>
+
+        {properties.length > 0 ? (
+          <div className="divide-y divide-slate-100">
+            {properties.map((prop) => (
+              <Link
+                key={prop.id}
+                href={`/protected/properties/${prop.id}`}
+                className="block p-4 hover:bg-slate-50 transition-colors group"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
                         {prop.title || "ไม่ระบุชื่อโครงการ"}
-                      </h4>
-                      <p className="text-sm text-muted-foreground mb-2">
+                      </h3>
+                      {getStatusBadge(prop.status)}
+                    </div>
+
+                    <div className="flex items-center gap-3 text-sm text-slate-500 mb-2">
+                      <span className="flex items-center gap-1">
+                        <Tag className="h-3.5 w-3.5" />
                         {prop.listing_type === "SALE"
                           ? "ขาย"
                           : prop.listing_type === "RENT"
                             ? "เช่า"
-                            : "ขาย / เช่า"}{" "}
-                        • {prop.property_type}
-                      </p>
-                      <div className="flex gap-2 text-xs text-muted-foreground flex-wrap">
-                        {prop.popular_area && (
-                          <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-medium">
-                            📍 {prop.popular_area}
-                          </span>
-                        )}
-                        {prop.address_line1 && (
-                          <span>| บ้านเลขที่ {prop.address_line1}</span>
-                        )}
-                        {prop.subdistrict && <span>ต.{prop.subdistrict}</span>}
-                        {prop.district && <span>อ.{prop.district}</span>}
-                      </div>
+                            : "ขาย / เช่า"}
+                      </span>
+                      <span className="text-slate-300">•</span>
+                      <span>{prop.property_type}</span>
                     </div>
-                    <div className="text-right flex flex-col items-end gap-1">
-                      {/* Price Display */}
-                      <div className="flex flex-col items-end">
-                        {/* Sale Price Section */}
-                        {(prop.listing_type === "SALE" ||
-                          prop.listing_type === "SALE_AND_RENT" ||
-                          (prop.listing_type as any) === "SALE_RENT") &&
-                          ((prop.price || 0) > 0 ||
-                            (prop.original_price || 0) > 0) && (
-                            <div className="flex flex-col items-end">
-                              {prop.original_price &&
-                                (prop.price || 0) > 0 &&
-                                prop.original_price > prop.price! && (
-                                  <span className="text-xs text-muted-foreground line-through">
-                                    {new Intl.NumberFormat("th-TH", {
-                                      style: "currency",
-                                      currency: "THB",
-                                      maximumFractionDigits: 0,
-                                    }).format(prop.original_price)}
-                                  </span>
-                                )}
-                              <p className="font-bold text-primary">
-                                {new Intl.NumberFormat("th-TH", {
-                                  style: "currency",
-                                  currency: "THB",
-                                  maximumFractionDigits: 0,
-                                }).format(
-                                  (prop.price || 0) > 0
-                                    ? prop.price!
-                                    : prop.original_price || 0,
-                                )}
-                              </p>
-                            </div>
-                          )}
 
-                        {/* Rental Price Section */}
-                        {(prop.listing_type === "RENT" ||
-                          prop.listing_type === "SALE_AND_RENT" ||
-                          (prop.listing_type as any) === "SALE_RENT") &&
-                          ((prop.rental_price || 0) > 0 ||
-                            (prop.original_rental_price || 0) > 0) && (
-                            <div className="flex flex-col items-end mt-1">
-                              {prop.original_rental_price &&
-                                (prop.rental_price || 0) > 0 &&
-                                prop.original_rental_price >
-                                  prop.rental_price! && (
-                                  <span className="text-xs text-muted-foreground line-through">
-                                    {new Intl.NumberFormat("th-TH", {
-                                      style: "currency",
-                                      currency: "THB",
-                                      maximumFractionDigits: 0,
-                                    }).format(prop.original_rental_price)}
-                                  </span>
-                                )}
-                              <p className="font-bold text-primary text-sm">
-                                {new Intl.NumberFormat("th-TH", {
-                                  style: "currency",
-                                  currency: "THB",
-                                  maximumFractionDigits: 0,
-                                }).format(
-                                  (prop.rental_price || 0) > 0
-                                    ? prop.rental_price!
-                                    : prop.original_rental_price || 0,
-                                )}
-                                <span className="text-xs font-normal text-muted-foreground ml-1">
-                                  /เดือน
-                                </span>
-                              </p>
-                            </div>
-                          )}
-                      </div>
-
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full ${
-                          prop.status === "ACTIVE"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {prop.status}
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                      <span className="line-clamp-1">
+                        {[
+                          prop.popular_area,
+                          prop.subdistrict,
+                          prop.district,
+                          prop.province,
+                        ]
+                          .filter(Boolean)
+                          .join(", ") || "ไม่ระบุที่ตั้ง"}
                       </span>
                     </div>
                   </div>
-                </Link>
-              ))}
+
+                  <div className="text-right shrink-0">
+                    {/* Sale Price */}
+                    {(prop.listing_type === "SALE" ||
+                      prop.listing_type === "SALE_AND_RENT" ||
+                      (prop.listing_type as any) === "SALE_RENT") &&
+                      (prop.price || prop.original_price) && (
+                        <div>
+                          {prop.original_price &&
+                            prop.price &&
+                            prop.original_price > prop.price && (
+                              <span className="text-xs text-slate-400 line-through">
+                                {formatCurrency(prop.original_price)}
+                              </span>
+                            )}
+                          <p className="font-bold text-blue-600">
+                            {formatCurrency(
+                              prop.price || prop.original_price || 0,
+                            )}
+                          </p>
+                        </div>
+                      )}
+
+                    {/* Rental Price */}
+                    {(prop.listing_type === "RENT" ||
+                      prop.listing_type === "SALE_AND_RENT" ||
+                      (prop.listing_type as any) === "SALE_RENT") &&
+                      (prop.rental_price || prop.original_rental_price) && (
+                        <div className="mt-1">
+                          {prop.original_rental_price &&
+                            prop.rental_price &&
+                            prop.original_rental_price > prop.rental_price && (
+                              <span className="text-xs text-slate-400 line-through">
+                                {formatCurrency(prop.original_rental_price)}
+                              </span>
+                            )}
+                          <p className="font-semibold text-emerald-600 text-sm">
+                            {formatCurrency(
+                              prop.rental_price ||
+                                prop.original_rental_price ||
+                                0,
+                            )}
+                            <span className="text-xs font-normal text-slate-400 ml-1">
+                              /เดือน
+                            </span>
+                          </p>
+                        </div>
+                      )}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="p-12 text-center">
+            <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
+              <Building2 className="h-8 w-8 text-slate-400" />
             </div>
-          ) : (
-            <div className="text-center py-12 border rounded-lg border-dashed bg-muted/10">
-              <p className="text-muted-foreground">ไม่มีรายการทรัพย์</p>
-            </div>
-          )}
-        </div>
+            <h3 className="font-medium text-slate-900 mb-1">ยังไม่มีทรัพย์</h3>
+            <p className="text-sm text-slate-500 mb-4">
+              เจ้าของนี้ยังไม่มีทรัพย์ในระบบ
+            </p>
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/protected/properties/new?owner_id=${owner.id}`}>
+                <Plus className="h-4 w-4 mr-2" />
+                เพิ่มทรัพย์แรก
+              </Link>
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -13,9 +13,9 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { ShieldCheck, Activity, User } from "lucide-react";
+import { ShieldCheck, Activity, User, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, useWatch } from "react-hook-form";
 import { PropertyFormValues } from "../../../schema";
 import {
   PROPERTY_STATUS_LABELS,
@@ -34,6 +34,9 @@ export const ManagementSection = ({
   owners,
   agents,
 }: ManagementSectionProps) => {
+  const totalUnits = useWatch({ control: form.control, name: "total_units" });
+  const soldUnits = useWatch({ control: form.control, name: "sold_units" });
+
   return (
     <section className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/60 space-y-6">
       <div className="flex  items-center gap-2 pb-3 border-b border-slate-50">
@@ -107,8 +110,7 @@ export const ManagementSection = ({
               </FormItem>
             )}
           />
-
-          {/* Owner */}
+        {/* Owner */}
           <FormField
             control={form.control}
             name="owner_id"
@@ -154,8 +156,122 @@ export const ManagementSection = ({
               </FormItem>
             )}
           />
-        </div>
+          {/* 🏢 Stock Management - Compact Row Layout */}
+          <div className="col-span-2 flex flex-wrap items-center gap-4 bg-slate-50 p-4 rounded-xl border border-dashed border-slate-200">
+            {/* Total Units */}
+            <FormField
+              control={form.control}
+              name="total_units"
+              render={({ field }) => (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-600 whitespace-nowrap">
+                    จำนวนยูนิต:
+                  </span>
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const val = (field.value || 0) - 1;
+                        if (val >= 1) field.onChange(val);
+                      }}
+                      className="h-8 w-8 flex items-center justify-center rounded-l-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <input
+                      type="number"
+                      min={1}
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        field.onChange(val === "" ? undefined : Number(val));
+                      }}
+                      className="h-8 w-12 text-center border-y border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const val = (field.value ?? 1) + 1;
+                        field.onChange(val);
+                      }}
+                      className="h-8 w-8 flex items-center justify-center rounded-r-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            />
 
+            {/* Sold Units */}
+            <FormField
+              control={form.control}
+              name="sold_units"
+              render={({ field }) => (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-600 whitespace-nowrap">
+                    ยูนิตปล่อยแล้ว:
+                  </span>
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const val = (field.value || 0) - 1;
+                        if (val >= 0) field.onChange(val);
+                      }}
+                      className="h-8 w-8 flex items-center justify-center rounded-l-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <input
+                      type="number"
+                      min={0}
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        field.onChange(val === "" ? undefined : Number(val));
+                      }}
+                      className="h-8 w-12 text-center border-y border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const val = (field.value ?? 0) + 1;
+                        field.onChange(val);
+                      }}
+                      className="h-8 w-8 flex items-center justify-center rounded-r-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            />
+
+            {/* Remaining - Highlight */}
+            <div className="flex items-center gap-2 ml-auto">
+              <span className="text-xs font-medium text-slate-600">
+                คงเหลือ:
+              </span>
+              <span
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                  (totalUnits ?? 1) - (soldUnits ?? 0) > 0
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
+                {(totalUnits ?? 1) - (soldUnits ?? 0)} ยูนิต
+                {(totalUnits ?? 1) - (soldUnits ?? 0) > 0 && (
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                )}
+              </span>
+            </div>
+          </div>
+
+          
+        </div>
         {/* Divider */}
         <div className="h-px bg-slate-100 my-2" />
 

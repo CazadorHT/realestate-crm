@@ -20,7 +20,13 @@ export type DealWithProperty = Deal & {
       is_cover: boolean;
     }[];
   } | null;
-  lead?: { id: string; full_name?: string } | null;
+  lead?: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    phone: string | null;
+    stage: string | null;
+  } | null;
   co_agent_online?: string | null;
   duration_months?: number | null;
 };

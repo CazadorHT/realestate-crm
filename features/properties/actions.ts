@@ -363,6 +363,14 @@ export async function createPropertyAction(
       ...propertyData
     } = safeValues;
 
+    // 🧠 Auto-Status Logic: Check Stock
+    if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
+      propertyData.status = "SOLD";
+    } else if (propertyData.status === "SOLD") {
+      // If stock remains, force ACTIVE (prevent premature SOLD status)
+      propertyData.status = "ACTIVE";
+    }
+
     // ✅ image paths ต้องอยู่ภายใต้ properties/
     if (images?.length) {
       const mustStartWith = "properties/";
@@ -641,6 +649,13 @@ export async function updatePropertyAction(
       ...propertyData
     } = safeValues;
 
+    // 🧠 Auto-Status Logic: Check Stock
+    if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
+      propertyData.status = "SOLD";
+    } else if (propertyData.status === "SOLD") {
+      propertyData.status = "ACTIVE";
+    }
+
     // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ
     // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ
     const { data: existing, error: findErr } = await supabase
@@ -849,18 +864,28 @@ export async function updatePropertyAction(
       const valid = validatePropertyImagePaths(images);
       if (!valid.ok) return { success: false, message: valid.message };
 
-      const missing = await verifyImagesExist(
-        supabase,
-        PROPERTY_IMAGES_BUCKET,
-        images,
+      // Skip verification for images that already exist in property_images
+      // (they were already verified when first uploaded)
+      const existingPaths = new Set(
+        (oldImages || []).map((img: any) => img.storage_path),
       );
-      if (missing.length > 0) {
-        return {
-          success: false,
-          message: `Some images are missing in storage: ${missing
-            .slice(0, 3)
-            .join(", ")}${missing.length > 3 ? "..." : ""}`,
-        };
+      const newImages = images.filter((path) => !existingPaths.has(path));
+
+      // Only verify truly new images
+      if (newImages.length > 0) {
+        const missing = await verifyImagesExist(
+          supabase,
+          PROPERTY_IMAGES_BUCKET,
+          newImages,
+        );
+        if (missing.length > 0) {
+          return {
+            success: false,
+            message: `Some images are missing in storage: ${missing
+              .slice(0, 3)
+              .join(", ")}${missing.length > 3 ? "..." : ""}`,
+          };
+        }
       }
     }
 
@@ -1451,7 +1476,6 @@ export async function duplicatePropertyAction(
       created_at: _created_at,
       updated_at: _updated_at,
       created_by: _created_by,
-      updated_by: _updated_by,
       slug: _slug,
       meta_title: _meta_title,
       meta_description: _meta_description,
@@ -1467,7 +1491,6 @@ export async function duplicatePropertyAction(
         title: newTitle,
         status: "DRAFT", // แนะนำให้เป็น draft เสมอ
         created_by: user.id,
-        updated_by: user.id,
         slug: uniqueSlug,
         meta_title: seoData.metaTitle,
         meta_description: seoData.metaDescription,
@@ -1522,8 +1545,6 @@ export async function duplicatePropertyAction(
       },
     );
 
-    revalidatePath("/protected/properties");
-    return { success: true, propertyId: newPropertyId };
     revalidatePath("/protected/properties");
     return { success: true, propertyId: newPropertyId };
   } catch (err) {

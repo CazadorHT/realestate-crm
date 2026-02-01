@@ -2,6 +2,7 @@
 
 import { requireAuthContext, assertAdmin } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
+import { autoPurgeOldLogs } from "./queries";
 
 export type AdminUserRow = {
   id: string;
@@ -32,7 +33,7 @@ export async function getAdminUsersAction() {
 
 export async function updateUserRoleAction(
   userId: string,
-  newRole: "USER" | "AGENT" | "ADMIN"
+  newRole: "USER" | "AGENT" | "ADMIN",
 ) {
   const { supabase, role, user } = await requireAuthContext();
   assertAdmin(role);
@@ -52,7 +53,15 @@ export async function updateUserRoleAction(
   return { success: true };
 }
 
-// Optional: Delete user (profile only, or full auth user?
-// Deleting from 'profiles' is usually enough if cascade is set,
-// but typically we want to delete from auth.users via service_role client.
-// For now, let's stick to role management as requested.)
+export async function purgeOldLogsAction() {
+  const { role } = await requireAuthContext();
+  assertAdmin(role);
+
+  await autoPurgeOldLogs();
+
+  revalidatePath("/protected/admin/audit-logs");
+  return {
+    success: true,
+    message: `ลบประวัติการใช้งานที่เก่ากว่า 30 วันสำเร็จเรียบร้อยแล้ว`,
+  };
+}

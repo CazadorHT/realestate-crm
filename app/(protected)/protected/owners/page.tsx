@@ -78,7 +78,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
           <>
             <OwnersTable owners={owners} />
 
-            <div className="flex items-center justify-between text-sm bg-slate-50 rounded-xl p-4 border">
+            <div className="flex items-center justify-between text-sm bg-slate-50 rounded-xl p-4 border border-gray-200">
               <div className="text-slate-600 font-medium">
                 ทั้งหมด <span className="text-slate-900">{count}</span> รายการ •
                 หน้า <span className="text-slate-900">{page}</span> จาก{" "}
@@ -86,7 +86,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
               </div>
               <div className="flex gap-2">
                 <Link
-                  className={`rounded-lg border bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
+                  className={`rounded-lg border border-gray-200 bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
                     page <= 1 ? "pointer-events-none opacity-50" : ""
                   }`}
                   href={makeHref(page - 1)}
@@ -95,7 +95,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
                   ← ก่อนหน้า
                 </Link>
                 <Link
-                  className={`rounded-lg border bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
+                  className={`rounded-lg border border-gray-200 bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
                     page >= totalPages ? "pointer-events-none opacity-50" : ""
                   }`}
                   href={makeHref(page + 1)}

@@ -33,6 +33,7 @@ interface EmptyStateProps {
   actionLabel?: string;
   actionHref?: string;
   actionIcon?: keyof typeof ICON_MAP;
+  onAction?: () => void;
 }
 
 export function EmptyState({
@@ -42,6 +43,7 @@ export function EmptyState({
   actionLabel,
   actionHref,
   actionIcon = "plusCircle",
+  onAction,
 }: EmptyStateProps) {
   const Icon = ICON_MAP[icon] || PlusCircle;
   const ActionIcon = ICON_MAP[actionIcon] || PlusCircle;
@@ -71,16 +73,24 @@ export function EmptyState({
         </div>
 
         {/* CTA Button */}
-        {actionLabel && actionHref && (
+        {actionLabel && (actionHref || onAction) && (
           <Button
-            asChild
+            asChild={!!actionHref}
             size="lg"
             className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8"
+            onClick={onAction}
           >
-            <Link href={actionHref}>
-              <ActionIcon className="h-5 w-5 mr-2" />
-              {actionLabel}
-            </Link>
+            {actionHref ? (
+              <Link href={actionHref}>
+                <ActionIcon className="h-5 w-5 mr-2" />
+                {actionLabel}
+              </Link>
+            ) : (
+              <>
+                <ActionIcon className="h-5 w-5 mr-2" />
+                {actionLabel}
+              </>
+            )}
           </Button>
         )}
       </div>

@@ -85,7 +85,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border border-slate-200 shadow-sm p-6">
         <Table>
           <TableHeader>
             <TableRow>
@@ -105,7 +105,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-destructive"
+                    className="h-8 w-8 text-destructive cursor-pointer"
                     onClick={() => handleDelete(category.id)}
                     disabled={isPending}
                   >

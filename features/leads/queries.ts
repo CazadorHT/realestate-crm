@@ -13,7 +13,9 @@ export type PropertySummary = Pick<
   | "listing_type"
   | "status"
   | "price"
+  | "original_price"
   | "rental_price"
+  | "original_rental_price"
   | "currency"
 > & {
   cover_url: string | null;
@@ -43,7 +45,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   if (q) {
     // ค้นชื่อ/เบอร์/อีเมล (ปรับ field ได้)
     query = query.or(
-      `full_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`
+      `full_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`,
     );
   }
   if (stage && stage !== "ALL") {
@@ -124,7 +126,7 @@ export async function getLeadByIdQuery(id: string): Promise<LeadRow | null> {
 }
 // ใช้สำหรับแสดง leads พร้อมกับ activities
 export async function getLeadWithActivitiesQuery(
-  id: string
+  id: string,
 ): Promise<LeadWithActivities | null> {
   try {
     const { supabase, role } = await requireAuthContext();
@@ -139,7 +141,7 @@ export async function getLeadWithActivitiesQuery(
                 id, lead_id, property_id, activity_type, note, created_by, created_at,
                 properties ( id, title )
                 )
-            `
+            `,
       )
       .eq("id", id)
       .single();
@@ -152,7 +154,7 @@ export async function getLeadWithActivitiesQuery(
 
     lead.lead_activities?.sort(
       (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
     return lead;
@@ -171,7 +173,7 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
   const { data: props, error: propsErr } = await supabase
     .from("properties")
     .select(
-      "id,title,property_type,listing_type,status,price,rental_price,currency"
+      "id,title,property_type,listing_type,status,price,original_price,rental_price,original_rental_price,currency",
     )
     .in("id", uniq);
 
@@ -223,7 +225,7 @@ export async function getLeadsDashboardStatsQuery() {
   const startOfMonth = new Date(
     now.getFullYear(),
     now.getMonth(),
-    1
+    1,
   ).toISOString();
   const { count: newLeadsMonth } = await supabase
     .from("leads")

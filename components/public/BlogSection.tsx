@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Calendar, ArrowRight, User, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SectionBackground } from "./SectionBackground";
 
 // Author type matching database schema (Json field)
@@ -238,17 +239,16 @@ export function BlogSection() {
                           itemScope
                           itemType="https://schema.org/Person"
                         >
-                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
-                            {post.author?.avatar_url ? (
-                              <img
-                                src={post.author.avatar_url}
-                                alt=""
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
+                          <Avatar className="w-8 h-8 border border-slate-100">
+                            <AvatarImage
+                              src={post.author?.avatar_url || ""}
+                              alt={post.author?.name || "Admin"}
+                              className="object-cover"
+                            />
+                            <AvatarFallback className="bg-slate-100 flex items-center justify-center">
                               <User className="w-4 h-4 text-slate-400" />
-                            )}
-                          </div>
+                            </AvatarFallback>
+                          </Avatar>
                           <span
                             className="text-sm font-medium text-slate-700 truncate"
                             itemProp="name"

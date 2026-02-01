@@ -6,10 +6,20 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import {
+  User,
+  Phone,
+  MessageCircle,
+  Globe,
+  AtSign,
+  Loader2,
+  Save,
+  X,
+} from "lucide-react";
+import { FaFacebook, FaLine } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import type { Owner, OwnerFormValues } from "@/features/owners/types";
 
 import {
@@ -34,13 +44,13 @@ type FormShape = z.infer<typeof ownerSchema>;
 type Props =
   | { mode: "create"; initialValues?: Partial<OwnerFormValues> }
   | { mode: "edit"; id: string; initialValues: Owner | OwnerFormValues };
+
 function toNull(v: string | null | undefined) {
   const t = (v ?? "").trim();
   return t.length ? t : null;
 }
 
 function isNextRedirectError(e: any) {
-  // redirect() จะ throw error ที่มี digest ขึ้นต้นด้วย "NEXT_REDIRECT"
   return typeof e?.digest === "string" && e.digest.startsWith("NEXT_REDIRECT");
 }
 
@@ -65,7 +75,6 @@ export function OwnerForm(props: Props) {
   const onSubmit = (values: FormShape) => {
     setError(null);
 
-    // แนะนำให้ส่ง null (ไม่ส่ง undefined) ให้ตรง DB ที่เป็น nullable
     const payload: OwnerFormValues = {
       full_name: values.full_name.trim(),
       phone: toNull(values.phone),
@@ -92,19 +101,17 @@ export function OwnerForm(props: Props) {
           return;
         }
 
-        // Success
         toast.success(
-          props.mode === "create" ? "เพิ่มเจ้าของสำเร็จ" : "บันทึกข้อมูลสำเร็จ"
+          props.mode === "create" ? "เพิ่มเจ้าของสำเร็จ" : "บันทึกข้อมูลสำเร็จ",
         );
 
-        // เผื่อกรณี action “ไม่ redirect”
         router.refresh();
       } catch (e: any) {
         if (isNextRedirectError(e)) {
           toast.success(
             props.mode === "create"
               ? "เพิ่มเจ้าของสำเร็จ"
-              : "บันทึกข้อมูลสำเร็จ"
+              : "บันทึกข้อมูลสำเร็จ",
           );
           throw e;
         }
@@ -115,76 +122,114 @@ export function OwnerForm(props: Props) {
 
   return (
     <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
-      {error ? (
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {error}
         </div>
-      ) : null}
+      )}
 
-      <div className="grid gap-5 md:grid-cols-2">
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="full_name">ชื่อเจ้าของ *</Label>
-          <Input
-            id="full_name"
-            placeholder="เช่น คุณสมชาย ใจดี"
-            {...form.register("full_name")}
-          />
-          {form.formState.errors.full_name ? (
-            <p className="text-xs text-destructive">
-              {form.formState.errors.full_name.message}
-            </p>
-          ) : null}
-        </div>
+      {/* Name Field - Full Width */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+          <User className="h-4 w-4 text-slate-400" />
+          ชื่อเจ้าของ <span className="text-red-500">*</span>
+        </label>
+        <Input
+          placeholder="เช่น คุณสมชาย ใจดี"
+          className="h-11 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+          {...form.register("full_name")}
+        />
+        {form.formState.errors.full_name && (
+          <p className="text-xs text-red-500">
+            {form.formState.errors.full_name.message}
+          </p>
+        )}
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="phone">เบอร์โทร</Label>
-          <Input
-            id="phone"
-            placeholder="เช่น 089xxxxxxx"
-            {...form.register("phone")}
-          />
-        </div>
+      {/* Contact Info Section */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+          <Phone className="h-4 w-4 text-slate-400" />
+          ข้อมูลการติดต่อ
+        </h3>
 
-        <div className="space-y-2">
-          <Label htmlFor="line_id">Line ID</Label>
-          <Input
-            id="line_id"
-            placeholder="เช่น @ownerline"
-            {...form.register("line_id")}
-          />
-        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Phone */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <Phone className="h-4 w-4 text-blue-500" />
+              เบอร์โทร
+            </label>
+            <Input
+              placeholder="089-xxx-xxxx"
+              className="h-11 border-slate-200"
+              {...form.register("phone")}
+            />
+          </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="facebook_url">Facebook URL</Label>
-          <Input
-            id="facebook_url"
-            placeholder="เช่น https://facebook.com/..."
-            {...form.register("facebook_url")}
-          />
-          {form.formState.errors.facebook_url ? (
-            <p className="text-xs text-destructive">
-              {form.formState.errors.facebook_url.message}
-            </p>
-          ) : null}
-        </div>
+          {/* Line ID */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <FaLine className="h-4 w-4 text-[#06C755]" />
+              Line ID
+            </label>
+            <Input
+              placeholder="@lineid หรือ เบอร์โทร"
+              className="h-11 border-slate-200"
+              {...form.register("line_id")}
+            />
+          </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="other_contact">ช่องทางติดต่ออื่น ๆ</Label>
-          <Input
-            id="other_contact"
-            placeholder="เช่น WhatsApp / WeChat / เบอร์สำรอง"
-            {...form.register("other_contact")}
-          />
+          {/* Facebook */}
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <FaFacebook className="h-4 w-4 text-[#1877F2]" />
+              Facebook URL
+            </label>
+            <Input
+              placeholder="https://facebook.com/..."
+              className="h-11 border-slate-200"
+              {...form.register("facebook_url")}
+            />
+            {form.formState.errors.facebook_url && (
+              <p className="text-xs text-red-500">
+                {form.formState.errors.facebook_url.message}
+              </p>
+            )}
+          </div>
+
+          {/* Other Contact */}
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <AtSign className="h-4 w-4 text-slate-400" />
+              ช่องทางติดต่ออื่นๆ
+            </label>
+            <Input
+              placeholder="WhatsApp, WeChat, เบอร์สำรอง ฯลฯ"
+              className="h-11 border-slate-200"
+              {...form.register("other_contact")}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button type="submit" disabled={isPending}>
+      {/* Action Buttons */}
+      <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="gap-2 bg-blue-600 hover:bg-blue-700"
+        >
+          {isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
           {isPending
             ? "กำลังบันทึก..."
             : props.mode === "create"
-            ? "เพิ่มเจ้าของ"
-            : "บันทึกข้อมูล"}
+              ? "เพิ่มเจ้าของ"
+              : "บันทึกข้อมูล"}
         </Button>
 
         <Button
@@ -192,7 +237,9 @@ export function OwnerForm(props: Props) {
           variant="outline"
           disabled={isPending}
           onClick={() => router.back()}
+          className="gap-2"
         >
+          <X className="h-4 w-4" />
           ยกเลิก
         </Button>
       </div>

@@ -245,6 +245,8 @@ export default async function PropertiesPage({
       original_rental_price: p.original_rental_price,
       is_new: isNew,
       view_count: p.view_count || 0,
+      total_units: p.total_units || undefined,
+      sold_units: p.sold_units || undefined,
     };
   });
 
@@ -292,7 +294,7 @@ export default async function PropertiesPage({
 
       <PropertiesDashboard stats={stats} />
 
-      <div className="space-y-4">
+      <div id="table" className="space-y-4 scroll-mt-4">
         {/* Enhanced Section Title */}
         <div className="flex items-center gap-3">
           <div className="relative">

@@ -42,6 +42,7 @@ import {
   Info,
   Calendar,
   Cigarette,
+  Save,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -122,7 +123,7 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
 
   return (
     <form
-      className="space-y-6 max-w-5xl mx-auto pb-10"
+      className="space-y-6 max-w-full mx-auto pb-10"
       onSubmit={form.handleSubmit(onSubmit)}
     >
       {error ? (
@@ -171,11 +172,11 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
         )}
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* --- LEFT COLUMN: Contact & Requirements --- */}
         <div className="space-y-6">
           <Card className="shadow-md border-slate-200 dark:border-slate-800 overflow-hidden">
-            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b pb-4">
+            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 pb-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10 text-primary">
                   <UserCircle className="h-5 w-5" />
@@ -359,12 +360,17 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
         {/* --- RIGHT COLUMN: Requirements & Pipeline --- */}
         <div className="space-y-6">
           <Card className="shadow-md border-slate-200 dark:border-slate-800">
-            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b pb-4">
+            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 pb-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600">
                   <ClipboardList className="h-5 w-5" />
                 </div>
-                <CardTitle className="text-lg">ความต้องการทรัพย์</CardTitle>
+                <div>
+                  <CardTitle className="text-lg">ความต้องการทรัพย์</CardTitle>
+                  <CardDescription>
+                    ระบุรายละเอียดทรัพย์ที่ลูกค้าต้องการ
+                  </CardDescription>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
@@ -544,17 +550,27 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
               </div>
             </CardContent>
           </Card>
+        </div>
 
+        {/* สถานะและดีล */}
+        <div className="space-y-6">
           <Card className="shadow-md border-slate-200 dark:border-slate-800">
-            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Search className="h-5 w-5 text-indigo-500" />
-                สถานะและดีล
-              </CardTitle>
+            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                  <Search className="h-5 w-5 text-indigo-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">สถานะและงบประมาณ</CardTitle>
+                  <CardDescription>
+                    ระบุสถานะของลูกค้าและงบประมาณ
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
+              <div className="flex justify-between gap-4">
+                <div className="space-y-2 flex-1">
                   <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     กระบวนการขาย (Stage)
                   </Label>
@@ -597,7 +613,7 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 flex-1">
                   <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     ช่องทางการติดต่อ (Source)
                   </Label>
@@ -619,46 +635,43 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                     </SelectContent>
                   </Select>
                 </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <DollarSign className="h-3 w-3" /> งบประมาณที่คาดหวัง
-                  </Label>
-                  <div className="space-y-3">
-                    <div className="relative group">
-                      <span className="absolute left-3 top-2.5 text-xs font-bold text-muted-foreground group-focus-within:text-primary transition-colors">
-                        MIN
-                      </span>
-                      <Input
-                        type="number"
-                        className="pl-12 h-10 font-mono text-right"
-                        placeholder="0"
-                        {...form.register("budget_min", {
-                          valueAsNumber: true,
-                        })}
-                      />
-                      <span className="absolute right-3 top-2.5 text-[10px] font-bold text-muted-foreground/50">
-                        THB
-                      </span>
-                    </div>
-                    <div className="relative group">
-                      <span className="absolute left-3 top-2.5 text-xs font-bold text-muted-foreground group-focus-within:text-primary transition-colors">
-                        MAX
-                      </span>
-                      <Input
-                        type="number"
-                        className="pl-12 h-10 font-mono text-right"
-                        placeholder="0"
-                        {...form.register("budget_max", {
-                          valueAsNumber: true,
-                        })}
-                      />
-                      <span className="absolute right-3 top-2.5 text-[10px] font-bold text-muted-foreground/50">
-                        THB
-                      </span>
-                    </div>
+              </div>
+              <div className="space-y-4">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <DollarSign className="h-3 w-3" /> งบประมาณที่คาดหวัง
+                </Label>
+                <div className="space-y-3 flex  gap-2">
+                  <div className="relative group flex-1">
+                    <span className="absolute left-3 top-3 text-xs font-bold text-muted-foreground group-focus-within:text-primary transition-colors">
+                      MIN
+                    </span>
+                    <Input
+                      type="number"
+                      className="pl-12 h-10 font-mono text-right pr-6"
+                      placeholder="ไม่ระบุ"
+                      {...form.register("budget_min", {
+                        valueAsNumber: true,
+                      })}
+                    />
+                    <span className="absolute right-3 top-3 text-[10px] font-bold text-muted-foreground/50">
+                      THB
+                    </span>
+                  </div>
+                  <div className="relative group flex-1">
+                    <span className="absolute left-3 top-3 text-xs font-bold text-muted-foreground group-focus-within:text-primary transition-colors">
+                      MAX
+                    </span>
+                    <Input
+                      type="number"
+                      className="pl-12 h-10 font-mono text-right pr-6"
+                      placeholder="ไม่ระบุ"
+                      {...form.register("budget_max", {
+                        valueAsNumber: true,
+                      })}
+                    />
+                    <span className="absolute right-3 top-3 text-[10px] font-bold text-muted-foreground/50">
+                      THB
+                    </span>
                   </div>
                 </div>
               </div>
@@ -673,28 +686,31 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                   {...form.register("note")}
                 />
               </div>
-
-              <div className="pt-2">
-                <Button
-                  className="w-full h-12 text-md font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-                  type="submit"
-                  disabled={isPending}
-                >
-                  {isPending ? "กำลังดำเนินการ..." : "บันทึกข้อมูลลูกค้า"}
-                </Button>
-                <Button
-                  className="w-full mt-3 h-10 text-muted-foreground hover:text-foreground"
-                  variant="ghost"
-                  type="button"
-                  disabled={isPending}
-                  onClick={() => router.back()}
-                >
-                  ยกเลิกและย้อนกลับ
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="pt-6 mt-6 border-t border-slate-200 flex flex-col-reverse sm:flex-row sm:justify-start gap-3">
+        
+        <Button
+          className="h-11 px-8 text-md font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all min-w-[200px]"
+          type="submit"
+          disabled={isPending}
+        >
+          <Save className="h-4 w-4 mr-2" />
+          {isPending ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
+        </Button>
+        <Button
+          className="h-11 px-8 text-muted-foreground hover:text-foreground"
+          variant="outline"
+          type="button"
+          disabled={isPending}
+          onClick={() => router.back()}
+        >
+          ยกเลิก
+        </Button>
       </div>
     </form>
   );

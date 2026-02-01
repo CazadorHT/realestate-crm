@@ -152,7 +152,7 @@ export function AuditLogFilters({ users }: AuditLogFiltersProps) {
     !!date;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 p-4 bg-white border rounded-lg shadow-sm mb-6">
+    <div className="flex flex-wrap items-center gap-3 p-4 bg-white border border-slate-200 rounded-lg shadow-sm mb-6">
       <span className="text-sm font-medium text-muted-foreground mr-2">
         Filter:
       </span>

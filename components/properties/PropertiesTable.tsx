@@ -43,6 +43,7 @@ import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeletePropertiesAction } from "@/features/properties/bulk-actions";
 import { exportPropertiesAction } from "@/features/properties/export-action";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export interface PropertyTableData {
   id: string;
@@ -73,6 +74,8 @@ export interface PropertyTableData {
   popular_area?: string | null;
   original_price?: number | null;
   original_rental_price?: number | null;
+  total_units?: number;
+  sold_units?: number;
 }
 
 interface PropertiesTableProps {
@@ -117,8 +120,8 @@ function SortableHead({
         ? "desc"
         : "asc"
       : defaultDesc.has(sortKey)
-      ? "desc"
-      : "asc";
+        ? "desc"
+        : "asc";
 
     params.set("sortBy", sortKey);
     params.set("sortOrder", nextOrder);
@@ -218,11 +221,11 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
         actionableCount={selectedCount - blockedCount}
       />
 
-      <div className="rounded-md border shadow-sm bg-card">
+      <div className="rounded-md border border-gray-200 shadow-sm bg-card">
         <Table>
           <TableHeader>
             {/* Rest of the table header content ... */}
-            <TableRow className="bg-muted/50 hover:bg-muted/50">
+            <TableRow className="bg-muted/50 hover:bg-muted/50 ">
               <TableHead className="w-[50px]">
                 <Checkbox
                   checked={isAllSelected}
@@ -235,29 +238,30 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                   }
                 />
               </TableHead>
-              <TableHead className="w-[300px]">
+              <TableHead className="w-[320px]">
                 <SortableHead label="ทรัพย์สิน" sortKey="created_at" />
               </TableHead>
-              <TableHead>
+              <TableHead className="w-[120px]">
                 <SortableHead label="ประเภท" sortKey="property_type" />
               </TableHead>
-              <TableHead>ทำเล/ขนาด</TableHead>
-              <TableHead>
+              <TableHead className="w-[180px]">ทำเล/ขนาด</TableHead>
+              <TableHead className="w-[140px]">
                 <SortableHead label="ราคา" sortKey="price" />
               </TableHead>
-              <TableHead>ความสนใจ</TableHead>
+              <TableHead className="w-[120px]">ความสนใจ</TableHead>
               <TableHead className="w-[140px]">
                 <SortableHead label="อัปเดต" sortKey="updated_at" />
               </TableHead>
               <TableHead className="w-[200px]">
                 ผู้ซื้อ/ผู้เช่า/ผู้ดูแล
               </TableHead>
-
-              <TableHead>
+              <TableHead className="w-[140px]">
                 <SortableHead label="สถานะ" sortKey="status" />
               </TableHead>
-              <TableHead>สัญญา</TableHead>
-              <TableHead className="text-right">จัดการ</TableHead>
+              <TableHead className="w-[100px]">สัญญา</TableHead>
+              <TableHead className="w-[100px] text-right pr-4">
+                จัดการ
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -265,7 +269,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
               <TableRow
                 key={property.id}
                 className={`group hover:bg-slate-50/50 ${
-                  isSelected(property.id) ? "bg-blue-50/50" : ""
+                  isSelected(property.id) ? "bg-blue-50/50 " : ""
                 }`}
               >
                 {/* CHECKBOX */}
@@ -279,7 +283,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                 {/* PROPERTY NAME & COVER */}
                 <TableCell>
                   <div className="flex items-start gap-4">
-                    <div className="relative h-[80px] w-[120px] flex-shrink-0 overflow-hidden rounded-lg border bg-slate-100 group/image cursor-zoom-in">
+                    <div className="relative h-[80px] w-[100px] shrink-0 overflow-hidden rounded-lg  bg-slate-100 group/image cursor-zoom-in">
                       {property.image_url ? (
                         <Dialog>
                           <DialogTrigger asChild>
@@ -320,8 +324,10 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                           display: "-webkit-box",
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
                         }}
-                        className="block font-bold text-slate-900 hover:text-blue-600 transition-colors text-sm line-clamp-2 whitespace-normal break-all overflow-hidden"
+                        className="font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm"
                       >
                         {property.title || "ไม่ระบุชื่อ"}
                       </Link>
@@ -349,8 +355,8 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                       {property.listing_type === "SALE"
                         ? "ขาย"
                         : property.listing_type === "RENT"
-                        ? "เช่า"
-                        : "ขาย/เช่า"}
+                          ? "เช่า"
+                          : "ขาย/เช่า"}
                     </span>
                   </div>
                 </TableCell>
@@ -484,7 +490,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                   </div>
                 </TableCell>
 
-                {/* INTEREST */}
+                {/* INTEREST & STOCK */}
                 <TableCell>
                   <div className="flex flex-col gap-1">
                     <div
@@ -501,15 +507,37 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                       <Eye className="h-3 w-3" />
                       <span>{property.view_count || 0}</span>
                     </div>
+                    {/* Stock Display */}
+                    {(property.total_units || 0) > 1 && (
+                      <div className="flex items-center gap-1.5 text-[10px] bg-slate-100 px-1.5 py-0.5 rounded-full w-fit border border-slate-200">
+                        <span
+                          className={cn(
+                            "font-medium",
+                            (property.total_units || 0) -
+                              (property.sold_units || 0) >
+                              0
+                              ? "text-emerald-600"
+                              : "text-red-500",
+                          )}
+                        >
+                          ยูนิตเหลือ{" "}
+                          {(property.total_units || 0) -
+                            (property.sold_units || 0)}
+                        </span>
+                        <span className="text-slate-400">
+                          / {property.total_units}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </TableCell>
 
                 {/* UPDATED */}
                 <TableCell className="align-top">
                   <div
-                    className="text-xs text-slate-500"
+                    className="text-xs text-slate-500 line-clamp-1 max-w-[100px] text-ellipsis"
                     title={new Date(property.updated_at).toLocaleString(
-                      "th-TH"
+                      "th-TH",
                     )}
                   >
                     {formatDistanceToNow(new Date(property.updated_at), {
@@ -572,7 +600,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                       asChild
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-8 w-8 cursor-pointer  hover:text-blue-700 hover:bg-blue-50"
                       title="ดู"
                       aria-label="ดู"
                     >
@@ -585,7 +613,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                       asChild
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-8 w-8 cursor-pointer  hover:text-amber-700 hover:bg-amber-50"
                       title="แก้ไข"
                       aria-label="แก้ไข"
                     >
@@ -596,7 +624,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
 
                     <DuplicatePropertyButton
                       id={property.id}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="cursor-pointer hover:text-purple-600 hover:bg-purple-50"
                     />
 
                     {/* delete อยู่ในนี้ */}

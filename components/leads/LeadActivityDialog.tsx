@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,12 +18,22 @@ interface LeadActivityDialogProps {
   leadId: string;
   leadName?: string;
   onSubmitAction: (values: LeadActivityFormValues) => Promise<void>;
+  triggerVariant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
+  triggerClassName?: string;
 }
 
 export function LeadActivityDialog({
   leadId,
   leadName,
   onSubmitAction,
+  triggerVariant = "default",
+  triggerClassName,
 }: LeadActivityDialogProps) {
   const [open, setOpen] = useState(false);
 
@@ -34,7 +45,10 @@ export function LeadActivityDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button
+          variant={triggerVariant}
+          className={cn("gap-2", triggerClassName)}
+        >
           <Plus className="h-4 w-4" />
           บันทึกกิจกรรม
         </Button>

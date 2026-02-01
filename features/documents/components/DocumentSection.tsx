@@ -24,16 +24,11 @@ export function DocumentSection({ ownerId, ownerType }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="space-y-4 rounded-xl border bg-card p-5 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-semibold text-base flex items-center gap-2">
-            📄 เอกสาร
-          </h3>
-          <p className="text-xs text-muted-foreground mt-1">
-            เอกสารที่เกี่ยวข้อง เช่น สัญญา, บัตรประชาชน, หนังสือเดินทาง ฯลฯ
-          </p>
-        </div>
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-semibold text-base flex items-center gap-2">
+          📄 เอกสาร
+        </h3>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button size="sm" variant="outline">
@@ -56,12 +51,17 @@ export function DocumentSection({ ownerId, ownerType }: Props) {
           </DialogContent>
         </Dialog>
       </div>
+      <p className="text-xs text-muted-foreground mb-4">
+        เอกสารที่เกี่ยวข้อง เช่น สัญญา, บัตรประชาชน, หนังสือเดินทาง ฯลฯ
+      </p>
 
-      <DocumentList
-        ownerId={ownerId}
-        ownerType={ownerType}
-        refreshTrigger={refreshKey}
-      />
+      <div className="flex-1 overflow-auto">
+        <DocumentList
+          ownerId={ownerId}
+          ownerType={ownerType}
+          refreshTrigger={refreshKey}
+        />
+      </div>
     </div>
   );
 }

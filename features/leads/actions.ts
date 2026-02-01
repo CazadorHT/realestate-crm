@@ -19,7 +19,7 @@ import type {
 } from "./types";
 
 export async function createLeadAction(
-  values: unknown
+  values: unknown,
 ): Promise<LeadActionResult> {
   try {
     const parsed = leadFormSchema.safeParse(values);
@@ -63,7 +63,7 @@ export async function createLeadAction(
 
 export async function updateLeadAction(
   id: string,
-  values: unknown
+  values: unknown,
 ): Promise<{ success: true } | { success: false; message: string }> {
   try {
     const parsed = leadFormSchema.safeParse(values);
@@ -120,7 +120,7 @@ export async function updateLeadAction(
 }
 
 export async function deleteLeadAction(
-  id: string
+  id: string,
 ): Promise<{ success: true } | { success: false; message: string }> {
   try {
     const ctx = await requireAuthContext();
@@ -160,7 +160,7 @@ export async function deleteLeadAction(
 
 export async function createLeadActivityAction(
   leadId: string,
-  values: unknown
+  values: unknown,
 ): Promise<{ success: true } | { success: false; message: string }> {
   try {
     const parsed = leadActivitySchema.safeParse(values);
@@ -198,8 +198,6 @@ export async function createLeadActivityAction(
       .insert(payload);
     if (error) return { success: false, message: error.message };
 
-    // (optional) ถ้าคุณอยาก log activity ด้วยจริง ๆ แนะนำเพิ่ม action ใหม่ใน lib/audit.ts
-    // await logAudit(ctx, { action: "lead_activity.create", entity: "lead_activities", entityId: null, metadata: { leadId } });
     await logAudit(ctx, {
       action: "lead_activity.create",
       entity: "lead_activities",
@@ -213,9 +211,74 @@ export async function createLeadActivityAction(
   }
 }
 
+export async function updateLeadActivityAction(
+  activityId: string,
+  leadId: string,
+  values: unknown,
+): Promise<{ success: true } | { success: false; message: string }> {
+  try {
+    const parsed = leadActivitySchema.safeParse(values);
+    if (!parsed.success)
+      return { success: false, message: "ข้อมูล Activity ไม่ถูกต้อง" };
+
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+
+    const { error } = await ctx.supabase
+      .from("lead_activities")
+      .update({
+        activity_type: parsed.data.activity_type,
+        note: parsed.data.note.trim(),
+        property_id: parsed.data.property_id ?? null,
+      })
+      .eq("id", activityId);
+
+    if (error) return { success: false, message: error.message };
+
+    await logAudit(ctx, {
+      action: "lead_activity.update",
+      entity: "lead_activities",
+      entityId: activityId,
+      metadata: { leadId },
+    });
+    revalidatePath(`/protected/leads/${leadId}`);
+    return { success: true };
+  } catch (err) {
+    return authzFail(err);
+  }
+}
+
+export async function deleteLeadActivityAction(
+  activityId: string,
+  leadId: string,
+): Promise<{ success: true } | { success: false; message: string }> {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+
+    const { error } = await ctx.supabase
+      .from("lead_activities")
+      .delete()
+      .eq("id", activityId);
+
+    if (error) return { success: false, message: error.message };
+
+    await logAudit(ctx, {
+      action: "lead_activity.delete",
+      entity: "lead_activities",
+      entityId: activityId,
+      metadata: { leadId },
+    });
+    revalidatePath(`/protected/leads/${leadId}`);
+    return { success: true };
+  } catch (err) {
+    return authzFail(err);
+  }
+}
+
 export async function updateLeadStageAction(
   id: string,
-  stage: string
+  stage: string,
 ): Promise<{ success: true } | { success: false; message: string }> {
   try {
     const ctx = await requireAuthContext();
@@ -260,7 +323,7 @@ export async function updateLeadStageAction(
 
 export type PropertyPickItem = { id: string; title: string };
 export async function searchPropertiesAction(
-  q?: string
+  q?: string,
 ): Promise<PropertyPickItem[]> {
   const ctx = await requireAuthContext();
   assertStaff(ctx.role);

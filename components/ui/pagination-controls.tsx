@@ -30,7 +30,7 @@ export function PaginationControls({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between mt-4">
+    <div className="flex items-center justify-between mt-4 p-3">
       <div className="text-sm text-muted-foreground">
         แสดง {Math.min(pageSize * (currentPage - 1) + 1, totalCount)} ถึง{" "}
         {Math.min(pageSize * currentPage, totalCount)} จาก {totalCount} รายการ

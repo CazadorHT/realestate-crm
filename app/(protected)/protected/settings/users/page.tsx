@@ -50,11 +50,9 @@ export default async function UsersManagementPage() {
     users?.filter((u) => u.role === "USER" || !u.role).length || 0;
 
   return (
-    <div className=" mx-auto p-4 md:p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-10">
       {/* Header */}
       <UsersPageHeader />
-
-      <Separator />
 
       {/* Statistics Summary */}
       <UsersStatsSummary
@@ -64,8 +62,16 @@ export default async function UsersManagementPage() {
         totalUsersWaiting={totalUsersWaiting}
       />
 
-      {/* Users Table */}
-      <UsersTable users={users || []} currentUserId={user.id} />
+      {/* Table Section with title */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <div className="h-4 w-1 bg-blue-600 rounded-full" />
+          <h2 className="text-lg font-bold text-slate-800">
+            รายชื่อสมาชิกทีมทั้งหมด
+          </h2>
+        </div>
+        <UsersTable users={users || []} currentUserId={user.id} />
+      </div>
     </div>
   );
 }

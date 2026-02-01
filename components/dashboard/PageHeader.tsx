@@ -39,6 +39,7 @@ interface PageHeaderProps {
   actionIcon?: keyof typeof ICON_MAP;
   actionSlot?: ReactNode; // For custom action components like dialogs
   gradient?: "blue" | "emerald" | "purple" | "amber" | "rose";
+  children?: ReactNode;
 }
 
 const GRADIENT_MAP = {
@@ -59,6 +60,7 @@ export function PageHeader({
   actionIcon,
   actionSlot,
   gradient = "blue",
+  children,
 }: PageHeaderProps) {
   const Icon = icon ? ICON_MAP[icon] : null;
   const ActionIcon = actionIcon ? ICON_MAP[actionIcon] : null;
@@ -115,6 +117,10 @@ export function PageHeader({
           </Button>
         ) : null}
       </div>
+
+      {children && (
+        <div className="mt-6 pt-6 border-t border-white/10">{children}</div>
+      )}
     </div>
   );
 }

@@ -61,7 +61,7 @@ export function PopularAreasTable({
   // Bulk selection
   const allIds = useMemo(
     () => displayData.map((item) => item.id),
-    [displayData]
+    [displayData],
   );
   const {
     toggleSelect,
@@ -148,7 +148,7 @@ export function PopularAreasTable({
         entityName="ทำเล"
       />
 
-      <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex justify-between items-center bg-white p-4  border border-slate-200 shadow-sm">
         <div>
           <h2 className="text-lg font-bold flex items-center gap-2">
             <MapPin className="h-5 w-5 text-indigo-600" />
@@ -197,7 +197,7 @@ export function PopularAreasTable({
         </Dialog>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+      <div className="rounded-xl bg-white overflow-hidden shadow-sm">
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>

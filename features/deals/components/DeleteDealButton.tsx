@@ -70,16 +70,14 @@ export function DeleteDealButton({
       <AlertDialogTrigger asChild>
         {iconOnly ? (
           <Button
-            variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+            className="h-8 w-8 bg-white text-muted-foreground hover:text-red-600 hover:bg-red-50"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         ) : (
-          <Button variant="destructive" size="sm">
-            <Trash2 className="h-4 w-4 mr-2" />
-            ลบ
+          <Button className="bg-white text-red-600 hover:bg-red-50 cursor-pointer" size="sm">
+            <Trash2 className="h-4 w-4 text-red-600" />
           </Button>
         )}
       </AlertDialogTrigger>

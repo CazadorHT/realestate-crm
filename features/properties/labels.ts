@@ -38,9 +38,9 @@ export const PROPERTY_STATUS_LABELS = {
 export const PROPERTY_TYPE_ORDER = [
   "HOUSE",
   "CONDO",
+  "OFFICE_BUILDING",
   "TOWNHOME",
   "LAND",
-  "OFFICE_BUILDING",
   "WAREHOUSE",
   "COMMERCIAL_BUILDING",
   "OTHER",
@@ -133,8 +133,29 @@ export const TRANSIT_TYPE_LABELS: Record<TransitType, string> = {
   SRT2: "รถไฟฟ้า (สายสีส้ม)",
   SRT3: "รถไฟฟ้า (สายสีชมพู)",
   MRT2: "รถไฟฟ้า (สายสีม่วง)",
-
   OTHER: "อื่นๆ",
+};
+
+export const TRANSIT_TYPE_STYLES: Record<
+  TransitType,
+  { bg: string; text: string; icon: string }
+> = {
+  BTS: { bg: "bg-green-50", text: "text-green-700", icon: "text-green-500" },
+  MRT: { bg: "bg-blue-50", text: "text-blue-700", icon: "text-blue-500" },
+  MRT2: {
+    bg: "bg-purple-50",
+    text: "text-purple-700",
+    icon: "text-purple-500",
+  },
+  ARL: { bg: "bg-red-50", text: "text-red-700", icon: "text-red-500" },
+  SRT: { bg: "bg-rose-50", text: "text-rose-700", icon: "text-rose-500" },
+  SRT2: {
+    bg: "bg-orange-50",
+    text: "text-orange-700",
+    icon: "text-orange-500",
+  },
+  SRT3: { bg: "bg-pink-50", text: "text-pink-700", icon: "text-pink-500" },
+  OTHER: { bg: "bg-slate-50", text: "text-slate-700", icon: "text-slate-500" },
 };
 
 export const PROPERTY_TYPE_GRADIENTS = {
@@ -175,7 +196,7 @@ export const NEARBY_PLACE_CATEGORIES = [
   { value: "School", label: "โรงเรียน / มหาวิทยาลัย" },
   { value: "Mall", label: "ห้างสรรพสินค้า / ตลาด" },
   { value: "Hospital", label: "โรงพยาบาล" },
-  { value: "Transport", label: "ขนส่งสาธารณะ (BTS/MRT/ทางด่วน)" },
+  { value: "Transport", label: "ทางด่วน" },
   { value: "Park", label: "สวนสาธารณะ" },
   { value: "Office", label: "สถานที่ทำงาน" },
   { value: "Other", label: "อื่นๆ" },
