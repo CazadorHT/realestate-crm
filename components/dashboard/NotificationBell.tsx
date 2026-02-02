@@ -22,24 +22,36 @@ interface NotificationBellProps {
 export function NotificationBell({
   notifications: initialNotifications = [],
 }: NotificationBellProps) {
-  // State to track read notification IDs locally
+  // State to track read/deleted notification IDs locally
   const [readIds, setReadIds] = useState<Set<string | number>>(new Set());
+  const [deletedIds, setDeletedIds] = useState<Set<string | number>>(new Set());
   const [mounted, setMounted] = useState(false);
   const [serverNotifications, setServerNotifications] =
     useState<Notification[]>(initialNotifications);
 
-  // Load read IDs from LocalStorage on mount
+  // Load state from LocalStorage on mount
   useEffect(() => {
     setMounted(true);
-    const stored = localStorage.getItem("read_notifications");
-    if (stored) {
+
+    // Load Read IDs
+    const storedRead = localStorage.getItem("read_notifications");
+    if (storedRead) {
       try {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          setReadIds(new Set(parsed));
-        }
+        const parsed = JSON.parse(storedRead);
+        if (Array.isArray(parsed)) setReadIds(new Set(parsed));
       } catch (e) {
         console.error("Failed to parse read_notifications", e);
+      }
+    }
+
+    // Load Deleted IDs
+    const storedDeleted = localStorage.getItem("deleted_notifications");
+    if (storedDeleted) {
+      try {
+        const parsed = JSON.parse(storedDeleted);
+        if (Array.isArray(parsed)) setDeletedIds(new Set(parsed));
+      } catch (e) {
+        console.error("Failed to parse deleted_notifications", e);
       }
     }
   }, []);
@@ -51,18 +63,20 @@ export function NotificationBell({
       if (latest && latest.length > 0) {
         setServerNotifications(latest);
       }
-    }, 10000); // 10 seconds
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Merge server notifications with local read state
-  const notifications = serverNotifications.map((n) => ({
-    ...n,
-    read: n.read || readIds.has(n.id),
-  }));
+  // Filter and merge notifications
+  const visibleNotifications = serverNotifications
+    .filter((n) => !deletedIds.has(n.id))
+    .map((n) => ({
+      ...n,
+      read: n.read || readIds.has(n.id),
+    }));
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = visibleNotifications.filter((n) => !n.read).length;
 
   const markAsRead = (id: string | number) => {
     const newReadIds = new Set(readIds);
@@ -74,13 +88,36 @@ export function NotificationBell({
     );
   };
 
+  const deleteNotification = (e: React.MouseEvent, id: string | number) => {
+    e.stopPropagation(); // Prevent triggering navigation/read
+    e.preventDefault();
+
+    const newDeletedIds = new Set(deletedIds);
+    newDeletedIds.add(id);
+    setDeletedIds(newDeletedIds);
+    localStorage.setItem(
+      "deleted_notifications",
+      JSON.stringify(Array.from(newDeletedIds)),
+    );
+  };
+
   const markAllRead = () => {
     const newReadIds = new Set(readIds);
-    notifications.forEach((n) => newReadIds.add(n.id));
+    visibleNotifications.forEach((n) => newReadIds.add(n.id));
     setReadIds(newReadIds);
     localStorage.setItem(
       "read_notifications",
       JSON.stringify(Array.from(newReadIds)),
+    );
+  };
+
+  const deleteAll = () => {
+    const newDeletedIds = new Set(deletedIds);
+    visibleNotifications.forEach((n) => newDeletedIds.add(n.id));
+    setDeletedIds(newDeletedIds);
+    localStorage.setItem(
+      "deleted_notifications",
+      JSON.stringify(Array.from(newDeletedIds)),
     );
   };
 
@@ -91,8 +128,6 @@ export function NotificationBell({
   };
 
   if (!mounted) {
-    // Return a placeholder or the server state carefully to avoid hydration mismatch
-    // For simplicity, we render with server state but don't persist yet
     return (
       <Button
         variant="ghost"
@@ -131,23 +166,23 @@ export function NotificationBell({
         </div>
         <Separator />
         <div className="h-[300px] overflow-y-auto">
-          {notifications.length === 0 ? (
+          {visibleNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-10 text-center text-sm text-muted-foreground">
               <Bell className="h-10 w-10 opacity-20" />
               <p>ไม่มีการแจ้งเตือนใหม่</p>
             </div>
           ) : (
             <div className="flex flex-col">
-              {notifications.map((n) => {
+              {visibleNotifications.map((n) => {
                 const Content = (
                   <div
                     className={cn(
-                      "flex flex-col gap-1 p-4 border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer",
+                      "group flex flex-col gap-1 p-4 border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer relative",
                       !n.read && "bg-blue-50/50 dark:bg-blue-900/10",
                     )}
                     onClick={() => markAsRead(n.id)}
                   >
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start justify-between gap-2 pr-6">
                       <p
                         className={cn(
                           "text-sm",
@@ -164,6 +199,28 @@ export function NotificationBell({
                     <span className="text-xs text-muted-foreground">
                       {n.time}
                     </span>
+
+                    {/* Delete Button */}
+                    <button
+                      onClick={(e) => deleteNotification(e, n.id)}
+                      className="absolute top-2 right-2 p-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-slate-400 hover:text-red-500"
+                      title="ลบการแจ้งเตือน"
+                    >
+                      <span className="sr-only">Delete</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-3 h-3"
+                      >
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                      </svg>
+                    </button>
                   </div>
                 );
 
@@ -186,7 +243,7 @@ export function NotificationBell({
           )}
         </div>
         <Separator />
-        <div className="p-2">
+        <div className="p-2 grid grid-cols-2 gap-2">
           <Button
             variant="ghost"
             className="w-full justify-center text-xs h-8"
@@ -194,6 +251,14 @@ export function NotificationBell({
             disabled={unreadCount === 0}
           >
             อ่านทั้งหมด
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-center text-xs h-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+            onClick={deleteAll}
+            disabled={visibleNotifications.length === 0}
+          >
+            ลบทั้งหมด
           </Button>
         </div>
       </PopoverContent>

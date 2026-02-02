@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useTransition, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,31 +13,43 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Send, CheckCircle2 } from "lucide-react";
+import { submitContactFormAction } from "@/features/leads/contact-action";
+// import { useFormState } from "react-dom"; // Nextjs 14+ specific, but let's use standard client action calling for simplicity with transition if needed, or use useFormState if we modify the form to be a real <form action={...}>
+// Let's stick to client-side handler calling the action to keep control over the "success" state easily,
+// or wrap standard form action. Based on existing code using useState, let's keep it simple.
 
 export function ContactForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const clientAction = async (formData: FormData) => {
+    setErrorMsg("");
+    startTransition(async () => {
+      const result = await submitContactFormAction(
+        { success: false, message: "" },
+        formData,
+      );
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    setIsSubmitting(false);
-    setIsSuccess(true);
-
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      setIsSuccess(false);
-      (e.target as HTMLFormElement).reset();
-    }, 3000);
+      if (result.success) {
+        setIsSuccess(true);
+        // Reset Logic handled by just showing success message
+        // If we want to reset and show form again:
+        setTimeout(() => {
+          setIsSuccess(false);
+          // form reset is harder with FormData directly passing,
+          // usually we just let the success state persist or user refreshes.
+          // For this UI pattern:
+        }, 3000);
+      } else {
+        setErrorMsg(result.message);
+      }
+    });
   };
 
   if (isSuccess) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
+      <div className="flex flex-col items-center justify-center py-12 text-center fade-in animate-in">
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
           <CheckCircle2 className="h-8 w-8 text-green-600" />
         </div>
@@ -52,7 +64,7 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form action={clientAction} className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="space-y-2">
           <Label htmlFor="name">
@@ -126,12 +138,14 @@ export function ContactForm() {
         />
       </div>
 
+      {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
+
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isPending}
         className="w-full h-12 text-base"
       >
-        {isSubmitting ? (
+        {isPending ? (
           <>
             <span className="animate-spin mr-2">⏳</span>
             กำลังส่ง...

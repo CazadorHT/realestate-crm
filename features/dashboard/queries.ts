@@ -337,7 +337,11 @@ export async function getTopAgents(): Promise<TopAgent[]> {
   // Aggregate by agent
   const agentStats = new Map<
     string,
-    { count: number; commission: number; profile: any }
+    {
+      count: number;
+      commission: number;
+      profile: { full_name: string | null; avatar_url: string | null };
+    }
   >();
 
   deals.forEach((d) => {
@@ -379,6 +383,7 @@ export type Notification = {
   time: string;
   read: boolean;
   href?: string;
+  createdAt?: number;
 };
 
 export async function getRecentNotifications(): Promise<Notification[]> {
@@ -389,40 +394,109 @@ export async function getRecentNotifications(): Promise<Notification[]> {
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-  const { data: recentLeads } = await supabase
-    .from("leads")
-    .select("id, full_name, created_at, note")
-    .eq("source", "WEBSITE")
-    .gte("created_at", threeDaysAgo.toISOString())
-    .order("created_at", { ascending: false });
+  // Parallel fetch: Leads, Profiles, & Audit Logs
+  const [leadsResult, profilesResult, logsResult] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("id, full_name, created_at, note, source")
+      .eq("source", "WEBSITE")
+      .gte("created_at", threeDaysAgo.toISOString())
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("profiles")
+      .select("id, full_name, email, created_at, role")
+      .gte("created_at", threeDaysAgo.toISOString())
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("audit_logs")
+      .select("id, action, created_at, metadata, user_id")
+      .eq("action", "LOGIN")
+      .gte("created_at", threeDaysAgo.toISOString())
+      .order("created_at", { ascending: false }),
+  ]);
 
-  if (recentLeads) {
-    recentLeads.forEach((lead) => {
-      // Parse time diff
-      const created = new Date(lead.created_at);
-      const diffMs = new Date().getTime() - created.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMins / 60);
+  const recentLeads = leadsResult.data || [];
+  const recentProfiles = profilesResult.data || [];
+  const recentLogs = logsResult.data || [];
 
-      let timeStr = "Just now";
-      if (diffMins < 60) timeStr = `${diffMins}m ago`;
-      else if (diffHours < 24) timeStr = `${diffHours}h ago`;
-      else timeStr = "1d ago";
+  // Process Leads (Contact Form & Line ID)
+  recentLeads.forEach((lead) => {
+    const timeStr = formatTimeAgo(lead.created_at);
+    const isLine = lead.full_name.startsWith("Line Contact:");
 
-      notifications.push({
-        id: `lead-${lead.id}`,
-        message: `Lead ใหม่จากเว็บ: ${lead.full_name} ฝากทรัพย์`,
-        type: "success",
-        time: timeStr,
-        read: false, // In a real app, track read status
-        href: `/protected/leads/${lead.id}`,
-      });
+    // Check if it's a "Property Deposit" (Sell/Invest subject)
+    const isDeposit =
+      lead.note?.includes("Subject: sell") ||
+      lead.note?.includes("Subject: invest");
+
+    let message = `รถรายชื่อใหม่: ${lead.full_name}`;
+    let href = `/protected/leads/${lead.id}`;
+
+    if (isLine) {
+      message = `Lead ใหม่จาก Line: ${lead.full_name.replace("Line Contact: ", "")}`;
+    } else if (isDeposit) {
+      message = `ฝากขาย/ลงทุนทรัพย์: ${lead.full_name}`;
+    } else {
+      message = `ติดต่อจากหน้าเว็บ: ${lead.full_name}`;
+    }
+
+    notifications.push({
+      id: `lead-${lead.id}`,
+      message: message,
+      type: "success",
+      time: timeStr,
+      read: false,
+      href: href,
+      createdAt: new Date(lead.created_at).getTime(),
     });
-  }
+  });
 
-  // 2. We can add more sources here (e.g. Overdue Tasks, Closing Deals) like in the mock
+  // Process New Registrations
+  recentProfiles.forEach((profile) => {
+    const timeStr = formatTimeAgo(profile.created_at);
+    notifications.push({
+      id: `user-${profile.id}`,
+      message: `สมาชิกใหม่: ${profile.full_name || profile.email} (${profile.role})`,
+      type: "info",
+      time: timeStr,
+      read: false,
+      href: `/protected/settings`, // Redirect to user management
+      createdAt: new Date(profile.created_at).getTime(),
+    });
+  });
 
-  return notifications;
+  // Process Login Events
+  recentLogs.forEach((log) => {
+    const timeStr = formatTimeAgo(log.created_at);
+    // Safe cast metadata
+    const meta = log.metadata as { email?: string } | null;
+    const userEmail = meta?.email || "User";
+
+    notifications.push({
+      id: `login-${log.id}`,
+      message: `เข้าสู่ระบบ: ${userEmail}`,
+      type: "info",
+      time: timeStr,
+      read: false,
+      href: `/protected/profile`, // No specific page for login log yet
+      createdAt: new Date(log.created_at).getTime(),
+    });
+  });
+
+  // Sort by newest first
+  return notifications.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
+
+function formatTimeAgo(dateString: string): string {
+  const created = new Date(dateString);
+  const diffMs = new Date().getTime() - created.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return "1d ago";
 }
 // ... existing code ...
 
@@ -547,7 +621,7 @@ export async function getRiskDeals(): Promise<RiskDeal[]> {
 
   if (!deals) return [];
 
-  return deals.map((d: any) => {
+  return deals.map((d) => {
     const updated = new Date(d.updated_at);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - updated.getTime());

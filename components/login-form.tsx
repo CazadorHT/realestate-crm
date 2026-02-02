@@ -1,6 +1,5 @@
-"use client";
-
 import { cn } from "@/lib/utils";
+import { logActivityAction } from "@/features/audit/actions";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +41,10 @@ export function LoginForm({
         password,
       });
       if (error) throw error;
+
+      // Log successful login
+      await logActivityAction("LOGIN", "user", undefined, { email });
+
       router.push("/protected");
     } catch (error: unknown) {
       setError(
