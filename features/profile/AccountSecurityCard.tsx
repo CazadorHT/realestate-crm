@@ -68,7 +68,7 @@ export function AccountSecurityCard() {
               <p className="text-sm text-muted-foreground">ออกจากบัญชีของคุณ</p>
             </div>
           </div>
-          <Button variant="destructive" onClick={handleSignOut}>
+          <Button variant="destructive" onClick={handleSignOut} className="">
             ออกจากระบบ
           </Button>
         </div>

@@ -197,6 +197,12 @@ export function PropertyBadgesSection({
       icon: Star,
       color: "bg-yellow-50 text-yellow-700",
     },
+    {
+      condition: property.is_tax_registered,
+      label: "จดทะเบียนบริษัทได้",
+      icon: ShieldCheck,
+      color: "bg-fuchsia-100 text-fuchsia-700",
+    },
   ];
 
   const filteredBadges = badgeItems.filter((item) => item.condition);

@@ -8,6 +8,7 @@ import {
   KeySellingPoint,
 } from "@/components/public/KeySellingPoints";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
+import { cn } from "@/lib/utils";
 
 interface PropertyHeaderProps {
   property: {
@@ -23,12 +24,16 @@ interface PropertyHeaderProps {
   };
   locationParts: string;
   keySellingPoints: KeySellingPoint[];
+  className?: string;
+  hideBreadcrumbs?: boolean;
 }
 
 export function PropertyHeader({
   property,
   locationParts,
   keySellingPoints,
+  className,
+  hideBreadcrumbs = false,
 }: PropertyHeaderProps) {
   const formatPrice = (val: number | null) =>
     val
@@ -118,18 +123,25 @@ export function PropertyHeader({
   };
 
   return (
-    <div className="pt-20 md:pt-24 px-5 md:px-6 lg:px-8 bg-white relative">
+    <div
+      className={cn(
+        "pt-20 md:pt-24 px-5 md:px-6 lg:px-8 bg-white relative",
+        className,
+      )}
+    >
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col gap-3 md:gap-4">
-          <div className="mb-2">
-            <AppBreadcrumbs
-              items={[
-                { label: "หน้าแรก", href: "/" },
-                { label: "โครงการและทรัพย์สิน", href: "/properties" },
-                { label: property.title },
-              ]}
-            />
-          </div>
+          {!hideBreadcrumbs && (
+            <div className="mb-2">
+              <AppBreadcrumbs
+                items={[
+                  { label: "หน้าแรก", href: "/" },
+                  { label: "โครงการและทรัพย์สิน", href: "/properties" },
+                  { label: property.title },
+                ]}
+              />
+            </div>
+          )}
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-3 grow min-w-0 max-w-[900px] ">

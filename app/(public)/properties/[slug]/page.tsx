@@ -160,6 +160,10 @@ export default async function PublicPropertyDetailPage(props: {
       name: "โควต้าต่างชาติ ",
       icon: "globe",
     },
+    data.is_tax_registered && {
+      name: "จดทะเบียนบริษัทได้",
+      icon: "file-check",
+    },
   ].filter((f): f is { name: string; icon: string } => !!f);
 
   const keySellingPoints = [
