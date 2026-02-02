@@ -16,6 +16,7 @@ import { User } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { OwnerRowActions } from "@/components/owners/OwnerRowActions";
+import { CreateOwnerDialog } from "@/components/owners/CreateOwnerDialog";
 import type { Owner } from "@/features/owners/types";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
@@ -56,9 +57,9 @@ export function OwnersTable({ owners }: OwnersTableProps) {
       <div className="text-center py-12 border rounded-lg bg-muted/20">
         <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
         <p className="text-muted-foreground">ยังไม่มีเจ้าของทรัพย์</p>
-        <Button asChild className="mt-4">
-          <Link href="/protected/owners/new">เพิ่มเจ้าของทรัพย์</Link>
-        </Button>
+        <div className="mt-4 flex justify-center">
+          <CreateOwnerDialog />
+        </div>
       </div>
     );
   }
@@ -124,7 +125,7 @@ export function OwnersTable({ owners }: OwnersTableProps) {
                     {owner.created_at &&
                       differenceInHours(
                         new Date(),
-                        new Date(owner.created_at)
+                        new Date(owner.created_at),
                       ) < 24 && (
                         <div className="w-fit">
                           <div className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">

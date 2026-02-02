@@ -226,7 +226,7 @@ export function EventDetailsDialog({
                 <p className="text-sm font-semibold text-slate-900">
                   ทรัพย์สิน
                 </p>
-                <div className="mt-2 rounded-lg border overflow-hidden bg-slate-50">
+                <div className="mt-2 rounded-lg border border-slate-200 overflow-hidden bg-slate-50">
                   {event.meta.propertyImage ? (
                     <div className="relative h-32 w-full">
                       <img
@@ -285,7 +285,166 @@ export function EventDetailsDialog({
             </div>
           )}
         </div>
+
+        <DialogFooter className="gap-2 sm:gap-2 border-t border-slate-100 pt-4 mt-2">
+          {event.type === "viewing" && event.meta?.leadId ? (
+            <EventActions
+              eventId={event.id}
+              leadId={event.meta.leadId}
+              onClose={onClose}
+              meta={event.meta}
+            />
+          ) : (
+            <div className="flex w-full justify-between items-center text-xs text-muted-foreground">
+              <span>* แก้ไขข้อมูลได้ที่หน้ารายละเอียดหลัก</span>
+              <Button variant="outline" size="sm" onClick={onClose}>
+                ปิด
+              </Button>
+            </div>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Trash2, Edit, ExternalLink } from "lucide-react";
+import {
+  deleteLeadActivityAction,
+  updateLeadActivityAction,
+} from "@/features/leads/actions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { DialogFooter } from "@/components/ui/dialog";
+import { LeadActivityDialog } from "@/components/leads/LeadActivityDialog";
+import { LeadActivityFormValues } from "@/lib/types/leads";
+
+function EventActions({
+  eventId,
+  leadId,
+  onClose,
+  meta,
+}: {
+  eventId: string;
+  leadId: string;
+  onClose: () => void;
+  meta: any;
+}) {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteLeadActivityAction(eventId, leadId);
+      if (result.success) {
+        toast.success("ลบนัดหมายเรียบร้อย");
+        onClose();
+        router.refresh();
+      } else {
+        toast.error(result.message || "ลบไม่สำเร็จ");
+      }
+    } catch (error) {
+      toast.error("เกิดข้อผิดพลาด");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  const handleEdit = async (values: LeadActivityFormValues) => {
+    const result = await updateLeadActivityAction(eventId, leadId, values);
+    if (result.success) {
+      toast.success("แก้ไขนัดหมายเรียบร้อย");
+      onClose();
+      router.refresh();
+    } else {
+      toast.error(result.message || "แก้ไขไม่สำเร็จ");
+    }
+  };
+
+  return (
+    <div className="flex w-full justify-between gap-2">
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="bg-red-50 text-red-600 hover:bg-red-100 border-0 shadow-none"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            ลบนัดหมาย
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการลบ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              การดำเนินการนี้จะลบรายการนัดหมายนี้ออกจากระบบอย่างถาวร
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+              className="bg-red-600"
+            >
+              {isDeleting ? "กำลังลบ..." : "ยืนยันลบ"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="flex gap-2">
+        <LeadActivityDialog
+          leadId={leadId}
+          title="แก้ไขนัดหมาย"
+          submitLabel="บันทึกการแก้ไข"
+          trigger={
+            <Button variant="outline" size="sm" className="text-slate-600">
+              <Edit className="h-4 w-4 mr-2" />
+              แก้ไข
+            </Button>
+          }
+          defaultValues={{
+            activity_type: "VIEWING",
+            note: meta?.note || "",
+            property_id: meta?.propertyId || null,
+          }}
+          initialProperty={
+            meta?.propertyId
+              ? { id: meta.propertyId, title: meta.propertyTitle || "" }
+              : null
+          }
+          onSubmitAction={handleEdit}
+        />
+
+        <Button
+          size="sm"
+          onClick={() => router.push(`/protected/leads/${leadId}`)}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          <ExternalLink className="h-4 w-4 mr-2" />
+          ไปที่ลีด
+        </Button>
+      </div>
+    </div>
   );
 }

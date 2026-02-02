@@ -40,6 +40,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { cn } from "@/lib/utils";
+
 const formSchema = z.object({
   question: z.string().min(1, "กรุณาระบุคำถาม"),
   answer: z.string().min(1, "กรุณาระบุคำตอบ"),
@@ -61,14 +63,25 @@ interface FAQFormProps {
   } | null;
   faqId?: string;
   isNew: boolean;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  isStandalone?: boolean;
 }
 
-export function FAQForm({ initialData, faqId, isNew }: FAQFormProps) {
+export function FAQForm({
+  initialData,
+  faqId,
+  isNew,
+  onSuccess,
+  onCancel,
+  isStandalone = false,
+}: FAQFormProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema) as any,
+    mode: "onChange",
     defaultValues: {
       question: initialData?.question || "",
       answer: initialData?.answer || "",
@@ -89,7 +102,11 @@ export function FAQForm({ initialData, faqId, isNew }: FAQFormProps) {
         await updateFaq({ id: faqId, ...values });
         toast.success("อัปเดตข้อมูลสำเร็จ");
       }
-      router.push("/protected/faqs");
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push("/protected/faqs");
+      }
       router.refresh();
     } catch (error: any) {
       toast.error("เกิดข้อผิดพลาด: " + error.message);
@@ -101,46 +118,56 @@ export function FAQForm({ initialData, faqId, isNew }: FAQFormProps) {
   return (
     <div className="container mx-auto max-w-full px-4 md:px-0">
       {/* Header section with Premium feel */}
-      <div className="mb-8 space-y-4">
-        <Breadcrumb
-          backHref="/protected/faqs"
-          items={[
-            { label: "FAQs", href: "/protected/faqs" },
-            { label: isNew ? "เพิ่มคำถามใหม่" : "แก้ไขคำถาม" },
-          ]}
-        />
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
-            <HelpCircle className="h-7 w-7" />
+      {!isStandalone && (
+        <div className="mb-8 space-y-4">
+          <Breadcrumb
+            backHref="/protected/faqs"
+            items={[
+              { label: "FAQs", href: "/protected/faqs" },
+              { label: isNew ? "เพิ่มคำถามใหม่" : "แก้ไขคำถาม" },
+            ]}
+          />
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
+              <HelpCircle className="h-7 w-7" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900 leading-none">
+                {isNew ? "เพิ่มคำถามใหม่" : "แก้ไขคำถาม"}
+              </h1>
+              <p className="text-slate-500 mt-2 text-sm">
+                {isNew
+                  ? "สร้างคู่มือคำถามที่พบบ่อยเพื่อให้ลูกค้าช่วยเหลือตนเองได้รวดเร็วขึ้น"
+                  : "แก้ไขรายละเอียดคำถามและคำตอบเพื่อให้ข้อมูลที่ถูกต้องแก่ลูกค้า"}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 leading-none">
-              {isNew ? "เพิ่มคำถามใหม่" : "แก้ไขคำถาม"}
-            </h1>
-            <p className="text-slate-500 mt-2 text-sm">
-              {isNew
-                ? "สร้างคู่มือคำถามที่พบบ่อยเพื่อให้ลูกค้าช่วยเหลือตนเองได้รวดเร็วขึ้น"
-                : "แก้ไขรายละเอียดคำถามและคำตอบเพื่อให้ข้อมูลที่ถูกต้องแก่ลูกค้า"}
+        </div>
+      )}
+
+      <div
+        className={cn(
+          "bg-white  border border-slate-200 shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl",
+          isStandalone &&
+            "border-0 shadow-none hover:shadow-none bg-transparent",
+        )}
+      >
+        {/* Card Header with Gradient */}
+        {!isStandalone && (
+          <div className="bg-linear-to-r from-slate-800 to-slate-900 px-8 py-6">
+            <div className="flex items-center gap-3">
+              <Settings className="h-5 w-5 text-blue-400" />
+              <h2 className="text-lg font-semibold text-white">
+                รายละเอียดข้อมูลคำถาม
+              </h2>
+            </div>
+            <p className="text-slate-400 text-sm mt-1 ml-8 italic">
+              กรุณากรอกข้อมูลให้ครบถ้วนเพื่อผลลัพธ์ที่ดีที่สุดบนหน้าเว็บไซต์
             </p>
           </div>
-        </div>
-      </div>
+        )}
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
-        {/* Card Header with Gradient */}
-        <div className="bg-linear-to-r from-slate-800 to-slate-900 px-8 py-6">
-          <div className="flex items-center gap-3">
-            <Settings className="h-5 w-5 text-blue-400" />
-            <h2 className="text-lg font-semibold text-white">
-              รายละเอียดข้อมูลคำถาม
-            </h2>
-          </div>
-          <p className="text-slate-400 text-sm mt-1 ml-8 italic">
-            กรุณากรอกข้อมูลให้ครบถ้วนเพื่อผลลัพธ์ที่ดีที่สุดบนหน้าเว็บไซต์
-          </p>
-        </div>
-
-        <div className="p-8">
+        <div className={cn("p-8", isStandalone && "p-0")}>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -303,26 +330,31 @@ export function FAQForm({ initialData, faqId, isNew }: FAQFormProps) {
 
               {/* Action Buttons */}
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-4 pt-10 border-t border-slate-100">
-                <Link href="/protected/faqs">
-                  <Button
-                    variant="outline"
-                    type="button"
-                    className="w-full sm:w-32 h-11 border-slate-200 hover:bg-slate-50 transition-all"
-                  >
-                    ยกเลิก
-                  </Button>
-                </Link>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={onCancel || (() => router.push("/protected/faqs"))}
+                  className="w-full sm:w-32 h-11 border-slate-200 hover:bg-slate-50 transition-all"
+                >
+                  ยกเลิก
+                </Button>
                 <Button
                   type="submit"
-                  disabled={saving}
-                  className="w-full sm:w-48 h-11 bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg transition-all gap-2"
+                  disabled={
+                    saving || !form.formState.isValid || !form.formState.isDirty
+                  }
+                  className="w-full sm:w-48 h-11 bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg transition-all gap-2 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                 >
                   {saving ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <Save className="w-4 h-4" />
                   )}
-                  {isNew ? "สร้างคำถามใหม่" : "บันทึกการเปลี่ยนแปลง"}
+                  {saving
+                    ? "กำลังบันทึก..."
+                    : isNew
+                      ? "สร้างคำถามใหม่"
+                      : "บันทึกการเปลี่ยนแปลง"}
                 </Button>
               </div>
             </form>

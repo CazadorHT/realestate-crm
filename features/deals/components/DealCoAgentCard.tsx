@@ -1,4 +1,5 @@
-import { Users, Phone, Globe } from "lucide-react";
+import { Phone, Globe } from "lucide-react";
+import { RiUserStarLine } from "react-icons/ri";
 
 interface DealCoAgentCardProps {
   name: string | null;
@@ -12,12 +13,15 @@ export function DealCoAgentCard({
   online,
 }: DealCoAgentCardProps) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h3 className="font-semibold text-base flex items-center gap-2 text-slate-800">
-          <Users className="h-4 w-4 text-slate-500" />
-          ข้อมูล Co-Agent
-        </h3>
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-200">
+        <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center shrink-0 border border-purple-100">
+          <RiUserStarLine className="h-5 w-5 text-purple-600" />
+        </div>
+        <div>
+          <h3 className="font-bold text-lg text-slate-800">ข้อมูล Co-Agent</h3>
+          <p className="text-xs text-slate-500">นายหน้าผู้ร่วมงาน</p>
+        </div>
       </div>
       <div className="p-5">
         {name || contact || online ? (
@@ -26,7 +30,7 @@ export function DealCoAgentCard({
               {name && (
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                    <Users className="h-5 w-5 text-slate-500" />
+                    <RiUserStarLine className="h-5 w-5 text-slate-500" />
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">

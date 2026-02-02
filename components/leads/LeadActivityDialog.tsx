@@ -26,6 +26,11 @@ interface LeadActivityDialogProps {
     | "ghost"
     | "link";
   triggerClassName?: string;
+  trigger?: React.ReactNode;
+  defaultValues?: Partial<LeadActivityFormValues>;
+  title?: string;
+  submitLabel?: string;
+  initialProperty?: { id: string; title: string } | null;
 }
 
 export function LeadActivityDialog({
@@ -34,6 +39,11 @@ export function LeadActivityDialog({
   onSubmitAction,
   triggerVariant = "default",
   triggerClassName,
+  trigger,
+  defaultValues,
+  title = "บันทึกกิจกรรมใหม่",
+  submitLabel,
+  initialProperty,
 }: LeadActivityDialogProps) {
   const [open, setOpen] = useState(false);
 
@@ -45,20 +55,28 @@ export function LeadActivityDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant={triggerVariant}
-          className={cn("gap-2", triggerClassName)}
-        >
-          <Plus className="h-4 w-4" />
-          บันทึกกิจกรรม
-        </Button>
+        {trigger || (
+          <Button
+            variant={triggerVariant}
+            className={cn("gap-2", triggerClassName)}
+          >
+            <Plus className="h-4 w-4" />
+            บันทึกกิจกรรม
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>บันทึกกิจกรรมใหม่</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <div className="py-2">
-          <LeadActivityForm onSubmitAction={handleSubmit} />
+          <LeadActivityForm
+            onSubmitAction={handleSubmit}
+            defaultValues={defaultValues}
+            title={title}
+            submitLabel={submitLabel}
+            initialProperty={initialProperty}
+          />
         </div>
       </DialogContent>
     </Dialog>

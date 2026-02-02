@@ -24,9 +24,15 @@ import {
 export function LeadActivityForm({
   onSubmitAction,
   defaultValues,
+  title = "Add activity",
+  submitLabel,
+  initialProperty,
 }: {
   onSubmitAction: (values: LeadActivityFormValues) => Promise<void>;
   defaultValues?: Partial<LeadActivityFormValues>;
+  title?: string;
+  submitLabel?: string;
+  initialProperty?: { id: string; title: string } | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -45,7 +51,9 @@ export function LeadActivityForm({
     startTransition(async () => {
       try {
         await onSubmitAction(values);
-        form.reset({ activity_type: "CALL", note: "", property_id: null });
+        if (!defaultValues) {
+          form.reset({ activity_type: "CALL", note: "", property_id: null });
+        }
         router.refresh();
       } catch (e: any) {
         setError(e?.message ?? "เกิดข้อผิดพลาด");
@@ -58,7 +66,7 @@ export function LeadActivityForm({
       className="rounded-xl border border-gray-300 p-4 space-y-3"
       onSubmit={form.handleSubmit(submit)}
     >
-      <div className="font-medium">Add activity</div>
+      <div className="font-medium">{title}</div>
 
       {error ? (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
@@ -92,6 +100,7 @@ export function LeadActivityForm({
         <PropertyCombobox
           value={form.watch("property_id")}
           onChange={(val) => form.setValue("property_id", val)}
+          initialProperty={initialProperty}
         />
       </div>
 
@@ -105,7 +114,7 @@ export function LeadActivityForm({
       </div>
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? "Saving..." : "Save activity"}
+        {isPending ? "Saving..." : submitLabel || "Save activity"}
       </Button>
     </form>
   );

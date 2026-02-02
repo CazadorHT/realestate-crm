@@ -8,6 +8,7 @@ import {
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SectionTitle } from "@/components/dashboard/SectionTitle";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { CreateOwnerDialog } from "@/components/owners/CreateOwnerDialog";
 
 type PageProps = {
   searchParams: Promise<{
@@ -43,16 +44,14 @@ export default async function OwnersPage({ searchParams }: PageProps) {
   const isEmptyState = owners.length === 0 && page === 1 && !q;
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Premium Header */}
       <PageHeader
         title="เจ้าของทรัพย์"
         subtitle="จัดการข้อมูลเจ้าของทรัพย์และผู้ติดต่อ"
         count={count}
         icon="userCircle"
-        actionLabel="เพิ่มเจ้าของ"
-        actionHref="/protected/owners/new"
-        actionIcon="userPlus"
+        actionSlot={<CreateOwnerDialog />}
         gradient="purple"
       />
 
@@ -70,9 +69,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
             icon="userCircle"
             title="ยังไม่มีเจ้าของในระบบ"
             description="เริ่มต้นเพิ่มเจ้าของทรัพย์คนแรกเพื่อจัดการข้อมูลผู้ติดต่อ"
-            actionLabel="เพิ่มเจ้าของคนแรก"
-            actionHref="/protected/owners/new"
-            actionIcon="userPlus"
+            actionSlot={<CreateOwnerDialog />}
           />
         ) : (
           <>

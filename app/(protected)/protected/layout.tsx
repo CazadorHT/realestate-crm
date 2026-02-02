@@ -57,7 +57,6 @@ export default async function ProtectedLayout({
         </header>
 
         <main className="flex-1 p-6 md:p-8 mx-auto w-full">
-          <AppBreadcrumbs className="mb-6" />
           {children}
         </main>
       </div>

@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Upload, FileText } from "lucide-react";
 
 type Props = {
   ownerId: string;
@@ -24,11 +24,17 @@ export function DocumentSection({ ownerId, ownerType }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="font-semibold text-base flex items-center gap-2">
-          📄 เอกสาร
-        </h3>
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between gap-4 p-5 border-b border-slate-200">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
+            <FileText className="h-5 w-5 text-teal-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg text-slate-800">เอกสาร</h3>
+            <p className="text-xs text-slate-500">เอกสารที่เกี่ยวข้อง</p>
+          </div>
+        </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button size="sm" variant="outline">
@@ -51,11 +57,8 @@ export function DocumentSection({ ownerId, ownerType }: Props) {
           </DialogContent>
         </Dialog>
       </div>
-      <p className="text-xs text-muted-foreground mb-4">
-        เอกสารที่เกี่ยวข้อง เช่น สัญญา, บัตรประชาชน, หนังสือเดินทาง ฯลฯ
-      </p>
 
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto p-5">
         <DocumentList
           ownerId={ownerId}
           ownerType={ownerType}

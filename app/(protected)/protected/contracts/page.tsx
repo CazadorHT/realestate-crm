@@ -39,7 +39,7 @@ export default async function RentalContractsPage() {
   ).length;
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Premium Header */}
       <PageHeader
         title="สัญญาเช่า (Contracts)"

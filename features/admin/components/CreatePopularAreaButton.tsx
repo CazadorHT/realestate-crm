@@ -26,10 +26,10 @@ export function CreatePopularAreaButton() {
     const res = await createPopularAreaAction(itemName);
     setIsLoading(false);
 
-    if (res?.error) {
-      toast.error(res.error);
+    if (res?.success === false) {
+      toast.error(res.message || "เกิดข้อผิดพลาด");
     } else {
-      toast.success("เพิ่มทำเลสำเร็จ");
+      toast.success(res.message || "เพิ่มทำเลสำเร็จ");
       setIsDialogOpen(false);
       setItemName("");
       window.location.reload();
@@ -64,8 +64,16 @@ export function CreatePopularAreaButton() {
             <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
               ยกเลิก
             </Button>
-            <Button onClick={handleSave} disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button
+              onClick={handleSave}
+              disabled={isLoading || !itemName.trim()}
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed px-8"
+            >
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="mr-2 h-4 w-4" />
+              )}
               บันทึก
             </Button>
           </div>

@@ -82,6 +82,7 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
 
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadFormSchema) as unknown as Resolver<any>,
+    mode: "onChange",
     defaultValues: {
       full_name: "",
       stage: "NEW",
@@ -98,6 +99,7 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
       allow_airbnb: false,
       is_foreigner: false,
       lead_type: "INDIVIDUAL",
+      nationality: ["ไทย"],
       preferred_locations: [], // New field for preferred locations
       note: "", // General notes
       ...initialValues,
@@ -122,10 +124,7 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
   };
 
   return (
-    <form
-      className="space-y-6 max-w-full mx-auto pb-10"
-      onSubmit={form.handleSubmit(onSubmit)}
-    >
+    <form className="space-y-6  mx-auto" onSubmit={form.handleSubmit(onSubmit)}>
       {error ? (
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm flex items-center gap-3">
           <Info className="h-4 w-4 text-destructive" />
@@ -133,68 +132,91 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* --- LEFT COLUMN: Contact & Requirements --- */}
-        <div className="space-y-6">
-          <Card className="shadow-md border-slate-200 dark:border-slate-800 overflow-hidden">
-            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                  <UserCircle className="h-5 w-5" />
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        {/* --- LEFT COLUMN: Contact (Span 4) --- */}
+        <div className="xl:col-span-4 space-y-6">
+          <Card className="shadow-lg border-slate-200 dark:border-slate-800 overflow-hidden h-full">
+            <CardHeader className="bg-linear-to-br from-emerald-600 to-teal-600 border-b border-emerald-500/20 pb-6">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 rounded-xl bg-white/20 text-white shadow-inner backdrop-blur-sm">
+                  <UserCircle className="h-6 w-6" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">ข้อมูลติดต่อหลัก</CardTitle>
-                  <CardDescription>
-                    ข้อมูลส่วนตัวและสัญชาติของลูกค้า
+                  <CardTitle className="text-xl text-white font-bold">
+                    ข้อมูลติดต่อหลัก
+                  </CardTitle>
+                  <CardDescription className="text-emerald-50 font-medium">
+                    โปรไฟล์และช่องทางติดต่อ
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-6 space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    ชื่อ-นามสกุล <span className="text-destructive">*</span>
-                  </Label>
+            <CardContent className="p-6 space-y-5">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                  ชื่อ-นามสกุล <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative group">
+                  <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
                   <Input
                     placeholder="ระบุชื่อของ Lead..."
                     {...form.register("full_name")}
-                    className="h-10 border-slate-200 dark:border-slate-700 bg-slate-50/10"
+                    className="pl-9 h-11 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 bg-slate-50/50 rounded-xl"
                   />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    ประเภทลูกค้า
-                  </Label>
-                  <Select
-                    value={form.watch("lead_type") ?? "INDIVIDUAL"}
-                    onValueChange={(v) =>
-                      form.setValue(
-                        "lead_type",
-                        v as "INDIVIDUAL" | "COMPANY" | "JURISTIC_PERSON",
-                      )
-                    }
-                  >
-                    <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700">
-                      <SelectValue placeholder="เลือกประเภท" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="INDIVIDUAL">บุคคลธรรมดา</SelectItem>
-                      <SelectItem value="COMPANY">บริษัท/องค์กร</SelectItem>
-                      <SelectItem value="JURISTIC_PERSON">นิติบุคคล</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  ประเภทลูกค้า
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: "INDIVIDUAL", label: "บุคคลธรรมดา" },
+                    { value: "COMPANY", label: "บริษัท/องค์กร" },
+                    { value: "JURISTIC_PERSON", label: "นิติบุคคล" },
+                  ].map((option) => {
+                    const isSelected = form.watch("lead_type") === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() =>
+                          form.setValue(
+                            "lead_type",
+                            option.value as
+                              | "INDIVIDUAL"
+                              | "COMPANY"
+                              | "JURISTIC_PERSON",
+                          )
+                        }
+                        className={`
+                          px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 flex-1 cursor-pointer
+                          ${
+                            isSelected
+                              ? "bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-200"
+                              : "bg-white border-slate-200 text-slate-600 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                          }
+                        `}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
                 </div>
+              </div>
 
+              <Separator className="my-2 bg-slate-100 dark:bg-slate-800" />
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     เบอร์โทรศัพท์
                   </Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" />
+                  <div className="relative group">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
                     <Input
-                      className="pl-9 h-10 border-slate-200 dark:border-slate-700"
+                      className="pl-9 h-11 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 bg-slate-50/50 rounded-xl"
                       placeholder="0xx-xxxxxxx"
                       {...form.register("phone")}
                     />
@@ -202,13 +224,13 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     อีเมล
                   </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" />
+                  <div className="relative group">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
                     <Input
-                      className="pl-9 h-10 border-slate-200 dark:border-slate-700"
+                      className="pl-9 h-11 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 bg-slate-50/50 rounded-xl"
                       placeholder="example@email.com"
                       {...form.register("email")}
                     />
@@ -216,269 +238,298 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     Line ID
                   </Label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60 flex items-center justify-center">
+                  <div className="relative group">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-slate-400 group-focus-within:text-[#06C755] transition-colors">
                       <span className="font-bold text-[10px]">L</span>
                     </div>
                     <Input
-                      className="pl-9 h-10 border-slate-200 dark:border-slate-700"
-                      placeholder="Line ID ของลูกค้า..."
+                      className="pl-9 h-11 border-slate-200 focus:border-[#06C755] focus:ring-[#06C755]/20 bg-slate-50/50 rounded-xl"
+                      placeholder="Line ID"
                       {...form.register("preferences.line_id")}
                     />
                   </div>
                 </div>
-
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    ช่องทางติดต่อออนไลน์
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Social
                   </Label>
-                  <div className="relative">
-                    <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" />
+                  <div className="relative group">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                     <Input
-                      className="pl-9 h-10 border-slate-200 dark:border-slate-700"
-                      placeholder="เช่น Facebook, WeChat, WhatsApp..."
+                      className="pl-9 h-11 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 bg-slate-50/50 rounded-xl"
+                      placeholder="FB, WeChat.."
                       {...form.register("preferences.online_contact")}
                     />
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-2 md:col-span-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    สัญชาติ
-                  </Label>
-                  {/* Nationality Button Grid */}
-                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 max-h-40 overflow-y-auto">
-                    {NATIONALITY_OPTIONS.map((nat) => {
-                      const currentVal = form.watch("nationality");
-                      const selected = Array.isArray(currentVal)
-                        ? currentVal
-                        : typeof currentVal === "string" &&
-                            currentVal.length > 0
-                          ? currentVal.split(",").map((x) => x.trim())
-                          : [];
+              <div className="space-y-3 pt-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
+                  <span>สัญชาติ</span>
+                  <span className="text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                    เลือกได้มากกว่า 1
+                  </span>
+                </Label>
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                  {NATIONALITY_OPTIONS.map((nat) => {
+                    const currentVal = form.watch("nationality");
+                    const selected = Array.isArray(currentVal)
+                      ? currentVal
+                      : typeof currentVal === "string" && currentVal.length > 0
+                        ? currentVal.split(",").map((x) => x.trim())
+                        : [];
 
-                      const isSelected = selected.includes(nat);
+                    const isSelected = selected.includes(nat);
 
-                      return (
-                        <button
-                          key={nat}
-                          type="button"
-                          onClick={() => {
-                            let newSelected = [...selected];
-                            if (isSelected) {
-                              newSelected = newSelected.filter(
-                                (x) => x !== nat,
-                              );
-                            } else {
-                              newSelected.push(nat);
-                            }
+                    return (
+                      <button
+                        key={nat}
+                        type="button"
+                        onClick={() => {
+                          let newSelected = [...selected];
+                          if (isSelected) {
+                            newSelected = newSelected.filter((x) => x !== nat);
+                          } else {
+                            newSelected.push(nat);
+                          }
 
-                            form.setValue("nationality", newSelected);
+                          form.setValue("nationality", newSelected);
 
-                            // Auto-set is_foreigner logic
-                            const hasThai = newSelected.includes("ไทย");
-                            if (newSelected.length > 0 && !hasThai) {
-                              form.setValue("is_foreigner", true);
-                            } else if (hasThai) {
-                              form.setValue("is_foreigner", false);
-                            }
-                          }}
-                          className={`
-                            flex items-center gap-2 p-2 rounded-lg border text-sm font-medium transition-all
+                          // Auto-set is_foreigner logic
+                          const hasThai = newSelected.includes("ไทย");
+                          if (newSelected.length > 0 && !hasThai) {
+                            form.setValue("is_foreigner", true);
+                          } else if (hasThai) {
+                            form.setValue("is_foreigner", false);
+                          }
+                        }}
+                        className={`
+                            flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all duration-200
                             ${
                               isSelected
-                                ? "bg-blue-600 border-blue-600 text-white shadow-md active:scale-95"
-                                : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50"
+                                ? "bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm"
+                                : "bg-white border-slate-100 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                             }
                           `}
-                        >
-                          <div
-                            className={`
-                             p-1 rounded-full 
-                             ${
-                               isSelected
-                                 ? "bg-white/20 text-white"
-                                 : "bg-slate-100 text-slate-400"
-                             }
+                      >
+                        <div
+                          className={`
+                             w-2 h-2 rounded-full shrink-0
+                             ${isSelected ? "bg-emerald-500" : "bg-slate-300"}
                           `}
-                          >
-                            <Globe className="h-3 w-3" />
-                          </div>
-                          {nat}
-                        </button>
-                      );
-                    })}
-                  </div>
+                        />
+                        {nat}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* --- RIGHT COLUMN: Requirements & Pipeline --- */}
-        <div className="space-y-6">
-          <Card className="shadow-md border-slate-200 dark:border-slate-800">
-            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600">
-                  <ClipboardList className="h-5 w-5" />
+        {/* --- RIGHT COLUMN: Requirements & Pipeline (Span 8) --- */}
+        <div className="xl:col-span-8 space-y-6">
+          {/* Requirements Card */}
+          <Card className="shadow-lg border-slate-200 dark:border-slate-800 overflow-hidden">
+            <CardHeader className="bg-linear-to-r from-slate-900 to-slate-800 border-b border-slate-700 pb-6">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 rounded-xl bg-white/10 text-white backdrop-blur-sm border border-white/20">
+                  <ClipboardList className="h-6 w-6" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">ความต้องการทรัพย์</CardTitle>
-                  <CardDescription>
-                    ระบุรายละเอียดทรัพย์ที่ลูกค้าต้องการ
+                  <CardTitle className="text-xl text-white font-bold">
+                    ความต้องการทรัพย์
+                  </CardTitle>
+                  <CardDescription className="text-slate-300">
+                    รายละเอียด Spec ที่ลูกค้ากำลังมองหา
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-6 space-y-6">
+            <CardContent className="p-6 space-y-8">
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-3">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    พื้นที่ใช้สอย (ตร.ม.)
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <Maximize className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/50" />
-                      <Input
-                        type="number"
-                        step="any"
-                        className="pl-8 text-center"
-                        placeholder="Min"
-                        {...form.register("min_size_sqm", {
-                          valueAsNumber: true,
-                        })}
-                      />
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/30" />
-                    <div className="relative flex-1">
-                      <Input
-                        type="number"
-                        step="any"
-                        className="text-center"
-                        placeholder="Max"
-                        {...form.register("max_size_sqm", {
-                          valueAsNumber: true,
-                        })}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    ยูนิตสำคัญ (ห้องนอน/น้ำ)
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <Bed className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/50" />
-                      <Input
-                        type="number"
-                        className="pl-8 text-center"
-                        placeholder="นอน"
-                        {...form.register("min_bedrooms", {
-                          valueAsNumber: true,
-                        })}
-                      />
-                    </div>
-                    <div className="relative flex-1">
-                      <Bath className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/50" />
-                      <Input
-                        type="number"
-                        className="pl-8 text-center"
-                        placeholder="น้ำ"
-                        {...form.register("min_bathrooms", {
-                          valueAsNumber: true,
-                        })}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    จำนวนคนอยู่
-                  </Label>
-                  <div className="relative">
-                    <Users className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/60" />
-                    <Input
-                      type="number"
-                      className="pl-9 h-10 border-slate-200 dark:border-slate-700"
-                      placeholder="คน"
-                      {...form.register("num_occupants", {
-                        valueAsNumber: true,
-                      })}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3 md:col-span-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    ย่านทำเลที่สนใจ
-                  </Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" />
-                    <Controller
-                      control={form.control}
-                      name="preferred_locations"
-                      render={({ field }) => (
-                        <Textarea
-                          className="pl-9 min-h-[60px] py-2 resize-none border-slate-200 dark:border-slate-700"
-                          placeholder="เช่น สุขุมวิท, สีลม, ทองหล่อ, อโศก (คั่นด้วยจุลภาค)"
-                          value={
-                            Array.isArray(field.value)
-                              ? field.value.join(", ")
-                              : field.value || ""
-                          }
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            // Convert comma-separated string back to string[]
-                            const arr = val
-                              .split(",")
-                              .map((x) => x.trim())
-                              .filter(Boolean);
-                            field.onChange(arr.length > 0 ? arr : null);
-                          }}
+                <div className="space-y-4">
+                  <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100 space-y-4">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-3">
+                      <Maximize className="h-3.5 w-3.5" /> พื้นที่ใช้สอย (ตร.ม.)
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-1 group">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 group-focus-within:text-slate-600 transition-colors">
+                          MIN
+                        </span>
+                        <Input
+                          type="number"
+                          step="any"
+                          className="pl-10 text-center text-sm font-medium h-10 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-blue-500/20"
+                          placeholder="0"
+                          {...form.register("min_size_sqm", {
+                            valueAsNumber: true,
+                          })}
                         />
-                      )}
-                    />
+                      </div>
+                      <div className="h-px w-4 bg-slate-300"></div>
+                      <div className="relative flex-1 group">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 group-focus-within:text-slate-600 transition-colors">
+                          MAX
+                        </span>
+                        <Input
+                          type="number"
+                          step="any"
+                          className="pl-10 text-center text-sm font-medium h-10 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-blue-500/20"
+                          placeholder="∞"
+                          {...form.register("max_size_sqm", {
+                            valueAsNumber: true,
+                          })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100 space-y-4">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-3">
+                      <Bed className="h-3.5 w-3.5" /> ฟังก์ชันห้อง
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-1 group">
+                        <Bed className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500" />
+                        <Input
+                          type="number"
+                          className="pl-9 text-center text-sm font-medium h-10 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-blue-500/20"
+                          placeholder="นอน"
+                          {...form.register("min_bedrooms", {
+                            valueAsNumber: true,
+                          })}
+                        />
+                      </div>
+                      <div className="relative flex-1 group">
+                        <Bath className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500" />
+                        <Input
+                          type="number"
+                          className="pl-9 text-center text-sm font-medium h-10 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-blue-500/20"
+                          placeholder="น้ำ"
+                          {...form.register("min_bathrooms", {
+                            valueAsNumber: true,
+                          })}
+                        />
+                      </div>
+                    </div>
+                    <div className="pt-2">
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-2">
+                        <Users className="h-3.5 w-3.5" /> จำนวนคนอยู่
+                      </Label>
+                      <div className="flex flex-row gap-2">
+                        {[1, 2, 3, 4, 5].map((num) => {
+                          const current = form.watch("num_occupants");
+                          const isSelected = current === num;
+                          const label = num === 5 ? "> 4" : num.toString();
+
+                          return (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() =>
+                                form.setValue("num_occupants", num)
+                              }
+                              className={`
+                                h-9 w-full px-3 rounded-lg text-sm font-semibold transition-all border
+                                ${
+                                  isSelected
+                                    ? "bg-slate-800 border-slate-800 text-white shadow-md"
+                                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+                                }
+                              `}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2 h-full flex flex-col">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5" /> ทำเลที่สนใจ
+                    </Label>
+                    <div className="relative flex-1">
+                      <Controller
+                        control={form.control}
+                        name="preferred_locations"
+                        render={({ field }) => (
+                          <Textarea
+                            className="w-full h-full min-h-[140px] p-4 resize-none border-slate-200 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 bg-slate-50/50 leading-relaxed"
+                            placeholder={"เช่น\n• สุขุมวิท\n• สีลม\n• ทองหล่อ"}
+                            value={
+                              Array.isArray(field.value)
+                                ? field.value.join(", ")
+                                : field.value || ""
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const arr = val
+                                .split(",")
+                                .map((x) => x.trim())
+                                .filter(Boolean);
+                              field.onChange(arr.length > 0 ? arr : null);
+                            }}
+                          />
+                        )}
+                      />
+                      <div className="absolute bottom-3 right-3 text-[10px] text-slate-400 bg-white/80 px-2 py-0.5 rounded-md backdrop-blur-sm border border-slate-100">
+                        คั่นด้วยจุลภาค (,)
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                   {
                     id: "has_pets",
                     label: "เลี้ยงสัตว์",
                     icon: PawPrint,
                     color: "text-orange-500",
+                    bg: "bg-orange-50",
+                    border: "border-orange-100",
                   },
                   {
                     id: "need_company_registration",
                     label: "จดบริษัท",
                     icon: Briefcase,
-                    color: "text-blue-500",
+                    color: "text-blue-600",
+                    bg: "bg-blue-50",
+                    border: "border-blue-100",
                   },
                   {
                     id: "allow_airbnb",
                     label: "Airbnb",
                     icon: PlaneTakeoff,
-                    color: "text-red-500",
+                    color: "text-rose-500",
+                    bg: "bg-rose-50",
+                    border: "border-rose-100",
                   },
                 ].map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40"
+                    className={`flex items-center justify-between p-3 rounded-xl border ${item.border} ${item.bg} transition-all hover:shadow-sm`}
                   >
-                    <div className="flex items-center gap-2">
-                      <item.icon className={`h-4 w-4 ${item.color}`} />
-                      <span className="text-xs font-medium">{item.label}</span>
+                    <div className="flex items-center gap-3">
+                      <item.icon className={`h-4.5 w-4.5 ${item.color}`} />
+                      <span className="text-sm font-semibold text-slate-700">
+                        {item.label}
+                      </span>
                     </div>
                     <Switch
+                      className="data-[state=checked]:bg-slate-800"
                       checked={
                         (form.watch(
                           item.id as keyof LeadFormValues,
@@ -486,23 +537,20 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                       }
                       onCheckedChange={(checked) => {
                         form.setValue(item.id as keyof LeadFormValues, checked);
-                        toast.success(
-                          checked
-                            ? `เปิด ${item.label} สำเร็จ`
-                            : `ปิด ${item.label} สำเร็จ`,
-                        );
                       }}
                     />
                   </div>
                 ))}
 
-                {/* Smoking Switch (Stored in preferences JSON) */}
-                <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40">
-                  <div className="flex items-center gap-2">
-                    <Cigarette className="h-4 w-4 text-gray-500" />
-                    <span className="text-xs font-medium">สูบบุหรี่</span>
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white transition-all hover:shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <Cigarette className="h-4.5 w-4.5 text-slate-500" />
+                    <span className="text-sm font-semibold text-slate-700">
+                      สูบบุหรี่
+                    </span>
                   </div>
                   <Switch
+                    className="data-[state=checked]:bg-slate-800"
                     checked={!!form.watch("preferences")?.is_smoker}
                     onCheckedChange={(checked) => {
                       const current = form.getValues("preferences") || {};
@@ -516,72 +564,64 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* สถานะและดีล */}
-        <div className="space-y-6">
-          <Card className="shadow-md border-slate-200 dark:border-slate-800">
-            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                  <Search className="h-5 w-5 text-indigo-500" />
+          {/* Status & Budget Card */}
+          <Card className="shadow-lg border-slate-200 dark:border-slate-800 overflow-hidden">
+            <CardHeader className="bg-linear-to-r from-violet-600 to-indigo-600 border-b border-white/10 pb-6">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 rounded-xl bg-white/20 text-white shadow-inner backdrop-blur-sm">
+                  <Search className="h-6 w-6" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">สถานะและงบประมาณ</CardTitle>
-                  <CardDescription>
-                    ระบุสถานะของลูกค้าและงบประมาณ
+                  <CardTitle className="text-xl text-white font-bold">
+                    สถานะและงบประมาณ
+                  </CardTitle>
+                  <CardDescription className="text-indigo-100">
+                    ติดตามความคืบหน้าและประเมินงบประมาณ
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-6 space-y-6">
-              <div className="flex justify-between gap-4">
-                <div className="space-y-2 flex-1">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    กระบวนการขาย (Stage)
+            <CardContent className="p-6 space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Stage (สถานะ)
                   </Label>
                   <Select
                     value={form.watch("stage")}
-                    onValueChange={(v) =>
-                      form.setValue(
-                        "stage",
-                        v as
-                          | "NEW"
-                          | "CONTACTED"
-                          | "VIEWED"
-                          | "NEGOTIATING"
-                          | "CLOSED",
-                      )
-                    }
+                    onValueChange={(v) => form.setValue("stage", v as any)}
                   >
-                    <SelectTrigger className="w-full h-10 border-indigo-200 dark:border-indigo-900 focus-visible:ring-indigo-500">
+                    <SelectTrigger className="w-full h-11 border-slate-200 rounded-xl bg-slate-50/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {LEAD_STAGE_ORDER.map((s) => (
                         <SelectItem key={s} value={s}>
-                          <Badge
-                            variant={
-                              s === "NEW"
-                                ? "default"
-                                : s === "CLOSED"
-                                  ? "secondary"
-                                  : "outline"
-                            }
-                            className="mr-2 h-4 text-[10px] px-1.5"
-                          >
-                            {s}
-                          </Badge>
-                          {LEAD_STAGE_LABELS[s]}
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant={
+                                s === "NEW"
+                                  ? "default"
+                                  : s === "CLOSED"
+                                    ? "secondary"
+                                    : "outline"
+                              }
+                              className="rounded-md px-1.5 py-0.5 text-[10px] h-auto"
+                            >
+                              {s}
+                            </Badge>
+                            {LEAD_STAGE_LABELS[s]}
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="space-y-2 flex-1">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    ช่องทางการติดต่อ (Source)
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Source (ที่มา)
                   </Label>
                   <Select
                     value={form.watch("source") ?? "OTHER"}
@@ -589,7 +629,7 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                       form.setValue("source", (v as any) || null)
                     }
                   >
-                    <SelectTrigger className="h-10 border-slate-200">
+                    <SelectTrigger className="w-full h-11 border-slate-200 rounded-xl bg-slate-50/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -602,53 +642,46 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
                   </Select>
                 </div>
               </div>
-              <div className="space-y-4">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <DollarSign className="h-3 w-3" /> งบประมาณที่คาดหวัง
+
+              <div className="p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100/50 space-y-4">
+                <Label className="text-xs font-bold uppercase tracking-wider text-indigo-900/70 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-indigo-500" />{" "}
+                  งบประมาณที่คาดหวัง (Budget)
                 </Label>
-                <div className="space-y-3 flex  gap-2">
-                  <div className="relative group flex-1">
-                    <span className="absolute left-3 top-3 text-xs font-bold text-muted-foreground group-focus-within:text-primary transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-1 group">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-indigo-100 rounded text-[10px] font-bold text-indigo-600">
                       MIN
-                    </span>
+                    </div>
                     <Input
                       type="number"
-                      className="pl-12 h-10 font-mono text-right pr-6"
-                      placeholder="ไม่ระบุ"
-                      {...form.register("budget_min", {
-                        valueAsNumber: true,
-                      })}
+                      className="pl-14 text-right pr-4 h-12 text-lg font-semibold text-indigo-900 border-indigo-200 rounded-xl focus:border-indigo-500 focus:ring-indigo-500/20 bg-white shadow-sm"
+                      placeholder="0"
+                      {...form.register("budget_min", { valueAsNumber: true })}
                     />
-                    <span className="absolute right-3 top-3 text-[10px] font-bold text-muted-foreground/50">
-                      THB
-                    </span>
                   </div>
-                  <div className="relative group flex-1">
-                    <span className="absolute left-3 top-3 text-xs font-bold text-muted-foreground group-focus-within:text-primary transition-colors">
+                  <div className="text-indigo-300 font-medium">ถึง</div>
+                  <div className="relative flex-1 group">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-indigo-100 rounded text-[10px] font-bold text-indigo-600">
                       MAX
-                    </span>
+                    </div>
                     <Input
                       type="number"
-                      className="pl-12 h-10 font-mono text-right pr-6"
-                      placeholder="ไม่ระบุ"
-                      {...form.register("budget_max", {
-                        valueAsNumber: true,
-                      })}
+                      className="pl-14 text-right pr-4 h-12 text-lg font-semibold text-indigo-900 border-indigo-200 rounded-xl focus:border-indigo-500 focus:ring-indigo-500/20 bg-white shadow-sm"
+                      placeholder="ไม่อั้น"
+                      {...form.register("budget_max", { valueAsNumber: true })}
                     />
-                    <span className="absolute right-3 top-3 text-[10px] font-bold text-muted-foreground/50">
-                      THB
-                    </span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2 pt-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Info className="h-3 w-3" /> บันทึกเพิ่มเติม
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                  <Info className="h-3.5 w-3.5" /> บันทึกเพิ่มเติม
                 </Label>
                 <Textarea
-                  className="min-h-[120px] bg-sky-50/20 border-slate-200 dark:border-slate-800"
-                  placeholder="ระบุรายละเอียดอื่นๆ ที่ควรรู้เกี่ยวกับลูกค้า..."
+                  className="min-h-[100px] bg-slate-50/50 border-slate-200 rounded-xl resize-y focus:border-slate-400 focus:ring-slate-400/20"
+                  placeholder="รายละเอียดอื่นๆ..."
                   {...form.register("note")}
                 />
               </div>
@@ -657,24 +690,26 @@ export function LeadForm({ leadId, initialValues, onSubmitAction }: Props) {
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="pt-6 mt-6 border-t border-slate-200 flex flex-col-reverse sm:flex-row sm:justify-start gap-3">
+      {/* Action Buttons (Sticky Bottom) */}
+      <div className="sticky bottom-0 z-40 -mx-7 -mb-6 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 rounded-b-xl">
         <Button
-          className="h-11 px-8 text-md font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all min-w-[200px]"
-          type="submit"
-          disabled={isPending}
-        >
-          <Save className="h-4 w-4 mr-2" />
-          {isPending ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
-        </Button>
-        <Button
-          className="h-11 px-8 text-muted-foreground hover:text-foreground"
-          variant="outline"
+          className="h-15 px-8 text-muted-foreground hover:text-foreground cursor-pointer"
+          variant="ghost"
           type="button"
           disabled={isPending}
           onClick={() => router.back()}
         >
           ยกเลิก
+        </Button>
+        <Button
+          className="h-15 px-8 text-md font-bold shadow-lg cursor-pointer shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 transition-all min-w-[200px] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+          type="submit"
+          disabled={
+            isPending || !form.formState.isValid || !form.formState.isDirty
+          }
+        >
+          <Save className="h-4 w-4 mr-2" />
+          {isPending ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
         </Button>
       </div>
     </form>

@@ -54,7 +54,7 @@ export default async function EditOwnerPage({ params }: PageProps) {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-full mx-auto">
+    <div className="space-y-6 max-w-full mx-auto">
       {/* Header */}
       <Breadcrumb
         backHref={`/protected/owners/${id}`}
@@ -67,15 +67,18 @@ export default async function EditOwnerPage({ params }: PageProps) {
           { label: "แก้ไขข้อมูล" },
         ]}
       />
-      <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-lg font-bold shadow-md">
+      <div className="flex items-center gap-4 px-6 py-8 border-b border-slate-200 bg-linear-to-r from-slate-800 to-slate-900 rounded-xl">
+        <div className="h-16 w-16 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold backdrop-blur-sm border border-white/20 shadow-inner ">
           {owner.full_name?.charAt(0).toUpperCase() || "O"}
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-white">
             แก้ไขข้อมูลเจ้าของทรัพย์
           </h1>
-          <p className="text-sm text-slate-500">{owner.full_name}</p>
+          <p className="text-base text-slate-300 font-medium">
+            {" "}
+            K. {owner.full_name}
+          </p>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

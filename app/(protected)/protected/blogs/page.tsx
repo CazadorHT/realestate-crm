@@ -16,7 +16,7 @@ export default async function BlogListPage() {
   const categories = new Set(posts.map((p) => p.category).filter(Boolean));
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Premium Header */}
       <PageHeader
         title="บทความ (Blogs)"

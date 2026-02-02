@@ -31,7 +31,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PaginationControls } from "@/components/ui/pagination-controls";
-import { Plus, Pencil, Trash2, Loader2, MapPin } from "lucide-react";
+import { Pencil, Trash2, Loader2, MapPin, Check } from "lucide-react";
 import { toast } from "sonner";
 import {
   createPopularAreaAction,
@@ -167,43 +167,6 @@ export function PopularAreasTable({
             จัดการรายชื่อทำเลยอดนิยมในระบบ
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="mr-2 h-4 w-4" /> เพิ่มทำเลใหม่
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingItem ? "แก้ไขทำเล" : "เพิ่มทำเลใหม่"}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  ชื่อทำเล (Keyword)
-                </label>
-                <Input
-                  value={itemName}
-                  onChange={(e) => setItemName(e.target.value)}
-                  placeholder="เช่น สุขุมวิท, ทองหล่อ"
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
-                  ยกเลิก
-                </Button>
-                <Button onClick={handleSave} disabled={isLoading}>
-                  {isLoading && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  บันทึก
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
 
       <div className="rounded-xl bg-white overflow-hidden shadow-sm">
@@ -326,6 +289,48 @@ export function PopularAreasTable({
         pageSize={pageSize}
         currentPage={page}
       />
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingItem ? "แก้ไขทำเล" : "เพิ่มทำเลใหม่"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">ชื่อทำเล (Keyword)</label>
+              <Input
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                placeholder="เช่น สุขุมวิท, ทองหล่อ"
+                className="h-11"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
+                ยกเลิก
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={
+                  isLoading ||
+                  !itemName.trim() ||
+                  (editingItem !== null && itemName.trim() === editingItem.name)
+                }
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed px-8"
+              >
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Check className="mr-2 h-4 w-4" />
+                )}
+                บันทึก
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

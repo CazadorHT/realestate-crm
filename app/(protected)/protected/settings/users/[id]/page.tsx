@@ -26,6 +26,7 @@ import {
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import { UserRoleBadge } from "@/features/users/UserRoleBadge";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export default async function UserDetailPage({
   params,
@@ -66,16 +67,17 @@ export default async function UserDetailPage({
     <div className="max-w-7xl mx-auto p-4  space-y-8">
       {/* Back Button & Header */}
       <div className="flex flex-col gap-4">
-        <Link href="/protected/settings/users" className="w-fit">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hover:bg-slate-100 -ml-2 text-slate-500"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            กลับไปหน้ารายชื่อ
-          </Button>
-        </Link>
+         <Breadcrumb
+        backHref={`/protected/settings/users`}
+        items={[
+          { label: "ผู้ใช้งาน", href: "/protected/settings/users" },
+          {
+            label: `รายละเอียดผู้ใช้งาน ${profile.full_name}`,
+            href: `/protected/settings/users/${id}`,
+          },
+        ]}
+        className="mb-4"
+      />
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h1 className="text-3xl font-semibold tracking-tight text-slate-900">

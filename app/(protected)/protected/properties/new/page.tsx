@@ -5,9 +5,9 @@ export default function NewPropertyPage() {
   return (
     <div className="space-y-4 p-6">
       <Breadcrumb
-        backHref="/protected/properties"
+        backHref={`/protected/properties`}
         items={[
-          { label: "ทรัพย์", href: "/protected/properties" },
+          { label: "โครงการและทรัพย์สิน", href: "/protected/properties" },
           { label: "เพิ่มทรัพย์ใหม่" },
         ]}
       />

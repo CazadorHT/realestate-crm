@@ -29,7 +29,7 @@ export function Breadcrumb({
   return (
     <nav
       className={cn(
-        "flex items-center gap-2 text-sm",
+        "flex items-center gap-3 text-sm",
         isOnDark ? "text-white/70" : "text-muted-foreground",
         className,
       )}
@@ -41,18 +41,15 @@ export function Breadcrumb({
           <Link
             href={backHref}
             className={cn(
-              "flex items-center gap-1 transition-colors font-medium",
-              isOnDark ? "hover:text-white" : "hover:text-primary",
+              "flex items-center justify-center h-10 w-10 rounded-full border border-slate-200 text-slate-500 transition-colors shadow-sm",
+              isOnDark
+                ? "bg-white/10 text-white/60 border-white/10 hover:bg-white hover:text-slate-900"
+                : "bg-white hover:bg-slate-600 hover:text-white hover:border-slate-600",
             )}
+            title={backLabel}
           >
-            <ChevronLeft className="h-4 w-4" />
-            {backLabel}
+            <ChevronLeft className="h-5 w-5" />
           </Link>
-          <span
-            className={isOnDark ? "text-white/40" : "text-muted-foreground/50"}
-          >
-            ›
-          </span>
         </>
       )}
 

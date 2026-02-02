@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Users, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { RiUser3Line } from "react-icons/ri";
 import { Button } from "@/components/ui/button";
 
 interface DealLeadCardProps {
@@ -15,12 +16,15 @@ export function DealLeadCard({ lead }: DealLeadCardProps) {
   if (!lead) return null;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h3 className="font-semibold text-base flex items-center gap-2 text-slate-800">
-          <Users className="h-4 w-4 text-slate-500" />
-          ลูกค้า (Lead)
-        </h3>
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-200">
+        <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100">
+          <RiUser3Line className="h-5 w-5 text-blue-600" />
+        </div>
+        <div>
+          <h3 className="font-bold text-lg text-slate-800">ลูกค้า (Lead)</h3>
+          <p className="text-xs text-slate-500">ข้อมูลผู้สนใจทรัพย์</p>
+        </div>
       </div>
       <div className="p-5">
         <div className="flex items-center gap-4">

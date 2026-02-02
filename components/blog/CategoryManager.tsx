@@ -44,25 +44,25 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
       if (result.success && result.category) {
         setCategories((prev) => [...prev, result.category!]);
         setNewCategoryName("");
-        toast.success("Category created");
+        toast.success("สร้างหมวดหมู่สำเร็จ");
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to create category");
+        toast.error(result.error || "สร้างหมวดหมู่ไม่สำเร็จ");
       }
     });
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm("Are you sure you want to delete this category?")) return;
+    if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบหมวดหมู่นี้?")) return;
 
     startTransition(async () => {
       const result = await deleteCategoryAction(id);
       if (result.success) {
         setCategories((prev) => prev.filter((c) => c.id !== id));
-        toast.success("Category deleted");
+        toast.success("ลบหมวดหมู่สำเร็จ");
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to delete category");
+        toast.error(result.error || "ลบหมวดหมู่ไม่สำเร็จ");
       }
     });
   };
@@ -71,7 +71,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
     <div className="space-y-6">
       <div className="flex gap-4">
         <Input
-          placeholder="New Category Name (e.g. 'Market Trends')"
+          placeholder="ชื่อหมวดหมู่ใหม่ (เช่น 'ข่าวสารอสังหาฯ')"
           value={newCategoryName}
           onChange={(e) => setNewCategoryName(e.target.value)}
           disabled={isPending}
@@ -81,7 +81,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
           disabled={isPending || !newCategoryName.trim()}
         >
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Add Category
+          เพิ่มหมวดหมู่
         </Button>
       </div>
 
@@ -89,9 +89,9 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Slug</TableHead>
-              <TableHead className="w-[100px] text-right">Actions</TableHead>
+              <TableHead>ชื่อหมวดหมู่</TableHead>
+              <TableHead>สลัก (Slug)</TableHead>
+              <TableHead className="w-[100px] text-right">การจัดการ</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

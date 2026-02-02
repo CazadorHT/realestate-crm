@@ -25,7 +25,7 @@ export default async function AdminPopularAreasPage() {
   const totalProperties = propertiesCount || 0;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Premium Header */}
       <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6 md:p-8 shadow-xl">
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />

@@ -14,17 +14,7 @@ interface OwnerHeaderProps {
 export function OwnerHeader({ owner, propertyCount }: OwnerHeaderProps) {
   return (
     <div className="bg-linear-to-r from-slate-800 to-slate-900 px-6 py-8">
-      {/* Breadcrumb */}
-      <Breadcrumb
-        variant="on-dark"
-        backHref="/protected/owners"
-        backLabel="เจ้าของทรัพย์"
-        items={[
-          { label: "เจ้าของทรัพย์", href: "/protected/owners" },
-          { label: owner.full_name || "รายละเอียด" },
-        ]}
-        className="mb-6"
-      />
+      
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">

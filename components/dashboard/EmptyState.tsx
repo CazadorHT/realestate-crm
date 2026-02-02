@@ -34,6 +34,7 @@ interface EmptyStateProps {
   actionHref?: string;
   actionIcon?: keyof typeof ICON_MAP;
   onAction?: () => void;
+  actionSlot?: React.ReactNode;
 }
 
 export function EmptyState({
@@ -44,6 +45,7 @@ export function EmptyState({
   actionHref,
   actionIcon = "plusCircle",
   onAction,
+  actionSlot,
 }: EmptyStateProps) {
   const Icon = ICON_MAP[icon] || PlusCircle;
   const ActionIcon = ICON_MAP[actionIcon] || PlusCircle;
@@ -72,8 +74,12 @@ export function EmptyState({
           <p className="text-slate-500 leading-relaxed">{description}</p>
         </div>
 
-        {/* CTA Button */}
-        {actionLabel && (actionHref || onAction) && (
+        {/* CTA Button or Slot */}
+        {actionSlot ? (
+          <div className="[&_button]:bg-linear-to-r [&_button]:from-blue-600 [&_button]:to-indigo-600 [&_button]:hover:from-blue-700 [&_button]:hover:to-indigo-700 [&_button]:text-white [&_button]:shadow-lg [&_button]:hover:shadow-xl [&_button]:px-8 [&_button]:h-11">
+            {actionSlot}
+          </div>
+        ) : actionLabel && (actionHref || onAction) ? (
           <Button
             asChild={!!actionHref}
             size="lg"
@@ -92,7 +98,7 @@ export function EmptyState({
               </>
             )}
           </Button>
-        )}
+        ) : null}
       </div>
     </div>
   );

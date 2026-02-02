@@ -2,7 +2,7 @@ import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function Loading() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header Skeleton */}
       <div className="h-32 w-full bg-slate-100 rounded-2xl animate-pulse" />
 

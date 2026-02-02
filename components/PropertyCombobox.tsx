@@ -26,22 +26,24 @@ type Props = {
   value: string | null;
   onChange: (value: string | null, picked?: PropertyPickItem | null) => void;
   placeholder?: string;
+  initialProperty?: PropertyPickItem | null;
 };
 
 export function PropertyCombobox({
   value,
   onChange,
   placeholder = "เลือกทรัพย์ (พิมพ์เพื่อค้นหา)",
+  initialProperty,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [items, setItems] = useState<PropertyPickItem[]>([]);
   const [q, setQ] = useState("");
 
-  const selected = useMemo(
-    () => items.find((x) => x.id === value) ?? null,
-    [items, value],
-  );
+  const selected = useMemo(() => {
+    if (initialProperty && initialProperty.id === value) return initialProperty;
+    return items.find((x) => x.id === value) ?? null;
+  }, [items, value, initialProperty]);
 
   useEffect(() => {
     if (!open) return;

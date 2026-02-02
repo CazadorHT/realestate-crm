@@ -101,7 +101,7 @@ export function CreateEventDialog({
               <SelectTrigger>
                 <SelectValue placeholder="เลือกลูกค้า..." />
               </SelectTrigger>
-              <SelectContent className="max-h-[200px]">
+              <SelectContent className="max-h-[200px] overflow-y-auto">
                 {leads.map((lead) => (
                   <SelectItem key={lead.id} value={lead.id}>
                     {lead.full_name}
@@ -120,7 +120,7 @@ export function CreateEventDialog({
               <SelectTrigger>
                 <SelectValue placeholder="เลือกทรัพย์สิน..." />
               </SelectTrigger>
-              <SelectContent className="max-h-[200px]">
+              <SelectContent className="max-h-[200px] overflow-y-auto">
                 <SelectItem value="none">ไม่ระบุ</SelectItem>
                 {properties.map((prop) => (
                   <SelectItem key={prop.id} value={prop.id}>
@@ -210,7 +210,7 @@ export function CreateEventDialog({
                 <SelectTrigger>
                   <SelectValue placeholder="เลือกเวลา..." />
                 </SelectTrigger>
-                <SelectContent className="max-h-[200px]">
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   {timeOptions.map((time) => (
                     <SelectItem key={time} value={time}>
                       {time} น.

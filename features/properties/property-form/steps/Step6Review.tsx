@@ -148,7 +148,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
         }).format(val)
       : "-";
 
-  const keySellingPoints = [
+  const keySellingPointsStrings = [
     // 1. Transit
     values.near_transit && values.transit_station_name
       ? `ใกล้ ${values.transit_station_name}`
@@ -180,8 +180,12 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
     values.has_247_access ? "เข้าออกได้ 24 ชม." : "",
     values.is_tax_registered ? "จดทะเบียนบริษัทได้" : "",
   ]
-    .filter(Boolean)
+    .filter((item): item is string => !!item)
     .slice(0, 6); // Increased limit to 6 for better coverage
+
+  const keySellingPoints = keySellingPointsStrings.map((point) => ({
+    name: point,
+  }));
 
   const handleRegenerateDescription = useCallback(async () => {
     try {

@@ -1,3 +1,16 @@
+import {
+  Target,
+  MapPin,
+  DollarSign,
+  Bed,
+  Bath,
+  Users,
+  Ruler,
+  PawPrint,
+  Cigarette,
+  Home,
+} from "lucide-react";
+
 interface LeadRequirementsCardProps {
   lead: {
     preferred_locations: string[] | null;
@@ -15,11 +28,15 @@ interface LeadRequirementsCardProps {
 
 export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm space-y-4">
-      <div className="border-b border-slate-200 px-5 py-4">
-        <h3 className="font-semibold text-base flex items-center gap-2 text-slate-800">
-          🎯 ความต้องการ
-        </h3>
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm space-y-4 overflow-hidden h-full">
+      <div className="flex items-center gap-4 p-5 border-b border-slate-200">
+        <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center  shrink-0">
+          <Target className="h-5 w-5 text-slate-700" />
+        </div>
+        <div>
+          <h3 className="font-bold text-lg text-slate-800">ความต้องการ</h3>
+          <p className="text-xs text-slate-500">สเปคทรัพย์ที่มองหา</p>
+        </div>
       </div>
       <div className="p-5">
         <div className="grid gap-3 text-sm">

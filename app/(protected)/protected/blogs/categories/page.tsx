@@ -9,6 +9,7 @@ import {
   CategoryStatsCard,
   CategorySidebarStats,
 } from "@/features/blogs/components/CategoryStats";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export default async function CategoriesPage() {
   const { categories } = await getCategoriesAction();
@@ -19,21 +20,17 @@ export default async function CategoriesPage() {
       {/* Header with Breadcrumb */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/protected/blogs">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <nav className="flex items-center gap-2 text-sm text-slate-500">
-            <Link
-              href="/protected/blogs"
-              className="hover:text-slate-900 transition-colors"
-            >
-              Blogs
-            </Link>
-            <span>/</span>
-            <span className="text-slate-900 font-medium">จัดการหมวดหมู่</span>
-          </nav>
+           <Breadcrumb
+                  backHref={`/protected/blogs`}
+                  items={[
+                    { label: "บทความ", href: "/protected/blogs" },
+                    {
+                      label: "จัดการหมวดหมู่",
+                      href: `/protected/blogs/categories`,
+                    },
+                  ]}
+                  className="mb-4"
+                />
         </div>
 
         <div className="flex items-start gap-4">

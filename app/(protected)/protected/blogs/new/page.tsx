@@ -19,7 +19,7 @@ export default async function NewBlogPostPage() {
           ]}
         />
 
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-4 pt-6">
           <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
             <FileText className="h-6 w-6 text-blue-600" />
           </div>
@@ -35,7 +35,7 @@ export default async function NewBlogPostPage() {
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 pt-0 ">
         <BlogForm categories={categories || []} />
       </div>
     </div>

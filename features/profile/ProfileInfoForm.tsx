@@ -57,6 +57,7 @@ export function ProfileInfoForm({
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
+    mode: "onChange",
     defaultValues: {
       full_name: fullName || "",
       phone: phone || "",
@@ -220,10 +221,16 @@ export function ProfileInfoForm({
           </p>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button
+          type="submit"
+          className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed font-semibold text-lg"
+          disabled={
+            isLoading || !form.formState.isValid || !form.formState.isDirty
+          }
+        >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               กำลังบันทึก...
             </>
           ) : (

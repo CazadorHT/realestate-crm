@@ -130,7 +130,7 @@ export function CreateContractDialog() {
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[750px] p-0 overflow-hidden border-none shadow-2xl bg-slate-50">
-        <DialogHeader className="p-6 pb-4 bg-white border-b">
+        <DialogHeader className="p-6 pb-4 bg-white border-b border-slate-200">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
               <FileText className="h-6 w-6" />
@@ -211,7 +211,7 @@ export function CreateContractDialog() {
 
                 {selectedDeal && (
                   <div className="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 max-w-[600px]">
-                    <div className="relative w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-slate-100 border line-clamp-2 whitespace-normal wrap-break-word">
+                    <div className="relative w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-200 line-clamp-2 whitespace-normal wrap-break-word">
                       {selectedDeal.cover_image_url ? (
                         <img
                           src={selectedDeal.cover_image_url}
@@ -598,19 +598,19 @@ export function CreateContractDialog() {
               )}
             </div>
 
-            <DialogFooter className="p-6 bg-white border-t gap-3 sm:gap-0">
+            <DialogFooter className="p-6 bg-white border-t border-slate-200 gap-3 sm:gap-3">
               <Button
                 variant="ghost"
                 type="button"
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="text-slate-500 font-semibold"
+                className="text-slate-500 font-semibold px-10 h-11 cursor-pointer"
               >
                 ยกเลิก
               </Button>
               <Button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 font-bold px-10 h-11 shadow-lg shadow-blue-500/20"
+                className="bg-emerald-600 hover:bg-emerald-700 font-bold px-10 h-11 shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer rounded-xl"
                 disabled={isSubmitting || !selectedDealId}
               >
                 {isSubmitting ? (

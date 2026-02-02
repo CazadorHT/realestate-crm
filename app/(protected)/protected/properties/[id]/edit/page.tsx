@@ -23,12 +23,12 @@ export default async function EditPropertyPage({
       <Breadcrumb
         backHref={`/protected/properties/${id}`}
         items={[
-          { label: "ทรัพย์", href: "/protected/properties" },
+          { label: "โครงการและทรัพย์สิน", href: "/protected/properties" },
           {
             label: property.title || "รายละเอียด",
             href: `/protected/properties/${id}`,
           },
-          { label: "แก้ไข" },
+          { label: "แก้ไขข้อมูล" },
         ]}
       />
       <PropertyForm

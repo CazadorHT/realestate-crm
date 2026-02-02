@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Home, MapPin, ArrowRight } from "lucide-react";
+import { MapPin, ArrowRight } from "lucide-react";
+import { RiHome4Line } from "react-icons/ri";
 import { Button } from "@/components/ui/button";
 
 interface DealPropertyCardProps {
@@ -9,12 +10,17 @@ interface DealPropertyCardProps {
 
 export function DealPropertyCard({ property, isRent }: DealPropertyCardProps) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden sticky top-6">
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h3 className="font-semibold text-base flex items-center gap-2 text-slate-800">
-          <Home className="h-4 w-4 text-slate-500" />
-          ทรัพย์ที่เกี่ยวข้อง
-        </h3>
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden   ">
+      <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-200">
+        <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
+          <RiHome4Line className="h-5 w-5 text-emerald-600" />
+        </div>
+        <div>
+          <h3 className="font-bold text-lg text-slate-800">
+            ทรัพย์ที่เกี่ยวข้อง
+          </h3>
+          <p className="text-xs text-slate-500">รายละเอียดทรัพย์สินในดีล</p>
+        </div>
       </div>
 
       {property ? (
@@ -32,7 +38,7 @@ export function DealPropertyCard({ property, isRent }: DealPropertyCardProps) {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-300">
-                <Home className="h-16 w-16" />
+                <RiHome4Line className="h-16 w-16" />
               </div>
             )}
             {/* Price Badge */}
@@ -97,7 +103,7 @@ export function DealPropertyCard({ property, isRent }: DealPropertyCardProps) {
         </div>
       ) : (
         <div className="p-8 text-center text-muted-foreground">
-          <Home className="h-12 w-12 mx-auto mb-3 opacity-30" />
+          <RiHome4Line className="h-12 w-12 mx-auto mb-3 opacity-30" />
           <p className="text-sm">ไม่พบข้อมูลทรัพย์</p>
         </div>
       )}

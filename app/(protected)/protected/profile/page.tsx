@@ -29,7 +29,7 @@ export default async function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="p-8 text-center text-red-500">
+      <div className="text-center text-red-500">
         เกิดข้อผิดพลาดในการโหลดข้อมูลโปรไฟล์
       </div>
     );
@@ -38,7 +38,7 @@ export default async function ProfilePage() {
   const isAdmin = profile.role === "ADMIN";
 
   return (
-    <div className="mx-auto p-4 md:p-6 space-y-6">
+    <div className="mx-auto  space-y-6">
       {/* Header */}
       <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent">

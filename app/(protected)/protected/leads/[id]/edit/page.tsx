@@ -5,6 +5,7 @@ import { updateLeadAction } from "@/features/leads/actions";
 import { leadRowToFormValues } from "@/features/leads/mapper";
 import { LeadFormValues } from "@/features/leads/types";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { leadSourceLabelNullable, leadStageLabelNullable } from "@/features/leads/labels";
 
 export default async function LeadEditPage({
   params,
@@ -23,7 +24,7 @@ export default async function LeadEditPage({
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <Breadcrumb
         backHref={`/protected/leads/${id}`}
         items={[
@@ -32,10 +33,23 @@ export default async function LeadEditPage({
             label: lead.full_name || "รายละเอียด",
             href: `/protected/leads/${id}`,
           },
-          { label: "แก้ไข" },
+          { label: "แก้ไขข้อมูล" },
         ]}
       />
-      <h1 className="text-xl font-semibold">แก้ไข Lead</h1>
+      <div className="flex items-center justify-between gap-4 px-4 py-8 border-b border-slate-200 bg-linear-to-r from-slate-800 to-slate-900 rounded-xl">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-white">K. {lead.full_name}</h1>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+              {leadStageLabelNullable(lead.stage)}
+            </span>
+            <span className="text-white">•</span>
+            <span className="text-white">
+              {leadSourceLabelNullable(lead.source)}
+            </span>
+          </div>
+        </div>
+      </div>
       <LeadForm
         leadId={id}
         initialValues={leadRowToFormValues(lead)}

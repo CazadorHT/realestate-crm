@@ -72,14 +72,14 @@ export default async function LeadsPage({
     listLeads.length === 0 && page === 1 && !sp.q && !sp.stage;
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Premium Header */}
       <PageHeader
-        title="ลีด (Leads)"
+        title="ลูกค้า (Leads)"
         subtitle="จัดการและติดตามลูกค้าที่สนใจ"
         count={count}
         icon="users"
-        actionLabel="สร้างลีดใหม่"
+        actionLabel="สร้างลูกค้าใหม่"
         actionHref="/protected/leads/new"
         actionIcon="userPlus"
         gradient="emerald"

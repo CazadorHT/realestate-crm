@@ -166,19 +166,18 @@ export default async function PropertyDetailsPage({
   return (
     <div className="min-h-screen bg-white pb-24 lg:pb-20 font-sans ">
       {/* 1. Header & Breadcrumb & Actions */}
-      <div className="pt-6 px-5 md:px-6 lg:px-8 bg-white relative">
+      <div className="pt-6 px-4 md:px-6 lg:px-6 bg-white relative">
+        <Breadcrumb
+          backHref={`/protected/properties`}
+          items={[
+            { label: "โครงการและทรัพย์สิน", href: "/protected/properties" },
+            { label: property.title || "รายละเอียด" },
+          ]}
+        />
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col gap-3 md:gap-4">
             {/* Back Link & Edit Actions */}
-            <div className="flex justify-between items-center mb-2">
-              <Breadcrumb
-                backHref="/protected/properties"
-                backLabel="ทรัพย์"
-                items={[
-                  { label: "ทรัพย์", href: "/protected/properties" },
-                  { label: property.title || "รายละเอียด" },
-                ]}
-              />
+            <div className="flex justify-end items-center mb-2">
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/protected/properties/${property.id}/edit`}>
                   <Edit className="h-4 w-4 mr-2" />

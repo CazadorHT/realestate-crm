@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { UserPlus, Briefcase, History as HistoryIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getLeadWithActivitiesQuery } from "@/features/leads/queries";
 import { createLeadActivityAction } from "@/features/leads/actions";
@@ -88,7 +89,7 @@ export default async function LeadDetailPage({
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 p-4 border-b border-slate-200 bg-linear-to-r from-slate-800 to-slate-900 rounded-xl">
+      <div className="flex items-center justify-between gap-4 px-4 py-8 border-b border-slate-200 bg-linear-to-r from-slate-800 to-slate-900 rounded-xl">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold text-white">K. {lead.full_name}</h1>
           <div className="flex items-center gap-2 text-sm">
@@ -103,12 +104,6 @@ export default async function LeadDetailPage({
         </div>
 
         <div className="flex gap-3 ">
-          <Link
-            className="inline-flex items-center gap-1.5 rounded-lg py-2 px-3 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-            href="/protected/leads"
-          >
-            ← ย้อนกลับ
-          </Link>
           <Link
             className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 py-2 px-3 text-sm font-medium text-white hover:bg-white/20 transition-colors shadow-sm"
             href={`/protected/leads/${id}/edit`}
@@ -133,21 +128,27 @@ export default async function LeadDetailPage({
       {/* Main Content - 3 Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Deals Section */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-base flex items-center gap-2">
-              💼 ดีล ({deals.length})
-            </h3>
+        {/* Deals Section */}
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col overflow-hidden h-full">
+          <div className="flex items-center justify-between gap-4 p-5 border-b border-slate-200">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
+                <Briefcase className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg text-slate-800">
+                  ดีล ({deals.length})
+                </h3>
+                <p className="text-xs text-slate-500">รายการดีลที่เกี่ยวข้อง</p>
+              </div>
+            </div>
             <DealFormDialog
               leadId={id}
               properties={properties || []}
               refreshOnSuccess
             />
           </div>
-          <p className="text-xs text-muted-foreground mb-4">
-            รายการดีล (เช่า/ขาย) ที่เกี่ยวข้องกับลูกค้ารายนี้
-          </p>
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto p-5">
             <DealList deals={deals} properties={properties} />
           </div>
         </div>
@@ -156,21 +157,27 @@ export default async function LeadDetailPage({
         <DocumentSection ownerId={id} ownerType="LEAD" />
 
         {/* Timeline */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-base flex items-center gap-2">
-              📋 ประวัติกิจกรรม
-            </h3>
+        {/* Timeline */}
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col overflow-hidden h-full">
+          <div className="flex items-center justify-between gap-4 p-5 border-b border-slate-200">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
+                <HistoryIcon className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg text-slate-800">
+                  ประวัติกิจกรรม
+                </h3>
+                <p className="text-xs text-slate-500">ไทม์ไลน์การติดตาม</p>
+              </div>
+            </div>
             <LeadActivityDialog
               leadId={id}
               leadName={lead.full_name}
               onSubmitAction={onCreateActivity}
             />
           </div>
-          <p className="text-xs text-muted-foreground mb-4">
-            บันทึกกิจกรรมที่เกี่ยวข้องกับลูกค้ารายนี้
-          </p>
-          <div className="flex-1 overflow-y-auto max-h-80">
+          <div className="flex-1 overflow-y-auto max-h-80 p-5">
             <LeadTimeline
               activities={lead.lead_activities ?? []}
               propertiesById={propertiesById}

@@ -1,4 +1,5 @@
 import { leadStageLabelNullable } from "@/features/leads/labels";
+import { RiContactsBookLine } from "react-icons/ri";
 
 interface LeadContactCardProps {
   lead: {
@@ -14,11 +15,15 @@ interface LeadContactCardProps {
 
 export function LeadContactCard({ lead }: LeadContactCardProps) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm space-y-4">
-      <div className="border-b border-slate-200 px-5 py-4">
-        <h3 className="font-semibold text-base flex items-center gap-2 text-slate-800">
-          📞 ข้อมูลติดต่อ
-        </h3>
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col h-full overflow-hidden">
+      <div className="flex items-center gap-4 p-5 border-b border-slate-200">
+        <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center  shrink-0">
+          <RiContactsBookLine className="h-5 w-5 text-emerald-600" />
+        </div>
+        <div>
+          <h3 className="font-bold text-lg text-slate-800">ข้อมูลติดต่อ</h3>
+          <p className="text-xs text-slate-500">รายละเอียดการติดต่อและสถานะ</p>
+        </div>
       </div>
       <div className="p-5">
         <div className="grid gap-3 text-sm">

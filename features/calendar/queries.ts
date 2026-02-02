@@ -19,6 +19,7 @@ export type CalendarEvent = {
     leadId?: string;
     note?: string;
     propertyTitle?: string;
+    propertyId?: string;
     propertyImage?: string | null;
     contractNumber?: string;
     type?: string;
@@ -79,6 +80,7 @@ export async function getCalendarEvents(
           leadId: v.lead_id,
           note: v.note,
           propertyTitle: v.properties?.title,
+          propertyId: v.property_id,
           propertyImage: v.properties?.images?.[0]?.image_url || null,
         },
       });

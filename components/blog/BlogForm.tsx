@@ -122,6 +122,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
   const form = useForm<BlogPostInput>({
     resolver: zodResolver(blogPostSchema) as unknown as Resolver<any>,
+    mode: "onChange",
     defaultValues,
   });
 
@@ -214,16 +215,17 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     }
   }
 
-  const characterCount = watchedContent
-    ? watchedContent.replace(/<[^>]*>?/gm, "").length
-    : 0;
+  const characterCount = (watchedContent || "").replace(
+    /<[^>]*>?/gm,
+    "",
+  ).length;
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="pb-20">
         {/* Premium Sticky Header */}
-        <div className="sticky top-0 z-50 -mx-6 px-6 mb-6">
-          <div className="bg-white/95 backdrop-blur-md border-b border-slate-200 rounded-b-xl shadow-sm py-4 px-6 -mx-6">
+        <div className=" top-16 z-50 -mx-6 px-6 mb-6">
+          <div className="bg-white/95 backdrop-blur-md border-b border-slate-200 rounded-xl shadow-sm py-4 px-6 -mx-6">
             <div className="flex items-center justify-between">
               {/* Left - Back & Title */}
               <div className="flex items-center gap-4">
@@ -232,17 +234,17 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                   variant="ghost"
                   size="icon"
                   onClick={() => router.back()}
-                  className="hover:bg-slate-100 rounded-full"
+                  className="hover:bg-slate-100 rounded-full "
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 ">
                     <h1 className="text-xl font-bold text-slate-900">
                       {initialData ? "แก้ไขบทความ" : "สร้างบทความใหม่"}
                     </h1>
                     {watchedIsPublished ? (
-                      <Badge className="bg-emerald-500 hover:bg-emerald-600 gap-1">
+                      <Badge className="bg-emerald-500 hover:bg-emerald-600 gap-1 ">
                         <Eye className="h-3 w-3" />
                         เผยแพร่แล้ว
                       </Badge>
@@ -267,7 +269,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="hidden md:flex gap-2"
+                      className="hidden md:flex gap-2 h-12"
                     >
                       <FileJson className="h-4 w-4" />
                       นำเข้า JSON
@@ -287,7 +289,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                         value={jsonInput}
                         onChange={(e) => setJsonInput(e.target.value)}
                       />
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-2 h">
                         <Button
                           type="button"
                           variant="outline"
@@ -308,7 +310,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                   control={form.control}
                   name="is_published"
                   render={({ field }) => (
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100">
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 h-12 ">
                       <span className="text-sm font-medium text-slate-600">
                         เผยแพร่
                       </span>
@@ -330,8 +332,13 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="gap-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25"
+                  disabled={
+                    isSubmitting ||
+                    !watchedTitle?.trim() ||
+                    characterCount === 0 ||
+                    !form.formState.isDirty
+                  }
+                  className="gap-2 bg-linear-to-r h-12 from-emerald-600 to-emerald-600 hover:from-emerald-700 hover:to-emerald-700 shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -347,24 +354,24 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
         {/* Main Content with Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 p-1 bg-slate-100 rounded-xl h-12">
+          <TabsList className="grid w-full grid-cols-3 mb-6  bg-slate-100 rounded-xl h-20">
             <TabsTrigger
               value="content"
-              className="gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="gap-2 rounded-lg p-6 data-[state=active]:bg-white data-[state=active]:shadow-sm"
             >
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">เนื้อหา</span>
             </TabsTrigger>
             <TabsTrigger
               value="media"
-              className="gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="gap-2 rounded-lg p-6 data-[state=active]:bg-white data-[state=active]:shadow-sm"
             >
               <ImageIcon className="h-4 w-4" />
               <span className="hidden sm:inline">รูปภาพ & หมวดหมู่</span>
             </TabsTrigger>
             <TabsTrigger
               value="seo"
-              className="gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="gap-2 rounded-lg p-6 data-[state=active]:bg-white data-[state=active]:shadow-sm"
             >
               <Search className="h-4 w-4" />
               <span className="hidden sm:inline">SEO</span>
@@ -776,6 +783,71 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Sticky Bottom Action Bar */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2  z-40 w-full max-w-6xl px-4 sm:px-6">
+          <div className="bg-white/80 backdrop-blur-md border border-slate-200 shadow-2xl rounded-2xl py-6 px-12 flex items-center justify-between">
+            <div className="flex items-center gap-4 text-xs text-slate-500">
+              <span className="hidden sm:inline">
+                {watchedIsPublished
+                  ? "บทความนี้ถูกเผยแพร่แล้ว"
+                  : "บทความนี้ยังเป็นแบบร่าง"}
+              </span>
+              <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+              <span>
+                {(watchedContent || "")
+                  .replace(/<[^>]*>?/gm, "")
+                  .length.toLocaleString()}{" "}
+                ตัวอักษร
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Publication Switch - duplicate of top for convenience */}
+              <FormField
+                control={form.control}
+                name="is_published"
+                render={({ field }) => (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 h-12">
+                    <span className="text-sm font-medium text-slate-600">
+                      เผยแพร่
+                    </span>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                        toast.success(
+                          checked
+                            ? "เปิดเผยแพร่บทความสำเร็จ"
+                            : "ปิดการเผยแพร่บทความสำเร็จ",
+                        );
+                      }}
+                      className="h-5 w-9 data-[state=checked]:bg-blue-600 scale-90"
+                    />
+                  </div>
+                )}
+              />
+
+              <Button
+                type="submit"
+                disabled={
+                  isSubmitting ||
+                  !watchedTitle?.trim() ||
+                  characterCount === 0 ||
+                  !form.formState.isDirty
+                }
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white h-12 shadow-lg shadow-emerald-500/25 px-8 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                บันทึก
+              </Button>
+            </div>
+          </div>
+        </div>
       </form>
     </Form>
   );

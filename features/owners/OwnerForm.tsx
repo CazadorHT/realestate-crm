@@ -42,16 +42,25 @@ const ownerSchema = z.object({
 type FormShape = z.infer<typeof ownerSchema>;
 
 type Props =
-  | { mode: "create"; initialValues?: Partial<OwnerFormValues> }
-  | { mode: "edit"; id: string; initialValues: Owner | OwnerFormValues };
+  | {
+      mode: "create";
+      initialValues?: Partial<OwnerFormValues>;
+      onSuccess?: () => void;
+      onCancel?: () => void;
+    }
+  | {
+      mode: "edit";
+      id: string;
+      initialValues: Owner | OwnerFormValues;
+      onSuccess?: () => void;
+      onCancel?: () => void;
+    };
+
+// ... constants ...
 
 function toNull(v: string | null | undefined) {
   const t = (v ?? "").trim();
   return t.length ? t : null;
-}
-
-function isNextRedirectError(e: any) {
-  return typeof e?.digest === "string" && e.digest.startsWith("NEXT_REDIRECT");
 }
 
 export function OwnerForm(props: Props) {
@@ -61,6 +70,7 @@ export function OwnerForm(props: Props) {
 
   const form = useForm<FormShape>({
     resolver: zodResolver(ownerSchema),
+    mode: "onChange",
     defaultValues: {
       full_name: props.initialValues?.full_name ?? "",
       phone: props.initialValues?.phone ?? "",
@@ -106,119 +116,164 @@ export function OwnerForm(props: Props) {
         );
 
         router.refresh();
-      } catch (e: any) {
-        if (isNextRedirectError(e)) {
-          toast.success(
-            props.mode === "create"
-              ? "เพิ่มเจ้าของสำเร็จ"
-              : "บันทึกข้อมูลสำเร็จ",
-          );
-          throw e;
+
+        // Call onSuccess callback if provided
+        if (props.onSuccess) {
+          props.onSuccess();
+        } else {
+          // Default behavior for non-dialog: redirect to owners list
+          router.push("/protected/owners");
         }
+      } catch (e: any) {
         toast.error(e?.message ?? "เกิดข้อผิดพลาด");
       }
     });
   };
 
+  const handleCancel = () => {
+    if (props.onCancel) {
+      props.onCancel();
+    } else {
+      router.back();
+    }
+  };
+
   return (
-    <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+    <form className="space-y-8" onSubmit={form.handleSubmit(onSubmit)}>
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 font-medium flex items-center gap-2">
+          <X className="h-4 w-4" /> {error}
         </div>
       )}
 
-      {/* Name Field - Full Width */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
-          <User className="h-4 w-4 text-slate-400" />
-          ชื่อเจ้าของ <span className="text-red-500">*</span>
-        </label>
-        <Input
-          placeholder="เช่น คุณสมชาย ใจดี"
-          className="h-11 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
-          {...form.register("full_name")}
-        />
-        {form.formState.errors.full_name && (
-          <p className="text-xs text-red-500">
-            {form.formState.errors.full_name.message}
-          </p>
-        )}
-      </div>
-
-      {/* Contact Info Section */}
-      <div className="space-y-4">
-        <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
-          <Phone className="h-4 w-4 text-slate-400" />
-          ข้อมูลการติดต่อ
-        </h3>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          {/* Phone */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <Phone className="h-4 w-4 text-blue-500" />
-              เบอร์โทร
-            </label>
-            <Input
-              placeholder="089-xxx-xxxx"
-              className="h-11 border-slate-200"
-              {...form.register("phone")}
-            />
+      <div className="space-y-6">
+        {/* Main Info Card */}
+        <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 space-y-4">
+          <div className="flex items-center gap-2 text-slate-800 font-semibold border-b border-slate-200/60 pb-2 mb-2">
+            <User className="h-4 w-4 text-blue-600" />
+            ข้อมูลทั่วไป
           </div>
 
-          {/* Line ID */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <FaLine className="h-4 w-4 text-[#06C755]" />
-              Line ID
-            </label>
-            <Input
-              placeholder="@lineid หรือ เบอร์โทร"
-              className="h-11 border-slate-200"
-              {...form.register("line_id")}
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                ชื่อเจ้าของ <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="เช่น คุณสมชาย ใจดี"
+                  className="pl-9 h-11 bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all rounded-xl"
+                  {...form.register("full_name")}
+                />
+              </div>
+              {form.formState.errors.full_name && (
+                <p className="text-xs text-red-500 font-medium ml-1">
+                  {form.formState.errors.full_name.message}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Info Card */}
+        <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 space-y-4">
+          <div className="flex items-center gap-2 text-slate-800 font-semibold border-b border-slate-200/60 pb-2 mb-2">
+            <Phone className="h-4 w-4 text-emerald-600" />
+            ข้อมูลการติดต่อ
           </div>
 
-          {/* Facebook */}
-          <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <FaFacebook className="h-4 w-4 text-[#1877F2]" />
-              Facebook URL
-            </label>
-            <Input
-              placeholder="https://facebook.com/..."
-              className="h-11 border-slate-200"
-              {...form.register("facebook_url")}
-            />
-            {form.formState.errors.facebook_url && (
-              <p className="text-xs text-red-500">
-                {form.formState.errors.facebook_url.message}
-              </p>
-            )}
-          </div>
+          <div className="grid gap-5 md:grid-cols-2">
+            {/* Phone */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                เบอร์โทร
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="089-xxx-xxxx"
+                  className="pl-9 h-11 bg-white border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all rounded-xl"
+                  {...form.register("phone")}
+                />
+              </div>
+            </div>
 
-          {/* Other Contact */}
-          <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <AtSign className="h-4 w-4 text-slate-400" />
-              ช่องทางติดต่ออื่นๆ
-            </label>
-            <Input
-              placeholder="WhatsApp, WeChat, เบอร์สำรอง ฯลฯ"
-              className="h-11 border-slate-200"
-              {...form.register("other_contact")}
-            />
+            {/* Line ID */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                Line ID
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                  <FaLine className="h-4 w-4 text-[#06C755]" />
+                </div>
+                <Input
+                  placeholder="@lineid"
+                  className="pl-9 h-11 bg-white border-slate-200 focus:border-[#06C755] focus:ring-[#06C755]/20 transition-all rounded-xl"
+                  {...form.register("line_id")}
+                />
+              </div>
+            </div>
+
+            {/* Facebook */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                Facebook URL
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                  <FaFacebook className="h-4 w-4 text-[#1877F2]" />
+                </div>
+                <Input
+                  placeholder="facebook.com/..."
+                  className="pl-9 h-11 bg-white border-slate-200 focus:border-[#1877F2] focus:ring-[#1877F2]/20 transition-all rounded-xl"
+                  {...form.register("facebook_url")}
+                />
+              </div>
+              {form.formState.errors.facebook_url && (
+                <p className="text-xs text-red-500 font-medium ml-1">
+                  {form.formState.errors.facebook_url.message}
+                </p>
+              )}
+            </div>
+
+            {/* Other Contact */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                ช่องทางอื่นๆ
+              </label>
+              <div className="relative">
+                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="WhatsApp, WeChat..."
+                  className="pl-9 h-11 bg-white border-slate-200 focus:border-slate-400 focus:ring-slate-400/20 transition-all rounded-xl"
+                  {...form.register("other_contact")}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
+      {/* Action Buttons (Sticky Bottom) */}
+      <div className="sticky bottom-0 z-40 -mx-6 -mb-6 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 flex items-center justify-end gap-3 rounded-b-xl">
+        <Button
+          type="button"
+          variant="ghost"
+          disabled={isPending}
+          onClick={handleCancel}
+          className="h-15 px-10 text-muted-foreground hover:text-foreground cursor-pointer"
+        >
+          ยกเลิก
+        </Button>
+
         <Button
           type="submit"
-          disabled={isPending}
-          className="gap-2 bg-blue-600 hover:bg-blue-700"
+          disabled={
+            isPending || !form.formState.isValid || !form.formState.isDirty
+          }
+          className="h-15 px-10 rounded-xl bg-linear-to-r shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 text-white shadow-lg  hover:shadow-xl hover:shadow-emerald-500/30 transition-all gap-2 font-medium cursor-pointer disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
         >
           {isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -230,17 +285,6 @@ export function OwnerForm(props: Props) {
             : props.mode === "create"
               ? "เพิ่มเจ้าของ"
               : "บันทึกข้อมูล"}
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isPending}
-          onClick={() => router.back()}
-          className="gap-2"
-        >
-          <X className="h-4 w-4" />
-          ยกเลิก
         </Button>
       </div>
     </form>

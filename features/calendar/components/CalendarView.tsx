@@ -193,11 +193,11 @@ export function CalendarView({
                     "Select Property"}
               </span>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[300px] overflow-y-auto">
               <SelectItem value="ALL">ทรัพย์สินทั้งหมด</SelectItem>
               {properties.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
-                  <span className="truncate block max-w-[300px]">
+                  <span className="truncate block max-w-[300px] ">
                     {p.title}
                   </span>
                 </SelectItem>
@@ -266,7 +266,7 @@ export function CalendarView({
 
           {events.filter((e) => isSameMonth(new Date(e.start), currentDate))
             .length === 0 && (
-            <div className="p-2 bg-slate-50 text-center text-sm text-muted-foreground border-b">
+            <div className="p-2 bg-slate-50 text-center text-sm text-muted-foreground border-b border-slate-200">
               ไม่มีนัดหมายในเดือนนี้
             </div>
           )}

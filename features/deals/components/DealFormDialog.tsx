@@ -9,7 +9,8 @@ import { createDealAction, updateDealAction } from "../actions";
 import { DealWithProperty, DealPropertyOption } from "../types";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Loader2, Plus, Check } from "lucide-react";
+import { Loader2, Plus, Check, Save } from "lucide-react";
+import { RiEdit2Line } from "react-icons/ri";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import {
@@ -67,6 +68,7 @@ export function DealFormDialog({
 
   const form = useForm<CreateDealInput>({
     resolver: zodResolver(createDealSchema) as unknown as Resolver<any>,
+    mode: "onChange",
     defaultValues: {
       lead_id: leadId || "",
       deal_type: deal?.deal_type || "RENT",
@@ -222,12 +224,18 @@ export function DealFormDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || (
-          <Button size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            สร้าง Deal
-          </Button>
-        )}
+        {trigger ||
+          (deal ? (
+            <Button className="bg-white/20 cursor-pointer text-white border-0 hover:bg-white/30  transition-all hover:scale-105 active:scale-95">
+              <RiEdit2Line className="h-4 w-4 mr-2" />
+              แก้ไข
+            </Button>
+          ) : (
+            <Button size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              สร้าง Deal
+            </Button>
+          ))}
       </DialogTrigger>
       <DialogContent className="sm:max-w-3xl w-[95vw] max-h-[95vh] overflow-hidden flex flex-col">
         <DialogHeader>
@@ -258,7 +266,7 @@ export function DealFormDialog({
                         />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="max-h-[400px] w-(--radix-select-trigger-width)">
+                    <SelectContent className="max-h-[400px] overflow-y-auto">
                       {properties.map((p) => (
                         <SelectItem
                           key={p.id}
@@ -609,21 +617,26 @@ export function DealFormDialog({
               />
             </div>
 
-            <DialogFooter className="gap-2 sm:gap-2">
+            <DialogFooter className="gap-2 sm:gap-2 my-3">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => {
                   form.reset();
                   setOpen(false);
                 }}
+                className="h-12 px-6  text-slate-500 hover:text-slate-800 cursor-pointer"
               >
                 ยกเลิก
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="min-w-[100px]"
+                disabled={
+                  isSubmitting ||
+                  !form.formState.isValid ||
+                  !form.formState.isDirty
+                }
+                className="h-12 px-8  rounded-xl bg-linear-to-r shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 text-white shadow-md hover:shadow-lg hover:shadow-emerald-500/30 transition-all gap-2 font-medium cursor-pointer disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>
@@ -632,7 +645,7 @@ export function DealFormDialog({
                   </>
                 ) : (
                   <>
-                    <Check className="mr-2 h-4 w-4" />
+                    <Save className="mr-2 h-4 w-4" />
                     บันทึก
                   </>
                 )}

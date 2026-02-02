@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { OwnerHeader } from "@/features/owners/components/OwnerHeader";
 import { OwnerContactInfo } from "@/features/owners/components/OwnerContactInfo";
 import { OwnerProperties } from "@/features/owners/components/OwnerProperties";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 interface PageProps {
   params: Promise<{
@@ -33,7 +34,16 @@ export default async function OwnerPage({ params }: PageProps) {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-6 mx-auto">
+      {/* Breadcrumb */}
+      <Breadcrumb
+        backHref={`/protected/owners`}
+        items={[
+          { label: "เจ้าของทรัพย์", href: "/protected/owners" },
+          { label: owner.full_name || "รายละเอียด" },
+        ]}
+        className="mb-6"
+      />
       {/* Premium Header */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <OwnerHeader owner={owner} propertyCount={properties.length} />

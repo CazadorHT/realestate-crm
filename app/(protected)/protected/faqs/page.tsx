@@ -3,6 +3,7 @@ import { FAQsTable } from "@/features/admin/components/FAQsTable";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { FAQStats } from "@/features/admin/components/FAQStats";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
+import { CreateFAQDialog } from "@/features/admin/components/CreateFAQDialog";
 
 export default async function FAQsPage() {
   const faqs = await getFaqs();
@@ -11,16 +12,14 @@ export default async function FAQsPage() {
   const activeFaqs = faqs?.filter((f) => f.is_active).length || 0;
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className=" space-y-6 animate-fade-in">
       {/* Premium Header */}
       <PageHeader
         title="คำถามที่พบบ่อย (FAQs)"
         subtitle="จัดการคำถามและคำตอบสำหรับลูกค้า"
         count={totalFaqs}
         icon="helpCircle"
-        actionLabel="เพิ่มคำถามใหม่"
-        actionHref="/protected/faqs/new"
-        actionIcon="plus"
+        actionSlot={<CreateFAQDialog />}
         gradient="blue"
       />
 

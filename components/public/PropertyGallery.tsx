@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +40,7 @@ export function PropertyGallery({
 }: PropertyGalleryProps) {
   const [open, setOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   // Sort: Cover first
   const sortedImages = [...(images || [])].sort((a, b) => {
@@ -74,6 +80,57 @@ export function PropertyGallery({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, handleNext, handlePrev]);
+
+  const handleImageError = useCallback((id: string) => {
+    setFailedImages((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(id);
+      return newSet;
+    });
+  }, []);
+
+  const ImageWithFallback = ({
+    img,
+    alt,
+    className,
+    priority = false,
+    sizes,
+    fill = true,
+  }: {
+    img: PropertyImage;
+    alt: string;
+    className?: string;
+    priority?: boolean;
+    sizes?: string;
+    fill?: boolean;
+  }) => {
+    // If image thinks it failed or URL is empty, show fallback
+    if (!img.image_url || failedImages.has(img.id)) {
+      return (
+        <div
+          className={cn(
+            "flex flex-col items-center justify-center bg-slate-100 text-slate-400 absolute inset-0 h-full w-full",
+            className,
+          )}
+        >
+          <ImageIcon className="w-8 h-8 opacity-40 mb-1" />
+          <span className="text-[10px] font-medium opacity-60">No Image</span>
+        </div>
+      );
+    }
+
+    return (
+      <Image
+        src={img.image_url}
+        alt={alt}
+        fill={fill}
+        className={className}
+        priority={priority}
+        sizes={sizes}
+        onError={() => handleImageError(img.id)}
+      />
+    );
+  };
 
   if (!mainImage) {
     return (
@@ -148,12 +205,12 @@ export function PropertyGallery({
                   setOpen(true);
                 }}
               >
-                <Image
-                  src={img.image_url}
+                <ImageWithFallback
+                  img={img}
                   alt={`${title} ${idx + 1}`}
-                  fill
                   className="object-cover"
                   priority={idx === 0}
+                  sizes="(max-width: 768px) 100vw, 33vw"
                 />
               </div>
             ))}
@@ -170,10 +227,9 @@ export function PropertyGallery({
               setOpen(true);
             }}
           >
-            <Image
-              src={mainImage?.image_url || "/images/placeholder.jpg"}
+            <ImageWithFallback
+              img={mainImage}
               alt={title}
-              fill
               className="object-cover hover:scale-105 transition-transform duration-700"
               priority
               sizes="50vw"
@@ -191,10 +247,9 @@ export function PropertyGallery({
                   setOpen(true);
                 }}
               >
-                <Image
-                  src={img.image_url}
+                <ImageWithFallback
+                  img={img}
                   alt={`${title} - ${idx + 1}`}
-                  fill
                   className="object-cover hover:scale-105 transition-transform duration-500"
                   sizes="25vw"
                 />
@@ -247,6 +302,10 @@ export function PropertyGallery({
             <DialogTitle>
               รูปภาพ: {title} ({currentIndex + 1}/{sortedImages.length})
             </DialogTitle>
+            <DialogDescription>
+              รูปภาพที่ {currentIndex + 1} จากทั้งหมด {sortedImages.length}{" "}
+              รูปของ {title}
+            </DialogDescription>
           </VisuallyHidden>
 
           <button
@@ -268,14 +327,13 @@ export function PropertyGallery({
 
           <div className="relative w-full h-full flex items-center justify-center px-4 pb-24 pt-4">
             <div className="relative w-full h-full flex items-center justify-center">
-              <Image
-                src={sortedImages[currentIndex].image_url}
+              <ImageWithFallback
+                img={sortedImages[currentIndex]}
                 alt={title}
-                fill
                 className="object-contain"
-                quality={100}
                 priority
                 sizes="100vw"
+                fill={true}
               />
             </div>
           </div>
@@ -317,11 +375,11 @@ export function PropertyGallery({
                     : "border-white/30 opacity-60 hover:opacity-100 hover:border-white/60",
                 )}
               >
-                <Image
-                  src={img.image_url}
+                <ImageWithFallback
+                  img={img}
                   alt=""
-                  fill
                   className="object-cover"
+                  sizes="10vw"
                 />
               </button>
             ))}

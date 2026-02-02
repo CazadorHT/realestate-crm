@@ -103,8 +103,12 @@ export function AppBreadcrumbs({
       });
     });
 
+    // Debug log to verify props
+    // Debug log removed to prevent TS error
+    // console.log("AppBreadcrumbs rendered", { ... });
+
     return items;
-  }, [pathname, showHome]);
+  }, [pathname, showHome, customItems]);
 
   // Schema.org for SEO
   const schemaData = useMemo(() => {

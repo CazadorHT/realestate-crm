@@ -31,6 +31,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
+import { EditFAQDialog } from "./EditFAQDialog";
 
 interface FAQ {
   id: string;
@@ -47,6 +48,7 @@ interface FAQsTableProps {
 
 export function FAQsTable({ faqs }: FAQsTableProps) {
   const [deleteConfirmFaq, setDeleteConfirmFaq] = useState<FAQ | null>(null);
+  const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const allIds = useMemo(() => faqs?.map((f) => f.id) || [], [faqs]);
   const {
@@ -180,15 +182,14 @@ export function FAQsTable({ faqs }: FAQsTableProps) {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Link href={`/protected/faqs/${faq.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="hover:bg-blue-50 hover:text-blue-600"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                        onClick={() => setEditingFaq(faq)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -243,6 +244,16 @@ export function FAQsTable({ faqs }: FAQsTableProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <EditFAQDialog
+        faq={editingFaq}
+        open={!!editingFaq}
+        onOpenChange={(open) => !open && setEditingFaq(null)}
+        onSuccess={() => {
+          // You might already have a refresh mechanism, but reload is safe here
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

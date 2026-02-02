@@ -5,9 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { addMonths, subDays } from "date-fns";
 
-// ... (keep other imports) ...
-
-// ... (keep ContractStatusBadge and getStatusLabel) ...
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { DocumentSection } from "@/features/documents/components/DocumentSection";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { getContractByDealId as _noop } from "@/features/rental-contracts/actions"; // noop to keep import types consistent
 
 type Props = {
   dealId: string;
@@ -16,18 +25,6 @@ type Props = {
   defaultLeaseTerm?: number | null;
   dealStatus?: string;
 };
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { getContractByDealId as _noop } from "@/features/rental-contracts/actions"; // noop to keep import types consistent
-import { DocumentSection } from "@/features/documents/components/DocumentSection";
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   contractFormSchema,
   ContractFormInput,
@@ -40,7 +37,13 @@ import {
   XCircle,
   Calendar as CalendarIcon,
   Wallet,
+  PenLine,
+  ChevronRight,
+  Trash2,
+  FileText,
+  Plus,
 } from "lucide-react";
+import { RiEdit2Line } from "react-icons/ri";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PriceInput } from "@/components/ui/price-input";
 import {
@@ -129,6 +132,7 @@ export function RentalContractSection({
 
   const form = useForm<ContractFormInput>({
     resolver: zodResolver(contractFormSchema) as any,
+    mode: "onChange",
     defaultValues: {
       deal_id: dealId,
       start_date: contract?.start_date ?? today,
@@ -236,11 +240,49 @@ export function RentalContractSection({
             </div>
           ) : (
             <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  {contract ? "แก้ไขสัญญา" : "สร้างสัญญา"}
-                </Button>
-              </DialogTrigger>
+              <div className="flex items-center gap-2">
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant={contract ? "outline" : "default"}
+                    className={cn(
+                      "gap-1.5 transition-all active:scale-95 shadow-xs",
+                      !contract &&
+                        "bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-slate-200 dark:text-slate-900",
+                    )}
+                  >
+                    {contract ? (
+                      <>
+                        <RiEdit2Line className="h-3.5 w-3.5" />
+                        แก้ไขสัญญา
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-3.5 w-3.5" />
+                        สร้างสัญญา
+                      </>
+                    )}
+                  </Button>
+                </DialogTrigger>
+                {contract && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={
+                      !["DRAFT", "TERMINATED"].includes(contract.status)
+                    }
+                    className={`gap-1.5 transition-all active:scale-95 ${
+                      ["DRAFT", "TERMINATED"].includes(contract.status)
+                        ? "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        : "text-muted-foreground opacity-50 cursor-not-allowed"
+                    }`}
+                    onClick={() => setShowDeleteDialog(true)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    ลบสัญญา
+                  </Button>
+                )}
+              </div>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>
@@ -499,7 +541,15 @@ export function RentalContractSection({
                     >
                       ยกเลิก
                     </Button>
-                    <Button type="submit">บันทึก</Button>
+                    <Button
+                      type="submit"
+                      disabled={
+                        !form.formState.isValid || !form.formState.isDirty
+                      }
+                      className="disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+                    >
+                      บันทึก
+                    </Button>
                   </div>
                 </form>
               </DialogContent>
@@ -529,7 +579,41 @@ export function RentalContractSection({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {/* View Details Dialog */}
+                {/* 1. Sign (Primary Action for Draft) */}
+                {contract.status === "DRAFT" && (
+                  <Button
+                    size="sm"
+                    className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(
+                          `/api/rental-contracts/${dealId}`,
+                          {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              id: contract.id,
+                              status: "ACTIVE",
+                            }),
+                          },
+                        );
+                        const payload = await res.json();
+                        if (!res.ok)
+                          throw new Error(payload.message || "Sign failed");
+                        toast.success("สัญญาถูกเซ็นเรียบร้อย");
+                        await fetchContract();
+                      } catch (e) {
+                        console.error(e);
+                        toast.error("ไม่สามารถเซ็นสัญญาได้");
+                      }
+                    }}
+                  >
+                    <PenLine className="h-3.5 w-3.5" />
+                    เริ่มสัญญา
+                  </Button>
+                )}
+
+                {/* 2. View */}
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button size="sm" variant="outline" className="gap-1.5">
@@ -543,25 +627,25 @@ export function RentalContractSection({
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
+                        <div className="col-span-1">
                           <p className="text-muted-foreground">หมายเลขสัญญา</p>
                           <p className="font-medium text-blue-600">
                             {contract.contract_number ?? "-"}
                           </p>
                         </div>
-                        <div>
+                        <div className="col-span-1">
                           <p className="text-muted-foreground">สถานะ</p>
                           <div>
                             <ContractStatusBadge status={contract.status} />
                           </div>
                         </div>
-                        <div>
+                        <div className="col-span-1">
                           <p className="text-muted-foreground">วันเริ่มสัญญา</p>
                           <p className="font-medium">
                             {contract.start_date ?? "-"}
                           </p>
                         </div>
-                        <div>
+                        <div className="col-span-1">
                           <p className="text-muted-foreground">
                             วันสิ้นสุดสัญญา
                           </p>
@@ -569,20 +653,20 @@ export function RentalContractSection({
                             {contract.end_date ?? "-"}
                           </p>
                         </div>
-                        <div>
+                        <div className="col-span-1">
                           <p className="text-muted-foreground">ราคาเช่า/งวด</p>
                           <p className="font-medium">
                             {Number(contract.rent_price).toLocaleString()} บาท
                           </p>
                         </div>
-                        <div>
+                        <div className="col-span-1">
                           <p className="text-muted-foreground">ระยะเวลาสัญญา</p>
                           <p className="font-medium">
                             {contract.lease_term_months} เดือน
                           </p>
                         </div>
                         {(contract.deposit_amount ?? 0) > 0 && (
-                          <div>
+                          <div className="col-span-1">
                             <p className="text-muted-foreground">เงินประกัน</p>
                             <p className="font-medium">
                               {Number(contract.deposit_amount).toLocaleString()}{" "}
@@ -591,7 +675,7 @@ export function RentalContractSection({
                           </div>
                         )}
                         {(contract.advance_payment_amount ?? 0) > 0 && (
-                          <div>
+                          <div className="col-span-1">
                             <p className="text-muted-foreground">
                               เงินล่วงหน้า
                             </p>
@@ -618,45 +702,12 @@ export function RentalContractSection({
                   </DialogContent>
                 </Dialog>
 
-                {contract.status === "DRAFT" && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={async () => {
-                        try {
-                          const res = await fetch(
-                            `/api/rental-contracts/${dealId}`,
-                            {
-                              method: "PUT",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                id: contract.id,
-                                status: "ACTIVE",
-                              }),
-                            },
-                          );
-                          const payload = await res.json();
-                          if (!res.ok)
-                            throw new Error(payload.message || "Sign failed");
-                          toast.success("สัญญาถูกเซ็นเรียบร้อย");
-                          await fetchContract();
-                        } catch (e) {
-                          console.error(e);
-                          toast.error("ไม่สามารถเซ็นสัญญาได้");
-                        }
-                      }}
-                    >
-                      เซ็นสัญญา
-                    </Button>
-                  </>
-                )}
-
+                {/* 4. Terminate (Stop) */}
                 {contract.status === "ACTIVE" && (
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-1.5"
+                    className="text-amber-600 border-amber-200 hover:bg-amber-100 hover:text-amber-700 dark:hover:bg-amber-900/20 gap-1.5 transition-all active:scale-95 flex items-center shadow-xs"
                     onClick={() => setShowStopDialog(true)}
                   >
                     <Ban className="h-3.5 w-3.5" />
@@ -664,6 +715,7 @@ export function RentalContractSection({
                   </Button>
                 )}
 
+                {/* Confirm Stop Dialog */}
                 <AlertDialog
                   open={showStopDialog}
                   onOpenChange={setShowStopDialog}
@@ -683,7 +735,7 @@ export function RentalContractSection({
                       </AlertDialogCancel>
                       <AlertDialogAction
                         disabled={isActionPending}
-                        className="bg-amber-600 hover:bg-amber-700"
+                        className="bg-amber-600 hover:bg-amber-700 font-medium"
                         onClick={async (e) => {
                           e.preventDefault();
                           setIsActionPending(true);
@@ -716,29 +768,7 @@ export function RentalContractSection({
                   </AlertDialogContent>
                 </AlertDialog>
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setOpen(true)}
-                >
-                  แก้ไข
-                </Button>
-
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={!["DRAFT", "TERMINATED"].includes(contract.status)}
-                  className={`gap-1.5 ${
-                    ["DRAFT", "TERMINATED"].includes(contract.status)
-                      ? "text-destructive hover:text-destructive hover:bg-destructive/10"
-                      : "text-muted-foreground"
-                  }`}
-                  onClick={() => setShowDeleteDialog(true)}
-                >
-                  <XCircle className="h-3.5 w-3.5" />
-                  ลบสัญญา
-                </Button>
-
+                {/* Confirm Delete Dialog */}
                 <AlertDialog
                   open={showDeleteDialog}
                   onOpenChange={setShowDeleteDialog}
@@ -748,7 +778,7 @@ export function RentalContractSection({
                       <AlertDialogTitle>ยืนยันการลบสัญญา</AlertDialogTitle>
                       <AlertDialogDescription>
                         คุณแน่ใจหรือไม่ว่าต้องการลบสัญญานี้?
-                        ข้อมูลสัญญาและเอกสารที่เกี่ยวข้องในส่วนของสัญญานี้จะถูกลบออกจากระบบเป็นการถาวร
+                        ข้อมูลสัญญาและเอกสารที่เกี่ยวข้องจะถูกลบออกจากระบบเป็นการถาวร
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -757,7 +787,7 @@ export function RentalContractSection({
                       </AlertDialogCancel>
                       <AlertDialogAction
                         disabled={isActionPending}
-                        className="bg-destructive hover:bg-destructive/90 text-white"
+                        className="bg-red-600 hover:bg-red-700 font-medium"
                         onClick={async (e) => {
                           e.preventDefault();
                           setIsActionPending(true);

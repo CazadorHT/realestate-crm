@@ -63,6 +63,7 @@ export function PartnerForm({
 
   const form = useForm<PartnerFormValues>({
     resolver: zodResolver(formSchema) as any,
+    mode: "onChange",
     defaultValues: {
       name: initialData?.name || "",
       logo_url: initialData?.logo_url || "",
@@ -297,8 +298,10 @@ export function PartnerForm({
           )}
           <Button
             type="submit"
-            disabled={saving}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 h-11 px-10 rounded-xl transition-all active:scale-95 flex items-center font-semibold"
+            disabled={
+              saving || !form.formState.isValid || !form.formState.isDirty
+            }
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 h-11 px-10 rounded-xl transition-all active:scale-95 flex items-center font-semibold disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
           >
             {saving ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

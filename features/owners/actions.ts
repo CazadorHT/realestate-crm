@@ -99,10 +99,10 @@ export async function createOwnerAction(values: OwnerFormValues) {
     });
 
     revalidatePath("/protected/owners");
+    return { success: true, id: owner.id };
   } catch (err) {
     return authzFail(err);
-  }
-  redirect("/protected/owners");
+  }   
 }
 
 export async function updateOwnerAction(id: string, values: OwnerFormValues) {
@@ -151,10 +151,10 @@ export async function updateOwnerAction(id: string, values: OwnerFormValues) {
 
     revalidatePath("/protected/owners");
     revalidatePath("/protected/properties");
+    return { success: true };
   } catch (err) {
     return authzFail(err);
   }
-  redirect("/protected/owners");
 }
 
 export async function deleteOwnerAction(id: string) {
