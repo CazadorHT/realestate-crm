@@ -212,7 +212,12 @@ export default async function PropertyDetailsPage({
             ]}
           />
         </div>
-        <Button size="sm" asChild className="rounded-full shadow-md">
+        <Button
+          variant="outline"
+          size="lg"
+          asChild
+          className="rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
+        >
           <Link href={`/protected/properties/${property.id}/edit`}>
             <Edit className="h-4 w-4 mr-2" />
             แก้ไขข้อมูล

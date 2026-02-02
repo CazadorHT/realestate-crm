@@ -15,14 +15,24 @@ function isStepComplete(step: number, values: PropertyFormValues) {
   if (step === 1)
     return !!(values.title && values.property_type && values.listing_type);
   if (step === 2) {
-    if (values.listing_type === "SALE") return !!values.original_price;
-    if (values.listing_type === "RENT") return !!values.original_rental_price;
-    return !!(values.original_price && values.original_rental_price);
+    const isSale =
+      values.listing_type === "SALE" || values.listing_type === "SALE_AND_RENT";
+    const isRent =
+      values.listing_type === "RENT" || values.listing_type === "SALE_AND_RENT";
+    const saleOk =
+      !isSale ||
+      (!!values.original_price && values.commission_sale_percentage != null);
+    const rentOk =
+      !isRent ||
+      (!!values.original_rental_price && values.commission_rent_months != null);
+    return saleOk && rentOk;
   }
   if (step === 3)
     return !!(values.province && values.district && values.subdistrict);
   if (step === 4) return (values.images?.length || 0) > 0;
-  return false; // Step 5
+  if (step === 5) return true; // อุปกรณ์อำนวยความสะดวก (Optional)
+  if (step === 6) return !!values.status; // ตรวจสอบและบันทึก (Required Status)
+  return false;
 }
 
 export function PropertyFormStepper({
