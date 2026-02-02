@@ -14,6 +14,7 @@ import { COMPARISON_ROWS } from "@/components/public/compare/constants";
 import { CompareEmptyState } from "@/components/public/compare/CompareEmptyState";
 import { CompareLoadingSkeleton } from "@/components/public/compare/CompareLoadingSkeleton";
 import { CompareTable } from "@/components/public/compare/CompareTable";
+import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
 export default function ComparePage() {
   return (
@@ -78,19 +79,14 @@ function ComparePageContent() {
       <SectionBackground pattern="blobs" intensity="low" showDots={true} />
 
       <div className="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 relative z-10">
-        <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <Button variant="ghost" asChild className="hover:bg-white/50 w-fit">
-              <Link href="/properties">
-                <ArrowLeft className="h-4 w-4 mr-2" /> กลับไปค้นหา
-              </Link>
-            </Button>
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 icon-underline">
-              เปรียบเทียบทรัพย์
-            </h1>
-          </div>
-        </div>
-
+        <AppBreadcrumbs
+          items={[
+            { label: "หน้าแรก", href: "/" },
+            { label: "เปรียบเทียบ", href: "/compare" },
+          ]}
+          className="mb-6"
+        />
+        
         {isLoading ? (
           <CompareLoadingSkeleton count={3} />
         ) : properties.length === 0 ? (

@@ -39,7 +39,7 @@ export function BlogSection() {
         .select("*")
         .eq("is_published", true)
         .order("published_at", { ascending: false })
-        .limit(3);
+        .limit(4);
 
       if (data) {
         setPosts(data as BlogPost[]);
@@ -116,9 +116,9 @@ export function BlogSection() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
           {loading
-            ? Array.from({ length: 3 }).map((_, idx) => (
+            ? Array.from({ length: 4 }).map((_, idx) => (
                 <div
                   key={idx}
                   className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col h-full"
@@ -213,9 +213,6 @@ export function BlogSection() {
                             )}
                           </time>
                         </div>
-                        {post.reading_time && (
-                          <span>• {post.reading_time}</span>
-                        )}
                       </div>
 
                       <h3

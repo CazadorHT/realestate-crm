@@ -410,7 +410,7 @@ export async function generateMetadata(props: {
   let query = supabase
     .from("properties")
     .select(
-      "title, description, slug, listing_type, province, property_images(image_url, is_cover)",
+      "title, description, slug, listing_type, property_type, price, rental_price, bedrooms, bathrooms, size_sqm, province, district, subdistrict, popular_area, property_images(image_url, is_cover)",
     );
 
   if (UUID_RE.test(slug)) {
@@ -423,10 +423,29 @@ export async function generateMetadata(props: {
 
   if (!data) return { title: "ไม่พบทรัพย์" };
 
-  // Helper for better title
-  const typeLabel = data.listing_type === "RENT" ? "เช่า" : "ขาย";
-  const locationLabel = data.province ? ` - ${data.province}` : "";
-  const pageTitle = `${typeLabel} ${data.title}${locationLabel} | Real Estate CRM`;
+  // Use centralized SEO logic
+  const seoData = {
+    title: data.title,
+    property_type: data.property_type,
+    listing_type: data.listing_type,
+    bedrooms: data.bedrooms,
+    bathrooms: data.bathrooms,
+    size_sqm: data.size_sqm,
+    price: data.price,
+    rental_price: data.rental_price,
+    popular_area: data.popular_area,
+    province: data.province,
+    district: data.district,
+    subdistrict: data.subdistrict,
+  };
+
+  // Import locally to avoid top-level side effects if any (though standard imports are fine too, but this file is huge)
+  const { generateMetaTitle, generateMetaDescription, generateMetaKeywords } =
+    await import("@/lib/seo-utils");
+
+  const pageTitle = generateMetaTitle(seoData as any);
+  const pageDesc = generateMetaDescription(seoData as any);
+  const keywords = generateMetaKeywords(seoData as any);
 
   const propertyImages = data.property_images as unknown as {
     image_url: string;
@@ -436,24 +455,22 @@ export async function generateMetadata(props: {
   const COVER_IMAGE =
     propertyImages?.find((img) => img.is_cover)?.image_url ||
     propertyImages?.[0]?.image_url ||
-    "/images/og-default.jpg";
+    "/images/hero-realestate.png";
 
-  const cleanDesc =
-    data.description?.replace(/<[^>]*>?/gm, "").slice(0, 160) ||
-    "รายละเอียดทรัพย์";
   const canonicalUrl = `https://your-domain.com/properties/${
     data.slug || slug
   }`;
 
   return {
     title: pageTitle,
-    description: cleanDesc,
+    description: pageDesc,
+    keywords: keywords,
     alternates: {
       canonical: canonicalUrl,
     },
     openGraph: {
       title: pageTitle,
-      description: cleanDesc,
+      description: pageDesc,
       images: [COVER_IMAGE],
       url: canonicalUrl,
       type: "website",
@@ -462,7 +479,7 @@ export async function generateMetadata(props: {
     twitter: {
       card: "summary_large_image",
       title: pageTitle,
-      description: cleanDesc,
+      description: pageDesc,
       images: [COVER_IMAGE],
     },
   };

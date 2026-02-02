@@ -33,21 +33,12 @@ export const metadata: Metadata = {
     description:
       "ระบบบริหารจัดการอสังหาริมทรัพย์ครบวงจร ค้นหาบ้าน คอนโด ที่ดิน และเครื่องมือสำหรับนายหน้ามืออาชีพ",
     siteName: "Real Estate CRM",
-    images: [
-      {
-        url: "/images/og-share.jpg", // Make sure to use a valid path if available, or keep generic
-        width: 1200,
-        height: 630,
-        alt: "Real Estate CRM Platform",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Real Estate CRM | แพลตฟอร์มบริหารงานขายอสังหาริมทรัพย์",
     description:
       "ระบบบริหารจัดการอสังหาริมทรัพย์ครบวงจร ค้นหาบ้าน คอนโด ที่ดิน และเครื่องมือสำหรับนายหน้ามืออาชีพ",
-    images: ["/images/og-share.jpg"],
   },
 };
 

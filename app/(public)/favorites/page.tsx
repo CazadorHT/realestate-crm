@@ -11,6 +11,7 @@ import { FavoritesHeader } from "@/components/public/favorites/FavoritesHeader";
 import { FavoritesEmptyState } from "@/components/public/favorites/FavoritesEmptyState";
 import { FavoritesGrid } from "@/components/public/favorites/FavoritesGrid";
 import { FavoritesSkeleton } from "@/components/public/favorites/FavoritesSkeleton";
+import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState<PropertyCardProps[]>([]);
@@ -73,11 +74,17 @@ export default function FavoritesPage() {
   return (
     <div className="min-h-screen bg-slate-50 pt-10">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <AppBreadcrumbs
+          items={[
+            { label: "หน้าแรก", href: "/" },
+            { label: "รายการโปรด", href: "/favorites" },
+          ]}
+          className="mb-6"
+        />
         <FavoritesHeader
           favoriteIds={favoriteIds}
           onClearAll={handleClearAll}
         />
-
         {isLoading ? (
           <FavoritesSkeleton />
         ) : favorites.length === 0 ? (

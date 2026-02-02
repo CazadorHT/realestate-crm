@@ -80,6 +80,21 @@ export function generatePropertySlug(data: PropertyDataForSEO): string {
   // Extract Top 2 Nearby Places (Priority: Transit > Others)
   const nearbyKeywords: string[] = [];
   if (data.nearby_places && data.nearby_places.length > 0) {
+    // Explicitly find transit stations and add them to URL
+    data.nearby_places.forEach((place) => {
+      const isTransit =
+        place.name.includes("BTS") ||
+        place.name.includes("MRT") ||
+        place.name.includes("สายสี");
+
+      if (isTransit) {
+        // Add clean station name to keywords (e.g. "BTS ทองหล่อ")
+        nearbyKeywords.push(place.name.replace(/\s+/g, "-"));
+      }
+    });
+
+    // Also keep existing logic but ensure no duplicates if needed, or just prioritize transit
+    // For now, let's just ensure standard "near-X" format for top places too
     const sorted = [...data.nearby_places].sort((a, b) => {
       const isTransit = (t: string) =>
         t.includes("BTS") || t.includes("MRT") || t.includes("สายสี");
@@ -87,8 +102,13 @@ export function generatePropertySlug(data: PropertyDataForSEO): string {
       if (!isTransit(a.name) && isTransit(b.name)) return 1;
       return 0;
     });
+
+    // Add top 2 places as "near-X" keyword if not already added
     sorted.slice(0, 2).forEach((place) => {
-      nearbyKeywords.push(`ใกล้-${place.name}`);
+      const keyword = `ใกล้-${place.name.replace(/\s+/g, "-")}`;
+      if (!nearbyKeywords.includes(place.name.replace(/\s+/g, "-"))) {
+        nearbyKeywords.push(keyword);
+      }
     });
   }
 

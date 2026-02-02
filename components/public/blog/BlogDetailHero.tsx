@@ -9,7 +9,6 @@ interface BlogDetailHeroProps {
     title: string;
     cover_image?: string | null;
     category?: string | null;
-    reading_time?: string | null;
   };
   author: {
     name: string;
@@ -73,15 +72,6 @@ export function BlogDetailHero({
               <Calendar className="w-4 h-4" />
               <span>{formattedDate}</span>
             </div>
-            {post.reading_time && (
-              <>
-                <span>•</span>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{post.reading_time}</span>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>

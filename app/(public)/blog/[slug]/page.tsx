@@ -15,6 +15,7 @@ import Link from "next/link";
 import { BlogDetailHero } from "@/components/public/blog/BlogDetailHero";
 import { BlogDetailContent } from "@/components/public/blog/BlogDetailContent";
 import { BlogDetailSidebar } from "@/components/public/blog/BlogDetailSidebar";
+import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
 interface BlogPostPageProps {
   params: Promise<{
@@ -112,43 +113,23 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     keywords: post.tags?.join(", ") || "",
   };
 
-  // Breadcrumb Schema
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "หน้าแรก",
-        item: "https://your-domain.com",
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "บทความ",
-        item: "https://your-domain.com/blog",
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: post.title,
-        item: `https://your-domain.com/blog/${slug}`,
-      },
-    ],
-  };
-
   return (
-    <article className="min-h-screen bg-slate-50 pb-20">
+    <article className="min-h-screen bg-slate-50 pb-20 pt-16 md:pt-16">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
+
+      <div className="container mx-auto px-4 md:px-6 py-4">
+        <AppBreadcrumbs
+          items={[
+            { label: "หน้าแรก", href: "/" },
+            { label: "บทความ", href: "/blog" },
+            { label: post.title, href: `/blog/${slug}` },
+          ]}
+        />
+      </div>
 
       {/* Hero Header */}
       <BlogDetailHero
@@ -158,7 +139,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       />
 
       {/* Content Body with Sidebar */}
-      <div className="max-w-screen-2xl px-4 md:px-6 mx-auto relative z-10">
+      <div className="max-w-screen-2xl px-4 md:px-6 py-6 mx-auto relative z-10">
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-9">
