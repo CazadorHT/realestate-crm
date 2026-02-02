@@ -48,17 +48,17 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const startOfMonth = new Date(
     now.getFullYear(),
     now.getMonth(),
-    1
+    1,
   ).toISOString();
   const startOfLastMonth = new Date(
     now.getFullYear(),
     now.getMonth() - 1,
-    1
+    1,
   ).toISOString();
   const endOfLastMonth = new Date(
     now.getFullYear(),
     now.getMonth(),
-    0
+    0,
   ).toISOString();
 
   // 1. Revenue (Sold/Rented Properties)
@@ -147,7 +147,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   // 5. Total Commission (This Month)
   const totalCommission = (commissionDeals || []).reduce(
     (sum, d) => sum + (d.commission_amount || 0),
-    0
+    0,
   );
 
   return {
@@ -378,6 +378,7 @@ export type Notification = {
   type: "info" | "warning" | "alert" | "success";
   time: string;
   read: boolean;
+  href?: string;
 };
 
 export async function getRecentNotifications(): Promise<Notification[]> {
@@ -414,6 +415,7 @@ export async function getRecentNotifications(): Promise<Notification[]> {
         type: "success",
         time: timeStr,
         read: false, // In a real app, track read status
+        href: `/protected/leads/${lead.id}`,
       });
     });
   }

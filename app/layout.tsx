@@ -56,6 +56,8 @@ const notoThai = Noto_Sans_Thai({
   variable: "--font-noto-thai",
 });
 
+import { CookieConsent } from "@/components/common/CookieConsent";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -72,6 +74,7 @@ export default function RootLayout({
         >
           {children}
           <Toaster />
+          <CookieConsent />
         </ThemeProvider>
       </body>
     </html>

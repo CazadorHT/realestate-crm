@@ -172,7 +172,7 @@ export function SmartMatchWizard() {
             </div>
           </div>
 
-          <div className="relative flex-1 flex flex-col pt-5 min-h-0">
+          <div className="relative flex-1 flex flex-col pt-5 min-h-0 ">
             {step === 1 && (
               <QuizQuestion
                 title="วันนี้คุณกำลังมองหา..."
@@ -292,7 +292,7 @@ function QuizQuestion({ title, options, onSelect }: QuizQuestionProps) {
             <button
               key={option}
               onClick={() => onSelect(option)}
-              className="p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-sm font-medium text-slate-700 hover:text-blue-600 h-full"
+              className="p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-sm font-medium text-slate-700 hover:text-blue-600 h-full cursor-pointer"
             >
               {option}
             </button>

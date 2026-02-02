@@ -10,6 +10,8 @@ import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
+import { getRecentNotifications } from "@/features/dashboard/queries";
+
 export default async function ProtectedLayout({
   children,
 }: {
@@ -35,6 +37,9 @@ export default async function ProtectedLayout({
     return redirect("/auth/error?error=forbidden");
   }
 
+  // Fetch Notifications
+  const notifications = await getRecentNotifications();
+
   return (
     <div className="flex min-h-screen w-full bg-slate-50/50 dark:bg-slate-950">
       <SidebarNav role={profile.role} />
@@ -49,16 +54,14 @@ export default async function ProtectedLayout({
             </h1>
           </div>
           <div className="ml-auto flex items-center gap-4">
-            <NotificationBell />
+            <NotificationBell notifications={notifications} />
             <ThemeToggle />
             <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2 hidden sm:block" />
             <UserNav profile={profile} />
           </div>
         </header>
 
-        <main className="flex-1 p-6 md:p-8 mx-auto w-full">
-          {children}
-        </main>
+        <main className="flex-1 p-6 md:p-8 mx-auto w-full">{children}</main>
       </div>
     </div>
   );
