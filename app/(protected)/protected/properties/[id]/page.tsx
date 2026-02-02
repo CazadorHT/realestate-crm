@@ -11,6 +11,7 @@ import {
   User,
   Phone,
   TrainFront,
+  Eye,
 } from "lucide-react";
 import { FaLine } from "react-icons/fa";
 import { PropertyStatusBadge } from "@/components/properties/PropertyStatusBadge";
@@ -212,6 +213,21 @@ export default async function PropertyDetailsPage({
             ]}
           />
         </div>
+        <div className="flex items-center gap-4">
+        <Button
+          variant="outline"
+          size="lg"
+          asChild
+          className="rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
+        >
+          <Link
+            href={`/properties/${property.slug || property.id}`}
+            target="_blank"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            ดูหน้าเว็บไซต์
+          </Link>
+        </Button>
         <Button
           variant="outline"
           size="lg"
@@ -223,6 +239,7 @@ export default async function PropertyDetailsPage({
             แก้ไขข้อมูล
           </Link>
         </Button>
+        </div>
       </div>
 
       <div className="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 mt-6">

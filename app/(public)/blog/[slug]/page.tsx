@@ -27,7 +27,8 @@ export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const decodedSlug = decodeURIComponent(slug);
+  const post = await getBlogPostBySlug(decodedSlug);
 
   if (!post) {
     return {
@@ -66,7 +67,8 @@ export async function generateStaticParams() {
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const decodedSlug = decodeURIComponent(slug);
+  const post = await getBlogPostBySlug(decodedSlug);
 
   if (!post) {
     notFound();
@@ -82,7 +84,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     : "";
 
   const relatedPosts = post.category
-    ? await getRelatedPosts(slug, post.category)
+    ? await getRelatedPosts(decodedSlug, post.category)
     : [];
 
   // Schema.org Article markup
@@ -148,7 +150,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
           {/* Sidebar */}
           <BlogDetailSidebar
-            slug={slug}
+            slug={decodedSlug}
             title={post.title}
             relatedPosts={relatedPosts}
           />

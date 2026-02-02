@@ -48,7 +48,7 @@ export function PropertyDescription({ description }: PropertyDescriptionProps) {
       <div className="relative">
         <div
           ref={contentRef}
-          className={`prose prose-slate max-w-none text-slate-600 leading-relaxed text-sm md:text-base transition-all duration-500 ease-in-out border-b border-slate-200/60 pb-10 overflow-hidden ${
+          className={`prose prose-slate max-w-none text-slate-600 leading-5 text-sm md:text-base transition-all duration-500 ease-in-out border-b border-slate-200/60 pb-10 overflow-hidden ${
             !isExpanded && shouldShowButton ? "max-h-[500px]" : "max-h-[2000px]"
           }`}
           dangerouslySetInnerHTML={{

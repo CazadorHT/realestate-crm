@@ -405,6 +405,7 @@ export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await props.params;
+  const decodedSlug = decodeURIComponent(slug); // Fix for Thai characters
 
   const supabase = createAdminClient();
   let query = supabase
@@ -413,10 +414,10 @@ export async function generateMetadata(props: {
       "title, description, slug, listing_type, property_type, price, rental_price, bedrooms, bathrooms, size_sqm, province, district, subdistrict, popular_area, property_images(image_url, is_cover)",
     );
 
-  if (UUID_RE.test(slug)) {
-    query = query.eq("id", slug);
+  if (UUID_RE.test(decodedSlug)) {
+    query = query.eq("id", decodedSlug);
   } else {
-    query = query.eq("slug", slug);
+    query = query.eq("slug", decodedSlug);
   }
 
   const { data } = await query.maybeSingle();

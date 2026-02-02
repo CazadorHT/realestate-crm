@@ -44,6 +44,8 @@ interface PropertyDataForSEO {
   is_foreigner_quota?: boolean;
   is_hot_sale?: boolean;
   near_transit?: boolean;
+  transit_station_name?: string; // Legacy/Single field
+  nearby_transits?: { type: string; station_name: string }[]; // Full list from Step 3
   nearby_places?: any[];
   features?: string[];
 }
@@ -79,6 +81,30 @@ export function generatePropertySlug(data: PropertyDataForSEO): string {
 
   // Extract Top 2 Nearby Places (Priority: Transit > Others)
   const nearbyKeywords: string[] = [];
+
+  // 1. Priority: Main Transit Station from Form (Legacy/Simple)
+  if (data.near_transit && data.transit_station_name) {
+    const stationName = data.transit_station_name.trim().replace(/\s+/g, "-");
+    nearbyKeywords.push(`ใกล้รถไฟฟ้าสถานี-${stationName}`);
+  }
+
+  // 1.5 Priority: Transit List from Step 3 (nearby_transits) - Covers BTS, MRT, ARL, etc.
+  if (data.nearby_transits && data.nearby_transits.length > 0) {
+    data.nearby_transits.forEach((transit) => {
+      if (transit.station_name) {
+        const type = transit.type || "";
+        const name = transit.station_name.trim().replace(/\s+/g, "-");
+        // e.g. "ใกล้รถไฟฟ้าสถานี-bts-ทองหล่อ" or "ใกล้รถไฟฟ้าสถานี-arl-มักกะสัน"
+        const keyword = `ใกล้รถไฟฟ้าสถานี-${type}-${name}`;
+
+        if (!nearbyKeywords.includes(keyword)) {
+          nearbyKeywords.push(keyword);
+        }
+      }
+    });
+  }
+
+  // 2. Secondary: Transit from Nearby Places (Google Places API or similar)
   if (data.nearby_places && data.nearby_places.length > 0) {
     // Explicitly find transit stations and add them to URL
     data.nearby_places.forEach((place) => {
@@ -88,25 +114,49 @@ export function generatePropertySlug(data: PropertyDataForSEO): string {
         place.name.includes("สายสี");
 
       if (isTransit) {
-        // Add clean station name to keywords (e.g. "BTS ทองหล่อ")
-        nearbyKeywords.push(place.name.replace(/\s+/g, "-"));
+        // Use specific requested format: "ใกล้รถไฟฟ้าสถานี-X"
+        const stationName = place.name.trim().replace(/\s+/g, "-");
+        const keyword = `ใกล้รถไฟฟ้าสถานี-${stationName}`;
+
+        // Avoid adding if it's the same as the main station we just added
+        if (!nearbyKeywords.includes(keyword)) {
+          nearbyKeywords.push(keyword);
+        }
       }
     });
 
     // Also keep existing logic but ensure no duplicates if needed, or just prioritize transit
-    // For now, let's just ensure standard "near-X" format for top places too
-    const sorted = [...data.nearby_places].sort((a, b) => {
-      const isTransit = (t: string) =>
-        t.includes("BTS") || t.includes("MRT") || t.includes("สายสี");
-      if (isTransit(a.name) && !isTransit(b.name)) return -1;
-      if (!isTransit(a.name) && isTransit(b.name)) return 1;
-      return 0;
-    });
+    // Refined Logic: Add max 3 nearby places, 1 per category (excluding transit we just handled)
+    const addedCategories = new Set<string>();
+    const selectedNearbyPlaces: any[] = [];
 
-    // Add top 2 places as "near-X" keyword if not already added
-    sorted.slice(0, 2).forEach((place) => {
+    // Sort slightly to prioritize well-known categories if needed, or just keep original order
+    // Original order is likely user-defined order which is good.
+
+    for (const place of data.nearby_places) {
+      if (selectedNearbyPlaces.length >= 3) break;
+
+      const isTransit =
+        place.name.includes("BTS") ||
+        place.name.includes("MRT") ||
+        place.name.includes("สายสี");
+
+      // Skip if it's a transit station (already added above)
+      if (isTransit) continue;
+
+      const category = place.category || "Other";
+
+      // If we haven't added this category yet, add it
+      if (!addedCategories.has(category)) {
+        selectedNearbyPlaces.push(place);
+        addedCategories.add(category);
+      }
+    }
+
+    // Add selected places to keywords
+    selectedNearbyPlaces.forEach((place) => {
       const keyword = `ใกล้-${place.name.replace(/\s+/g, "-")}`;
-      if (!nearbyKeywords.includes(place.name.replace(/\s+/g, "-"))) {
+      if (!nearbyKeywords.includes(keyword)) {
         nearbyKeywords.push(keyword);
       }
     });
@@ -148,7 +198,7 @@ export function generatePropertySlug(data: PropertyDataForSEO): string {
 
   // Add random suffix to ensure uniqueness (project standard)
   const suffix = Date.now().toString(36).slice(-4);
-  return `${cleaned.slice(0, 160)}-${suffix}`;
+  return `${cleaned.slice(0, 220)}-${suffix}`;
 }
 
 /**

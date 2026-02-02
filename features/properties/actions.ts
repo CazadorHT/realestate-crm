@@ -362,6 +362,8 @@ export async function createPropertyAction(
       address_line1: propertyData.address_line1,
       postal_code: propertyData.postal_code,
       description: propertyData.description,
+      transit_station_name: (propertyData as any).transit_station_name,
+      nearby_transits: (propertyData as any).nearby_transits,
     });
 
     // Merge SEO keywords with our custom tags if SEO generated keywords don't include them (or just append)
@@ -714,6 +716,8 @@ export async function updatePropertyAction(
       address_line1: propertyData.address_line1 ?? undefined,
       postal_code: propertyData.postal_code ?? undefined,
       description: propertyData.description ?? undefined,
+      transit_station_name: (propertyData as any).transit_station_name,
+      nearby_transits: (propertyData as any).nearby_transits,
       // SEO Flags
       is_pet_friendly: !!propertyData.is_pet_friendly,
       is_corner_unit: !!propertyData.is_corner_unit,
@@ -735,6 +739,12 @@ export async function updatePropertyAction(
       ),
       nearby_places: (propertyData as any).nearby_places || [],
       features: (propertyData as any).features || [],
+    });
+
+    console.log("DEBUG: Generate SEO", {
+      transit_station_name: (propertyData as any).transit_station_name,
+      nearby_transits: (propertyData as any).nearby_transits,
+      slug: seoData.slug,
     });
 
     const mergedKeywords = Array.from(
