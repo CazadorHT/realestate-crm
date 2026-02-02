@@ -88,7 +88,7 @@ export function FloatingContactDial() {
     if (clean.length === 10) {
       return `${clean.substring(0, 3)}-${clean.substring(
         3,
-        6
+        6,
       )}-${clean.substring(6)}`;
     }
     return phone;
@@ -124,7 +124,7 @@ export function FloatingContactDial() {
             }`}
           >
             {agents.map((agent) => (
-              <div key={agent.id} className="flex-shrink-0">
+              <div key={agent.id} className="shrink-0">
                 {agent.phone &&
                   (revealedAgentId === agent.id ? (
                     <a
