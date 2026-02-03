@@ -8,9 +8,76 @@ import type { PropertyCardProps } from "../PropertyCard";
 
 export function PropertyCardFooter({
   property,
+  variant = "default",
 }: {
   property: PropertyCardProps;
+  variant?: "default" | "minimal";
 }) {
+  if (variant === "minimal") {
+    return (
+      <div className="px-3 sm:px-4 py-3 border-t border-slate-100 bg-white flex flex-col gap-3">
+        {/* Price Section */}
+        <div className="flex items-start justify-between">
+          {/* Sale Column */}
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
+              ขาย
+            </span>
+            <div className="text-base sm:text-lg font-extrabold text-[#1B263B]">
+              {property.price || property.original_price
+                ? PRICE_FORMATTER.format(
+                    property.price || property.original_price!,
+                  )
+                : "สอบถามราคา"}
+            </div>
+          </div>
+
+          {/* Rent Column */}
+          <div className="flex flex-col text-right">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
+              เช่า
+            </span>
+            <div className="text-base sm:text-lg font-extrabold text-[#1B263B]">
+              {property.rental_price || property.original_rental_price ? (
+                <>
+                  {PRICE_FORMATTER.format(
+                    property.rental_price || property.original_rental_price!,
+                  )}
+                  <span className="text-[10px] text-slate-400 font-medium ml-0.5">
+                    /เดือน
+                  </span>
+                </>
+              ) : (
+                "สอบถามค่าเช่า"
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Info Row */}
+        <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+          {/* Contract */}
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+            <div className="w-1 h-1 rounded-full bg-slate-300" />
+            <span>สัญญา {property.min_contract_months || 12} ด.</span>
+          </div>
+
+          {/* Date */}
+          <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
+            <Clock className="w-3 h-3" />
+            <span>
+              {property.updated_at
+                ? format(new Date(property.updated_at), "d MMM yyyy", {
+                    locale: th,
+                  })
+                : "-"}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-auto sm:h-auto md:h-28 px-3 sm:px-3.5 md:px-4 py-2 sm:py-2.5 md:py-3 border-t border-slate-200 bg-white/60 flex flex-col justify-between gap-1 sm:gap-1.5 md:gap-2">
       <div className="min-w-0">

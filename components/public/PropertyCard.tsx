@@ -40,12 +40,14 @@ export type PropertyCardProps = {
   min_contract_months?: number | null;
   meta_keywords?: string[] | null;
   features?: { id: string; name: string; icon_key: string }[] | null;
+  footerVariant?: "default" | "minimal";
 };
 
 export function PropertyCard({
   property,
   priority = false,
   compareWith,
+  footerVariant,
 }: {
   property: PropertyCardProps;
   priority?: boolean;
@@ -54,6 +56,7 @@ export function PropertyCard({
     size: number | null;
     date: string | null;
   };
+  footerVariant?: "default" | "minimal";
 }) {
   const [isInCompare, setIsInCompare] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -183,7 +186,10 @@ export function PropertyCard({
           </button>
         </div>
 
-        <PropertyCardFooter property={property} />
+        <PropertyCardFooter
+          property={property}
+          variant={footerVariant || property.footerVariant}
+        />
       </Link>
     </div>
   );
