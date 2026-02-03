@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, X, Facebook, MessageSquare } from "lucide-react";
+// Removed Lucide icons: Phone, X, Facebook, MessageSquare
+import {
+  FaPhone,
+  FaTimes,
+  FaFacebook,
+  FaLine,
+  FaCommentDots,
+} from "react-icons/fa";
 import { createClient } from "@/lib/supabase/client";
 
 export function FloatingContactDial() {
@@ -114,8 +121,6 @@ export function FloatingContactDial() {
         {/* Phone Group */}
         <div className="flex items-end gap-2">
           {/* Agent List Popover */}
-
-          {/* Agent List Popover */}
           <div
             className={`flex flex-col gap-2 bg-white p-2 rounded-xl shadow-xl max-h-[160px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent transition-all duration-300 origin-bottom-right ${
               isPhoneListOpen
@@ -166,9 +171,9 @@ export function FloatingContactDial() {
             className="w-12 h-12 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white shrink-0 hover:bg-green-600 hover:scale-110 transition-all duration-200"
           >
             {isPhoneListOpen ? (
-              <X className="w-5 h-5" />
+              <FaTimes className="w-5 h-5" />
             ) : (
-              <Phone className="w-5 h-5 " />
+              <FaPhone className="w-5 h-5 " />
             )}
           </button>
         </div>
@@ -185,7 +190,7 @@ export function FloatingContactDial() {
             Messenger
           </span>
           <div className="w-12 h-12 bg-[#0084FF] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#0074e0] hover:scale-110 transition-all duration-200">
-            <Facebook className="w-6 h-6" />
+            <FaFacebook className="w-6 h-6" />
           </div>
         </a>
 
@@ -201,17 +206,7 @@ export function FloatingContactDial() {
             แชท LINE
           </span>
           <div className="w-12 h-12 bg-[#06C755] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#05b34c] hover:scale-110 transition-all duration-200">
-            {/* Line Icon (SVG) */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="currentColor"
-              viewBox="0 0 16 16"
-              className="text-white relative z-10"
-            >
-              <path d="M8 0c4.418 0 8 2.972 8 6.61 0 3.307-2.956 6.075-6.848 6.516-.628.14-1.378.852-1.558 1.487-.184.646-.118 1.259-.884.693-1.127-.832-2.78-2.613-3.23-3.13C1.353 11.233 0 9.066 0 6.61 0 2.972 3.582 0 8 0z" />
-            </svg>
+            <FaLine className="w-6 h-6 text-white" />
           </div>
         </a>
       </div>
@@ -231,10 +226,10 @@ export function FloatingContactDial() {
 
         <div className="relative z-10">
           {isOpen ? (
-            <X className="w-6 h-6 text-white" />
+            <FaTimes className="w-6 h-6 text-white" />
           ) : (
             <div className="relative">
-              <MessageSquare className="w-6 h-6 text-white" />
+              <FaCommentDots className="w-6 h-6 text-white" />
               {/* Notification dot to encourage click */}
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

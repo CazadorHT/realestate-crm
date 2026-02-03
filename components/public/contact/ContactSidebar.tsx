@@ -2,13 +2,8 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Clock,
-  MessageCircle,
-  Facebook,
-  Instagram,
-  Twitter,
-} from "lucide-react";
+import { Clock } from "lucide-react";
+import { FaFacebook, FaLine, FaInstagram, FaTiktok } from "react-icons/fa";
 
 const businessHours = [
   { day: "จันทร์ - ศุกร์", hours: "09:00 - 18:00" },
@@ -18,22 +13,28 @@ const businessHours = [
 
 const socialLinks = [
   {
-    icon: Facebook,
+    icon: FaFacebook,
     name: "Facebook",
     href: "https://facebook.com/yourpage",
-    color: "hover:text-blue-600",
+    color: "text-[#1877F2] bg-[#1877F2]/10 hover:bg-[#1877F2] hover:text-white",
   },
   {
-    icon: Instagram,
+    icon: FaLine,
+    name: "Line",
+    href: "https://line.me/R/ti/p/@your-line-id",
+    color: "text-[#06C755] bg-[#06C755]/10 hover:bg-[#06C755] hover:text-white",
+  },
+  {
+    icon: FaInstagram,
     name: "Instagram",
     href: "https://instagram.com/yourpage",
-    color: "hover:text-pink-600",
+    color: "text-[#E4405F] bg-[#E4405F]/10 hover:bg-[#E4405F] hover:text-white",
   },
   {
-    icon: Twitter,
-    name: "Twitter",
-    href: "https://twitter.com/yourpage",
-    color: "hover:text-sky-600",
+    icon: FaTiktok,
+    name: "TikTok",
+    href: "https://tiktok.com/@yourpage",
+    color: "text-[#000000] bg-slate-100 hover:bg-black hover:text-white",
   },
 ];
 
@@ -41,17 +42,24 @@ export function ContactSidebar() {
   return (
     <div className="space-y-6">
       {/* Business Hours */}
-      <Card>
+      <Card className="border-slate-100 shadow-lg shadow-slate-100/50">
         <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Clock className="h-5 w-5 text-blue-600" />
-            <h3 className="font-semibold text-slate-900">เวลาทำการ</h3>
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-50">
+            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+              <Clock className="h-5 w-5 text-blue-600" />
+            </div>
+            <h3 className="font-bold text-slate-800 text-lg">เวลาทำการ</h3>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {businessHours.map((schedule, index) => (
-              <div key={index} className="flex justify-between text-sm">
-                <span className="text-slate-600">{schedule.day}</span>
-                <span className="font-medium text-slate-900">
+              <div
+                key={index}
+                className="flex justify-between items-center text-sm group"
+              >
+                <span className="text-slate-500 group-hover:text-slate-800 transition-colors">
+                  {schedule.day}
+                </span>
+                <span className="font-semibold text-slate-800 bg-slate-50 px-3 py-1 rounded-full">
                   {schedule.hours}
                 </span>
               </div>
@@ -61,44 +69,50 @@ export function ContactSidebar() {
       </Card>
 
       {/* Social Media */}
-      <Card>
+      <Card className="border-slate-100 shadow-lg shadow-slate-100/50">
         <CardContent className="p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">ติดตามเรา</h3>
-          <div className="flex gap-3">
+          <h3 className="font-bold text-slate-800 text-lg mb-6">ติดตามเรา</h3>
+          <div className="grid grid-cols-4 gap-3">
             {socialLinks.map((social, index) => (
               <a
                 key={index}
                 href={social.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 transition-colors ${social.color}`}
+                className={`aspect-square rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${social.color}`}
                 aria-label={social.name}
               >
-                <social.icon className="h-5 w-5" />
+                <social.icon className="h-6 w-6" />
               </a>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Quick Contact CTA */}
-      <Card className="bg-linear-to-br from-blue-600 to-blue-500 text-white">
-        <CardContent className="p-6">
-          <h3 className="font-semibold mb-2">ต้องการคำตอบด่วน?</h3>
-          <p className="text-sm text-blue-50 mb-4">
-            ติดต่อเราผ่าน LINE ได้เลย ตอบเร็วที่สุด!
+      {/* Quick Contact CTA (Official Line Style) */}
+      <Card className="bg-[#06C755] text-white border-none shadow-xl shadow-green-500/20 overflow-hidden relative group">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-500" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/5 rounded-full translate-y-1/2 -translate-x-1/2 group-hover:scale-110 transition-transform duration-500" />
+
+        <CardContent className="p-6 relative z-10 text-center">
+          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 border border-white/30 shadow-inner">
+            <FaLine className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="font-bold text-xl mb-2">ต้องการคำตอบด่วน?</h3>
+          <p className="text-white/90 text-sm mb-6 leading-relaxed">
+            แอด LINE Official Account
+            <br />
+            ทีมงานพร้อมตอบคำถามตลอด 24 ชม.
           </p>
           <a
             href="https://line.me/R/ti/p/@your-line-id"
             target="_blank"
             rel="noopener noreferrer"
+            className="block"
           >
-            <Button
-              variant="secondary"
-              className="w-full bg-white text-blue-600 hover:bg-blue-50"
-            >
-              <MessageCircle className="mr-2 h-4 w-4" />
-              เปิด LINE
+            <Button className="w-full bg-white text-[#06C755] hover:bg-white/90 font-bold h-12 rounded-xl shadow-lg border-2 border-transparent hover:border-white/50 transition-all">
+              <FaLine className="mr-2 h-5 w-5" />
+              แอดไลน์เลย
             </Button>
           </a>
         </CardContent>

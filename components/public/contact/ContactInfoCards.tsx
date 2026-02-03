@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Phone, Mail, MessageCircle, MapPin } from "lucide-react";
+import { Phone, Mail, MessageCircle } from "lucide-react";
 
 const contactInfo = [
   {
@@ -10,6 +10,8 @@ const contactInfo = [
     value: "02-XXX-XXXX",
     subtitle: "จันทร์-ศุกร์ 9:00-18:00",
     href: "tel:02XXXXXXX",
+    color: "bg-blue-100 text-blue-600",
+    borderColor: "group-hover:border-blue-200",
   },
   {
     icon: Mail,
@@ -17,6 +19,8 @@ const contactInfo = [
     value: "contact@yourdomain.com",
     subtitle: "ตอบภายใน 24 ชม.",
     href: "mailto:contact@yourdomain.com",
+    color: "bg-purple-100 text-purple-600",
+    borderColor: "group-hover:border-purple-200",
   },
   {
     icon: MessageCircle,
@@ -24,52 +28,43 @@ const contactInfo = [
     value: "@your-line-id",
     subtitle: "ตอบเร็วที่สุด",
     href: "https://line.me/R/ti/p/@your-line-id",
-  },
-  {
-    icon: MapPin,
-    title: "สำนักงาน",
-    value: "123 ถนนสุขุมวิท",
-    subtitle: "เขตวัฒนา กรุงเทพฯ 10110",
-    href: "https://maps.google.com",
+    color: "bg-green-100 text-green-600",
+    borderColor: "group-hover:border-green-200",
   },
 ];
 
 export function ContactInfoCards() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
       {contactInfo.map((info, index) => (
-        <Card
+        <a
           key={index}
-          className="hover:shadow-lg transition-shadow duration-300"
+          href={info.href}
+          target={info.href.startsWith("http") ? "_blank" : undefined}
+          rel={info.href.startsWith("http") ? "noopener noreferrer" : undefined}
+          className="block group"
         >
-          <CardContent className="p-6">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <info.icon className="h-6 w-6 text-blue-600" />
-              </div>
-              <h3 className="font-semibold text-slate-900 mb-2">
-                {info.title}
-              </h3>
-              {info.href ? (
-                <a
-                  href={info.href}
-                  target={info.href.startsWith("http") ? "_blank" : undefined}
-                  rel={
-                    info.href.startsWith("http")
-                      ? "noopener noreferrer"
-                      : undefined
-                  }
-                  className="text-blue-600 hover:text-blue-700 font-medium mb-1 hover:underline"
+          <Card className="h-full border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white/60 backdrop-blur-md">
+            <CardContent className="p-8">
+              <div className="flex flex-col items-center text-center">
+                <div
+                  className={`w-16 h-16 ${info.color} rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform duration-300`}
                 >
+                  <info.icon className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-primary transition-colors">
+                  {info.title}
+                </h3>
+                <p className="text-primary font-medium text-lg mb-2">
                   {info.value}
-                </a>
-              ) : (
-                <p className="text-blue-600 font-medium mb-1">{info.value}</p>
-              )}
-              <p className="text-xs text-slate-500">{info.subtitle}</p>
-            </div>
-          </CardContent>
-        </Card>
+                </p>
+                <p className="text-sm text-slate-500 font-light tracking-wide">
+                  {info.subtitle}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </a>
       ))}
     </div>
   );

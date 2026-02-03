@@ -1,30 +1,44 @@
 "use client";
 
-import { useTransition, useState, useEffect } from "react";
+import { useTransition, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Send, CheckCircle2 } from "lucide-react";
+  Send,
+  CheckCircle2,
+  User,
+  Phone,
+  Mail,
+  MessageSquare,
+} from "lucide-react";
+import { FaLine } from "react-icons/fa";
 import { submitContactFormAction } from "@/features/leads/contact-action";
-// import { useFormState } from "react-dom"; // Nextjs 14+ specific, but let's use standard client action calling for simplicity with transition if needed, or use useFormState if we modify the form to be a real <form action={...}>
-// Let's stick to client-side handler calling the action to keep control over the "success" state easily,
-// or wrap standard form action. Based on existing code using useState, let's keep it simple.
+
+const INTEREST_OPTIONS = [
+  "ปรึกษาเรา",
+  "สอบถามทรัพย์",
+  "อยากซื้อ",
+  "อยากเช่า",
+  "อยากลงทุน",
+  "อยากฝากขาย/เช่า",
+];
 
 export function ContactForm() {
   const [isPending, startTransition] = useTransition();
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
 
   const clientAction = async (formData: FormData) => {
     setErrorMsg("");
+
+    // Ensure subject is set if user clicked a button (handled by hidden input, but double check validation if needed)
+    if (!selectedSubject) {
+      // Optional: Force selection or let backend handle simple optional
+    }
+
     startTransition(async () => {
       const result = await submitContactFormAction(
         { success: false, message: "" },
@@ -33,14 +47,8 @@ export function ContactForm() {
 
       if (result.success) {
         setIsSuccess(true);
-        // Reset Logic handled by just showing success message
-        // If we want to reset and show form again:
-        setTimeout(() => {
-          setIsSuccess(false);
-          // form reset is harder with FormData directly passing,
-          // usually we just let the success state persist or user refreshes.
-          // For this UI pattern:
-        }, 3000);
+        setSelectedSubject(""); // Reset selection
+        // Reset form visually handled by hiding it, effectively
       } else {
         setErrorMsg(result.message);
       }
@@ -49,121 +57,171 @@ export function ContactForm() {
 
   if (isSuccess) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center fade-in animate-in">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-          <CheckCircle2 className="h-8 w-8 text-green-600" />
+      <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in zoom-in duration-500">
+        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-sm">
+          <CheckCircle2 className="h-10 w-10 text-green-600" />
         </div>
-        <h3 className="text-xl font-semibold text-slate-900 mb-2">
+        <h3 className="text-2xl font-bold text-slate-900 mb-2">
           ส่งข้อความสำเร็จ!
         </h3>
-        <p className="text-slate-600">
-          ขอบคุณที่ติดต่อเรา ทีมงานจะตอบกลับภายใน 24 ชั่วโมง
+        <p className="text-slate-600 max-w-xs mx-auto text-lg">
+          ขอบคุณที่ติดต่อเรา ทีมงานจะรีบตอบกลับภายใน 24 ชั่วโมง
         </p>
+        <Button
+          onClick={() => setIsSuccess(false)}
+          variant="outline"
+          className="mt-8"
+        >
+          ส่งข้อความเพิ่ม
+        </Button>
       </div>
     );
   }
 
   return (
-    <form action={clientAction} className="space-y-5">
+    <form action={clientAction} className="space-y-6">
+      <div className="space-y-4">
+        <Label className="text-base font-semibold text-slate-900">
+          เรื่องที่ต้องการติดต่อ <span className="text-red-500">*</span>
+        </Label>
+        <input type="hidden" name="subject" value={selectedSubject} />
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {INTEREST_OPTIONS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setSelectedSubject(option)}
+              className={`
+                px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 border
+                ${
+                  selectedSubject === option
+                    ? "bg-blue-600 text-white border-blue-600 shadow-md scale-[1.02]"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:bg-blue-50/50"
+                }
+              `}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="space-y-2">
-          <Label htmlFor="name">
+          <Label htmlFor="name" className="text-slate-700 font-medium">
             ชื่อ-นามสกุล <span className="text-red-500">*</span>
           </Label>
-          <Input
-            id="name"
-            name="name"
-            required
-            placeholder="กรอกชื่อของคุณ"
-            className="h-11"
-          />
+          <div className="relative">
+            <User className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+            <Input
+              id="name"
+              name="name"
+              required
+              placeholder="กรอกชื่อของคุณ"
+              className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phone">
+          <Label htmlFor="phone" className="text-slate-700 font-medium">
             เบอร์โทรศัพท์ <span className="text-red-500">*</span>
           </Label>
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            required
-            placeholder="0XX-XXX-XXXX"
-            className="h-11"
-          />
+          <div className="relative">
+            <Phone className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+            <Input
+              id="phone"
+              name="phone"
+              type="tel"
+              required
+              placeholder="0XX-XXX-XXXX"
+              className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-slate-700 font-medium">
+            อีเมล
+          </Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="your.email@example.com"
+              className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="lineId" className="text-slate-700 font-medium">
+            Line ID
+          </Label>
+          <div className="relative">
+            <FaLine className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+            <Input
+              id="lineId"
+              name="lineId"
+              placeholder="ไอดีไลน์ของคุณ (ถ้ามี)"
+              className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+            />
+          </div>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">
-          อีเมล <span className="text-red-500">*</span>
+        <Label htmlFor="message" className="text-slate-700 font-medium">
+          รายละเอียดเพิ่มเติม
         </Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          required
-          placeholder="your@email.com"
-          className="h-11"
-        />
+        <div className="relative">
+          <MessageSquare className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+          <Textarea
+            id="message"
+            name="message"
+            placeholder="บอกรายละเอียดความต้องการของคุณ..."
+            rows={4}
+            className="resize-none pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+          />
+        </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="subject">หัวข้อที่สนใจ</Label>
-        <Select name="subject">
-          <SelectTrigger className="h-11">
-            <SelectValue placeholder="เลือกหัวข้อ" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="buy">ซื้อบ้าน/คอนโด</SelectItem>
-            <SelectItem value="sell">ขายบ้าน/คอนโด</SelectItem>
-            <SelectItem value="rent">เช่า</SelectItem>
-            <SelectItem value="invest">ลงทุน</SelectItem>
-            <SelectItem value="other">อื่นๆ</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="message">
-          ข้อความ <span className="text-red-500">*</span>
-        </Label>
-        <Textarea
-          id="message"
-          name="message"
-          required
-          placeholder="กรุณาระบุรายละเอียดที่ต้องการปรึกษา..."
-          rows={5}
-          className="resize-none"
-        />
-      </div>
-
-      {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
+      {errorMsg && (
+        <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center animate-in slide-in-from-top-2">
+          ⚠️ {errorMsg}
+        </div>
+      )}
 
       <Button
         type="submit"
         disabled={isPending}
-        className="w-full h-12 text-base"
+        className="w-full h-12 text-base font-semibold shadow-lg shadow-blue-500/20 bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all active:scale-[0.98]"
       >
         {isPending ? (
           <>
             <span className="animate-spin mr-2">⏳</span>
-            กำลังส่ง...
+            กำลังส่งข้อความ...
           </>
         ) : (
           <>
-            <Send className="mr-2 h-4 w-4" />
+            <Send className="mr-2 h-5 w-5" />
             ส่งข้อความ
           </>
         )}
       </Button>
 
-      <p className="text-xs text-slate-500 text-center">
-        โดยการส่งแบบฟอร์มนี้ คุณยอมรับ{" "}
-        <a href="/privacy" className="text-blue-600 hover:underline">
+      <p className="text-xs text-slate-400 text-center pt-2">
+        ข้อมูลของคุณจะถูกเก็บเป็นความลับตาม
+        <a
+          href="/privacy-policy"
+          className="text-blue-600 hover:underline hover:text-blue-700 ml-1"
+        >
           นโยบายความเป็นส่วนตัว
-        </a>{" "}
-        ของเรา
+        </a>
       </p>
     </form>
   );

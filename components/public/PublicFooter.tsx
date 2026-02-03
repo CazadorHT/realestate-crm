@@ -1,7 +1,7 @@
 "use client";
 
-import { Home, Mail, Phone, Facebook, Instagram, MapPin } from "lucide-react";
-import { FaLine } from "react-icons/fa";
+import { Home, Mail, Phone, MapPin } from "lucide-react";
+import { FaFacebook, FaInstagram, FaLine, FaTiktok } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useTransition, Suspense } from "react";
@@ -65,168 +65,183 @@ export function PublicFooter() {
     {
       name: "Facebook",
       href: "#",
-      icon: Facebook,
-      color: "hover:text-blue-500",
-    },
-    {
-      name: "Instagram",
-      href: "#",
-      icon: Instagram,
-      color: "hover:text-pink-500",
+      icon: FaFacebook,
+      color: "hover:text-[#1877F2]",
     },
     {
       name: "Line @",
       href: "#",
       icon: FaLine,
-      color: "hover:text-green-500",
+      color: "hover:text-[#06C755]",
+    },
+    {
+      name: "Instagram",
+      href: "#",
+      icon: FaInstagram,
+      color: "hover:text-[#E4405F]",
+    },
+    {
+      name: "TikTok",
+      href: "#",
+      icon: FaTiktok,
+      color: "hover:text-white",
     },
   ];
 
   return (
     <Suspense fallback={null}>
-      <footer className="bg-linear-to-br from-slate-900 to-slate-800 text-slate-300">
+      <footer className="bg-[#0B1120] text-slate-300 relative overflow-hidden font-sans">
+        {/* Background Effects */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute top-0 -left-[10%] w-[50%] h-[500px] bg-blue-900/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 -right-[10%] w-[50%] h-[500px] bg-purple-900/10 rounded-full blur-[120px]" />
+        </div>
+
         {/* Schema.org Structured Data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
         />
 
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-10 lg:py-12">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 relative z-10">
           {/* Main Footer Content */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-6 md:mb-8">
-            {/* Company Info */}
-            <div
-              className="col-span-2 md:col-span-1 space-y-3 md:space-y-4"
-              itemScope
-              itemType="https://schema.org/RealEstateAgent"
-            >
-              <div className="flex items-center gap-2 text-white">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
+            {/* 1. Brand & Contact (4 cols) */}
+            <div className="lg:col-span-4 space-y-6">
+              <div className="flex items-center gap-2">
                 <Link
                   href="/"
-                  className="hover:scale-105 transition-transform block"
+                  className="block w-48 transition-opacity hover:opacity-90"
                 >
                   <Image
                     src="/images/brand-logo-dark.svg"
-                    alt="OMA ASSET Logo"
-                    width={220}
-                    height={70}
-                    className="h-[100px] w-auto"
+                    alt="CEAZADOR Logo"
+                    width={180}
+                    height={60}
+                    className="w-auto h-12"
                     priority
                   />
                 </Link>
               </div>
-              <p
-                className="text-xs md:text-sm leading-relaxed"
-                itemProp="description"
-              >
-                แพลตฟอร์มอสังหาริมทรัพย์ครบวงจร
-                <br />
-                <span className="font-semibold text-white">
-                  บ้าน คอนโด สำนักงานออฟฟิศ
-                </span>
+              <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
+                แพลตฟอร์มอสังหาริมทรัพย์ครบวงจร ที่ใส่ใจทุกรายละเอียด
+                เพื่อช่วยให้คุณเจอ "ที่ที่ใช่" ในทำเลศักยภาพ
               </p>
 
-              {/* Contact Info */}
-              <div className="space-y-1.5 md:space-y-2 text-xs md:text-sm">
-                <div className="flex items-center gap-1.5 md:gap-2">
-                  <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-400" />
-                  <span itemProp="telephone">+66-XX-XXX-XXXX</span>
+              {/* Contact Info List */}
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center gap-3 group cursor-pointer transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-blue-600/20 transition-colors">
+                    <Phone className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
+                    +66-XX-XXX-XXXX
+                  </span>
                 </div>
-                <div className="flex items-center gap-1.5 md:gap-2">
-                  <Mail className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-400" />
-                  <span className="text-[10px] md:text-sm" itemProp="email">
+                <div className="flex items-center gap-3 group cursor-pointer transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-blue-600/20 transition-colors">
+                    <Mail className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
                     contact@oma-asset.com
                   </span>
                 </div>
-                <div className="flex items-start gap-1.5 md:gap-2">
-                  <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-400 mt-0.5" />
-                  <span className="text-[10px] md:text-xs">
-                    Bangkok, Thailand
+                <div className="flex items-start gap-3 group cursor-pointer transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center mt-1 group-hover:bg-blue-600/20 transition-colors">
+                    <MapPin className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <span className="text-sm text-slate-300 leading-snug group-hover:text-white transition-colors pt-2">
+                    123 Business Road, Bangkok, Thailand
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Services */}
-            <div>
-              <h4 className="font-semibold text-white mb-3 md:mb-4 text-base md:text-lg">
-                บริการ
+            {/* 2. Services (2 cols) */}
+            <div className="lg:col-span-2 lg:pl-4">
+              <h4 className="font-bold text-white mb-6 text-lg tracking-tight">
+                บริการของเรา
               </h4>
-              <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm">
+              <ul className="space-y-3">
                 {services.map((service) => (
                   <li key={service.name}>
                     <Link
                       href={service.href}
-                      className="hover:text-white transition-colors hover:translate-x-1 inline-block"
+                      className="text-slate-400 hover:text-blue-400 text-sm transition-all duration-200 hover:translate-x-1 flex items-center gap-2"
                     >
-                      → {service.name}
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-700"></span>
+                      {service.name}
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* About */}
-            <div>
-              <h4 className="font-semibold text-white mb-3 md:mb-4 text-base md:text-lg">
-                เกี่ยวกับ
+            {/* 3. About (2 cols) */}
+            <div className="lg:col-span-2">
+              <h4 className="font-bold text-white mb-6 text-lg tracking-tight">
+                เกี่ยวกับเรา
               </h4>
-              <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm">
+              <ul className="space-y-3">
                 {about.map((item) => (
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className="hover:text-white transition-colors hover:translate-x-1 inline-block"
+                      className="text-slate-400 hover:text-blue-400 text-sm transition-all duration-200 hover:translate-x-1 flex items-center gap-2"
                     >
-                      → {item.name}
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-700"></span>
+                      {item.name}
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Social & Newsletter */}
-            <div className="col-span-2 md:col-span-1">
-              <h4 className="font-semibold text-white mb-3 md:mb-4 text-base md:text-lg">
-                ติดตามเรา
+            {/* 4. Newsletter & Social (4 cols) */}
+            <div className="lg:col-span-4">
+              <h4 className="font-bold text-white mb-6 text-lg tracking-tight">
+                ติดตามข่าวสาร
               </h4>
-              <div className="flex gap-2 md:gap-3 mb-4 md:mb-6">
-                {socialMedia.map((social) => (
-                  <a
-                    key={social.name}
-                    href={social.href}
-                    className={`p-2 md:p-3 bg-slate-800 rounded-lg ${social.color} transition-all hover:scale-110`}
-                    aria-label={social.name}
-                  >
-                    <social.icon className="w-4 h-4 md:w-5 md:h-5" />
-                  </a>
-                ))}
-              </div>
 
-              {/* Newsletter */}
               <NewsletterSection />
+
+              <div className="mt-8">
+                <h5 className="text-sm font-semibold text-white mb-4">
+                  Social Media
+                </h5>
+                <div className="flex gap-3">
+                  {socialMedia.map((social) => (
+                    <a
+                      key={social.name}
+                      href={social.href}
+                      className={`w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:border-slate-600 ${social.color}`}
+                      aria-label={social.name}
+                    >
+                      <social.icon className="w-5 h-5" />
+                    </a>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-slate-800 text-center md:text-left">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-slate-500 text-sm">
-                &copy; {currentYear} {companyMeta.name_th}. All rights reserved.
-              </p>
-              <div className="flex gap-6 text-sm font-medium text-slate-400">
-                <Link
-                  href="/privacy-policy"
-                  className="hover:text-white transition-colors"
-                >
-                  นโยบายความเป็นส่วนตัว
-                </Link>
-                <Link
-                  href="/terms"
-                  className="hover:text-white transition-colors"
-                >
-                  ข้อตกลงการใช้งาน
-                </Link>
-              </div>
+          <div className="pt-8 border-t border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-slate-500 text-sm">
+              &copy; {currentYear} {companyMeta.name_th}. All rights reserved.
+            </p>
+            <div className="flex gap-6 text-sm font-medium text-slate-400">
+              <Link
+                href="/privacy-policy"
+                className="hover:text-blue-400 transition-colors"
+              >
+                นโยบายความเป็นส่วนตัว
+              </Link>
+              <Link
+                href="/terms"
+                className="hover:text-blue-400 transition-colors"
+              >
+                ข้อตกลงการใช้งาน
+              </Link>
             </div>
           </div>
         </div>
@@ -257,20 +272,23 @@ function NewsletterSection() {
   };
 
   return (
-    <div className="mt-4 md:mt-6 p-3 md:p-4 rounded-xl md:rounded-2xl bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm">
-      <div className="flex items-center gap-2 text-white mb-1.5 md:mb-2">
-        <span className="flex h-6 w-6 md:h-8 md:w-8 items-center justify-center rounded-lg bg-[#00B900]/10 text-[#00B900]">
-          <FaLine className="h-3 w-3 md:h-4 md:w-4" />
-        </span>
-        <span className="font-medium text-xs md:text-sm">
-          รับข่าวสารทาง Line
-        </span>
-      </div>
-      <p className="text-[10px] md:text-xs text-slate-400 mb-3 md:mb-4 leading-relaxed">
-        ไม่พลาดโปรโมชั่น บ้านหลุดจอง และข่าวสารอสังหาฯ ล่าสุด ส่งตรงถึงมือคุณ
-      </p>
-      <div className="space-y-2">
-        <div className="relative">
+    <div className="p-1 rounded-2xl bg-linear-to-br from-slate-700/50 to-slate-800/50 border border-slate-700/50">
+      <div className="bg-[#0f1623] rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-[#06C755]/10 flex items-center justify-center shrink-0">
+            <FaLine className="w-5 h-5 text-[#06C755]" />
+          </div>
+          <div>
+            <span className="block text-white font-semibold text-sm">
+              รับข่าวสารทาง Line
+            </span>
+            <span className="block text-xs text-slate-500">
+              โปรโมชั่นและทรัพย์หลุดจอง
+            </span>
+          </div>
+        </div>
+
+        <div className="relative group">
           <input
             type="text"
             value={lineId}
@@ -279,30 +297,27 @@ function NewsletterSection() {
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSubmit();
             }}
-            placeholder="กรอก Line ID ของคุณ"
-            className="w-full pl-8 md:pl-9 pr-3 md:pr-4 py-2 md:py-2.5 bg-slate-900 border border-slate-700/80 rounded-lg md:rounded-xl text-xs md:text-sm focus:outline-none focus:border-[#00B900] focus:ring-1 focus:ring-[#00B900] text-white placeholder-slate-500 transition-all disabled:opacity-50"
+            placeholder="กรอก Line ID..."
+            className="w-full h-11 pl-10 pr-24 bg-slate-900/80 border border-slate-700/80 rounded-lg text-sm focus:outline-none focus:border-[#06C755]/50 focus:ring-1 focus:ring-[#06C755]/50 text-white placeholder-slate-600 transition-all"
           />
-          <FaLine className="absolute left-2.5 md:left-3 top-2.5 md:top-3 h-3 w-3 md:h-4 md:w-4 text-slate-500" />
+          <FaLine className="absolute left-3 top-3.5 h-4 w-4 text-slate-600 group-focus-within:text-[#06C755] transition-colors" />
+
+          <button
+            onClick={handleSubmit}
+            disabled={isPending || status === "success" || !lineId.trim()}
+            className={`absolute right-1 top-1 h-9 px-4 rounded-md text-xs font-bold text-white transition-all
+                        ${
+                          status === "success"
+                            ? "bg-green-600"
+                            : status === "error"
+                              ? "bg-red-600"
+                              : "bg-[#06C755] hover:bg-[#05b34c]"
+                        }
+                    `}
+          >
+            {isPending ? "..." : status === "success" ? "✓" : "ติดตาม"}
+          </button>
         </div>
-        <button
-          onClick={handleSubmit}
-          disabled={isPending || status === "success" || !lineId.trim()}
-          className={`w-full py-2 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold text-white shadow-lg transition-all duration-200   ${
-            status === "success"
-              ? "bg-green-600 hover:bg-green-700 shadow-green-900/20"
-              : status === "error"
-                ? "bg-red-600 hover:bg-red-700 shadow-red-900/20"
-                : "bg-[#00B900] hover:bg-[#009900] shadow-green-900/20 hover:shadow-green-900/40 hover:scale-[1.02] active:scale-[0.98]"
-          } disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
-        >
-          {isPending
-            ? "กำลังบันทึก..."
-            : status === "success"
-              ? "บันทึกเรียบร้อย!"
-              : status === "error"
-                ? "เกิดข้อผิดพลาด ลองใหม่"
-                : "ติดตามข่าวสาร"}
-        </button>
       </div>
     </div>
   );

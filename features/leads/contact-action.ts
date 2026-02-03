@@ -8,6 +8,7 @@ const contactSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().min(1, "Phone is required"),
   email: z.string().email("Invalid email"),
+  lineId: z.string().optional(),
   subject: z.string().optional(),
   message: z.string().min(1, "Message is required"),
 });
@@ -38,7 +39,7 @@ export async function submitContactFormAction(
     };
   }
 
-  const { name, phone, email, subject, message } = validatedFields.data;
+  const { name, phone, email, lineId, subject, message } = validatedFields.data;
 
   try {
     const supabase = createAdminClient();
@@ -50,7 +51,7 @@ export async function submitContactFormAction(
       email: email,
       source: "WEBSITE", // Generic website source
       stage: "NEW", // Initial stage
-      note: `Contact Form Subject: ${subject || "N/A"}\nMessage: ${message}`,
+      note: `Contact Form Subject: ${subject || "N/A"}\nLine ID: ${lineId || "N/A"}\nMessage: ${message}`,
       lead_type: "INDIVIDUAL",
     });
 
