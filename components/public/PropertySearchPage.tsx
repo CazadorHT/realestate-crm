@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { PropertyCard, PropertyCardProps } from "./PropertyCard";
 import { Button } from "@/components/ui/button";
 import { MorphingLoader } from "@/components/ui/MorphingLoader";
@@ -9,29 +10,66 @@ import { SearchPagination } from "./search/SearchPagination";
 
 type ApiProperty = PropertyCardProps;
 
-export function PropertySearchPage() {
-  const [properties, setProperties] = useState<ApiProperty[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface PropertySearchPageProps {
+  initialProperties?: ApiProperty[];
+}
 
-  // Filters
-  const [keyword, setKeyword] = useState("");
-  const [type, setType] = useState("ALL");
-  const [listingType, setListingType] = useState("ALL"); // ALL, SALE, RENT, SALE_AND_RENT
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [sort, setSort] = useState("NEWEST"); // NEWEST, PRICE_ASC, PRICE_DESC
+export function PropertySearchPage({
+  initialProperties,
+}: PropertySearchPageProps) {
+  const searchParams = useSearchParams();
+  const [properties, setProperties] = useState<ApiProperty[]>(
+    initialProperties || [],
+  );
+  const [isLoading, setIsLoading] = useState(!initialProperties);
+
+  // Filters - Init from URL
+  const [keyword, setKeyword] = useState(searchParams.get("keyword") || "");
+  const [type, setType] = useState(searchParams.get("property_type") || "ALL");
+  const [listingType, setListingType] = useState(
+    searchParams.get("listing_type") || "ALL",
+  );
+  const [minPrice, setMinPrice] = useState(searchParams.get("min_price") || "");
+  const [maxPrice, setMaxPrice] = useState(searchParams.get("max_price") || "");
+  const [sort, setSort] = useState("NEWEST");
 
   // New Filters
-  const [area, setArea] = useState("ALL");
-  const [nearTrain, setNearTrain] = useState(false);
-  const [petFriendly, setPetFriendly] = useState(false);
-  const [bedrooms, setBedrooms] = useState("ALL"); // ALL, 1, 2, 3, 4+
+  const [area, setArea] = useState(searchParams.get("popular_area") || "ALL");
+  const [nearTrain, setNearTrain] = useState(
+    searchParams.get("near_train") === "true",
+  );
+  const [petFriendly, setPetFriendly] = useState(
+    searchParams.get("pet_friendly") === "true",
+  );
+  const [bedrooms, setBedrooms] = useState(
+    searchParams.get("bedrooms") || "ALL",
+  );
+
+  const [province, setProvince] = useState(
+    searchParams.get("province") || "ALL",
+  );
+  // Note: province filtering is done in the search logic, but not yet a standalone state/UI filter in SearchFilterBar
+  // If we want to filter by province passed in URL (from breadcrumbs), we should respect it in the filtering logic too.
+  const provinceParam = searchParams.get("province");
+
+  // Update state when params change (for back/forward navigation)
+  useEffect(() => {
+    setKeyword(searchParams.get("keyword") || "");
+    setType(searchParams.get("property_type") || "ALL");
+    setListingType(searchParams.get("listing_type") || "ALL");
+    setArea(searchParams.get("popular_area") || "ALL");
+    setProvince(searchParams.get("province") || "ALL");
+    // ... update others if needed, though mostly navigating to page sets them initially
+  }, [searchParams]);
 
   // Pagination
   const ITEMS_PER_PAGE = 12;
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
+    // Skip loading if initialProperties provided
+    if (initialProperties) return;
+
     async function load() {
       try {
         setIsLoading(true);
@@ -48,16 +86,34 @@ export function PropertySearchPage() {
       }
     }
     load();
-  }, []);
+  }, [initialProperties]);
 
-  // Compute unique Popular Areas from data
-  const availableAreas = useMemo(() => {
-    const areas = new Set<string>();
+  // Compute unique Popular Areas with Counts
+  // Compute available Provinces
+  const availableProvinces = useMemo(() => {
+    const set = new Set<string>();
     properties.forEach((p) => {
-      if (p.popular_area) areas.add(p.popular_area);
+      if (p.province) set.add(p.province);
     });
-    return Array.from(areas).sort();
+    return Array.from(set).sort();
   }, [properties]);
+
+  // Compute unique Popular Areas with Counts
+  const availableAreas = useMemo(() => {
+    const map = new Map<string, number>();
+    properties.forEach((p) => {
+      // Filter by province if selected
+      if (province !== "ALL" && p.province !== province) return;
+
+      if (p.popular_area) {
+        map.set(p.popular_area, (map.get(p.popular_area) || 0) + 1);
+      }
+    });
+
+    return Array.from(map.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [properties, province]);
 
   const filtered = useMemo(() => {
     let result = [...properties];
@@ -72,6 +128,11 @@ export function PropertySearchPage() {
           (p.popular_area || "").toLowerCase().includes(k) ||
           (p.province || "").toLowerCase().includes(k),
       );
+    }
+
+    // Province (New)
+    if (province !== "ALL") {
+      result = result.filter((p) => p.province === province);
     }
 
     // Type
@@ -235,6 +296,9 @@ export function PropertySearchPage() {
         setBedrooms={setBedrooms}
         filteredLength={filtered.length}
         availableAreas={availableAreas}
+        province={province}
+        setProvince={setProvince}
+        availableProvinces={availableProvinces}
       />
 
       {/* Results Grid */}

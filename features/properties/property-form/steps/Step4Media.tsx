@@ -20,6 +20,7 @@ function Step4MediaComponent({
   initialImages,
   uploadSessionId,
   persistImages,
+  refreshOwners,
 }: Step4Props) {
   return (
     <div className="animate-in fade-in slide-in-from-right-8 duration-500">
@@ -36,7 +37,12 @@ function Step4MediaComponent({
         {/* Right Column: Management & Details (40%) */}
         <div className="lg:col-span-5 space-y-6">
           {/* Card 1: Management (Status, Owner, Agents) */}
-          <ManagementSection form={form} owners={owners} agents={agents} />
+          <ManagementSection
+            form={form}
+            owners={owners}
+            agents={agents}
+            refreshOwners={refreshOwners}
+          />
 
           {/* Card 2: Source & Co-Agent */}
           <AdditionalSection form={form} />

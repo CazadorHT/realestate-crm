@@ -13,7 +13,12 @@ export function usePropertyFormData(
     { id: string; full_name: string; phone: string | null }[]
   >([]);
   const [agents, setAgents] = React.useState<
-    { id: string; full_name: string | null; phone: string | null }[]
+    {
+      id: string;
+      full_name: string | null;
+      phone: string | null;
+      avatar_url?: string | null;
+    }[]
   >([]);
   const [popularAreas, setPopularAreas] = React.useState<string[]>([]);
 
@@ -45,7 +50,7 @@ export function usePropertyFormData(
         const supabase = createClient();
         const { data: agentsData } = await supabase
           .from("profiles")
-          .select("id, full_name, phone")
+          .select("id, full_name, phone, avatar_url")
           .order("full_name");
 
         if (agentsData) {
@@ -104,5 +109,11 @@ export function usePropertyFormData(
     agents,
     popularAreas,
     refreshPopularAreas: fetchPopularAreas,
+    refreshOwners: async () => {
+      const { getOwnersAction } = await import("@/features/owners/actions");
+      const ownersData = await getOwnersAction();
+      setOwners(ownersData);
+      return ownersData;
+    },
   };
 }

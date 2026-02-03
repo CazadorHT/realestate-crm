@@ -153,7 +153,7 @@ export function AddressSection({ form }: AddressSectionProps) {
                   <SelectContent className="max-h-[300px]">
                     {districtOptions.map((d) => (
                       <SelectItem key={d.id} value={d.name_th}>
-                        {d.name_th}
+                        {d.name_th.replace(/^เขต/, "")}
                       </SelectItem>
                     ))}
                   </SelectContent>

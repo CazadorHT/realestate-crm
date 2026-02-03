@@ -6,7 +6,7 @@ const AREA_MAPPING: Record<string, string[]> = {
   อ่อนนุช: ["อ่อนนุช", "พระโขนงเหนือ", "สวนหลวง", "Phra Khanong"],
   บางนา: ["บางนา", "สรรพาวุธ", "ลาซาล", "แบริ่ง", "Bang Na"],
   ลาดพร้าว: ["ลาดพร้าว", "วังทองหลาง", "จตุจักร", "Lat Phrao"],
-  พระราม9: ["ห้วยขวาง", "บางกะปิ", "ดินแดง", "พระราม 9", "Rama 9"],
+  "พระราม 9": ["ห้วยขวาง", "บางกะปิ", "ดินแดง", "พระราม 9", "Rama 9"],
   สุขุมวิท: ["คลองเตย", "วัฒนา", "พระโขนง", "Sukhumvit"],
   อารีย์: ["สามเสนใน", "พญาไท", "Ari", "Samsen Nai"],
   ทองหล่อ: ["คลองตันเหนือ", "วัฒนา", "Thong Lo", "Sukhumvit 55"],
@@ -35,7 +35,7 @@ type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 
 export function calculateMatchScore(
   property: PropertyRow,
-  criteria: SearchCriteria
+  criteria: SearchCriteria,
 ): { score: number; reasons: string[]; scoreBreakdown: ScoreBreakdown[] } {
   let score = 0;
   const reasons: string[] = [];
@@ -109,7 +109,7 @@ export function calculateMatchScore(
       }`.toLowerCase();
 
       const isMatch = searchTerms.some((term) =>
-        propertyText.includes(term.toLowerCase())
+        propertyText.includes(term.toLowerCase()),
       );
 
       if (isMatch) {

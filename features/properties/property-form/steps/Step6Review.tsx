@@ -197,168 +197,173 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
           locationParts={locationParts}
           keySellingPoints={keySellingPoints}
         />
-
-        <div className="max-w-7xl mx-auto px-6 md:px-8 mt-4 md:mt-8">
-          {/* 2. Gallery */}
-          <section className="mb-6 md:mb-10">
-            <PropertyGallery
-              images={images}
-              title={values.title}
-              isHot={false}
-              verified={values.verified}
-              petFriendly={values.is_pet_friendly}
-            />
-          </section>
-
-          {/* 3. Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-10">
-            {/* Left Column */}
-            <div className="space-y-10">
-              {/* Specs */}
-              <PropertySpecs
-                bedrooms={values.bedrooms}
-                bathrooms={values.bathrooms}
-                parking={values.parking_slots}
-                sizeSqm={values.size_sqm}
-                landSize={values.land_size_sqwah}
-                floor={values.floor}
-                type={values.property_type}
+        <div className="pt-20 md:pt-24 px-5 md:px-6 lg:px-8 bg-white relative">
+          <div className="max-w-screen-2xl mx-auto px-6 md:px-8 mt-4 md:mt-8">
+            {/* 2. Gallery */}
+            <section className="mb-6 md:mb-10">
+              <PropertyGallery
+                images={images}
+                title={values.title}
+                isHot={false}
+                verified={values.verified}
+                petFriendly={values.is_pet_friendly}
               />
+            </section>
 
-              {/* Badges Section */}
-              <PropertyBadgesSection
-                property={
-                  {
-                    ...values,
-                    id: (values as any).id || "preview-id",
-                    created_at: new Date().toISOString(),
-                  } as any
-                }
-              />
+            {/* 3. Main Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-10">
+              {/* Left Column */}
+              <div className="space-y-10">
+                {/* Specs */}
+                <PropertySpecs
+                  bedrooms={values.bedrooms}
+                  bathrooms={values.bathrooms}
+                  parking={values.parking_slots}
+                  sizeSqm={values.size_sqm}
+                  landSize={values.land_size_sqwah}
+                  floor={values.floor}
+                  type={values.property_type}
+                />
 
-              {/* Description Editor / Preview Content */}
-              <div className="space-y-4 relative group">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-lg flex items-center gap-2 text-slate-800">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                    แก้ไขรายละเอียด
-                  </h3>
-                  <div className="flex gap-2">
-                    {isEditingDesc ? (
-                      <>
+                {/* Badges Section */}
+                <PropertyBadgesSection
+                  property={
+                    {
+                      ...values,
+                      id: (values as any).id || "preview-id",
+                      created_at: new Date().toISOString(),
+                    } as any
+                  }
+                />
+
+                {/* Description Editor / Preview Content */}
+                <div className="space-y-4 relative group">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-lg flex items-center gap-2 text-slate-800">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      แก้ไขรายละเอียด
+                    </h3>
+                    <div className="flex gap-2">
+                      {isEditingDesc ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setIsEditingDesc(false)}
+                            className="text-slate-500"
+                          >
+                            <X className="w-4 h-4 mr-1" /> ยกเลิก
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => setIsEditingDesc(false)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            <Check className="w-4 h-4 mr-1" /> เสร็จสิ้น
+                          </Button>
+                        </>
+                      ) : (
                         <Button
                           size="sm"
-                          variant="ghost"
-                          onClick={() => setIsEditingDesc(false)}
-                          className="text-slate-500"
+                          variant="outline"
+                          onClick={() => setIsEditingDesc(true)}
+                          className="gap-2"
                         >
-                          <X className="w-4 h-4 mr-1" /> ยกเลิก
+                          <Pencil className="w-3.5 h-3.5" /> แก้ไขรายละเอียด
                         </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => setIsEditingDesc(false)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          <Check className="w-4 h-4 mr-1" /> เสร็จสิ้น
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setIsEditingDesc(true)}
-                        className="gap-2"
-                      >
-                        <Pencil className="w-3.5 h-3.5" /> แก้ไขรายละเอียด
-                      </Button>
-                    )}
+                      )}
+                    </div>
                   </div>
+
+                  {isEditingDesc ? (
+                    <div className="p-6 bg-white rounded-2xl border border-slate-200 min-h-[300px] animate-in fade-in zoom-in-95 duration-200">
+                      <SmartEditor
+                        value={values.description || ""}
+                        onChange={(val) =>
+                          form.setValue("description", val, {
+                            shouldDirty: true,
+                          })
+                        }
+                        onAiGenerate={async () => {
+                          const newDesc = generatePropertyDescription(
+                            form.getValues(),
+                            activeFeatures,
+                          );
+                          toast.success("อัปเดตรายละเอียดเรียบร้อย");
+                          return newDesc;
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <PropertyDescription
+                      description={values.description || null}
+                    />
+                  )}
                 </div>
 
-                {isEditingDesc ? (
-                  <div className="p-6 bg-white rounded-2xl border border-slate-200 min-h-[300px] animate-in fade-in zoom-in-95 duration-200">
-                    <SmartEditor
-                      value={values.description || ""}
-                      onChange={(val) =>
-                        form.setValue("description", val, { shouldDirty: true })
-                      }
-                      onAiGenerate={async () => {
-                        const newDesc = generatePropertyDescription(
-                          form.getValues(),
-                          activeFeatures,
-                        );
-                        toast.success("อัปเดตรายละเอียดเรียบร้อย");
-                        return newDesc;
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <PropertyDescription
-                    description={values.description || null}
-                  />
-                )}
+                {/* Nearby */}
+                <NearbyPlaces
+                  location={values.popular_area || undefined}
+                  data={[
+                    ...(values.nearby_places || []),
+                    ...(values.near_transit && values.transit_station_name
+                      ? [
+                          {
+                            category: "Transport",
+                            name: `${values.transit_type || "BTS/MRT"} ${
+                              values.transit_station_name
+                            }`,
+                            distance: values.transit_distance_meters
+                              ? (
+                                  values.transit_distance_meters / 1000
+                                ).toString()
+                              : undefined,
+                          },
+                        ]
+                      : []),
+                    ...(values.nearby_transits || []).map((t) => ({
+                      category: "Transport",
+                      name: `${t.type} ${t.station_name}`,
+                      distance: t.distance_meters
+                        ? (t.distance_meters / 1000).toString()
+                        : undefined,
+                    })),
+                  ]}
+                />
+
+                <hr className="border-slate-100" />
+
+                {/* Amenities */}
+                <PropertyAmenities features={activeFeatures} />
+
+                <hr className="border-slate-100" />
+
+                {/* Map */}
+                <PropertyMapSection
+                  googleMapsLink={values.google_maps_link || null}
+                />
               </div>
 
-              {/* Nearby */}
-              <NearbyPlaces
-                location={values.popular_area || undefined}
-                data={[
-                  ...(values.nearby_places || []),
-                  ...(values.near_transit && values.transit_station_name
-                    ? [
-                        {
-                          category: "Transport",
-                          name: `${values.transit_type || "BTS/MRT"} ${
-                            values.transit_station_name
-                          }`,
-                          distance: values.transit_distance_meters
-                            ? (values.transit_distance_meters / 1000).toString()
-                            : undefined,
-                        },
-                      ]
-                    : []),
-                  ...(values.nearby_transits || []).map((t) => ({
-                    category: "Transport",
-                    name: `${t.type} ${t.station_name}`,
-                    distance: t.distance_meters
-                      ? (t.distance_meters / 1000).toString()
-                      : undefined,
-                  })),
-                ]}
-              />
-
-              <hr className="border-slate-100" />
-
-              {/* Amenities */}
-              <PropertyAmenities features={activeFeatures} />
-
-              <hr className="border-slate-100" />
-
-              {/* Map */}
-              <PropertyMapSection
-                googleMapsLink={values.google_maps_link || null}
-              />
-            </div>
-
-            {/* Right Column (Sidebar) */}
-            <div className="space-y-6">
-              <PropertySuitability
-                listingType={values.listing_type || "SALE"}
-                price={values.price ?? null}
-                rentalPrice={values.rental_price ?? null}
-              />
-
-              <div className="sticky top-24">
-                <AgentSidebar
-                  agentName={currentUser?.full_name}
-                  agentImage={currentUser?.avatar_url}
-                  agentPhone={currentUser?.phone}
-                  agentLine={currentUser?.line_id}
-                  isVerified={true}
-                  propertyId="preview-id"
-                  propertyTitle={values.title}
-                  shareUrl="#"
+              {/* Right Column (Sidebar) */}
+              <div className="space-y-6">
+                <PropertySuitability
+                  listingType={values.listing_type || "SALE"}
+                  price={values.price ?? null}
+                  rentalPrice={values.rental_price ?? null}
                 />
+
+                <div className="sticky top-24">
+                  <AgentSidebar
+                    agentName={currentUser?.full_name}
+                    agentImage={currentUser?.avatar_url}
+                    agentPhone={currentUser?.phone}
+                    agentLine={currentUser?.line_id}
+                    isVerified={true}
+                    propertyId="preview-id"
+                    propertyTitle={values.title}
+                    shareUrl="#"
+                  />
+                </div>
               </div>
             </div>
           </div>

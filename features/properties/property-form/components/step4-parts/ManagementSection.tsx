@@ -1,6 +1,15 @@
 "use client";
 
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { OwnerForm } from "@/features/owners/OwnerForm";
+import React, { useState } from "react";
+import {
   FormField,
   FormItem,
   FormLabel,
@@ -22,18 +31,22 @@ import {
   PROPERTY_STATUS_ORDER,
 } from "@/features/properties/labels";
 import { AgentMultiSelect } from "../../sections/AgentMultiSelect";
+import { Button } from "@/components/ui/button";
 
 interface ManagementSectionProps {
   form: UseFormReturn<PropertyFormValues>;
   owners: any[];
   agents: any[];
+  refreshOwners?: () => Promise<any>;
 }
 
 export const ManagementSection = ({
   form,
   owners,
   agents,
+  refreshOwners,
 }: ManagementSectionProps) => {
+  const [isAddingOwner, setIsAddingOwner] = useState(false);
   const totalUnits = useWatch({ control: form.control, name: "total_units" });
   const soldUnits = useWatch({ control: form.control, name: "sold_units" });
 
@@ -71,7 +84,7 @@ export const ManagementSection = ({
                         field.value === "DRAFT" &&
                           "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200",
                         field.value === "ARCHIVED" &&
-                          "bg-slate-800 text-slate-100 border-slate-900 hover:bg-slate-900",
+                          "bg-slate-800 text-white border-slate-900 hover:bg-slate-900",
                         (field.value === "SOLD" || field.value === "RENTED") &&
                           "bg-red-500 text-white border-red-600 hover:bg-red-600",
                         (field.value === "UNDER_OFFER" ||
@@ -110,7 +123,7 @@ export const ManagementSection = ({
               </FormItem>
             )}
           />
-        {/* Owner */}
+          {/* Owner */}
           <FormField
             control={form.control}
             name="owner_id"
@@ -125,34 +138,91 @@ export const ManagementSection = ({
                     ส่วนตัว 🔒
                   </span>
                 </FormLabel>
-                <Select
-                  value={field.value ?? "NONE"}
-                  onValueChange={(v) => field.onChange(v === "NONE" ? null : v)}
-                >
-                  <FormControl>
-                    <SelectTrigger className="h-11 rounded-lg bg-white border border-slate-200 font-normal px-4 text-sm">
-                      <SelectValue placeholder="เลือกเจ้าของ" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white rounded-xl shadow-lg border-none max-h-[300px] overflow-y-auto">
-                    <SelectItem
-                      value="NONE"
-                      className="font-normal text-slate-400 text-sm"
-                    >
-                      -- ไม่ระบุ --
-                    </SelectItem>
-                    {owners.map((o) => (
+                <div className="flex items-center gap-8">
+                  <Select
+                    value={field.value ?? "NONE"}
+                    onValueChange={(v) =>
+                      field.onChange(v === "NONE" ? null : v)
+                    }
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-11 flex-1 rounded-lg bg-white border border-slate-200 font-normal px-4 text-sm">
+                        <SelectValue placeholder="เลือกเจ้าของ" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-white rounded-xl shadow-lg border-none max-h-[300px] overflow-y-auto">
                       <SelectItem
-                        key={o.id}
-                        value={o.id}
-                        className="py-3 font-normal text-sm"
+                        value="NONE"
+                        className="font-normal text-slate-400 text-sm"
                       >
-                        {"K."}
-                        {o.full_name} {o.phone ? `(${o.phone})` : ""}
+                        -- ไม่ระบุ --
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      {owners.map((o) => (
+                        <SelectItem
+                          key={o.id}
+                          value={o.id}
+                          className="py-3 font-normal text-sm"
+                        >
+                          {"K."}
+                          {o.full_name} {o.phone ? `(${o.phone})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Dialog open={isAddingOwner} onOpenChange={setIsAddingOwner}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className=" shrink-0 rounded-lg border-slate-200 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200 transition-all shadow-sm"
+                      onClick={() => setIsAddingOwner(true)}
+                      title="เพิ่มเจ้าของใหม่"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-none bg-transparent shadow-none">
+                      <div className="bg-white rounded-2xl overflow-hidden shadow-2xl">
+                        <DialogHeader className="p-6 bg-slate-50/50 border-b border-slate-100">
+                          <DialogTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
+                              <Plus className="w-5 h-5" />
+                            </div>
+                            เพิ่มเจ้าของทรัพย์ใหม่
+                          </DialogTitle>
+                          <DialogDescription className="text-slate-500">
+                            กรอกข้อมูลเจ้าของทรัพย์เพื่อบันทึกลงในระบบ
+                          </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="p-6">
+                          <OwnerForm
+                            mode="create"
+                            onCancel={() => setIsAddingOwner(false)}
+                            onSuccess={async () => {
+                              setIsAddingOwner(false);
+                              if (refreshOwners) {
+                                const newOwners = await refreshOwners();
+                                // Option: Automatically select the latest one
+                                if (newOwners && newOwners.length > 0) {
+                                  // Sort by created_at if possible, or just the last one
+                                  const latest = [...newOwners].sort(
+                                    (a, b) =>
+                                      new Date(b.created_at).getTime() -
+                                      new Date(a.created_at).getTime(),
+                                  )[0];
+                                  if (latest) {
+                                    form.setValue("owner_id", latest.id);
+                                  }
+                                }
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </FormItem>
             )}
           />
@@ -269,8 +339,6 @@ export const ManagementSection = ({
               </span>
             </div>
           </div>
-
-          
         </div>
         {/* Divider */}
         <div className="h-px bg-slate-100 my-2" />

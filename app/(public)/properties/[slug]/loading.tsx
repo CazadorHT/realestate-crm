@@ -4,7 +4,7 @@ export default function Loading() {
     <main className="min-h-screen bg-white pb-20 font-sans">
       {/* Header & Breadcrumb Skeleton */}
       <div className="pt-24 bg-white sticky top-0 z-30 opacity-95 backdrop-blur-sm shadow-sm md:shadow-none md:static">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 animate-pulse">
             {/* Back Link */}
             <div className="flex justify-between items-center">
@@ -44,7 +44,7 @@ export default function Loading() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 md:mt-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 md:mt-8">
         {/* Gallery Skeleton */}
         <section className="mb-10 animate-pulse">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2 h-[300px] md:h-[450px] rounded-3xl overflow-hidden">

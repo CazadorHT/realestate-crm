@@ -34,6 +34,7 @@ interface PropertyHeaderProps {
     slug?: string | null;
     property_type?: string | null;
     province?: string | null;
+    district?: string | null;
     popular_area?: string | null;
   };
   locationParts: string;
@@ -169,6 +170,8 @@ export function PropertyHeader({
                         },
                       ]
                     : []),
+                  // District omitted for now as we don't have direct district filter,
+                  // and province filter + popular area is the main flow.
                   ...(property.popular_area
                     ? [
                         {

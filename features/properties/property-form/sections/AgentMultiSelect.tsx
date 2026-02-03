@@ -137,7 +137,10 @@ export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
                         )}
                       >
                         <AvatarImage
-                          src={`https://api.dicebear.com/7.x/initials/svg?seed=${agent?.full_name || "Agent"}`}
+                          src={
+                            agent?.avatar_url ||
+                            `https://api.dicebear.com/7.x/initials/svg?seed=${agent?.full_name || "Agent"}`
+                          }
                         />
                         <AvatarFallback
                           className={

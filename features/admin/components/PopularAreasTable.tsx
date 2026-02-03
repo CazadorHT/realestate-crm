@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -31,7 +31,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PaginationControls } from "@/components/ui/pagination-controls";
-import { Pencil, Trash2, Loader2, MapPin, Check } from "lucide-react";
+import { Pencil, Trash2, Loader2, MapPin, Check, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   createPopularAreaAction,
@@ -61,14 +61,38 @@ export function PopularAreasTable({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
 
+  // Search
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredData = useMemo(() => {
+    if (!searchQuery.trim()) return data;
+    return data.filter((item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase().trim()),
+    );
+  }, [data, searchQuery]);
+
   // Pagination
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Reset page to 1 when searching
+  useEffect(() => {
+    if (searchQuery) {
+      const params = new URLSearchParams(searchParams);
+      if (params.get("page") !== "1") {
+        params.set("page", "1");
+        router.replace(`${pathname}?${params.toString()}`);
+      }
+    }
+  }, [searchQuery, searchParams, pathname, router]);
+
   const page = Number(searchParams.get("page")) || 1;
   const pageSize = 10;
 
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
-  const displayData = data.slice(start, end);
+  const displayData = filteredData.slice(start, end);
 
   // Bulk selection
   const allIds = useMemo(
@@ -157,15 +181,24 @@ export function PopularAreasTable({
         entityName="ทำเล"
       />
 
-      <div className="flex justify-between items-center bg-white p-4  border border-slate-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-4 border border-slate-200 shadow-sm rounded-xl">
         <div>
           <h2 className="text-lg font-bold flex items-center gap-2">
             <MapPin className="h-5 w-5 text-indigo-600" />
-            Popular Areas ({data.length})
+            Popular Areas ({filteredData.length})
           </h2>
           <p className="text-sm text-slate-500">
             จัดการรายชื่อทำเลยอดนิยมในระบบ
           </p>
+        </div>
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="ค้นหาทำเล..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-10 bg-slate-50 border-slate-200 focus:bg-white transition-all"
+          />
         </div>
       </div>
 
@@ -191,13 +224,23 @@ export function PopularAreasTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.length === 0 ? (
+            {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={4}
                   className="text-center h-24 text-slate-500"
                 >
-                  ยังไม่มีข้อมูล
+                  {searchQuery ? (
+                    <span>
+                      ไม่พบผลลัพธ์สำหรับ "
+                      <span className="font-semibold text-slate-900">
+                        {searchQuery}
+                      </span>
+                      "
+                    </span>
+                  ) : (
+                    "ยังไม่มีข้อมูล"
+                  )}
                 </TableCell>
               </TableRow>
             ) : (
@@ -285,7 +328,7 @@ export function PopularAreasTable({
       </AlertDialog>
 
       <PaginationControls
-        totalCount={data.length}
+        totalCount={filteredData.length}
         pageSize={pageSize}
         currentPage={page}
       />

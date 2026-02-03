@@ -9,7 +9,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
+import { useState } from "react";
+import {
+  Search,
+  SlidersHorizontal,
+  ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { MdOutlinePets } from "react-icons/md";
 import { FaTrainSubway } from "react-icons/fa6";
 import {
@@ -24,7 +31,7 @@ import {
 import { FilterBarSkeleton } from "../FilterBarSkeleton";
 
 export const PROPERTY_TYPES = [
-  { value: "ALL", label: "ทั้งหมด" },
+  { value: "ALL", label: "รวมทุกประเภท" },
   { value: "HOUSE", label: "บ้าน" },
   { value: "CONDO", label: "คอนโด" },
   { value: "TOWNHOME", label: "ทาวน์โฮม" },
@@ -57,7 +64,10 @@ interface SearchFilterBarProps {
   bedrooms: string;
   setBedrooms: (v: string) => void;
   filteredLength: number;
-  availableAreas: string[];
+  availableAreas: { name: string; count: number }[];
+  province: string;
+  setProvince: (v: string) => void;
+  availableProvinces: string[];
 }
 
 export function SearchFilterBar({
@@ -84,7 +94,13 @@ export function SearchFilterBar({
   setBedrooms,
   filteredLength,
   availableAreas,
+  province,
+  setProvince,
+  availableProvinces,
 }: SearchFilterBarProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showAreaSection, setShowAreaSection] = useState(true);
+
   if (isLoading) return <FilterBarSkeleton />;
 
   const clearFilters = () => {
@@ -95,6 +111,7 @@ export function SearchFilterBar({
     setMaxPrice("");
     setSort("NEWEST");
     setArea("ALL");
+    setProvince("ALL");
     setNearTrain(false);
     setPetFriendly(false);
     setBedrooms("ALL");
@@ -131,6 +148,32 @@ export function SearchFilterBar({
                 <SheetTitle>ตัวกรองค้นหา</SheetTitle>
               </SheetHeader>
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Province (Mobile) */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-slate-900">
+                    จังหวัด
+                  </label>
+                  <Select
+                    value={province}
+                    onValueChange={(val) => {
+                      setProvince(val);
+                      setArea("ALL"); // Reset area when province changes
+                    }}
+                  >
+                    <SelectTrigger className="w-full h-12 rounded-xl bg-white">
+                      <SelectValue placeholder="ทุกจังหวัด" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">-- ทุกจังหวัด --</SelectItem>
+                      {availableProvinces.map((p) => (
+                        <SelectItem key={p} value={p}>
+                          {p}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Property Type */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-900">
@@ -185,19 +228,19 @@ export function SearchFilterBar({
                   <label className="text-sm font-medium text-slate-900">
                     ช่วงราคา
                   </label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 h-12 bg-white rounded-xl px-2">
                     <Input
                       type="number"
-                      placeholder="ต่ำสุด"
-                      className="bg-white"
+                      placeholder="งบต่ำสุด"
+                      className="border-0 h-full w-full p-0 text-sm focus-visible:ring-0 bg-white"
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
                     />
-                    <span className="text-slate-400">-</span>
+                    <span className="text-slate-400">—</span>
                     <Input
                       type="number"
-                      placeholder="สูงสุด"
-                      className="bg-white"
+                      placeholder="งบสูงสุด"
+                      className="border-0 h-full w-full p-0 text-sm focus-visible:ring-0 bg-white"
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
                     />
@@ -226,7 +269,9 @@ export function SearchFilterBar({
                   </div>
                 </div>
 
-                {/* Area */}
+                {/* Area (Mobile: Still use Select for compactness or list?) */}
+                {/* For consistency with design, let's keep Select for mobile or use a scrollable list.
+                     Let's sticky to Select for Mobile for now to save vertical space. */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-900">
                     ทำเล
@@ -238,8 +283,8 @@ export function SearchFilterBar({
                     <SelectContent>
                       <SelectItem value="ALL">-- ทุกย่านทำเล --</SelectItem>
                       {availableAreas.map((a) => (
-                        <SelectItem key={a} value={a}>
-                          {a}
+                        <SelectItem key={a.name} value={a.name}>
+                          {a.name} ({a.count})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -283,21 +328,43 @@ export function SearchFilterBar({
             </SheetContent>
           </Sheet>
         </div>
-
+        {/* ********************************************************************* */}
         {/* Desktop View (Hidden on Mobile) */}
         <div className="hidden lg:block">
           {/* Row 1: Search + Core Filters */}
           <div className="grid grid-cols-12 gap-3 mb-4">
-            <div className="col-span-5">
+            <div className="col-span-3">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <Input
-                  placeholder="ค้นหาอสังหาฯ ที่ใช่สำหรับคุณ..."
+                  placeholder="ค้นหา..."
                   className="pl-12 h-12 text-base rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md focus:shadow-lg transition-all"
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                 />
               </div>
+            </div>
+
+            <div className="col-span-2">
+              <Select
+                value={province}
+                onValueChange={(val) => {
+                  setProvince(val);
+                  setArea("ALL");
+                }}
+              >
+                <SelectTrigger className="h-12 py-[23px] w-full rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all">
+                  <SelectValue placeholder="จังหวัด" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">ทุกจังหวัด</SelectItem>
+                  {availableProvinces.map((p) => (
+                    <SelectItem key={p} value={p}>
+                      {p}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="col-span-2">
@@ -317,41 +384,63 @@ export function SearchFilterBar({
 
             <div className="col-span-3">
               <div className="grid grid-cols-4 gap-1.5 h-12">
-                {[
-                  { val: "ALL", label: "ทั้งหมด", color: "slate" },
-                  { val: "SALE", label: "ขาย", color: "green" },
-                  { val: "RENT", label: "เช่า", color: "orange" },
-                  { val: "SALE_AND_RENT", label: "ขาย+เช่า", color: "blue" },
-                ].map((opt) => (
-                  <button
-                    key={opt.val}
-                    onClick={() => setListingType(opt.val)}
-                    className={`rounded-lg border-2 transition-all font-medium text-xs ${
-                      listingType === opt.val
-                        ? `bg-${opt.color}-600 border-${opt.color}-600 text-white shadow-md`
-                        : `bg-white border-slate-200 hover:border-${opt.color}-400 hover:bg-${opt.color}-50 text-slate-700`
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+                <button
+                  onClick={() => setListingType("ALL")}
+                  className={`rounded-lg border-2 transition-colors duration-200 font-medium text-xs ${
+                    listingType === "ALL"
+                      ? "bg-slate-600 border-slate-600 text-white shadow-md"
+                      : "bg-white border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-slate-700"
+                  }`}
+                >
+                  ทั้งหมด
+                </button>
+                <button
+                  onClick={() => setListingType("SALE")}
+                  className={`rounded-lg border-2 transition-colors duration-200 font-medium text-xs ${
+                    listingType === "SALE"
+                      ? "bg-green-600 border-green-600 text-white shadow-md"
+                      : "bg-white border-slate-200 hover:border-green-400 hover:bg-green-50 text-slate-700"
+                  }`}
+                >
+                  ขาย
+                </button>
+                <button
+                  onClick={() => setListingType("RENT")}
+                  className={`rounded-lg border-2 transition-colors duration-200 font-medium text-xs ${
+                    listingType === "RENT"
+                      ? "bg-orange-600 border-orange-600 text-white shadow-md"
+                      : "bg-white border-slate-200 hover:border-orange-400 hover:bg-orange-50 text-slate-700"
+                  }`}
+                >
+                  เช่า
+                </button>
+                <button
+                  onClick={() => setListingType("SALE_AND_RENT")}
+                  className={`rounded-lg border-2 transition-colors duration-200 font-medium text-xs ${
+                    listingType === "SALE_AND_RENT"
+                      ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                      : "bg-white border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-slate-700"
+                  }`}
+                >
+                  ขาย+เช่า
+                </button>
               </div>
             </div>
 
             <div className="col-span-2">
-              <div className="flex items-center gap-2 h-12 bg-white rounded-xl border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-2 h-12 bg-white rounded-xl">
                 <Input
                   type="number"
-                  placeholder="ราคาต่ำสุด"
-                  className="border-0 h-full w-full p-0 text-sm focus-visible:ring-0 bg-white px-2"
+                  placeholder="งบต่ำสุด"
+                  className="h-full w-full p-0 text-sm focus-visible:ring-0 bg-white shadow-sm border-slate-200 border px-2"
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
                 />
                 <span className="text-slate-400">—</span>
                 <Input
                   type="number"
-                  placeholder="สูงสุด"
-                  className="border-0 h-full w-full p-0 text-sm focus-visible:ring-0 bg-white px-2"
+                  placeholder="งบสูงสุด"
+                  className="  h-full w-full p-0 text-sm focus-visible:ring-0 bg-white shadow-sm border-slate-200 border px-2"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
                 />
@@ -361,22 +450,25 @@ export function SearchFilterBar({
 
           {/* Row 2: Secondary Filters + Actions */}
           <div className="flex flex-wrap items-center gap-3">
-            <Select value={area} onValueChange={setArea}>
-              <SelectTrigger className="w-[160px] h-12 py-[23px] rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all">
-                <SelectValue placeholder="ทุกย่านทำเล" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">-- ทุกย่านทำเล --</SelectItem>
-                {availableAreas.map((a) => (
-                  <SelectItem key={a} value={a}>
-                    {a}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
+            {availableAreas.length > 0 && (
+              <button
+                onClick={() => setShowAreaSection(!showAreaSection)}
+                className={`flex items-center justify-between gap-2 px-4 h-12 rounded-xl border-2 transition-all font-medium text-sm ${
+                  showAreaSection
+                    ? "bg-slate-100 border-slate-200 text-slate-900"
+                    : "bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-700"
+                }`}
+              >
+                ทำเลยอดนิยม
+                {showAreaSection ? (
+                  <ChevronUp className="w-4 h-4 text-slate-500" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-slate-500" />
+                )}
+              </button>
+            )}
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl h-12">
-              <span className="text-xs text-slate-600 font-medium px-2">
+              <span className="text-sm text-slate-600 font-medium px-2">
                 ห้องนอน:
               </span>
               {["ALL", "1", "2", "3", "4+"].map((bed) => (
@@ -453,6 +545,62 @@ export function SearchFilterBar({
               ล้างตัวกรอง
             </Button>
           </div>
+
+          {/* Popular Areas List */}
+          {availableAreas.length > 0 && (
+            <div className="mt-4 pt-4  border-t border-slate-100 transition-all duration-300">
+              {showAreaSection && (
+                <div className="flex flex-wrap gap-x-2 gap-y-2 px-2 animate-in fade-in slide-in-from-top-1">
+                  <button
+                    onClick={() => setArea("ALL")}
+                    className={`text-md transition-colors ${
+                      area === "ALL"
+                        ? "font-semibold text-blue-600"
+                        : "text-slate-500 hover:text-blue-600"
+                    }`}
+                  >
+                    ทำเลทั้งหมด
+                  </button>
+                  {availableAreas
+                    .slice(0, isExpanded ? undefined : 15) // Show top 15 initially
+                    .map((a) => (
+                      <button
+                        key={a.name}
+                        onClick={() => setArea(a.name)}
+                        className={`text-md transition-colors flex items-center gap-2  px-3 py-1  hover:bg-sky-50 rounded-lg ${
+                          area === a.name
+                            ? "font-semibold text-blue-600"
+                            : "text-slate-500 hover:text-blue-600"
+                        }`}
+                      >
+                        {a.name}
+                        <span className="text-md text-slate-400 font-light">
+                          ({a.count})
+                        </span>
+                      </button>
+                    ))}
+
+                  {availableAreas.length > 15 && (
+                    <button
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      className="text-md font-medium text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors"
+                    >
+                      {isExpanded ? (
+                        <>
+                          น้อยลง <ChevronUp className="w-3 h-3" />
+                        </>
+                      ) : (
+                        <>
+                          ดูเพิ่ม ({availableAreas.length - 15}){" "}
+                          <ChevronDown className="w-3 h-3" />
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

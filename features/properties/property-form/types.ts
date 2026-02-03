@@ -39,7 +39,12 @@ export interface Step3Props extends BaseStepProps {}
  */
 export interface Step4Props extends BaseStepProps {
   owners: Array<{ id: string; full_name: string; phone: string | null }>;
-  agents: Array<{ id: string; full_name: string | null; phone: string | null }>;
+  agents: Array<{
+    id: string;
+    full_name: string | null;
+    phone: string | null;
+    avatar_url?: string | null;
+  }>;
   initialImages: Array<{
     image_url: string;
     storage_path: string;
@@ -47,6 +52,7 @@ export interface Step4Props extends BaseStepProps {
   }>;
   uploadSessionId: string;
   persistImages: boolean;
+  refreshOwners?: () => Promise<any>;
 }
 
 /**
@@ -54,5 +60,10 @@ export interface Step4Props extends BaseStepProps {
  */
 export interface AgentMultiSelectProps {
   form: UseFormReturn<PropertyFormValues>;
-  agents: Array<{ id: string; full_name: string | null; phone: string | null }>;
+  agents: Array<{
+    id: string;
+    full_name: string | null;
+    phone: string | null;
+    avatar_url?: string | null;
+  }>;
 }

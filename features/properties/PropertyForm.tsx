@@ -112,7 +112,7 @@ export function PropertyForm({
   });
 
   // === DATA LOADING ===
-  const { owners, agents, popularAreas, refreshPopularAreas } =
+  const { owners, agents, popularAreas, refreshPopularAreas, refreshOwners } =
     usePropertyFormData(mode, defaultValues?.id, form);
 
   // === DRAFT MANAGEMENT ===
@@ -499,6 +499,7 @@ export function PropertyForm({
               initialImages={initialImages}
               uploadSessionId={uploadSessionId}
               persistImages={persistImages}
+              refreshOwners={refreshOwners}
             />
           )}
 
