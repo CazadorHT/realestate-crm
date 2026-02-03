@@ -17,10 +17,30 @@ export const metadata: Metadata = {
 
 export const revalidate = 3600; // Revalidate every hour
 
-export default async function BlogListingPage() {
-  const posts = await getBlogPosts();
-  const featuredPost = posts[0];
-  const remainingPosts = posts.slice(1);
+interface BlogListingPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function BlogListingPage({
+  searchParams,
+}: BlogListingPageProps) {
+  const { category } = await searchParams;
+  const categoryFilter = typeof category === "string" ? category : undefined;
+
+  // Ideally, get all posts for sidebar count, and filtered for display
+  // But current service logic might need adjustment if we want sidebar to show full counts
+  // For now, let's fetch all to keep sidebar counts correct, then filter in memory or fetch twice
+  // Strategy: Fetch ALL for counts, filter for display.
+  // Efficiency: If huge blog, better to have separate 'getCategoryCounts' RPC.
+  // Given current scale, fetching all and filtering in memory or fetching twice is fine.
+  // Sidebar needs ALL posts to calculate counts correctly.
+  const allPosts = await getBlogPosts(); // Get all for sidebar
+  const posts = categoryFilter
+    ? allPosts.filter((p) => p.category === categoryFilter)
+    : allPosts;
+
+  const featuredPost = categoryFilter ? null : posts[0]; // Don't show hero featured if filtered, or show first of filter? Let's hide hero featured on filter to focus on list.
+  const remainingPosts = categoryFilter ? posts : posts.slice(1);
 
   // Schema.org for SEO
   const schemaData = {
@@ -73,8 +93,18 @@ export default async function BlogListingPage() {
               <div className="flex items-center gap-2 mb-6">
                 <div className="h-6 w-1 bg-linear-to-b from-slate-700 to-slate-900 rounded-full"></div>
                 <h2 className="text-xl font-bold text-slate-900">
-                  บทความล่าสุด
+                  {categoryFilter
+                    ? `หมวดหมู่: ${categoryFilter}`
+                    : "บทความล่าสุด"}
                 </h2>
+                {categoryFilter && (
+                  <a
+                    href="/blog"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    ดูทั้งหมด
+                  </a>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -94,7 +124,7 @@ export default async function BlogListingPage() {
             </div>
 
             {/* Sidebar */}
-            <BlogSidebar posts={posts} />
+            <BlogSidebar posts={allPosts} />
           </div>
         </section>
       </div>

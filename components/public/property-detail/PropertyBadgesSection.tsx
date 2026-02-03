@@ -270,7 +270,7 @@ export function PropertyBadgesSection({
         }
       `}</style>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-        <div className="flex items-center gap-3 flex-1 max-w-2xl overflow-hidden group/container">
+        <div className="flex items-center gap-3 flex-1 max-w-3xl overflow-hidden group/container">
           {/* Sale/Rent: Static */}
           <div className="shrink-0 z-20 bg-white">
             <Badge

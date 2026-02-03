@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 export interface BreadcrumbItem {
   label: string;
   href?: string; // if no href, it's the current page
+  className?: string;
 }
 
 export interface BreadcrumbProps {
@@ -58,13 +59,14 @@ export function Breadcrumb({
         const isLast = index === items.length - 1;
 
         return (
-          <span key={index} className="flex items-center gap-2">
+          <span key={index} className="flex items-center gap-2 overflow-hidden">
             {item.href && !isLast ? (
               <Link
                 href={item.href}
                 className={cn(
-                  "transition-colors",
+                  "transition-colors whitespace-nowrap",
                   isOnDark ? "hover:text-white" : "hover:text-primary",
+                  item.className,
                 )}
               >
                 {item.label}
@@ -74,7 +76,9 @@ export function Breadcrumb({
                 className={cn(
                   "font-medium",
                   isOnDark ? "text-white" : "text-foreground",
+                  item.className,
                 )}
+                title={item.label} // tooltip for truncated text
               >
                 {item.label}
               </span>
@@ -82,7 +86,7 @@ export function Breadcrumb({
             {!isLast && (
               <ChevronRight
                 className={cn(
-                  "h-3.5 w-3.5",
+                  "h-3.5 w-3.5 flex-none",
                   isOnDark ? "text-white/40" : "text-muted-foreground/50",
                 )}
               />

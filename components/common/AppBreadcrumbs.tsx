@@ -51,7 +51,7 @@ interface AppBreadcrumbsProps {
   className?: string;
   variant?: "default" | "on-dark";
   showHome?: boolean;
-  items?: { label: string; href?: string }[];
+  items?: { label: string; href?: string; className?: string }[];
 }
 
 export function AppBreadcrumbs({
@@ -102,10 +102,6 @@ export function AppBreadcrumbs({
         href: currentHref,
       });
     });
-
-    // Debug log to verify props
-    // Debug log removed to prevent TS error
-    // console.log("AppBreadcrumbs rendered", { ... });
 
     return items;
   }, [pathname, showHome, customItems]);

@@ -10,6 +10,17 @@ import {
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { cn } from "@/lib/utils";
 
+const PROPERTY_TYPE_TH: Record<string, string> = {
+  HOUSE: "บ้าน",
+  CONDO: "คอนโด",
+  TOWNHOME: "ทาวน์โฮม",
+  LAND: "ที่ดิน",
+  COMMERCIAL_BUILDING: "อาคารพาณิชย์",
+  OFFICE_BUILDING: "อาคารสำนักงาน/ออฟฟิศ",
+  WAREHOUSE: "โกดัง/โรงงาน",
+  OTHER: "อื่นๆ",
+};
+
 interface PropertyHeaderProps {
   property: {
     id: string;
@@ -21,6 +32,9 @@ interface PropertyHeaderProps {
     original_rental_price: number | null;
     min_contract_months: number | null;
     slug?: string | null;
+    property_type?: string | null;
+    province?: string | null;
+    popular_area?: string | null;
   };
   locationParts: string;
   keySellingPoints: KeySellingPoint[];
@@ -129,7 +143,7 @@ export function PropertyHeader({
         className,
       )}
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-screen-2xl px-4 sm:px-6 lg:px-8  mx-auto">
         <div className="flex flex-col gap-3 md:gap-4">
           {!hideBreadcrumbs && (
             <div className="mb-2">
@@ -137,7 +151,37 @@ export function PropertyHeader({
                 items={[
                   { label: "หน้าแรก", href: "/" },
                   { label: "โครงการและทรัพย์สิน", href: "/properties" },
-                  { label: property.title },
+                  ...(property.property_type
+                    ? [
+                        {
+                          label:
+                            PROPERTY_TYPE_TH[property.property_type] ||
+                            property.property_type,
+                          href: `/properties?property_type=${property.property_type}`,
+                        },
+                      ]
+                    : []),
+                  ...(property.province
+                    ? [
+                        {
+                          label: property.province,
+                          href: `/properties?province=${property.province}`,
+                        },
+                      ]
+                    : []),
+                  ...(property.popular_area
+                    ? [
+                        {
+                          label: property.popular_area,
+                          href: `/properties?popular_area=${property.popular_area}`,
+                        },
+                      ]
+                    : []),
+                  {
+                    label: property.title,
+                    className:
+                      "max-w-[150px] sm:max-w-[250px] md:max-w-[400px] truncate block",
+                  },
                 ]}
               />
             </div>

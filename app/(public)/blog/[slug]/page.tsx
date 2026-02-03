@@ -128,6 +128,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           items={[
             { label: "หน้าแรก", href: "/" },
             { label: "บทความ", href: "/blog" },
+            ...(post.category
+              ? [
+                  {
+                    label: post.category,
+                    href: `/blog?category=${post.category}`,
+                  },
+                ]
+              : []),
             { label: post.title, href: `/blog/${slug}` },
           ]}
         />

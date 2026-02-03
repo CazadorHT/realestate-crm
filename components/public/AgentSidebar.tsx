@@ -1,7 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Phone, BadgeCheck, ShieldCheck } from "lucide-react";
+import {
+  Phone,
+  BadgeCheck,
+  ShieldCheck,
+  CalendarSearch,
+  MessageCircleQuestion,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ContactAgentDialog } from "@/components/public/ContactAgentDialog";
 import { FavoriteButton } from "@/components/public/FavoriteButton";
@@ -132,12 +138,40 @@ export function AgentSidebar({
             {getDisplayedPhone()}
           </Button>
 
-          <ContactAgentDialog
-            propertyId={propertyId}
-            propertyTitle={propertyTitle}
-            open={contactDialogOpen}
-            onOpenChange={setContactDialogOpen}
-          />
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <ContactAgentDialog
+              propertyId={propertyId}
+              propertyTitle={propertyTitle}
+              defaultMessage="สนใจนัดชมทรัพย์นี้ครับ สะดวกช่วง..."
+              trigger={
+                <Button
+                  variant="outline"
+                  className="w-full rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 h-12 text-sm font-semibold px-2"
+                  type="button"
+                >
+                  <CalendarSearch className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                  <span className="truncate">นัดชม</span>
+                </Button>
+              }
+            />
+            <ContactAgentDialog
+              propertyId={propertyId}
+              propertyTitle={propertyTitle}
+              defaultMessage="สอบถามข้อมูลเพิ่มเติมครับ..."
+              open={contactDialogOpen}
+              onOpenChange={setContactDialogOpen}
+              trigger={
+                <Button
+                  variant="outline"
+                  className="w-full rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-800 h-12 text-sm font-semibold px-2"
+                  type="button"
+                >
+                  <MessageCircleQuestion className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                  <span className="truncate">สอบถาม</span>
+                </Button>
+              }
+            />
+          </div>
         </div>
       </div>
 

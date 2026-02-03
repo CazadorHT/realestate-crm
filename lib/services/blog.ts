@@ -3,13 +3,19 @@ import type { Database } from "@/lib/database.types";
 
 export type BlogPost = Database["public"]["Tables"]["blog_posts"]["Row"];
 
-export async function getBlogPosts() {
+export async function getBlogPosts(category?: string) {
   const supabase = createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("blog_posts")
     .select("*")
     .eq("is_published", true)
     .order("published_at", { ascending: false });
+
+  if (category) {
+    query = query.eq("category", category);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching blog posts:", error);
@@ -53,7 +59,7 @@ export async function getBlogPostBySlug(slug: string) {
 export async function getRelatedPosts(
   currentSlug: string,
   category: string,
-  limit: number = 3
+  limit: number = 3,
 ) {
   const supabase = createClient();
   const { data, error } = await supabase

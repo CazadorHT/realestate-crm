@@ -1,6 +1,7 @@
 "use client";
 
 import { BookOpen } from "lucide-react";
+import Link from "next/link";
 
 interface BlogSidebarProps {
   posts: any[];
@@ -41,7 +42,8 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
               }
 
               return categories.map(([cat, count]) => (
-                <button
+                <Link
+                  href={`/blog?category=${cat}`}
                   key={cat}
                   className="w-full text-left px-4 py-3 rounded-xl bg-slate-50 hover:bg-linear-to-r hover:from-blue-50 hover:to-purple-50 text-slate-700 hover:text-blue-700 font-medium transition-all duration-300 border border-transparent hover:border-blue-200 flex items-center justify-between group"
                 >
@@ -49,7 +51,7 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
                   <span className="text-xs bg-slate-200 group-hover:bg-blue-100 group-hover:text-blue-700 px-2 py-0.5 rounded-full transition-colors">
                     {count}
                   </span>
-                </button>
+                </Link>
               ));
             })()}
           </div>

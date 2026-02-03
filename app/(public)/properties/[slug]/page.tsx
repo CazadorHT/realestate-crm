@@ -194,7 +194,7 @@ export default async function PublicPropertyDetailPage(props: {
         keySellingPoints={keySellingPoints}
       />
 
-      <div className="max-w-7xl mx-auto mt-4 md:mt-8">
+      <div className="max-w-screen-2xl px-4 sm:px-6 lg:px-8 mx-auto mt-4 md:mt-8">
         {/* 2. Gallery (Mosaic) */}
         <section className="mb-6 md:mb-10">
           <PropertyGallery

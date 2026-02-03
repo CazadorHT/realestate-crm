@@ -25,6 +25,7 @@ interface ContactAgentDialogProps {
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  defaultMessage?: string;
 }
 
 function SubmitButton() {
@@ -57,6 +58,7 @@ export function ContactAgentDialog({
   trigger,
   open: controlledOpen,
   onOpenChange,
+  defaultMessage = "",
 }: ContactAgentDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [state, setState] = useState<LeadState>({});
@@ -182,6 +184,7 @@ export function ContactAgentDialog({
               name="message"
               placeholder="เช่น สนใจนัดชมวันเสาร์นี้, สอบถามราคาเพิ่มเติม..."
               rows={3}
+              defaultValue={defaultMessage}
             />
           </div>
 
