@@ -21,6 +21,7 @@ import type { Database } from "@/lib/database.types";
 // Components
 import { LeadContactCard } from "@/features/leads/components/LeadContactCard";
 import { LeadRequirementsCard } from "@/features/leads/components/LeadRequirementsCard";
+import { LeadSummaryCard } from "@/features/leads/components/LeadSummaryCard";
 
 type LeadActivity = Database["public"]["Tables"]["lead_activities"]["Row"];
 
@@ -118,6 +119,9 @@ export default async function LeadDetailPage({
           />
         </div>
       </div>
+
+      {/* AI Summary Section */}
+      <LeadSummaryCard leadId={id} />
 
       {/* Top Row - Contact & Requirements (2 columns) */}
       <div className="grid gap-6 lg:grid-cols-2">
