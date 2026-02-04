@@ -1,6 +1,7 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
+import { useEffect } from "react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import { Toggle } from "@/components/ui/toggle";
@@ -27,10 +28,25 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     immediatelyRender: false,
     extensions: [
       StarterKit,
-      Link.configure({
+      Link.extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            class: {
+              default: null,
+              parseHTML: (element) => element.getAttribute("class"),
+              renderHTML: (attributes) => {
+                return {
+                  class: attributes.class,
+                };
+              },
+            },
+          };
+        },
+      }).configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: "text-primary underline cursor-pointer",
+          class: "text-primary underline cursor-pointer", // This might still apply default style if no class present, or merge.
         },
       }),
     ],
@@ -38,13 +54,26 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     editorProps: {
       attributes: {
         class:
-          "min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 prose prose-sm max-w-none dark:prose-invert",
+          "min-h-[400px] max-h-[600px] overflow-y-auto w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 prose prose-sm max-w-none dark:prose-invert",
       },
     },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
   });
+
+  // Sync editor content when value prop changes
+  useEffect(() => {
+    if (editor && value) {
+      // Only update if the content is different to avoid cursor jumping / loops
+      // We check for HTML mismatch or if the editor is empty but value is not
+      const currentContent = editor.getHTML();
+      if (currentContent !== value && !editor.isDestroyed) {
+        // Use commands.setContent to update
+        editor.commands.setContent(value);
+      }
+    }
+  }, [editor, value]);
 
   if (!editor) {
     return null;

@@ -4,12 +4,15 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { User } from "lucide-react";
 import DOMPurify from "isomorphic-dompurify";
+import { useRef, useEffect, useState } from "react";
+import { ContactAgentDialog } from "@/components/public/ContactAgentDialog";
 
 interface BlogDetailContentProps {
   post: {
     excerpt?: string | null;
     content?: string | null;
     tags?: string[] | null;
+    title: string;
   };
   author: {
     name: string;
@@ -19,6 +22,33 @@ interface BlogDetailContentProps {
 }
 
 export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
+  const [contactOpen, setContactOpen] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleContentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Check if the clicked element or its parent has the trigger class
+      const trigger = target.closest(".contact-agent-trigger");
+
+      if (trigger) {
+        e.preventDefault();
+        setContactOpen(true);
+      }
+    };
+
+    const element = contentRef.current;
+    if (element) {
+      element.addEventListener("click", handleContentClick);
+    }
+
+    return () => {
+      if (element) {
+        element.removeEventListener("click", handleContentClick);
+      }
+    };
+  }, []);
+
   return (
     <div className="bg-white rounded-2xl p-6 md:p-10 shadow-xl border border-slate-200">
       {/* Excerpt */}
@@ -30,9 +60,13 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
 
       {/* Main Content Render */}
       <div
+        ref={contentRef}
         className="prose prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline"
         dangerouslySetInnerHTML={{
-          __html: DOMPurify.sanitize(post.content || ""),
+          __html: DOMPurify.sanitize(post.content || "", {
+            ADD_TAGS: ["iframe"],
+            ADD_ATTR: ["target", "class"],
+          }),
         }}
         itemProp="articleBody"
       />
@@ -81,6 +115,13 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
           </div>
         </div>
       </div>
+
+      <ContactAgentDialog
+        open={contactOpen}
+        onOpenChange={setContactOpen}
+        propertyTitle={`[Blog Inquiry] ${post.title}`}
+        defaultMessage={`สนใจสอบถามเพิ่มเติมเกี่ยวกับบทความ: ${post.title}`}
+      />
     </div>
   );
 }

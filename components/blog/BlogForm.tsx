@@ -77,6 +77,8 @@ import {
 import { TiptapEditor } from "./TiptapEditor";
 import { CategoryDialog } from "./CategoryDialog";
 import { BlogImageUploader } from "./BlogImageUploader";
+import { BlogAiGenerator } from "./BlogAiGenerator";
+import { BlogContentRefiner } from "./BlogContentRefiner";
 
 interface BlogFormProps {
   initialData?: BlogPostRow;
@@ -196,6 +198,28 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     toast.success("สร้าง JSON-LD สำเร็จ");
   };
 
+  const handleAiGenerated = (data: any) => {
+    if (!data) return;
+
+    if (data.title) setValue("title", data.title);
+    if (data.slug) setValue("slug", data.slug);
+    if (data.excerpt) setValue("excerpt", data.excerpt);
+    if (data.content) setValue("content", data.content);
+    if (data.tags) setValue("tags", data.tags);
+    if (data.reading_time) setValue("reading_time", data.reading_time);
+
+    if (data.structured_data) {
+      setValue(
+        "structured_data",
+        JSON.stringify(data.structured_data, null, 2),
+      );
+    }
+
+    toast.success(
+      "ข้อมูลบทความถูกเติมลงในฟอร์มเรียบร้อยแล้ว ✨ อย่าลืมตรวจสอบเนื้อหาก่อนบันทึกนะครับ",
+    );
+  };
+
   async function onSubmit(data: BlogPostInput) {
     setIsSubmitting(true);
     try {
@@ -310,6 +334,21 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                     </div>
                   </DialogContent>
                 </Dialog>
+
+                {/* AI Blog Generator */}
+                <BlogAiGenerator onGenerated={handleAiGenerated} />
+
+                {/* AI Content Refiner */}
+                <div className="hidden md:block">
+                  <BlogContentRefiner
+                    currentContent={form.watch("content") || ""}
+                    onRefined={(newContent) =>
+                      form.setValue("content", newContent, {
+                        shouldDirty: true,
+                      })
+                    }
+                  />
+                </div>
 
                 {/* Publish Toggle */}
                 <FormField
