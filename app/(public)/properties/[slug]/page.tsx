@@ -180,6 +180,31 @@ export default async function PublicPropertyDetailPage(props: {
 
   const shareUrl = `https://your-domain.com/properties/${data.slug || slug}`;
 
+  // Helper: Try to resolve short links (server-side)
+  async function resolveGoogleMapsLink(url: string | null) {
+    if (!url) return null;
+    // Check for common shortener patterns
+    if (
+      url.includes("goo.gl") ||
+      url.includes("maps.app.goo.gl") ||
+      url.includes("share.google")
+    ) {
+      try {
+        // Fetch with HEAD to follow redirects lightly
+        const res = await fetch(url, {
+          method: "HEAD",
+          redirect: "follow",
+          next: { revalidate: 3600 }, // Cache the resolution for 1 hour
+        });
+        return res.url;
+      } catch (e) {
+        console.error("Error resolving Google Maps link:", e);
+        return url; // Fallback to original
+      }
+    }
+    return url;
+  }
+
   return (
     <main className="min-h-screen bg-white pb-24 lg:pb-20 font-sans">
       {/* Schema.org Structured Data */}
@@ -350,8 +375,12 @@ export default async function PublicPropertyDetailPage(props: {
 
             <hr className="border-slate-100" />
 
-            {/* Map */}
-            <PropertyMapSection googleMapsLink={data.google_maps_link} />
+            {/* Map (Resolved Short Link) */}
+            <PropertyMapSection
+              googleMapsLink={await resolveGoogleMapsLink(
+                data.google_maps_link,
+              )}
+            />
           </div>
 
           {/* Right Sidebar (Sticky) */}

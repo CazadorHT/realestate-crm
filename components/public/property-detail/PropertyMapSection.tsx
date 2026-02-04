@@ -17,25 +17,28 @@ export function PropertyMapSection({
     if (!url.startsWith("http")) return url;
 
     try {
-      // 1. Check for standard q= or query= parameters in standard URLs
+      // 1. Prioritize destination (daddr) if available to avoid showing directions/routes
       const urlObj = new URL(url);
+      const daddr =
+        urlObj.searchParams.get("daddr") ||
+        urlObj.searchParams.get("destination");
+      if (daddr) return daddr;
+
+      // 2. Check for standard q= or query= parameters in standard URLs
       const q =
         urlObj.searchParams.get("q") || urlObj.searchParams.get("query");
       if (q) return q;
 
-      // 2. Check for /place/ADDRESS/ pattern (Common in long URLs)
+      // 2. Check for @LAT,LNG coordinates (Prioritize valid coordinates for precision)
+      const coordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (coordMatch) return `${coordMatch[1]},${coordMatch[2]}`;
+
+      // 3. Check for /place/ADDRESS/ pattern (Common in long URLs)
       const placeMatch = url.match(/\/place\/([^\/]+)/);
       if (placeMatch && placeMatch[1])
         return decodeURIComponent(placeMatch[1]).replace(/\+/g, " ");
 
-      // 3. Check for /search/QUERY/ pattern
-      const searchMatch = url.match(/\/search\/([^\/]+)/);
-      if (searchMatch && searchMatch[1])
-        return decodeURIComponent(searchMatch[1]).replace(/\+/g, " ");
-
-      // 4. Check for @LAT,LNG coordinates
-      const coordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (coordMatch) return `${coordMatch[1]},${coordMatch[2]}`;
+      // 4. Check for /search/QUERY/ pattern
 
       // 5. Shortened links (maps.app.goo.gl) - Cannot be parsed easily on client-side
       // We return the URL and hope Google resolves it, but warn in documentation

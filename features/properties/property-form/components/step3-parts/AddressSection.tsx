@@ -242,7 +242,7 @@ export function AddressSection({ form }: AddressSectionProps) {
                   <Input
                     {...field}
                     value={field.value ?? ""}
-                    placeholder="วางลิงก์จาก Google Maps ที่นี่ (https://maps.google.com/...)"
+                    placeholder="วางลิงก์จาก Google Maps ที่นี่ (รองรับทั้งแบบยาว และแบบสั้น .goo.gl)"
                     className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
                   />
                 </FormControl>

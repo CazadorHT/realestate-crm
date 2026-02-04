@@ -12,7 +12,7 @@ export type ActionResponse = {
 };
 
 export async function createBlogPostAction(
-  input: BlogPostInput
+  input: BlogPostInput,
 ): Promise<ActionResponse> {
   const supabase = await createClient();
   const user = await getCurrentProfile();
@@ -55,17 +55,17 @@ export async function createBlogPostAction(
 
   if (error) {
     console.error("Create blog error:", error);
-    return { success: false, message: "Failed to create post" };
+    return { success: false, message: "ไม่สามารถสร้างบทความได้" };
   }
 
   revalidatePath("/protected/blogs");
   revalidatePath("/blog");
-  return { success: true, message: "Blog post created successfully" };
+  return { success: true, message: "สร้างบทความเรียบร้อยแล้ว" };
 }
 
 export async function updateBlogPostAction(
   id: string,
-  input: BlogPostInput
+  input: BlogPostInput,
 ): Promise<ActionResponse> {
   const supabase = await createClient();
   const user = await getCurrentProfile();
@@ -107,17 +107,17 @@ export async function updateBlogPostAction(
 
   if (error) {
     console.error("Update blog error:", error);
-    return { success: false, message: "Failed to update post" };
+    return { success: false, message: "ไม่สามารถอัปเดตบทความได้" };
   }
 
   revalidatePath("/protected/blogs");
   revalidatePath("/blog");
   revalidatePath(`/blog/${input.slug}`);
-  return { success: true, message: "Blog post updated successfully" };
+  return { success: true, message: "อัปเดตบทความเรียบร้อยแล้ว" };
 }
 
 export async function deleteBlogPostAction(
-  id: string
+  id: string,
 ): Promise<ActionResponse> {
   const supabase = await createClient();
   const user = await getCurrentProfile();
@@ -130,17 +130,17 @@ export async function deleteBlogPostAction(
 
   if (error) {
     console.error("Delete blog error:", error);
-    return { success: false, message: "Failed to delete post" };
+    return { success: false, message: "ไม่สามารถลบบทความได้" };
   }
 
   revalidatePath("/protected/blogs");
-  return { success: true, message: "Blog post deleted successfully" };
+  return { success: true, message: "ลบบทความเรียบร้อยแล้ว" };
 }
 
 // Image Actions
 
 export async function uploadBlogImageAction(
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionResponse> {
   const supabase = await createClient();
   const user = await getCurrentProfile();
@@ -219,7 +219,7 @@ export async function getCategoriesAction(): Promise<{
 }
 
 export async function createCategoryAction(
-  name: string
+  name: string,
 ): Promise<{ success: boolean; category?: any; error?: string }> {
   const supabase = await createClient();
   const user = await getCurrentProfile();
@@ -249,7 +249,7 @@ export async function createCategoryAction(
 }
 
 export async function deleteCategoryAction(
-  id: string
+  id: string,
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
   const user = await getCurrentProfile();

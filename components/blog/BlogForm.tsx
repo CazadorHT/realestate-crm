@@ -21,6 +21,8 @@ import {
   Sparkles,
   Type,
   Link2,
+  ExternalLink,
+  List,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -85,6 +87,9 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("content");
+  const [successData, setSuccessData] = useState<{
+    slug: string;
+  } | null>(null);
 
   // Convert JSONB structured_data to string for the form
   const initialStructuredData = initialData?.structured_data
@@ -203,8 +208,9 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
       if (res.success) {
         toast.success(res.message);
-        router.push("/protected/blogs");
-        router.refresh();
+        // router.push("/protected/blogs");
+        // router.refresh();
+        setSuccessData({ slug: data.slug });
       } else {
         toast.error(res.message);
       }
@@ -555,14 +561,14 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {categories.length > 0 ? (
-                              categories.map((cat) => (
-                                <SelectItem key={cat.id} value={cat.name}>
-                                  {cat.name}
-                                </SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value="General">ทั่วไป</SelectItem>
+                            <SelectItem value="General">General</SelectItem>
+                            {categories.map(
+                              (cat) =>
+                                cat.name !== "General" && (
+                                  <SelectItem key={cat.id} value={cat.name}>
+                                    {cat.name}
+                                  </SelectItem>
+                                ),
                             )}
                           </SelectContent>
                         </Select>
@@ -829,6 +835,14 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
               />
 
               <Button
+                type="button"
+                variant="ghost"
+                onClick={() => router.back()}
+                className="hover:bg-slate-100 h-12"
+              >
+                ยกเลิก
+              </Button>
+              <Button
                 type="submit"
                 disabled={
                   isSubmitting ||
@@ -836,7 +850,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                   characterCount === 0 ||
                   !form.formState.isDirty
                 }
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white h-12 shadow-lg shadow-emerald-500/25 px-8 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+                className="gap-2 bg-linear-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg shadow-green-500/25 min-w-[120px]  h-12"
               >
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -848,6 +862,65 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
             </div>
           </div>
         </div>
+
+        {/* Success Navigation Dialog */}
+        <Dialog
+          open={!!successData}
+          onOpenChange={(open) => {
+            if (!open) {
+              router.push("/protected/blogs");
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md bg-white border-0 shadow-xl rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3 text-emerald-600 text-xl">
+                <div className="p-2 bg-emerald-100 rounded-full">
+                  <ExternalLink className="w-6 h-6" />
+                </div>
+                บันทึกบทความสำเร็จ
+              </DialogTitle>
+              <DialogDescription className="text-base text-slate-600 pt-2">
+                คุณต้องการทำรายการใดต่อ?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 py-4">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200 hover:bg-slate-50 hover:text-slate-900 rounded-xl"
+                onClick={() => {
+                  if (successData?.slug) {
+                    window.open(`/blog/${successData.slug}`, "_blank");
+                    router.push("/protected/blogs");
+                  } else {
+                    toast.error("ไม่พบข้อมูล Slug สำหรับเปิดหน้าเว็บ");
+                  }
+                }}
+              >
+                <ExternalLink className="w-5 h-5 text-blue-600" />
+                <div className="flex flex-col items-start">
+                  <span>ดูหน้าบทความ (Blog Page)</span>
+                  <span className="text-xs text-slate-400 font-normal">
+                    เปิดแท็บใหม่เพื่อดูตัวอย่าง
+                  </span>
+                </div>
+              </Button>
+
+              <Button
+                className="w-full justify-start gap-3 h-14 text-base font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-xl"
+                onClick={() => router.push("/protected/blogs")}
+              >
+                <List className="w-5 h-5" />
+                <div className="flex flex-col items-start">
+                  <span>กลับหน้ารายการบทความ </span>
+                  <span className="text-xs text-slate-400/80 font-normal">
+                    จัดการบทความอื่นต่อ
+                  </span>
+                </div>
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </form>
     </Form>
   );

@@ -2,12 +2,17 @@
 
 import { BookOpen } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 interface BlogSidebarProps {
   posts: any[];
 }
 
 export function BlogSidebar({ posts }: BlogSidebarProps) {
+  const searchParams = useSearchParams();
+  const currentTag = searchParams.get("tag");
+  const currentCategory = searchParams.get("category");
+
   return (
     <aside className="lg:col-span-4 lg:col-start-9">
       <div className="sticky top-24 space-y-6">
@@ -41,18 +46,31 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
                 );
               }
 
-              return categories.map(([cat, count]) => (
-                <Link
-                  href={`/blog?category=${cat}`}
-                  key={cat}
-                  className="w-full text-left px-4 py-3 rounded-xl bg-slate-50 hover:bg-linear-to-r hover:from-blue-50 hover:to-purple-50 text-slate-700 hover:text-blue-700 font-medium transition-all duration-300 border border-transparent hover:border-blue-200 flex items-center justify-between group"
-                >
-                  <span>{cat}</span>
-                  <span className="text-xs bg-slate-200 group-hover:bg-blue-100 group-hover:text-blue-700 px-2 py-0.5 rounded-full transition-colors">
-                    {count}
-                  </span>
-                </Link>
-              ));
+              return categories.map(([cat, count]) => {
+                const isActive = currentCategory === cat;
+                return (
+                  <Link
+                    href={`/blog?category=${cat}`}
+                    key={cat}
+                    className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 border flex items-center justify-between group ${
+                      isActive
+                        ? "bg-blue-50 text-blue-700 border-blue-200 font-semibold"
+                        : "bg-slate-50 text-slate-700 hover:bg-linear-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 font-medium border-transparent hover:border-blue-200"
+                    }`}
+                  >
+                    <span>{cat}</span>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                        isActive
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-slate-200 group-hover:bg-blue-100 group-hover:text-blue-700"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </Link>
+                );
+              });
             })()}
           </div>
         </div>
@@ -65,11 +83,31 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
           </div>
           <div className="flex flex-wrap gap-2">
             {(() => {
-              // Get all tags from posts
-              const allTags = posts.flatMap((post) => post.tags || []);
-              const uniqueTags = Array.from(new Set(allTags)).slice(0, 12);
+              // Get all tags from posts and count them
+              const tagMap = new Map<string, number>();
+              posts.forEach((post) => {
+                if (Array.isArray(post.tags)) {
+                  post.tags.forEach((tag: string) => {
+                    const normalizedTag = tag.trim();
+                    if (normalizedTag) {
+                      tagMap.set(
+                        normalizedTag,
+                        (tagMap.get(normalizedTag) || 0) + 1,
+                      );
+                    }
+                  });
+                }
+              });
 
-              if (uniqueTags.length === 0) {
+              // Sort by count (descending) then by name
+              const popularTags = Array.from(tagMap.entries())
+                .sort((a, b) => {
+                  if (b[1] !== a[1]) return b[1] - a[1];
+                  return a[0].localeCompare(b[0]);
+                })
+                .slice(0, 15); // Show top 15 tags
+
+              if (popularTags.length === 0) {
                 return (
                   <div className="text-center w-full py-4 text-slate-400 text-sm">
                     ยังไม่มีแท็ก
@@ -77,14 +115,22 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
                 );
               }
 
-              return uniqueTags.map((tag, idx) => (
-                <button
-                  key={idx}
-                  className="px-3 py-1.5 text-sm font-medium bg-white hover:bg-linear-to-r hover:from-blue-600 hover:to-purple-600 text-slate-700 hover:text-white rounded-full border border-slate-200 hover:border-transparent transition-all duration-300 hover:shadow-md hover:scale-105"
-                >
-                  #{tag}
-                </button>
-              ));
+              return popularTags.map(([tag, count]) => {
+                const isActive = currentTag === tag;
+                return (
+                  <Link
+                    key={tag}
+                    href={isActive ? "/blog" : `/blog?tag=${tag}`}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-all duration-300 hover:shadow-md hover:scale-105 ${
+                      isActive
+                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-linear-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white hover:border-transparent"
+                    }`}
+                  >
+                    #{tag}
+                  </Link>
+                );
+              });
             })()}
           </div>
         </div>

@@ -24,8 +24,9 @@ interface BlogListingPageProps {
 export default async function BlogListingPage({
   searchParams,
 }: BlogListingPageProps) {
-  const { category } = await searchParams;
+  const { category, tag } = await searchParams;
   const categoryFilter = typeof category === "string" ? category : undefined;
+  const tagFilter = typeof tag === "string" ? tag : undefined;
 
   // Ideally, get all posts for sidebar count, and filtered for display
   // But current service logic might need adjustment if we want sidebar to show full counts
@@ -35,12 +36,17 @@ export default async function BlogListingPage({
   // Given current scale, fetching all and filtering in memory or fetching twice is fine.
   // Sidebar needs ALL posts to calculate counts correctly.
   const allPosts = await getBlogPosts(); // Get all for sidebar
-  const posts = categoryFilter
-    ? allPosts.filter((p) => p.category === categoryFilter)
-    : allPosts;
 
-  const featuredPost = categoryFilter ? null : posts[0]; // Don't show hero featured if filtered, or show first of filter? Let's hide hero featured on filter to focus on list.
-  const remainingPosts = categoryFilter ? posts : posts.slice(1);
+  let posts = allPosts;
+
+  if (categoryFilter) {
+    posts = posts.filter((p) => p.category === categoryFilter);
+  } else if (tagFilter) {
+    posts = posts.filter((p) => p.tags && p.tags.includes(tagFilter));
+  }
+
+  const featuredPost = categoryFilter || tagFilter ? null : posts[0]; // Don't show hero featured if filtered, or show first of filter? Let's hide hero featured on filter to focus on list.
+  const remainingPosts = categoryFilter || tagFilter ? posts : posts.slice(1);
 
   // Schema.org for SEO
   const schemaData = {
@@ -95,9 +101,11 @@ export default async function BlogListingPage({
                 <h2 className="text-xl font-bold text-slate-900">
                   {categoryFilter
                     ? `หมวดหมู่: ${categoryFilter}`
-                    : "บทความล่าสุด"}
+                    : tagFilter
+                      ? `แท็ก: #${tagFilter}`
+                      : "บทความล่าสุด"}
                 </h2>
-                {categoryFilter && (
+                {(categoryFilter || tagFilter) && (
                   <a
                     href="/blog"
                     className="text-sm text-blue-600 hover:underline"
