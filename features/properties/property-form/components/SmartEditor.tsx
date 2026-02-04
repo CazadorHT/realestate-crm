@@ -42,7 +42,7 @@ interface SmartEditorProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   placeholder?: string;
-  onAiGenerate?: () => Promise<string>;
+  onAiGenerate?: (currentValue: string) => Promise<string>;
 }
 
 const TEMPLATES = [
@@ -191,7 +191,7 @@ export function SmartEditor({
     try {
       if (onAiGenerate) {
         await new Promise((resolve) => setTimeout(resolve, 800));
-        const content = await onAiGenerate();
+        const content = await onAiGenerate(editor.getHTML());
         if (content) {
           editor.commands.setContent(content);
         }

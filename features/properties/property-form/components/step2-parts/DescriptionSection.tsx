@@ -14,6 +14,8 @@ import { SectionHeader } from "../../components/SectionHeader";
 import { SmartEditor } from "../../components/SmartEditor";
 import { FileText } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
+import { generateAIPropertyDescriptionAction } from "../../actions/ai-actions";
+import { toast } from "sonner";
 import { generatePropertyDescription } from "../../utils/description-generator";
 import { PropertyFormValues } from "@/features/properties/schema";
 
@@ -26,13 +28,47 @@ export function DescriptionSection({
   form,
   isReadOnly,
 }: DescriptionSectionProps) {
-  const handleGenerate = useCallback(async () => {
-    // Get all form values
-    const values = form.getValues() as PropertyFormValues;
-    // Generate description
-    const html = generatePropertyDescription(values);
-    return html;
-  }, [form]);
+  const handleGenerate = useCallback(
+    async (currentValue: string) => {
+      // Get all form values
+      const values = form.getValues() as PropertyFormValues;
+
+      // Check if we should "Generate" or "Improve"
+      const isImproving =
+        currentValue && currentValue !== "<p></p>" && currentValue.length > 50;
+      const toastMessage = isImproving
+        ? "AI กำลังช่วยปรับปรุงคำบรรยายให้สละสลวยยิ่งขึ้น..."
+        : "AI กำลังแต่งคำบรรยายที่น่าสนใจให้คุณ...";
+
+      // Show loading toast
+      const toastId = toast.loading(toastMessage);
+
+      try {
+        // Try AI generation
+        const html = await generateAIPropertyDescriptionAction(
+          values,
+          isImproving ? currentValue : undefined,
+        );
+        toast.success(
+          isImproving
+            ? "ปรับปรุงคำบรรยายเรียบร้อยแล้ว ✨"
+            : "AI แต่งคำบรรยายเรียบร้อยแล้ว ✨",
+          { id: toastId },
+        );
+        return html;
+      } catch (error) {
+        console.error("AI Generation failed, falling back to template:", error);
+        toast.error("AI ไม่พร้อมใช้งานในขณะนี้ กำลังใช้ระบบ Template แทน", {
+          id: toastId,
+        });
+
+        // Fallback to template generator
+        const html = generatePropertyDescription(values);
+        return html;
+      }
+    },
+    [form],
+  );
 
   return (
     <Card className="lg:col-span-2 border-slate-200/70 bg-white">
