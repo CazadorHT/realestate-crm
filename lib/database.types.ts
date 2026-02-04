@@ -470,6 +470,27 @@ export type Database = {
           },
         ]
       }
+      line_templates: {
+        Row: {
+          config: Json
+          is_active: boolean | null
+          key: string
+          label: string
+        }
+        Insert: {
+          config?: Json
+          is_active?: boolean | null
+          key: string
+          label: string
+        }
+        Update: {
+          config?: Json
+          is_active?: boolean | null
+          key?: string
+          label?: string
+        }
+        Relationships: []
+      }
       owners: {
         Row: {
           company_name: string | null

@@ -7,7 +7,8 @@
     "lint": "eslint .",
     "gen:types": "supabase gen types typescript --project-id nxvoynycshhqiffygddv --schema public > lib/database.types.ts",
     "migrate:slugs": "tsx scripts/migrate-slugs.ts",
-    "force-regenerate:slugs": "tsx scripts/force-regenerate-slugs.ts"
+    "force-regenerate:slugs": "tsx scripts/force-regenerate-slugs.ts",
+    "seed:line": "tsx scripts/seed-line.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

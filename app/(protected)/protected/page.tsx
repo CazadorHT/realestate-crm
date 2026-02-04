@@ -102,7 +102,7 @@ export default async function DashboardPage() {
       getFunnelStats(),
       getPipelineStats(),
       getTopAgents(),
-      getRecentNotifications(),
+      getRecentNotifications(profile?.notification_preferences as any),
       getTodayAgenda(),
       getFollowUpLeads(),
       getRiskDeals(),

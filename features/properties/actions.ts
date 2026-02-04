@@ -25,6 +25,7 @@ import { validateImageFile } from "@/lib/file-validation"; // สำหรับ
 import { IMAGE_UPLOAD_POLICY } from "@/components/property-image-uploader";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PROPERTY_STATUS_ENUM } from "./labels";
+import { sendLineNotification } from "@/lib/line";
 
 export type CreatePropertyResult = {
   success: boolean;
@@ -559,7 +560,9 @@ export async function updatePropertyAction(
     // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ
     const { data: existing, error: findErr } = await supabase
       .from("properties")
-      .select("id, created_by, meta_keywords")
+      .select(
+        "id, created_by, meta_keywords, price, rental_price, original_price, original_rental_price, status, title, property_images(image_url, is_cover, sort_order)",
+      )
       .eq("id", id)
       .single();
 
@@ -933,6 +936,207 @@ export async function updatePropertyAction(
         },
       },
     );
+    // --- Workflow Notifications ---
+    if (existing) {
+      const newStatus = safeValues.status;
+      const isDealClosure =
+        (newStatus === "SOLD" || newStatus === "RENTED") &&
+        existing.status !== newStatus;
+      const currentSalePrice =
+        safeValues.price || safeValues.original_price || 0;
+      const oldSalePrice = existing.price || existing.original_price || 0;
+      const currentRentPrice =
+        safeValues.rental_price || safeValues.original_rental_price || 0;
+      const oldRentPrice =
+        existing.rental_price || existing.original_rental_price || 0;
+
+      const priceDropped =
+        currentSalePrice > 0 &&
+        oldSalePrice > 0 &&
+        currentSalePrice < oldSalePrice;
+      const rentDropped =
+        currentRentPrice > 0 &&
+        oldRentPrice > 0 &&
+        currentRentPrice < oldRentPrice;
+      const isPriceDrop = priceDropped || rentDropped;
+
+      // 1. Deal Closure Notification
+      if (isDealClosure) {
+        const dealType = newStatus === "SOLD" ? "ขายแล้ว" : "เช่าแล้ว";
+        const dealIcon = newStatus === "SOLD" ? "💰" : "📝";
+        const headerColor = newStatus === "SOLD" ? "#2E7D32" : "#1976D2";
+
+        await sendLineNotification({
+          type: "flex",
+          altText: `🎊 ${dealIcon} ปิดดีลแล้ว! ${existing.title}`,
+          contents: {
+            type: "bubble",
+            header: {
+              type: "box",
+              layout: "vertical",
+              backgroundColor: headerColor,
+              contents: [
+                {
+                  type: "text",
+                  text: `🎊 ${dealIcon} ปิดดีลเรียบร้อย! (${dealType})`,
+                  weight: "bold",
+                  color: "#FFFFFF",
+                  size: "md",
+                },
+              ],
+            },
+            body: {
+              type: "box",
+              layout: "vertical",
+              spacing: "md",
+              contents: [
+                {
+                  type: "text",
+                  text: existing.title,
+                  weight: "bold",
+                  size: "sm",
+                  wrap: true,
+                },
+                {
+                  type: "text",
+                  text: `สถานะใหม่: ${newStatus}`,
+                  size: "xs",
+                  color: "#666666",
+                },
+              ],
+            },
+            footer: {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "button",
+                  style: "primary",
+                  color: headerColor,
+                  action: {
+                    type: "uri",
+                    label: "ดูในระบบ CRM",
+                    uri: `https://oma-asset.com/protected/properties/${existing.id}`,
+                  },
+                },
+              ],
+            },
+          },
+        });
+      }
+
+      // 2. Price Drop Notification
+      if (isPriceDrop && !isDealClosure) {
+        const dropType = priceDropped ? "SALE" : "RENT";
+        const oldPrice = dropType === "SALE" ? oldSalePrice : oldRentPrice;
+        const newPrice =
+          dropType === "SALE" ? currentSalePrice : currentRentPrice;
+        const diff = oldPrice - newPrice;
+        const percent = ((diff / oldPrice) * 100).toFixed(1);
+        const typeLabel = dropType === "SALE" ? "ราคาขาย" : "ค่าเช่า";
+
+        // Fetch image for notification
+        const images = (existing as any).property_images || [];
+        const coverImageUrl =
+          images.find((img: any) => img.is_cover)?.image_url ||
+          images[0]?.image_url;
+
+        const flexContents: any = {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            backgroundColor: "#E53935",
+            contents: [
+              {
+                type: "text",
+                text: "📉 " + (priceDropped ? "ลดราคาขาย!" : "ลดค่าเช่า!"),
+                weight: "bold",
+                color: "#ffffff",
+                size: "lg",
+              },
+            ],
+          },
+        };
+
+        if (coverImageUrl) {
+          flexContents.hero = {
+            type: "image",
+            url: coverImageUrl,
+            size: "full",
+            aspectRatio: "20:13",
+            aspectMode: "cover",
+          };
+        }
+
+        flexContents.body = {
+          type: "box",
+          layout: "vertical",
+          spacing: "md",
+          contents: [
+            {
+              type: "text",
+              text: existing.title,
+              weight: "bold",
+              size: "md",
+              wrap: true,
+            },
+            {
+              type: "box",
+              layout: "vertical",
+              spacing: "xs",
+              contents: [
+                {
+                  type: "text",
+                  text: `เดิม: ฿${oldPrice.toLocaleString()}`,
+                  size: "sm",
+                  color: "#999999",
+                  decoration: "line-through",
+                },
+                {
+                  type: "text",
+                  text: `เหลือ: ฿${newPrice.toLocaleString()}`,
+                  size: "xl",
+                  weight: "bold",
+                  color: "#E53935",
+                },
+                {
+                  type: "text",
+                  text: `ประหยัดถึง ${percent}% (ลดลง ฿${diff.toLocaleString()})`,
+                  size: "xs",
+                  color: "#E53935",
+                  weight: "bold",
+                },
+              ],
+            },
+          ],
+        };
+
+        flexContents.footer = {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              color: "#E53935",
+              action: {
+                type: "uri",
+                label: "ดูรายละเอียดทรัพย์",
+                uri: `https://oma-asset.com/protected/properties/${existing.id}`,
+              },
+            },
+          ],
+        };
+
+        await sendLineNotification({
+          type: "flex",
+          altText: `📉 ลดราคา${typeLabel}! ${existing.title}`,
+          contents: flexContents,
+        });
+      }
+    }
+
     revalidatePath("/protected/properties");
     revalidatePath(`/protected/properties/${id}`);
     return { success: true, propertyId: id, slug: seoData.slug };
@@ -1305,6 +1509,13 @@ export async function updatePropertyStatusAction(input: {
       return { success: false, message: "สถานะไม่ถูกต้อง" };
     }
 
+    //ดึงข้อมูลเดิมก่อนอัปเดตเพื่อใช้แจ้งเตือน
+    const { data: existing } = await supabase
+      .from("properties")
+      .select("title, status, listing_type")
+      .eq("id", input.id)
+      .single();
+
     const { error } = await supabase
       .from("properties")
       .update({
@@ -1326,6 +1537,75 @@ export async function updatePropertyStatusAction(input: {
         metadata: { status: input.status },
       },
     );
+
+    // Workflow Notification: Sold or Rented (Simplified for status update)
+    if (
+      existing &&
+      (input.status === "SOLD" || input.status === "RENTED") &&
+      existing.status !== input.status
+    ) {
+      const dealType = input.status === "SOLD" ? "ขายแล้ว" : "เช่าแล้ว";
+      const dealIcon = input.status === "SOLD" ? "💰" : "📝";
+      const headerColor = input.status === "SOLD" ? "#2E7D32" : "#1976D2";
+
+      await sendLineNotification({
+        type: "flex",
+        altText: `🎊 ${dealIcon} ปิดดีลแล้ว! ${existing.title}`,
+        contents: {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            backgroundColor: headerColor,
+            contents: [
+              {
+                type: "text",
+                text: `🎊 ${dealIcon} ปิดดีลเรียบร้อย! (${dealType})`,
+                weight: "bold",
+                color: "#FFFFFF",
+                size: "md",
+              },
+            ],
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            spacing: "md",
+            contents: [
+              {
+                type: "text",
+                text: existing.title,
+                weight: "bold",
+                size: "sm",
+                wrap: true,
+              },
+              {
+                type: "text",
+                text: `สถานะใหม่: ${input.status}`,
+                size: "xs",
+                color: "#666666",
+              },
+            ],
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "button",
+                style: "primary",
+                color: headerColor,
+                action: {
+                  type: "uri",
+                  label: "ดูในระบบ CRM",
+                  uri: `https://oma-asset.com/protected/properties/${input.id}`,
+                },
+              },
+            ],
+          },
+        },
+      });
+    }
 
     // protected pages
     revalidatePath("/protected/properties");
@@ -1473,7 +1753,7 @@ export async function duplicatePropertyAction(
  * Publicly accessible action (no auth required)
  */
 export async function incrementPropertyView(propertyId: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Call the secure database function
   const { error } = await supabase.rpc("increment_property_view", {

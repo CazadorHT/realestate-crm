@@ -244,9 +244,16 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
                 </FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="08x-xxx-xxxx"
+                    placeholder="08xxxxxxxx"
+                    maxLength={10}
                     className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                     {...field}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 10);
+                      field.onChange(value);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

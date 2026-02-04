@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { SearchCriteria, PropertyMatch } from "./types";
 import { calculateMatchScore } from "./matching";
 import { v4 as uuidv4 } from "uuid";
@@ -14,7 +14,7 @@ type PropertyWithImages = Database["public"]["Tables"]["properties"]["Row"] & {
 };
 
 export async function searchPropertiesAction(criteria: SearchCriteria) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Debug check for supabase client
   const hasFrom = supabase ? Reflect.has(supabase, "from") : false;
@@ -26,7 +26,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
         isDefined: !!supabase,
         type: typeof supabase,
         hasFrom,
-      }
+      },
     );
     throw new Error("เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล");
   }
@@ -57,7 +57,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
   let query = supabase
     .from("properties")
     .select(
-      "id, slug, title, price, rental_price, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, property_images(*)"
+      "id, slug, title, price, rental_price, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, property_images(*)",
     );
 
   if (criteria.purpose === "BUY" || criteria.purpose === "INVEST") {
@@ -87,7 +87,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
       const prop = p as unknown as PropertyWithImages;
       const { score, reasons, scoreBreakdown } = calculateMatchScore(
         prop,
-        criteria
+        criteria,
       );
       const imageUrl =
         prop.property_images?.[0]?.image_url ||
@@ -153,7 +153,7 @@ export async function createLeadFromMatchAction(data: {
   email?: string;
   lineId?: string;
 }) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // 1. Create Lead
   const { data: lead, error: leadError } = await supabase

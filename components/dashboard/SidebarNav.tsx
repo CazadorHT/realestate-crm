@@ -24,6 +24,7 @@ import {
   Box,
   History,
   CalendarDays,
+  MessageSquare,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -157,6 +158,13 @@ export function SidebarNav({ role }: { role: UserRole }) {
       href: "/protected/admin/audit-logs",
       icon: History,
       active: pathname?.startsWith("/protected/admin/audit-logs") ?? false,
+      roles: ["ADMIN"],
+    },
+    {
+      title: "Line Manager",
+      href: "/protected/line-manager",
+      icon: MessageSquare,
+      active: pathname?.startsWith("/protected/line-manager") ?? false,
       roles: ["ADMIN"],
     },
   ];

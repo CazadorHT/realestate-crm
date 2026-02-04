@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { logActivityAction } from "@/features/audit/actions";
 import { createClient } from "@/lib/supabase/client";

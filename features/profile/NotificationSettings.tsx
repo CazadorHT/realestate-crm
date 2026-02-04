@@ -11,7 +11,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Bell, Mail, MessageSquare, UserPlus } from "lucide-react";
+import { Bell, Mail, MessageSquare, UserPlus, Clock } from "lucide-react";
 import { updateNotificationSettings } from "./actions";
 import { toast } from "sonner";
 import type { Json } from "@/lib/database.types";
@@ -25,6 +25,8 @@ const DEFAULT_SETTINGS = {
   assignment: true,
   status_update: false,
   activity: true,
+  price_drop: true,
+  contract_expiry: true,
 };
 
 export function NotificationSettings({
@@ -65,6 +67,18 @@ export function NotificationSettings({
       label: "กิจกรรมใหม่",
       description: "แจ้งเตือนกิจกรรมใหม่ใน Lead ของคุณ",
       icon: <Mail className="h-5 w-5" />,
+    },
+    {
+      id: "price_drop",
+      label: "ทรัพย์ลดราคา",
+      description: "แจ้งเตือนเมื่อมีการลดราคาทรัพย์ในระบบ",
+      icon: <Bell className="h-5 w-5" />,
+    },
+    {
+      id: "contract_expiry",
+      label: "สัญญาใกล้หมดอายุ",
+      description: "แจ้งเตือนเมื่อสัญญาฝากขาย/เช่าใกล้ครบกำหนด",
+      icon: <Clock className="h-5 w-5" />,
     },
   ];
 

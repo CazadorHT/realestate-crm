@@ -384,102 +384,180 @@ export type Notification = {
   read: boolean;
   href?: string;
   createdAt?: number;
+  category?: string;
 };
 
-export async function getRecentNotifications(): Promise<Notification[]> {
+export async function getRecentNotifications(
+  preferences: Record<string, boolean> | null = null,
+): Promise<Notification[]> {
   const supabase = await createClient();
   const notifications: Notification[] = [];
 
-  // 1. Get New Website Leads (Last 3 Days)
+  // Default true for legacy or unset preferences
+  const checkPref = (id: string) => {
+    if (!preferences) return true;
+    return preferences[id] !== false; // Default to true if missing
+  };
+
+  // 1. Get New Website Leads (New Lead)
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const isoLimit = threeDaysAgo.toISOString();
 
-  // Parallel fetch: Leads, Profiles, & Audit Logs
-  const [leadsResult, profilesResult, logsResult] = await Promise.all([
-    supabase
-      .from("leads")
-      .select("id, full_name, created_at, note, source")
-      .eq("source", "WEBSITE")
-      .gte("created_at", threeDaysAgo.toISOString())
-      .order("created_at", { ascending: false }),
+  const [
+    leadsResult,
+    profilesResult,
+    logsResult,
+    activitiesResult,
+    assignmentsResult,
+    expiringContractsResult,
+  ] = await Promise.all([
+    // Website Leads
+    checkPref("new_lead")
+      ? supabase
+          .from("leads")
+          .select("id, full_name, created_at, source")
+          .eq("source", "WEBSITE")
+          .gte("created_at", isoLimit)
+          .order("created_at", { ascending: false })
+      : Promise.resolve({ data: [] }),
+
+    // New Profiles (Admin use case)
     supabase
       .from("profiles")
       .select("id, full_name, email, created_at, role")
-      .gte("created_at", threeDaysAgo.toISOString())
+      .gte("created_at", isoLimit)
       .order("created_at", { ascending: false }),
+
+    // Audit Logs (Status Updates, Price Drops, Logic Alerts)
     supabase
       .from("audit_logs")
-      .select("id, action, created_at, metadata, user_id")
-      .eq("action", "LOGIN")
-      .gte("created_at", threeDaysAgo.toISOString())
+      .select("id, action, created_at, metadata, user_id, entity, entity_id")
+      .gte("created_at", isoLimit)
       .order("created_at", { ascending: false }),
+
+    // Activities (New Activities)
+    checkPref("activity")
+      ? supabase
+          .from("lead_activities")
+          .select(
+            "id, created_at, lead_id, activity_type, note, leads(full_name)",
+          )
+          .gte("created_at", isoLimit)
+          .order("created_at", { ascending: false })
+      : Promise.resolve({ data: [] }),
+
+    // Assignments logic usually is in audit_logs, but let's check specifically for property_agents or similar
+    // Actually logAudit for assignments uses 'property.assign' or 'lead.assign'
+    Promise.resolve({ data: [] }), // Placeholder if handled in logs
+
+    // Contract Expiry
+    checkPref("contract_expiry")
+      ? supabase
+          .from("properties")
+          .select("id, title, rental_price, status")
+          .not("status", "in", '("SOLD", "RENTED")')
+          .limit(10) // Just a sample check for expiry logic
+      : Promise.resolve({ data: [] }),
   ]);
 
   const recentLeads = leadsResult.data || [];
   const recentProfiles = profilesResult.data || [];
   const recentLogs = logsResult.data || [];
+  const recentActivities = activitiesResult.data || [];
 
-  // Process Leads (Contact Form & Line ID)
+  // 1. New Leads
   recentLeads.forEach((lead) => {
-    const timeStr = formatTimeAgo(lead.created_at);
-    const isLine = lead.full_name.startsWith("Line Contact:");
-
-    // Check if it's a "Property Deposit" (Sell/Invest subject)
-    const isDeposit =
-      lead.note?.includes("Subject: sell") ||
-      lead.note?.includes("Subject: invest");
-
-    let message = `รถรายชื่อใหม่: ${lead.full_name}`;
-    let href = `/protected/leads/${lead.id}`;
-
-    if (isLine) {
-      message = `Lead ใหม่จาก Line: ${lead.full_name.replace("Line Contact: ", "")}`;
-    } else if (isDeposit) {
-      message = `ฝากขาย/ลงทุนทรัพย์: ${lead.full_name}`;
-    } else {
-      message = `ติดต่อจากหน้าเว็บ: ${lead.full_name}`;
-    }
-
     notifications.push({
       id: `lead-${lead.id}`,
-      message: message,
+      message: `Lead ใหม่จากหน้าเว็บ: ${lead.full_name}`,
       type: "success",
-      time: timeStr,
+      time: formatTimeAgo(lead.created_at),
       read: false,
-      href: href,
+      href: `/protected/leads/${lead.id}`,
       createdAt: new Date(lead.created_at).getTime(),
+      category: "new_lead",
     });
   });
 
-  // Process New Registrations
+  // 2. Audit Logs
+  recentLogs.forEach((log) => {
+    const meta = log.metadata as any;
+    const timeStr = formatTimeAgo(log.created_at);
+    const createdAt = new Date(log.created_at).getTime();
+
+    // Price Drops
+    if (
+      checkPref("price_drop") &&
+      log.action === "property.update" &&
+      meta?.price_change
+    ) {
+      notifications.push({
+        id: `price-${log.id}`,
+        message: `ลดราคา! ${meta.title || "ทรัพย์"}: ฿${meta.old_price?.toLocaleString()} → ฿${meta.new_price?.toLocaleString()}`,
+        type: "warning",
+        time: timeStr,
+        read: false,
+        href: `/protected/properties/${log.entity_id}`,
+        createdAt,
+        category: "price_drop",
+      });
+    }
+
+    // Status Updates
+    if (
+      checkPref("status_update") &&
+      meta?.status_update &&
+      log.action.includes(".update")
+    ) {
+      notifications.push({
+        id: `status-${log.id}`,
+        message: `เปลี่ยนสถานะ ${log.entity}: ${meta.new_stage || meta.new_status}`,
+        type: "info",
+        time: timeStr,
+        read: false,
+        href: `/protected/${log.entity === "leads" ? "leads" : "properties"}/${log.entity_id}`,
+        createdAt,
+        category: "status_update",
+      });
+    }
+
+    // Login (Security - always show if relevant or map to profile?)
+    if (log.action === "LOGIN") {
+      notifications.push({
+        id: `login-${log.id}`,
+        message: `เข้าสู่ระบบ: ${meta?.email || "User"}`,
+        type: "info",
+        time: timeStr,
+        read: false,
+        createdAt,
+      });
+    }
+  });
+
+  // 3. New Activities
+  recentActivities.forEach((act: any) => {
+    notifications.push({
+      id: `act-${act.id}`,
+      message: `กิจกรรมใน Lead ${act.leads?.full_name}: ${act.activity_type}`,
+      type: "info",
+      time: formatTimeAgo(act.created_at),
+      read: false,
+      href: `/protected/leads/${act.lead_id}`,
+      createdAt: new Date(act.created_at).getTime(),
+      category: "activity",
+    });
+  });
+
+  // 4. New Registrations (Profiles)
   recentProfiles.forEach((profile) => {
-    const timeStr = formatTimeAgo(profile.created_at);
     notifications.push({
       id: `user-${profile.id}`,
-      message: `สมาชิกใหม่: ${profile.full_name || profile.email} (${profile.role})`,
+      message: `สมาชิกใหม่: ${profile.full_name || profile.email}`,
       type: "info",
-      time: timeStr,
+      time: formatTimeAgo(profile.created_at),
       read: false,
-      href: `/protected/settings`, // Redirect to user management
       createdAt: new Date(profile.created_at).getTime(),
-    });
-  });
-
-  // Process Login Events
-  recentLogs.forEach((log) => {
-    const timeStr = formatTimeAgo(log.created_at);
-    // Safe cast metadata
-    const meta = log.metadata as { email?: string } | null;
-    const userEmail = meta?.email || "User";
-
-    notifications.push({
-      id: `login-${log.id}`,
-      message: `เข้าสู่ระบบ: ${userEmail}`,
-      type: "info",
-      time: timeStr,
-      read: false,
-      href: `/protected/profile`, // No specific page for login log yet
-      createdAt: new Date(log.created_at).getTime(),
     });
   });
 

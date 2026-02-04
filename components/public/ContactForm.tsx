@@ -152,7 +152,7 @@ export function ContactForm() {
               id="email"
               name="email"
               type="email"
-              placeholder="your.email@example.com"
+              placeholder="your.email@example.com (ถ้ามี)"
               className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
             />
           </div>
@@ -183,7 +183,7 @@ export function ContactForm() {
           <Textarea
             id="message"
             name="message"
-            placeholder="บอกรายละเอียดความต้องการของคุณ..."
+            placeholder="บอกรายละเอียดความต้องการของคุณ (ถ้ามี)..."
             rows={4}
             className="resize-none pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
           />

@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AuthLayout } from "@/components/auth-layout";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { notifySignupAction } from "@/features/audit/actions";
 
 export function SignUpForm({
   className,
@@ -52,6 +53,10 @@ export function SignUpForm({
         },
       });
       if (error) throw error;
+
+      // Notify Admin
+      await notifySignupAction(email);
+
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "เกิดข้อผิดพลาด");
