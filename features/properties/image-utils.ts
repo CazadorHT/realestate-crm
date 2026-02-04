@@ -12,10 +12,19 @@ const BUCKET_NAME = "property-images";
  * @returns public URL
  */
 export function getPublicImageUrl(storagePath: string): string {
-  // Clean up the path: remove leading/trailing whitespace and internal newlines/spaces
-  const cleanPath = storagePath?.trim().replace(/\s/g, "") || "";
-  if (!cleanPath) return "";
-  return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET_NAME}/${cleanPath}`;
+  // 1. Clean up SUPABASE_URL (ensure no trailing slash)
+  const baseUrl = SUPABASE_URL?.replace(/\/+$/, "");
+
+  // 2. Clean up storagePath (remove whitespace and potential leading/trailing slashes)
+  const cleanPath =
+    storagePath
+      ?.trim()
+      .replace(/\s/g, "")
+      .replace(/^\/+|\/+$/g, "") || "";
+
+  if (!baseUrl || !cleanPath) return "";
+
+  return `${baseUrl}/storage/v1/object/public/${BUCKET_NAME}/${cleanPath}`;
 }
 
 /**

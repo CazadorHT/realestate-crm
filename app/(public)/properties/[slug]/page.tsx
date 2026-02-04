@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RecentPropertyTracker } from "@/components/public/RecentPropertyTracker";
 import { PropertyGallery } from "@/components/public/PropertyGallery";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { PropertySpecs } from "@/components/public/PropertySpecs";
 import { AgentSidebar } from "@/components/public/AgentSidebar";
 import { ShareButtons } from "@/components/public/ShareButtons";
@@ -27,7 +28,7 @@ const UUID_RE =
 type PropertyDetail = Database["public"]["Tables"]["properties"]["Row"] & {
   property_images: Pick<
     Database["public"]["Tables"]["property_images"]["Row"],
-    "id" | "image_url" | "is_cover" | "sort_order"
+    "id" | "image_url" | "storage_path" | "is_cover" | "sort_order"
   >[];
   assigned_agent: Pick<
     Database["public"]["Tables"]["profiles"]["Row"],
@@ -58,6 +59,7 @@ export default async function PublicPropertyDetailPage(props: {
         property_images (
           id,
           image_url,
+          storage_path,
           is_cover,
           sort_order
         ),
@@ -94,7 +96,47 @@ export default async function PublicPropertyDetailPage(props: {
   // Cast to our defined type to ensure safety downstream
   const data = rawData as unknown as PropertyDetail;
 
-  const images = data.property_images || [];
+  // Normalize images: Resolve public URL from storage_path if image_url is missing/relative
+  const images = (rawData.property_images || []).map((img: any) => {
+    // 1. If already absolute URL, use as is (matching pickCoverImage logic)
+    if (img.image_url && img.image_url.startsWith("http")) {
+      return {
+        ...img,
+        image_url: img.image_url,
+      };
+    }
+
+    // 2. If storage_path exists, resolve via utility
+    if (img.storage_path) {
+      return {
+        ...img,
+        image_url: getPublicImageUrl(img.storage_path),
+      };
+    }
+
+    // 3. Last fallback
+    return {
+      ...img,
+      image_url: img.image_url || "/images/hero-realestate.png",
+    };
+  });
+
+  // Debug logs to help identify why images might be missing
+  console.log(
+    `[SlugPage] Rendering property: ${data.id} (${slug})`,
+    JSON.stringify({
+      foundImages: images.length,
+      rawImages: rawData.property_images?.map((i: any) => ({
+        id: i.id,
+        url: i.image_url,
+        path: i.storage_path,
+      })),
+    }),
+  );
+  if (images.length > 0) {
+    console.log(`[SlugPage] Normalized First Image: ${images[0].image_url}`);
+  }
+
   const agent = data.assigned_agent;
 
   const rawFeatures = data.property_features || [];
@@ -237,7 +279,6 @@ export default async function PublicPropertyDetailPage(props: {
             petFriendly={!!data.meta_keywords?.includes("Pet Friendly")}
           />
         </section>
-
         <RecentPropertyTracker
           property={{
             id: data.id,
@@ -440,7 +481,7 @@ export async function generateMetadata(props: {
   let query = supabase
     .from("properties")
     .select(
-      "title, description, slug, listing_type, property_type, price, rental_price, bedrooms, bathrooms, size_sqm, province, district, subdistrict, popular_area, property_images(image_url, is_cover)",
+      "title, description, slug, listing_type, property_type, price, rental_price, bedrooms, bathrooms, size_sqm, province, district, subdistrict, popular_area, property_images(image_url, storage_path, is_cover)",
     );
 
   if (UUID_RE.test(decodedSlug)) {
@@ -477,10 +518,18 @@ export async function generateMetadata(props: {
   const pageDesc = generateMetaDescription(seoData as any);
   const keywords = generateMetaKeywords(seoData as any);
 
-  const propertyImages = data.property_images as unknown as {
-    image_url: string;
-    is_cover: boolean;
-  }[];
+  const { getPublicImageUrl: getPublicImageUrlSeo } =
+    await import("@/features/properties/image-utils");
+
+  const propertyImages = ((data.property_images as any[]) || []).map((img) => ({
+    image_url:
+      img.image_url && img.image_url.startsWith("http")
+        ? img.image_url
+        : img.storage_path
+          ? getPublicImageUrlSeo(img.storage_path)
+          : img.image_url || "/images/hero-realestate.png",
+    is_cover: img.is_cover,
+  }));
 
   const COVER_IMAGE =
     propertyImages?.find((img) => img.is_cover)?.image_url ||

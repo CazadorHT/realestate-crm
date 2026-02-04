@@ -31,6 +31,91 @@ interface PropertyGalleryProps {
   petFriendly?: boolean;
 }
 
+// ImageWithFallback as a separate component to avoid re-creation on every render
+const ImageWithFallback = ({
+  img,
+  alt,
+  className,
+  priority = false,
+  sizes,
+  fill = true,
+  onImageError,
+  failedImages,
+}: {
+  img: PropertyImage;
+  alt: string;
+  className?: string;
+  priority?: boolean;
+  sizes?: string;
+  fill?: boolean;
+  onImageError: (id: string) => void;
+  failedImages: Set<string>;
+}) => {
+  // If URL is empty, show fallback immediately
+  if (!img.image_url) {
+    return (
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center bg-slate-100 text-slate-400 absolute inset-0 h-full w-full",
+          className,
+        )}
+      >
+        <ImageIcon className="w-8 h-8 opacity-40 mb-1" />
+        <span className="text-[10px] font-medium opacity-60">No Image URL</span>
+      </div>
+    );
+  }
+
+  const hasFailed = failedImages.has(img.id);
+
+  if (hasFailed) {
+    return (
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center bg-slate-100 text-slate-400 absolute inset-0 h-full w-full",
+          className,
+        )}
+      >
+        <ImageIcon className="w-8 h-8 opacity-40 mb-1" />
+        <span className="text-[10px] font-medium opacity-60">Load Error</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("relative h-full w-full overflow-hidden", className)}>
+      <Image
+        key={img.image_url}
+        src={img.image_url}
+        alt={alt}
+        fill={fill}
+        className={cn("transition-transform duration-500", className)}
+        priority={priority}
+        sizes={sizes}
+        onLoad={() => {
+          console.log(
+            JSON.stringify({
+              message: `[next-image] Successfully loaded`,
+              id: img.id,
+              url: img.image_url,
+            }),
+          );
+        }}
+        onError={() => {
+          console.error(
+            JSON.stringify({
+              message: `[next-image] FAILED to load`,
+              id: img.id,
+              url: img.image_url,
+            }),
+          );
+          onImageError(img.id);
+        }}
+      />
+    </div>
+  );
+};
+
 export function PropertyGallery({
   images,
   title,
@@ -38,6 +123,11 @@ export function PropertyGallery({
   verified,
   petFriendly,
 }: PropertyGalleryProps) {
+  // Debug log for incoming images
+  console.log(
+    `[PropertyGallery] Received ${images?.length} images for "${title}"`,
+  );
+
   const [open, setOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
@@ -89,54 +179,13 @@ export function PropertyGallery({
     });
   }, []);
 
-  const ImageWithFallback = ({
-    img,
-    alt,
-    className,
-    priority = false,
-    sizes,
-    fill = true,
-  }: {
-    img: PropertyImage;
-    alt: string;
-    className?: string;
-    priority?: boolean;
-    sizes?: string;
-    fill?: boolean;
-  }) => {
-    // If image thinks it failed or URL is empty, show fallback
-    if (!img.image_url || failedImages.has(img.id)) {
-      return (
-        <div
-          className={cn(
-            "flex flex-col items-center justify-center bg-slate-100 text-slate-400 absolute inset-0 h-full w-full",
-            className,
-          )}
-        >
-          <ImageIcon className="w-8 h-8 opacity-40 mb-1" />
-          <span className="text-[10px] font-medium opacity-60">No Image</span>
-        </div>
-      );
-    }
-
-    return (
-      <Image
-        src={img.image_url}
-        alt={alt}
-        fill={fill}
-        className={className}
-        priority={priority}
-        sizes={sizes}
-        onError={() => handleImageError(img.id)}
-      />
-    );
-  };
-
   if (!mainImage) {
     return (
       <div className="w-full aspect-video bg-slate-100 rounded-3xl flex items-center justify-center text-slate-400">
-        <ImageIcon className="h-12 w-12 opacity-50 mb-2" />
-        <span className="block">ไม่มีรูปภาพ</span>
+        <div className="flex flex-col items-center">
+          <ImageIcon className="h-12 w-12 opacity-50 mb-2" />
+          <span className="block font-medium">ไม่มีรูปภาพ</span>
+        </div>
       </div>
     );
   }
@@ -211,6 +260,8 @@ export function PropertyGallery({
                   className="object-cover"
                   priority={idx === 0}
                   sizes="(max-width: 768px) 100vw, 33vw"
+                  onImageError={handleImageError}
+                  failedImages={failedImages}
                 />
               </div>
             ))}
@@ -233,6 +284,8 @@ export function PropertyGallery({
               className="object-cover hover:scale-105 transition-transform duration-700"
               priority
               sizes="50vw"
+              onImageError={handleImageError}
+              failedImages={failedImages}
             />
           </div>
 
@@ -249,9 +302,11 @@ export function PropertyGallery({
               >
                 <ImageWithFallback
                   img={img}
-                  alt={`${title} - ${idx + 1}`}
+                  alt={`${title} - ${idx + 2}`}
                   className="object-cover hover:scale-105 transition-transform duration-500"
                   sizes="25vw"
+                  onImageError={handleImageError}
+                  failedImages={failedImages}
                 />
                 {/* Overlay for the last visible image if more exist */}
                 {idx === 3 && remainingCount > 0 && (
@@ -308,24 +363,28 @@ export function PropertyGallery({
             </DialogDescription>
           </VisuallyHidden>
 
+          {/* Lightbox Header - Split Design matching screenshot but refined */}
+          <div className="absolute top-4 left-4 right-16 z-50 flex flex-col gap-2 pointer-events-none">
+            <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10 w-fit max-w-full">
+              <span className="text-white font-bold text-sm md:text-base line-clamp-1">
+                {title}
+              </span>
+            </div>
+            <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 w-fit">
+              <span className="text-white/90 text-[10px] md:text-xs font-bold tracking-widest">
+                {currentIndex + 1} / {sortedImages.length}
+              </span>
+            </div>
+          </div>
+
           <button
             onClick={() => setOpen(false)}
-            className="absolute top-4 right-4 p-2.5 bg-black/60 text-white rounded-full hover:bg-white/20 transition-colors z-50 backdrop-blur-sm"
+            className="absolute top-4 right-4 p-2.5 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full hover:bg-white/20 transition-all z-50 shadow-lg"
           >
             <X className="h-6 w-6" />
           </button>
 
-          {/* Image Counter & Title */}
-          <div className="absolute top-4 left-4 z-50 flex flex-col gap-2">
-            <div className="flex-1 px-4 py-2 bg-black/60 text-white text-sm font-medium rounded-full backdrop-blur-sm line-clamp-1 max-w-md">
-              {title}
-            </div>
-            <div className="flex-1 px-4 py-2 bg-black/60 text-white text-sm font-medium rounded-full backdrop-blur-sm w-fit">
-              {currentIndex + 1} / {sortedImages.length}
-            </div>
-          </div>
-
-          <div className="relative w-full h-full flex items-center justify-center px-4 pb-24 pt-4">
+          <div className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 mb-20 mt-12">
             <div className="relative w-full h-full flex items-center justify-center">
               <ImageWithFallback
                 img={sortedImages[currentIndex]}
@@ -334,6 +393,8 @@ export function PropertyGallery({
                 priority
                 sizes="100vw"
                 fill={true}
+                onImageError={handleImageError}
+                failedImages={failedImages}
               />
             </div>
           </div>
@@ -380,6 +441,8 @@ export function PropertyGallery({
                   alt=""
                   className="object-cover"
                   sizes="10vw"
+                  onImageError={handleImageError}
+                  failedImages={failedImages}
                 />
               </button>
             ))}

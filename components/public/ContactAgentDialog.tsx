@@ -163,7 +163,7 @@ export function ContactAgentDialog({
                   htmlFor="fullName"
                   className="text-slate-600 font-medium text-xs uppercase tracking-wider pl-1"
                 >
-                  ชื่อ-นามสกุล <span className="text-red-500">*</span>
+                  ชื่อ <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative group">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">

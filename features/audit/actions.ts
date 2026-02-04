@@ -198,7 +198,7 @@ export async function logActivityAction(
           type: "image",
           url: profile.avatar_url,
           size: "full",
-          aspectRatio: "20:13",
+          aspectRatio: "1:1",
           aspectMode: "cover",
         };
       }

@@ -1,0 +1,35 @@
+
+{
+  "nav": {
+    "home": "Home",
+    "properties": "Properties",
+    "services": "Services",
+    "contact": "Contact",
+    "about": "About Us",
+    "login": "Login",
+    "dashboard": "Dashboard"
+  },
+  "footer": {
+    "company_desc": "Committed to elevating the Thai real estate industry with sincerity and professionalism.",
+    "quick_links": "Quick Links",
+    "contact_us": "Contact Us",
+    "follow_us": "Follow Us",
+    "rights": "All rights reserved"
+  },
+  "home": {
+    "hero_title": "Find Your Dream Home",
+    "hero_subtitle": "Curated collection of over 10,000 quality properties across Bangkok.",
+    "search_placeholder": "Search location, project name...",
+    "search_btn": "Search",
+    "featured_properties": "Featured Properties",
+    "new_listings": "New Listings"
+  },
+  "property": {
+    "details": "Details",
+    "price": "Price",
+    "bed": "Bed",
+    "bath": "Bath",
+    "size": "Size",
+    "contact_agent": "Contact Agent"
+  }
+}

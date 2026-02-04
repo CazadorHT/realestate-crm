@@ -7,6 +7,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { readFavoriteIds } from "@/lib/favorite-store";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function PublicNav() {
   const pathname = usePathname();
@@ -14,9 +21,14 @@ export function PublicNav() {
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Hook for translation
+  const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
     // Initial load
+    setMounted(true);
     updateFavoriteCount();
 
     // Listen for favorite updates
@@ -44,13 +56,12 @@ export function PublicNav() {
   }
 
   const navigationLinks = [
-    { name: "หน้าหลัก", href: "/" },
-    { name: "ทรัพย์สิน", href: "#latest-properties" },
-    { name: "วิธีการทำงาน", href: "#how-it-works" },
-    { name: "บทความ", href: "#blog" },
-    { name: "คำถามที่พบบ่อย", href: "#faq" },
-    { name: "เกี่ยวกับเรา", href: "#trust" },
-    { name: "ติดต่อเรา", href: "/contact" },
+    { name: t("nav.home"), href: "/" },
+    { name: t("nav.properties"), href: "#latest-properties" },
+    { name: t("nav.services"), href: "#how-it-works" },
+
+    { name: t("nav.about"), href: "#trust" },
+    { name: t("nav.contact"), href: "/contact" },
   ];
 
   // Smooth scroll handler
@@ -90,8 +101,14 @@ export function PublicNav() {
     url: navigationLinks.map((link) => ({
       "@type": "WebPage",
       name: link.name,
-      url: `https://your-domain.com${link.href}`,
+      url: `https://oma-asset.com${link.href}`,
     })),
+  };
+
+  const currentLangFlag = {
+    th: <span className="fi fi-th h-4 w-6 rounded-full shadow-sm" />,
+    en: <span className="fi fi-us h-4 w-6 rounded-full shadow-sm" />,
+    cn: <span className="fi fi-cn h-4 w-6 rounded-full shadow-sm" />,
   };
 
   return (
@@ -103,7 +120,7 @@ export function PublicNav() {
       />
 
       <div
-        className={`backdrop-blur-md border-b fixed top-0 w-full z-50 transition-all duration-300 ${
+        className={`border-b fixed border-b-slate-200 top-0 w-full z-50 transition-all duration-300 ${
           scrolled
             ? "bg-white/95 shadow-lg border-slate-200"
             : "bg-white border-slate-200"
@@ -134,9 +151,9 @@ export function PublicNav() {
               <div className="hidden xl:flex items-center gap-6">
                 {navigationLinks.map((link) => (
                   <a
-                    key={link.name}
+                    key={link.href}
                     href={link.href}
-                    onClick={(e) => handleNavClick(e, link.href)}
+                    onClick={(e) => handleNavClick(e, link.href as string)}
                     className="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm relative group"
                   >
                     {link.name}
@@ -144,11 +161,63 @@ export function PublicNav() {
                   </a>
                 ))}
 
+                {/* Language Switcher */}
+                {mounted ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-2 text-slate-600 font-medium px-2 hover:bg-slate-100"
+                      >
+                        {currentLangFlag[language]}
+                        <span className="uppercase text-xs font-semibold text-slate-500">
+                          {language}
+                        </span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[150px]">
+                      <DropdownMenuItem
+                        onClick={() => setLanguage("th")}
+                        className={`cursor-pointer ${language === "th" ? "bg-slate-50" : ""}`}
+                      >
+                        <span className="fi fi-th mr-3 rounded-sm shadow-sm" />
+                        <span className="font-medium">Thai</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setLanguage("en")}
+                        className={`cursor-pointer ${language === "en" ? "bg-slate-50" : ""}`}
+                      >
+                        <span className="fi fi-us mr-3 rounded-sm shadow-sm" />
+                        <span className="font-medium">English</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setLanguage("cn")}
+                        className={`cursor-pointer ${language === "cn" ? "bg-slate-50" : ""}`}
+                      >
+                        <span className="fi fi-cn mr-3 rounded-sm shadow-sm" />
+                        <span className="font-medium">Chinese</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2 text-slate-600 font-medium opacity-50 cursor-wait px-2"
+                  >
+                    <span className="fi fi-th h-3 w-4 rounded-sm shadow-sm" />
+                    <span className="uppercase text-xs font-bold text-slate-500">
+                      TH
+                    </span>
+                  </Button>
+                )}
+
                 {/* Favorites Button */}
                 <Link
                   href="/favorites"
                   className="relative group"
-                  aria-label="รายการโปรด"
+                  aria-label="favorites"
                 >
                   <div
                     className={`flex items-center gap-2 transition-colors ${
@@ -178,10 +247,10 @@ export function PublicNav() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="border-blue-600 cursor-pointer text-blue-600 hover:bg-linear-to-r hover:from-sky-500 hover:to-blue-500 hover:text-white hover:border-sky-500 duration-300 transition-all"
+                      className="border-blue-600 cursor-pointer text-blue-600 hover:bg-linear-to-r hover:from-sky-500 hover:to-blue-500 hover:text-white hover:border-sky-500 duration-300 transition-all font-medium"
                     >
                       <Search className="h-4 w-4 mr-1" />
-                      ค้นหาทรัพย์
+                      {t("home.search_btn")}
                     </Button>
                   </Link>
                   <a
@@ -190,33 +259,81 @@ export function PublicNav() {
                   >
                     <Button
                       size="lg"
-                      className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md"
+                      className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md font-medium"
                     >
                       <Key className="h-4 w-4 mr-1" />
+                      {/* Using hardcoded 'ฝากทรัพย์' for now or add key later */}
                       ฝากทรัพย์
                     </Button>
                   </a>
                 </div>
               </div>
 
-              {/* Mobile Menu Button */}
-              <div className="xl:hidden flex items-center gap-4">
+              {/* Mobile Menu Button + Lang */}
+              <div className="xl:hidden flex items-center gap-3">
+                {/* Mobile Language Switcher (Compact) */}
+                {mounted ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-slate-600 hover:bg-slate-100"
+                      >
+                        {/* Mobile: Just the flag */}
+                        {currentLangFlag[language]}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => setLanguage("th")}
+                        className="gap-3"
+                      >
+                        <span className="fi fi-th mr-3 rounded-sm shadow-sm" />{" "}
+                        TH
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setLanguage("en")}
+                        className="gap-3"
+                      >
+                        <span className="fi fi-us mr-3 rounded-sm shadow-sm" />{" "}
+                        EN
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setLanguage("cn")}
+                        className="gap-3"
+                      >
+                        <span className="fi fi-cn mr-3 rounded-sm shadow-sm" />{" "}
+                        CN
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-slate-600"
+                  >
+                    <span className="fi fi-th h-3 w-4 rounded-sm shadow-sm" />
+                  </Button>
+                )}
+
                 {/* Mobile Favorites */}
                 <Link
                   href="/favorites"
-                  className="relative group"
-                  aria-label="รายการโปรด"
+                  className="relative group p-2"
+                  aria-label="favorites"
                 >
                   <Heart
-                    className={`h-5 w-5 transition-colors ${
+                    className={`h-6 w-6 transition-colors ${
                       favoriteCount > 0
                         ? "text-red-500 fill-red-500"
                         : "text-slate-600 group-hover:text-slate-900"
                     }`}
                   />
                   {favoriteCount > 0 && (
-                    <span className="absolute -top-2 -right-2 h-5 w-5 bg-linear-to-br from-pink-500 to-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm border border-white">
-                      {favoriteCount > 99 ? "99+" : favoriteCount}
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
+                      {favoriteCount > 9 ? "9+" : favoriteCount}
                     </span>
                   )}
                 </Link>
@@ -227,9 +344,9 @@ export function PublicNav() {
                   aria-label="Toggle menu"
                 >
                   {mobileMenuOpen ? (
-                    <X className="h-6 w-6" />
+                    <X className="h-7 w-7" />
                   ) : (
-                    <Menu className="h-6 w-6" />
+                    <Menu className="h-7 w-7" />
                   )}
                 </button>
               </div>
@@ -244,41 +361,43 @@ export function PublicNav() {
                   <a
                     key={link.name}
                     href={link.href}
-                    onClick={(e) => handleNavClick(e, link.href)}
+                    onClick={(e) => handleNavClick(e, link.href as string)}
                     className="block px-4 py-3 text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium "
                   >
                     {link.name}
                   </a>
                 ))}
 
-                <div className="pt-4 border-t border-slate-200 flex items-center gap-3">
-                  <Link
-                    href="/properties"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1"
-                  >
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-base"
+                <div className="pt-4 border-t border-slate-200 flex flex-col gap-3">
+                  <div className="flex gap-3">
+                    <Link
+                      href="/properties"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1"
                     >
-                      <Search className="h-5 w-5 mr-2" />
-                      ค้นหาทรัพย์
-                    </Button>
-                  </Link>
-                  <a
-                    href="#deposit-section"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1"
-                  >
-                    <Button
-                      size="lg"
-                      className="w-full cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base"
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="w-full cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-base"
+                      >
+                        <Search className="h-5 w-5 mr-2" />
+                        {t("home.search_btn")}
+                      </Button>
+                    </Link>
+                    <a
+                      href="#deposit-section"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1"
                     >
-                      <Key className="h-5 w-5 mr-2" />
-                      ฝากทรัพย์
-                    </Button>
-                  </a>
+                      <Button
+                        size="lg"
+                        className="w-full cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base"
+                      >
+                        <Key className="h-5 w-5 mr-2" />
+                        ฝากทรัพย์
+                      </Button>
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>

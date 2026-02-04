@@ -4,12 +4,14 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Database } from "@/lib/database.types";
 import { MdMapsHomeWork } from "react-icons/md";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 type PropertyType = Database["public"]["Enums"]["property_type"];
 type PropertyImage = {
   id: string;
   image_url: string;
+  storage_path: string | null;
   is_cover: boolean;
   sort_order: number;
 };
@@ -50,6 +52,7 @@ export async function SimilarPropertiesSection({
       property_images (
         id,
         image_url,
+        storage_path,
         is_cover,
         sort_order
       ),
@@ -103,9 +106,16 @@ export async function SimilarPropertiesSection({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
         {(properties as PropertyWithImages[]).map((property) => {
+          const coverImg =
+            property.property_images?.find((img) => img.is_cover) ||
+            property.property_images?.[0];
+
           const imageUrl =
-            property.property_images?.find((img) => img.is_cover)?.image_url ||
-            property.property_images?.[0]?.image_url;
+            coverImg?.image_url && coverImg.image_url.startsWith("http")
+              ? coverImg.image_url
+              : coverImg?.storage_path
+                ? getPublicImageUrl(coverImg.storage_path)
+                : coverImg?.image_url;
 
           return (
             <div key={property.id} className="min-w-0 ">

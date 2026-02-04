@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/database.types";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 export type PropertyRow = {
   id: string;
@@ -35,6 +36,7 @@ export type PropertyRow = {
 
   property_images?: Array<{
     image_url: string;
+    storage_path: string | null;
     is_cover: boolean | null;
     sort_order: number | null;
   }> | null;
@@ -63,14 +65,18 @@ function pickCoverImage(
 ) {
   if (!images || images.length === 0) return null;
 
-  const cover = images.find((img) => img.is_cover);
-  if (cover?.image_url) return cover.image_url;
+  const cover = images.find((img) => img.is_cover) || images[0];
+  if (!cover) return null;
 
-  const sorted = [...images].sort(
-    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
-  );
+  if (cover.image_url && cover.image_url.startsWith("http")) {
+    return cover.image_url;
+  }
 
-  return sorted[0]?.image_url ?? null;
+  if (cover.storage_path) {
+    return getPublicImageUrl(cover.storage_path);
+  }
+
+  return cover.image_url ?? null;
 }
 
 export interface GetPropertiesOptions {
@@ -115,6 +121,7 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       address_line1,
       property_images (
         image_url,
+        storage_path,
         is_cover,
         sort_order
       ),

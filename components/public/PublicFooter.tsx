@@ -6,8 +6,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useTransition, Suspense } from "react";
 import { subscribeToLineAction } from "@/features/leads/public-actions";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function PublicFooter() {
+  const { t } = useLanguage();
   const currentYear = new Date().getFullYear();
   const companyMeta = {
     name_th: "OMA ASSET",
@@ -20,7 +22,7 @@ export function PublicFooter() {
     name: "OMA ASSET",
     description:
       "แพลตฟอร์มอสังหาริมทรัพย์ครบวงจร บ้าน คอนโด สำนักงานออฟฟิศ ให้เช่า ขาย",
-    url: "https://oma-asset.com", // Example URL, should be env var ideally
+    url: "https://oma-asset.com",
     telephone: "+66-XX-XXX-XXXX",
     email: "contact@oma-asset.com",
     address: {
@@ -48,17 +50,17 @@ export function PublicFooter() {
   };
 
   const services = [
-    { name: "ซื้อบ้าน", href: "/properties?type=sale" },
-    { name: "เช่าคอนโด", href: "/properties?type=rent" },
-    { name: "สำนักงานออฟฟิศ", href: "/properties?category=office" },
-    { name: "ประเมินราคา", href: "/valuation" },
+    { name: t("nav.properties"), href: "/properties?type=sale" },
+    { name: t("nav.services"), href: "/properties?type=rent" },
+    { name: "Office / Retail", href: "/properties?category=office" },
+    { name: "Valuation", href: "/valuation" },
   ];
 
   const about = [
-    { name: "เกี่ยวกับเรา", href: "#trust" },
-    { name: "ทีมงาน", href: "/team" },
-    { name: "ติดต่อเรา", href: "/contact" },
-    { name: "บทความ", href: "/blog" },
+    { name: t("nav.about"), href: "#trust" },
+    { name: "Team", href: "/team" },
+    { name: t("nav.contact"), href: "/contact" },
+    { name: "Blog", href: "/blog" },
   ];
 
   const socialMedia = [
@@ -124,8 +126,7 @@ export function PublicFooter() {
                 </Link>
               </div>
               <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
-                แพลตฟอร์มอสังหาริมทรัพย์ครบวงจร ที่ใส่ใจทุกรายละเอียด
-                เพื่อช่วยให้คุณเจอ "ที่ที่ใช่" ในทำเลศักยภาพ
+                {t("footer.company_desc")}
               </p>
 
               {/* Contact Info List */}
@@ -160,7 +161,7 @@ export function PublicFooter() {
             {/* 2. Services (2 cols) */}
             <div className="lg:col-span-2 lg:pl-4">
               <h4 className="font-bold text-white mb-6 text-lg tracking-tight">
-                บริการของเรา
+                {t("nav.services")}
               </h4>
               <ul className="space-y-3">
                 {services.map((service) => (
@@ -180,7 +181,7 @@ export function PublicFooter() {
             {/* 3. About (2 cols) */}
             <div className="lg:col-span-2">
               <h4 className="font-bold text-white mb-6 text-lg tracking-tight">
-                เกี่ยวกับเรา
+                {t("nav.about")}
               </h4>
               <ul className="space-y-3">
                 {about.map((item) => (
@@ -200,7 +201,7 @@ export function PublicFooter() {
             {/* 4. Newsletter & Social (4 cols) */}
             <div className="lg:col-span-4">
               <h4 className="font-bold text-white mb-6 text-lg tracking-tight">
-                ติดตามข่าวสาร
+                {t("footer.follow_us")}
               </h4>
 
               <NewsletterSection />
@@ -227,20 +228,20 @@ export function PublicFooter() {
 
           <div className="pt-8 border-t border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-slate-500 text-sm">
-              &copy; {currentYear} {companyMeta.name_th}. All rights reserved.
+              &copy; {currentYear} {companyMeta.name_th}. {t("footer.rights")}
             </p>
             <div className="flex gap-6 text-sm font-medium text-slate-400">
               <Link
                 href="/privacy-policy"
                 className="hover:text-blue-400 transition-colors"
               >
-                นโยบายความเป็นส่วนตัว
+                Privacy Policy
               </Link>
               <Link
                 href="/terms"
                 className="hover:text-blue-400 transition-colors"
               >
-                ข้อตกลงการใช้งาน
+                Terms of Use
               </Link>
             </div>
           </div>

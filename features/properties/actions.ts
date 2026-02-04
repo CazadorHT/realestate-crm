@@ -780,106 +780,108 @@ export async function updatePropertyAction(
     }
 
     // --- Step 3: Images update with rollback ---
-
-    // A) โหลดรูปเดิมไว้ก่อน เผื่อ rollback
-    const { data: oldImages, error: oldImagesErr } = await supabase
-      .from("property_images")
-      .select("storage_path, image_url, is_cover, sort_order")
-      .eq("property_id", id);
-
-    if (oldImagesErr) {
-      console.error("Fetch old images error:", oldImagesErr);
-      return { success: false, message: "Failed to read existing images" };
-    }
-
-    // B) ถ้ามีรูปใหม่: validate + existence check ก่อนทำลายของเดิม
-    if (images && images.length > 0) {
-      const valid = validatePropertyImagePaths(images);
-      if (!valid.ok) return { success: false, message: valid.message };
-
-      // Skip verification for images that already exist in property_images
-      // (they were already verified when first uploaded)
-      const existingPaths = new Set(
-        (oldImages || []).map((img: any) => img.storage_path),
-      );
-      const newImages = images.filter((path) => !existingPaths.has(path));
-
-      // Only verify truly new images
-    }
-
-    // C) ลบรูปเดิม (ถ้าผู้ใช้ตั้งใจลบทั้งหมด images อาจว่าง → ก็ลบให้หมดได้)
-    const { error: deleteError } = await supabase
-      .from("property_images")
-      .delete()
-      .eq("property_id", id);
-
-    if (deleteError) {
-      console.error("Delete old images error:", deleteError);
-      return { success: false, message: "Failed to replace images" };
-    }
-
-    // D) insert รูปใหม่ (ถ้ามี)
-    if (images && images.length > 0) {
-      const imageRows = images.map((storagePath, index) => ({
-        property_id: id,
-        storage_path: storagePath,
-        image_url: getPublicImageUrl(storagePath),
-        is_cover: index === 0,
-        sort_order: index,
-      }));
-
-      const { error: imagesError } = await supabase
+    // Only process images if the field was included in the request
+    if (images !== undefined) {
+      // A) โหลดรูปเดิมไว้ก่อน เผื่อ rollback
+      const { data: oldImages, error: oldImagesErr } = await supabase
         .from("property_images")
-        .insert(imageRows);
+        .select("storage_path, image_url, is_cover, sort_order")
+        .eq("property_id", id);
 
-      if (imagesError) {
-        console.error("Images insertion error:", imagesError);
-
-        // ✅ rollback: เอารูปเดิมกลับเข้าไป
-        if (oldImages && oldImages.length > 0) {
-          await supabase.from("property_images").insert(
-            oldImages.map((img) => ({
-              property_id: id,
-              storage_path: img.storage_path,
-              image_url: img.image_url,
-              is_cover: img.is_cover,
-              sort_order: img.sort_order,
-            })),
-          );
-        }
-
-        return { success: false, message: "Failed to attach images" };
+      if (oldImagesErr) {
+        console.error("Fetch old images error:", oldImagesErr);
+        return { success: false, message: "Failed to read existing images" };
       }
-    }
-    await finalizeUploadSession({
-      supabase,
-      userId: user.id,
-      sessionId,
-      propertyId: id,
-      usedPaths: images ?? [],
-    });
 
-    // E) ลบไฟล์จริงออกจาก Storage (เฉพาะไฟล์ที่ถูกถอดออก)
-    if (oldImages && oldImages.length > 0) {
-      const oldPaths = new Set(
-        oldImages.map((x) => x.storage_path).filter(Boolean),
-      );
-      const newPaths = new Set((images ?? []).filter(Boolean));
+      // B) ถ้ามีรูปใหม่: validate + existence check ก่อนทำลายของเดิม
+      if (images && images.length > 0) {
+        const valid = validatePropertyImagePaths(images);
+        if (!valid.ok) return { success: false, message: valid.message };
 
-      const removed = [...oldPaths].filter(
-        (p): p is string => typeof p === "string" && !newPaths.has(p),
-      );
+        // Skip verification for images that already exist in property_images
+        // (they were already verified when first uploaded)
+        const existingPaths = new Set(
+          (oldImages || []).map((img: any) => img.storage_path),
+        );
+        const newImages = images.filter((path) => !existingPaths.has(path));
 
-      if (removed.length > 0) {
-        const { error: removeErr } = await supabase.storage
-          .from(PROPERTY_IMAGES_BUCKET)
-          .remove(removed);
+        // Only verify truly new images
+      }
 
-        if (removeErr) {
-          console.error("Failed to remove orphaned images:", removeErr);
+      // C) ลบรูปเดิม (ถ้าผู้ใช้ตั้งใจลบทั้งหมด images อาจว่าง → ก็ลบให้หมดได้)
+      const { error: deleteError } = await supabase
+        .from("property_images")
+        .delete()
+        .eq("property_id", id);
+
+      if (deleteError) {
+        console.error("Delete old images error:", deleteError);
+        return { success: false, message: "Failed to replace images" };
+      }
+
+      // D) insert รูปใหม่ (ถ้ามี)
+      if (images && images.length > 0) {
+        const imageRows = images.map((storagePath, index) => ({
+          property_id: id,
+          storage_path: storagePath,
+          image_url: getPublicImageUrl(storagePath),
+          is_cover: index === 0,
+          sort_order: index,
+        }));
+
+        const { error: imagesError } = await supabase
+          .from("property_images")
+          .insert(imageRows);
+
+        if (imagesError) {
+          console.error("Images insertion error:", imagesError);
+
+          // ✅ rollback: เอารูปเดิมกลับเข้าไป
+          if (oldImages && oldImages.length > 0) {
+            await supabase.from("property_images").insert(
+              oldImages.map((img) => ({
+                property_id: id,
+                storage_path: img.storage_path,
+                image_url: img.image_url,
+                is_cover: img.is_cover,
+                sort_order: img.sort_order,
+              })),
+            );
+          }
+
+          return { success: false, message: "Failed to attach images" };
         }
       }
-    }
+      await finalizeUploadSession({
+        supabase,
+        userId: user.id,
+        sessionId,
+        propertyId: id,
+        usedPaths: images ?? [],
+      });
+
+      // E) ลบไฟล์จริงออกจาก Storage (เฉพาะไฟล์ที่ถูกถอดออก)
+      if (oldImages && oldImages.length > 0) {
+        const oldPaths = new Set(
+          oldImages.map((x) => x.storage_path).filter(Boolean),
+        );
+        const newPaths = new Set((images ?? []).filter(Boolean));
+
+        const removed = [...oldPaths].filter(
+          (p): p is string => typeof p === "string" && !newPaths.has(p),
+        );
+
+        if (removed.length > 0) {
+          const { error: removeErr } = await supabase.storage
+            .from(PROPERTY_IMAGES_BUCKET)
+            .remove(removed);
+
+          if (removeErr) {
+            console.error("Failed to remove orphaned images:", removeErr);
+          }
+        }
+      }
+    } // End of if (images !== undefined)
 
     // --- Step 4: Agents update ---
     if (agent_ids !== undefined) {
@@ -1064,8 +1066,9 @@ export async function updatePropertyAction(
             type: "image",
             url: coverImageUrl,
             size: "full",
-            aspectRatio: "20:13",
+            aspectRatio: "4:3",
             aspectMode: "cover",
+            gravity: "top",
           };
         }
 

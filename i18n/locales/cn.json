@@ -1,0 +1,35 @@
+
+{
+  "nav": {
+    "home": "首页",
+    "properties": "房源搜索",
+    "services": "我们的服务",
+    "contact": "联系我们",
+    "about": "关于我们",
+    "login": "登录",
+    "dashboard": "仪表盘"
+  },
+  "footer": {
+    "company_desc": "致力于以真诚和专业的态度提升泰国房地产行业水平。",
+    "quick_links": "快速链接",
+    "contact_us": "联系方式",
+    "follow_us": "关注我们",
+    "rights": "版权所有"
+  },
+  "home": {
+    "hero_title": "寻找您梦想中的家",
+    "hero_subtitle": "精选曼谷及周边地区超过 10,000 套优质房源。",
+    "search_placeholder": "搜索地点、项目名称...",
+    "search_btn": "搜索",
+    "featured_properties": "精选房源",
+    "new_listings": "最新房源"
+  },
+  "property": {
+    "details": "详情",
+    "price": "价格",
+    "bed": "卧室",
+    "bath": "浴室",
+    "size": "面积",
+    "contact_agent": "联系经纪人"
+  }
+}

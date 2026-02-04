@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Prompt, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
+import "flag-icons/css/flag-icons.min.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -57,6 +58,7 @@ const notoThai = Noto_Sans_Thai({
 });
 
 import { CookieConsent } from "@/components/common/CookieConsent";
+import { LanguageProvider } from "@/components/providers/LanguageProvider";
 
 export default function RootLayout({
   children,
@@ -72,9 +74,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster />
-          <CookieConsent />
+          <LanguageProvider>
+            {children}
+            <Toaster />
+            <CookieConsent />
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

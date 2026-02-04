@@ -47,6 +47,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "emoji-picker-react": "^4.17.1",
+    "flag-icons": "^7.5.0",
     "fuzzball": "^2.2.3",
     "isomorphic-dompurify": "^2.35.0",
     "lucide-react": "^0.563.0",

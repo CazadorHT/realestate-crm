@@ -475,8 +475,9 @@ export async function submitInquiryAction(
         type: "image",
         url: imageUrl,
         size: "full",
-        aspectRatio: "20:13",
+        aspectRatio: "4:3",
         aspectMode: "cover",
+        gravity: "top",
         action: {
           type: "uri",
           label: "View Property",

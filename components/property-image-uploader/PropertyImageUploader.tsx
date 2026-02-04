@@ -91,10 +91,11 @@ export function PropertyImageUploader({
 
     // Only sync if value has actual paths
     if (valuePaths.length === 0) {
-      if (images.length > 0 && !images.some((img) => img.is_uploading)) {
-        // Value was cleared and no uploads in progress, clear images too
+      // FIX: Don't clear local images just because value is empty,
+      // as this causes issues during re-renders or form resets/initialization
+      /* if (images.length > 0 && !images.some((img) => img.is_uploading)) {
         setImages([]);
-      }
+      } */
       prevValueRef.current = valuePaths;
       return;
     }

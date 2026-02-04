@@ -12,7 +12,36 @@ import {
   TrendingDown,
   CheckCircle,
   Tag,
+  Palette,
+  Loader2,
+  Save,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+
+// Premium Color Presets (Dominant Color + Gradient Class for UI)
+const COLOR_PRESETS = [
+  { name: "Ocean", color: "#0288D1", gradient: "from-cyan-500 to-blue-600" },
+  {
+    name: "Emerald",
+    color: "#2E7D32",
+    gradient: "from-emerald-500 to-green-600",
+  },
+  { name: "Sunset", color: "#E64A19", gradient: "from-orange-500 to-red-600" },
+  {
+    name: "Royal",
+    color: "#7B1FA2",
+    gradient: "from-purple-500 to-indigo-600",
+  },
+  {
+    name: "Graphite",
+    color: "#37474F",
+    gradient: "from-slate-600 to-slate-800",
+  },
+  { name: "Gold", color: "#FBC02D", gradient: "from-yellow-400 to-amber-600" },
+];
 
 export function LineManagerClient({
   initialTemplates,
@@ -23,31 +52,31 @@ export function LineManagerClient({
   const [loading, setLoading] = useState<string | null>(null);
 
   const getIcon = (key: string) => {
+    const className = "w-5 h-5 text-white";
     switch (key) {
       case "DEPOSIT":
-        return <Home className="w-5 h-5 text-white" />;
+        return <Home className={className} />;
       case "INQUIRY":
-        return <MessageCircle className="w-5 h-5 text-white" />;
+        return <MessageCircle className={className} />;
       case "CONTACT":
-        return <Mail className="w-5 h-5 text-white" />;
+        return <Mail className={className} />;
       case "SIGNUP":
-        return <UserPlus className="w-5 h-5 text-white" />;
+        return <UserPlus className={className} />;
       case "LOGIN":
-        return <LogIn className="w-5 h-5 text-white" />;
+        return <LogIn className={className} />;
       case "PRICE_DROP":
-        return <TrendingDown className="w-5 h-5 text-white" />;
+        return <TrendingDown className={className} />;
       case "DEAL_SOLO":
-        return <CheckCircle className="w-5 h-5 text-white" />;
+        return <CheckCircle className={className} />;
       case "DEAL_RENT":
-        return <Tag className="w-5 h-5 text-white" />;
+        return <Tag className={className} />;
       default:
-        return <MessageCircle className="w-5 h-5 text-white" />;
+        return <MessageCircle className={className} />;
     }
   };
 
   const handleUpdate = async (key: string, field: string, value: any) => {
-    setLoading(key);
-
+    // Optimistic Update
     const updatedTemplates = templates.map((t) => {
       if (t.key === key) {
         if (field === "is_active") return { ...t, is_active: value };
@@ -58,226 +87,258 @@ export function LineManagerClient({
       }
       return t;
     });
-
     setTemplates(updatedTemplates);
 
-    const templateToUpdate = updatedTemplates.find((t) => t.key === key);
-    if (!templateToUpdate) return;
+    // If it's just text input, don't auto-save immediately to avoid spamming (debounce ideally, but explicit save for now is safer or just background save)
+    // For Toggles/Colors, likely safe to save immediately
+    if (field === "is_active" || field === "config.headerColor") {
+      saveChanges(key, updatedTemplates);
+    }
+  };
 
+  const saveChanges = async (key: string, currentTemplates: LineTemplate[]) => {
+    const template = currentTemplates.find((t) => t.key === key);
+    if (!template) return;
+
+    setLoading(key);
     try {
       await updateLineTemplate(key, {
-        is_active: templateToUpdate.is_active,
-        config: templateToUpdate.config,
+        is_active: template.is_active,
+        config: template.config,
       });
+      toast.success("Saved changes");
     } catch (err) {
-      alert("Failed to save changes");
+      toast.error("Failed to save");
     } finally {
       setLoading(null);
     }
   };
 
+  const handleManualSave = (key: string) => {
+    saveChanges(key, templates);
+  };
+
   return (
-    <div className="grid gap-6 grid-cols-3">
-      {templates.map((template) => (
-        <div
-          key={template.key}
-          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">{template.label}</h3>
-            <label className="flex items-center cursor-pointer">
-              <span className="mr-3 text-sm text-gray-500">Active</span>
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={template.is_active}
-                  onChange={(e) =>
-                    handleUpdate(template.key, "is_active", e.target.checked)
-                  }
-                />
-                <div
-                  className={`block w-10 h-6 rounded-full ${template.is_active ? "bg-green-500" : "bg-gray-300"}`}
-                ></div>
-                <div
-                  className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${template.is_active ? "transform translate-x-4" : ""}`}
-                ></div>
-              </div>
-            </label>
-          </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-2">
+        <h2 className="text-2xl font-bold tracking-tight bg-linear-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+          LINE Notification Manager
+        </h2>
+        <p className="text-muted-foreground">
+          Customize your LINE Flex Message templates and visibility.
+        </p>
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Header Text
-              </label>
-              <input
-                type="text"
-                className="w-full p-2 border border-gray-200 rounded-md"
-                value={template.config.headerText}
-                onChange={(e) =>
-                  handleUpdate(
-                    template.key,
-                    "config.headerText",
-                    e.target.value,
-                  )
-                }
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Header Color
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  className="h-10 w-20 p-1 border border-gray-200 rounded-md cursor-pointer"
-                  value={template.config.headerColor}
-                  onChange={(e) =>
-                    handleUpdate(
-                      template.key,
-                      "config.headerColor",
-                      e.target.value,
-                    )
-                  }
-                />
-                <span className="text-sm text-gray-500">
-                  {template.config.headerColor}
-                </span>
-              </div>
-            </div>
-          </div>
+      <div className="grid gap-6 grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
+        {templates.map((template) => {
+          // Find matching gradient for UI (fallback to solid based on hex match or default)
+          const preset = COLOR_PRESETS.find(
+            (p) =>
+              p.color.toLowerCase() ===
+              template.config.headerColor?.toLowerCase(),
+          );
+          const gradientClass =
+            preset?.gradient || "from-slate-500 to-slate-700";
 
-          {loading === template.key && (
-            <p className="text-xs text-blue-500 mt-2">Saving...</p>
-          )}
+          return (
+            <div
+              key={template.key}
+              className="group relative bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-all duration-300"
+            >
+              {/* Gradient Header Strip */}
+              <div className={cn("h-2 w-full bg-linear-to-r", gradientClass)} />
 
-          {/* Preview Mockup */}
-          <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-            <p className="text-xs text-gray-500 mb-2">Preview:</p>
-            <div className="max-w-xs bg-white rounded-xl overflow-hidden shadow-sm font-sans mx-auto border border-gray-200">
-              {/* Header */}
-              <div
-                style={{ backgroundColor: template.config.headerColor }}
-                className="p-4 flex items-center gap-3"
-              >
-                {getIcon(template.key)}
-                <p className="text-white font-bold">
-                  {template.config.headerText}
-                </p>
-              </div>
-
-              {/* Body Preview based on Type */}
-              <div className="p-0">
-                {template.key === "INQUIRY" ||
-                template.key === "DEPOSIT" ||
-                template.key === "PRICE_DROP" ||
-                template.key === "DEAL_SOLO" ||
-                template.key === "DEAL_RENT" ? (
-                  <div className="bg-white">
-                    {/* Property Image Mock */}
-                    <div className="h-32 bg-gray-300 w-full object-cover relative">
-                      <img
-                        src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=500&q=60"
-                        alt="Property"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-2 right-2 bg-white/90 px-2 py-0.5 rounded text-xs font-bold text-gray-700">
-                        FOR SALE
-                      </div>
+              <div className="p-6">
+                {/* Header Row */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        "p-2 rounded-lg bg-linear-to-br shadow-inner text-white",
+                        gradientClass,
+                      )}
+                    >
+                      {getIcon(template.key)}
                     </div>
-
-                    <div className="p-3">
-                      {/* Property Title */}
-                      <h4 className="font-bold text-gray-800 text-sm mb-1 line-clamp-1">
-                        The Luxury Residence Sukhumvit
-                      </h4>
-                      <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-                        📍 Sukhumvit 39, Bangkok
+                    <div>
+                      <h3 className="font-bold text-slate-800">
+                        {template.label}
+                      </h3>
+                      <p className="text-xs text-slate-500 font-mono opacity-80">
+                        {template.key}
                       </p>
-
-                      {/* Specs */}
-                      <div className="flex items-center gap-3 text-xs text-gray-600 mb-3 bg-gray-50 p-2 rounded-lg">
-                        <span className="flex items-center gap-1">🛏️ 2</span>
-                        <span className="w-px h-3 bg-gray-300"></span>
-                        <span className="flex items-center gap-1">🚿 2</span>
-                        <span className="w-px h-3 bg-gray-300"></span>
-                        <span className="flex items-center gap-1">
-                          📏 85 sq.m
-                        </span>
-                      </div>
-
-                      {/* Price */}
-                      <div className="flex items-center justify-between mt-2">
-                        <div>
-                          <p className="text-xs text-gray-400 line-through">
-                            ฿12,900,000
-                          </p>
-                          <p className="text-sm font-bold text-red-600">
-                            ฿11,500,000
-                          </p>
-                        </div>
-                        <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
-                          -11%
-                        </span>
-                      </div>
-
-                      <div className="h-px bg-gray-100 my-3"></div>
-
-                      {/* Contact Info Mock */}
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-500">ติดต่อ:</span>
-                          <span className="text-gray-900 font-medium">
-                            คุณลูกค้าใจดี
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-500">เบอร์:</span>
-                          <span className="text-gray-900">089-999-9999</span>
-                        </div>
-                      </div>
                     </div>
+                  </div>
 
-                    {/* Footer Button Mock */}
-                    <div className="bg-gray-50 p-2 text-center border-t border-gray-100">
-                      <a
-                        href="#"
-                        className="text-xs text-blue-600 font-bold block w-full"
+                  <div className="flex items-center">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={template.is_active}
+                        onChange={(e) =>
+                          handleUpdate(
+                            template.key,
+                            "is_active",
+                            e.target.checked,
+                          )
+                        }
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Controls */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Header Text
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                        value={template.config.headerText}
+                        onChange={(e) =>
+                          handleUpdate(
+                            template.key,
+                            "config.headerText",
+                            e.target.value,
+                          )
+                        }
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleManualSave(template.key)}
+                        disabled={loading === template.key}
+                        className="text-slate-400 hover:text-blue-600"
                       >
-                        ดูรายละเอียดทรัพย์
-                      </a>
+                        {loading === template.key ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                      </Button>
                     </div>
                   </div>
-                ) : (
-                  // Generic Layout for others
-                  <div className="p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="h-3 w-1/3 bg-gray-200 rounded"></div>
-                      <div className="h-3 w-1/4 bg-gray-100 rounded"></div>
-                    </div>
-                    <div className="h-3 w-3/4 bg-gray-100 rounded mb-2"></div>
-                    <div className="h-3 w-1/2 bg-gray-100 rounded mb-4"></div>
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <div className="h-8 w-8 rounded-full bg-gray-200"></div>
-                        <div className="flex-1 space-y-1">
-                          <div className="h-2 w-full bg-gray-100 rounded"></div>
-                          <div className="h-2 w-2/3 bg-gray-100 rounded"></div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                      <Palette className="w-3 h-3" /> Theme Color
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {COLOR_PRESETS.map((p) => (
+                        <button
+                          key={p.name}
+                          onClick={() =>
+                            handleUpdate(
+                              template.key,
+                              "config.headerColor",
+                              p.color,
+                            )
+                          }
+                          className={cn(
+                            "w-8 h-8 rounded-full transition-all hover:scale-110 focus:ring-2 focus:ring-offset-2 ring-blue-500",
+                            template.config.headerColor === p.color
+                              ? "ring-2 ring-offset-2 scale-110 shadow-md"
+                              : "opacity-80 hover:opacity-100",
+                          )}
+                          style={{ backgroundColor: p.color }}
+                          title={p.name}
+                        />
+                      ))}
+                      {/* Custom color picker fallback */}
+                      <div className="relative group">
+                        <input
+                          type="color"
+                          className="w-8 h-8 rounded-full p-0 border-0 overflow-hidden cursor-pointer opacity-0 absolute inset-0"
+                          value={template.config.headerColor}
+                          onChange={(e) =>
+                            handleUpdate(
+                              template.key,
+                              "config.headerColor",
+                              e.target.value,
+                            )
+                          }
+                        />
+                        <div className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center bg-white text-slate-400 hover:text-slate-600 pointer-events-none">
+                          <span className="text-xs font-bold">+</span>
                         </div>
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
+
+                {/* Preview Area */}
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-medium text-slate-400">
+                      Flex Message Preview
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] font-normal text-slate-400"
+                    >
+                      Mobile
+                    </Badge>
+                  </div>
+
+                  <div className="relative mx-auto rounded-xl overflow-hidden shadow-lg border border-slate-200 bg-white max-w-[280px]">
+                    {/* Flex Header */}
+                    <div
+                      style={{ backgroundColor: template.config.headerColor }}
+                      className="p-4 flex items-center gap-3 relative overflow-hidden"
+                    >
+                      {/* Add simulated gradient overlay for preview only */}
+                      <div className="absolute inset-0 bg-white/10" />
+
+                      <div className="relative z-10 flex items-center gap-2">
+                        <div className="opacity-90">
+                          {getIcon(template.key)}
+                        </div>
+                        <span className="text-white font-bold text-sm tracking-wide text-shadow-sm">
+                          {template.config.headerText}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Flex Body Mock */}
+                    <div className="bg-white">
+                      <div className="h-32 bg-gray-300 w-full object-cover relative">
+                        <img
+                          src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=500&q=60"
+                          alt="Property"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-2 right-2 bg-white/90 px-2 py-0.5 rounded text-xs font-bold text-gray-700">
+                          FOR SALE
+                        </div>
+                      </div>
+                      <div className="p-3 space-y-2">
+                        <div className="h-4 bg-slate-100 rounded w-3/4" />
+                        <div className="h-3 bg-slate-50 rounded w-1/2" />
+                        <div className="flex justify-between items-center pt-2">
+                          <div className="h-5 bg-red-50 rounded w-1/3" />
+                          <div className="h-6 w-20 bg-slate-800 rounded text-center text-[10px] text-white leading-6 px-2">
+                            Button
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      ))}
+          );
+        })}
+      </div>
 
       {templates.length === 0 && (
-        <div className="p-8 text-center text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-          No templates found. Run the seed/migration first.
+        <div className="flex flex-col items-center justify-center py-12 text-center text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+          <Loader2 className="w-10 h-10 mb-4 animate-spin text-slate-300" />
+          <p className="font-medium">Loading templates...</p>
         </div>
       )}
     </div>
