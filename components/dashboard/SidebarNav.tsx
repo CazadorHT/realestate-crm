@@ -26,6 +26,7 @@ import {
   CalendarDays,
   MessageSquare,
   Activity,
+  Layout,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -146,6 +147,13 @@ export function SidebarNav({ role }: { role: UserRole }) {
       href: "/protected/profile",
       icon: UserCircle,
       active: pathname === "/protected/profile",
+    },
+    {
+      title: "บริการ (Services)",
+      href: "/protected/services",
+      icon: Layout,
+      active: pathname?.startsWith("/protected/services") ?? false,
+      roles: ["ADMIN", "AGENT"],
     },
     {
       title: "AI Monitor",

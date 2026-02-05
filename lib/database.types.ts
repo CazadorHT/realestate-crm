@@ -1309,6 +1309,54 @@ export type Database = {
           },
         ]
       }
+      services: {
+        Row: {
+          contact_link: string | null
+          content: string | null
+          cover_image: string | null
+          created_at: string
+          description: string | null
+          gallery_images: Json | null
+          id: string
+          is_active: boolean
+          price_range: string | null
+          slug: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          contact_link?: string | null
+          content?: string | null
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          gallery_images?: Json | null
+          id?: string
+          is_active?: boolean
+          price_range?: string | null
+          slug: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          contact_link?: string | null
+          content?: string | null
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          gallery_images?: Json | null
+          id?: string
+          is_active?: boolean
+          price_range?: string | null
+          slug?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
