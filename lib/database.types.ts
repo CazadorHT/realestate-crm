@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          feature: string
+          id: string
+          model: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          feature: string
+          id?: string
+          model: string
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          feature?: string
+          id?: string
+          model?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string

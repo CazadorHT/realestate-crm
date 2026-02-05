@@ -270,3 +270,33 @@
     animation: fade-in 0.5s ease-out forwards;
   }
 }
+
+/* Blog Content Overrides */
+/* Blog Content Overrides */
+@layer components {
+  /* Force white text on CTA buttons regardless of prose overrides */
+  .prose a.contact-agent-trigger {
+    @apply text-white! no-underline! font-bold! shadow-lg! transition-all duration-300;
+    background: linear-gradient(
+      90deg,
+      #4f46e5 0%,
+      #7c3aed 100%
+    ); /* Indigo to Violet default */
+  }
+
+  .prose a.contact-agent-trigger:hover {
+    @apply shadow-xl! -translate-y-1;
+    background: linear-gradient(90deg, #4338ca 0%, #6d28d9 100%);
+  }
+
+  /* Secondary button style */
+  .prose a.contact-agent-trigger.cta-secondary {
+    @apply text-indigo-600! bg-indigo-50! border! border-indigo-200! shadow-sm!;
+    background: #eef2ff !important; /* Force bg-indigo-50 */
+  }
+
+  .prose a.contact-agent-trigger.cta-secondary:hover {
+    @apply bg-indigo-100!;
+    background: #e0e7ff !important;
+  }
+}

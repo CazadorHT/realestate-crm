@@ -278,14 +278,39 @@ export async function generateBlogPostAction(
   keyword: string,
   targetAudience: string,
   tone: string,
+  length: string = "Medium",
   includeImage: boolean = false,
 ) {
   const { generateText } = await import("@/lib/ai/gemini");
+  const { logAiUsage } = await import("@/features/ai-monitor/actions");
+
+  let lengthInstruction = "";
+  let minWords = "";
+
+  switch (length) {
+    case "Short":
+      lengthInstruction =
+        "เขียนแบบกระชับ (Concise) เน้นเนื้อหาสำคัญ ไม่เยิ่นเย้อ แต่ยังคงครบถ้วนตามโครงสร้าง SEO";
+      minWords = "ประมาณ 800 - 1,000";
+      break;
+    case "Long":
+      lengthInstruction =
+        "เขียนแบบเจาะลึกพิเศษ (In-depth Comprehensive Guide) ลงรายละเอียดทุกหัวข้อ มีตัวอย่างประกอบเยอะๆ";
+      minWords = "มากกว่า 2,500";
+      break;
+    case "Medium":
+    default:
+      lengthInstruction =
+        "เขียนแบบมาตรฐาน (Standard SEO Article) มีความ สมดุลระว่างความกระชับและรายละเอียด";
+      minWords = "ประมาณ 1,500 - 2,000";
+      break;
+  }
 
   const prompt = `
     คุณเป็นนักเขียนบทความ SEO มืออาชีพและผู้เชี่ยวชาญด้านอสังหาริมทรัพย์
-    หน้าที่ของคุณคือเขียนบทความคุณภาพสูง (High-Quality Long-form Content) ที่มีความยาวมากกว่า 2,000 คำ (ภาษาไทย) 
-    โดยเน้นการให้ข้อมูลเชิงลึกที่เป็นประโยชน์ต่อผู้อ่านและติดอันดับต้นๆ บน Google
+    หน้าที่ของคุณคือเขียนบทความคุณภาพสูง (High-Quality Content) ที่มีความยาว ${minWords} คำ (ภาษาไทย)
+    สไตล์การเขียน: ${lengthInstruction}
+    โดยเน้นการให้ข้อมูลที่เป็นประโยชน์ต่อผู้อ่านและติดอันดับต้นๆ บน Google
 
     รายละเอียดหัวข้อ:
     - Focus Keyword: ${keyword}
@@ -305,12 +330,13 @@ export async function generateBlogPostAction(
     5. FAQ Section: คำถามที่พบบ่อย 5-6 ข้อ (ต้องเขียนในรูปแบบ HTML <h3>Question</h3><p>Answer</p> ลงในส่วน content นี้ด้วย ห้ามใส่แค่ใน JSON)
     6. Conclusion: สรุปจบที่ทรงพลัง
     7. CTA (Call to Action): ออกแบบปุ่มหรือข้อความเชิญชวน 2-3 แบบ (เขียนในรูปแบบ HTML ให้สวยงาม)
+       - **สำคัญ:** หากมีหลายปุ่ม ให้ครอบด้วย \`<div class="flex flex-wrap gap-4 mt-8 mb-4">\` เพื่อให้ปุ่มมีระยะห่างที่สวยงาม ไม่ติดกัน
        - กรณีเป็นปุ่ม "ติดต่อเรา" หรือ "ขอคำปรึกษา" ให้ใช้ Link: <a href="#" class="contact-agent-trigger inline-block ..." >
        - กรณีเป็นปุ่ม "ดาวน์โหลด" หรือ "ดูรายละเอียด" ให้ใช้ Link: <a href="#" target="_blank" ...> (เพื่อให้นำไปใส่ลิ้งค์จริงทีหลัง)
        - ให้ใช้ Class ของ Tailwind CSS ในการตกแต่งปุ่มให้ดูพรีเมียม สวยงาม:
-         * ปุ่มหลัก: 'contact-agent-trigger inline-flex items-center justify-center px-8 py-4 text-base font-bold !text-white !no-underline transition-all duration-200 bg-linear-to-r from-blue-600 to-indigo-600 border border-transparent rounded-full hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg hover:shadow-xl hover:-translate-y-0.5'
-         * ปุ่มรอง: 'contact-agent-trigger inline-flex items-center justify-center px-8 py-4 text-base font-bold text-indigo-600 !no-underline transition-all duration-200 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 hover:shadow-md'
-         * แนะนำให้ใช้สี Gradient เช่น bg-linear-to-r from-violet-600 to-indigo-600 หรือ from-emerald-500 to-teal-500
+         * ปุ่มหลัก: 'contact-agent-trigger inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white transition-all duration-200 rounded-full hover:-translate-y-1 shadow-lg hover:shadow-xl'
+         * ปุ่มรอง: 'contact-agent-trigger cta-secondary inline-flex items-center justify-center px-8 py-4 text-base font-bold text-indigo-600 transition-all duration-200 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 hover:shadow-md'
+         * ไม่ต้องใส่ bg-gradient ใน class เพราะมี CSS global override ให้แล้วเพื่อความสวยงามที่แน่นอน
 
     คำสั่งพิเศษสำหรับรูปภาพ (สำคัญมาก):
     - ให้แทรก Placeholder สำหรับรูปภาพจำนวน 3-4 จุดกระจายทั่วบทความ
@@ -338,7 +364,7 @@ export async function generateBlogPostAction(
     }
 
     สำคัญ:
-    - เขียนเนื้อหาให้ละเอียดมากที่สุดเท่าที่จะทำได้เพื่อให้ถึงเป้าหมาย 2,000 คำ
+    - เขียนเนื้อหาให้ได้ตามเป้าหมาย ${minWords} คำ
     - ใช้ภาษาไทยที่ถูกต้องและสละสลวยตาม Tone ที่กำหนด
     - เนื้อหาต้องดูเป็นมืออาชีพและพรีเมียม
   `;
@@ -444,10 +470,27 @@ export async function generateBlogPostAction(
       }
     }
 
+    // Log success
+    await logAiUsage({
+      model: "gemini-pro-latest",
+      feature: "blog_generator",
+      status: "success",
+    });
+
     return blogData;
-  } catch (error) {
+  } catch (error: any) {
     console.error("AI Blog Generation Error:", error);
-    throw new Error("ไม่สามารถสร้างบทความด้วย AI ได้ในขณะนี้");
+
+    // Log error
+    await logAiUsage({
+      model: "gemini-pro-latest",
+      feature: "blog_generator",
+      status: "error",
+      errorMessage: error.message,
+    });
+
+    // Throw the actual error message so the client can see it (e.g. 404, 503)
+    throw new Error(error.message || "ไม่สามารถสร้างบทความด้วย AI ได้ในขณะนี้");
   }
 }
 
@@ -534,10 +577,10 @@ export async function refineBlogPostAction(
     const user = await getCurrentProfile();
     if (!user) return { success: false, error: "Unauthorized" };
 
-    // Use a lighter model for content geneation
     const model = genAI.getGenerativeModel({
-      model: "gemini-flash-latest",
+      model: "gemini-pro-latest",
     });
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
 
     let systemPrompt = "You are a professional content editor. ";
 
@@ -588,9 +631,23 @@ export async function refineBlogPostAction(
       .replace(/```/g, "")
       .trim();
 
+    await logAiUsage({
+      model: "gemini-pro-latest",
+      feature: "content_refiner",
+      status: "success",
+    });
+
     return { success: true, refinedContent };
   } catch (error: any) {
     console.error("Refine Content Error:", error);
+
+    const { logAiUsage } = await import("@/features/ai-monitor/actions"); // Lazy import if validation failed earlier
+    await logAiUsage({
+      model: "gemini-pro-latest",
+      feature: "content_refiner",
+      status: "error",
+      errorMessage: error.message,
+    });
 
     // Check for specific Google AI errors
     if (

@@ -37,6 +37,11 @@ export function BlogContentRefiner({
   const [refineType, setRefineType] = useState("grammar");
   const [customInstruction, setCustomInstruction] = useState("");
 
+  // Hide button if no content
+  if (!currentContent || currentContent.trim().length === 0) {
+    return null;
+  }
+
   const handleRefine = async () => {
     if (!currentContent) {
       toast.error("ไม่พบเนื้อหาที่ต้องการปรับปรุง");
