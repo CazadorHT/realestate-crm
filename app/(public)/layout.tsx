@@ -4,6 +4,7 @@ import { PublicNav } from "@/components/public/PublicNav";
 import { FloatingActionMenu } from "@/components/public/FloatingActionMenu";
 import { FloatingContactDial } from "@/components/public/FloatingContactDial";
 import { PublicFooter } from "@/components/public/PublicFooter";
+import { ChatWidget } from "@/components/chatbot/ChatWidget";
 
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
@@ -17,6 +18,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
       <CompareBar />
 
       <PublicFooter />
+      <ChatWidget />
     </>
   );
 }

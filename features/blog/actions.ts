@@ -472,7 +472,7 @@ export async function generateBlogPostAction(
 
     // Log success
     await logAiUsage({
-      model: "gemini-pro-latest",
+      model: "gemini-2.5-flash",
       feature: "blog_generator",
       status: "success",
     });
@@ -483,7 +483,7 @@ export async function generateBlogPostAction(
 
     // Log error
     await logAiUsage({
-      model: "gemini-pro-latest",
+      model: "gemini-2.5-flash",
       feature: "blog_generator",
       status: "error",
       errorMessage: error.message,
@@ -578,7 +578,7 @@ export async function refineBlogPostAction(
     if (!user) return { success: false, error: "Unauthorized" };
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-pro-latest",
+      model: "gemini-2.5-flash",
     });
     const { logAiUsage } = await import("@/features/ai-monitor/actions");
 
@@ -632,7 +632,7 @@ export async function refineBlogPostAction(
       .trim();
 
     await logAiUsage({
-      model: "gemini-pro-latest",
+      model: "gemini-2.5-flash",
       feature: "content_refiner",
       status: "success",
     });
@@ -643,7 +643,7 @@ export async function refineBlogPostAction(
 
     const { logAiUsage } = await import("@/features/ai-monitor/actions"); // Lazy import if validation failed earlier
     await logAiUsage({
-      model: "gemini-pro-latest",
+      model: "gemini-2.5-flash",
       feature: "content_refiner",
       status: "error",
       errorMessage: error.message,

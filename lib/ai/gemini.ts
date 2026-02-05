@@ -3,10 +3,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
-// ใช้ gemini-flash-latest เป็นรุ่นที่เสถียรที่สุดและมีโควต้าพร้อมใช้ในบัญชีนี้
-// Use gemini-pro-latest which is the valid Pro model alias in this environment
+// ใช้ gemini-2.5-flash เป็นรุ่นหลักที่รองรับในบัญชีนี้ (Updated)
 export const geminiModel = genAI
-  ? genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+  ? genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
   : null;
 
 export async function generateText(prompt: string): Promise<string> {

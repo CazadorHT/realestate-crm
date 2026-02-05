@@ -46,7 +46,7 @@ export function FloatingActionMenu() {
         const { data, error } = await supabase
           .from("profiles")
           .select(
-            "id, full_name, avatar_url, phone, line_id, facebook_url, whatsapp_id, wechat_id"
+            "id, full_name, avatar_url, phone, line_id, facebook_url, whatsapp_id, wechat_id",
           );
 
         if (error) {
@@ -86,7 +86,7 @@ export function FloatingActionMenu() {
   };
 
   return (
-    <div className="fixed bottom-24 lg:bottom-6 right-6 z-50 flex flex-col gap-3 items-end">
+    <div className="fixed bottom-6 right-6 z-30 flex flex-col gap-3 items-end">
       {/* Scroll To Top Button */}
       <div
         className={`transition-all duration-300 transform ${

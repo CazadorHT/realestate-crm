@@ -85,6 +85,15 @@ export interface GetPropertiesOptions {
   limit?: number;
   province?: string;
   district?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  propertyType?: string;
+  listingType?: "SALE" | "RENT"; // Abstract intent: Buy or Rent
+  q?: string; // General keyword search
+  bedrooms?: number;
+  bathrooms?: number;
+  minSize?: number;
+  maxSize?: number;
 }
 
 export async function getPublicProperties(options: GetPropertiesOptions = {}) {
@@ -157,21 +166,73 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       .limit(options.limit || 60);
   }
 
-  // Filter by Location (Exact Match)
-  if (options.province) {
-    // Note: Database stores values as is. Should ideally match case-insensitive or exact if normalized.
-    // Assuming exact match for now, or using ilike if we want flexibility.
-    // But supabase .eq is exact. Let's use simple .eq first.
-    // To handle URL slugs (e.g. "bangkok"), we might need to map them or use ilike.
-    // Let's assume params are passed correctly capitalized or we use ilike.
-    // Since this is "Public" and SEO, fetching via slug is common.
-    // But here we are filtering by column.
-    // Let's try .ilike just in case.
-    query = query.ilike("province", options.province);
+  // Filter by Location
+  if (options.district || options.province) {
+    const loc = (options.district || options.province || "").trim();
+    if (loc) {
+      query = query.or(
+        `district.ilike.%${loc}%,province.ilike.%${loc}%,popular_area.ilike.%${loc}%,subdistrict.ilike.%${loc}%`,
+      );
+    }
   }
 
-  if (options.district) {
-    query = query.ilike("district", options.district);
+  // Filter by Property Type
+  if (options.propertyType) {
+    query = query.ilike("property_type", `%${options.propertyType}%`);
+  }
+
+  // Filter by Price
+  if (options.minPrice) {
+    // If listingType is RENT, check rental_price. Else check price.
+    // Or check both if ambiguous?
+    // Chatbot usually implies intent.
+    if (options.listingType === "RENT") {
+      query = query.gte("rental_price", options.minPrice);
+    } else {
+      // Default to Sale Price if unspecified or explicitly SALE
+      query = query.gte("price", options.minPrice);
+    }
+  }
+
+  if (options.maxPrice) {
+    if (options.listingType === "RENT") {
+      query = query.lte("rental_price", options.maxPrice);
+    } else {
+      query = query.lte("price", options.maxPrice);
+    }
+  }
+
+  // Filter by Listing Type (Intent)
+  if (options.listingType) {
+    if (options.listingType === "SALE") {
+      query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+    } else if (options.listingType === "RENT") {
+      query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+    }
+  }
+
+  // Filter by Specs
+  if (options.bedrooms) {
+    query = query.gte("bedrooms", options.bedrooms);
+  }
+  if (options.bathrooms) {
+    query = query.gte("bathrooms", options.bathrooms);
+  }
+  if (options.minSize) {
+    query = query.gte("size_sqm", options.minSize);
+  }
+  if (options.maxSize) {
+    query = query.lte("size_sqm", options.maxSize);
+  }
+
+  // General Keyword Search
+  if (options.q) {
+    const searchTerm = `%${options.q}%`;
+    // We search in title and description using ilike
+    // For meta_keywords (array), we use 'cs' (contains)
+    query = query.or(
+      `title.ilike.${searchTerm},description.ilike.${searchTerm},meta_keywords.cs.{${options.q}}`,
+    );
   }
 
   const { data, error } = await query;

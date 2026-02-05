@@ -103,7 +103,7 @@ export function FloatingContactDial() {
 
   return (
     <div
-      className={`hidden md:flex fixed bottom-24 right-4 md:right-6 z-50 flex-col items-end gap-4 transition-all duration-500 transform ${
+      className={`hidden md:flex fixed bottom-44 right-4 md:right-6 z-40 flex-col items-end gap-4 transition-all duration-500 transform ${
         isVisible
           ? "translate-y-0 opacity-100"
           : "translate-y-10 opacity-0 pointer-events-none"

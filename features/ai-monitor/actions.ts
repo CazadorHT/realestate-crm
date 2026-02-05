@@ -25,10 +25,38 @@ export async function logAiUsage(input: AiLogInput) {
       error_message: input.errorMessage,
       user_id: user.id,
     });
+
+    // Lazy Cleanup: 10% chance to prune logs older than 30 days
+    // This prevents table bloat without needing a cron job
+    if (Math.random() < 0.1) {
+      // Don't await this, let it run in background
+      pruneAiLogs(30).catch(console.error);
+    }
   } catch (error) {
     console.error("Failed to log AI usage:", error);
     // Don't throw, we don't want to break the main feature if logging fails
   }
+}
+
+export async function pruneAiLogs(daysToKeep: number = 30) {
+  const supabase = await createClient();
+  // No auth check needed inside server action used by system,
+  // but if exposed to UI make sure to check admin role.
+
+  const dateThreshold = new Date();
+  dateThreshold.setDate(dateThreshold.getDate() - daysToKeep);
+
+  const { error } = await supabase
+    .from("ai_usage_logs")
+    .delete()
+    .lt("created_at", dateThreshold.toISOString());
+
+  if (error) {
+    console.error("Failed to prune AI logs:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
 }
 
 export type AiUsageStats = {
@@ -101,5 +129,95 @@ export async function getAiUsageStats(): Promise<AiUsageStats> {
     requestsLast24Hours: rpdCount || 0,
     limitRPM: limit,
     isRateLimited: false, // We can't really know if Supabase/Google blocked us unless we catch a 429 recently.
+  };
+}
+
+export type AiLogRecord = {
+  id: number;
+  created_at: string;
+  model: string;
+  feature: string;
+  status: "success" | "error";
+  error_message: string | null;
+  user?: {
+    full_name: string | null;
+    email: string | null;
+  };
+};
+
+export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
+  const supabase = await createClient();
+  const user = await getCurrentProfile();
+
+  if (!user) return [];
+
+  const { data } = await supabase
+    .from("ai_usage_logs")
+    .select(
+      `
+      id,
+      created_at,
+      model,
+      feature,
+      status,
+      error_message,
+      user:user_id (full_name, email)
+    `,
+    )
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  return (data as any) || [];
+}
+
+export type AiDashboardStats = {
+  totalRequests: number;
+  successRate: number;
+  chatbotUsage: number;
+  blogUsage: number;
+};
+
+export async function getAiDashboardStats(): Promise<AiDashboardStats> {
+  const supabase = await createClient();
+  const user = await getCurrentProfile();
+
+  if (!user) {
+    return {
+      totalRequests: 0,
+      successRate: 0,
+      chatbotUsage: 0,
+      blogUsage: 0,
+    };
+  }
+
+  // Get all logs for stats (might be heavy if lots of logs, in product prefer dedicated stat tables)
+  // For now, limiting to last 1000 for calc is reasonable for this MVP
+  const { data } = await supabase
+    .from("ai_usage_logs")
+    .select("feature, status")
+    .order("created_at", { ascending: false })
+    .limit(1000);
+
+  if (!data || data.length === 0) {
+    return {
+      totalRequests: 0,
+      successRate: 0,
+      chatbotUsage: 0,
+      blogUsage: 0,
+    };
+  }
+
+  const total = data.length;
+  const successCount = data.filter((d) => d.status === "success").length;
+  const chatbotCount = data.filter((d) => d.feature === "chatbot").length;
+  const blogCount = data.filter(
+    (d) => d.feature === "blog_generator" || d.feature === "content_refiner",
+  ).length;
+
+  return {
+    totalRequests: total, // Last 1000 only
+    successRate: Math.round((successCount / total) * 100),
+    chatbotUsage: chatbotCount,
+    blogUsage: blogCount,
   };
 }

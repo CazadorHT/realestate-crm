@@ -25,6 +25,7 @@ import {
   History,
   CalendarDays,
   MessageSquare,
+  Activity,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -145,6 +146,13 @@ export function SidebarNav({ role }: { role: UserRole }) {
       href: "/protected/profile",
       icon: UserCircle,
       active: pathname === "/protected/profile",
+    },
+    {
+      title: "AI Monitor",
+      href: "/protected/ai-monitor",
+      icon: Activity,
+      active: pathname?.startsWith("/protected/ai-monitor") ?? false,
+      roles: ["ADMIN", "AGENT"],
     },
     {
       title: "จัดการผู้ใช้",
