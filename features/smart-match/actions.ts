@@ -5,6 +5,7 @@ import { SearchCriteria, PropertyMatch } from "./types";
 import { calculateMatchScore } from "./matching";
 import { v4 as uuidv4 } from "uuid";
 import { Database } from "@/lib/database.types";
+import { getOfficePrice } from "@/lib/property-utils";
 
 type PropertyWithImages = Database["public"]["Tables"]["properties"]["Row"] & {
   property_images: Pick<
@@ -57,13 +58,13 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
   let query = supabase
     .from("properties")
     .select(
-      "id, slug, title, price, rental_price, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, property_images(*)",
+      "id, slug, title, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, property_images(*)",
     );
 
   if (criteria.purpose === "BUY" || criteria.purpose === "INVEST") {
-    query = query.eq("listing_type", "SALE");
+    query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
   } else if (criteria.purpose === "RENT") {
-    query = query.eq("listing_type", "RENT");
+    query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
   }
 
   // active properties only
@@ -101,11 +102,62 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
       commuteTime += Math.floor(Math.random() * 5) - 2;
       if (commuteTime < 10) commuteTime = 10;
 
+      // Select correct price based on purpose
+      let primaryPrice =
+        criteria.purpose === "RENT"
+          ? prop.rental_price || prop.original_rental_price
+          : prop.price || prop.original_price;
+      let secondaryPrice: number | undefined;
+      let isSqmPrice = false;
+
+      // Office-specific logic: Total vs SQM override using helper
+      const officePrice = getOfficePrice(prop);
+      if (officePrice?.isCalculated) {
+        primaryPrice = officePrice.totalPrice ?? null;
+        secondaryPrice = officePrice.sqmPrice || undefined;
+        isSqmPrice = false;
+      } else if (prop.property_type === "OFFICE_BUILDING" && !primaryPrice) {
+        // Fallback for office if we only have SQM but no size (can't calculate total)
+        const sqmPrice =
+          criteria.purpose === "RENT"
+            ? prop.rent_price_per_sqm
+            : prop.price_per_sqm;
+        if (sqmPrice) {
+          primaryPrice = sqmPrice;
+          isSqmPrice = true;
+        }
+      }
+
+      // Secondary fallback if primary is still missing (Cross-purpose fallback)
+      if (!primaryPrice) {
+        primaryPrice =
+          criteria.purpose === "RENT"
+            ? prop.price || prop.original_price
+            : prop.rental_price || prop.original_rental_price;
+      }
+
+      // Strictly for actual discounts (Current < Original)
+      let originalDisplayPrice: number | undefined;
+      const rawOriginal =
+        criteria.purpose === "RENT"
+          ? prop.original_rental_price
+          : prop.original_price;
+
+      // Disable strikethrough for offices as original total price often gets mis-compared with current sqm price
+      if (prop.property_type !== "OFFICE_BUILDING") {
+        if (rawOriginal && primaryPrice && rawOriginal > primaryPrice) {
+          originalDisplayPrice = rawOriginal;
+        }
+      }
+
       return {
         id: prop.id,
         slug: prop.slug,
         title: prop.title,
-        price: prop.price || prop.rental_price,
+        price: primaryPrice || 0,
+        original_price: originalDisplayPrice,
+        secondary_price: secondaryPrice,
+        is_sqm_price: isSqmPrice,
         image_url: imageUrl,
         match_score: score,
         match_reasons: reasons,

@@ -3,7 +3,7 @@
 import { Clock } from "lucide-react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import { PRICE_FORMATTER } from "@/lib/property-utils";
+import { PRICE_FORMATTER, getOfficePrice } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
 
 export function PropertyCardFooter({
@@ -273,8 +273,21 @@ export function PropertyCardFooter({
 
 // Helpers
 function getDisplayPrice(property: PropertyCardProps) {
-  const salePrice = property.price ?? undefined;
-  const rentPrice = property.rental_price ?? undefined;
+  // Office price override
+  const officePrice = getOfficePrice(property as any);
+
+  const salePrice =
+    property.price ??
+    (officePrice?.isCalculated &&
+    officePrice.sqmPrice === property.price_per_sqm
+      ? officePrice.totalPrice
+      : undefined);
+  const rentPrice =
+    property.rental_price ??
+    (officePrice?.isCalculated &&
+    officePrice.sqmPrice === property.rent_price_per_sqm
+      ? officePrice.totalPrice
+      : undefined);
 
   let value: number | undefined;
   let isRent = false;

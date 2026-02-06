@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Phone, MessageCircle } from "lucide-react";
+import Link from "next/link";
 import type { FollowUpLead } from "@/features/dashboard/queries";
 
 interface FollowUpInsightsProps {
@@ -17,8 +18,8 @@ export function FollowUpInsights({ leads = [] }: FollowUpInsightsProps) {
           ต้องติดตาม (Follow Up)
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="p-0">
+        <div className="space-y-3 max-h-[250px] overflow-y-auto px-6 py-4">
           {leads.length === 0 ? (
             <p className="text-xs text-muted-foreground">
               ไม่มีรายการค้างติดตาม
@@ -44,8 +45,11 @@ export function FollowUpInsights({ leads = [] }: FollowUpInsightsProps) {
                   size="icon"
                   variant="ghost"
                   className="h-8 w-8 text-muted-foreground hover:text-primary"
+                  asChild
                 >
-                  <MessageCircle className="h-4 w-4" />
+                  <Link href={`/protected/leads/${lead.id}`}>
+                    <MessageCircle className="h-4 w-4" />
+                  </Link>
                 </Button>
               </div>
             ))

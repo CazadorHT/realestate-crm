@@ -34,6 +34,8 @@ export type PropertyCardProps = {
   size_sqm?: number | null;
   parking_slots?: number | null;
   floor?: number | null;
+  price_per_sqm?: number | null;
+  rent_price_per_sqm?: number | null;
   original_price?: number | null;
   original_rental_price?: number | null;
   verified?: boolean;

@@ -27,6 +27,7 @@ import {
   MessageSquare,
   Activity,
   Layout,
+  Sparkles,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -120,6 +121,13 @@ export function SidebarNav({ role }: { role: UserRole }) {
       active: pathname?.startsWith("/protected/blogs") ?? false,
     },
     {
+      title: "บริการ (Services)",
+      href: "/protected/services",
+      icon: Layout,
+      active: pathname?.startsWith("/protected/services") ?? false,
+      roles: ["ADMIN", "AGENT"],
+    },
+    {
       title: "คำถามที่พบบ่อย",
       href: "/protected/faqs",
       icon: CircleHelp,
@@ -148,19 +156,27 @@ export function SidebarNav({ role }: { role: UserRole }) {
       icon: UserCircle,
       active: pathname === "/protected/profile",
     },
-    {
-      title: "บริการ (Services)",
-      href: "/protected/services",
-      icon: Layout,
-      active: pathname?.startsWith("/protected/services") ?? false,
-      roles: ["ADMIN", "AGENT"],
-    },
+
     {
       title: "AI Monitor",
       href: "/protected/ai-monitor",
       icon: Activity,
       active: pathname?.startsWith("/protected/ai-monitor") ?? false,
       roles: ["ADMIN", "AGENT"],
+    },
+    {
+      title: "ตั้งค่าเว็บไซต์",
+      href: "/protected/settings",
+      icon: Settings,
+      active: pathname === "/protected/settings",
+      roles: ["ADMIN", "AGENT"],
+    },
+    {
+      title: "SmartMatch Config",
+      href: "/protected/settings/smart-match",
+      icon: Sparkles,
+      active: pathname?.startsWith("/protected/settings/smart-match") ?? false,
+      roles: ["ADMIN"],
     },
     {
       title: "จัดการผู้ใช้",

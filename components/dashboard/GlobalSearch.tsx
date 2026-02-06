@@ -85,13 +85,18 @@ export function GlobalSearch() {
         </kbd>
       </Button>
 
-      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
+      <CommandDialog
+        open={open}
+        onOpenChange={setOpen}
+        shouldFilter={false}
+        className="sm:max-w-lg"
+      >
         <CommandInput
           placeholder="พิมพ์เพื่อค้นหา..."
           value={query}
           onValueChange={setQuery}
         />
-        <CommandList>
+        <CommandList className="max-h-[300px]">
           {loading && (
             <div className="py-6 text-center text-sm">กำลังค้นหา...</div>
           )}

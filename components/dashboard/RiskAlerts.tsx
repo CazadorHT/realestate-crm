@@ -15,8 +15,8 @@ export function RiskAlerts({ deals = [] }: RiskAlertsProps) {
           ดีลเสี่ยง / ค้างนาน
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="p-0">
+        <div className="space-y-3 max-h-[200px] overflow-y-auto px-6 py-4">
           {deals.length === 0 ? (
             <p className="text-xs text-muted-foreground">
               ไม่มีดีลที่มีความเสี่ยง

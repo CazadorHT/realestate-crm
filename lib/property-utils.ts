@@ -14,6 +14,17 @@ export const PROPERTY_TYPE_LABELS: Record<string, string> = {
   OTHER: "อื่นๆ",
 };
 
+export const PROPERTY_TYPE_TH: Record<string, string> = {
+  HOUSE: "บ้าน",
+  CONDO: "คอนโด",
+  TOWNHOME: "ทาวน์โฮม",
+  LAND: "ที่ดิน",
+  COMMERCIAL_BUILDING: "อาคารพาณิชย์",
+  OFFICE_BUILDING: "อาคารสำนักงาน/ออฟฟิศ",
+  WAREHOUSE: "โกดัง/โรงงาน",
+  OTHER: "อื่นๆ",
+};
+
 /**
  * Get display label for property type
  */
@@ -111,7 +122,7 @@ export const PRICE_FORMATTER = new Intl.NumberFormat("th-TH", {
 
 export function getSafeText(
   value: string | null | undefined,
-  fallback: string
+  fallback: string,
 ): string {
   return value && value.trim() ? value : fallback;
 }
@@ -140,5 +151,43 @@ export function getPriceDisplayConfig(property: {
       ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
       : 0,
     priceLabel: isRent ? "/เดือน" : "",
+  };
+}
+
+/**
+ * Enhanced Office Price Helper
+ * Calculates total price from SQM price if total is missing
+ */
+export function getOfficePrice(property: {
+  price?: number | null;
+  rental_price?: number | null;
+  price_per_sqm?: number | null;
+  rent_price_per_sqm?: number | null;
+  size_sqm?: number | null;
+  listing_type?: string | null;
+  property_type?: string | null;
+}) {
+  if (property.property_type !== "OFFICE_BUILDING") return null;
+
+  const isRent =
+    property.listing_type === "RENT" ||
+    property.listing_type === "SALE_AND_RENT";
+  const mainPrice = isRent ? property.rental_price : property.price;
+  const sqmPrice = isRent
+    ? property.rent_price_per_sqm
+    : property.price_per_sqm;
+
+  if (!mainPrice && sqmPrice && property.size_sqm) {
+    return {
+      totalPrice: sqmPrice * property.size_sqm,
+      sqmPrice: sqmPrice,
+      isCalculated: true,
+    };
+  }
+
+  return {
+    totalPrice: mainPrice,
+    sqmPrice: sqmPrice,
+    isCalculated: false,
   };
 }

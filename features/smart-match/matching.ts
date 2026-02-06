@@ -42,25 +42,63 @@ export function calculateMatchScore(
   const scoreBreakdown: ScoreBreakdown[] = [];
 
   // 1. Price Matching (40%)
-  const price = property.price || property.rental_price || 0;
-  let pricePoints = 0;
-  if (criteria.budgetMin && criteria.budgetMax) {
-    if (price >= criteria.budgetMin && price <= criteria.budgetMax) {
-      pricePoints = 40;
-      reasons.push("งบไม่เกิน ราคาเหมาะสม");
-    } else if (price <= criteria.budgetMax * 1.15) {
-      pricePoints = 30; // Close enough (within 15%)
-      reasons.push("ราคาใกล้เคียงงบประมาณ");
-    }
-  } else if (criteria.budgetMax) {
-    if (price <= criteria.budgetMax) {
-      pricePoints = 40;
-      reasons.push("งบไม่เกิน ราคาเหมาะสม");
-    } else if (price <= criteria.budgetMax * 1.1) {
-      pricePoints = 25;
-      reasons.push("เกินงบเล็กน้อยแต่ทำเลดีเยี่ยม");
+  let price =
+    criteria.purpose === "RENT"
+      ? property.rental_price || property.original_rental_price
+      : property.price || property.original_price;
+
+  // Fallback for offices if main price is missing
+  if (!price && property.property_type === "OFFICE_BUILDING") {
+    const sqmPrice =
+      criteria.purpose === "RENT"
+        ? property.rent_price_per_sqm
+        : property.price_per_sqm;
+
+    if (sqmPrice && property.size_sqm) {
+      // Estimate total price: sqm_price * size
+      price = sqmPrice * property.size_sqm;
+    } else {
+      // If we only have sqm price and no size, don't use it for budget matching
+      // as it's not a total price and will cause false positives (e.g. 1,300 matching 15k-50k budget)
+      price = 0;
     }
   }
+
+  // Secondary fallback (Rent <-> Sale cross-check)
+  if (!price) {
+    price =
+      criteria.purpose === "RENT"
+        ? property.price || property.rental_price
+        : property.rental_price || property.price;
+  }
+
+  const effectivePrice = price || 0;
+  let pricePoints = 0;
+
+  // Only award points if price is > 0
+  if (effectivePrice > 0) {
+    if (criteria.budgetMin && criteria.budgetMax) {
+      if (
+        effectivePrice >= criteria.budgetMin &&
+        effectivePrice <= criteria.budgetMax
+      ) {
+        pricePoints = 40;
+        reasons.push("งบไม่เกิน ราคาเหมาะสม");
+      } else if (effectivePrice <= criteria.budgetMax * 1.15) {
+        pricePoints = 30; // Close enough (within 15%)
+        reasons.push("ราคาใกล้เคียงงบประมาณ");
+      }
+    } else if (criteria.budgetMax) {
+      if (effectivePrice <= criteria.budgetMax) {
+        pricePoints = 40;
+        reasons.push("งบไม่เกิน ราคาเหมาะสม");
+      } else if (effectivePrice <= criteria.budgetMax * 1.1) {
+        pricePoints = 25;
+        reasons.push("เกินงบเล็กน้อยแต่ทำเลดีเยี่ยม");
+      }
+    }
+  }
+
   if (pricePoints > 0) {
     score += pricePoints;
     scoreBreakdown.push({ label: "งบประมาณ", points: pricePoints });

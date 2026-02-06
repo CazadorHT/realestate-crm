@@ -48,7 +48,7 @@ export default async function EditOwnerPage({ params }: PageProps) {
     TOWNHOME: "ทาวน์โฮม",
     LAND: "ที่ดิน",
     COMMERCIAL_BUILDING: "อาคารพาณิชย์",
-    OFFICE_BUILDING: "สำนักงาน",
+    OFFICE_BUILDING: "สำนักงาน/ออฟฟิศ",
     WAREHOUSE: "โกดัง",
     OTHER: "อื่นๆ",
   };

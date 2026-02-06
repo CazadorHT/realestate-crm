@@ -9,17 +9,11 @@ import {
 } from "@/components/public/KeySellingPoints";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { cn } from "@/lib/utils";
-
-const PROPERTY_TYPE_TH: Record<string, string> = {
-  HOUSE: "บ้าน",
-  CONDO: "คอนโด",
-  TOWNHOME: "ทาวน์โฮม",
-  LAND: "ที่ดิน",
-  COMMERCIAL_BUILDING: "อาคารพาณิชย์",
-  OFFICE_BUILDING: "อาคารสำนักงาน/ออฟฟิศ",
-  WAREHOUSE: "โกดัง/โรงงาน",
-  OTHER: "อื่นๆ",
-};
+import {
+  PROPERTY_TYPE_TH,
+  getOfficePrice,
+  getTypeColor,
+} from "@/lib/property-utils";
 
 interface PropertyHeaderProps {
   property: {
@@ -30,6 +24,9 @@ interface PropertyHeaderProps {
     original_price: number | null;
     rental_price: number | null;
     original_rental_price: number | null;
+    rent_price_per_sqm?: number | null;
+    price_per_sqm?: number | null;
+    size_sqm?: number | null;
     min_contract_months: number | null;
     slug?: string | null;
     property_type?: string | null;
@@ -50,6 +47,10 @@ export function PropertyHeader({
   className,
   hideBreadcrumbs = false,
 }: PropertyHeaderProps) {
+  // Office price override
+  const officePrice = getOfficePrice(property);
+  const typeColor = getTypeColor(property.property_type ?? null);
+
   const formatPrice = (val: number | null) =>
     val
       ? new Intl.NumberFormat("th-TH", {
@@ -65,7 +66,15 @@ export function PropertyHeader({
     label: string,
     isRent: boolean,
   ) => {
-    const displayPrice = price ?? originalPrice;
+    // If office and we calculated a price, use it
+    const effectivePrice =
+      officePrice?.isCalculated &&
+      ((isRent && officePrice.sqmPrice === property.rent_price_per_sqm) ||
+        (!isRent && officePrice.sqmPrice === property.price_per_sqm))
+        ? officePrice.totalPrice
+        : price;
+
+    const displayPrice = effectivePrice ?? originalPrice;
 
     if (
       displayPrice === null ||
@@ -123,16 +132,23 @@ export function PropertyHeader({
     }
 
     return (
-      <div className="flex items-center gap-2">
-        {label && (
-          <span className="text-sm text-slate-500 font-medium">{label}</span>
-        )}
-        <span className="text-xl md:text-2xl font-bold text-slate-900">
-          {formatPrice(displayPrice)}
-          {isRent && (
-            <span className="text-sm font-normal text-slate-500">/เดือน</span>
+      <div className="flex flex-col md:items-end gap-0.5">
+        <div className="flex items-center gap-2">
+          {label && (
+            <span className="text-sm text-slate-500 font-medium">{label}</span>
           )}
-        </span>
+          <span className="text-xl md:text-2xl font-bold text-slate-900">
+            {formatPrice(displayPrice)}
+            {isRent && (
+              <span className="text-sm font-normal text-slate-500">/เดือน</span>
+            )}
+          </span>
+        </div>
+        {officePrice?.isCalculated && (
+          <span className="text-[10px] text-slate-400 font-medium">
+            (฿ {officePrice.sqmPrice?.toLocaleString()} / ตร.ม.)
+          </span>
+        )}
       </div>
     );
   };
@@ -170,8 +186,6 @@ export function PropertyHeader({
                         },
                       ]
                     : []),
-                  // District omitted for now as we don't have direct district filter,
-                  // and province filter + popular area is the main flow.
                   ...(property.popular_area
                     ? [
                         {
@@ -192,7 +206,7 @@ export function PropertyHeader({
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-3 grow min-w-0 max-w-[900px] ">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge
                   className={`rounded-full px-8 py-2 text-md font-medium  ${
                     property.listing_type === "SALE"
@@ -202,6 +216,20 @@ export function PropertyHeader({
                 >
                   {property.listing_type === "SALE" ? "ขาย" : "เช่า"}
                 </Badge>
+
+                {property.property_type && (
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "rounded-full px-4 py-2 text-md font-medium border-transparent shadow-sm",
+                      typeColor.bg,
+                      typeColor.text,
+                    )}
+                  >
+                    {PROPERTY_TYPE_TH[property.property_type] ||
+                      property.property_type}
+                  </Badge>
+                )}
               </div>
 
               <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-tight line-clamp-2">

@@ -15,8 +15,8 @@ export function AgendaList({ agenda = [] }: AgendaListProps) {
           วาระวันนี้ (Today's Agenda)
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="relative border-l border-muted ml-2 space-y-6">
+      <CardContent className="p-0">
+        <div className="relative border-l border-muted ml-2 space-y-6 max-h-[250px] overflow-y-auto px-6 py-4">
           {agenda.length === 0 ? (
             <div className="text-center text-sm text-muted-foreground py-4">
               ไม่มีวาระงานวันนี้
@@ -27,8 +27,8 @@ export function AgendaList({ agenda = [] }: AgendaListProps) {
                 event.priority === "high"
                   ? "bg-red-500 ring-red-100"
                   : event.priority === "medium"
-                  ? "bg-yellow-500 ring-yellow-100"
-                  : "bg-blue-500 ring-blue-100";
+                    ? "bg-yellow-500 ring-yellow-100"
+                    : "bg-blue-500 ring-blue-100";
 
               return (
                 <div key={event.id} className="ml-4 relative">

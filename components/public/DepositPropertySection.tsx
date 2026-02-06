@@ -321,7 +321,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
                   },
                   {
                     value: "COMMERCIAL",
-                    label: "สำนักงาน",
+                    label: "สำนักงาน/ออฟฟิศ",
                     icon: "🏢",
                     color: "bg-violet-600 hover:bg-violet-700",
                     border: "hover:border-violet-300",

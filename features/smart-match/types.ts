@@ -22,6 +22,9 @@ export interface PropertyMatch {
   slug?: string | null;
   title: string;
   price: number;
+  original_price?: number;
+  secondary_price?: number;
+  is_sqm_price?: boolean;
   image_url: string;
   match_score: number;
   match_reasons: string[];

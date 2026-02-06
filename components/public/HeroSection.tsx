@@ -12,8 +12,28 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ScrollDownButton } from "@/components/public/ScrollDownButton";
+import { useEffect, useState } from "react";
 
 export function HeroSection() {
+  const [showSmartMatch, setShowSmartMatch] = useState(true);
+
+  useEffect(() => {
+    // Fetch setting on client side
+    async function checkSetting() {
+      try {
+        const response = await fetch("/api/site-settings/smart-match");
+        if (response.ok) {
+          const data = await response.json();
+          setShowSmartMatch(data.enabled);
+        }
+      } catch (error) {
+        // Default to showing if error
+        setShowSmartMatch(true);
+      }
+    }
+    checkSetting();
+  }, []);
+
   const handleScrollToDeposit = (e: React.MouseEvent) => {
     e.preventDefault();
     const element = document.getElementById("deposit-section");
@@ -46,9 +66,15 @@ export function HeroSection() {
        "
       >
         <div className="px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 xl:gap-16 items-center">
-            <div className="space-y-4 sm:space-y-5 md:space-y-6 animate-in fade-in-0 duration-700 slide-in-from-bottom-4 lg:col-span-8">
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-blue-50 backdrop-blur-sm text-blue-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium border border-blue-100 shadow-sm">
+          <div
+            className={`grid grid-cols-1 ${showSmartMatch ? "lg:grid-cols-12" : ""} gap-6 sm:gap-8 lg:gap-12 xl:gap-16 items-center`}
+          >
+            <div
+              className={`space-y-4 sm:space-y-5 md:space-y-6 animate-in fade-in-0 duration-700 slide-in-from-bottom-4 ${showSmartMatch ? "lg:col-span-8" : "max-w-4xl mx-auto text-center"}`}
+            >
+              <div
+                className={`inline-flex items-center gap-1.5 sm:gap-2 bg-blue-50 backdrop-blur-sm text-blue-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium border border-blue-100 shadow-sm ${!showSmartMatch ? "mx-auto" : ""}`}
+              >
                 <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span>แพลตฟอร์มอสังหาฯ ที่คัดสรรเพื่อคุณโดยเฉพาะ</span>
               </div>
@@ -64,7 +90,9 @@ export function HeroSection() {
                 ในทำเลศักยภาพ พร้อมบริการระดับมืออาชีพครบวงจร
               </h2>
 
-              <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 pt-2">
+              <div
+                className={`flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 pt-2 ${!showSmartMatch ? "justify-center" : ""}`}
+              >
                 <Link href="/properties">
                   <Button
                     size="lg"
@@ -85,7 +113,9 @@ export function HeroSection() {
                 </Button>
               </div>
 
-              <div className="flex flex-wrap gap-3 sm:gap-4 md:gap-6 pt-4 sm:pt-6 border-t border-white/10">
+              <div
+                className={`flex flex-wrap gap-3 sm:gap-4 md:gap-6 pt-4 sm:pt-6 border-t border-white/10 ${!showSmartMatch ? "justify-center" : ""}`}
+              >
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-400 drop-shadow" />
                   <span className="text-xs sm:text-sm text-white/90 drop-shadow-sm">
@@ -107,9 +137,11 @@ export function HeroSection() {
               </div>
             </div>
 
-            <div className="lg:col-span-4  w-full max-w-md mx-auto lg:max-w-none relative z-20">
-              <SmartMatchWizard />
-            </div>
+            {showSmartMatch && (
+              <div className="lg:col-span-4  w-full max-w-md mx-auto lg:max-w-none relative z-20">
+                <SmartMatchWizard />
+              </div>
+            )}
           </div>
         </div>
       </section>

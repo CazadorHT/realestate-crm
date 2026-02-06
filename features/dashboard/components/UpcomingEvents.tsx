@@ -19,51 +19,53 @@ export function UpcomingEvents({ events }: UpcomingEventsProps) {
         <CardTitle className="text-sm font-medium">นัดหมายเร็วๆ นี้</CardTitle>
         <Calendar className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
-      <CardContent className="space-y-4 pt-4">
-        {events.length === 0 ? (
-          <div className="text-center py-6 text-sm text-muted-foreground">
-            ไม่มีนัดหมายใน 7 วันนี้
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {events.slice(0, 5).map((event) => (
-              <div
-                key={event.id}
-                className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0"
-              >
+      <CardContent className="pt-4">
+        <div className="max-h-[250px] overflow-y-auto space-y-4">
+          {events.length === 0 ? (
+            <div className="text-center py-3 text-sm text-muted-foreground">
+              ไม่มีนัดหมายใน 7 วันนี้
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {events.slice(0, 5).map((event) => (
                 <div
-                  className={`mt-1 p-1.5 rounded-full shrink-0 ${
-                    event.type === "viewing"
-                      ? "bg-blue-100 text-blue-600"
-                      : event.type === "contract_end"
-                        ? "bg-red-100 text-red-600"
-                        : "bg-green-100 text-green-600"
-                  }`}
+                  key={event.id}
+                  className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0"
                 >
-                  {event.type === "viewing" && <Video className="h-3 w-3" />}
-                  {event.type === "contract_end" && (
-                    <FileText className="h-3 w-3" />
-                  )}
-                  {event.type === "deal_closing" && (
-                    <Home className="h-3 w-3" />
-                  )}
-                </div>
-                <div className="space-y-1 overflow-hidden">
-                  <p className="text-sm font-medium leading-none truncate block">
-                    {event.title}
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="font-medium text-slate-700">
-                      {format(new Date(event.start), "d MMM", { locale: th })}
-                    </span>
-                    <span>•</span>
-                    <span>{format(new Date(event.start), "HH:mm")}</span>
+                  <div
+                    className={`mt-1 p-1.5 rounded-full shrink-0 ${
+                      event.type === "viewing"
+                        ? "bg-blue-100 text-blue-600"
+                        : event.type === "contract_end"
+                          ? "bg-red-100 text-red-600"
+                          : "bg-green-100 text-green-600"
+                    }`}
+                  >
+                    {event.type === "viewing" && <Video className="h-3 w-3" />}
+                    {event.type === "contract_end" && (
+                      <FileText className="h-3 w-3" />
+                    )}
+                    {event.type === "deal_closing" && (
+                      <Home className="h-3 w-3" />
+                    )}
+                  </div>
+                  <div className="space-y-1 overflow-hidden">
+                    <p className="text-sm font-medium leading-none truncate block">
+                      {event.title}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="font-medium text-slate-700">
+                        {format(new Date(event.start), "d MMM", { locale: th })}
+                      </span>
+                      <span>•</span>
+                      <span>{format(new Date(event.start), "HH:mm")}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="pt-2">
           <Link
