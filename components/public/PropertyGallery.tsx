@@ -92,25 +92,25 @@ const ImageWithFallback = ({
         className={cn("transition-transform duration-500", className)}
         priority={priority}
         sizes={sizes}
-        onLoad={() => {
-          console.log(
-            JSON.stringify({
-              message: `[next-image] Successfully loaded`,
-              id: img.id,
-              url: img.image_url,
-            }),
-          );
-        }}
-        onError={() => {
-          console.error(
-            JSON.stringify({
-              message: `[next-image] FAILED to load`,
-              id: img.id,
-              url: img.image_url,
-            }),
-          );
-          onImageError(img.id);
-        }}
+        // onLoad={() => {
+        //   console.log(
+        //     JSON.stringify({
+        //       message: `[next-image] Successfully loaded`,
+        //       id: img.id,
+        //       url: img.image_url,
+        //     }),
+        //   );
+        // }}
+        // onError={() => {
+        //   console.error(
+        //     JSON.stringify({
+        //       message: `[next-image] FAILED to load`,
+        //       id: img.id,
+        //       url: img.image_url,
+        //     }),
+        //   );
+        //   onImageError(img.id);
+        // }}
       />
     </div>
   );
@@ -124,9 +124,9 @@ export function PropertyGallery({
   petFriendly,
 }: PropertyGalleryProps) {
   // Debug log for incoming images
-  console.log(
-    `[PropertyGallery] Received ${images?.length} images for "${title}"`,
-  );
+  // console.log(
+  //   `[PropertyGallery] Received ${images?.length} images for "${title}"`,
+  // );
 
   const [open, setOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -379,6 +379,7 @@ export function PropertyGallery({
 
           <button
             onClick={() => setOpen(false)}
+            aria-label="Close gallery"
             className="absolute top-4 right-4 p-2.5 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full hover:bg-white/20 transition-all z-50 shadow-lg"
           >
             <X className="h-6 w-6" />
@@ -407,6 +408,7 @@ export function PropertyGallery({
                   e.stopPropagation();
                   handlePrev();
                 }}
+                aria-label="Previous image"
                 className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50"
               >
                 <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
@@ -416,6 +418,7 @@ export function PropertyGallery({
                   e.stopPropagation();
                   handleNext();
                 }}
+                aria-label="Next image"
                 className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50"
               >
                 <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />

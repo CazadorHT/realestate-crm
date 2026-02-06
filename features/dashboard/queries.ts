@@ -451,13 +451,17 @@ export async function getRecentNotifications(
     // Actually logAudit for assignments uses 'property.assign' or 'lead.assign'
     Promise.resolve({ data: [] }), // Placeholder if handled in logs
 
-    // Contract Expiry
+    // Contract Expiry - Check rental contracts expiring in next 30 days
     checkPref("contract_expiry")
       ? supabase
-          .from("properties")
-          .select("id, title, rental_price, status")
-          .not("status", "in", '("SOLD", "RENTED")')
-          .limit(10) // Just a sample check for expiry logic
+          .from("rental_contracts")
+          .select(
+            "id, deal_id, end_date, start_date, rent_price, deals(property_id, properties(title))",
+          )
+          .eq("status", "ACTIVE")
+          .not("end_date", "is", null)
+          .gte("end_date", new Date().toISOString())
+          .order("end_date", { ascending: true })
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -559,6 +563,36 @@ export async function getRecentNotifications(
       read: false,
       createdAt: new Date(profile.created_at).getTime(),
     });
+  });
+
+  // 5. Contract Expiry (Contracts expiring in 30 days)
+  const expiringContracts = expiringContractsResult.data || [];
+  const now = new Date();
+  const thirtyDaysFromNow = new Date(now);
+  thirtyDaysFromNow.setDate(now.getDate() + 30);
+
+  expiringContracts.forEach((contract: any) => {
+    const endDate = new Date(contract.end_date);
+    const daysUntilExpiry = Math.ceil(
+      (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    // Only show contracts expiring within 30 days
+    if (daysUntilExpiry > 0 && daysUntilExpiry <= 30) {
+      const propertyTitle = contract.deals?.properties?.title || "ทรัพย์สิน";
+      const type = daysUntilExpiry <= 7 ? "alert" : "warning";
+
+      notifications.push({
+        id: `contract-${contract.id}`,
+        message: `สัญญาใกล้หมดอายุ: ${propertyTitle} (อีก ${daysUntilExpiry} วัน)`,
+        type,
+        time: `${daysUntilExpiry} วันข้างหน้า`,
+        read: false,
+        href: `/protected/deals/${contract.deal_id}`,
+        createdAt: endDate.getTime(), // Sort by expiry date
+        category: "contract_expiry",
+      });
+    }
   });
 
   // Sort by newest first

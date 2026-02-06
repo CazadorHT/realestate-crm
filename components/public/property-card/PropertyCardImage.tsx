@@ -41,9 +41,9 @@ export function PropertyCardImage({
     <div className="relative aspect-4/3 sm:aspect-4/3 md:aspect-square h-auto sm:h-auto md:h-[300px] w-full overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5">
       {property.image_url ? (
         <>
-          {console.log(`[PropertyCardImage] Loading: ${property.title}`, {
+          {/* {console.log(`[PropertyCardImage] Loading: ${property.title}`, {
             url: property.image_url,
-          })}
+          })} */}
           <Image
             src={property.image_url}
             alt={`${

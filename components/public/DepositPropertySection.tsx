@@ -286,9 +286,9 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
           name="propertyType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-slate-700 font-semibold">
+              <label className="text-sm font-semibold text-slate-700 block mb-2">
                 ประเภททรัพย์ <span className="text-red-500">*</span>
-              </FormLabel>
+              </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
                 {[
                   {

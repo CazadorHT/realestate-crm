@@ -59,6 +59,7 @@ export function CreateContractDialog() {
 
   const form = useForm<ContractFormInput>({
     resolver: zodResolver(contractFormSchema) as unknown as Resolver<any>,
+    mode: "onChange", // Enable real-time validation and dirty tracking
     defaultValues: {
       start_date: todayStr,
       end_date: defaultEndDate,
@@ -177,29 +178,31 @@ export function CreateContractDialog() {
                                     picked.original_rental_price)
                                   : (picked.price ?? picked.original_price);
 
-                              if (price !== undefined && price !== null) {
-                                form.setValue("rent_price", price);
+                              const newDefaults: any = {
+                                deal_id: val,
+                                start_date: todayStr,
+                                end_date: defaultEndDate,
+                                rent_price: price ?? 0,
+                                lease_term_months: 12,
+                                deposit_amount: 0,
+                                advance_payment_amount: 0,
+                              };
 
-                                // For RENT, set default multiples
-                                if (picked.deal_type === "RENT") {
-                                  form.setValue("deposit_amount", price * 2);
-                                  form.setValue(
-                                    "advance_payment_amount",
-                                    price * 1,
-                                  );
-                                }
+                              if (picked.deal_type === "RENT") {
+                                newDefaults.deposit_amount = price
+                                  ? price * 2
+                                  : 0;
+                                newDefaults.advance_payment_amount = price ?? 0;
+                                newDefaults.lease_term_months =
+                                  picked.duration_months || 12;
+                              } else if (picked.deal_type === "SALE") {
+                                newDefaults.lease_term_months = 1;
+                                newDefaults.deposit_amount = 0;
+                                newDefaults.advance_payment_amount = 0;
                               }
 
-                              if (picked.deal_type === "SALE") {
-                                form.setValue("lease_term_months", 1);
-                                form.setValue("deposit_amount", 0);
-                                form.setValue("advance_payment_amount", 0);
-                              } else {
-                                form.setValue(
-                                  "lease_term_months",
-                                  picked.duration_months || 12,
-                                );
-                              }
+                              // Reset form with new defaults (clears dirty state)
+                              form.reset(newDefaults);
                             }
                           }}
                         />
@@ -305,7 +308,7 @@ export function CreateContractDialog() {
                         <FormControl>
                           <DatePicker
                             value={field.value}
-                            onChange={field.onChange}
+                            onChange={(val) => field.onChange(val)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -326,7 +329,7 @@ export function CreateContractDialog() {
                         <FormControl>
                           <DatePicker
                             value={field.value}
-                            onChange={field.onChange}
+                            onChange={(val) => field.onChange(val)}
                             placeholder={
                               isSale ? "วว/ดด/ปปปป" : "คำนวณอัตโนมัติ"
                             }
@@ -350,7 +353,7 @@ export function CreateContractDialog() {
                         <FormControl>
                           <PriceInput
                             value={field.value}
-                            onChange={field.onChange}
+                            onChange={(val) => field.onChange(val)}
                           />
                         </FormControl>
                         {(() => {

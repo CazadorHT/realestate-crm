@@ -1,6 +1,8 @@
 ﻿import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
+export const dynamic = "force-dynamic";
+
 export default function PublicPropertiesPage() {
   return (
     <>

@@ -78,6 +78,7 @@ export function QuickInfoSection({
             render={({ field, fieldState }) => (
               <FormItem data-field="title" className="space-y-2">
                 <label
+                  htmlFor={field.name}
                   className={`font-medium text-sm uppercase tracking-wider ${
                     fieldState.error ? "text-red-700" : "text-slate-700"
                   }`}
@@ -116,7 +117,10 @@ export function QuickInfoSection({
             name="popular_area"
             render={({ field }) => (
               <FormItem className="flex flex-col space-y-2 ">
-                <label className="font-medium text-sm uppercase tracking-wider text-slate-700">
+                <label
+                  htmlFor={field.name}
+                  className="font-medium text-sm uppercase tracking-wider text-slate-700"
+                >
                   ระบุย่านทำเล
                 </label>
 
@@ -126,9 +130,13 @@ export function QuickInfoSection({
                     onValueChange={(v) =>
                       field.onChange(v === "none" ? undefined : v)
                     }
+                    name={field.name}
                   >
                     <FormControl>
-                      <SelectTrigger className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full">
+                      <SelectTrigger
+                        id={field.name}
+                        className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full"
+                      >
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                           <MapPin className="h-5 w-5" />
                         </div>

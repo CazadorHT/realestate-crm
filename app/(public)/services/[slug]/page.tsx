@@ -14,12 +14,23 @@ import { Metadata } from "next";
 
 export const revalidate = 60;
 
+// Generate static params for all services
+export async function generateStaticParams() {
+  const { getServices } = await import("@/features/services/actions");
+  const services = await getServices();
+
+  return services.map((service) => ({
+    slug: service.slug,
+  }));
+}
+
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 async function ServiceDetail({ params }: PageProps) {
-  const service = await getServiceBySlug(params.slug);
+  const { slug } = await params;
+  const service = await getServiceBySlug(slug);
 
   if (!service) {
     notFound();
@@ -164,7 +175,8 @@ async function ServiceDetail({ params }: PageProps) {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const service = await getServiceBySlug(params.slug);
+  const { slug } = await params;
+  const service = await getServiceBySlug(slug);
   if (!service) return { title: "Service Not Found" };
 
   return {

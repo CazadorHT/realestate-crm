@@ -9,7 +9,10 @@ export const contractFormSchema = z.object({
   start_date: z
     .string()
     .refine((val) => !isNaN(Date.parse(val)), "Invalid Date"),
-  end_date: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid Date"),
+  end_date: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), "Invalid Date")
+    .optional(),
   rent_price: z.coerce.number().min(0, "ราคาค่าเช่าต้องไม่ต่ำกว่า 0"),
   deposit_amount: z.coerce
     .number()
@@ -20,7 +23,7 @@ export const contractFormSchema = z.object({
     .min(0, "เงินล่วงหน้าต้องไม่ต่ำกว่า 0")
     .optional(),
   lease_term_months: z.coerce.number().min(1, "ระยะเวลาสัญญาขั้นต่ำ 1 เดือน"),
-   payment_cycle: z.string().optional(),
+  payment_cycle: z.string().optional(),
   other_terms: z.string().optional(),
   status: z.enum(["DRAFT", "ACTIVE", "TERMINATED"]).optional(),
 });

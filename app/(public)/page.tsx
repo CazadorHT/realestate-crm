@@ -33,7 +33,7 @@ export default function LandingPage() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     name: "Real Estate CRM",
-    image: "https://your-domain.com/images/logo.png", // Replace with actual domain/logo
+    image: `${process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.com"}/images/logo.png`, // Replace with actual domain/logo
     description: "แพลตฟอร์มบริหารงานขายอสังหาริมทรัพย์ครบวงจร",
     address: {
       "@type": "PostalAddress",
@@ -47,7 +47,7 @@ export default function LandingPage() {
       latitude: 13.7563,
       longitude: 100.5018,
     },
-    url: "https://your-domain.com", // Replace with actual domain
+    url: process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.com", // Replace with actual domain
     priceRange: "฿฿฿",
     openingHoursSpecification: [
       {

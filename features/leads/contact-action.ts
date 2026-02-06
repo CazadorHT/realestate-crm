@@ -22,10 +22,30 @@ export type ContactFormState = {
   fields?: Record<string, string>;
 };
 
+import { rateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
+
+const limiter = rateLimit({
+  interval: 60 * 1000, // 60 seconds
+  uniqueTokenPerInterval: 500, // Max 500 users per second
+});
+
 export async function submitContactFormAction(
   prevState: ContactFormState,
   formData: FormData,
 ): Promise<ContactFormState> {
+  const ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
+
+  try {
+    // 3 requests per minute per IP
+    await limiter.check(3, ip);
+  } catch {
+    return {
+      success: false,
+      message: "⏳ คุณส่งข้อความเร็วเกินไป กรุณารอสักครู่",
+    };
+  }
+
   const validatedFields = contactSchema.safeParse({
     name: formData.get("name"),
     phone: formData.get("phone"),

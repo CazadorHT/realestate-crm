@@ -135,16 +135,15 @@ export function RentalContractSection({
     mode: "onChange",
     defaultValues: {
       deal_id: dealId,
-      start_date: contract?.start_date ?? today,
-      end_date: contract?.end_date ?? undefined,
-      rent_price: contract?.rent_price ?? defaultRent ?? undefined,
-      deposit_amount: contract?.deposit_amount ?? undefined,
-      lease_term_months:
-        contract?.lease_term_months ?? defaultLeaseTerm ?? undefined,
-      payment_cycle: contract?.payment_cycle ?? undefined,
-      other_terms: contract?.other_terms ?? undefined,
-      advance_payment_amount: contract?.advance_payment_amount ?? undefined,
-      status: contract?.status ?? "DRAFT",
+      start_date: today,
+      end_date: undefined,
+      rent_price: undefined,
+      deposit_amount: undefined,
+      lease_term_months: undefined,
+      payment_cycle: undefined,
+      other_terms: undefined,
+      advance_payment_amount: undefined,
+      status: "DRAFT",
     },
   });
 
@@ -166,7 +165,7 @@ export function RentalContractSection({
         const newEndString = end.toISOString().split("T")[0];
 
         if (currentEnd !== newEndString) {
-          form.setValue("end_date", newEndString);
+          form.setValue("end_date", newEndString, { shouldDirty: false });
         }
       }
     }
@@ -192,7 +191,7 @@ export function RentalContractSection({
         (initialRent ? initialRent * 1 : undefined),
       status: contract?.status ?? "DRAFT",
     });
-  }, [contract, dealId]); // Removed defaultRent, defaultLeaseTerm to prevent reset on parent re-render
+  }, [contract?.id]); // ONLY reset when contract ID changes, ignore dealId/defaultRent/defaultLeaseTerm changes
 
   const handleSubmit = async (vals: ContractFormInput) => {
     try {
@@ -304,7 +303,11 @@ export function RentalContractSection({
                       </Label>
                       <DatePicker
                         value={form.watch("start_date")}
-                        onChange={(date) => form.setValue("start_date", date)}
+                        onChange={(date) =>
+                          form.setValue("start_date", date, {
+                            shouldDirty: true,
+                          })
+                        }
                       />
                     </div>
 
@@ -317,7 +320,9 @@ export function RentalContractSection({
                       </Label>
                       <DatePicker
                         value={form.watch("end_date")}
-                        onChange={(date) => form.setValue("end_date", date)}
+                        onChange={(date) =>
+                          form.setValue("end_date", date, { shouldDirty: true })
+                        }
                         placeholder="เลือกวันที่"
                       />
                     </div>
@@ -331,13 +336,21 @@ export function RentalContractSection({
                         /* Only show Deposit/Advance calculator for RENT */
                         <PriceInput
                           value={form.watch("rent_price")}
-                          onChange={(val) => form.setValue("rent_price", val)}
+                          onChange={(val) =>
+                            form.setValue("rent_price", val, {
+                              shouldDirty: true,
+                            })
+                          }
                         />
                       )}
                       {dealType !== "RENT" && (
                         <PriceInput
                           value={form.watch("rent_price")}
-                          onChange={(val) => form.setValue("rent_price", val)}
+                          onChange={(val) =>
+                            form.setValue("rent_price", val, {
+                              shouldDirty: true,
+                            })
+                          }
                         />
                       )}
                     </div>
@@ -356,6 +369,7 @@ export function RentalContractSection({
                                     form.setValue(
                                       "deposit_amount",
                                       m * rentPrice,
+                                      { shouldDirty: true },
                                     )
                                   }
                                   className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
@@ -374,7 +388,9 @@ export function RentalContractSection({
                         <PriceInput
                           value={form.watch("deposit_amount") ?? 0}
                           onChange={(val) =>
-                            form.setValue("deposit_amount", val)
+                            form.setValue("deposit_amount", val, {
+                              shouldDirty: true,
+                            })
                           }
                         />
                       </div>
@@ -394,6 +410,7 @@ export function RentalContractSection({
                                     form.setValue(
                                       "advance_payment_amount",
                                       m * rentPrice,
+                                      { shouldDirty: true },
                                     )
                                   }
                                   className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
@@ -412,7 +429,9 @@ export function RentalContractSection({
                         <PriceInput
                           value={form.watch("advance_payment_amount") ?? 0}
                           onChange={(val) =>
-                            form.setValue("advance_payment_amount", val)
+                            form.setValue("advance_payment_amount", val, {
+                              shouldDirty: true,
+                            })
                           }
                         />
                       </div>
@@ -440,7 +459,7 @@ export function RentalContractSection({
                       <Select
                         value={form.watch("status")}
                         onValueChange={(val: any) =>
-                          form.setValue("status", val)
+                          form.setValue("status", val, { shouldDirty: true })
                         }
                       >
                         <SelectTrigger>
@@ -543,9 +562,6 @@ export function RentalContractSection({
                     </Button>
                     <Button
                       type="submit"
-                      disabled={
-                        !form.formState.isValid || !form.formState.isDirty
-                      }
                       className="disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                     >
                       บันทึก

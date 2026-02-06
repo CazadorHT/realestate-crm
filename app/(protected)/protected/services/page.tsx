@@ -36,7 +36,7 @@ async function ServicesContent() {
                 Add New Service
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-7xl! max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Service</DialogTitle>
               </DialogHeader>

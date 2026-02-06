@@ -71,6 +71,12 @@ export async function getServices(includeInactive = false) {
 }
 
 export async function getServiceBySlug(slug: string) {
+  // Use mock data if enabled (for development/demo)
+  if (USE_MOCK_SERVICES) {
+    const mockService = MOCK_SERVICES.find((s) => s.slug === slug);
+    return mockService || null;
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("services")

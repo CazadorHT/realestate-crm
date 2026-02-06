@@ -118,6 +118,7 @@ export function ContactForm() {
               name="name"
               required
               placeholder="กรอกชื่อของคุณ"
+              aria-label="ชื่อ-นามสกุล"
               className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
             />
           </div>
@@ -135,6 +136,7 @@ export function ContactForm() {
               type="tel"
               required
               placeholder="0XX-XXX-XXXX"
+              aria-label="เบอร์โทรศัพท์"
               className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
             />
           </div>
@@ -153,6 +155,7 @@ export function ContactForm() {
               name="email"
               type="email"
               placeholder="your.email@example.com (ถ้ามี)"
+              aria-label="อีเมล"
               className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
             />
           </div>
@@ -168,6 +171,7 @@ export function ContactForm() {
               id="lineId"
               name="lineId"
               placeholder="ไอดีไลน์ของคุณ (ถ้ามี)"
+              aria-label="Line ID"
               className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
             />
           </div>
@@ -185,6 +189,7 @@ export function ContactForm() {
             name="message"
             placeholder="บอกรายละเอียดความต้องการของคุณ (ถ้ามี)..."
             rows={4}
+            aria-label="รายละเอียดเพิ่มเติม"
             className="resize-none pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
           />
         </div>
@@ -199,6 +204,7 @@ export function ContactForm() {
       <Button
         type="submit"
         disabled={isPending}
+        aria-label="ส่งข้อความติดต่อ"
         className="w-full h-12 text-base font-semibold shadow-lg shadow-blue-500/20 bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all active:scale-[0.98]"
       >
         {isPending ? (

@@ -122,20 +122,20 @@ export default async function PublicPropertyDetailPage(props: {
   });
 
   // Debug logs to help identify why images might be missing
-  console.log(
-    `[SlugPage] Rendering property: ${data.id} (${slug})`,
-    JSON.stringify({
-      foundImages: images.length,
-      rawImages: rawData.property_images?.map((i: any) => ({
-        id: i.id,
-        url: i.image_url,
-        path: i.storage_path,
-      })),
-    }),
-  );
-  if (images.length > 0) {
-    console.log(`[SlugPage] Normalized First Image: ${images[0].image_url}`);
-  }
+  // console.log(
+  //   `[SlugPage] Rendering property: ${data.id} (${slug})`,
+  //   JSON.stringify({
+  //     foundImages: images.length,
+  //     rawImages: rawData.property_images?.map((i: any) => ({
+  //       id: i.id,
+  //       url: i.image_url,
+  //       path: i.storage_path,
+  //     })),
+  //   }),
+  // );
+  // if (images.length > 0) {
+  //   console.log(`[SlugPage] Normalized First Image: ${images[0].image_url}`);
+  // }
 
   const agent = data.assigned_agent;
 
