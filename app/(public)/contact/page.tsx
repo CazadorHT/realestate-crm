@@ -1,7 +1,9 @@
-import { Metadata } from "next";
+"use client";
+
 import { ContactForm } from "@/components/public/ContactForm";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Send } from "lucide-react";
+import { Mail } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 // Modular components
 import { ContactHero } from "@/components/public/contact/ContactHero";
@@ -9,28 +11,8 @@ import { ContactInfoCards } from "@/components/public/contact/ContactInfoCards";
 import { ContactSidebar } from "@/components/public/contact/ContactSidebar";
 import { ContactFAQ } from "@/components/public/contact/ContactFAQ";
 
-export const metadata: Metadata = {
-  title: "ติดต่อเรา | Real Estate CRM - ปรึกษาผู้เชี่ยวชาญด้านอสังหาริมทรัพย์",
-  description:
-    "ติดต่อทีมผู้เชี่ยวชาญของเรา พร้อมให้คำปรึกษาด้านอสังหาริมทรัพย์ บ้าน คอนโด สำนักงานออฟฟิศ ตอบกลับภายใน 24 ชั่วโมง",
-  keywords: [
-    "ติดต่อ",
-    "ปรึกษา",
-    "อสังหาริมทรัพย์",
-    "Real Estate",
-    "บ้าน",
-    "คอนโด",
-    "สำนักงานออฟฟิศ",
-  ],
-  openGraph: {
-    title: "ติดต่อเรา | Real Estate CRM",
-    description:
-      "ปรึกษาผู้เชี่ยวชาญด้านอสังหาริมทรัพย์ ตอบกลับภายใน 24 ชั่วโมง",
-    type: "website",
-  },
-};
-
 export default function ContactPage() {
+  const { t } = useLanguage();
   return (
     <main className="min-h-screen bg-slate-50 relative overflow-hidden">
       {/* Background Decorations */}
@@ -56,10 +38,10 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-                      ส่งข้อความถึงเรา
+                      {t("contact.form_title")}
                     </h2>
                     <p className="text-slate-600 text-lg">
-                      กรอกข้อมูลด้านล่าง ทีมงานจะติดต่อกลับภายใน 24 ชั่วโมง
+                      {t("contact.form_subtitle")}
                     </p>
                   </div>
                 </div>

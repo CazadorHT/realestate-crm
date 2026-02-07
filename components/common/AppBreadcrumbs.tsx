@@ -3,48 +3,26 @@
 import { usePathname } from "next/navigation";
 import { Breadcrumb, BreadcrumbItem } from "@/components/ui/breadcrumb";
 import { useMemo } from "react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const routeLabels: Record<string, string> = {
   // Common
-  home: "หน้าแรก",
-  search: "ค้นหา",
-  about: "เกี่ยวกับเรา",
-  contact: "ติดต่อเรา",
-  blog: "บทความ",
-  blogs: "บทความ",
-  category: "หมวดหมู่",
-  tags: "แท็ก",
+  home: "breadcrumb.home",
+  search: "breadcrumb.search",
+  about: "breadcrumb.about",
+  contact: "breadcrumb.contact",
+  blog: "breadcrumb.blog",
+  blogs: "breadcrumb.blog",
+  services: "breadcrumb.services",
 
   // Public Properties
-  properties: "โครงการและทรัพย์สิน",
-  rent: "เช่า",
-  sale: "ขาย",
+  properties: "breadcrumb.properties",
+  rent: "breadcrumb.rent",
+  sale: "breadcrumb.sale",
 
-  // Auth
-  auth: "เข้าสู่ระบบ",
-  login: "ลงชื่อเข้าใช้",
-  register: "ลงทะเบียน",
-
-  // CRM / Protected
-  protected: "ระบบจัดการ",
-  admin: "ผู้ดูแลระบบ",
-  dashboard: "แดชบอร์ด",
-  calendar: "ปฏิทิน",
-  contracts: "สัญญา",
-  deals: "ดีล",
-  documents: "เอกสาร",
-  faqs: "คำถามที่พบบ่อย",
-  leads: "ลูกค้ามุ่งหวัง",
-  owners: "เจ้าของทรัพย์",
-  partners: "พาร์ทเนอร์",
-  profile: "โปรไฟล์",
-  settings: "ตั้งค่า",
-  users: "ผู้ใช้งาน",
-  roles: "บทบาท",
-  new: "เพิ่มใหม่",
-  edit: "แก้ไข",
-  details: "รายละเอียด",
-  view: "ดูข้อมูล",
+  // CRM / Protected (Fallback to nav if breadcrumb section doesn't have it)
+  dashboard: "nav.dashboard",
+  leads: "nav.leads",
 };
 
 interface AppBreadcrumbsProps {
@@ -61,6 +39,7 @@ export function AppBreadcrumbs({
   items: customItems,
 }: AppBreadcrumbsProps) {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   const breadcrumbs = useMemo(() => {
     if (customItems) return customItems;
@@ -73,7 +52,7 @@ export function AppBreadcrumbs({
     // Add Home if requested
     if (showHome) {
       items.push({
-        label: routeLabels["home"],
+        label: t("breadcrumb.home"),
         href: "/",
       });
     }
@@ -91,11 +70,12 @@ export function AppBreadcrumbs({
       currentHref += `/${segment}`;
 
       // Try to find a label in the map, otherwise use the capitalized segment
-      const label =
-        routeLabels[segment.toLowerCase()] ||
-        decodeURIComponent(segment)
-          .replace(/-/g, " ")
-          .replace(/\b\w/g, (l) => l.toUpperCase());
+      const key = routeLabels[segment.toLowerCase()];
+      const label = key
+        ? t(key)
+        : decodeURIComponent(segment)
+            .replace(/-/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase());
 
       items.push({
         label,
@@ -104,7 +84,7 @@ export function AppBreadcrumbs({
     });
 
     return items;
-  }, [pathname, showHome, customItems]);
+  }, [pathname, showHome, customItems, t]);
 
   // Schema.org for SEO
   const schemaData = useMemo(() => {

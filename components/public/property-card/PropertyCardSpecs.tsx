@@ -2,12 +2,15 @@
 
 import { BedDouble, Bath, Car, Expand } from "lucide-react";
 import type { PropertyCardProps } from "../PropertyCard";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function PropertyCardSpecs({
   property,
 }: {
   property: PropertyCardProps;
 }) {
+  const { t } = useLanguage();
+
   return (
     <div className="flex flex-wrap items-center text-xs text-slate-600 gap-x-3 sm:gap-x-3.5 md:gap-x-4 gap-y-1 sm:gap-y-1.5 md:gap-y-2 mt-auto">
       <div className="flex items-center gap-1 sm:gap-1 md:gap-1.5">
@@ -49,10 +52,7 @@ export function PropertyCardSpecs({
           {property.size_sqm || "-"}
           <small className="text-[10px] md:text-[12px]">
             {" "}
-            ม.
-            <small className="text-[8px] md:text-[10px] font-medium relative top-[-0.2em] ml-0.5">
-              2
-            </small>
+            {t("common.sqm")}
           </small>
         </span>
       </div>

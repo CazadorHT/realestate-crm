@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { searchPropertiesAction } from "@/features/smart-match/actions";
 import {
   getSmartMatchConfig,
@@ -32,35 +33,48 @@ import {
 export type QuizStep = 1 | 1.5 | 1.7 | 2 | 2.5 | 3 | 4 | 9;
 
 export function useSmartMatchWizard() {
+  let languageContext;
+  try {
+    languageContext = useLanguage();
+  } catch (e) {
+    // Fallback for SSR or if used outside provider (though it should be inside)
+    languageContext = {
+      t: (k: string) => k,
+      language: "th" as const,
+      setLanguage: () => {},
+    };
+  }
+  const { t } = languageContext;
+
   const [step, setStep] = useState<QuizStep>(1);
   const [purpose, setPurpose] = useState<SearchPurpose>("BUY");
   const [selectedBudget, setSelectedBudget] = useState<{
     min: number;
     max: number;
   } | null>(null);
-  const [area, setArea] = useState<string>("");
-  const [sessionId, setSessionId] = useState<string>("");
-  const [matches, setMatches] = useState<PropertyMatch[]>([]);
-  const [popularAreas, setPopularAreas] = useState<string[]>([]);
-  const [nearTransit, setNearTransit] = useState<boolean>(false);
-  const [propertyType, setPropertyType] = useState<PropertyType | "">("");
-  const [isOfficeMode, setIsOfficeMode] = useState(false);
+  const [propertyType, setPropertyType] = useState<PropertyType | null>(null);
   const [officeSize, setOfficeSize] = useState<{
     min: number;
     max: number;
   } | null>(null);
-
-  // Config from database
+  const [area, setArea] = useState("");
+  const [nearTransit, setNearTransit] = useState<boolean | null>(null);
+  const [matches, setMatches] = useState<PropertyMatch[]>([]);
+  const [sessionId, setSessionId] = useState("");
+  const [isOfficeMode, setIsOfficeMode] = useState(false);
   const [configLoading, setConfigLoading] = useState(true);
-  const [buyBudgetRanges, setBuyBudgetRanges] = useState<BudgetRange[]>([]);
-  const [rentBudgetRanges, setRentBudgetRanges] = useState<BudgetRange[]>([]);
+
+  // Initial data from constants (Source of Truth)
+  const [buyBudgetRanges, setBuyBudgetRanges] =
+    useState<BudgetRange[]>(DEFAULT_BUY_RANGES);
+  const [rentBudgetRanges, setRentBudgetRanges] =
+    useState<BudgetRange[]>(DEFAULT_RENT_RANGES);
   const [propertyTypes, setPropertyTypes] = useState<PropertyTypeOption[]>([]);
   const [officeSizes, setOfficeSizes] = useState<OfficeSizeOption[]>([]);
   const [settings, setSettings] =
     useState<SmartMatchSettings>(DEFAULT_SETTINGS);
-
-  // Inventory State
-  const [availablePurposes, setAvailablePurposes] = useState<string[]>([]);
+  const [popularAreas, setPopularAreas] = useState<string[]>([]);
+  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
   const [availablePropertyTypes, setAvailablePropertyTypes] = useState<
     string[]
   >([]);
@@ -70,13 +84,8 @@ export function useSmartMatchWizard() {
   const [availableBudgetIds, setAvailableBudgetIds] = useState<string[]>([]);
   const [availableTransitOptions, setAvailableTransitOptions] = useState<
     string[]
-  >([]); // Added new state
-  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
-
-  // Load initial purpose availability
-  useEffect(() => {
-    checkPurposeAvailability().then(setAvailablePurposes).catch(console.error);
-  }, []);
+  >([]);
+  const [availablePurposes, setAvailablePurposes] = useState<string[]>([]);
 
   // Load property type availability based on purpose
   useEffect(() => {
@@ -152,7 +161,7 @@ export function useSmartMatchWizard() {
         propertyType: propertyType || undefined,
         officeSize: officeSize || undefined,
         budget: selectedBudget || undefined,
-        nearTransit: nearTransit || undefined,
+        nearTransit: nearTransit === null ? undefined : nearTransit,
       })
         .then(setAvailableLocations)
         .catch(console.error);
@@ -164,8 +173,46 @@ export function useSmartMatchWizard() {
     async function loadConfig() {
       try {
         const config = await getSmartMatchConfig();
-        setBuyBudgetRanges(config.buyBudgetRanges);
-        setRentBudgetRanges(config.rentBudgetRanges);
+
+        // If DB has custom ranges, we use them, but we prioritize the new default values
+        // for standard IDs (rent_1, buy_1, etc.) as requested by user
+        if (config.buyBudgetRanges.length > 0) {
+          setBuyBudgetRanges((prev) => {
+            const dbMap = new Map(config.buyBudgetRanges.map((r) => [r.id, r]));
+            return prev.map((p) => {
+              const dbItem = dbMap.get(p.id);
+              if (dbItem) {
+                // Keep default label/min/max but use DB's sort/active status
+                return {
+                  ...p,
+                  sort_order: dbItem.sort_order,
+                  is_active: dbItem.is_active,
+                };
+              }
+              return p;
+            });
+          });
+        }
+
+        if (config.rentBudgetRanges.length > 0) {
+          setRentBudgetRanges((prev) => {
+            const dbMap = new Map(
+              config.rentBudgetRanges.map((r) => [r.id, r]),
+            );
+            return prev.map((p) => {
+              const dbItem = dbMap.get(p.id);
+              if (dbItem) {
+                return {
+                  ...p,
+                  sort_order: dbItem.sort_order,
+                  is_active: dbItem.is_active,
+                };
+              }
+              return p;
+            });
+          });
+        }
+
         setPropertyTypes(config.propertyTypes);
         setOfficeSizes(config.officeSizes || []);
         setSettings(config.settings);
@@ -188,14 +235,24 @@ export function useSmartMatchWizard() {
         if (data.length > 0) {
           setPopularAreas(data);
         } else {
-          setPopularAreas(["อ่อนนุช", "บางนา", "ลาดพร้าว", "พระราม 9"]);
+          setPopularAreas([
+            t("search.locations.on_nut"),
+            t("search.locations.bangna"),
+            t("search.locations.lat_phrao"),
+            t("search.locations.rama_9"),
+          ]);
         }
       } catch (e) {
-        setPopularAreas(["อ่อนนุช", "บางนา", "ลาดพร้าว", "พระราม 9"]);
+        setPopularAreas([
+          t("search.locations.on_nut"),
+          t("search.locations.bangna"),
+          t("search.locations.lat_phrao"),
+          t("search.locations.rama_9"),
+        ]);
       }
     }
     loadAreas();
-  }, []);
+  }, [t]);
 
   const handleBack = () => {
     if (step === 1.5) setStep(1);
@@ -235,7 +292,7 @@ export function useSmartMatchWizard() {
         budgetMin: min,
         budgetMax: max,
         area,
-        nearTransit,
+        nearTransit: nearTransit === null ? undefined : nearTransit,
         propertyType:
           propertyType || (isOfficeMode ? "OFFICE_BUILDING" : undefined),
       });
@@ -245,7 +302,7 @@ export function useSmartMatchWizard() {
 
       setTimeout(() => setStep(9), 1500);
     } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการค้นหา กรุณาลองใหม่");
+      toast.error(t("smart_match.search_error"));
       setStep(1);
     }
   };
@@ -255,7 +312,7 @@ export function useSmartMatchWizard() {
     setMatches([]);
     setOfficeSize(null);
     setSelectedBudget(null);
-    setPropertyType("");
+    setPropertyType(null);
     setIsOfficeMode(false);
   };
 

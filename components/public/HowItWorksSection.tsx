@@ -1,3 +1,5 @@
+"use client";
+
 import type { LucideIcon } from "lucide-react";
 import {
   Search,
@@ -7,6 +9,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { SectionBackground } from "./SectionBackground";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const STEP_TONES = {
   blue: {
@@ -43,41 +46,42 @@ type StepItem = {
   tone: StepTone;
 };
 
-const STEPS: StepItem[] = [
-  {
-    step: "1",
-    icon: Search,
-    title: "ค้นหาบ้าน คอนโด สำนักงานออฟฟิศ",
-    desc: "เลือกทำเลและประเภททรัพย์สินที่ต้องการ ไม่ว่าจะเป็น บ้านเดี่ยว คอนโดมิเนียม ทาวน์โฮม หรือสำนักงานออฟฟิศ ระบบคัดกรองให้อัตโนมัติ",
-    cta: "เริ่มค้นหาทรัพย์",
-    tone: "blue",
-  },
-  {
-    step: "2",
-    icon: MapPin,
-    title: "นัดชมทรัพย์จริง",
-    desc: "ผู้เชี่ยวชาญด้านอสังหาริมทรัพย์ติดต่อกลับภายใน 24 ชม. พาชมบ้าน-คอนโด พร้อมให้คำปรึกษาฟรี",
-    cta: "นัดชมฟรี",
-    tone: "purple",
-  },
-  {
-    step: "3",
-    icon: CheckCircle2,
-    title: "ปิดดีลและโอนกรรมสิทธิ์",
-    desc: "ดูแลทุกขั้นตอนจนปิดการซื้อ-ขาย-เช่า ตรวจสอบเอกสาร ดำเนินการโอนกรรมสิทธิ์ให้ครบถ้วน",
-    cta: "เริ่มกระบวนการ",
-    tone: "green",
-  },
-];
-
 export function HowItWorksSection() {
+  const { t } = useLanguage();
+
+  const STEPS: StepItem[] = [
+    {
+      step: "1",
+      icon: Search,
+      title: t("home.how_it_works.step1_title").replace(/^\d\.\s*/, ""),
+      desc: t("home.how_it_works.step1_desc"),
+      cta: t("home.hero.cta_buy"),
+      tone: "blue",
+    },
+    {
+      step: "2",
+      icon: MapPin,
+      title: t("home.how_it_works.step2_title").replace(/^\d\.\s*/, ""),
+      desc: t("home.how_it_works.step2_desc"),
+      cta: t("common.free"),
+      tone: "purple",
+    },
+    {
+      step: "3",
+      icon: CheckCircle2,
+      title: t("home.how_it_works.step3_title").replace(/^\d\.\s*/, ""),
+      desc: t("home.how_it_works.step3_desc"),
+      cta: t("common.verified_100"),
+      tone: "green",
+    },
+  ];
+
   // Schema.org HowTo for SEO
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    name: "วิธีค้นหาและซื้อบ้าน คอนโด ที่ดิน อสังหาริมทรัพย์",
-    description:
-      "3 ขั้นตอนง่ายๆ ในการค้นหา ชม และซื้อบ้านเดี่ยว คอนโดมิเนียม ที่ดิน และอสังหาริมทรัพย์ทุกประเภท",
+    name: t("home.how_it_works.subtitle"),
+    description: t("home.how_it_works.description"),
     step: STEPS.map((step, index) => ({
       "@type": "HowToStep",
       position: index + 1,
@@ -108,25 +112,29 @@ export function HowItWorksSection() {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-blue-50 to-purple-50 border border-blue-100">
             <Sparkles className="w-4 h-4 text-blue-600" />
             <span className="text-sm font-bold text-blue-700">
-              ง่ายเพียง 3 ขั้นตอน
+              {t("home.how_it_works.title")}
             </span>
           </div>
 
           <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-            วิธีค้นหาและซื้อ
-            <br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
-              บ้าน คอนโด สำนักงานออฟฟิศ
-            </span>
+            {t("home.how_it_works.subtitle")
+              .split(" ")
+              .map((word, i) => (
+                <span
+                  key={i}
+                  className={
+                    i >= 2
+                      ? "text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600"
+                      : ""
+                  }
+                >
+                  {word} {i === 1 && <br />}
+                </span>
+              ))}
           </h2>
 
           <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">
-            3 ขั้นตอนง่ายๆ ที่จะนำคุณไปสู่
-            <span className="font-semibold text-slate-900">
-              {" "}
-              บ้านเดี่ยว คอนโดมิเนียม หรือสำนักงานออฟฟิศ
-            </span>{" "}
-            ในฝัน
+            {t("home.how_it_works.description")}
           </p>
         </div>
 
@@ -142,7 +150,7 @@ export function HowItWorksSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 relative">
             {STEPS.map((item, idx) => {
-              const t = STEP_TONES[item.tone];
+              const tone = STEP_TONES[item.tone];
 
               return (
                 <div
@@ -155,17 +163,17 @@ export function HowItWorksSection() {
                   <div className="bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 shadow-lg border border-slate-200 hover:border-slate-300 hover:shadow-2xl transition-all hover:-translate-y-2 duration-500 relative overflow-hidden">
                     {/* Step Number Badge */}
                     <div
-                      className={`absolute -top-1 -left-1 w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-xl md:rounded-2xl flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl shadow-xl ${t.badge} group-hover:scale-110 transition-transform duration-300`}
+                      className={`absolute -top-1 -left-1 w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-xl md:rounded-2xl flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl shadow-xl ${tone.badge} group-hover:scale-110 transition-transform duration-300`}
                     >
                       {item.step}
                     </div>
 
                     {/* Icon */}
                     <div
-                      className={`w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 ${t.iconWrap} group-hover:scale-110 group-hover:rotate-3`}
+                      className={`w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 ${tone.iconWrap} group-hover:scale-110 group-hover:rotate-3`}
                     >
                       <item.icon
-                        className={`h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 ${t.icon}`}
+                        className={`h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 ${tone.icon}`}
                       />
                     </div>
 
@@ -179,7 +187,7 @@ export function HowItWorksSection() {
 
                     {/* Step-Specific CTA */}
                     <div
-                      className={`mt-4 text-sm font-bold flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ${t.cta}`}
+                      className={`mt-4 text-sm font-bold flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ${tone.cta}`}
                     >
                       {item.cta}{" "}
                       <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -187,7 +195,7 @@ export function HowItWorksSection() {
 
                     {/* Decorative gradient overlay */}
                     <div
-                      className={`absolute top-0 right-0 w-32 h-32 bg-linear-to-br ${t.badge.replace(
+                      className={`absolute top-0 right-0 w-32 h-32 bg-linear-to-br ${tone.badge.replace(
                         "bg-linear-to-r",
                         "bg-linear-to-br",
                       )} opacity-0 group-hover:opacity-5 rounded-bl-full transition-opacity duration-500`}
@@ -206,10 +214,10 @@ export function HowItWorksSection() {
           data-aos-delay="300"
         >
           <p className="text-sm md:text-base text-slate-600 mb-3 md:mb-4">
-            พร้อมเริ่มต้นค้นหาทรัพย์สินในฝันแล้วหรือยัง?
+            {t("home.how_it_works.ready_q")}
           </p>
           <button className="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-linear-to-r from-blue-600 to-purple-600 text-white text-sm md:text-base font-bold rounded-xl md:rounded-2xl hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105">
-            เริ่มต้นเลย
+            {t("common.start_search")}
             <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
           </button>
         </div>

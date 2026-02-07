@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Phone, Mail, ChevronLeft, MessageCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { createLeadFromMatchAction } from "@/features/smart-match/actions";
 import { PropertyMatch } from "@/features/smart-match/types";
 
@@ -16,6 +17,7 @@ interface LeadFormProps {
 }
 
 export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -32,10 +34,10 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
         email: formData.get("email") as string,
         lineId: formData.get("lineId") as string,
       });
-      toast.success("ส่งข้อมูลเรียบร้อย! เจ้าหน้าที่จะติดต่อกลับเร็วๆนี้");
+      toast.success(t("smart_match.lead_success"));
       onBack();
     } catch (err) {
-      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
+      toast.error(t("smart_match.lead_error"));
     } finally {
       setLoading(false);
     }
@@ -47,7 +49,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
         onClick={onBack}
         className="text-slate-500 mb-4 flex items-center text-sm gap-1 hover:text-blue-600 w-fit"
       >
-        <ChevronLeft className="h-4 w-4" /> ย้อนกลับ
+        <ChevronLeft className="h-4 w-4" /> {t("common.back")}
       </button>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
@@ -74,9 +76,13 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                 <div className="flex flex-wrap items-baseline gap-1">
                   <span>฿ {match.price.toLocaleString()}</span>
                   {match.is_sqm_price ? (
-                    <span className="text-[10px]">/ ตร.ม.</span>
+                    <span className="text-[10px]">/ {t("common.sqm")}</span>
                   ) : (
-                    isRent && <span className="text-[10px]">/ เดือน</span>
+                    isRent && (
+                      <span className="text-[10px]">
+                        / {t("common.per_month")}
+                      </span>
+                    )
                   )}
                   {match.secondary_price && (
                     <span className="text-[10px] text-slate-400 font-normal ml-0.5">
@@ -85,7 +91,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                   )}
                 </div>
               ) : (
-                "ราคาโปรดสอบถาม"
+                t("common.contact_for_price")
               )}
             </div>
           </div>
@@ -94,31 +100,35 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-slate-700">
-              ชื่อ-นามสกุล <span className="text-red-500">*</span>
+              {t("smart_match.lead_name_label")}{" "}
+              <span className="text-red-500">*</span>
             </label>
             <Input
               name="fullName"
               required
-              placeholder="คุณสมชาย ใจดี"
+              placeholder={t("smart_match.lead_name_placeholder")}
               className="rounded-xl border-slate-200"
             />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-slate-700">
-              เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+              {t("smart_match.lead_phone_label")}{" "}
+              <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 name="phone"
                 required
-                placeholder="08x-xxx-xxxx"
+                placeholder={t("smart_match.lead_phone_placeholder")}
                 className="pl-9 rounded-xl border-slate-200"
               />
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-bold text-slate-700">อีเมล</label>
+            <label className="text-sm font-bold text-slate-700">
+              {t("smart_match.lead_email_label")}
+            </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
@@ -130,7 +140,9 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-bold text-slate-700">Line ID</label>
+            <label className="text-sm font-bold text-slate-700">
+              {t("smart_match.lead_line_label")}
+            </label>
             <div className="relative">
               <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
@@ -149,11 +161,11 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
             ) : (
-              "นัดชม / สอบถามข้อมูล"
+              t("smart_match.lead_submit")
             )}
           </Button>
           <p className="text-xs text-center text-slate-400">
-            เจ้าหน้าที่จะติดต่อกลับภายใน 24 ชม.
+            {t("smart_match.lead_footer")}
           </p>
         </form>
       </div>

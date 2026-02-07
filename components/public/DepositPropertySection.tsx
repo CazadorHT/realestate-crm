@@ -28,25 +28,26 @@ import { createDepositLeadAction } from "@/features/public/actions";
 import { depositLeadSchema } from "@/features/public/schema";
 import { DepositLeadInput } from "@/features/public/types";
 import { SectionBackground } from "./SectionBackground";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function DepositPropertySection() {
+  const { t } = useLanguage();
   const [isSuccess, setIsSuccess] = useState(false);
 
   // Schema.org Service for SEO
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Service",
-    name: "ฝากขาย ฝากเช่า บ้าน คอนโด สำนักงานออฟฟิศ",
-    description:
-      "บริการฝากขาย ฝากเช่า บ้าน คอนโด สำนักงานออฟฟิศ ฟรี ไม่มีค่าใช้จ่ายเบื้องต้น มีทีมการตลาดพร้อมดูแล",
+    name: t("deposit.subtitle"),
+    description: t("deposit.description"),
     provider: {
       "@type": "RealEstateAgent",
-      name: "Your Real Estate Company",
+      name: "OMA ASSET",
     },
     areaServed: "Thailand",
     availableChannel: {
       "@type": "ServiceChannel",
-      serviceUrl: "https://your-domain.com/#deposit-section",
+      serviceUrl: "https://oma-asset.com/#deposit-section",
     },
   };
 
@@ -73,30 +74,35 @@ export function DepositPropertySection() {
           >
             <div className="inline-flex items-center rounded-full border border-blue-200 bg-linear-to-r from-blue-50 to-purple-50 px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold text-blue-700 backdrop-blur-sm mx-auto lg:mx-0 shadow-sm">
               <Key className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
-              บริการฝากทรัพย์สิน
+              {t("deposit.title")}
             </div>
 
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold tracking-tight leading-tight">
-              <span className="text-slate-900">ฝากขาย ฝากเช่า</span>
-              <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
-                บ้าน คอนโด ออฟฟิศ
-              </span>
+              {t("deposit.subtitle")
+                .split(" ")
+                .map((word, i) => (
+                  <span
+                    key={i}
+                    className={
+                      i >= 2
+                        ? "text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600"
+                        : "text-slate-900"
+                    }
+                  >
+                    {word} {i === 1 && <br />}
+                  </span>
+                ))}
             </h2>
 
             <p className="text-base md:text-lg lg:text-xl text-slate-600 leading-relaxed">
-              <span className="font-semibold text-slate-900">
-                ฟรี! ไม่มีค่าใช้จ่ายเบื้องต้น
-              </span>
-              <br />
-              เรามีฐานลูกค้าและทีมการตลาดพร้อมดูแลให้ทรัพย์ของคุณปล่อยออกได้เร็วที่สุด
+              {t("deposit.description")}
             </p>
 
             <div className="pt-3 md:pt-4 space-y-3 md:space-y-4">
               {[
-                { step: 1, text: "กรอกข้อมูลทรัพย์เบื้องต้น" },
-                { step: 2, text: "เจ้าหน้าที่ติดต่อกลับเพื่อยืนยัน" },
-                { step: 3, text: "ทำการตลาดหาลูกค้าให้ทันที" },
+                { step: 1, text: t("deposit.step1") },
+                { step: 2, text: t("deposit.step2") },
+                { step: 3, text: t("deposit.step3") },
               ].map((item) => (
                 <div
                   key={item.step}
@@ -106,7 +112,7 @@ export function DepositPropertySection() {
                     {item.step}
                   </div>
                   <span className="text-sm md:text-base text-slate-700 font-medium">
-                    {item.text}
+                    {item.text.replace(/^\d\.\s*/, "")}
                   </span>
                 </div>
               ))}
@@ -117,13 +123,15 @@ export function DepositPropertySection() {
               <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-slate-50 rounded-lg md:rounded-xl border border-slate-200">
                 <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
                 <span className="text-xs md:text-sm font-medium text-slate-700">
-                  ฟรี ไม่มีค่าใช้จ่าย
+                  {t("common.no_cost")}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-slate-50 rounded-lg md:rounded-xl border border-slate-200">
                 <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
                 <span className="text-xs md:text-sm font-medium text-slate-700">
-                  ทีมมืออาชีพ
+                  {t("common.verified_100").includes("100%")
+                    ? "Professional Team"
+                    : "ทีมมืออาชีพ"}
                 </span>
               </div>
             </div>
@@ -139,10 +147,10 @@ export function DepositPropertySection() {
 
             <div className="mb-4 md:mb-6 relative z-10">
               <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-1.5 md:mb-2">
-                ฝากข้อมูลทรัพย์สิน
+                {t("deposit.form.submit_btn")}
               </h3>
               <p className="text-slate-500 text-xs md:text-sm">
-                กรอกข้อมูลให้ครบถ้วน เจ้าหน้าที่จะติดต่อกลับโดยเร็ว
+                {t("deposit.form.required_note")}
               </p>
             </div>
 
@@ -152,20 +160,15 @@ export function DepositPropertySection() {
                   <Home className="h-8 w-8" />
                 </div>
                 <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-green-600 to-emerald-600">
-                  ขอบคุณสำหรับข้อมูล
+                  {t("deposit.success.title")}
                 </h3>
-                <p className="text-slate-600">
-                  ทางทีมงานได้รับข้อมูลทรัพย์ของท่านแล้ว <br />
-                  <span className="font-semibold text-slate-900">
-                    เจ้าหน้าที่จะรีบติดต่อกลับไปครับ
-                  </span>
-                </p>
+                <p className="text-slate-600">{t("deposit.success.message")}</p>
                 <Button
                   variant="outline"
                   onClick={() => setIsSuccess(false)}
                   className="mt-4 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                 >
-                  ส่งข้อมูลเพิ่มเติม
+                  {t("deposit.success.more_info_btn")}
                 </Button>
               </div>
             ) : (
@@ -178,7 +181,18 @@ export function DepositPropertySection() {
   );
 }
 
+import {
+  Building2,
+  Home as HomeIcon,
+  Trees,
+  Briefcase,
+  Factory,
+  Layout,
+  Check,
+} from "lucide-react";
+
 function DepositForm({ onSuccess }: { onSuccess: () => void }) {
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<DepositLeadInput>({
     resolver: zodResolver(depositLeadSchema),
@@ -196,57 +210,115 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
     try {
       const res = await createDepositLeadAction(values);
       if (res.success) {
-        toast.success(
-          "บันทึกข้อมูลเรียบร้อย เจ้าหน้าที่จะติดต่อกลับโดยเร็วที่สุด",
-        );
+        toast.success(t("deposit.success.message"));
         form.reset();
         onSuccess();
       } else {
-        toast.error(res.message || "เกิดข้อผิดพลาด");
+        toast.error(res.message || "Error occurred");
       }
     } catch {
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      toast.error("Connection error");
     } finally {
       setIsLoading(false);
     }
   }
 
+  const propertyOptions = [
+    {
+      value: "CONDO",
+      label: t("home.property_types.condo"),
+      icon: Building2,
+      activeColor: "border-blue-500 bg-blue-50 ring-blue-500/20",
+      iconColor: "bg-blue-500",
+      textColor: "text-blue-700",
+      checkColor: "bg-blue-500",
+    },
+    {
+      value: "HOUSE",
+      label: t("home.property_types.house"),
+      icon: HomeIcon,
+      activeColor: "border-emerald-500 bg-emerald-50 ring-emerald-500/20",
+      iconColor: "bg-emerald-500",
+      textColor: "text-emerald-700",
+      checkColor: "bg-emerald-500",
+    },
+    {
+      value: "TOWNHOME",
+      label: t("home.property_types.townhome"),
+      icon: Layout,
+      activeColor: "border-indigo-500 bg-indigo-50 ring-indigo-500/20",
+      iconColor: "bg-indigo-500",
+      textColor: "text-indigo-700",
+      checkColor: "bg-indigo-500",
+    },
+    {
+      value: "LAND",
+      label: t("home.property_types.land"),
+      icon: Trees,
+      activeColor: "border-amber-500 bg-amber-50 ring-amber-500/20",
+      iconColor: "bg-amber-500",
+      textColor: "text-amber-700",
+      checkColor: "bg-amber-500",
+    },
+    {
+      value: "COMMERCIAL",
+      label: t("home.property_types.office"),
+      icon: Briefcase,
+      activeColor: "border-violet-500 bg-violet-50 ring-violet-500/20",
+      iconColor: "bg-violet-500",
+      textColor: "text-violet-700",
+      checkColor: "bg-violet-500",
+    },
+    {
+      value: "FACTORY",
+      label: t("home.property_types.warehouse"),
+      icon: Factory,
+      activeColor: "border-slate-500 bg-slate-50 ring-slate-500/20",
+      iconColor: "bg-slate-500",
+      textColor: "text-slate-700",
+      checkColor: "bg-slate-500",
+    },
+  ];
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-slate-700 font-semibold">
-                ชื่อ-นามสกุล/ชื่อเล่น <span className="text-red-500">*</span>
+              <FormLabel className="text-slate-800 font-bold mb-1.5 flex items-center gap-1.5">
+                {t("deposit.form.name_label")}
+                <span className="text-rose-500 font-bold">*</span>
               </FormLabel>
               <FormControl>
                 <Input
-                  placeholder="เช่น คุณสมชาย (เจ้าของ)"
-                  className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder={t("deposit.form.name_placeholder")}
+                  className="h-12 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
                   {...field}
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="font-medium" />
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
           <FormField
             control={form.control}
             name="phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-slate-700 font-semibold">
-                  เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                <FormLabel className="text-slate-800 font-bold mb-1.5 flex items-center gap-1.5">
+                  {t("deposit.form.phone_label")}
+                  <span className="text-rose-500 font-bold">*</span>
                 </FormLabel>
                 <FormControl>
                   <Input
                     placeholder="08xxxxxxxx"
                     maxLength={10}
-                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    className="h-12 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
                     {...field}
                     onChange={(e) => {
                       const value = e.target.value
@@ -256,7 +328,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
                     }}
                   />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="font-medium" />
               </FormItem>
             )}
           />
@@ -265,17 +337,17 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
             name="lineId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-slate-700 font-semibold">
-                  Line ID (ถ้ามี)
+                <FormLabel className="text-slate-800 font-bold mb-1.5">
+                  {t("deposit.form.line_label")}
                 </FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="ID ของคุณ"
-                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder={t("deposit.form.line_placeholder")}
+                    className="h-12 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
                     {...field}
                   />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="font-medium" />
               </FormItem>
             )}
           />
@@ -285,74 +357,59 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
           control={form.control}
           name="propertyType"
           render={({ field }) => (
-            <FormItem>
-              <label className="text-sm font-semibold text-slate-700 block mb-2">
-                ประเภททรัพย์ <span className="text-red-500">*</span>
+            <FormItem className="space-y-3">
+              <label className="text-slate-800 font-bold flex items-center gap-1.5">
+                {t("deposit.form.type_label")}
+                <span className="text-rose-500 font-bold">*</span>
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                {[
-                  {
-                    value: "CONDO",
-                    label: "คอนโด",
-                    icon: "🏢",
-                    color: "bg-blue-600 hover:bg-blue-700",
-                    border: "hover:border-blue-300",
-                  },
-                  {
-                    value: "HOUSE",
-                    label: "บ้านเดี่ยว",
-                    icon: "🏠",
-                    color: "bg-emerald-600 hover:bg-emerald-700",
-                    border: "hover:border-emerald-300",
-                  },
-                  {
-                    value: "TOWNHOME",
-                    label: "ทาวน์โฮม",
-                    icon: "🏘️",
-                    color: "bg-indigo-600 hover:bg-indigo-700",
-                    border: "hover:border-indigo-300",
-                  },
-                  {
-                    value: "LAND",
-                    label: "ที่ดิน",
-                    icon: "🌳",
-                    color: "bg-amber-600 hover:bg-amber-700",
-                    border: "hover:border-amber-300",
-                  },
-                  {
-                    value: "COMMERCIAL",
-                    label: "สำนักงาน/ออฟฟิศ",
-                    icon: "🏢",
-                    color: "bg-violet-600 hover:bg-violet-700",
-                    border: "hover:border-violet-300",
-                  },
-                  {
-                    value: "FACTORY",
-                    label: "โรงงาน",
-                    icon: "🏭",
-                    color: "bg-slate-700 hover:bg-slate-800",
-                    border: "hover:border-slate-400",
-                  },
-                ].map((option) => (
-                  <Button
-                    key={option.value}
-                    type="button"
-                    variant={
-                      field.value === option.value ? "default" : "outline"
-                    }
-                    className={`h-auto py-3 px-2 flex flex-col gap-1 items-center justify-center text-xs transition-all ${
-                      field.value === option.value
-                        ? `${option.color} text-white shadow-md scale-105`
-                        : `text-slate-600 ${option.border} hover:bg-slate-50`
-                    }`}
-                    onClick={() => field.onChange(option.value)}
-                  >
-                    <span className="text-xl">{option.icon}</span>
-                    <span className="font-semibold">{option.label}</span>
-                  </Button>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {propertyOptions.map((option) => {
+                  const isSelected = field.value === option.value;
+                  const Icon = option.icon;
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => field.onChange(option.value)}
+                      className={`
+                        relative flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-300 group
+                        ${
+                          isSelected
+                            ? `border-transparent ${option.activeColor} shadow-md ring-2`
+                            : "border-slate-100 bg-slate-50/30 hover:border-slate-300 hover:bg-white text-slate-500 hover:text-slate-700"
+                        }
+                      `}
+                    >
+                      <div
+                        className={`
+                        mb-2 p-2 rounded-lg transition-colors
+                        ${
+                          isSelected
+                            ? `${option.iconColor} text-white`
+                            : "bg-white text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-600"
+                        }
+                      `}
+                      >
+                        <Icon size={20} strokeWidth={isSelected ? 3 : 2} />
+                      </div>
+                      <span
+                        className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-center ${isSelected ? option.textColor : ""}`}
+                      >
+                        {option.label}
+                      </span>
+                      {isSelected && (
+                        <div
+                          className={`absolute top-1.5 right-1.5 ${option.checkColor} rounded-full p-0.5 shadow-sm overflow-hidden`}
+                        >
+                          <Check className="text-white w-2 h-2 stroke-[4px]" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-              <FormMessage />
+              <FormMessage className="font-medium" />
             </FormItem>
           )}
         />
@@ -362,17 +419,23 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
           name="details"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-slate-700 font-semibold">
-                ทำเล / ชื่อโครงการ / รายละเอียดเพิ่มเติม
+              <FormLabel className="text-slate-800 font-bold mb-1.5">
+                {t("home.property_types.title").includes("Type")
+                  ? "Location / Project / Details"
+                  : "ทำเล / ชื่อโครงการ / รายละเอียดเพิ่มเติม"}
               </FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="เช่น ต้องการฝากขายคอนโด Rhythm รัชดา 1 ห้องนอน ติด BTS รัชดา..."
-                  className="resize-none h-24 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder={
+                    t("home.property_types.title").includes("Type")
+                      ? "e.g. Want to sell Rhythm Ratchada, 1 Bedroom, near BTS..."
+                      : "เช่น ต้องการฝากขายคอนโด Rhythm รัชดา 1 ห้องนอน ติด BTS รัชดา..."
+                  }
+                  className="min-h-[100px] resize-none border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
                   {...field}
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="font-medium" />
             </FormItem>
           )}
         />
@@ -380,15 +443,17 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
         <div className="pt-2">
           <Button
             type="submit"
-            className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-5 md:py-6 text-base md:text-lg shadow-lg hover:shadow-xl transition-all"
+            className="w-full bg-linear-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 py-6 text-base font-bold rounded-xl shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)] hover:shadow-[0_15px_25px_-10px_rgba(37,99,235,0.5)] active:scale-[0.98] transition-all group"
             disabled={isLoading}
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
-              <Send className="mr-2 h-5 w-5" />
+              <div className="flex items-center">
+                <span>{t("deposit.form.submit_btn")}</span>
+                <Send className="ml-2 h-4 w-4 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </div>
             )}
-            ส่งข้อมูลฝากทรัพย์
           </Button>
         </div>
       </form>

@@ -1,6 +1,5 @@
-"use client";
-
 import { OfficeSizeOption } from "@/features/smart-match/config-actions";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface OfficeSizeStepProps {
   officeSizes: OfficeSizeOption[];
@@ -13,6 +12,7 @@ export function OfficeSizeStep({
   availableSizes,
   onSelect,
 }: OfficeSizeStepProps) {
+  const { t } = useLanguage();
   const hasChecked = Object.keys(availableSizes).length > 0;
 
   const renderOptions = () => {
@@ -22,21 +22,33 @@ export function OfficeSizeStep({
         const count = availableSizes[sizeKey] ?? 0;
         const isDisabled = hasChecked && count === 0;
 
-        // Try to split label into size and description
-        // Example: "(M) 40-70 ตร.ม. (SMEs 5-8 คน)"
-        const parts = opt.label.split(/(\(.*\))/);
-        // A more reliable split for this specific pattern:
-        // Find the second set of parentheses
+        // Try to translate based on size key (S, M, L, XL)
+        const lowerKey = sizeKey.toLowerCase();
+        const localizedSize = t(
+          `smart_match.office_size_labels.${lowerKey}_size`,
+        );
+        const localizedDesc = t(
+          `smart_match.office_size_labels.${lowerKey}_desc`,
+        );
+
+        // Fallback to label parsing if translation missing
         const labelStr = opt.label;
         const secondParenIndex = labelStr.indexOf("(", 1);
-        const sizePart =
+        const fallbackSize =
           secondParenIndex !== -1
             ? labelStr.substring(0, secondParenIndex).trim()
             : labelStr;
-        const descPart =
+        const fallbackDesc =
           secondParenIndex !== -1
             ? labelStr.substring(secondParenIndex).trim()
             : "";
+
+        const displaySize = localizedSize.includes("_size")
+          ? fallbackSize
+          : localizedSize;
+        const displayDesc = localizedDesc.includes("_desc")
+          ? fallbackDesc
+          : localizedDesc;
 
         return (
           <button
@@ -55,12 +67,14 @@ export function OfficeSizeStep({
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
               </span>
             )}
-            <span className="font-bold text-lg">{sizePart}</span>
-            {descPart && (
+            <span className="font-bold text-lg">
+              ({sizeKey}) {displaySize}
+            </span>
+            {displayDesc && (
               <p
                 className={`text-[11px] leading-tight mt-1 font-medium ${isDisabled ? "text-slate-300" : "text-blue-500"}`}
               >
-                {descPart}
+                {displayDesc}
               </p>
             )}
           </button>
@@ -70,19 +84,31 @@ export function OfficeSizeStep({
 
     // Default Fallback Options
     return [
-      { key: "S", size: "< 40 ตร.ม.", desc: "Startup", min: 0, max: 40 },
-      { key: "M", size: "40-70 ตร.ม.", desc: "SMEs 5-8 คน", min: 40, max: 70 },
+      {
+        key: "S",
+        size: t("smart_match.office_size_labels.s_size"),
+        desc: t("smart_match.office_size_labels.s_desc"),
+        min: 0,
+        max: 40,
+      },
+      {
+        key: "M",
+        size: t("smart_match.office_size_labels.m_size"),
+        desc: t("smart_match.office_size_labels.m_desc"),
+        min: 40,
+        max: 70,
+      },
       {
         key: "L",
-        size: "71-100 ตร.ม.",
-        desc: "พนักงาน 9-15 คน",
+        size: t("smart_match.office_size_labels.l_size"),
+        desc: t("smart_match.office_size_labels.l_desc"),
         min: 71,
         max: 100,
       },
       {
         key: "XL",
-        size: "> 100 ตร.ม.",
-        desc: "พนักงาน 15-20+ คน",
+        size: t("smart_match.office_size_labels.xl_size"),
+        desc: t("smart_match.office_size_labels.xl_desc"),
         min: 100,
         max: 9999,
       },
@@ -113,7 +139,7 @@ export function OfficeSizeStep({
           <p
             className={`text-[11px] leading-tight mt-1 font-medium ${isDisabled ? "text-slate-300" : "text-blue-500"}`}
           >
-            ({opt.desc})
+            {opt.desc}
           </p>
         </button>
       );
@@ -123,7 +149,7 @@ export function OfficeSizeStep({
   return (
     <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex flex-col h-full">
       <h2 className="text-2xl sm:text-3xl font-medium md:text-2xl mb-4 sm:mb-6 text-slate-900 shrink-0">
-        ต้องการพื้นที่ขนาดประมาณเท่าไหร่?
+        {t("smart_match.office_size_q")}
       </h2>
       <div className="overflow-y-auto pr-2 flex-1 custom-scrollbar">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4">

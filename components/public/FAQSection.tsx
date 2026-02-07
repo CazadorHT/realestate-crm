@@ -11,6 +11,7 @@ import {
 import { CircleHelp, MessageCircle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type FAQ = {
   id: string;
@@ -20,6 +21,7 @@ type FAQ = {
 };
 
 export function FAQSection() {
+  const { t } = useLanguage();
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -81,17 +83,26 @@ export function FAQSection() {
         <div className="text-left mb-8 md:mb-12 lg:mb-16 w-full">
           <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-blue-400 text-xs md:text-sm font-medium mb-4 md:mb-6 backdrop-blur-sm">
             <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            <span>Help Center & Support</span>
+            <span>{t("home.faq.title")}</span>
           </div>
           <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-white mb-4 md:mb-6 tracking-tight">
-            มีคำถาม?{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">
-              เรามีคำตอบ
-            </span>
+            {t("home.faq.subtitle")
+              .split(" ")
+              .map((word, i) => (
+                <span
+                  key={i}
+                  className={
+                    i >= 1
+                      ? "text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400"
+                      : ""
+                  }
+                >
+                  {word}{" "}
+                </span>
+              ))}
           </h2>
           <p className="text-slate-400 text-base md:text-lg max-w-2xl leading-relaxed">
-            รวมคำถามที่พบบ่อยเกี่ยวกับการซื้อ-ขาย-เช่า และสินเชื่อ
-            เพื่อให้คุณมั่นใจในทุกขั้นตอน
+            {t("home.faq.description")}
           </p>
         </div>
 

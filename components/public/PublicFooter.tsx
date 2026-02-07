@@ -20,8 +20,7 @@ export function PublicFooter() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     name: "OMA ASSET",
-    description:
-      "แพลตฟอร์มอสังหาริมทรัพย์ครบวงจร บ้าน คอนโด สำนักงานออฟฟิศ ให้เช่า ขาย",
+    description: t("footer.company_desc"),
     url: "https://oma-asset.com",
     telephone: "+66-XX-XXX-XXXX",
     email: "contact@oma-asset.com",
@@ -41,26 +40,29 @@ export function PublicFooter() {
       name: "Thailand",
     },
     serviceType: [
-      "บ้านเดี่ยว",
-      "คอนโด",
-      "สำนักงานออฟฟิศ",
-      "ทาวน์โฮม",
-      "อสังหาริมทรัพย์",
+      t("home.property_types.house"),
+      t("home.property_types.condo"),
+      t("home.property_types.office"),
+      t("home.property_types.townhome"),
+      "Real Estate",
     ],
   };
 
   const services = [
     { name: t("nav.properties"), href: "/properties?type=sale" },
     { name: t("nav.services"), href: "/properties?type=rent" },
-    { name: "Office / Retail", href: "/properties?category=office" },
-    { name: "Valuation", href: "/valuation" },
+    {
+      name: t("home.property_types.office"),
+      href: "/properties?category=office",
+    },
+    { name: t("home.mortgage.title"), href: "/valuation" },
   ];
 
   const about = [
     { name: t("nav.about"), href: "#trust" },
-    { name: "Team", href: "/team" },
+    { name: t("footer.team"), href: "/team" },
     { name: t("nav.contact"), href: "/contact" },
-    { name: "Blog", href: "/blog" },
+    { name: t("nav.blog"), href: "/blog" },
   ];
 
   const socialMedia = [
@@ -117,7 +119,7 @@ export function PublicFooter() {
                 >
                   <Image
                     src="/images/brand-logo-dark.svg"
-                    alt="CEAZADOR Logo"
+                    alt="OMA ASSET Logo"
                     width={180}
                     height={60}
                     className="w-auto h-12"
@@ -152,7 +154,7 @@ export function PublicFooter() {
                     <MapPin className="w-4 h-4 text-blue-400" />
                   </div>
                   <span className="text-sm text-slate-300 leading-snug group-hover:text-white transition-colors pt-2">
-                    123 Business Road, Bangkok, Thailand
+                    {t("footer.address")}
                   </span>
                 </div>
               </div>
@@ -208,7 +210,7 @@ export function PublicFooter() {
 
               <div className="mt-8">
                 <h5 className="text-sm font-semibold text-white mb-4">
-                  Social Media
+                  {t("footer.follow_us")}
                 </h5>
                 <div className="flex gap-3">
                   {socialMedia.map((social) => (
@@ -235,13 +237,13 @@ export function PublicFooter() {
                 href="/privacy-policy"
                 className="hover:text-blue-400 transition-colors"
               >
-                Privacy Policy
+                {t("footer.privacy_policy")}
               </Link>
               <Link
                 href="/terms"
                 className="hover:text-blue-400 transition-colors"
               >
-                Terms of Use
+                {t("footer.terms_of_use")}
               </Link>
             </div>
           </div>
@@ -252,6 +254,7 @@ export function PublicFooter() {
 }
 
 function NewsletterSection() {
+  const { t } = useLanguage();
   const [lineId, setLineId] = useState("");
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -281,10 +284,10 @@ function NewsletterSection() {
           </div>
           <div>
             <span className="block text-white font-semibold text-sm">
-              รับข่าวสารทาง Line
+              {t("footer.newsletter_title")}
             </span>
             <span className="block text-xs text-slate-500">
-              โปรโมชั่นและทรัพย์หลุดจอง
+              {t("footer.newsletter_sub")}
             </span>
           </div>
         </div>
@@ -298,7 +301,7 @@ function NewsletterSection() {
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSubmit();
             }}
-            placeholder="กรอก Line ID..."
+            placeholder={t("footer.newsletter_placeholder")}
             className="w-full h-11 pl-10 pr-24 bg-slate-900/80 border border-slate-700/80 rounded-lg text-sm focus:outline-none focus:border-[#06C755]/50 focus:ring-1 focus:ring-[#06C755]/50 text-white placeholder-slate-600 transition-all"
           />
           <FaLine className="absolute left-3 top-3.5 h-4 w-4 text-slate-600 group-focus-within:text-[#06C755] transition-colors" />
@@ -316,7 +319,11 @@ function NewsletterSection() {
                         }
                     `}
           >
-            {isPending ? "..." : status === "success" ? "✓" : "ติดตาม"}
+            {isPending
+              ? "..."
+              : status === "success"
+                ? "✓"
+                : t("footer.newsletter_btn")}
           </button>
         </div>
       </div>

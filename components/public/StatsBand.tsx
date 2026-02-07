@@ -1,32 +1,34 @@
 "use client";
 
 import { Building2, Users2, Trophy, Headset } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function StatsBand() {
+  const { t } = useLanguage();
   const stats = [
     {
       icon: <Building2 className="w-6 h-6" />,
       value: "500+",
-      label: "บ้าน คอนโด สำนักงานคุณภาพ",
-      subLabel: "Verified Properties",
+      label: t("home.stats.properties_label"),
+      subLabel: t("home.stats.properties_sub"),
     },
     {
       icon: <Users2 className="w-6 h-6" />,
       value: "1,200+",
-      label: "ครอบครัวซื้อ-ขาย-เช่าสำเร็จ",
-      subLabel: "Happy Customers",
+      label: t("home.stats.customers_label"),
+      subLabel: t("home.stats.customers_sub"),
     },
     {
       icon: <Trophy className="w-6 h-6" />,
       value: "98%",
-      label: "อัตราความพึงพอใจลูกค้า",
-      subLabel: "Success Rate",
+      label: t("home.stats.satisfaction_label"),
+      subLabel: t("home.stats.satisfaction_sub"),
     },
     {
       icon: <Headset className="w-6 h-6" />,
       value: "24/7",
-      label: "ทีมงานดูแลตลอด 24 ชม.",
-      subLabel: "Premium Support",
+      label: t("home.stats.support_label"),
+      subLabel: t("home.stats.support_sub"),
     },
   ];
 
@@ -34,7 +36,7 @@ export function StatsBand() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    name: "Your Real Estate Company",
+    name: "OMA ASSET",
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: "4.9",
@@ -66,10 +68,7 @@ export function StatsBand() {
 
       <div className="max-w-screen-2xl mx-auto">
         {/* SEO-Critical Heading */}
-        <h2 className="sr-only">
-          สถิติความสำเร็จในการขายและให้เช่าอสังหาริมทรัพย์ บ้าน คอนโด
-          สำนักงานออฟฟิศ
-        </h2>
+        <h2 className="sr-only">{t("home.property_listing.title")}</h2>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-12">
           {stats.map((stat, index) => (

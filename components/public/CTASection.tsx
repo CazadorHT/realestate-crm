@@ -1,16 +1,21 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Search, MessageCircle, TrendingUp, Users, Award } from "lucide-react";
 import Link from "next/link";
 import { SectionBackground } from "./SectionBackground";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function CTASection() {
+  const { t } = useLanguage();
+
   // Schema.org Action for SEO
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "SearchAction",
     target: {
       "@type": "EntryPoint",
-      urlTemplate: "https://your-domain.com/properties?q={search_term}",
+      urlTemplate: "https://oma-asset.com/properties?q={search_term}",
       actionPlatform: [
         "http://schema.org/DesktopWebPlatform",
         "http://schema.org/MobileWebPlatform",
@@ -18,6 +23,30 @@ export function CTASection() {
     },
     "query-input": "required name=search_term",
   };
+
+  const STATS = [
+    {
+      icon: Users,
+      label: t("home.hero.title_sub").includes("dream")
+        ? "10,000+ Users"
+        : "ผู้ใช้งาน 10,000+ คน",
+      color: "text-blue-600",
+    },
+    {
+      icon: Award,
+      label: t("home.hero.title_sub").includes("dream")
+        ? "4.9/5 Satisfaction"
+        : "ความพึงพอใจ 4.9/5",
+      color: "text-purple-600",
+    },
+    {
+      icon: TrendingUp,
+      label: t("home.hero.title_sub").includes("dream")
+        ? "200% Growth"
+        : "การเติบโต 200%",
+      color: "text-green-600",
+    },
+  ];
 
   return (
     <section className="py-12 md:py-16 lg:py-24 px-4 md:px-6 lg:px-8 bg-linear-to-br from-blue-50 via-purple-50 to-blue-50 relative overflow-hidden z-0">
@@ -36,23 +65,7 @@ export function CTASection() {
           className="flex flex-wrap justify-center gap-3 md:gap-6 mb-6 md:mb-8"
           data-aos="fade-up"
         >
-          {[
-            {
-              icon: Users,
-              label: "ผู้ใช้งาน 10,000+ คน",
-              color: "text-blue-600",
-            },
-            {
-              icon: Award,
-              label: "ความพึงพอใจ 4.9/5",
-              color: "text-purple-600",
-            },
-            {
-              icon: TrendingUp,
-              label: "การเติบโต 200%",
-              color: "text-green-600",
-            },
-          ].map((stat, idx) => (
+          {STATS.map((stat, idx) => (
             <div
               key={idx}
               className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-slate-200"
@@ -72,13 +85,13 @@ export function CTASection() {
           data-aos="fade-up"
           data-aos-delay="100"
         >
-          <span className="text-slate-900">พร้อมค้นหา</span>
+          <span className="text-slate-900">{t("home.hero.title_main")}</span>
           <br />
           <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
-            บ้าน คอนโด ออฟฟิศ
+            {t("home.hero.title_highlight")}
           </span>
           <br />
-          <span className="text-slate-900">ในฝันของคุณ?</span>
+          <span className="text-slate-900">{t("home.hero.title_sub")}</span>
         </h2>
 
         <p
@@ -86,10 +99,10 @@ export function CTASection() {
           data-aos="fade-up"
           data-aos-delay="200"
         >
-          เริ่มค้นหาทรัพย์สินที่ใช่สำหรับคุณวันนี้
+          {t("home.hero.description")}
           <span className="font-semibold text-slate-900">
             {" "}
-            ฟรี! ไม่มีค่าใช้จ่าย
+            {t("common.free")} {t("common.no_cost")}
           </span>
         </p>
 
@@ -104,12 +117,12 @@ export function CTASection() {
               className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl hover:shadow-2xl transition-all hover:scale-105 w-full sm:w-auto"
             >
               <Search className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-              เริ่มค้นหาเลย
+              {t("common.start_search")}
             </Button>
           </Link>
 
           <a
-            href="https://line.me/R/ti/p/@your-line-id"
+            href="https://line.me/R/ti/p/@oma-asset"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -119,7 +132,7 @@ export function CTASection() {
               className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 border-2 border-slate-300 hover:border-green-600 hover:bg-green-50 hover:text-green-700 transition-all w-full sm:w-auto"
             >
               <MessageCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-              ติดต่อ LINE
+              {t("common.contact_line")}
             </Button>
           </a>
         </div>
@@ -129,7 +142,9 @@ export function CTASection() {
           className="text-xs md:text-sm text-slate-500 pt-2 md:pt-4"
           data-aos="fade-up"
         >
-          🔒 ข้อมูลของคุณปลอดภัย | 🎯 ไม่มีค่าใช้จ่าย | ⚡ รวดเร็วทันใจ
+          {t("home.hero.title_sub").includes("dream")
+            ? "🔒 Your data is safe | 🎯 No hidden costs | ⚡ Fast response"
+            : "🔒 ข้อมูลของคุณปลอดภัย | 🎯 ไม่มีค่าใช้จ่าย | ⚡ รวดเร็วทันใจ"}
         </p>
       </div>
     </section>

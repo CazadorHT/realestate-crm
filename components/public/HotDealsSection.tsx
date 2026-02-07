@@ -6,10 +6,12 @@ import { ArrowRight, Flame, Sparkles, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PropertyCard, PropertyCardProps } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type ApiProperty = PropertyCardProps;
 
 export function HotDealsSection() {
+  const { t } = useLanguage();
   const [properties, setProperties] = useState<ApiProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEmpty, setIsEmpty] = useState(false);
@@ -103,7 +105,7 @@ export function HotDealsSection() {
               <div className="bg-white/20 p-1 rounded-full">
                 <Flame className="h-3.5 w-3.5 fill-yellow-200 animate-pulse" />
               </div>
-              <span>Flash Sale & Hot Deals</span>
+              <span>{t("home.hot_deals.title")}</span>
             </div>
 
             {/* SEO-Optimized Heading */}
@@ -112,13 +114,30 @@ export function HotDealsSection() {
               data-aos="fade-up"
               data-aos-delay="100"
             >
-              โอกาสทอง!{" "}
-              <span className="text-slate-200 text-2xl sm:text-3xl md:text-3xl block md:inline mt-1">
-                บ้าน คอนโด สำนักงาน
-              </span>
-              <br className="hidden md:block" />
+              {t("home.hot_deals.subtitle")
+                .split("!")
+                .map((part, i) => (
+                  <span
+                    key={i}
+                    className={
+                      i === 1
+                        ? "text-slate-200 text-2xl sm:text-3xl md:text-3xl block md:inline mt-1"
+                        : ""
+                    }
+                  >
+                    {part}
+                    {i === 0 ? "!" : ""}
+                  </span>
+                ))}
               <span className="text-transparent bg-clip-text bg-linear-to-r from-red-400 via-orange-400 to-amber-400 drop-shadow-sm mt-1 block">
-                ลดราคาพิเศษ ขาย-เช่า
+                {t("home.hot_deals.description").includes("ลดราคาพิเศษ")
+                  ? t("home.hot_deals.description")
+                      .split(" ")
+                      .filter(
+                        (w) => w.includes("ลดราคา") || w.includes("ขาย-เช่า"),
+                      )
+                      .join(" ")
+                  : ""}
               </span>
             </h2>
 
@@ -129,13 +148,7 @@ export function HotDealsSection() {
               data-aos-delay="200"
             >
               <TrendingDown className="h-5 w-5  md:h-6 md:w-6 text-red-500 mt-0.5 md:mt-1 shrink-0" />
-              <p>
-                คัดเฉพาะทรัพย์สินคุณภาพ{" "}
-                <span className="font-bold text-white decoration-red-500/30 underline decoration-4 underline-offset-4">
-                  ลดราคาสูงสุด 40%
-                </span>{" "}
-                พร้อมข้อเสนอพิเศษจำกัดเวลา อัปเดตแบบเรียลไทม์ทุกวัน
-              </p>
+              <p>{t("home.hot_deals.description")}</p>
             </div>
           </div>
 
@@ -150,7 +163,7 @@ export function HotDealsSection() {
               className="rounded-full bg-white text-slate-900 hover:bg-slate-100 font-semibold px-6 h-12 w-full md:w-auto md:h-10 text-sm shadow-lg hover:shadow-xl hover:scale-105 duration-300 hover:shadow-white/20 transition-all group"
             >
               <Link href="/properties?sortBy=price&sortOrder=asc&filter=hot_deals">
-                ดูดีลทั้งหมด
+                {t("home.hot_deals.view_all")}
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>

@@ -5,6 +5,7 @@ import { CheckSquare, Square } from "lucide-react";
 import { useEffect, useState, MouseEvent } from "react";
 import { toggleCompareId, readCompareIds } from "@/lib/compare-store";
 import { toggleFavoriteId, readFavoriteIds } from "@/lib/favorite-store";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 // New Sub-components
 import { PropertyCardImage } from "./property-card/PropertyCardImage";
@@ -60,6 +61,7 @@ export function PropertyCard({
   };
   footerVariant?: "default" | "minimal";
 }) {
+  const { t } = useLanguage();
   const [isInCompare, setIsInCompare] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -117,7 +119,7 @@ export function PropertyCard({
 
     if (currentPrice && comparePrice && currentPrice < comparePrice) {
       comparisonBadges.push({
-        label: "ประหยัดกว่า",
+        label: t("common.save_more"),
         color: "bg-green-100 text-green-700",
       });
     }
@@ -128,7 +130,7 @@ export function PropertyCard({
       property.size_sqm > compareWith.size
     ) {
       comparisonBadges.push({
-        label: "พื้นที่ใหญ่กว่า",
+        label: t("common.larger_area"),
         color: "bg-blue-100 text-blue-700",
       });
     }
@@ -139,7 +141,7 @@ export function PropertyCard({
       new Date(property.created_at) > new Date(compareWith.date)
     ) {
       comparisonBadges.push({
-        label: "ใหม่กว่า",
+        label: t("common.newer"),
         color: "bg-purple-100 text-purple-700",
       });
     }
@@ -150,7 +152,7 @@ export function PropertyCard({
       <Link
         href={`/properties/${property.slug || property.id}`}
         className="flex flex-col h-full focus:outline-none"
-        aria-label={`ดูรายละเอียดทรัพย์: ${property.title}`}
+        aria-label={`${t("common.view_all")} ${property.title}`}
       >
         <PropertyCardImage
           property={property}
@@ -184,7 +186,7 @@ export function PropertyCard({
             ) : (
               <Square className="h-4 w-4" />
             )}
-            เปรียบเทียบ
+            {t("common.compare")}
           </button>
         </div>
 

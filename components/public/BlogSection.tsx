@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SectionBackground } from "./SectionBackground";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { format } from "date-fns";
+import { th, enUS, zhCN } from "date-fns/locale";
 
 // Author type matching database schema (Json field)
 type BlogAuthor = {
@@ -28,6 +31,7 @@ type BlogPost = {
 };
 
 export function BlogSection() {
+  const { t, language } = useLanguage();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,9 +60,8 @@ export function BlogSection() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    name: "บทความอสังหาริมทรัพย์ บ้าน คอนโด สำนักงานออฟฟิศ",
-    description:
-      "บทความความรู้เกี่ยวกับการซื้อ เช่า บ้าน คอนโด สำนักงานออฟฟิศ และการลงทุนอสังหาริมทรัพย์",
+    name: t("blog.schema_name"),
+    description: t("blog.schema_desc"),
     blogPost: posts.map((post) => ({
       "@type": "BlogPosting",
       headline: post.title,
@@ -93,25 +96,23 @@ export function BlogSection() {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-linear-to-r from-blue-50 to-purple-50 border border-blue-100 mb-2">
               <BookOpen className="w-3.5 h-3.5 text-blue-600" />
               <span className="text-xs font-bold text-blue-700">
-                บทความอสังหาริมทรัพย์
+                {t("blog.title_badge")}
               </span>
             </div>
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-              เคล็ดลับ
+              {t("blog.title_main")}
               <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
                 {" "}
-                บ้าน คอนโด ออฟฟิศ
+                {t("blog.title_highlight")}
               </span>
             </h2>
-            <p className="text-slate-600 mt-1.5 text-sm">
-              ความรู้การซื้อ เช่า ลงทุน อสังหาริมทรัพย์
-            </p>
+            <p className="text-slate-600 mt-1.5 text-sm">{t("blog.desc")}</p>
           </div>
           <Link
             href="/blog"
             className="group inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 font-medium transition-all duration-300 shadow-sm hover:shadow-md"
           >
-            ดูบทความทั้งหมด
+            {t("blog.view_all")}
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
@@ -203,14 +204,14 @@ export function BlogSection() {
                             itemProp="datePublished"
                             dateTime={post.published_at}
                           >
-                            {new Date(post.published_at).toLocaleDateString(
-                              "th-TH",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              },
-                            )}
+                            {format(new Date(post.published_at), "PPP", {
+                              locale:
+                                language === "th"
+                                  ? th
+                                  : language === "cn"
+                                    ? zhCN
+                                    : enUS,
+                            })}
                           </time>
                         </div>
                       </div>

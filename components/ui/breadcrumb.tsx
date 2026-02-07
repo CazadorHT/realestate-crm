@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export interface BreadcrumbItem {
   label: string;
@@ -13,7 +14,7 @@ export interface BreadcrumbItem {
 export interface BreadcrumbProps {
   items: BreadcrumbItem[];
   backHref?: string; // optional back button href
-  backLabel?: string; // default: "ย้อนกลับ"
+  backLabel?: string;
   variant?: "default" | "on-dark";
   className?: string;
 }
@@ -21,11 +22,13 @@ export interface BreadcrumbProps {
 export function Breadcrumb({
   items,
   backHref,
-  backLabel = "ย้อนกลับ",
+  backLabel,
   variant = "default",
   className,
 }: BreadcrumbProps) {
+  const { t } = useLanguage();
   const isOnDark = variant === "on-dark";
+  const effectiveBackLabel = backLabel || t("common.back");
 
   return (
     <nav
@@ -47,7 +50,7 @@ export function Breadcrumb({
                 ? "bg-white/10 text-white/60 border-white/10 hover:bg-white hover:text-slate-900"
                 : "bg-white hover:bg-slate-600 hover:text-white hover:border-slate-600",
             )}
-            title={backLabel}
+            title={effectiveBackLabel}
           >
             <ChevronLeft className="h-5 w-5" />
           </Link>

@@ -13,8 +13,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ScrollDownButton } from "@/components/public/ScrollDownButton";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function HeroSection() {
+  const { t } = useLanguage();
   const [showSmartMatch, setShowSmartMatch] = useState(true);
 
   useEffect(() => {
@@ -76,18 +78,13 @@ export function HeroSection() {
                 className={`inline-flex items-center gap-1.5 sm:gap-2 bg-blue-50 backdrop-blur-sm text-blue-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium border border-blue-100 shadow-sm ${!showSmartMatch ? "mx-auto" : ""}`}
               >
                 <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>แพลตฟอร์มอสังหาฯ ที่คัดสรรเพื่อคุณโดยเฉพาะ</span>
+                <span>{t("common.verified_100")}</span>
               </div>
 
               <HeroTitle />
 
               <h2 className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 leading-relaxed max-w-2xl drop-shadow-md">
-                แหล่งรวม{" "}
-                <strong className="text-blue-200 font-semibold">
-                  บ้านเดี่ยว คอนโด ออฟฟิศ อาคารสำนักงาน
-                </strong>{" "}
-                คุณภาพ คัดสรรมาเพื่อคุณโดยเฉพาะ ช่วยให้คุณเจอที่ที่ใช่
-                ในทำเลศักยภาพ พร้อมบริการระดับมืออาชีพครบวงจร
+                {t("home.hot_deals.description")}
               </h2>
 
               <div
@@ -98,7 +95,7 @@ export function HeroSection() {
                     size="lg"
                     className="w-full sm:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl shadow-lg hover:shadow-xl bg-linear-to-r from-blue-600 to-blue-500 hover:brightness-125 transition-all duration-500 animate-in fade-in-0 slide-in-from-bottom-4"
                   >
-                    เริ่มค้นหาบ้านในฝัน
+                    {t("home.hero.cta_buy")}
                     <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 </Link>
@@ -109,7 +106,7 @@ export function HeroSection() {
                   variant="outline"
                   className="w-full sm:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl bg-white/90 hover:bg-white border-slate-200 text-slate-700 hover:text-blue-600 shadow-sm transition-all animate-in fade-in-0 duration-300 slide-in-from-bottom-4"
                 >
-                  ลงประกาศฟรี
+                  {t("home.hero.cta_deposit")}
                 </Button>
               </div>
 
@@ -119,19 +116,19 @@ export function HeroSection() {
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-400 drop-shadow" />
                   <span className="text-xs sm:text-sm text-white/90 drop-shadow-sm">
-                    ตรวจสอบแล้ว 100%
+                    {t("common.verified_100")}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 drop-shadow" />
                   <span className="text-xs sm:text-sm text-white/90 drop-shadow-sm">
-                    ปลอดภัยทุกธุรกรรม
+                    {t("common.safe_transaction")}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400 drop-shadow" />
                   <span className="text-xs sm:text-sm text-white/90 drop-shadow-sm">
-                    ตอบกลับไวใน 24 ชม.
+                    {t("common.fast_response")}
                   </span>
                 </div>
               </div>

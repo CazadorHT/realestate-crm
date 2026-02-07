@@ -1,14 +1,17 @@
+"use client";
+
 import { Shield, CheckCircle2, Clock, Star, Award } from "lucide-react";
 import { SectionBackground } from "./SectionBackground";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function TrustSection() {
+  const { t } = useLanguage();
   // Schema.org Service + AggregateRating for SEO
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Service",
-    name: "บริการอสังหาริมทรัพย์ บ้าน คอนโด ที่ดิน",
-    description:
-      "บริการซื้อ ขาย เช่า บ้านเดี่ยว คอนโดมิเนียม ที่ดิน และอสังหาริมทรัพย์ทุก ประเภท ด้วยข้อมูลตรวจสอบแล้ว ปลอดภัย รวดเร็ว",
+    name: t("trust.schema_name"),
+    description: t("trust.schema_desc"),
     provider: {
       "@type": "Organization",
       name: "Your Real Estate Company",
@@ -32,27 +35,24 @@ export function TrustSection() {
       icon: CheckCircle2,
       iconBg: "bg-green-50 group-hover:bg-green-100",
       iconColor: "text-green-600",
-      title: "ข้อมูลทรัพย์ตรวจสอบแล้ว",
-      description:
-        "คัดกรองบ้าน คอนโด ที่ดิน ก่อนแสดงผล ข้อมูลครบถ้วนถูกต้อง ลดความเสี่ยงจากข้อมูลผิดพลาด",
+      title: t("trust.verified_title"),
+      description: t("trust.verified_desc"),
       gradient: "from-green-500 to-emerald-600",
     },
     {
       icon: Shield,
       iconBg: "bg-blue-50 group-hover:bg-blue-100",
       iconColor: "text-blue-600",
-      title: "ปลอดภัยทุกธุรกรรม",
-      description:
-        "ซื้อ-ขาย-เช่า อสังหาริมทรัพย์อย่างมั่นใจ ชัดเจนเรื่องเอกสาร เงื่อนไข พร้อมคำแนะนำจากผู้เชี่ยวชาญ",
+      title: t("trust.safe_title"),
+      description: t("trust.safe_desc"),
       gradient: "from-blue-500 to-indigo-600",
     },
     {
       icon: Clock,
       iconBg: "bg-purple-50 group-hover:bg-purple-100",
       iconColor: "text-purple-600",
-      title: "ตอบกลับไว ดูแลใกล้ชิด",
-      description:
-        "ระบบคัดกรองความต้องการทรัพย์สิน ทีมงานติดต่อกลับรวดเร็ว พาคุณสู่ทรัพย์ที่ใช่",
+      title: t("trust.service_title"),
+      description: t("trust.service_desc"),
       gradient: "from-purple-500 to-pink-600",
     },
   ];
@@ -75,27 +75,24 @@ export function TrustSection() {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100">
             <Award className="w-4 h-4 text-blue-600" />
             <span className="text-sm font-bold text-blue-700">
-              บริการมาตรฐานสูง
+              {t("trust.title_badge")}
             </span>
           </div>
 
           <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-            บริการ
+            {t("trust.title_main")}
             <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
-              บ้าน คอนโด สำนักงานออฟฟิศ
+              {" "}
+              {t("trust.title_highlight")}
             </span>
             <br />
             <span className="text-2xl md:text-3xl text-slate-600">
-              ที่คุณไว้วางใจได้
+              {t("trust.title_sub")}
             </span>
           </h2>
 
           <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">
-            ซื้อ ขาย เช่า{" "}
-            <span className="font-semibold text-slate-900">
-              อสังหาริมทรัพย์
-            </span>{" "}
-            อย่างมั่นใจ ด้วยข้อมูลที่ตรวจสอบแล้ว และบริการระดับมืออาชีพ
+            {t("trust.desc")}
           </p>
         </div>
 
@@ -156,12 +153,14 @@ export function TrustSection() {
             <div className="h-6 w-px bg-amber-300 mx-2" />
             <div className="flex flex-col items-start">
               <span className="text-sm font-bold text-slate-900">4.8/5.0</span>
-              <span className="text-xs text-slate-600">จาก 1,250+ รีวิว</span>
+              <span className="text-xs text-slate-600">
+                {t("trust.rating_prefix")} 1,250+ {t("trust.rating_suffix")}
+              </span>
             </div>
           </div>
 
           <span className="text-sm text-slate-500 font-medium">
-            ความพึงพอใจจากลูกค้าจริงทั่วประเทศ
+            {t("trust.rating_footer")}
           </span>
         </div>
       </div>

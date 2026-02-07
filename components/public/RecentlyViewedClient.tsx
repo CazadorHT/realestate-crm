@@ -23,6 +23,7 @@ import { getTypeColor, getTypeLabel } from "@/lib/property-utils";
 import { FavoriteButton } from "@/components/public/FavoriteButton";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import type { RecommendedProperty } from "@/features/properties/recommended-actions";
 import { getRecommendedProperties } from "@/features/properties/recommended-actions";
 import "aos/dist/aos.css";
@@ -32,7 +33,10 @@ function formatPrice(price: number) {
   return `฿${price.toLocaleString()}`;
 }
 
-function convertToRecentProperty(prop: RecommendedProperty): RecentProperty {
+function convertToRecentProperty(
+  prop: RecommendedProperty,
+  t: any,
+): RecentProperty {
   // Calculate price_text based on listing type and discount
   let price_text = "";
 
@@ -63,10 +67,12 @@ function convertToRecentProperty(prop: RecommendedProperty): RecentProperty {
             100,
         );
         parts.push(
-          `${formatPrice(prop.original_rental_price!)}/ด (-${discountPercent}%)`,
+          `${formatPrice(prop.original_rental_price!)}/${t("recently_viewed.per_month_short")} (-${discountPercent}%)`,
         );
       } else {
-        parts.push(`${formatPrice(prop.rental_price)}/ด`);
+        parts.push(
+          `${formatPrice(prop.rental_price)}/${t("recently_viewed.per_month_short")}`,
+        );
       }
     }
     price_text = parts.join(" | ");
@@ -96,9 +102,9 @@ function convertToRecentProperty(prop: RecommendedProperty): RecentProperty {
       );
       price_text = `${formatPrice(
         prop.original_rental_price!,
-      )}/ด (-${discountPercent}%)`;
+      )}/${t("recently_viewed.per_month_short")} (-${discountPercent}%)`;
     } else if (prop.rental_price) {
-      price_text = `${formatPrice(prop.rental_price)}/ด`;
+      price_text = `${formatPrice(prop.rental_price)}/${t("recently_viewed.per_month_short")}`;
     }
   }
 
@@ -125,6 +131,7 @@ export function RecentlyViewedClient({
   containerClassName?: string;
   disableAos?: boolean;
 }) {
+  const { t } = useLanguage();
   const [items, setItems] = useState<RecentProperty[]>([]);
   const [showingRecommended, setShowingRecommended] = useState(false);
   const [initializing, setInitializing] = useState(true); // New state for client-side loading
@@ -142,13 +149,15 @@ export function RecentlyViewedClient({
       if (recentItems.length === 0) {
         // Show recommended properties
         if (recommendedProperties.length > 0) {
-          setItems(recommendedProperties.map(convertToRecentProperty));
+          setItems(
+            recommendedProperties.map((p) => convertToRecentProperty(p, t)),
+          );
           setShowingRecommended(true);
         } else {
           // Provide fallback fetch on mount if needed
           getRecommendedProperties(10).then((recs) => {
             if (recs.length > 0) {
-              setItems(recs.map(convertToRecentProperty));
+              setItems(recs.map((p) => convertToRecentProperty(p, t)));
               setShowingRecommended(true);
             }
           });
@@ -177,7 +186,7 @@ export function RecentlyViewedClient({
           try {
             const freshRecs = await getRecommendedProperties(10);
             if (freshRecs.length > 0) {
-              setItems(freshRecs.map(convertToRecentProperty));
+              setItems(freshRecs.map((p) => convertToRecentProperty(p, t)));
               setShowingRecommended(true);
             }
           } catch (error) {
@@ -206,13 +215,13 @@ export function RecentlyViewedClient({
 
     // 3. Load Recommendations
     if (recommendedProperties.length > 0) {
-      setItems(recommendedProperties.map(convertToRecentProperty));
+      setItems(recommendedProperties.map((p) => convertToRecentProperty(p, t)));
     } else {
       setInitializing(true);
       try {
         const freshRecs = await getRecommendedProperties(10);
         if (freshRecs.length > 0) {
-          setItems(freshRecs.map(convertToRecentProperty));
+          setItems(freshRecs.map((p) => convertToRecentProperty(p, t)));
         }
       } catch (error) {
         console.error("Failed to fetch recommendations on clear", error);
@@ -329,10 +338,12 @@ export function RecentlyViewedClient({
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: showingRecommended ? "ทรัพย์สินแนะนำ" : "ทรัพย์สินที่เพิ่งดู",
+    name: showingRecommended
+      ? t("recently_viewed.schema_rec_name")
+      : t("recently_viewed.schema_recent_name"),
     description: showingRecommended
-      ? "คอลเลกชันบ้าน คอนโด ที่ดิน และอสังหาริมทรัพย์ที่แนะนำสำหรับคุณ"
-      : "ประวัติการดูบ้าน คอนโด ที่ดิน และอสังหาริมทรัพย์ล่าสุด",
+      ? t("recently_viewed.schema_rec_desc")
+      : t("recently_viewed.schema_recent_desc"),
     numberOfItems: items.length,
     itemListElement: items.slice(0, 10).map((item, index) => ({
       "@type": "ListItem",
@@ -375,25 +386,25 @@ export function RecentlyViewedClient({
                 {showingRecommended ? (
                   <>
                     <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-600 to-orange-600">
-                      บ้าน คอนโด สำนักงานออฟฟิศ
+                      {t("recently_viewed.property_types")}
                     </span>
                     <br className="hidden md:block" />
-                    แนะนำสำหรับคุณ
+                    {t("recently_viewed.title_recommended")}
                   </>
                 ) : (
                   <>
                     <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
-                      บ้าน คอนโด สำนักงานออฟฟิศ
+                      {t("recently_viewed.property_types")}
                     </span>
                     <br className="hidden md:block" />
-                    ที่คุณสนใจล่าสุด
+                    {t("recently_viewed.title_recent")}
                   </>
                 )}
               </h2>
               <p className="text-sm text-slate-600 mt-1">
                 {showingRecommended
-                  ? "ทรัพย์สินอสังหาริมทรัพย์ที่คัดสรรมาเพื่อคุณโดยเฉพาะ"
-                  : "ประวัติทรัพย์สินอสังหาริมทรัพย์ล่าสุดที่คุณเพิ่งเปิดชม"}
+                  ? t("recently_viewed.desc_recommended")
+                  : t("recently_viewed.desc_recent")}
               </p>
             </div>
           </div>
@@ -472,7 +483,7 @@ export function RecentlyViewedClient({
                 )}
                 <meta
                   itemProp="description"
-                  content={`ขาย/เช่า ${item.title} ${item.popular_area || ""} ${
+                  content={`${t("common.sale")}/${t("common.rent")} ${item.title} ${item.popular_area || ""} ${
                     item.province || ""
                   } ${item.price_text}`}
                 />
@@ -542,10 +553,10 @@ export function RecentlyViewedClient({
                         }`}
                       >
                         {item.listing_type === "SALE"
-                          ? "ขาย"
+                          ? t("common.sale")
                           : item.listing_type === "RENT"
-                            ? "เช่า"
-                            : "ขาย/เช่า"}
+                            ? t("common.rent")
+                            : `${t("common.sale")}/${t("common.rent")}`}
                       </span>
                     )}
                   </div>
@@ -574,7 +585,7 @@ export function RecentlyViewedClient({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-blue-600/50 uppercase tracking-widest">
-                      View Details
+                      {t("recently_viewed.view_details")}
                     </span>
                     <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
                       <ArrowRight className="h-4 w-4" />

@@ -1,18 +1,15 @@
-import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
-import type { Metadata } from "next";
-import { Shield, Lock, FileText, Info } from "lucide-react";
+"use client";
 
-export const metadata: Metadata = {
-  title: "นโยบายความเป็นส่วนตัว (Privacy Policy)",
-  description:
-    "นโยบายความเป็นส่วนตัวและมาตรการคุ้มครองข้อมูลส่วนบุคคลของเว็บไซต์",
-};
+import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
+import { Shield, Lock, FileText, Info, Phone as PhoneIcon } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { format } from "date-fns";
+import { th, enUS, zhCN } from "date-fns/locale";
 
 export default function PrivacyPolicyPage() {
-  const lastUpdated = new Date().toLocaleDateString("th-TH", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+  const { t, language } = useLanguage();
+  const lastUpdated = format(new Date(), "PPP", {
+    locale: language === "th" ? th : language === "cn" ? zhCN : enUS,
   });
 
   return (
@@ -23,8 +20,8 @@ export default function PrivacyPolicyPage() {
           <AppBreadcrumbs
             variant="on-dark"
             items={[
-              { label: "หน้าแรก", href: "/" },
-              { label: "นโยบายความเป็นส่วนตัว", href: "/privacy-policy" },
+              { label: t("nav.home"), href: "/" },
+              { label: t("privacy.title"), href: "/privacy-policy" },
             ]}
             className="text-slate-400 my-6 "
           />
@@ -33,11 +30,10 @@ export default function PrivacyPolicyPage() {
               <Shield className="w-8 h-8" />
             </div>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
-              นโยบายความเป็นส่วนตัว
+              {t("privacy.title")}
             </h1>
             <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-              เราให้ความสำคัญกับข้อมูลส่วนบุคคลของคุณ
-              เพื่อความมั่นใจและปลอดภัยในการใช้งาน
+              {t("privacy.hero_desc")}
             </p>
           </div>
         </div>
@@ -49,7 +45,9 @@ export default function PrivacyPolicyPage() {
           <div className="p-6 md:p-10 border-b border-slate-100 bg-slate-50/50">
             <div className="flex items-center gap-2 text-sm text-slate-500">
               <Info className="w-4 h-4" />
-              <span>อัปเดตล่าสุด: {lastUpdated}</span>
+              <span>
+                {t("privacy.update_label")}: {lastUpdated}
+              </span>
             </div>
           </div>
 
@@ -59,14 +57,9 @@ export default function PrivacyPolicyPage() {
                 <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   1
                 </span>
-                บทนำ
+                {t("privacy.section1_title")}
               </h2>
-              <p>
-                บริษัทให้ความสำคัญอย่างยิ่งต่อการคุ้มครองข้อมูลส่วนบุคคลของคุณ
-                นโยบายความเป็นส่วนตัวนี้อธิบายถึงวิธีการที่เรารวบรวม ใช้ เปิดเผย
-                และปกป้องข้อมูลส่วนบุคคลของคุณเมื่อคุณเข้าเยี่ยมชมหรือใช้บริการเว็บไซต์ของเรา
-                ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)
-              </p>
+              <p>{t("privacy.section1_p1")}</p>
             </section>
 
             <section className="mb-10 last:mb-0">
@@ -74,29 +67,29 @@ export default function PrivacyPolicyPage() {
                 <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   2
                 </span>
-                ข้อมูลที่เราจัดเก็บ
+                {t("privacy.section2_title")}
               </h2>
-              <p>เราอาจรวบรวมข้อมูลส่วนบุคคลประเภทต่างๆ ดังนี้:</p>
+              <p>{t("privacy.section2_p1")}</p>
               <div className="grid sm:grid-cols-2 gap-4 mt-4 not-prose">
                 {[
                   {
-                    title: "ข้อมูลระบุตัวตน",
-                    desc: "เช่น ชื่อ, นามสกุล",
+                    title: t("privacy.identity_title"),
+                    desc: t("privacy.identity_desc"),
                     icon: FileText,
                   },
                   {
-                    title: "ข้อมูลการติดต่อ",
-                    desc: "อีเมล, เบอร์โทรศัพท์, Line ID",
-                    icon: Phone,
+                    title: t("privacy.contact_info_title"),
+                    desc: t("privacy.contact_info_desc"),
+                    icon: PhoneIcon,
                   },
                   {
-                    title: "ข้อมูลทางเทคนิค",
-                    desc: "IP Address, Cookies, Log",
+                    title: t("privacy.tech_info_title"),
+                    desc: t("privacy.tech_info_desc"),
                     icon: Lock,
                   },
                   {
-                    title: "ข้อมูลธุรกรรม",
-                    desc: "ประวัติการค้นหา, รายการที่สนใจ",
+                    title: t("privacy.trans_info_title"),
+                    desc: t("privacy.trans_info_desc"),
                     icon: Info,
                   },
                 ].map((item, i) => (
@@ -123,23 +116,13 @@ export default function PrivacyPolicyPage() {
                 <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   3
                 </span>
-                วัตถุประสงค์การใช้ข้อมูล
+                {t("privacy.section3_title")}
               </h2>
               <ul>
-                <li>
-                  ติดต่อกลับและนำเสนอข้อมูลทรัพย์สินที่คุณสนใจ (เช่น
-                  การนัดหมายเข้าชมโครงการ)
-                </li>
-                <li>
-                  ปรับปรุงและพัฒนาประสบการณ์การใช้งานเว็บไซต์ให้ดียิ่งขึ้น
-                </li>
-                <li>
-                  วิเคราะห์ข้อมูลเชิงสถิติเพื่อการทำการตลาด
-                  (ในรูปแบบข้อมูลภาพรวมที่ไม่ระบุตัวตน)
-                </li>
-                <li>
-                  ปฏิบัติตามกฎหมายและข้อกำหนดที่เกี่ยวข้องกับธุรกิจอสังหาริมทรัพย์
-                </li>
+                <li>{t("privacy.section3_l1")}</li>
+                <li>{t("privacy.section3_l2")}</li>
+                <li>{t("privacy.section3_l3")}</li>
+                <li>{t("privacy.section3_l4")}</li>
               </ul>
             </section>
 
@@ -148,15 +131,9 @@ export default function PrivacyPolicyPage() {
                 <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   4
                 </span>
-                คุกกี้ (Cookies)
+                {t("privacy.section4_title")}
               </h2>
-              <p>
-                เว็บไซต์ของเรามีการใช้งานคุกกี้เพื่อช่วยให้การใช้งานเว็บไซต์ของคุณมีประสิทธิภาพมากยิ่งขึ้น
-                คุกกี้เป็นไฟล์ข้อความขนาดเล็กที่จัดเก็บลงในอุปกรณ์ของคุณ
-                คุณสามารถเลือกที่จะ "ยอมรับ" หรือ "ปฏิเสธ"
-                คุกกี้ได้ผ่านแถบการตั้งค่าคุกกี้
-                หรือการตั้งค่าในเบราว์เซอร์ของคุณ
-              </p>
+              <p>{t("privacy.section4_p1")}</p>
             </section>
 
             <section className="mb-10 last:mb-0">
@@ -164,18 +141,15 @@ export default function PrivacyPolicyPage() {
                 <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   5
                 </span>
-                สิทธิ์ของคุณ
+                {t("privacy.section5_title")}
               </h2>
-              <p>
-                ภายใต้กฎหมาย PDPA คุณมีสิทธิ์ในการจัดการข้อมูลส่วนบุคคลของคุณ
-                ดังนี้:
-              </p>
+              <p>{t("privacy.section5_p1")}</p>
               <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 not-prose space-y-2">
                 {[
-                  "สิทธิ์ในการเข้าถึงและขอรับสำเนาข้อมูลส่วนบุคคล",
-                  "สิทธิ์ในการขอแก้ไขข้อมูลให้ถูกต้องและเป็นปัจจุบัน",
-                  "สิทธิ์ในการขอลบ ทำลาย หรือระงับการใช้ข้อมูล",
-                  "สิทธิ์ในการถอนความยินยอมที่คุณเคยให้ไว้",
+                  t("privacy.right1"),
+                  t("privacy.right2"),
+                  t("privacy.right3"),
+                  t("privacy.right4"),
                 ].map((right, idx) => (
                   <div
                     key={idx}
@@ -193,26 +167,23 @@ export default function PrivacyPolicyPage() {
                 <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   6
                 </span>
-                ติดต่อเรา
+                {t("privacy.section6_title")}
               </h2>
-              <p>
-                หากคุณมีข้อสงสัยหรือต้องการใช้สิทธิ์เกี่ยวกับข้อมูลส่วนบุคคล
-                สามารถติดต่อเจ้าหน้าที่คุ้มครองข้อมูลส่วนบุคคลของเราได้ที่:
-              </p>
+              <p>{t("privacy.section6_p1")}</p>
               <div className="mt-4 p-5 bg-slate-50 rounded-xl border border-slate-200 not-prose flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
                 <div>
                   <h4 className="font-semibold text-slate-900">
-                    ฝ่ายบริการลูกค้า
+                    {t("privacy.customer_service")}
                   </h4>
                   <p className="text-slate-500 text-sm">
-                    เราพร้อมดูแลและตอบข้อสงสัยของคุณ
+                    {t("privacy.customer_service_desc")}
                   </p>
                 </div>
                 <a
                   href="/contact"
                   className="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 hover:text-blue-600 transition-colors shadow-sm"
                 >
-                  ติดต่อสอบถาม
+                  {t("privacy.contact_button")}
                 </a>
               </div>
             </section>

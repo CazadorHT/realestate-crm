@@ -1,8 +1,10 @@
 "use client";
 
 import { MessageSquare } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function ContactHero() {
+  const { t } = useLanguage();
   return (
     <section className="relative bg-linear-to-br from-slate-900 via-blue-900 to-slate-900 text-white py-20 md:py-28 overflow-hidden">
       {/* Animated Background Blobs */}
@@ -18,12 +20,10 @@ export function ContactHero() {
             <MessageSquare className="w-8 h-8 text-blue-50" />
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 tracking-tight">
-            ติดต่อเรา
+            {t("contact.hero_title")}
           </h1>
           <p className="text-lg sm:text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
-            ทีมผู้เชี่ยวชาญพร้อมให้คำปรึกษาด้านอสังหาริมทรัพย์
-            <br className="hidden sm:block" />
-            ตอบกลับภายใน 24 ชั่วโมง ผ่านทุกช่องทางที่คุณสะดวก
+            {t("contact.hero_desc")}
           </p>
         </div>
       </div>

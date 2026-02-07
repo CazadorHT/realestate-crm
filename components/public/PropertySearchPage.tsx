@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MorphingLoader } from "@/components/ui/MorphingLoader";
 import { SearchFilterBar } from "./search/SearchFilterBar";
 import { SearchPagination } from "./search/SearchPagination";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type ApiProperty = PropertyCardProps;
 
@@ -17,6 +18,7 @@ interface PropertySearchPageProps {
 export function PropertySearchPage({
   initialProperties,
 }: PropertySearchPageProps) {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const [properties, setProperties] = useState<ApiProperty[]>(
     initialProperties || [],
@@ -305,12 +307,13 @@ export function PropertySearchPage({
       <div className="max-w-screen-2xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
           <div className="text-slate-600 text-sm">
-            พบทรัพย์ทั้งหมด{" "}
+            {t("search.found_total")}{" "}
             <span className="font-bold text-blue-600">{filtered.length}</span>{" "}
-            รายการ
+            {t("search.items")}
             {filtered.length > 0 && (
               <span className="text-slate-400 ml-2">
-                (แสดง {startIndex + 1}-{Math.min(endIndex, filtered.length)})
+                ({t("search.displaying")} {startIndex + 1}-
+                {Math.min(endIndex, filtered.length)})
               </span>
             )}
           </div>
@@ -320,7 +323,7 @@ export function PropertySearchPage({
           <MorphingLoader />
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border border-slate-200">
-            <div className="text-slate-400 mb-2">ไม่พบรายการที่ค้นหา</div>
+            <div className="text-slate-400 mb-2">{t("search.no_results")}</div>
             <Button
               variant="outline"
               onClick={() => {
@@ -328,7 +331,7 @@ export function PropertySearchPage({
                 setType("ALL");
               }}
             >
-              ล้างการค้นหา
+              {t("search.clear_filters")}
             </Button>
           </div>
         ) : (

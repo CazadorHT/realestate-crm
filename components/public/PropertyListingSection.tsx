@@ -16,6 +16,7 @@ import { PropertyCard } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type FilterType =
   | "ALL"
@@ -27,6 +28,12 @@ type FilterType =
   | "WAREHOUSE"
   | "COMMERCIAL"
   | "OTHER";
+
+const OFFICE_TYPES = new Set(["OFFICE_BUILDING"]);
+const COMMERCIAL_TYPES = new Set(["COMMERCIAL_BUILDING"]);
+const WAREHOUSE_TYPES = new Set(["WAREHOUSE"]);
+
+const MAX_VISIBLE = 8;
 
 type ApiProperty = {
   id: string;
@@ -53,24 +60,6 @@ type ApiProperty = {
   original_rental_price: number | null;
   features?: { id: string; name: string; icon_key: string }[];
 };
-
-const FILTER_LABELS: Record<FilterType, string> = {
-  ALL: "🏡 ทั้งหมด",
-  HOUSE: "🏠 บ้าน",
-  CONDO: "🏢 คอนโด",
-  OFFICE: "👔 ออฟฟิศ",
-  TOWNHOME: "🏡 ทาวน์โฮม",
-  WAREHOUSE: "🏭 โกดัง",
-  COMMERCIAL: "🏪 อาคารพาณิชย์",
-  LAND: "🌳 ที่ดิน",
-  OTHER: "🔹 อื่นๆ",
-};
-
-const OFFICE_TYPES = new Set(["OFFICE_BUILDING"]);
-const COMMERCIAL_TYPES = new Set(["COMMERCIAL_BUILDING"]);
-const WAREHOUSE_TYPES = new Set(["WAREHOUSE"]);
-
-const MAX_VISIBLE = 8;
 
 function matchesFilter(item: ApiProperty, filter: FilterType) {
   if (filter === "ALL") return true;
@@ -110,6 +99,7 @@ export function PropertyListingSection() {
 }
 
 function PropertyListingContent() {
+  const { t } = useLanguage();
   const [filter, setFilter] = useState<FilterType>("ALL");
   const [properties, setProperties] = useState<ApiProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -120,6 +110,18 @@ function PropertyListingContent() {
   const router = useRouter();
   const [areaFilter, setAreaFilter] = useState<string>("");
   const [provinceFilter, setProvinceFilter] = useState<string>("");
+
+  const FILTER_LABELS: Record<FilterType, string> = {
+    ALL: `🏡 ${t("common.all")}`,
+    HOUSE: `🏠 ${t("home.property_types.house")}`,
+    CONDO: `🏢 ${t("home.property_types.condo")}`,
+    OFFICE: `👔 ${t("home.property_types.office")}`,
+    TOWNHOME: `🏡 ${t("home.property_types.townhome")}`,
+    WAREHOUSE: `🏭 ${t("home.property_types.warehouse")}`,
+    COMMERCIAL: `🏪 ${t("home.property_types.townhome")}`, // Using townhome as placeholder for commercial if missing
+    LAND: `🌳 ${t("home.property_types.land")}`,
+    OTHER: `🔹 ${t("common.all")}`,
+  };
 
   // -- Drag to Scroll Logic --
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -193,7 +195,7 @@ function PropertyListingContent() {
         setProperties(Array.isArray(data) ? data : []);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
-        setError("ไม่สามารถโหลดข้อมูลทรัพย์ได้ในขณะนี้");
+        setError(t("common.loading"));
       } finally {
         setIsLoading(false);
       }
@@ -256,9 +258,8 @@ function PropertyListingContent() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "ประกาศขายเช่าอสังหาริมทรัพย์ล่าสุด",
-    description:
-      "รวมประกาศซื้อ ขาย เช่า บ้าน คอนโด ที่ดิน ทาวน์โฮม และอสังหาริมทรัพย์ทุกประเภท",
+    name: t("property_listing.title"),
+    description: t("property_listing.description"),
     numberOfItems: visibleProperties.length,
     itemListElement: visibleProperties.slice(0, 8).map((property, index) => ({
       "@type": "ListItem",
@@ -266,7 +267,7 @@ function PropertyListingContent() {
       item: {
         "@type": "Product",
         name: property.title,
-        description: property.description || "ทรัพย์สินคุณภาพ",
+        description: property.description || t("common.verified_100"),
         image: property.image_url,
         offers: {
           "@type": "Offer",
@@ -285,9 +286,7 @@ function PropertyListingContent() {
             priceCurrency: "THB",
           },
         },
-        url: `https://your-domain.com/properties/${
-          property.slug || property.id
-        }`,
+        url: `https://oma-asset.com/properties/${property.slug || property.id}`,
       },
     })),
   };
@@ -313,32 +312,28 @@ function PropertyListingContent() {
           >
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
               <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
-                บ้าน คอนโด สำนักงานออฟฟิศ
+                {t("property_listing.title").split(" ").slice(0, -1).join(" ")}
               </span>
               <br />
               <span className="text-slate-600 text-2xl md:text-3xl font-semibold">
-                ซื้อ · ขาย · เช่า
+                {t("property_listing.title").split(" ").slice(-1).join(" ")}
               </span>{" "}
             </h2>
             <p className="text-base md:text-lg text-slate-600 max-w-2xl leading-relaxed">
-              รวมประกาศ{" "}
-              <span className="font-semibold text-slate-900">
-                บ้านเดี่ยว คอนโดมิเนียม สำนักงานออฟฟิศ ทาวน์โฮม
-              </span>{" "}
-              และ อสังหาริมทรัพย์ทุกประเภท ตรวจสอบข้อมูลแล้ว 100%
+              {t("property_listing.description")}
             </p>
             <div className="flex flex-wrap items-center gap-3">
               {!isLoading && !error && (
                 <div className="text-sm text-slate-600">
-                  หมวด:{" "}
+                  {t("property_listing.category_label")}{" "}
                   <span className="font-semibold text-blue-600">
                     {FILTER_LABELS[filter]}
                   </span>{" "}
-                  • พบ{" "}
+                  • {t("property_listing.found_prefix")}{" "}
                   <span className="font-semibold text-blue-600">
                     {resultCount.toLocaleString("th-TH")}
                   </span>{" "}
-                  รายการ
+                  {t("property_listing.found_suffix")}
                 </div>
               )}
             </div>
@@ -357,7 +352,7 @@ function PropertyListingContent() {
                 className="h-10 md:h-11 px-4 md:px-6 text-sm md:text-base"
               >
                 <Link href="/properties">
-                  ดูทรัพย์เพิ่มเติม
+                  {t("common.more")}
                   {hasMore && <ArrowRight className="h-4 w-4" />}
                 </Link>
               </Button>
@@ -366,7 +361,7 @@ function PropertyListingContent() {
             <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-start lg:justify-end gap-3 md:gap-4 lg:gap-14 w-full lg:w-auto">
               {(areaFilter || provinceFilter) && (
                 <div className="flex items-center gap-4 text-sm">
-                  <span className="text-slate-500">ทรัพย์ในย่านทำเล :</span>
+                  <span className="text-slate-500">Area :</span>
                   <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-700">
                     {[areaFilter, provinceFilter].filter(Boolean).join(" • ")}
                     <button
@@ -375,7 +370,7 @@ function PropertyListingContent() {
                         router.push("/#latest-properties");
                       }}
                       className="ml-1 -mr-1 rounded-full p-0.5 hover:bg-rose-400 hover:text-white duration-300 transition-colors"
-                      title="ลบตัวกรอง"
+                      title="Clear"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -503,7 +498,7 @@ function PropertyListingContent() {
                 className="bg-white"
                 onClick={() => setReloadKey((k) => k + 1)}
               >
-                ลองใหม่
+                {t("common.loading") === "Loading..." ? "Try Again" : "ลองใหม่"}
               </Button>
             </div>
           </div>
@@ -521,7 +516,7 @@ function PropertyListingContent() {
           </>
         ) : filteredProperties.length === 0 ? (
           <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6 text-slate-600">
-            ยังไม่มีทรัพย์ในประเภทที่เลือก — ลองเปลี่ยนหมวด หรือดู “ทั้งหมด”
+            {t("property_listing.empty_state")}
           </div>
         ) : (
           <div className="space-y-8 align-center">
@@ -566,7 +561,7 @@ function PropertyListingContent() {
                 className="h-10 md:h-11 px-4 md:px-6 text-sm md:text-base w-full sm:w-auto"
               >
                 <Link href="/properties">
-                  ดูทรัพย์เพิ่มเติม
+                  {t("common.more")}
                   {hasMore && <ArrowRight className="h-4 w-4" />}
                 </Link>
               </Button>

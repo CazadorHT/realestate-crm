@@ -533,7 +533,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                 </TableCell>
 
                 {/* UPDATED */}
-                <TableCell className="align-top">
+                <TableCell className="items-center ">
                   <div
                     className="text-xs text-slate-500 line-clamp-1 max-w-[100px] text-ellipsis"
                     title={new Date(property.updated_at).toLocaleString(
@@ -548,7 +548,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                 </TableCell>
 
                 {/* BUYER / TENANT / AGENT */}
-                <TableCell className="align-top">
+                <TableCell className="items-center ">
                   {property.status === "SOLD" ||
                   property.status === "RENTED" ? (
                     property.closed_lead_name ? (

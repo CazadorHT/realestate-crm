@@ -262,8 +262,7 @@ export function PublicNav() {
                       className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md font-medium"
                     >
                       <Key className="h-4 w-4 mr-1" />
-                      {/* Using hardcoded 'ฝากทรัพย์' for now or add key later */}
-                      ฝากทรัพย์
+                      {t("nav.deposit")}
                     </Button>
                   </a>
                 </div>
@@ -394,7 +393,7 @@ export function PublicNav() {
                         className="w-full cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base"
                       >
                         <Key className="h-5 w-5 mr-2" />
-                        ฝากทรัพย์
+                        {t("nav.deposit")}
                       </Button>
                     </a>
                   </div>

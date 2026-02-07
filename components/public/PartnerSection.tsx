@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type Partner = {
   id: string;
@@ -12,6 +13,7 @@ type Partner = {
 };
 
 export function PartnerSection() {
+  const { t } = useLanguage();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,13 +46,12 @@ export function PartnerSection() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Your Real Estate Company",
-    description:
-      "เครือข่ายพันธมิตรอสังหาริมทรัพย์ ธนาคาร และผู้พัฒนาโครงการชั้นนำ",
+    name: "OMA ASSET",
+    description: t("home.partners.description"),
     hasCredential: {
       "@type": "EducationalOccupationalCredential",
       credentialCategory: "Professional Certification",
-      description: "รับรองโดยสถาบันนายหน้าอสังหาริมทรัพย์",
+      description: t("home.partners.certified"),
     },
   };
 
@@ -66,32 +67,24 @@ export function PartnerSection() {
         {/* SEO-Optimized Header Section */}
         <div className="text-center mb-8 md:mb-10 lg:mb-12" data-aos="fade-up">
           <h2 className="text-2xl md:text-4xl font-bold text-slate-900 mb-3">
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
-              พันธมิตร
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600 mr-2">
+              {t("home.partners.title").split(" ")[0]}
             </span>
-            อสังหาริมทรัพย์ชั้นนำ
+            {t("home.partners.title").split(" ").slice(1).join(" ")}
           </h2>
           <p
             className="text-sm md:text-base text-slate-400 mb-4 uppercase tracking-wider font-semibold"
             data-aos="fade-up"
             data-aos-delay="100"
           >
-            Trusted Marketing Network
+            {t("home.partners.subtitle")}
           </p>
           <p
             className="max-w-2xl mx-auto text-slate-600 text-base md:text-lg leading-relaxed"
             data-aos="fade-up"
             data-aos-delay="200"
           >
-            ร่วมมือกับ
-            <span className="font-semibold text-slate-900">
-              ธนาคารชั้นนำ
-            </span>{" "}
-            และ
-            <span className="font-semibold text-slate-900">
-              ผู้พัฒนาโครงการ
-            </span>
-            คุณภาพ ผ่านการรับรองมาตรฐานอสังหาริมทรัพย์ระดับมืออาชีพ
+            {t("home.partners.description")}
           </p>
         </div>
 
@@ -120,11 +113,11 @@ export function PartnerSection() {
                     >
                       <img
                         src={partner.logo_url}
-                        alt={`${partner.name} - พันธมิตรอสังหาริมทรัพย์${
+                        alt={`${partner.name} - ${t("home.partners.title")}${
                           partner.category === "bank"
-                            ? " ธนาคารสินเชื่อบ้าน"
+                            ? ` ${t("home.partners.banks")}`
                             : partner.category === "developer"
-                              ? " ผู้พัฒนาโครงการ"
+                              ? ` ${t("home.partners.developers")}`
                               : ""
                         }`}
                         title={partner.name}
@@ -157,11 +150,11 @@ export function PartnerSection() {
                     >
                       <img
                         src={partner.logo_url}
-                        alt={`${partner.name} - พันธมิตรอสังหาริมทรัพย์${
+                        alt={`${partner.name} - ${t("home.partners.title")}${
                           partner.category === "bank"
-                            ? " ธนาคารสินเชื่อบ้าน"
+                            ? ` ${t("home.partners.banks")}`
                             : partner.category === "developer"
-                              ? " ผู้พัฒนาโครงการ"
+                              ? ` ${t("home.partners.developers")}`
                               : ""
                         }`}
                         title={partner.name}

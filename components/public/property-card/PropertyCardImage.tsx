@@ -5,6 +5,7 @@ import { Heart, PawPrint } from "lucide-react";
 import { IoShieldCheckmark } from "react-icons/io5";
 import { getTypeLabel, getListingBadge } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PropertyCardImageProps {
   property: PropertyCardProps;
@@ -16,16 +17,6 @@ interface PropertyCardImageProps {
   areaProvince: string;
 }
 
-// Assuming SUPABASE_URL and BUCKET_NAME are defined elsewhere or need to be imported.
-// For the purpose of this edit, I'm placing the function as requested,
-// but note that it would typically reside in a separate utility file (e.g., image-utils.ts)
-// and SUPABASE_URL/BUCKET_NAME would need to be defined or imported.
-// As per the instruction, this function is inserted here.
-// This function is not directly part of the PropertyCardImage component's render logic
-// but is placed at the module level as per the provided diff structure.
-// To make this syntactically correct, I'm placing it before the component definition.
-// If SUPABASE_URL and BUCKET_NAME are not defined in this file, this code will cause an error.
-// For demonstration, I'm adding placeholder definitions.
 export function PropertyCardImage({
   property,
   priority = false,
@@ -35,36 +26,43 @@ export function PropertyCardImage({
   comparisonBadges,
   areaProvince,
 }: PropertyCardImageProps) {
+  const { t } = useLanguage();
   const badge = getListingBadge(property.listing_type);
+
+  // Translate badge label if needed
+  const displayBadgeLabel = badge
+    ? badge.label === "ขาย"
+      ? t("common.sale")
+      : badge.label === "เช่า"
+        ? t("common.rent")
+        : badge.label === "ขาย/เช่า"
+          ? `${t("common.sale")}/${t("common.rent")}`
+          : badge.label
+    : null;
 
   return (
     <div className="relative aspect-4/3 sm:aspect-4/3 md:aspect-square h-auto sm:h-auto md:h-[300px] w-full overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5">
       {property.image_url ? (
-        <>
-          {/* {console.log(`[PropertyCardImage] Loading: ${property.title}`, {
-            url: property.image_url,
-          })} */}
-          <Image
-            src={property.image_url}
-            alt={`${
-              property.listing_type === "SALE"
-                ? "ขาย"
-                : property.listing_type === "RENT"
-                  ? "เช่า"
-                  : "ขาย-เช่า"
-            }${getTypeLabel(property.property_type)} - ${property.title}${
-              areaProvince ? ` ทำเล${areaProvince}` : ""
-            }`}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-            className="object-cover object-top transform-gpu will-change-transform group-hover:scale-125 group:hover:object-contain transition-transform duration-1000"
-            priority={priority}
-            loading={priority ? "eager" : "lazy"}
-          />
-        </>
+        <Image
+          src={property.image_url}
+          alt={`${
+            property.listing_type === "RENT"
+              ? t("common.rent")
+              : property.listing_type === "SALE"
+                ? t("common.sale")
+                : `${t("common.sale")}/${t("common.rent")}`
+          } ${t(`home.property_types.${property.property_type?.toLowerCase().replace("_", "") || "other"}`)} - ${property.title}${
+            areaProvince ? ` ${t("nav.properties")} ${areaProvince}` : ""
+          }`}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+          className="object-cover object-top transform-gpu will-change-transform group-hover:scale-125 group:hover:object-contain transition-transform duration-1000"
+          priority={priority}
+          loading={priority ? "eager" : "lazy"}
+        />
       ) : (
         <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
-          ไม่มีรูปภาพ
+          {t("recently_viewed.no_image")}
         </div>
       )}
 
@@ -119,9 +117,9 @@ export function PropertyCardImage({
         />
       </button>
 
-      {badge && (
+      {displayBadgeLabel && (
         <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md border border-white/30 text-[#12213b] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
-          {badge.label}
+          {displayBadgeLabel}
         </div>
       )}
     </div>

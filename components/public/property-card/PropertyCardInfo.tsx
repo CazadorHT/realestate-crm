@@ -1,8 +1,9 @@
 "use client";
 
 import { MapPin } from "lucide-react";
-import { getTypeLabel, getTypeColor, getSafeText } from "@/lib/property-utils";
+import { getTypeColor, getSafeText } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PropertyCardInfoProps {
   property: PropertyCardProps;
@@ -13,7 +14,13 @@ export function PropertyCardInfo({
   property,
   areaProvince,
 }: PropertyCardInfoProps) {
+  const { t } = useLanguage();
   const typeColor = getTypeColor(property.property_type);
+
+  // Property type localization
+  const typeLabel = t(
+    `home.property_types.${property.property_type?.toLowerCase().replace("_", "") || "other"}`,
+  );
 
   return (
     <div className="space-y-1 mb-3">
@@ -21,12 +28,15 @@ export function PropertyCardInfo({
         <span
           className={`text-[10px] sm:text-[11px] md:text-xs font-medium ${typeColor.text} ${typeColor.bg} px-2 sm:px-2.5 md:px-3 py-0.5 sm:py-0.5 md:py-1 rounded-full uppercase tracking-wide`}
         >
-          {getTypeLabel(property.property_type)}
+          {typeLabel}
         </span>
         <div className="flex items-center gap-1 text-stone-500">
           <MapPin className="h-3 w-3 text-blue-500" />
           <span className="text-xs">
-            {getSafeText(areaProvince, "กรุงเทพฯ")}
+            {getSafeText(
+              areaProvince,
+              t("nav.home").includes("Home") ? "Bangkok" : "กรุงเทพฯ",
+            )}
           </span>
         </div>
       </div>

@@ -29,17 +29,7 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { FilterBarSkeleton } from "../FilterBarSkeleton";
-
-export const PROPERTY_TYPES = [
-  { value: "ALL", label: "รวมทุกประเภท" },
-  { value: "HOUSE", label: "บ้าน" },
-  { value: "CONDO", label: "คอนโด" },
-  { value: "TOWNHOME", label: "ทาวน์โฮม" },
-  { value: "LAND", label: "ที่ดิน" },
-  { value: "OFFICE_BUILDING", label: "ออฟฟิศ" },
-  { value: "COMMERCIAL_BUILDING", label: "อาคารพาณิชย์" },
-  { value: "WAREHOUSE", label: "โกดัง" },
-];
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface SearchFilterBarProps {
   isLoading: boolean;
@@ -98,10 +88,28 @@ export function SearchFilterBar({
   setProvince,
   availableProvinces,
 }: SearchFilterBarProps) {
+  const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAreaSection, setShowAreaSection] = useState(true);
 
   if (isLoading) return <FilterBarSkeleton />;
+
+  const PROPERTY_TYPES = [
+    { value: "ALL", label: t("common.all") },
+    { value: "HOUSE", label: t("home.property_types.house") },
+    { value: "CONDO", label: t("home.property_types.condo") },
+    { value: "TOWNHOME", label: t("home.property_types.townhome") },
+    { value: "LAND", label: t("home.property_types.land") },
+    {
+      value: "OFFICE_BUILDING",
+      label: t("home.property_types.officebuilding"),
+    },
+    {
+      value: "COMMERCIAL_BUILDING",
+      label: t("home.property_types.commercialbuilding"),
+    },
+    { value: "WAREHOUSE", label: t("home.property_types.warehouse") },
+  ];
 
   const clearFilters = () => {
     setKeyword("");
@@ -125,7 +133,7 @@ export function SearchFilterBar({
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <Input
-              placeholder="ค้นหา..."
+              placeholder={t("search.keyword_placeholder")}
               className="pl-12 h-12 text-base rounded-xl border-slate-200 bg-white shadow-sm"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
@@ -145,13 +153,13 @@ export function SearchFilterBar({
               className="h-[90vh] rounded-t-4xl flex flex-col p-0 bg-slate-50"
             >
               <SheetHeader className="px-6 py-4 border-b border-slate-100 bg-white rounded-t-4xl">
-                <SheetTitle>ตัวกรองค้นหา</SheetTitle>
+                <SheetTitle>{t("search.filter_title")}</SheetTitle>
               </SheetHeader>
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* Province (Mobile) */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-900">
-                    จังหวัด
+                    {t("search.province")}
                   </label>
                   <Select
                     value={province}
@@ -161,10 +169,12 @@ export function SearchFilterBar({
                     }}
                   >
                     <SelectTrigger className="w-full h-12 rounded-xl bg-white">
-                      <SelectValue placeholder="ทุกจังหวัด" />
+                      <SelectValue placeholder={t("search.all_provinces")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ALL">-- ทุกจังหวัด --</SelectItem>
+                      <SelectItem value="ALL">
+                        -- {t("search.all_provinces")} --
+                      </SelectItem>
                       {availableProvinces.map((p) => (
                         <SelectItem key={p} value={p}>
                           {p}
@@ -177,7 +187,7 @@ export function SearchFilterBar({
                 {/* Property Type */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-900">
-                    ประเภททรัพย์
+                    {t("search.property_type")}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     {PROPERTY_TYPES.map((t) => (
@@ -199,14 +209,14 @@ export function SearchFilterBar({
                 {/* Listing Type */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-900">
-                    ต้องการ
+                    {t("search.needs")}
                   </label>
                   <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
                     {[
-                      { val: "ALL", label: "ทั้งหมด" },
-                      { val: "SALE", label: "ซื้อ" },
-                      { val: "RENT", label: "เช่า" },
-                      { val: "SALE_AND_RENT", label: "เช่า/ซื้อ" },
+                      { val: "ALL", label: t("common.all") },
+                      { val: "SALE", label: t("search.buy") },
+                      { val: "RENT", label: t("search.rent") },
+                      { val: "SALE_AND_RENT", label: t("search.rent_buy") },
                     ].map((opt) => (
                       <button
                         key={opt.val}
@@ -226,12 +236,12 @@ export function SearchFilterBar({
                 {/* Price Range */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-900">
-                    ช่วงราคา
+                    {t("search.price_range")}
                   </label>
                   <div className="flex items-center gap-2 h-12 bg-white rounded-xl px-2">
                     <Input
                       type="number"
-                      placeholder="งบต่ำสุด"
+                      placeholder={t("search.min_budget")}
                       className="border-0 h-full w-full p-0 text-sm focus-visible:ring-0 bg-white"
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
@@ -239,7 +249,7 @@ export function SearchFilterBar({
                     <span className="text-slate-400">—</span>
                     <Input
                       type="number"
-                      placeholder="งบสูงสุด"
+                      placeholder={t("search.max_budget")}
                       className="border-0 h-full w-full p-0 text-sm focus-visible:ring-0 bg-white"
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
@@ -250,7 +260,7 @@ export function SearchFilterBar({
                 {/* Bedroom */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-900">
-                    ห้องนอน
+                    {t("search.bedrooms")}
                   </label>
                   <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                     {["ALL", "1", "2", "3", "4+"].map((bed) => (
@@ -263,25 +273,24 @@ export function SearchFilterBar({
                             : "bg-white text-slate-700 border-slate-200"
                         }`}
                       >
-                        {bed === "ALL" ? "ทั้งหมด" : bed}
+                        {bed === "ALL" ? t("common.all") : bed}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Area (Mobile: Still use Select for compactness or list?) */}
-                {/* For consistency with design, let's keep Select for mobile or use a scrollable list.
-                     Let's sticky to Select for Mobile for now to save vertical space. */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-900">
-                    ทำเล
+                    {t("search.location")}
                   </label>
                   <Select value={area} onValueChange={setArea}>
                     <SelectTrigger className="w-full h-12 rounded-xl bg-white">
-                      <SelectValue placeholder="ทุกย่านทำเล" />
+                      <SelectValue placeholder={t("search.all_locations")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ALL">-- ทุกย่านทำเล --</SelectItem>
+                      <SelectItem value="ALL">
+                        -- {t("search.all_locations")} --
+                      </SelectItem>
                       {availableAreas.map((a) => (
                         <SelectItem key={a.name} value={a.name}>
                           {a.name} ({a.count})
@@ -302,7 +311,9 @@ export function SearchFilterBar({
                     onClick={() => setNearTrain(!nearTrain)}
                   >
                     <FaTrainSubway className="h-4 w-4" />
-                    <span className="text-sm font-medium">ใกล้รถไฟฟ้า</span>
+                    <span className="text-sm font-medium">
+                      {t("search.near_train")}
+                    </span>
                   </div>
                   <div
                     className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all cursor-pointer ${
@@ -313,7 +324,9 @@ export function SearchFilterBar({
                     onClick={() => setPetFriendly(!petFriendly)}
                   >
                     <MdOutlinePets className="h-5 w-5" />
-                    <span className="text-sm font-medium">เลี้ยงสัตว์ได้</span>
+                    <span className="text-sm font-medium">
+                      {t("search.pet_allowed")}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -321,7 +334,8 @@ export function SearchFilterBar({
               <SheetFooter className="p-6 border-t border-slate-100 bg-white pb-8">
                 <SheetClose asChild>
                   <Button className="w-full h-12 text-lg rounded-xl bg-linear-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-200/50">
-                    ดูผลลัพธ์ ({filteredLength} รายการ)
+                    {t("search.view_results")} ({filteredLength}{" "}
+                    {t("search.items")})
                   </Button>
                 </SheetClose>
               </SheetFooter>
@@ -337,7 +351,7 @@ export function SearchFilterBar({
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <Input
-                  placeholder="ค้นหา..."
+                  placeholder={t("search.keyword_placeholder")}
                   className="pl-12 h-12 text-base rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md focus:shadow-lg transition-all"
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
@@ -354,10 +368,12 @@ export function SearchFilterBar({
                 }}
               >
                 <SelectTrigger className="h-12 py-[23px] w-full rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all">
-                  <SelectValue placeholder="จังหวัด" />
+                  <SelectValue placeholder={t("search.province")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">ทุกจังหวัด</SelectItem>
+                  <SelectItem value="ALL">
+                    {t("search.all_provinces")}
+                  </SelectItem>
                   {availableProvinces.map((p) => (
                     <SelectItem key={p} value={p}>
                       {p}
@@ -370,7 +386,7 @@ export function SearchFilterBar({
             <div className="col-span-2">
               <Select value={type} onValueChange={setType}>
                 <SelectTrigger className="h-12 py-[23px] w-full rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all">
-                  <SelectValue placeholder="ประเภททรัพย์" />
+                  <SelectValue placeholder={t("search.property_type")} />
                 </SelectTrigger>
                 <SelectContent>
                   {PROPERTY_TYPES.map((t) => (
@@ -392,7 +408,7 @@ export function SearchFilterBar({
                       : "bg-white border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-slate-700"
                   }`}
                 >
-                  ทั้งหมด
+                  {t("common.all")}
                 </button>
                 <button
                   onClick={() => setListingType("SALE")}
@@ -402,7 +418,7 @@ export function SearchFilterBar({
                       : "bg-white border-slate-200 hover:border-green-400 hover:bg-green-50 text-slate-700"
                   }`}
                 >
-                  ขาย
+                  {t("search.buy")}
                 </button>
                 <button
                   onClick={() => setListingType("RENT")}
@@ -412,7 +428,7 @@ export function SearchFilterBar({
                       : "bg-white border-slate-200 hover:border-orange-400 hover:bg-orange-50 text-slate-700"
                   }`}
                 >
-                  เช่า
+                  {t("search.rent")}
                 </button>
                 <button
                   onClick={() => setListingType("SALE_AND_RENT")}
@@ -422,7 +438,7 @@ export function SearchFilterBar({
                       : "bg-white border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-slate-700"
                   }`}
                 >
-                  ขาย+เช่า
+                  {t("search.rent_buy")}
                 </button>
               </div>
             </div>
@@ -431,7 +447,7 @@ export function SearchFilterBar({
               <div className="flex items-center gap-2 h-12 bg-white rounded-xl">
                 <Input
                   type="number"
-                  placeholder="งบต่ำสุด"
+                  placeholder={t("search.min_budget")}
                   className="h-full w-full p-0 text-sm focus-visible:ring-0 bg-white shadow-sm border-slate-200 border px-2"
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
@@ -439,7 +455,7 @@ export function SearchFilterBar({
                 <span className="text-slate-400">—</span>
                 <Input
                   type="number"
-                  placeholder="งบสูงสุด"
+                  placeholder={t("search.max_budget")}
                   className="  h-full w-full p-0 text-sm focus-visible:ring-0 bg-white shadow-sm border-slate-200 border px-2"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
@@ -459,7 +475,7 @@ export function SearchFilterBar({
                     : "bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-700"
                 }`}
               >
-                ทำเลยอดนิยม
+                {t("search.popular_locations")}
                 {showAreaSection ? (
                   <ChevronUp className="w-4 h-4 text-slate-500" />
                 ) : (
@@ -469,7 +485,7 @@ export function SearchFilterBar({
             )}
             <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl h-12">
               <span className="text-sm text-slate-600 font-medium px-2">
-                ห้องนอน:
+                {t("search.bedrooms")}:
               </span>
               {["ALL", "1", "2", "3", "4+"].map((bed) => (
                 <button
@@ -481,7 +497,7 @@ export function SearchFilterBar({
                       : "bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-700"
                   }`}
                 >
-                  {bed === "ALL" ? "ทั้งหมด" : bed}
+                  {bed === "ALL" ? t("common.all") : bed}
                 </button>
               ))}
             </div>
@@ -500,7 +516,7 @@ export function SearchFilterBar({
                 }`}
               />
               <span className="text-sm font-medium select-none">
-                ใกล้รถไฟฟ้า
+                {t("search.near_train")}
               </span>
             </div>
 
@@ -518,21 +534,31 @@ export function SearchFilterBar({
                 }`}
               />
               <span className="text-sm font-medium select-none">
-                เลี้ยงสัตว์ได้
+                {t("search.pet_allowed")}
               </span>
             </div>
 
             <Select value={sort} onValueChange={setSort}>
               <SelectTrigger className="w-[210px] h-12 py-[23px] rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all">
                 <ArrowUpDown className="h-4 w-4 mr-2 text-slate-400" />
-                <SelectValue placeholder="เรียงลำดับ" />
+                <SelectValue placeholder={t("search.sort_by")} />
               </SelectTrigger>
               <SelectContent className="min-w-[210px]">
-                <SelectItem value="NEWEST">🆕 มาใหม่ล่าสุด</SelectItem>
-                <SelectItem value="PRICE_ASC">💰 ราคาน้อย → มาก</SelectItem>
-                <SelectItem value="PRICE_DESC">💎 ราคามาก → น้อย</SelectItem>
-                <SelectItem value="AREA_ASC">📐 พื้นที่น้อย → มาก</SelectItem>
-                <SelectItem value="AREA_DESC">🏠 พื้นที่มาก → น้อย</SelectItem>
+                <SelectItem value="NEWEST">
+                  {t("search.sort_newest")}
+                </SelectItem>
+                <SelectItem value="PRICE_ASC">
+                  {t("search.sort_price_asc")}
+                </SelectItem>
+                <SelectItem value="PRICE_DESC">
+                  {t("search.sort_price_desc")}
+                </SelectItem>
+                <SelectItem value="AREA_ASC">
+                  {t("search.sort_area_asc")}
+                </SelectItem>
+                <SelectItem value="AREA_DESC">
+                  {t("search.sort_area_desc")}
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -542,7 +568,7 @@ export function SearchFilterBar({
               className="ml-auto h-12 px-5 rounded-xl border-2 border-slate-200 hover:border-red-400 hover:text-red-600 hover:bg-red-50 transition-all font-medium shadow-sm bg-white"
             >
               <SlidersHorizontal className={`h-4 w-4 mr-2 text-rose-500`} />
-              ล้างตัวกรอง
+              {t("search.clear_filters")}
             </Button>
           </div>
 
@@ -559,7 +585,7 @@ export function SearchFilterBar({
                         : "text-slate-500 hover:text-blue-600"
                     }`}
                   >
-                    ทำเลทั้งหมด
+                    {t("search.all_locations")}
                   </button>
                   {availableAreas
                     .slice(0, isExpanded ? undefined : 15) // Show top 15 initially
@@ -587,11 +613,12 @@ export function SearchFilterBar({
                     >
                       {isExpanded ? (
                         <>
-                          น้อยลง <ChevronUp className="w-3 h-3" />
+                          {t("search.show_less")}{" "}
+                          <ChevronUp className="w-3 h-3" />
                         </>
                       ) : (
                         <>
-                          ดูเพิ่ม ({availableAreas.length - 15}){" "}
+                          {t("search.show_more")} ({availableAreas.length - 15}){" "}
                           <ChevronDown className="w-3 h-3" />
                         </>
                       )}

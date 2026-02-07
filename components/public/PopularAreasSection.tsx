@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { MapPin, ArrowRight } from "lucide-react";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type ApiPopularArea = {
   popular_area: string;
@@ -24,6 +25,7 @@ type AreaItem = {
 const LOADING = Array.from({ length: 6 });
 
 export function PopularAreasSection() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [items, setItems] = useState<AreaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -113,30 +115,32 @@ export function PopularAreasSection() {
                 <MapPin className="h-4 w-4 relative z-10" />
                 <div className="absolute inset-0 bg-blue-500 blur-md opacity-30 group-hover:opacity-50 transition-opacity" />
               </div>
-              <span className="tracking-wide">ทำเลยอดนิยม</span>
+              <span className="tracking-wide">
+                {t("home.popular_areas.title")}
+              </span>
             </div>
 
             {/* SEO-Optimized Gradient Heading */}
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
-              เจาะลึก
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-blue-500 to-purple-600">
-                ย่านน่าอยู่
-              </span>{" "}
-              บ้าน คอนโด
-              <br className="hidden md:block" />
-              <span className="text-slate-600 text-2xl sm:text-3xl md:text-4xl font-semibold mt-1 block md:inline">
-                {" "}
-                ซื้อ · ขาย · เช่า
-              </span>{" "}
-              <span className="text-slate-500 text-xl sm:text-2xl md:text-3xl font-normal">
-                ทั่วกรุงเทพฯ
-              </span>
+              {t("home.popular_areas.subtitle")
+                .split(" ")
+                .map((word, i) => (
+                  <span
+                    key={i}
+                    className={
+                      i === 1
+                        ? "text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-blue-500 to-purple-600 mx-1"
+                        : ""
+                    }
+                  >
+                    {word}
+                  </span>
+                ))}
             </h2>
 
             {/* SEO-Enhanced Description with Keywords */}
             <p className="text-slate-600 text-base md:text-lg leading-relaxed">
-              รวมทรัพย์สินคุณภาพในย่านศักยภาพสูง
-              ใกล้รถไฟฟ้าและสิ่งอำนวยความสะดวก พร้อมสถิติจำนวนทรัพย์อัพเดทล่าสุด
+              {t("home.popular_areas.description")}
             </p>
           </div>
 
@@ -155,7 +159,7 @@ export function PopularAreasSection() {
 
               {/* Button content */}
               <div className="relative flex items-center gap-2">
-                <span>ดูทรัพย์ทั้งหมด</span>
+                <span>{t("common.view_all")}</span>
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
               </div>
             </button>
@@ -184,7 +188,7 @@ export function PopularAreasSection() {
                 <MapPin className="h-8 w-8" />
               </div>
               <p className="text-slate-500 font-semibold text-xl">
-                ไม่พบข้อมูลทำเลในระบบ
+                {t("home.popular_areas.no_data")}
               </p>
             </div>
           ) : (
@@ -238,10 +242,11 @@ export function PopularAreasSection() {
                     {/* แถวข้อมูล: ปรับให้ดูแพงด้วย Glassmorphism */}
                     <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 ">
                       <p className="bg-white/30 backdrop-blur-md border border-white/30 text-white/80 text-[11px] font-medium px-3 py-1.5 rounded-full shadow-xl">
-                        {it.count.toLocaleString()} รายการอสังหาฯ
+                        {it.count.toLocaleString()}{" "}
+                        {t("property_listing.found_suffix")}
                       </p>
                       <div className="flex items-center gap-1 text-white text-xs font-semibold uppercase tracking-wider">
-                        สำรวจย่านนี้
+                        {t("home.popular_areas.explore")}
                         <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
                       </div>
                     </div>

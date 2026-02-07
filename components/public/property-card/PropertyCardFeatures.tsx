@@ -6,12 +6,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function PropertyCardFeatures({
   features,
 }: {
   features: { id: string; name: string; icon_key: string }[] | null | undefined;
 }) {
+  const { t } = useLanguage();
+
   if (!features || features.length === 0) return null;
 
   return (
@@ -37,7 +40,7 @@ export function PropertyCardFeatures({
               className="bg-slate-900/95 backdrop-blur-sm text-slate-50 border-slate-800 p-3 shadow-xl z-50"
             >
               <div className="font-semibold text-[10px] mb-1.5 text-slate-400 uppercase tracking-wider">
-                เพิ่มเติม
+                {t("common.more")}
               </div>
               <ul className="text-xs space-y-1 min-w-[120px]">
                 {features.slice(3, 8).map((f) => (
@@ -48,7 +51,8 @@ export function PropertyCardFeatures({
                 ))}
                 {features.length > 8 && (
                   <li className="text-slate-500 pl-3 text-[10px]">
-                    ...และอีก {features.length - 8} รายการ
+                    ...{t("common.more")} {features.length - 8}{" "}
+                    {t("search.items")}
                   </li>
                 )}
               </ul>

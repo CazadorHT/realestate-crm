@@ -35,7 +35,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   const q = (args.q ?? "").trim();
   const stage = (args.stage ?? "").trim();
   const page = Math.max(1, args.page ?? 1);
-  const pageSize = Math.min(10, Math.max(5, args.pageSize ?? 10));
+  const pageSize = Math.min(200, Math.max(5, args.pageSize ?? 10));
 
   let query = supabase
     .from("leads")

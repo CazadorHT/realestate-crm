@@ -2,38 +2,41 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Phone, Mail, MessageCircle } from "lucide-react";
-
-const contactInfo = [
-  {
-    icon: Phone,
-    title: "โทรศัพท์",
-    value: "02-XXX-XXXX",
-    subtitle: "จันทร์-ศุกร์ 9:00-18:00",
-    href: "tel:02XXXXXXX",
-    color: "bg-blue-100 text-blue-600",
-    borderColor: "group-hover:border-blue-200",
-  },
-  {
-    icon: Mail,
-    title: "อีเมล",
-    value: "contact@yourdomain.com",
-    subtitle: "ตอบภายใน 24 ชม.",
-    href: "mailto:contact@yourdomain.com",
-    color: "bg-purple-100 text-purple-600",
-    borderColor: "group-hover:border-purple-200",
-  },
-  {
-    icon: MessageCircle,
-    title: "LINE Official",
-    value: "@your-line-id",
-    subtitle: "ตอบเร็วที่สุด",
-    href: "https://line.me/R/ti/p/@your-line-id",
-    color: "bg-green-100 text-green-600",
-    borderColor: "group-hover:border-green-200",
-  },
-];
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function ContactInfoCards() {
+  const { t } = useLanguage();
+
+  const contactInfo = [
+    {
+      icon: Phone,
+      title: t("contact.info_phone"),
+      value: "02-XXX-XXXX",
+      subtitle: t("contact.info_phone_sub"),
+      href: "tel:02XXXXXXX",
+      color: "bg-blue-100 text-blue-600",
+      borderColor: "group-hover:border-blue-200",
+    },
+    {
+      icon: Mail,
+      title: t("contact.info_email"),
+      value: "contact@yourdomain.com",
+      subtitle: t("contact.info_email_sub"),
+      href: "mailto:contact@yourdomain.com",
+      color: "bg-purple-100 text-purple-600",
+      borderColor: "group-hover:border-purple-200",
+    },
+    {
+      icon: MessageCircle,
+      title: t("contact.info_line"),
+      value: "@your-line-id",
+      subtitle: t("contact.info_line_sub"),
+      href: "https://line.me/R/ti/p/@your-line-id",
+      color: "bg-green-100 text-green-600",
+      borderColor: "group-hover:border-green-200",
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
       {contactInfo.map((info, index) => (

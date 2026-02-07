@@ -12,12 +12,13 @@ import { FavoritesEmptyState } from "@/components/public/favorites/FavoritesEmpt
 import { FavoritesGrid } from "@/components/public/favorites/FavoritesGrid";
 import { FavoritesSkeleton } from "@/components/public/favorites/FavoritesSkeleton";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState<PropertyCardProps[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-
+  const { t } = useLanguage();
   useEffect(() => {
     loadFavorites();
 
@@ -76,7 +77,7 @@ export default function FavoritesPage() {
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <AppBreadcrumbs
           items={[
-            { label: "หน้าแรก", href: "/" },
+            { label: t("breadcrumb.home"), href: "/" },
             { label: "รายการโปรด", href: "/favorites" },
           ]}
           className="mb-6"

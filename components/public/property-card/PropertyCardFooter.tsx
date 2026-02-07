@@ -2,9 +2,10 @@
 
 import { Clock } from "lucide-react";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { PRICE_FORMATTER, getOfficePrice } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function PropertyCardFooter({
   property,
@@ -13,6 +14,9 @@ export function PropertyCardFooter({
   property: PropertyCardProps;
   variant?: "default" | "minimal";
 }) {
+  const { t, language } = useLanguage();
+  const dateLocale = language === "th" ? th : enUS;
+
   if (variant === "minimal") {
     return (
       <div className="px-3 sm:px-4 py-3 border-t border-slate-100 bg-white flex flex-col gap-3">
@@ -21,21 +25,21 @@ export function PropertyCardFooter({
           {/* Sale Column */}
           <div className="flex flex-col">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
-              ขาย
+              {t("common.sale")}
             </span>
             <div className="text-base sm:text-lg font-extrabold text-[#1B263B]">
               {property.price || property.original_price
                 ? PRICE_FORMATTER.format(
                     property.price || property.original_price!,
                   )
-                : "สอบถามราคา"}
+                : t("common.contact_for_price")}
             </div>
           </div>
 
           {/* Rent Column */}
           <div className="flex flex-col text-right">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
-              เช่า
+              {t("common.rent")}
             </span>
             <div className="text-base sm:text-lg font-extrabold text-[#1B263B]">
               {property.rental_price || property.original_rental_price ? (
@@ -44,11 +48,11 @@ export function PropertyCardFooter({
                     property.rental_price || property.original_rental_price!,
                   )}
                   <span className="text-[10px] text-slate-400 font-medium ml-0.5">
-                    /เดือน
+                    /{t("common.per_month")}
                   </span>
                 </>
               ) : (
-                "สอบถามค่าเช่า"
+                t("common.contact_for_price")
               )}
             </div>
           </div>
@@ -59,7 +63,10 @@ export function PropertyCardFooter({
           {/* Contract */}
           <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
             <div className="w-1 h-1 rounded-full bg-slate-300" />
-            <span>สัญญา {property.min_contract_months || 12} ด.</span>
+            <span>
+              {t("common.contract")} {property.min_contract_months || 12}{" "}
+              {t("common.months_short")}
+            </span>
           </div>
 
           {/* Date */}
@@ -68,7 +75,7 @@ export function PropertyCardFooter({
             <span>
               {property.updated_at
                 ? format(new Date(property.updated_at), "d MMM yyyy", {
-                    locale: th,
+                    locale: dateLocale,
                   })
                 : "-"}
             </span>
@@ -86,7 +93,7 @@ export function PropertyCardFooter({
             {/* SALE PRICE BLOCK */}
             <div className="flex flex-col pr-3">
               <span className="text-[10px] sm:text-[11px] md:text-xs font-bold uppercase tracking-tight mb-0.5">
-                ขาย
+                {t("common.sale")}
               </span>
               {property.original_price &&
               property.price &&
@@ -118,7 +125,7 @@ export function PropertyCardFooter({
                     ? PRICE_FORMATTER.format(
                         property.price || property.original_price!,
                       )
-                    : "สอบถามราคา"}
+                    : t("common.contact_for_price")}
                 </div>
               )}
             </div>
@@ -126,7 +133,7 @@ export function PropertyCardFooter({
             {/* RENT PRICE BLOCK */}
             <div className="flex flex-col pl-2 md:pl-3">
               <span className="text-[10px] md:text-xs font-bold uppercase tracking-tight mb-0.5">
-                เช่า
+                {t("common.rent")}
               </span>
               {property.original_rental_price &&
               property.rental_price &&
@@ -152,7 +159,7 @@ export function PropertyCardFooter({
                   <div className="order-1 text-base md:text-xl font-bold text-rose-600">
                     {PRICE_FORMATTER.format(property.rental_price)}
                     <span className="text-[10px] md:text-xs text-slate-500 font-normal ml-0.5">
-                      /เดือน
+                      /{t("common.per_month")}
                     </span>
                   </div>
                 </div>
@@ -163,9 +170,9 @@ export function PropertyCardFooter({
                         property.rental_price ||
                           property.original_rental_price!,
                       )
-                    : "สอบถามค่าเช่า"}
+                    : t("common.contact_for_price")}
                   <span className="text-[10px] md:text-xs text-slate-400 font-normal ml-0.5">
-                    /เดือน
+                    /{t("common.per_month")}
                   </span>
                 </div>
               )}
@@ -174,7 +181,9 @@ export function PropertyCardFooter({
         ) : (
           <>
             <div className="text-[10px] md:text-xs text-stone-400 uppercase tracking-tight">
-              {property.listing_type === "RENT" ? "ค่าเช่า" : "ราคาขาย"}
+              {property.listing_type === "RENT"
+                ? t("common.rent_price")
+                : t("common.sale_price")}
             </div>
             <div className="text-base md:text-xl font-bold text-[#1B263B] truncate flex items-baseline gap-1 md:gap-2">
               {/* SALE or RENT Discount Logic */}
@@ -218,21 +227,21 @@ export function PropertyCardFooter({
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-base md:text-xl font-bold text-rose-600">
-                      {getDisplayPrice(property)}
+                      {getDisplayPrice(property, t)}
                     </span>
                     {property.listing_type === "RENT" && (
                       <span className="text-[10px] md:text-xs text-slate-500 font-normal">
-                        /เดือน
+                        /{t("common.per_month")}
                       </span>
                     )}
                   </div>
                 </div>
               ) : (
                 <>
-                  {getDisplayPrice(property)}
+                  {getDisplayPrice(property, t)}
                   {property.listing_type === "RENT" && (
                     <span className="text-[10px] md:text-xs text-slate-500 font-normal">
-                      /เดือน
+                      /{t("common.per_month")}
                     </span>
                   )}
                 </>
@@ -249,7 +258,8 @@ export function PropertyCardFooter({
           property.min_contract_months && (
             <div className="flex items-center gap-1 text-[9px] md:text-[11px] text-slate-400 font-medium italic">
               <div className="w-1 h-1 rounded-full bg-slate-300" />
-              สัญญา {property.min_contract_months} ด.
+              {t("common.contract")} {property.min_contract_months}{" "}
+              {t("common.months_short")}
             </div>
           )}
 
@@ -260,7 +270,7 @@ export function PropertyCardFooter({
               <Clock className="h-3 w-3 mr-1" />
               <span className="text-slate-400 font-normal">
                 {format(new Date(property.updated_at), "d MMM yyyy", {
-                  locale: th,
+                  locale: dateLocale,
                 })}
               </span>
             </>
@@ -272,7 +282,10 @@ export function PropertyCardFooter({
 }
 
 // Helpers
-function getDisplayPrice(property: PropertyCardProps) {
+function getDisplayPrice(
+  property: PropertyCardProps,
+  t: (key: string) => string,
+) {
   // Office price override
   const officePrice = getOfficePrice(property as any);
 
@@ -313,7 +326,7 @@ function getDisplayPrice(property: PropertyCardProps) {
     }
   }
 
-  if (!value) return "สอบถามราคา";
+  if (!value) return t("common.contact_for_price");
   const formatted = PRICE_FORMATTER.format(value);
   return isRent ? `${formatted}` : formatted;
 }

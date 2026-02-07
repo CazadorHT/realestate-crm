@@ -9,6 +9,7 @@ import {
   Warehouse,
 } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PropertyTypeCardProps {
   icon: React.ElementType;
@@ -48,6 +49,7 @@ export function PropertyTypeCard({
   href,
   gradient,
 }: PropertyTypeCardProps) {
+  const { t } = useLanguage();
   return (
     <Link href={href}>
       <div className="group relative bg-white rounded-2xl py-6 px-4 shadow-lg border border-slate-100 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
@@ -70,7 +72,7 @@ export function PropertyTypeCard({
             {title}
           </h3>
           <p className="text-xs font-medium text-blue-600 mb-3 uppercase tracking-wider">
-            {count} รายการ
+            {count} {t("property_listing.found_suffix")}
           </p>
           {/* Description */}
           <p className="text-xs md:text-sm text-slate-600 mb-4 min-h-[56px] leading-relaxed">
@@ -80,7 +82,7 @@ export function PropertyTypeCard({
           {/* CTA */}
           <div className="text-center">
             <span className="text-sm text-blue-600 font-medium group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-              ค้นหาเลย →
+              {t("common.start_search")} →
             </span>
           </div>
         </div>
@@ -94,58 +96,53 @@ export function PropertyTypeGrid({
 }: {
   isLoading?: boolean;
 }) {
+  const { t } = useLanguage();
   const propertyTypes = [
     {
       icon: Building2,
-      title: "คอนโดมิเนียม",
+      title: t("home.property_types.condo"),
       count: "2,847",
-      description:
-        "ซื้อ-ขาย-เช่า คอนโด ทำเลใกล้ BTS MRT ราคาดีที่สุด โครงการใหม่และมือสอง",
+      description: t("home.property_types.condo_desc"),
       href: "/?type=CONDO#latest-properties",
       gradient: "from-blue-600 to-indigo-600",
     },
     {
       icon: Home,
-      title: "บ้านเดี่ยว-แฝด",
+      title: t("home.property_types.house"),
       count: "1,653",
-      description:
-        "บ้านเดี่ยว บ้านแฝด พร้อมอยู่ พื้นที่กว้าง ซื้อ-ขาย-เช่า ในโครงการชั้นนำ",
+      description: t("home.property_types.house_desc"),
       href: "/?type=HOUSE#latest-properties",
       gradient: "from-purple-500 to-purple-800",
     },
     {
       icon: Building,
-      title: "ทาวน์โฮม-โฮมออฟฟิศ",
+      title: t("home.property_types.townhome"),
       count: "892",
-      description:
-        "ทาวน์โฮม โฮมออฟฟิศ ซื้อ-ขาย-เช่า ตอบโจทย์ทั้งอยู่อาศัยและทำธุรกิจ",
+      description: t("home.property_types.townhome_desc"),
       href: "/?type=TOWNHOME#latest-properties",
       gradient: "from-orange-500 to-orange-800",
     },
     {
       icon: BriefcaseBusiness,
-      title: "อาคารสำนักงาน",
+      title: t("home.property_types.office"),
       count: "264",
-      description:
-        "อาคารออฟฟิศ สำนักงานพร้อมใช้งาน ขาย-เช่า ทำเลศูนย์กลางธุรกิจ",
+      description: t("home.property_types.office_desc"),
       href: "/?type=OFFICE_BUILDING#latest-properties",
       gradient: "from-sky-500 to-cyan-800",
     },
     {
       icon: Warehouse,
-      title: "โกดังคลังสินค้า",
+      title: t("home.property_types.warehouse"),
       count: "187",
-      description:
-        "โกดัง คลังสินค้า ขาย-เช่า พื้นที่กว้าง เหมาะสำหรับธุรกิจโลจิสติกส์",
+      description: t("home.property_types.warehouse_desc"),
       href: "/?type=WAREHOUSE#latest-properties",
       gradient: "from-amber-500 to-yellow-700",
     },
     {
       icon: Trees,
-      title: "ที่ดินเปล่า",
+      title: t("home.property_types.land"),
       count: "1,243",
-      description:
-        "ที่ดินเปล่า ขาย-เช่า ทำเลศักยภาพสูง เหมาะสร้างบ้าน-โครงการ-ลงทุน",
+      description: t("home.property_types.land_desc"),
       href: "/?type=LAND#latest-properties",
       gradient: "from-emerald-500 to-teal-800",
     },
@@ -155,9 +152,8 @@ export function PropertyTypeGrid({
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "ประเภทอสังหาริมทรัพย์",
-    description:
-      "รวมประกาศซื้อ ขาย เช่า บ้าน คอนโด สำนักงานออฟฟิศ และอสังหาริมทรัพย์ทุกประเภท",
+    name: t("home.property_types.title"),
+    description: t("property_listing.description"),
     itemListElement: propertyTypes.map((type, index) => ({
       "@type": "ListItem",
       position: index + 1,
@@ -165,7 +161,7 @@ export function PropertyTypeGrid({
         "@type": "Product",
         name: type.title,
         description: type.description,
-        url: `https://your-domain.com${type.href}`,
+        url: `https://oma-asset.com${type.href}`,
       },
     })),
   };
@@ -188,22 +184,26 @@ export function PropertyTypeGrid({
         {/* SEO-Optimized Section Header */}
         <div className="text-center mb-10" data-aos="fade-up">
           <h2 className="text-2xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
-            ค้นหา{" "}
+            {t("nav.properties")}{" "}
             <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
-              บ้าน คอนโด สำนักงานออฟฟิศ
+              {t("home.property_types.description")}
             </span>{" "}
-            ตามประเภท
+            {t("home.property_types.description").includes("ตามประเภท")
+              ? ""
+              : t("common.all")}
           </h2>
           <p
             className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto"
             data-aos="fade-up"
             data-aos-delay="100"
           >
-            รวมประกาศ{" "}
+            {t("property_listing.title")}{" "}
             <span className="font-semibold text-blue-600">
-              ซื้อ · ขาย · เช่า
+              {t("property_listing.title").includes("ซื้อ · ขาย · เช่า")
+                ? ""
+                : "Buy · Sell · Rent"}
             </span>{" "}
-            อสังหาริมทรัพย์ครบทุกประเภท พร้อมข้อมูลตรวจสอบแล้ว 100%
+            {t("common.verified_100")}
           </p>
         </div>
 

@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useSmartMatchWizard } from "@/features/smart-match/hooks/useSmartMatchWizard";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { type PropertyType } from "@/features/smart-match/types";
 
 // Layout & UI Components
@@ -20,6 +21,7 @@ import {
 } from "./smart-match/constants";
 
 export function SmartMatchWizard() {
+  const { t } = useLanguage();
   const {
     step,
     setStep,
@@ -66,7 +68,12 @@ export function SmartMatchWizard() {
         : DEFAULT_BUY_RANGES;
 
   const currentPropertyTypes = isOfficeMode
-    ? [{ label: "🏢 สำนักงาน/ออฟฟิศ", value: "OFFICE_BUILDING" }]
+    ? [
+        {
+          label: `🏢 ${t("home.property_types.office")}`,
+          value: "OFFICE_BUILDING",
+        },
+      ]
     : propertyTypes.length > 0
       ? propertyTypes
       : DEFAULT_PROPERTY_TYPES;
@@ -75,16 +82,16 @@ export function SmartMatchWizard() {
     return (
       <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-5 md:p-8 border border-slate-100 h-[450px] flex flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
-        <p className="text-sm text-slate-500">กำลังโหลด...</p>
+        <p className="text-sm text-slate-500">{t("smart_match.loading")}</p>
       </div>
     );
   }
 
   const purposeOptions = [
-    { label: "🔑 เช่าบ้าน/คอนโด", value: "RENT" },
-    { label: "🏢 หาพื้นที่ทำงาน", value: "OFFICE" },
-    { label: "🏠 ซื้อบ้าน/คอนโด", value: "BUY" },
-    { label: "📈 ลงทุนอสังหาฯ", value: "INVEST" },
+    { label: t("smart_match.purpose_rent"), value: "RENT" },
+    { label: t("smart_match.purpose_office"), value: "OFFICE" },
+    { label: t("smart_match.purpose_buy"), value: "BUY" },
+    { label: t("smart_match.purpose_invest"), value: "INVEST" },
   ];
 
   return (
@@ -101,7 +108,7 @@ export function SmartMatchWizard() {
           <div className="relative flex-1 flex flex-col pt-5 min-h-0 ">
             {step === 1 && (
               <QuizQuestion
-                title={settings.wizard_title || "วันนี้คุณกำลังมองหา..."}
+                title={t("smart_match.purpose_q")}
                 options={purposeOptions.map((o) => o.label)}
                 availableOptions={purposeOptions
                   .filter((o) => {
@@ -118,15 +125,13 @@ export function SmartMatchWizard() {
                   })
                   .map((o) => o.label)}
                 onSelect={(val) => {
-                  if (val.includes("พื้นที่ทำงาน")) {
+                  const selected = purposeOptions.find((o) => o.label === val);
+                  if (selected?.value === "OFFICE") {
                     setPurpose("RENT");
                     setIsOfficeMode(true);
                     setPropertyType("OFFICE_BUILDING");
                     setStep(1.7);
                   } else {
-                    const selected = purposeOptions.find(
-                      (o) => o.label === val,
-                    );
                     setPurpose((selected?.value as any) || "BUY");
                     setIsOfficeMode(false);
                     setStep(1.5);
@@ -137,12 +142,16 @@ export function SmartMatchWizard() {
 
             {step === 1.5 && (
               <QuizQuestion
-                title="ที่พักอาศัยแบบไหนที่ตอบโจทย์คุณ?"
+                title={t("smart_match.type_q")}
                 options={currentPropertyTypes
                   .filter((t) =>
                     !isOfficeMode ? t.value !== "OFFICE_BUILDING" : true,
                   )
-                  .map((t) => t.label)}
+                  .map((pt) => {
+                    const key = `property_types.${pt.value.toLowerCase()}`;
+                    const res = t(key);
+                    return res === key ? pt.label : res;
+                  })}
                 availableOptions={
                   availablePropertyTypes.length > 0
                     ? currentPropertyTypes
@@ -150,13 +159,19 @@ export function SmartMatchWizard() {
                           !isOfficeMode ? t.value !== "OFFICE_BUILDING" : true,
                         )
                         .filter((t) => availablePropertyTypes.includes(t.value))
-                        .map((t) => t.label)
+                        .map((pt) => {
+                          const key = `property_types.${pt.value.toLowerCase()}`;
+                          const res = t(key);
+                          return res === key ? pt.label : res;
+                        })
                     : undefined
                 }
                 onSelect={(val) => {
-                  const selectedType = currentPropertyTypes.find(
-                    (t) => t.label === val,
-                  );
+                  const selectedType = currentPropertyTypes.find((pt) => {
+                    const key = `property_types.${pt.value.toLowerCase()}`;
+                    const res = t(key);
+                    return (res === key ? pt.label : res) === val;
+                  });
                   setPropertyType(
                     (selectedType?.value as PropertyType) || "OTHER",
                   );
@@ -180,21 +195,31 @@ export function SmartMatchWizard() {
               <QuizQuestion
                 title={
                   purpose === "RENT"
-                    ? "งบเช่าต่อเดือนเท่าไหร่ ?"
-                    : "งบประมาณประมาณเท่าไหร่ ?"
+                    ? t("smart_match.budget_rent_q")
+                    : t("smart_match.budget_buy_q")
                 }
-                options={currentBudgetRanges.map((r) => r.label)}
+                options={currentBudgetRanges.map((r) => {
+                  const key = `smart_match.budget_labels.${r.id}`;
+                  const res = t(key);
+                  return res === key ? r.label : res;
+                })}
                 availableOptions={
                   availableBudgetIds.length > 0
                     ? currentBudgetRanges
                         .filter((r) => availableBudgetIds.includes(r.id))
-                        .map((r) => r.label)
+                        .map((r) => {
+                          const key = `smart_match.budget_labels.${r.id}`;
+                          const res = t(key);
+                          return res === key ? r.label : res;
+                        })
                     : undefined
                 }
                 onSelect={(val) => {
-                  const selected = currentBudgetRanges.find(
-                    (r) => r.label === val,
-                  );
+                  const selected = currentBudgetRanges.find((r) => {
+                    const key = `smart_match.budget_labels.${r.id}`;
+                    const res = t(key);
+                    return (res === key ? r.label : res) === val;
+                  });
                   if (selected)
                     setSelectedBudget({
                       min: selected.min_value,
@@ -207,18 +232,21 @@ export function SmartMatchWizard() {
 
             {step === 2.5 && settings.transit_question_enabled && (
               <QuizQuestion
-                title="ต้องการเน้นใกล้รถไฟฟ้าไหม ?"
-                options={["🚆 ใกล้รถไฟฟ้า BTS/MRT", "🚫 ไม่เน้นทำเลรถไฟฟ้า"]}
+                title={t("smart_match.transit_q")}
+                options={[
+                  t("smart_match.transit_yes"),
+                  t("smart_match.transit_no"),
+                ]}
                 availableOptions={[
                   availableTransitOptions.includes("NEAR_TRANSIT")
-                    ? "🚆 ใกล้รถไฟฟ้า BTS/MRT"
+                    ? t("smart_match.transit_yes")
                     : "",
                   availableTransitOptions.includes("ANY_LOCATION")
-                    ? "🚫 ไม่เน้นทำเลรถไฟฟ้า"
+                    ? t("smart_match.transit_no")
                     : "",
                 ].filter(Boolean)}
                 onSelect={(val) => {
-                  setNearTransit(val.includes("ใกล้รถไฟฟ้า"));
+                  setNearTransit(val === t("smart_match.transit_yes"));
                   setStep(3);
                 }}
               />
@@ -226,7 +254,7 @@ export function SmartMatchWizard() {
 
             {step === 3 && (
               <QuizQuestion
-                title="ระบุย่านที่คุณต้องการ (เช่น อารีย์, บางนา)"
+                title={t("smart_match.area_q")}
                 options={popularAreas}
                 availableOptions={availableLocations}
                 onSelect={(val) => {
@@ -236,10 +264,12 @@ export function SmartMatchWizard() {
               />
             )}
 
-            {step === 4 && <LoadingState loadingText={settings.loading_text} />}
+            {step === 4 && (
+              <LoadingState loadingText={t("smart_match.loading_analyzing")} />
+            )}
           </div>
 
-          <WizardFooter pdpaText={settings.pdpa_text} />
+          <WizardFooter pdpaText={t("smart_match.pdpa_text")} />
         </>
       ) : (
         <ResultsContainer

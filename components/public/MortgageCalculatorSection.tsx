@@ -5,8 +5,10 @@ import { Calculator } from "lucide-react";
 import { Slider } from "../ui/slider";
 import { Button } from "@/components/ui/button";
 import { SectionBackground } from "./SectionBackground";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function MortgageCalculatorSection() {
+  const { t } = useLanguage();
   const [propertyPrice, setPropertyPrice] = useState(5000000);
   const [downPaymentPercent, setDownPaymentPercent] = useState(20);
   const [interestRate, setInterestRate] = useState(3.5); // APR
@@ -26,7 +28,7 @@ export function MortgageCalculatorSection() {
   const monthlyPayment = calculateMonthlyPayment();
 
   const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("th-TH", {
+    new Intl.NumberFormat(t("common.baht") === "฿" ? "th-TH" : "en-US", {
       style: "currency",
       currency: "THB",
       maximumFractionDigits: 0,
@@ -36,9 +38,8 @@ export function MortgageCalculatorSection() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "เครื่องคำนวณสินเชื่อบ้าน คอนโด อสังหาริมทรัพย์",
-    description:
-      "เครื่องคำนวณสินเชื่อบ้าน คอนโด คำนวณยอดผ่อนต่อเดือน ดอกเบี้ย เงินดาวน์ สำหรับวางแพN่นซื้อบ้านเดี่ยว คอนโดมิเนียม และทรัพย์สินอสังหาริมทรัพย์",
+    name: t("home.mortgage.title"),
+    description: t("home.mortgage.description"),
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web Browser",
     offers: {
@@ -62,25 +63,28 @@ export function MortgageCalculatorSection() {
           {/* Left: SEO-Optimized Text Content */}
           <div className="lg:col-span-5 space-y-4" data-aos="fade-right">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/10 text-blue-700 text-sm font-bold border border-blue-200/50">
-              <Calculator className="w-4 h-4" /> คำนวณสินเชื่อบ้าน-คอนโด
+              <Calculator className="w-4 h-4" /> {t("home.mortgage.title")}
             </div>
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-              คำนวณ
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
-                สินเชื่อบ้าน
-              </span>
-              <br />
-              <span className="text-3xl md:text-4xl text-slate-600">
-                ผ่อนคอนโด ทาวน์โฮม
-              </span>
+              {t("home.mortgage.subtitle")
+                .split(" ")
+                .map((word, i) => (
+                  <span
+                    key={i}
+                    className={
+                      i === 1
+                        ? "text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600"
+                        : i === 2
+                          ? "text-3xl md:text-4xl text-slate-600 block mt-2"
+                          : ""
+                    }
+                  >
+                    {word}{" "}
+                  </span>
+                ))}
             </h2>
             <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-xl">
-              เครื่องคำนวณยอดผ่อนต่อเดือนสำหรับ
-              <span className="font-semibold text-slate-900">
-                {" "}
-                สินเชื่อบ้านเดี่ยว คอนโดมิเนียม ทาวน์โฮม
-              </span>{" "}
-              และทรัพย์สินอสังหาริมทรัพย์ ช่วยวางแผนการเงินก่อนตัดสินใจซื้อ
+              {t("home.mortgage.description")}
             </p>
           </div>
 
@@ -94,10 +98,10 @@ export function MortgageCalculatorSection() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-600">
-                    ราคาทรัพย์สิน
+                    {t("home.mortgage.property_price")}
                   </label>
                   <div className="text-xl font-bold text-blue-600">
-                    {propertyPrice.toLocaleString()} ฿
+                    {propertyPrice.toLocaleString()} {t("common.baht")}
                   </div>
                   <Slider
                     value={[propertyPrice]}
@@ -109,7 +113,7 @@ export function MortgageCalculatorSection() {
                 </div>
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-600">
-                    เงินดาวน์ ({downPaymentPercent}%)
+                    {t("home.mortgage.down_payment")} ({downPaymentPercent}%)
                   </label>
                   <div className="text-xl font-bold text-slate-900">
                     {formatCurrency(downPaymentAmount)}
@@ -127,7 +131,7 @@ export function MortgageCalculatorSection() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-slate-500">
-                    ดอกเบี้ย (%)
+                    {t("home.mortgage.interest_rate")}
                   </label>
                   <input
                     type="number"
@@ -138,7 +142,7 @@ export function MortgageCalculatorSection() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-slate-500">
-                    ระยะเวลา (ปี)
+                    {t("home.mortgage.period")}
                   </label>
                   <select
                     value={termYears}
@@ -147,7 +151,7 @@ export function MortgageCalculatorSection() {
                   >
                     {[10, 15, 20, 25, 30, 35, 40].map((year) => (
                       <option key={year} value={year}>
-                        {year} ปี
+                        {year} {t("common.years")}
                       </option>
                     ))}
                   </select>
@@ -158,7 +162,7 @@ export function MortgageCalculatorSection() {
               <div className="bg-linear-to-tr from-blue-600 to-blue-500 rounded-2xl p-4 md:p-6 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <p className="text-blue-100 text-xs uppercase font-semibold">
-                    ยอดผ่อนต่อเดือน
+                    {t("home.mortgage.monthly_payment")}
                   </p>
                   <div className="text-2xl md:text-3xl font-bold">
                     {formatCurrency(monthlyPayment)}
@@ -173,7 +177,7 @@ export function MortgageCalculatorSection() {
                     variant="secondary"
                     className="bg-white text-green-600 hover:bg-green-50 w-full sm:w-auto"
                   >
-                    ติดต่อ LINE
+                    {t("common.contact_line")}
                   </Button>
                 </a>
               </div>

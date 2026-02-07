@@ -4,12 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
 import { FaFacebook, FaLine, FaInstagram, FaTiktok } from "react-icons/fa";
-
-const businessHours = [
-  { day: "จันทร์ - ศุกร์", hours: "09:00 - 18:00" },
-  { day: "เสาร์", hours: "10:00 - 16:00" },
-  { day: "อาทิตย์ & วันหยุดนักขัตฤกษ์", hours: "ปิดทำการ" },
-];
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const socialLinks = [
   {
@@ -39,6 +34,17 @@ const socialLinks = [
 ];
 
 export function ContactSidebar() {
+  const { t } = useLanguage();
+
+  const businessHours = [
+    { day: t("contact.sidebar_mon_fri"), hours: "09:00 - 18:00" },
+    { day: t("contact.sidebar_sat"), hours: "10:00 - 16:00" },
+    {
+      day: t("contact.sidebar_sun_holiday"),
+      hours: t("contact.sidebar_closed"),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Business Hours */}
@@ -48,7 +54,9 @@ export function ContactSidebar() {
             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
               <Clock className="h-5 w-5 text-blue-600" />
             </div>
-            <h3 className="font-bold text-slate-800 text-lg">เวลาทำการ</h3>
+            <h3 className="font-bold text-slate-800 text-lg">
+              {t("contact.sidebar_hours")}
+            </h3>
           </div>
           <div className="space-y-4">
             {businessHours.map((schedule, index) => (
@@ -71,7 +79,9 @@ export function ContactSidebar() {
       {/* Social Media */}
       <Card className="border-slate-100 shadow-lg shadow-slate-100/50">
         <CardContent className="p-6">
-          <h3 className="font-bold text-slate-800 text-lg mb-6">ติดตามเรา</h3>
+          <h3 className="font-bold text-slate-800 text-lg mb-6">
+            {t("contact.sidebar_follow")}
+          </h3>
           <div className="grid grid-cols-4 gap-3">
             {socialLinks.map((social, index) => (
               <a
@@ -98,11 +108,13 @@ export function ContactSidebar() {
           <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 border border-white/30 shadow-inner">
             <FaLine className="h-6 w-6 text-white" />
           </div>
-          <h3 className="font-bold text-xl mb-2">ต้องการคำตอบด่วน?</h3>
+          <h3 className="font-bold text-xl mb-2">
+            {t("contact.sidebar_quick_title")}
+          </h3>
           <p className="text-white/90 text-sm mb-6 leading-relaxed">
-            แอด LINE Official Account
+            {t("contact.sidebar_quick_desc1")}
             <br />
-            ทีมงานพร้อมตอบคำถามตลอด 24 ชม.
+            {t("contact.sidebar_quick_desc2")}
           </p>
           <a
             href="https://line.me/R/ti/p/@your-line-id"
@@ -112,7 +124,7 @@ export function ContactSidebar() {
           >
             <Button className="w-full bg-white text-[#06C755] hover:bg-white/90 font-bold h-12 rounded-xl shadow-lg border-2 border-transparent hover:border-white/50 transition-all">
               <FaLine className="mr-2 h-5 w-5" />
-              แอดไลน์เลย
+              {t("contact.sidebar_line_button")}
             </Button>
           </a>
         </CardContent>

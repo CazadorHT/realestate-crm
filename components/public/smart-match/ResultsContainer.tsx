@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PropertyMatch, SearchPurpose } from "@/features/smart-match/types";
 import { ResultCard } from "./ResultCard";
 import { LeadForm } from "./LeadForm";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface ResultsContainerProps {
   matches: PropertyMatch[];
@@ -19,6 +20,7 @@ export function ResultsContainer({
   purpose,
   onReset,
 }: ResultsContainerProps) {
+  const { t } = useLanguage();
   const [showForm, setShowForm] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<PropertyMatch | null>(
     null,
@@ -28,13 +30,11 @@ export function ResultsContainer({
     return (
       <div className="text-center py-12 flex-1 flex flex-col justify-center ">
         <h3 className="text-xl font-bold text-slate-900 mb-2">
-          ไม่พบทรัพย์สินที่ตรงเป๊ะ
+          {t("smart_match.no_match_title")}
         </h3>
-        <p className="text-slate-600 mb-6">
-          ลองปรับงบประมาณหรือทำเลใหม่อีกครั้ง
-        </p>
+        <p className="text-slate-600 mb-6">{t("smart_match.no_match_desc")}</p>
         <Button onClick={onReset} variant="outline">
-          ค้นหาใหม่
+          {t("smart_match.search_new")}
         </Button>
       </div>
     );
@@ -55,7 +55,8 @@ export function ResultsContainer({
     <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex-1 flex flex-col min-h-0">
       <div className="bg-green-50 text-green-700 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-4 border border-green-200 shrink-0">
         <span className="text-lg">🏆</span>
-        พบ {matches.length} ทรัพย์สินที่เหมาะกับคุณ
+        {t("smart_match.found_prefix")} {matches.length}{" "}
+        {t("smart_match.found_suffix")}
       </div>
 
       <div className="overflow-y-auto pr-2 flex-1 custom-scrollbar mb-4">
@@ -78,7 +79,7 @@ export function ResultsContainer({
         onClick={onReset}
         className="w-full mt-auto text-sm text-slate-500 hover:text-blue-600 transition-colors shrink-0 pt-4"
       >
-        ← ค้นหาใหม่อีกครั้ง
+        {t("smart_match.search_again")}
       </button>
     </div>
   );

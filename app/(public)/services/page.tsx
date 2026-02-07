@@ -1,13 +1,34 @@
+"use client";
+
 import { Suspense } from "react";
-import { getServices } from "@/features/services/actions";
+import { getServices, type ServiceRow } from "@/features/services/actions";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useState, useEffect } from "react";
 
 export const revalidate = 60; // Revalidate every minute
 
 async function ServicesContent() {
-  const services = await getServices(); // Fetch only active services
+  const { t } = useLanguage();
+  const [services, setServices] = useState<ServiceRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getServices().then((data) => {
+      setServices(data);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        {t("common.loading")}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -19,14 +40,13 @@ async function ServicesContent() {
         <div className="container relative z-10 mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/90 text-sm mb-6 border border-white/20 backdrop-blur-sm">
             <Sparkles className="h-4 w-4 text-yellow-300" />
-            <span>Premium Services</span>
+            <span>{t("services.title_badge")}</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight">
-            More Than Just Property
+            {t("services.hero_title")}
           </h1>
           <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Discover our curated selection of verified partners and premium
-            services designed to make your move and living experience seamless.
+            {t("services.hero_desc")}
           </p>
         </div>
       </section>
@@ -51,7 +71,7 @@ async function ServicesContent() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
-                      No Image
+                      {t("services.no_image")}
                     </div>
                   )}
                   <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
@@ -76,7 +96,7 @@ async function ServicesContent() {
                   </p>
 
                   <div className="flex items-center text-blue-600 font-semibold group-hover:gap-2 transition-all">
-                    View Details{" "}
+                    {t("services.view_details")}{" "}
                     <ArrowRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
                   </div>
                 </div>
@@ -85,7 +105,7 @@ async function ServicesContent() {
 
             {services.length === 0 && (
               <div className="col-span-full py-20 text-center text-slate-400">
-                <p className="text-lg">Services coming soon...</p>
+                <p className="text-lg">{t("services.coming_soon")}</p>
               </div>
             )}
           </div>
@@ -96,11 +116,12 @@ async function ServicesContent() {
 }
 
 export default function ServicesPage() {
+  const { t } = useLanguage();
   return (
     <Suspense
       fallback={
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-          Loading...
+          {t("common.loading")}
         </div>
       }
     >

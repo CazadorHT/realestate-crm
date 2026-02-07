@@ -1,48 +1,68 @@
+"use client";
+
 import { Star, Quote, CheckCircle2, Award } from "lucide-react";
 import { SectionBackground } from "./SectionBackground";
-
-const TESTIMONIALS = [
-  {
-    name: "เจ้าของคอนโด",
-    role: "ให้เช่าคอนโด",
-    property: "คอนโด 2 ห้องนอน",
-    comment:
-      "ทีมงานมืออาชีพมาก ช่วยดูแลตั้งแต่หาผู้เช่าจนจบสัญญา คอนโดให้เช่าได้ภายใน 2 สัปดาห์ ในราคาที่พอใจ!",
-    rating: 5,
-    date: "2024-12",
-    image: "",
-    verified: true,
-  },
-  {
-    name: "ผู้เช่าบ้าน",
-    role: "เช่าบ้านเดี่ยว",
-    property: "บ้านเดี่ยว 3 ห้องนอน",
-    comment:
-      "หาบ้านเช่าได้รวดเร็ว ระบบกรองบ้านให้เช่าดีมาก ตอบทุกคำถาม พาชมบ้านถึงที่ ประทับใจมากค่ะ",
-    rating: 5,
-    date: "2025-01",
-    image: "",
-    verified: true,
-  },
-  {
-    name: "ผู้เช่าสำนักงาน",
-    role: "เช่าสำนักงานออฟฟิศ",
-    property: "สำนักงานออฟฟิศ",
-    comment:
-      "หาสำนักงานออฟฟิศให้เช่าง่ายมาก ข้อมูลออฟฟิศครบถ้วน ทำเลดี ราคาเหมาะสม ปิดดีลได้ไว",
-    rating: 5,
-    date: "2024-11",
-    image: "",
-    verified: true,
-  },
-];
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function TestimonialsSection() {
+  const { t } = useLanguage();
+
+  const TESTIMONIALS = [
+    {
+      name:
+        t("home.testimonials.verified_client") === "Verified"
+          ? "Condo Owner"
+          : "เจ้าของคอนโด",
+      role:
+        t("home.testimonials.verified_client") === "Verified"
+          ? "Rent Condo"
+          : "ให้เช่าคอนโด",
+      property: t("home.property_types.condo"),
+      comment: t("home.testimonials.footer_desc").includes("Review")
+        ? "Very professional team. Helped from finding tenant to contract ending. Condo rented in 2 weeks at a great price!"
+        : "ทีมงานมืออาชีพมาก ช่วยดูแลตั้งแต่หาผู้เช่าจนจบสัญญา คอนโดให้เช่าได้ภายใน 2 สัปดาห์ ในราคาที่พอใจ!",
+      rating: 5,
+      date: "2024-12",
+      image: "",
+      verified: true,
+    },
+    {
+      name:
+        t("home.testimonials.verified_client") === "Verified"
+          ? "House Tenant"
+          : "ผู้เช่าบ้าน",
+      role: t("home.property_types.house"),
+      property: t("home.property_types.house"),
+      comment: t("home.testimonials.footer_desc").includes("Review")
+        ? "Found a rental house quickly. Great filtering system. Answered all questions and showed the house. Very impressed."
+        : "หาบ้านเช่าได้รวดเร็ว ระบบกรองบ้านให้เช่าดีมาก ตอบทุกคำถาม พาชมบ้านถึงที่ ประทับใจมากค่ะ",
+      rating: 5,
+      date: "2025-01",
+      image: "",
+      verified: true,
+    },
+    {
+      name:
+        t("home.testimonials.verified_client") === "Verified"
+          ? "Office Tenant"
+          : "ผู้เช่าสำนักงาน",
+      role: t("home.property_types.office"),
+      property: t("home.property_types.office"),
+      comment: t("home.testimonials.footer_desc").includes("Review")
+        ? "Finding office space was very easy. Complete information, great location, reasonable price. Closed deal quickly."
+        : "หาสำนักงานออฟฟิศให้เช่าง่ายมาก ข้อมูลออฟฟิศครบถ้วน ทำเลดี ราคาเหมาะสม ปิดดีลได้ไว",
+      rating: 5,
+      date: "2024-11",
+      image: "",
+      verified: true,
+    },
+  ];
+
   // Schema.org Review for SEO
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Your Real Estate Company",
+    name: "OMA ASSET",
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: "5.0",
@@ -87,25 +107,29 @@ export function TestimonialsSection() {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200/50">
             <Award className="w-4 h-4 text-amber-600" />
             <span className="text-sm font-bold text-amber-700">
-              รีวิวจากลูกค้าจริง
+              {t("home.testimonials.title")}
             </span>
           </div>
 
           <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-            ลูกค้าของเรา
-            <br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-600 via-orange-600 to-amber-600">
-              พึงพอใจในบริการ
-            </span>
+            {t("home.testimonials.subtitle")
+              .split(" ")
+              .map((word, i) => (
+                <span
+                  key={i}
+                  className={
+                    i === 2
+                      ? "text-transparent bg-clip-text bg-linear-to-r from-amber-600 via-orange-600 to-amber-600 block mt-2"
+                      : ""
+                  }
+                >
+                  {word}{" "}
+                </span>
+              ))}
           </h2>
 
           <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">
-            จากประสบการณ์จริงของผู้ที่
-            <span className="font-semibold text-slate-900">
-              {" "}
-              ซื้อ-ขาย-เช่า บ้าน คอนโด ที่ดิน
-            </span>{" "}
-            กับเรา
+            {t("home.testimonials.description")}
           </p>
 
           {/* Trust Stats */}
@@ -125,14 +149,14 @@ export function TestimonialsSection() {
             </div>
             <div className="h-5 md:h-6 w-px bg-slate-300" />
             <span className="text-sm md:text-base text-slate-600">
-              จาก <span className="font-bold text-slate-900">1,250+</span> รีวิว
+              {t("home.testimonials.review_stat")}
             </span>
           </div>
         </div>
 
         {/* Enhanced Testimonial Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-          {TESTIMONIALS.map((t, idx) => (
+          {TESTIMONIALS.map((t_item, idx) => (
             <div
               key={idx}
               className="group relative"
@@ -146,18 +170,18 @@ export function TestimonialsSection() {
                 </div>
 
                 {/* Verified Badge */}
-                {t.verified && (
+                {t_item.verified && (
                   <div className="absolute top-4 left-4 flex items-center gap-1 px-3 py-1 bg-green-50 border border-green-200 rounded-full">
                     <CheckCircle2 className="h-3 w-3 text-green-600" />
                     <span className="text-xs font-bold text-green-700">
-                      ยืนยันแล้ว
+                      {t("home.testimonials.verified_client")}
                     </span>
                   </div>
                 )}
 
                 {/* Star Rating */}
                 <div className="flex items-center gap-1 mb-3 md:mb-4 mt-4 md:mt-6">
-                  {Array.from({ length: t.rating }).map((_, i) => (
+                  {Array.from({ length: t_item.rating }).map((_, i) => (
                     <Star
                       key={i}
                       className="h-4 w-4 md:h-5 md:w-5 fill-yellow-400 text-yellow-400 group-hover:scale-110 transition-transform"
@@ -169,25 +193,27 @@ export function TestimonialsSection() {
                 {/* Property Info */}
                 <div className="mb-3">
                   <span className="inline-block px-3 py-1 text-xs font-bold bg-blue-50 text-blue-700 rounded-full border border-blue-200">
-                    {t.property}
+                    {t_item.property}
                   </span>
                 </div>
 
                 {/* Comment */}
                 <div className="relative z-10">
                   <p className="text-slate-700 mb-6 leading-relaxed text-sm">
-                    "{t.comment}"
+                    "{t_item.comment}"
                   </p>
                 </div>
 
                 {/* Author */}
                 <div className="flex items-center gap-3 relative z-10">
                   <div className="text-4xl group-hover:scale-110 transition-transform duration-300">
-                    {t.image}
+                    {t_item.image}
                   </div>
                   <div>
-                    <div className="font-bold text-slate-900">{t.name}</div>
-                    <div className="text-sm text-slate-500">{t.role}</div>
+                    <div className="font-bold text-slate-900">
+                      {t_item.name}
+                    </div>
+                    <div className="text-sm text-slate-500">{t_item.role}</div>
                   </div>
                 </div>
 
@@ -207,12 +233,7 @@ export function TestimonialsSection() {
           <div className="inline-flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 bg-linear-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl md:rounded-2xl">
             <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
             <span className="text-sm md:text-base text-slate-700">
-              รีวิวทั้งหมด
-              <span className="font-bold text-slate-900">
-                {" "}
-                ตรวจสอบและยืนยันความถูกต้อง
-              </span>{" "}
-              จากลูกค้าจริง
+              {t("home.testimonials.footer_desc")}
             </span>
           </div>
         </div>
