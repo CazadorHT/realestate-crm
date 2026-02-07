@@ -95,9 +95,9 @@
 
 /* Production CSS Fixes - Force gradient and text color rendering */
 @layer components {
-  /* Gradient button text fix */
+  /* Gradient button text fix - removed !important to allow overrides */
   .bg-linear-to-r:not([class*="text-transparent"]) {
-    color: white !important;
+    color: white;
   }
 
   /* Explicit gradient definitions as fallback */

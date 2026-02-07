@@ -2,6 +2,7 @@
 
 import { MapPin } from "lucide-react";
 import { getTypeColor, getSafeText } from "@/lib/property-utils";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
@@ -14,13 +15,15 @@ export function PropertyCardInfo({
   property,
   areaProvince,
 }: PropertyCardInfoProps) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const typeColor = getTypeColor(property.property_type);
 
   // Property type localization
   const typeLabel = t(
     `property_types.${property.property_type?.toLowerCase() || "other"}`,
   );
+
+  const localizedTitle = getLocaleValue(property, "title", language);
 
   return (
     <div className="space-y-1 mb-3">
@@ -41,7 +44,7 @@ export function PropertyCardInfo({
         </div>
       </div>
       <h3 className="text-sm sm:text-base md:text-lg font-semibold tracking-wide text-slate-800 line-clamp-2 group-hover:text-blue-800 transition-all duration-300 ease-in-out">
-        {property.title}
+        {localizedTitle}
       </h3>
     </div>
   );

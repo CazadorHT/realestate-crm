@@ -1,23 +1,45 @@
+"use client";
+
 import { Wallet, Briefcase, TrendingUp } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PropertySuitabilityProps {
   listingType: "SALE" | "RENT" | "SALE_AND_RENT";
   price: number | null;
   rentalPrice: number | null;
+  propertyType?: string | null;
 }
 
 export function PropertySuitability({
   listingType,
   price,
   rentalPrice,
+  propertyType,
 }: PropertySuitabilityProps) {
+  const { t } = useLanguage();
+
   // Logic for rental yield if both prices exist
   const rentalYield =
     price && rentalPrice ? ((rentalPrice * 12) / price) * 100 : null;
 
+  // Determine if this is an office/commercial property
+  const isOffice =
+    propertyType?.toLowerCase().includes("office") ||
+    propertyType?.toLowerCase().includes("commercial");
+
+  const rentDesc = isOffice
+    ? t("property.suitability.rent_desc_office")
+    : t("property.suitability.rent_desc_residential");
+
+  const saleDesc = isOffice
+    ? t("property.suitability.sale_desc_office")
+    : t("property.suitability.sale_desc_residential");
+
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
-      <h3 className="font-bold text-slate-800 text-lg">หลังนี้เหมาะกับใคร?</h3>
+      <h3 className="font-bold text-slate-800 text-lg">
+        {t("property.suitability.title")}
+      </h3>
 
       <div className="flex flex-col gap-4">
         {/* For Renters */}
@@ -28,11 +50,10 @@ export function PropertySuitability({
             </div>
             <div>
               <p className="font-semibold text-blue-700 text-sm mb-1">
-                เหมาะเช่า
+                {t("property.suitability.rent_title")}
               </p>
               <p className="text-xs text-slate-600 leading-relaxed">
-                ผู้บริหาร / ครอบครัว Expat
-                ที่ต้องการความยืดหยุ่นและการดูแลครบวงจร
+                {rentDesc}
               </p>
             </div>
           </div>
@@ -46,10 +67,10 @@ export function PropertySuitability({
             </div>
             <div>
               <p className="font-semibold text-emerald-700 text-sm mb-1">
-                เหมาะซื้อ
+                {t("property.suitability.sale_title")}
               </p>
               <p className="text-xs text-slate-600 leading-relaxed">
-                อยู่อาศัยระยะยาว หรือลงทุนปล่อยเช่าเพื่อสร้าง Passive Income
+                {saleDesc}
               </p>
             </div>
           </div>
@@ -59,19 +80,21 @@ export function PropertySuitability({
       {/* Yield Calculation */}
       {rentalYield && (
         <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
-          <div className="bg-amber-100 p-2 rounded-lg text-amber-600">
+          <div className="bg-amber-100 p-2 rounded-lg text-amber-600 shadow-xs">
             <Wallet className="w-5 h-5" />
           </div>
           <div>
             <p className="font-semibold text-slate-700 text-sm">
-              โอกาสทองในการลงทุน
+              {t("property.suitability.investment_title")}
             </p>
             <p className="text-xs text-slate-500">
-              ราคาเช่า ฿{rentalPrice?.toLocaleString()}/เดือน คิดเป็นผลตอบแทน{" "}
+              {t("property.suitability.yield_prefix")}฿
+              {rentalPrice?.toLocaleString()}
+              {t("property.suitability.yield_middle")}
               <span className="font-bold text-amber-600">
-                ~{rentalYield.toFixed(1)}% ต่อปี
+                ~{rentalYield.toFixed(1)}%
               </span>{" "}
-              จากราคาขาย
+              {t("property.suitability.yield_suffix")}
             </p>
           </div>
         </div>

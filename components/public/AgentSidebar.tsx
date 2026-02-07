@@ -14,6 +14,7 @@ import { FavoriteButton } from "@/components/public/FavoriteButton";
 import { ShareButtons } from "@/components/public/ShareButtons";
 import { FaLine } from "react-icons/fa";
 import { useState } from "react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface AgentSidebarProps {
   agentName?: string | null;
@@ -36,6 +37,7 @@ export function AgentSidebar({
   propertyTitle,
   shareUrl,
 }: AgentSidebarProps) {
+  const { t } = useLanguage();
   const [showPhone, setShowPhone] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
 
@@ -60,7 +62,7 @@ export function AgentSidebar({
 
   // Helper to mask phone
   const getDisplayedPhone = () => {
-    if (showPhone && !agentPhone) return "ติดต่อผ่านแอดมิน";
+    if (showPhone && !agentPhone) return t("property.contact_admin");
     if (!agentPhone) return "0xx-xxx-xxxx";
     if (showPhone) return formatPhone(agentPhone);
 
@@ -93,7 +95,7 @@ export function AgentSidebar({
 
         <div className="flex-1 min-w-0">
           <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">
-            ดูแลโดย
+            {t("property.managed_by")}
           </div>
           <h3 className="font-bold text-slate-900 text-lg flex items-center gap-1.5 truncate">
             {agentName || "Admin Team"}
@@ -109,7 +111,7 @@ export function AgentSidebar({
       {/* Hidden on Mobile since we have Sticky Bar */}
       <div className="mb-6 hidden lg:block">
         <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-          ติดต่อเจ้าหน้าที่
+          {t("property.contact_agent")}
         </h4>
         <div className="space-y-3">
           <Button
@@ -126,7 +128,7 @@ export function AgentSidebar({
               rel="noopener noreferrer"
             >
               <FaLine className="w-6 h-6 mr-2" />
-              สนใจนัดชม (ไม่มีค่าใช้จ่าย)
+              {t("property.viewing_cta")}
             </a>
           </Button>
 
@@ -142,7 +144,7 @@ export function AgentSidebar({
             <ContactAgentDialog
               propertyId={propertyId}
               propertyTitle={propertyTitle}
-              defaultMessage="สนใจนัดชมทรัพย์นี้ครับ สะดวกช่วง..."
+              defaultMessage={t("property.viewing_msg")}
               trigger={
                 <Button
                   variant="outline"
@@ -150,14 +152,14 @@ export function AgentSidebar({
                   type="button"
                 >
                   <CalendarSearch className="w-3.5 h-3.5 mr-1.5 shrink-0" />
-                  <span className="truncate">นัดชม</span>
+                  <span className="truncate">{t("property.book_viewing")}</span>
                 </Button>
               }
             />
             <ContactAgentDialog
               propertyId={propertyId}
               propertyTitle={propertyTitle}
-              defaultMessage="สอบถามข้อมูลเพิ่มเติมครับ..."
+              defaultMessage={t("property.inquiry_msg")}
               open={contactDialogOpen}
               onOpenChange={setContactDialogOpen}
               trigger={
@@ -167,7 +169,7 @@ export function AgentSidebar({
                   type="button"
                 >
                   <MessageCircleQuestion className="w-3.5 h-3.5 mr-1.5 shrink-0" />
-                  <span className="truncate">สอบถาม</span>
+                  <span className="truncate">{t("property.inquiry")}</span>
                 </Button>
               }
             />
@@ -178,7 +180,7 @@ export function AgentSidebar({
       {/* Share & Favorite Section */}
       <div className="pb-6 border-b border-slate-100">
         <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-          แชร์ทรัพย์สิน
+          {t("property.share_property")}
         </h4>
         <div className="flex items-center justify-between gap-2">
           {propertyId && (
@@ -208,8 +210,7 @@ export function AgentSidebar({
       {/* Trust Message */}
       <div className="mt-6 text-center">
         <p className="text-xs text-slate-400 leading-relaxed">
-          มั่นใจ สะดวก ปลอดภัย <br />
-          ด้วยทีมงานมืออาชีพ พร้อมบริการสินเชื่อฟรี
+          {t("property.trust_message")}
         </p>
       </div>
     </div>

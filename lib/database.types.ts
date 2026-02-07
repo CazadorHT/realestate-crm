@@ -79,18 +79,24 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          name_cn: string | null
+          name_en: string | null
           slug: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
+          name_cn?: string | null
+          name_en?: string | null
           slug: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
+          name_cn?: string | null
+          name_en?: string | null
           slug?: string
         }
         Relationships: []
@@ -100,9 +106,13 @@ export type Database = {
           author: Json | null
           category: string | null
           content: string | null
+          content_cn: string | null
+          content_en: string | null
           cover_image: string | null
           created_at: string | null
           excerpt: string | null
+          excerpt_cn: string | null
+          excerpt_en: string | null
           id: string
           is_published: boolean | null
           published_at: string | null
@@ -111,15 +121,21 @@ export type Database = {
           structured_data: Json | null
           tags: string[] | null
           title: string
+          title_cn: string | null
+          title_en: string | null
           updated_at: string | null
         }
         Insert: {
           author?: Json | null
           category?: string | null
           content?: string | null
+          content_cn?: string | null
+          content_en?: string | null
           cover_image?: string | null
           created_at?: string | null
           excerpt?: string | null
+          excerpt_cn?: string | null
+          excerpt_en?: string | null
           id?: string
           is_published?: boolean | null
           published_at?: string | null
@@ -128,15 +144,21 @@ export type Database = {
           structured_data?: Json | null
           tags?: string[] | null
           title: string
+          title_cn?: string | null
+          title_en?: string | null
           updated_at?: string | null
         }
         Update: {
           author?: Json | null
           category?: string | null
           content?: string | null
+          content_cn?: string | null
+          content_en?: string | null
           cover_image?: string | null
           created_at?: string | null
           excerpt?: string | null
+          excerpt_cn?: string | null
+          excerpt_en?: string | null
           id?: string
           is_published?: boolean | null
           published_at?: string | null
@@ -145,6 +167,8 @@ export type Database = {
           structured_data?: Json | null
           tags?: string[] | null
           title?: string
+          title_cn?: string | null
+          title_en?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -284,31 +308,43 @@ export type Database = {
       faqs: {
         Row: {
           answer: string
+          answer_cn: string | null
+          answer_en: string | null
           category: string | null
           created_at: string
           id: string
           is_active: boolean | null
           question: string
+          question_cn: string | null
+          question_en: string | null
           sort_order: number | null
           updated_at: string
         }
         Insert: {
           answer: string
+          answer_cn?: string | null
+          answer_en?: string | null
           category?: string | null
           created_at?: string
           id?: string
           is_active?: boolean | null
           question: string
+          question_cn?: string | null
+          question_en?: string | null
           sort_order?: number | null
           updated_at?: string
         }
         Update: {
           answer?: string
+          answer_cn?: string | null
+          answer_en?: string | null
           category?: string | null
           created_at?: string
           id?: string
           is_active?: boolean | null
           question?: string
+          question_cn?: string | null
+          question_en?: string | null
           sort_order?: number | null
           updated_at?: string
         }
@@ -321,6 +357,8 @@ export type Database = {
           icon_key: string
           id: string
           name: string
+          name_cn: string | null
+          name_en: string | null
         }
         Insert: {
           category?: string | null
@@ -328,6 +366,8 @@ export type Database = {
           icon_key?: string
           id?: string
           name: string
+          name_cn?: string | null
+          name_en?: string | null
         }
         Update: {
           category?: string | null
@@ -335,6 +375,8 @@ export type Database = {
           icon_key?: string
           id?: string
           name?: string
+          name_cn?: string | null
+          name_en?: string | null
         }
         Relationships: []
       }
@@ -601,16 +643,22 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          name_cn: string | null
+          name_en: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
+          name_cn?: string | null
+          name_en?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
+          name_cn?: string | null
+          name_en?: string | null
         }
         Relationships: []
       }
@@ -668,6 +716,8 @@ export type Database = {
       properties: {
         Row: {
           address_line1: string | null
+          address_line1_cn: string | null
+          address_line1_en: string | null
           allow_smoking: boolean | null
           assigned_to: string | null
           bathrooms: number | null
@@ -685,6 +735,8 @@ export type Database = {
           created_by: string | null
           currency: string | null
           description: string | null
+          description_cn: string | null
+          description_en: string | null
           district: string | null
           electricity_charge: string | null
           facing_east: boolean | null
@@ -726,8 +778,12 @@ export type Database = {
           listing_type: Database["public"]["Enums"]["listing_type"]
           maintenance_fee: number | null
           meta_description: string | null
+          meta_description_cn: string | null
+          meta_description_en: string | null
           meta_keywords: string[] | null
           meta_title: string | null
+          meta_title_cn: string | null
+          meta_title_en: string | null
           min_contract_months: number | null
           near_transit: boolean | null
           nearby_places: Json | null
@@ -756,9 +812,13 @@ export type Database = {
           structured_data: Json | null
           subdistrict: string | null
           title: string
+          title_cn: string | null
+          title_en: string | null
           total_units: number
           transit_distance_meters: number | null
           transit_station_name: string | null
+          transit_station_name_cn: string | null
+          transit_station_name_en: string | null
           transit_type: string | null
           updated_at: string
           verified: boolean | null
@@ -768,6 +828,8 @@ export type Database = {
         }
         Insert: {
           address_line1?: string | null
+          address_line1_cn?: string | null
+          address_line1_en?: string | null
           allow_smoking?: boolean | null
           assigned_to?: string | null
           bathrooms?: number | null
@@ -785,6 +847,8 @@ export type Database = {
           created_by?: string | null
           currency?: string | null
           description?: string | null
+          description_cn?: string | null
+          description_en?: string | null
           district?: string | null
           electricity_charge?: string | null
           facing_east?: boolean | null
@@ -826,8 +890,12 @@ export type Database = {
           listing_type: Database["public"]["Enums"]["listing_type"]
           maintenance_fee?: number | null
           meta_description?: string | null
+          meta_description_cn?: string | null
+          meta_description_en?: string | null
           meta_keywords?: string[] | null
           meta_title?: string | null
+          meta_title_cn?: string | null
+          meta_title_en?: string | null
           min_contract_months?: number | null
           near_transit?: boolean | null
           nearby_places?: Json | null
@@ -856,9 +924,13 @@ export type Database = {
           structured_data?: Json | null
           subdistrict?: string | null
           title: string
+          title_cn?: string | null
+          title_en?: string | null
           total_units?: number
           transit_distance_meters?: number | null
           transit_station_name?: string | null
+          transit_station_name_cn?: string | null
+          transit_station_name_en?: string | null
           transit_type?: string | null
           updated_at?: string
           verified?: boolean | null
@@ -868,6 +940,8 @@ export type Database = {
         }
         Update: {
           address_line1?: string | null
+          address_line1_cn?: string | null
+          address_line1_en?: string | null
           allow_smoking?: boolean | null
           assigned_to?: string | null
           bathrooms?: number | null
@@ -885,6 +959,8 @@ export type Database = {
           created_by?: string | null
           currency?: string | null
           description?: string | null
+          description_cn?: string | null
+          description_en?: string | null
           district?: string | null
           electricity_charge?: string | null
           facing_east?: boolean | null
@@ -926,8 +1002,12 @@ export type Database = {
           listing_type?: Database["public"]["Enums"]["listing_type"]
           maintenance_fee?: number | null
           meta_description?: string | null
+          meta_description_cn?: string | null
+          meta_description_en?: string | null
           meta_keywords?: string[] | null
           meta_title?: string | null
+          meta_title_cn?: string | null
+          meta_title_en?: string | null
           min_contract_months?: number | null
           near_transit?: boolean | null
           nearby_places?: Json | null
@@ -956,9 +1036,13 @@ export type Database = {
           structured_data?: Json | null
           subdistrict?: string | null
           title?: string
+          title_cn?: string | null
+          title_en?: string | null
           total_units?: number
           transit_distance_meters?: number | null
           transit_station_name?: string | null
+          transit_station_name_cn?: string | null
+          transit_station_name_en?: string | null
           transit_type?: string | null
           updated_at?: string
           verified?: boolean | null
@@ -1313,9 +1397,13 @@ export type Database = {
         Row: {
           contact_link: string | null
           content: string | null
+          content_cn: string | null
+          content_en: string | null
           cover_image: string | null
           created_at: string
           description: string | null
+          description_cn: string | null
+          description_en: string | null
           gallery_images: Json | null
           id: string
           is_active: boolean
@@ -1323,14 +1411,20 @@ export type Database = {
           slug: string
           sort_order: number
           title: string
+          title_cn: string | null
+          title_en: string | null
           updated_at: string
         }
         Insert: {
           contact_link?: string | null
           content?: string | null
+          content_cn?: string | null
+          content_en?: string | null
           cover_image?: string | null
           created_at?: string
           description?: string | null
+          description_cn?: string | null
+          description_en?: string | null
           gallery_images?: Json | null
           id?: string
           is_active?: boolean
@@ -1338,14 +1432,20 @@ export type Database = {
           slug: string
           sort_order?: number
           title: string
+          title_cn?: string | null
+          title_en?: string | null
           updated_at?: string
         }
         Update: {
           contact_link?: string | null
           content?: string | null
+          content_cn?: string | null
+          content_en?: string | null
           cover_image?: string | null
           created_at?: string
           description?: string | null
+          description_cn?: string | null
+          description_en?: string | null
           gallery_images?: Json | null
           id?: string
           is_active?: boolean
@@ -1353,6 +1453,8 @@ export type Database = {
           slug?: string
           sort_order?: number
           title?: string
+          title_cn?: string | null
+          title_en?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1381,6 +1483,8 @@ export type Database = {
           id: string
           is_active: boolean | null
           label: string
+          label_cn: string | null
+          label_en: string | null
           max_value: number
           min_value: number
           purpose: string
@@ -1392,6 +1496,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           label: string
+          label_cn?: string | null
+          label_en?: string | null
           max_value: number
           min_value: number
           purpose: string
@@ -1403,6 +1509,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           label?: string
+          label_cn?: string | null
+          label_en?: string | null
           max_value?: number
           min_value?: number
           purpose?: string
@@ -1417,6 +1525,8 @@ export type Database = {
           id: string
           is_active: boolean | null
           label: string
+          label_cn: string | null
+          label_en: string | null
           max_sqm: number
           min_sqm: number
           sort_order: number | null
@@ -1426,6 +1536,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           label: string
+          label_cn?: string | null
+          label_en?: string | null
           max_sqm?: number
           min_sqm?: number
           sort_order?: number | null
@@ -1435,6 +1547,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           label?: string
+          label_cn?: string | null
+          label_en?: string | null
           max_sqm?: number
           min_sqm?: number
           sort_order?: number | null
@@ -1447,6 +1561,8 @@ export type Database = {
           id: string
           is_active: boolean | null
           label: string
+          label_cn: string | null
+          label_en: string | null
           sort_order: number | null
           value: string
         }
@@ -1455,6 +1571,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           label: string
+          label_cn?: string | null
+          label_en?: string | null
           sort_order?: number | null
           value: string
         }
@@ -1463,6 +1581,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           label?: string
+          label_cn?: string | null
+          label_en?: string | null
           sort_order?: number | null
           value?: string
         }

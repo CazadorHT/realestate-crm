@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 
 type AreaRow = {
   popular_area: string;
+  popular_area_en: string | null;
+  popular_area_cn: string | null;
   province: string;
   count: number;
   cover: string | null;
@@ -40,7 +42,6 @@ export async function GET() {
       .order("sort_order", { ascending: true });
 
     if (coverErr) {
-      // ถ้ารูปโดน RLS บล็อก จะได้ error ตรงนี้ → อย่างน้อยยังส่งทำเลได้แต่ไม่มีรูป
       console.error("popular-areas images error:", coverErr);
     }
 
@@ -50,20 +51,27 @@ export async function GET() {
       const url = img?.image_url;
       if (!pid || !url) continue;
 
-      // เอารูปแรกที่เจอจากลำดับที่ order ไว้ (cover ก่อน)
       if (!coverByPropertyId.has(pid)) coverByPropertyId.set(pid, url);
     }
 
     // 3) aggregate ตาม (popular_area + province)
     const map = new Map<string, AreaRow>();
 
-    // 0) Fetch valid popular areas
+    // 0) Fetch valid popular areas with translations
     const { data: validAreasData } = await supabase
       .from("popular_areas")
-      .select("name");
-    const validAreaNames = new Set(
-      (validAreasData || []).map((a: any) => a.name)
-    );
+      .select("name, name_en, name_cn");
+
+    // Create a map for quick lookup of translations
+    const areaTranslations = new Map<
+      string,
+      { en: string | null; cn: string | null }
+    >();
+    (validAreasData || []).forEach((a: any) => {
+      areaTranslations.set(a.name, { en: a.name_en, cn: a.name_cn });
+    });
+
+    const validAreaNames = new Set(areaTranslations.keys());
 
     for (const p of properties as any[]) {
       const area = (p?.popular_area ?? "").trim();
@@ -78,10 +86,18 @@ export async function GET() {
       // Use only area as key to prevent duplicates (e.g., "บางนา กรุงเทพฯ" vs "บางนา สมุทรปราการ")
       const key = area;
       const cover = coverByPropertyId.get(p.id) ?? null;
+      const trans = areaTranslations.get(area);
 
       const existing = map.get(key);
       if (!existing) {
-        map.set(key, { popular_area: area, province: prov, count: 1, cover });
+        map.set(key, {
+          popular_area: area,
+          popular_area_en: trans?.en ?? null,
+          popular_area_cn: trans?.cn ?? null,
+          province: prov,
+          count: 1,
+          cover,
+        });
       } else {
         existing.count += 1;
         // ถ้าการ์ดยังไม่มีรูป ให้ใช้รูปแรกที่หาได้

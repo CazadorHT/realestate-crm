@@ -4,24 +4,37 @@ import { useState, useRef, useEffect } from "react";
 import { BsStars } from "react-icons/bs";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import DOMPurify from "isomorphic-dompurify";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 interface PropertyDescriptionProps {
-  description: string | null;
+  property: {
+    description: string | null;
+    description_en?: string | null;
+    description_cn?: string | null;
+  };
 }
 
-export function PropertyDescription({ description }: PropertyDescriptionProps) {
+export function PropertyDescription({ property }: PropertyDescriptionProps) {
+  const { language, t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [shouldShowButton, setShouldShowButton] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
   const THRESHOLD_HEIGHT = 280;
 
+  const localizedDescription = getLocaleValue(
+    property,
+    "description",
+    language,
+  );
+
   useEffect(() => {
     if (contentRef.current) {
       const height = contentRef.current.scrollHeight;
       setShouldShowButton(height > THRESHOLD_HEIGHT);
     }
-  }, [description]);
+  }, [localizedDescription]);
 
   const handleToggle = () => {
     if (isExpanded && sectionRef.current) {
@@ -40,9 +53,9 @@ export function PropertyDescription({ description }: PropertyDescriptionProps) {
 
   return (
     <section ref={sectionRef} className="scroll-mt-24">
-      <h2 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+      <h2 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-bold text-blue-900 mb-6 flex items-center gap-2">
         <BsStars className="w-5 h-5 text-blue-600" />
-        รายละเอียดทรัพย์
+        {t("property.details")}
       </h2>
 
       <div className="relative">
@@ -53,7 +66,7 @@ export function PropertyDescription({ description }: PropertyDescriptionProps) {
           }`}
           dangerouslySetInnerHTML={{
             __html: DOMPurify.sanitize(
-              description || "ไม่มีรายละเอียดเพิ่มเติม",
+              localizedDescription || t("property.no_description"),
             ),
           }}
         />
@@ -72,12 +85,12 @@ export function PropertyDescription({ description }: PropertyDescriptionProps) {
             {isExpanded ? (
               <>
                 <ChevronUp className="w-4 h-4" />
-                แสดงน้อยลง
+                {t("common.show_less")}
               </>
             ) : (
               <>
                 <ChevronDown className="w-4 h-4" />
-                อ่านเพิ่มเติม
+                {t("common.read_more")}
               </>
             )}
           </button>

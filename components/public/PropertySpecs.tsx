@@ -1,6 +1,7 @@
 "use client";
 
 import { BedDouble, Bath, Car, Maximize, Building2, Home } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PropertySpecsProps {
   bedrooms?: number | null;
@@ -21,51 +22,53 @@ export function PropertySpecs({
   floor,
   type: _type,
 }: PropertySpecsProps) {
+  const { t } = useLanguage();
+
   const specs = [
     {
-      label: "ห้องนอน",
+      label: t("property.specs.bedrooms"),
       value: bedrooms,
-      suffix: "ห้อง",
+      suffix: t("property.specs.unit_room"),
       icon: <BedDouble className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
       show: true,
     },
     {
-      label: "ห้องน้ำ",
+      label: t("property.specs.bathrooms"),
       value: bathrooms,
-      suffix: "ห้อง",
+      suffix: t("property.specs.unit_room"),
       icon: <Bath className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
       show: true,
     },
     {
-      label: "พื้นที่ใช้สอย",
+      label: t("property.specs.size_sqm"),
       value: sizeSqm,
-      suffix: "ตร.ม.",
+      suffix: t("common.sqm_short"),
       icon: <Maximize className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
       show: !!sizeSqm,
     },
     {
-      label: "ขนาดที่ดิน",
+      label: t("property.specs.land_size"),
       value: landSize,
-      suffix: "ตร.วา",
+      suffix: t("common.sqwa_short"),
       icon: <Home className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
       show: !!landSize,
     },
     {
-      label: "ที่จอดรถ",
+      label: t("property.specs.parking"),
       value: parking,
-      suffix: "คัน",
+      suffix: t("property.specs.unit_car"),
       icon: <Car className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
       show: !!parking,
     },
     {
-      label: "ชั้นที่",
+      label: t("property.specs.floor"),
       value: floor,
-      suffix: "",
+      suffix: t("property.specs.unit_floor"),
       icon: <Building2 className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
       show: !!floor,
     },
   ].filter(
-    (item) => item.show && item.value !== null && item.value !== undefined
+    (item) => item.show && item.value !== null && item.value !== undefined,
   );
 
   return (
@@ -81,7 +84,7 @@ export function PropertySpecs({
           <div className="min-w-0">
             <div className="text-sm md:text-lg font-bold text-slate-900 truncate">
               {spec.value}{" "}
-              <span className="text-[10px] md:text-sm font-medium text-slate-500">
+              <span className="text-[10px] md:text-sm font-medium text-slate-500 lowercase first-letter:uppercase">
                 {spec.suffix}
               </span>
             </div>

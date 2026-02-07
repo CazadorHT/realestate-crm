@@ -37,7 +37,7 @@ type PropertyDetail = Database["public"]["Tables"]["properties"]["Row"] & {
   property_features: {
     features: Pick<
       Database["public"]["Tables"]["features"]["Row"],
-      "id" | "name" | "icon_key" | "category"
+      "id" | "name" | "name_en" | "name_cn" | "icon_key" | "category"
     > | null;
   }[];
 };
@@ -73,6 +73,8 @@ export default async function PublicPropertyDetailPage(props: {
           features (
             id,
             name,
+            name_en,
+            name_cn,
             icon_key,
             category
           )
@@ -401,7 +403,7 @@ export default async function PublicPropertyDetailPage(props: {
 
             <PropertyBadgesSection property={data} />
 
-            <PropertyDescription description={data.description} />
+            <PropertyDescription property={data} />
 
             <NearbyPlaces
               location={data.popular_area || undefined}
@@ -431,6 +433,7 @@ export default async function PublicPropertyDetailPage(props: {
               listingType={data.listing_type || "SALE"}
               price={data.price}
               rentalPrice={data.rental_price}
+              propertyType={data.property_type}
             />
 
             <AgentSidebar
@@ -481,7 +484,7 @@ export async function generateMetadata(props: {
   let query = supabase
     .from("properties")
     .select(
-      "title, description, slug, listing_type, property_type, price, rental_price, bedrooms, bathrooms, size_sqm, province, district, subdistrict, popular_area, property_images(image_url, storage_path, is_cover)",
+      "title, title_en, title_cn, description, description_en, description_cn, slug, listing_type, property_type, price, rental_price, bedrooms, bathrooms, size_sqm, province, district, subdistrict, popular_area, property_images(image_url, storage_path, is_cover)",
     );
 
   if (UUID_RE.test(decodedSlug)) {
@@ -497,6 +500,11 @@ export async function generateMetadata(props: {
   // Use centralized SEO logic
   const seoData = {
     title: data.title,
+    title_en: (data as any).title_en,
+    title_cn: (data as any).title_cn,
+    description: data.description,
+    description_en: (data as any).description_en,
+    description_cn: (data as any).description_cn,
     property_type: data.property_type,
     listing_type: data.listing_type,
     bedrooms: data.bedrooms,

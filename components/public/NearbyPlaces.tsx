@@ -1,3 +1,4 @@
+"use client";
 import {
   School,
   ShoppingBag,
@@ -12,6 +13,7 @@ import {
   TRANSIT_TYPE_STYLES,
 } from "@/features/properties/labels";
 import { MdOutlineExplore } from "react-icons/md";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export interface NearbyPlaceItem {
   category: string;
@@ -44,13 +46,13 @@ const ICON_MAP: Record<string, any> = {
 };
 
 const CATEGORY_LABEL_MAP: Record<string, string> = {
-  School: "สถานศึกษา",
-  Mall: "ห้างสรรพสินค้า / ตลาด",
-  Hospital: "โรงพยาบาล",
-  Transport: "ทางด่วน",
-  Park: "สวนสาธารณะ",
-  Office: "อาคารสำนักงาน",
-  Other: "สถานที่อื่นๆ",
+  School: "property.categories.school",
+  Mall: "property.categories.mall",
+  Hospital: "property.categories.hospital",
+  Transport: "property.categories.transport",
+  Park: "property.categories.park",
+  Office: "property.categories.office",
+  Other: "property.categories.other",
 };
 
 export function NearbyPlaces({
@@ -58,6 +60,7 @@ export function NearbyPlaces({
   data = [],
   transits = [],
 }: NearbyPlacesProps) {
+  const { t } = useLanguage();
   // Group nearby places by category (NOT including transits)
   const grouped = data.reduce(
     (acc, item) => {
@@ -94,9 +97,9 @@ export function NearbyPlaces({
     if (isNaN(num)) return String(val);
 
     if (num < 1) {
-      return `${Math.round(num * 1000)} ม.`;
+      return `${Math.round(num * 1000)} ${t("common.meters_short")}`;
     }
-    return `${num} กม.`;
+    return `${num} ${t("common.km_short")}`;
   };
 
   const categories = Object.keys(grouped);
@@ -104,15 +107,17 @@ export function NearbyPlaces({
 
   return (
     <div className="mt-10">
-      <h3 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-       <MdOutlineExplore className="w-5 h-5 text-blue-600" /> สถานที่สำคัญใกล้เคียง
+      <h3 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-bold text-blue-900! mb-6 flex items-center gap-2">
+        <MdOutlineExplore className="w-5 h-5 text-blue-600" />{" "}
+        {t("property.nearby_places")}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
         {/* Nearby Places Categories (Transport = ทางด่วน) */}
         {categories.map((catKey) => {
           const items = grouped[catKey];
           const Icon = ICON_MAP[catKey] || Map;
-          const label = CATEGORY_LABEL_MAP[catKey] || catKey;
+          const labelKey = CATEGORY_LABEL_MAP[catKey] || catKey;
+          const label = labelKey.includes(".") ? t(labelKey) : labelKey;
 
           return (
             <div
@@ -142,7 +147,7 @@ export function NearbyPlaces({
                       )}
                       {item.time && (
                         <span className="text-xs font-medium text-slate-400 whitespace-nowrap bg-white px-2 py-1 rounded-md border border-slate-100">
-                          {item.time} นาที
+                          {item.time} {t("common.minutes_short")}
                         </span>
                       )}
                     </div>
@@ -158,7 +163,9 @@ export function NearbyPlaces({
           <div className="bg-blue-50 border border-slate-100 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <TrainFront className="w-5 h-5 text-blue-500" />
-              <h4 className="font-semibold text-sm text-slate-700">รถไฟฟ้า</h4>
+              <h4 className="font-semibold text-sm text-slate-700">
+                {t("property.transit")}
+              </h4>
             </div>
             <ul className="space-y-2">
               {transits.map((transit, i) => {
@@ -196,7 +203,7 @@ export function NearbyPlaces({
                       )}
                       {transit.time && (
                         <span className="text-xs font-medium text-slate-400 whitespace-nowrap bg-white px-2 py-1 rounded-md border border-slate-100">
-                          {transit.time} นาที
+                          {transit.time} {t("common.minutes_short")}
                         </span>
                       )}
                     </div>

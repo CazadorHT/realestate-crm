@@ -19,10 +19,18 @@ export type PropertyCardProps = {
   id: string;
   slug?: string | null;
   title: string;
+  title_en?: string | null;
+  title_cn?: string | null;
   description?: string | null;
+  description_en?: string | null;
+  description_cn?: string | null;
   property_type: string | null;
   price?: number | null;
   rental_price?: number | null;
+  price_en?: number | null;
+  price_cn?: number | null;
+  rental_price_en?: number | null;
+  rental_price_cn?: number | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
   popular_area?: string | null;

@@ -7,9 +7,12 @@ import { MapPin, ArrowRight } from "lucide-react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 type ApiPopularArea = {
   popular_area: string;
+  popular_area_en: string | null;
+  popular_area_cn: string | null;
   province: string;
   count: number;
   cover?: string | null;
@@ -17,7 +20,9 @@ type ApiPopularArea = {
 
 type AreaItem = {
   key: string;
-  popular_area: string; // ชื่อทำเล
+  popular_area: string; // ชื่อทำเล (Default/Thai)
+  popular_area_en: string | null;
+  popular_area_cn: string | null;
   count: number; // จำนวนทรัพย์
   cover?: string | null; // รูปภาพ
 };
@@ -25,7 +30,7 @@ type AreaItem = {
 const LOADING = Array.from({ length: 6 });
 
 export function PopularAreasSection() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const router = useRouter();
   const [items, setItems] = useState<AreaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,6 +69,8 @@ export function PopularAreasSection() {
           (item: ApiPopularArea) => ({
             key: `${item.popular_area}__${item.province}`,
             popular_area: item.popular_area,
+            popular_area_en: item.popular_area_en,
+            popular_area_cn: item.popular_area_cn,
             province: item.province,
             count: item.count,
             cover: item.cover,
@@ -105,7 +112,7 @@ export function PopularAreasSection() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 md:gap-12 py-6 mb-4">
           <div
-            className="space-y-4 px-4 md:px-0 flex-1 md:max-w-2xl lg:max-w-4xl"
+            className="space-y-4 px-4 md:px-0 flex-1 md:max-w-2xl lg:max-w-6xl"
             data-aos="fade-right"
             suppressHydrationWarning
           >
@@ -123,19 +130,19 @@ export function PopularAreasSection() {
             {/* SEO-Optimized Gradient Heading */}
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
               {t("home.popular_areas.subtitle")
-                .split(" ")
-                .map((word, i) => (
-                  <span
-                    key={i}
-                    className={
-                      i === 1
-                        ? "text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-blue-500 to-purple-600 mx-1"
-                        : ""
-                    }
-                  >
-                    {word}
-                  </span>
-                ))}
+                .split("|")
+                .map((part, i) =>
+                  i % 2 === 1 ? (
+                    <span
+                      key={i}
+                      className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-blue-500 to-purple-600"
+                    >
+                      {part}
+                    </span>
+                  ) : (
+                    <span key={i}>{part}</span>
+                  ),
+                )}
             </h2>
 
             {/* SEO-Enhanced Description with Keywords */}
@@ -231,12 +238,19 @@ export function PopularAreasSection() {
                     <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/10 to-transparent opacity-90" />
                   </div>
 
-                  {/* Card Content */}
                   <div className="relative p-6 h-[180px] flex flex-col justify-end">
                     {/* ชื่อทำเล: ขยับขึ้นเล็กน้อยเมื่อ Hover เพื่อเปิดทางให้ Badge */}
                     <div className="transform transition-transform! duration-500! group-hover:-translate-y-10 ">
                       <h3 className="text-white text-2xl font-semibold tracking-tight drop-shadow-lg">
-                        {it.popular_area}
+                        {getLocaleValue(
+                          {
+                            name: it.popular_area,
+                            name_en: it.popular_area_en,
+                            name_cn: it.popular_area_cn,
+                          },
+                          "name",
+                          language,
+                        )}
                       </h3>
                     </div>
                     {/* แถวข้อมูล: ปรับให้ดูแพงด้วย Glassmorphism */}

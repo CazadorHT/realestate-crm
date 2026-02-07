@@ -14,6 +14,8 @@ import {
   getOfficePrice,
   getTypeColor,
 } from "@/lib/property-utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 interface PropertyHeaderProps {
   property: {
@@ -47,9 +49,12 @@ export function PropertyHeader({
   className,
   hideBreadcrumbs = false,
 }: PropertyHeaderProps) {
+  const { language, t } = useLanguage();
   // Office price override
   const officePrice = getOfficePrice(property);
   const typeColor = getTypeColor(property.property_type ?? null);
+
+  const localizedTitle = getLocaleValue(property, "title", language);
 
   const formatPrice = (val: number | null) =>
     val
@@ -87,7 +92,7 @@ export function PropertyHeader({
             <span className="text-sm text-slate-500 font-medium">{label}</span>
           )}
           <span className="text-xl md:text-2xl font-bold text-blue-600">
-            {isRent ? "สอบถามค่าเช่า" : "สอบถามราคา"}
+            {isRent ? t("property.inquiry_rent") : t("property.inquiry_price")}
           </span>
         </div>
       );
@@ -122,7 +127,7 @@ export function PropertyHeader({
               {formatPrice(price)}
               {isRent && (
                 <span className="text-sm font-normal text-slate-500">
-                  /เดือน
+                  /{t("common.month")}
                 </span>
               )}
             </span>
@@ -140,13 +145,15 @@ export function PropertyHeader({
           <span className="text-xl md:text-2xl font-bold text-slate-900">
             {formatPrice(displayPrice)}
             {isRent && (
-              <span className="text-sm font-normal text-slate-500">/เดือน</span>
+              <span className="text-sm font-normal text-slate-500">
+                /{t("common.month")}
+              </span>
             )}
           </span>
         </div>
         {officePrice?.isCalculated && (
           <span className="text-[10px] text-slate-400 font-medium">
-            (฿ {officePrice.sqmPrice?.toLocaleString()} / ตร.ม.)
+            (฿ {officePrice.sqmPrice?.toLocaleString()} / {t("common.sqm")})
           </span>
         )}
       </div>
@@ -166,14 +173,14 @@ export function PropertyHeader({
             <div className="mb-2">
               <AppBreadcrumbs
                 items={[
-                  { label: "หน้าแรก", href: "/" },
-                  { label: "โครงการและทรัพย์สิน", href: "/properties" },
+                  { label: t("nav.home"), href: "/" },
+                  { label: t("nav.properties"), href: "/properties" },
                   ...(property.property_type
                     ? [
                         {
-                          label:
-                            PROPERTY_TYPE_TH[property.property_type] ||
-                            property.property_type,
+                          label: t(
+                            `property_types.${property.property_type.toLowerCase()}`,
+                          ),
                           href: `/properties?property_type=${property.property_type}`,
                         },
                       ]
@@ -195,7 +202,7 @@ export function PropertyHeader({
                       ]
                     : []),
                   {
-                    label: property.title,
+                    label: localizedTitle,
                     className:
                       "max-w-[150px] sm:max-w-[250px] md:max-w-[400px] truncate block",
                   },
@@ -214,7 +221,9 @@ export function PropertyHeader({
                       : "bg-linear-to-r from-sky-500 to-blue-600"
                   }`}
                 >
-                  {property.listing_type === "SALE" ? "ขาย" : "เช่า"}
+                  {property.listing_type === "SALE"
+                    ? t("common.for_sale")
+                    : t("common.for_rent")}
                 </Badge>
 
                 {property.property_type && (
@@ -226,20 +235,21 @@ export function PropertyHeader({
                       typeColor.text,
                     )}
                   >
-                    {PROPERTY_TYPE_TH[property.property_type] ||
-                      property.property_type}
+                    {t(
+                      `property_types.${property.property_type.toLowerCase()}`,
+                    )}
                   </Badge>
                 )}
               </div>
 
               <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-tight line-clamp-2">
-                {property.title}
+                {localizedTitle}
               </h2>
 
               <div className="flex items-center text-slate-600 gap-2 font-normal text-sm">
                 <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
                 <span className="line-clamp-1">
-                  {locationParts || "ไม่ระบุทำเล"}
+                  {locationParts || t("common.no_location")}
                 </span>
               </div>
 
@@ -258,13 +268,13 @@ export function PropertyHeader({
                         {renderPriceBlock(
                           property.price,
                           property.original_price,
-                          "ราคาขาย",
+                          t("common.for_sale"),
                           false,
                         )}
                         {renderPriceBlock(
                           property.rental_price,
                           property.original_rental_price,
-                          "ค่าเช่า",
+                          t("common.for_rent"),
                           true,
                         )}
                       </>
@@ -275,7 +285,7 @@ export function PropertyHeader({
                     return renderPriceBlock(
                       property.rental_price,
                       property.original_rental_price,
-                      "ค่าเช่า",
+                      t("common.for_rent"),
                       true,
                     );
                   }
@@ -283,7 +293,7 @@ export function PropertyHeader({
                   return renderPriceBlock(
                     property.price,
                     property.original_price,
-                    "ราคาขาย",
+                    t("common.for_sale"),
                     false,
                   );
                 })()}
@@ -294,14 +304,16 @@ export function PropertyHeader({
                     <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200">
                       <CalendarDays className="w-4 h-4 text-blue-500" />
                       <span className="text-sm text-slate-600">
-                        อายุสัญญาขั้นต่ำ{" "}
+                        {t("property.min_contract")}{" "}
                         <strong className="text-slate-900">
-                          {property.min_contract_months} เดือน
+                          {property.min_contract_months} {t("common.month")}
                           {property.min_contract_months >= 12 &&
                             property.min_contract_months % 12 === 0 && (
                               <span className="text-slate-500 font-normal">
                                 {" "}
-                                หรือ {property.min_contract_months / 12} ปี
+                                {t("common.or")}{" "}
+                                {property.min_contract_months / 12}{" "}
+                                {t("common.year")}
                               </span>
                             )}
                         </strong>
