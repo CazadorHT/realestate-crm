@@ -244,11 +244,7 @@ export function PublicNav() {
                 {/* CTA Buttons */}
                 <div className="flex items-center gap-2 ml-2">
                   <Link href="/properties">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="border-blue-600 cursor-pointer text-blue-600 bg-white hover:bg-blue-500 hover:text-white focus:bg-white active:bg-white duration-300 transition-all font-medium"
-                    >
+                    <Button variant="outline" size="lg">
                       <Search className="h-4 w-4 mr-1" />
                       {t("home.search_btn")}
                     </Button>
