@@ -106,9 +106,9 @@ export function PublicNav() {
   };
 
   const currentLangFlag = {
-    th: <span className="fi fi-th h-4 w-6 rounded-full shadow-sm" />,
-    en: <span className="fi fi-us h-4 w-6 rounded-full shadow-sm" />,
-    cn: <span className="fi fi-cn h-4 w-6 rounded-full shadow-sm" />,
+    th: <span className="fi fi-th h-4 w-6 shadow-sm" />,
+    en: <span className="fi fi-us h-4 w-6 shadow-sm" />,
+    cn: <span className="fi fi-cn h-4 w-6 shadow-sm" />,
   };
 
   return (

@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useState, useEffect } from "react";
 
-export const revalidate = 60; // Revalidate every minute
-
 async function ServicesContent() {
   const { t } = useLanguage();
   const [services, setServices] = useState<ServiceRow[]>([]);

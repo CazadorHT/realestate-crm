@@ -51,7 +51,7 @@ export function PropertyCardImage({
               : property.listing_type === "SALE"
                 ? t("common.sale")
                 : `${t("common.sale")}/${t("common.rent")}`
-          } ${t(`home.property_types.${property.property_type?.toLowerCase().replace("_", "") || "other"}`)} - ${property.title}${
+          } ${t(`property_types.${property.property_type?.toLowerCase() || "other"}`)} - ${property.title}${
             areaProvince ? ` ${t("nav.properties")} ${areaProvince}` : ""
           }`}
           fill

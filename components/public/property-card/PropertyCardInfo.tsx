@@ -19,7 +19,7 @@ export function PropertyCardInfo({
 
   // Property type localization
   const typeLabel = t(
-    `home.property_types.${property.property_type?.toLowerCase().replace("_", "") || "other"}`,
+    `property_types.${property.property_type?.toLowerCase() || "other"}`,
   );
 
   return (

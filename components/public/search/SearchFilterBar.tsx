@@ -102,7 +102,7 @@ export function SearchFilterBar({
     { value: "LAND", label: t("home.property_types.land") },
     {
       value: "OFFICE_BUILDING",
-      label: t("home.property_types.officebuilding"),
+      label: t("home.property_types.office"),
     },
     {
       value: "COMMERCIAL_BUILDING",

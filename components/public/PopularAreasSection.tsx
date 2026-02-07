@@ -167,7 +167,7 @@ export function PopularAreasSection() {
         </div>
 
         {/* Content Area - Fixed height to prevent layout shift */}
-        <div className="min-h-[250px]">
+        <div className="min-h-[250px] px-4 md:px-0">
           {isLoading ? (
             <div className="flex gap-4 overflow-hidden py-4 ">
               {LOADING.map((_, i) => (

@@ -75,14 +75,46 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
     query = query.eq("property_type", criteria.propertyType);
   }
 
-  const { data: properties, error: propertiesError } = await query.limit(50);
+  const { data: properties, error: propertiesError } = await query.limit(100); // Increased limit since we'll filter after
 
   if (propertiesError) {
     throw new Error("Failed to fetch properties for matching");
   }
 
+  // Filter by budget range (post-query to handle complex OR logic correctly)
+  let filteredProperties = properties || [];
+
+  if (criteria.budgetMin !== undefined || criteria.budgetMax !== undefined) {
+    filteredProperties = filteredProperties.filter((p) => {
+      let price: number | null = null;
+
+      if (criteria.purpose === "BUY" || criteria.purpose === "INVEST") {
+        // Use price or original_price for buying
+        price = p.price || p.original_price || null;
+      } else if (criteria.purpose === "RENT") {
+        // Use rental_price or original_rental_price for renting
+        price = p.rental_price || p.original_rental_price || null;
+      }
+
+      // If no price available, exclude this property
+      if (price === null) return false;
+
+      // Check if price is within budget range
+      const minCheck =
+        criteria.budgetMin === undefined ||
+        criteria.budgetMin === 0 ||
+        price >= criteria.budgetMin;
+      const maxCheck =
+        criteria.budgetMax === undefined ||
+        criteria.budgetMax >= 999999999 ||
+        price <= criteria.budgetMax;
+
+      return minCheck && maxCheck;
+    });
+  }
+
   // 3. Calculate scores and match
-  const results: PropertyMatch[] = (properties || [])
+  const results: PropertyMatch[] = (filteredProperties || [])
     .map((p) => {
       // Safe cast to our extended type
       const prop = p as unknown as PropertyWithImages;

@@ -312,12 +312,10 @@ function PropertyListingContent() {
           >
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
               <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
-                {t("property_listing.title").split(" ").slice(0, -1).join(" ")}
+                {t("property_listing.title")}
               </span>
               <br />
-              <span className="text-slate-600 text-2xl md:text-3xl font-semibold">
-                {t("property_listing.title").split(" ").slice(-1).join(" ")}
-              </span>{" "}
+              
             </h2>
             <p className="text-base md:text-lg text-slate-600 max-w-2xl leading-relaxed">
               {t("property_listing.description")}
