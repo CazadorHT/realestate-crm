@@ -34,7 +34,8 @@ export default function LandingPage() {
     "@type": "RealEstateAgent",
     name: "OMA Asset",
     image: `${process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.com"}/images/logo.png`, // Replace with actual domain/logo
-    description: "แพลตฟอร์มบริหารงานขายอสังหาริมทรัพย์ครบวงจร",
+    description:
+      "ศูนย์รวมประกาศอสังหาริมทรัพย์ออนไลน์ ค้นหาง่าย ฝากขายรวดเร็ว พร้อมบริการดูแลโดยมืออาชีพ",
     address: {
       "@type": "PostalAddress",
       streetAddress: "123 Business Road",
