@@ -425,7 +425,7 @@ export function RecentlyViewedClient({
           <button
             onClick={scrollPrev}
             disabled={!canScrollLeft}
-            className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
+            className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all! duration-300! flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
             aria-label="Previous"
           >
             <ChevronLeft className="h-4 w-4 md:h-5 md:w-5 text-slate-700 group-hover:text-white" />
@@ -433,7 +433,7 @@ export function RecentlyViewedClient({
           <button
             onClick={scrollNext}
             disabled={!canScrollRight}
-            className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300 flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
+            className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all! duration-300! flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
             aria-label="Next"
           >
             <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-slate-700 group-hover:text-white" />
@@ -461,7 +461,7 @@ export function RecentlyViewedClient({
                     ? `/properties/${item.slug}`
                     : `/properties/${item.id}`
                 }
-                className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] bg-white rounded-[1.5rem] md:rounded-4xl border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-blue-500/10 transition-all duration-500 snap-start shrink-0 group relative isolate hover:-translate-y-1"
+                className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] bg-white rounded-[1.5rem] md:rounded-4xl border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-blue-500/10 transition-all! duration-500! snap-start shrink-0 group relative isolate hover:-translate-y-1"
                 {...(!disableAos && { "data-aos": "fade-left" })}
                 onClick={(e) => {
                   if (isDragging) e.preventDefault();
@@ -495,7 +495,7 @@ export function RecentlyViewedClient({
                       alt={item.title}
                       fill
                       sizes="300px"
-                      className="object-cover  group-hover:scale-110 transition-transform duration-700"
+                      className="object-cover  group-hover:scale-110 transition-transform duration-700!"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-300">

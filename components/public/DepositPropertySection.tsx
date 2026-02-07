@@ -72,9 +72,11 @@ export function DepositPropertySection() {
             className="space-y-4 md:space-y-6 text-center lg:text-left"
             data-aos="fade-right"
           >
-            <div className="inline-flex items-center rounded-full border border-blue-200 bg-linear-to-r from-blue-50 to-purple-50 px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold text-blue-700 backdrop-blur-sm mx-auto lg:mx-0 shadow-sm">
-              <Key className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
-              {t("deposit.title")}
+            <div className="inline-flex items-center rounded-full border border-blue-200 bg-linear-to-r from-blue-200 to-purple-200 px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold backdrop-blur-sm mx-auto lg:mx-0 shadow-sm">
+              <Key className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4 text-blue-600" />
+              <span className="text-blue-500 font-semibold">
+                {t("deposit.title")}
+              </span>
             </div>
 
             <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold tracking-tight leading-tight">

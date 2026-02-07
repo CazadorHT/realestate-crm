@@ -31,7 +31,7 @@ export function CookieConsent() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] transform transition-all duration-500 ease-in-out animate-in slide-in-from-bottom-10 fade-in zoom-in-95">
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] transform transition-all duration-500 ease-in-out animate-in slide-in-from-bottom-10 fade-in zoom-in-95">
       <div className="container mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex-1 flex gap-4">
           <div className="hidden md:flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">

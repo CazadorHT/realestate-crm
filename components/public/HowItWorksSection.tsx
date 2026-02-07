@@ -80,7 +80,7 @@ export function HowItWorksSection() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    name: t("home.how_it_works.subtitle"),
+    name: t("home.how_it_works.subtitle").replace("|", ""),
     description: t("home.how_it_works.description"),
     step: STEPS.map((step, index) => ({
       "@type": "HowToStep",
@@ -117,20 +117,24 @@ export function HowItWorksSection() {
           </div>
 
           <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-            {t("home.how_it_works.subtitle")
-              .split(" ")
-              .map((word, i) => (
-                <span
-                  key={i}
-                  className={
-                    i >= 2
-                      ? "text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600"
-                      : ""
-                  }
-                >
-                  {word} {i === 1 && <br />}
-                </span>
-              ))}
+            {(() => {
+              const [prefix, highlighted] = t(
+                "home.how_it_works.subtitle",
+              ).split("|");
+              return (
+                <>
+                  {prefix}
+                  {highlighted && (
+                    <>
+                      <br />
+                      <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
+                        {highlighted}
+                      </span>
+                    </>
+                  )}
+                </>
+              );
+            })()}
           </h2>
 
           <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">

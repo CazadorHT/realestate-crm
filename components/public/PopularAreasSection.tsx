@@ -110,12 +110,12 @@ export function PopularAreasSection() {
             suppressHydrationWarning
           >
             {/* Animated Badge with Glow */}
-            <div className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-blue-500/10 to-purple-500/10 text-blue-600 px-4 py-2 text-sm font-bold border border-blue-200/50 shadow-sm hover:shadow-md hover:shadow-blue-500/20 transition-all duration-300 group cursor-default">
+            <div className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-blue-500/30 to-purple-500/30  px-4 py-2 text-sm font-bold border border-blue-200/50 shadow-sm hover:shadow-md hover:shadow-blue-500/20 transition-all! duration-300! group cursor-default">
               <div className="relative">
-                <MapPin className="h-4 w-4 relative z-10" />
-                <div className="absolute inset-0 bg-blue-500 blur-md opacity-30 group-hover:opacity-50 transition-opacity" />
+                <MapPin className="h-4 w-4 relative z-10 text-blue-600" />
+                <div className="absolute inset-0 bg-blue-500 blur-md opacity-30 group-hover:opacity-50 transition-opacity!" />
               </div>
-              <span className="tracking-wide">
+              <span className="tracking-wide text-blue-600">
                 {t("home.popular_areas.title")}
               </span>
             </div>
@@ -149,18 +149,18 @@ export function PopularAreasSection() {
               onClick={() => router.push("/?type=ALL#latest-properties")}
               data-aos="fade-left"
               suppressHydrationWarning
-              className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-300 hover:scale-105 flex items-center justify-center"
+              className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all! duration-300! hover:scale-105 flex items-center justify-center"
             >
               {/* Animated gradient overlay */}
-              <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity! duration-500!" />
 
               {/* Shine effect */}
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-linear-to-r from-transparent via-white/20 to-transparent" />
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform! duration-700! bg-linear-to-r from-transparent via-white/20 to-transparent" />
 
               {/* Button content */}
               <div className="relative flex items-center gap-2">
                 <span>{t("common.view_all")}</span>
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform! duration-300!" />
               </div>
             </button>
           </div>
@@ -198,7 +198,7 @@ export function PopularAreasSection() {
               onMouseLeave={handleMouseLeave}
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}
-              className={`flex w-full gap-5 overflow-x-auto pb-8   py-4 snap-x snap-mandatory scrollbar-none transition-all ${
+              className={`flex w-full gap-5 overflow-x-auto pb-8   py-4 snap-x snap-mandatory scrollbar-none transition-all! ${
                 isDragging ? "cursor-grabbing scale-[0.99]" : "cursor-grab"
               }`}
             >
@@ -215,7 +215,7 @@ export function PopularAreasSection() {
                   }}
                   data-aos="fade-up"
                   data-aos-delay={index * 100}
-                  className="group w-[260px] relative isolate shrink-0 rounded-4xl overflow-hidden bg-slate-900 shadow-sm hover:shadow-xl  hover:-translate-y-2 transition-all duration-500 text-left snap-start"
+                  className="group w-[260px] relative isolate shrink-0 rounded-4xl overflow-hidden bg-slate-900 shadow-sm hover:shadow-xl  hover:-translate-y-2 transition-all! duration-500 text-left snap-start"
                 >
                   {/* Image & Overlays */}
                   <div className="absolute inset-0 -z-10">
@@ -224,30 +224,30 @@ export function PopularAreasSection() {
                       alt={it.popular_area}
                       fill
                       sizes="260px"
-                      className="object-cover transition-transform duration-1000 group-hover:scale-110 "
+                      className="object-cover transition-transform! duration-1000! group-hover:scale-110 "
                     />
                     {/* Double Gradient for readability */}
-                    <div className="absolute inset-0 bg-black/10 transition-opacity duration-500 group-hover:opacity-40" />
+                    <div className="absolute inset-0 bg-black/10 transition-opacity! duration-500! group-hover:opacity-40" />
                     <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/10 to-transparent opacity-90" />
                   </div>
 
                   {/* Card Content */}
                   <div className="relative p-6 h-[180px] flex flex-col justify-end">
                     {/* ชื่อทำเล: ขยับขึ้นเล็กน้อยเมื่อ Hover เพื่อเปิดทางให้ Badge */}
-                    <div className="transform transition-transform duration-500 group-hover:-translate-y-10 ">
+                    <div className="transform transition-transform! duration-500! group-hover:-translate-y-10 ">
                       <h3 className="text-white text-2xl font-semibold tracking-tight drop-shadow-lg">
                         {it.popular_area}
                       </h3>
                     </div>
                     {/* แถวข้อมูล: ปรับให้ดูแพงด้วย Glassmorphism */}
-                    <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 ">
+                    <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all! duration-300! ">
                       <p className="bg-white/30 backdrop-blur-md border border-white/30 text-white/80 text-[11px] font-medium px-3 py-1.5 rounded-full shadow-xl">
                         {it.count.toLocaleString()}{" "}
                         {t("property_listing.found_suffix")}
                       </p>
                       <div className="flex items-center gap-1 text-white text-xs font-semibold uppercase tracking-wider">
                         {t("home.popular_areas.explore")}
-                        <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+                        <ArrowRight className="h-3 w-3 transition-transform! group-hover:translate-x-1" />
                       </div>
                     </div>
                   </div>
