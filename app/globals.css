@@ -93,6 +93,40 @@
   }
 }
 
+/* Production CSS Fixes - Force gradient and text color rendering */
+@layer components {
+  /* Gradient button text fix */
+  .bg-linear-to-r {
+    color: white !important;
+  }
+
+  /* Explicit gradient definitions as fallback */
+  [class*="from-blue-600"][class*="to-purple-600"] {
+    background: linear-gradient(to right, #2563eb, #9333ea) !important;
+    color: white !important;
+  }
+
+  [class*="from-blue-600"][class*="to-blue-500"] {
+    background: linear-gradient(to right, #2563eb, #3b82f6) !important;
+    color: white !important;
+  }
+
+  [class*="from-sky-500"][class*="to-blue-500"] {
+    background: linear-gradient(to right, #0ea5e9, #3b82f6) !important;
+    color: white !important;
+  }
+
+  [class*="from-red-500"][class*="to-orange-500"] {
+    background: linear-gradient(to right, #ef4444, #f97316) !important;
+    color: white !important;
+  }
+
+  [class*="from-purple-500"][class*="to-pink-500"] {
+    background: linear-gradient(to right, #a855f7, #ec4899) !important;
+    color: white !important;
+  }
+}
+
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;

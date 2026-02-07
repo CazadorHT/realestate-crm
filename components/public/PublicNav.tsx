@@ -247,7 +247,7 @@ export function PublicNav() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="border-blue-600 cursor-pointer text-blue-600 hover:bg-linear-to-r hover:from-sky-500 hover:to-blue-500 hover:text-white hover:border-sky-500 duration-300 transition-all font-medium"
+                      className="border-blue-600 cursor-pointer text-blue-600 bg-white hover:bg-blue-500 hover:text-white focus:bg-white active:bg-white duration-300 transition-all font-medium"
                     >
                       <Search className="h-4 w-4 mr-1" />
                       {t("home.search_btn")}
@@ -259,7 +259,7 @@ export function PublicNav() {
                   >
                     <Button
                       size="lg"
-                      className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md font-medium"
+                      className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md font-medium outline-none ring-0 border-0 text-white"
                     >
                       <Key className="h-4 w-4 mr-1" />
                       {t("nav.deposit")}
@@ -390,7 +390,7 @@ export function PublicNav() {
                     >
                       <Button
                         size="lg"
-                        className="w-full cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base"
+                        className="w-full cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base outline-none ring-0 border-0 text-white"
                       >
                         <Key className="h-5 w-5 mr-2" />
                         {t("nav.deposit")}
