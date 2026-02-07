@@ -1,4 +1,10 @@
+import { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "แดชบอร์ด",
+  description: "ภาพรวมระบบ CRM อสังหาริมทรัพย์ สถิติ รายได้ และข้อมูลสำคัญ",
+};
 
 // Widgets
 import { StatsOverview } from "@/components/dashboard/StatsOverview";

@@ -1,6 +1,12 @@
+import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
+
+export const metadata: Metadata = {
+  title: "โปรไฟล์",
+  description: "จัดการข้อมูลส่วนตัวและการตั้งค่าบัญชี",
+};
 import { ProfileAvatar } from "@/features/profile/ProfileAvatar";
 import { ProfileInfoForm } from "@/features/profile/ProfileInfoForm";
 import { AccountSecurityCard } from "@/features/profile/AccountSecurityCard";

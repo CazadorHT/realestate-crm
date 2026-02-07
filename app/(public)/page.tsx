@@ -23,16 +23,16 @@ import { FAQSection } from "@/components/public/FAQSection";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "ค้นหาบ้าน คอนโด ที่ดิน สำนักงาน ขาย/เช่า | Real Estate CRM",
+  title: "ค้นหาบ้าน คอนโด ออฟฟิศ ขาย/เช่า | OMA Asset",
   description:
-    "แหล่งรวมประกาศขาย/เช่า บ้าน คอนโด ที่ดิน สำนักงาน อสังหาริมทรัพย์คุณภาพ ตรวจสอบแล้ว 100% พร้อมระบบ Smart Match ช่วยค้นหาบ้านในฝันของคุณ",
+    "แหล่งรวมประกาศขาย/เช่า บ้าน คอนโด ออฟฟิศ ที่ดิน สำนักงาน อสังหาริมทรัพย์คุณภาพ ตรวจสอบแล้ว 100% พร้อมระบบ Smart Match ช่วยค้นหาบ้านในฝันของคุณ",
 };
 
 export default function LandingPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    name: "Real Estate CRM",
+    name: "OMA Asset",
     image: `${process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.com"}/images/logo.png`, // Replace with actual domain/logo
     description: "แพลตฟอร์มบริหารงานขายอสังหาริมทรัพย์ครบวงจร",
     address: {

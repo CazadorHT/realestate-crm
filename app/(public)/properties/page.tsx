@@ -1,7 +1,14 @@
-﻿import { PropertySearchPage } from "@/components/public/PropertySearchPage";
+﻿import { Metadata } from "next";
+import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "ค้นหาอสังหาริมทรัพย์ | บ้าน คอนโด สำนักงานออฟฟิศ",
+  description:
+    "ค้นหาบ้าน คอนโด ที่ดิน สำนักงาน อสังหาริมทรัพย์ทุกประเภทสำหรับขายและเช่า พร้อมระบบกรองอัจฉริยะ",
+};
 
 export default function PublicPropertiesPage() {
   return (

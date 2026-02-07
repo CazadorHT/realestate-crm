@@ -12,32 +12,33 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: {
-    default: "Real Estate CRM | แพลตฟอร์มบริหารงานขายอสังหาริมทรัพย์",
-    template: "%s | Real Estate CRM",
+    default: "OMA Asset | แพลตฟอร์มบริหารงานขายอสังหาริมทรัพย์",
+    template: "%s | OMA Asset",
   },
   description:
     "ระบบบริหารจัดการอสังหาริมทรัพย์ครบวงจร ค้นหาบ้าน คอนโด ที่ดิน และเครื่องมือสำหรับนายหน้ามืออาชีพ",
   keywords: [
     "อสังหาริมทรัพย์",
+    "ออฟฟิศ",
     "ขายบ้าน",
     "คอนโด",
     "ที่ดิน",
     "นายหน้า",
     "Real Estate",
-    "CRM",
+    "OMA Asset",
   ],
   openGraph: {
     type: "website",
     locale: "th_TH",
     url: defaultUrl,
-    title: "Real Estate CRM | แพลตฟอร์มบริหารงานขายอสังหาริมทรัพย์",
+    title: "OMA Asset | แพลตฟอร์มบริหารงานขายอสังหาริมทรัพย์",
     description:
       "ระบบบริหารจัดการอสังหาริมทรัพย์ครบวงจร ค้นหาบ้าน คอนโด ที่ดิน และเครื่องมือสำหรับนายหน้ามืออาชีพ",
-    siteName: "Real Estate CRM",
+    siteName: "OMA Asset",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Real Estate CRM | แพลตฟอร์มบริหารงานขายอสังหาริมทรัพย์",
+    title: "OMA Asset | แพลตฟอร์มบริหารงานขายอสังหาริมทรัพย์",
     description:
       "ระบบบริหารจัดการอสังหาริมทรัพย์ครบวงจร ค้นหาบ้าน คอนโด ที่ดิน และเครื่องมือสำหรับนายหน้ามืออาชีพ",
   },

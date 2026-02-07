@@ -1,9 +1,15 @@
+import { Metadata } from "next";
 import Link from "next/link";
 import {
   getLeadsQuery,
   getLeadsForKanbanQuery,
   getLeadsDashboardStatsQuery,
 } from "@/features/leads/queries";
+
+export const metadata: Metadata = {
+  title: "จัดการลูกค้า (Leads)",
+  description: "จัดการและติดตามลูกค้าที่สนใจอสังหาริมทรัพย์",
+};
 import { LeadsFilters } from "@/components/leads/LeadsFilters";
 import { LeadsTable } from "@/components/leads/LeadsTable";
 import { LeadsKanban } from "@/features/leads/LeadsKanban";

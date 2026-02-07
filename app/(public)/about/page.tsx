@@ -1,13 +1,12 @@
-"use client";
+import { Metadata } from "next";
+import AboutPageClient from "./AboutPageClient";
 
-import { useLanguage } from "@/components/providers/LanguageProvider";
+export const metadata: Metadata = {
+  title: "เกี่ยวกับเรา",
+  description:
+    "รู้จักทีมงานอสังหาริมทรัพย์มืออาชีพ พร้อมให้บริการด้านอสังหาริมทรัพย์ครบวงจร",
+};
 
 export default function AboutPage() {
-  const { t } = useLanguage();
-  return (
-    <main className="max-w-screen-2xl mx-auto px-4 py-16">
-      <h1 className="text-3xl font-bold text-slate-900">{t("about.title")}</h1>
-      <p className="mt-3 text-slate-600">{t("about.description")}</p>
-    </main>
-  );
+  return <AboutPageClient />;
 }

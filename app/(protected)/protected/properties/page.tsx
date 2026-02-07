@@ -1,4 +1,10 @@
+import { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "จัดการทรัพย์",
+  description: "จัดการ เพิ่ม แก้ไข และติดตามอสังหาริมทรัพย์ทั้งหมดในระบบ",
+};
 import {
   PropertiesTable,
   PropertyTableData,

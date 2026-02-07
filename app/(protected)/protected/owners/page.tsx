@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { OwnersTable } from "@/components/owners/OwnersTable";
 import Link from "next/link";
 import { OwnersStats } from "@/components/owners/OwnersStats";
@@ -9,6 +10,11 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SectionTitle } from "@/components/dashboard/SectionTitle";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { CreateOwnerDialog } from "@/components/owners/CreateOwnerDialog";
+
+export const metadata: Metadata = {
+  title: "จัดการเจ้าของทรัพย์",
+  description: "จัดการข้อมูลเจ้าของทรัพย์และผู้ติดต่อ",
+};
 
 type PageProps = {
   searchParams: Promise<{
