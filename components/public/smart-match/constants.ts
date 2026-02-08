@@ -8,6 +8,8 @@ export const DEFAULT_RENT_RANGES: BudgetRange[] = [
   {
     id: "rent_1",
     label: "< 1.5 หมื่น",
+    label_en: "< 15k",
+    label_cn: "< 1.5 万",
     min_value: 0,
     max_value: 15000,
     purpose: "RENT",
@@ -17,6 +19,8 @@ export const DEFAULT_RENT_RANGES: BudgetRange[] = [
   {
     id: "rent_2",
     label: "1.5 - 5 หมื่น",
+    label_en: "15k - 50k",
+    label_cn: "1.5 - 5 万",
     min_value: 15000,
     max_value: 50000,
     purpose: "RENT",
@@ -26,6 +30,8 @@ export const DEFAULT_RENT_RANGES: BudgetRange[] = [
   {
     id: "rent_3",
     label: "5 หมื่น - 1.5 แสน",
+    label_en: "50k - 150k",
+    label_cn: "5 万 - 15 万",
     min_value: 50000,
     max_value: 150000,
     purpose: "RENT",
@@ -35,6 +41,8 @@ export const DEFAULT_RENT_RANGES: BudgetRange[] = [
   {
     id: "rent_4",
     label: "> 1.5 แสน",
+    label_en: "> 150k",
+    label_cn: "> 15 万",
     min_value: 150000,
     max_value: 999999999,
     purpose: "RENT",
@@ -48,6 +56,8 @@ export const DEFAULT_BUY_RANGES: BudgetRange[] = [
   {
     id: "buy_1",
     label: "< 3 ล้าน",
+    label_en: "< 3M",
+    label_cn: "< 300 万",
     min_value: 0,
     max_value: 3000000,
     purpose: "BUY",
@@ -57,6 +67,8 @@ export const DEFAULT_BUY_RANGES: BudgetRange[] = [
   {
     id: "buy_2",
     label: "3 - 5 ล้าน",
+    label_en: "3M - 5M",
+    label_cn: "300 - 500 万",
     min_value: 3000000,
     max_value: 5000000,
     purpose: "BUY",
@@ -66,6 +78,8 @@ export const DEFAULT_BUY_RANGES: BudgetRange[] = [
   {
     id: "buy_3",
     label: "5 - 10 ล้าน",
+    label_en: "5M - 10M",
+    label_cn: "500 - 1000 万",
     min_value: 5000000,
     max_value: 10000000,
     purpose: "BUY",
@@ -75,6 +89,8 @@ export const DEFAULT_BUY_RANGES: BudgetRange[] = [
   {
     id: "buy_4",
     label: "> 10 ล้าน",
+    label_en: "> 10M",
+    label_cn: "> 1000 万",
     min_value: 10000000,
     max_value: 999999999,
     purpose: "BUY",
@@ -84,16 +100,42 @@ export const DEFAULT_BUY_RANGES: BudgetRange[] = [
 ];
 
 export const DEFAULT_PROPERTY_TYPES = [
-  { label: "🏠 บ้าน", value: "HOUSE" },
-  { label: "🏢 คอนโด", value: "CONDO" },
-  { label: "🏬 ออฟฟิศ", value: "OFFICE_BUILDING" },
-  { label: "👔 อาคารสำนักงาน", value: "OFFICE_BUILDING" },
-  { label: "🏡 โฮมออฟฟิศ", value: "TOWNHOME" },
+  {
+    label: "🏠 บ้าน",
+    label_en: "House",
+    label_cn: "别墅/单户住宅",
+    value: "HOUSE",
+  },
+  { label: "🏢 คอนโด", label_en: "Condo", label_cn: "公寓", value: "CONDO" },
+  {
+    label: "🏬 ออฟฟิศ",
+    label_en: "Office",
+    label_cn: "办公室",
+    value: "OFFICE_BUILDING",
+  },
+  {
+    label: "👔 อาคารสำนักงาน",
+    label_en: "Commercial Bldg",
+    label_cn: "商用建筑",
+    value: "OFFICE_BUILDING",
+  },
+  {
+    label: "🏡 โฮมออฟฟิศ",
+    label_en: "Townhome",
+    label_cn: "联排别墅/店屋",
+    value: "TOWNHOME",
+  },
 ];
 
 export const DEFAULT_SETTINGS: SmartMatchSettings = {
   transit_question_enabled: true,
   wizard_title: "วันนี้คุณกำลังมองหา...",
+  wizard_title_en: "What are you looking for today?",
+  wizard_title_cn: "您今天在寻找什么？",
   loading_text: "กำลังวิเคราะห์ข้อมูล...",
+  loading_text_en: "Analyzing data...",
+  loading_text_cn: "正在分析数据...",
   pdpa_text: "ข้อมูลของคุณจะถูกเก็บเป็นความลับตามนโยบาย PDPA",
+  pdpa_text_en: "Your data will be kept confidential according to PDPA policy",
+  pdpa_text_cn: "您的数据将根据 PDPA 政策保密",
 };
