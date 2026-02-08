@@ -295,9 +295,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                       />
                     </div>
                   ) : (
-                    <PropertyDescription
-                      description={values.description || null}
-                    />
+                    <PropertyDescription property={values as any} />
                   )}
                 </div>
 
@@ -350,6 +348,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                   listingType={values.listing_type || "SALE"}
                   price={values.price ?? null}
                   rentalPrice={values.rental_price ?? null}
+                  propertyType={values.property_type || undefined}
                 />
 
                 <div className="sticky top-24">

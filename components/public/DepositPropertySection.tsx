@@ -131,9 +131,7 @@ export function DepositPropertySection() {
               <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-slate-50 rounded-lg md:rounded-xl border border-slate-200">
                 <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
                 <span className="text-xs md:text-sm font-medium text-slate-700">
-                  {t("common.verified_100").includes("100%")
-                    ? "Professional Team"
-                    : "ทีมมืออาชีพ"}
+                  {t("common.professional_team")}
                 </span>
               </div>
             </div>
@@ -419,27 +417,28 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
         <FormField
           control={form.control}
           name="details"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-slate-800 font-bold mb-1.5">
-                {t("home.property_types.title").includes("Type")
-                  ? "Location / Project / Details"
-                  : "ทำเล / ชื่อโครงการ / รายละเอียดเพิ่มเติม"}
-              </FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder={
-                    t("home.property_types.title").includes("Type")
-                      ? "e.g. Want to sell Rhythm Ratchada, 1 Bedroom, near BTS..."
-                      : "เช่น ต้องการฝากขายคอนโด Rhythm รัชดา 1 ห้องนอน ติด BTS รัชดา..."
-                  }
-                  className="min-h-[100px] resize-none border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage className="font-medium" />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const currentType = form.watch("propertyType");
+            return (
+              <FormItem>
+                <FormLabel className="text-slate-800 font-bold mb-1.5">
+                  {t("deposit.form.details_label")}
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder={
+                      currentType === "COMMERCIAL"
+                        ? t("deposit.form.details_placeholder_office")
+                        : t("deposit.form.details_placeholder")
+                    }
+                    className="min-h-[100px] resize-none border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="font-medium" />
+              </FormItem>
+            );
+          }}
         />
 
         <div className="pt-2">

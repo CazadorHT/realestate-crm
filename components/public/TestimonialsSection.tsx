@@ -9,51 +9,33 @@ export function TestimonialsSection() {
 
   const TESTIMONIALS = [
     {
-      name:
-        t("home.testimonials.verified_client") === "Verified"
-          ? "Condo Owner"
-          : "เจ้าของคอนโด",
-      role:
-        t("home.testimonials.verified_client") === "Verified"
-          ? "Rent Condo"
-          : "ให้เช่าคอนโด",
+      name: t("home.testimonials.item1_name"),
+      role: t("home.testimonials.item1_role"),
       property: t("home.property_types.condo"),
-      comment: t("home.testimonials.footer_desc").includes("Review")
-        ? "Very professional team. Helped from finding tenant to contract ending. Condo rented in 2 weeks at a great price!"
-        : "ทีมงานมืออาชีพมาก ช่วยดูแลตั้งแต่หาผู้เช่าจนจบสัญญา คอนโดให้เช่าได้ภายใน 2 สัปดาห์ ในราคาที่พอใจ!",
+      comment: t("home.testimonials.item1_comment"),
       rating: 5,
       date: "2024-12",
-      image: "",
+      image: "🏢",
       verified: true,
     },
     {
-      name:
-        t("home.testimonials.verified_client") === "Verified"
-          ? "House Tenant"
-          : "ผู้เช่าบ้าน",
-      role: t("home.property_types.house"),
+      name: t("home.testimonials.item2_name"),
+      role: t("home.testimonials.item2_role"),
       property: t("home.property_types.house"),
-      comment: t("home.testimonials.footer_desc").includes("Review")
-        ? "Found a rental house quickly. Great filtering system. Answered all questions and showed the house. Very impressed."
-        : "หาบ้านเช่าได้รวดเร็ว ระบบกรองบ้านให้เช่าดีมาก ตอบทุกคำถาม พาชมบ้านถึงที่ ประทับใจมากค่ะ",
+      comment: t("home.testimonials.item2_comment"),
       rating: 5,
       date: "2025-01",
-      image: "",
+      image: "🏠",
       verified: true,
     },
     {
-      name:
-        t("home.testimonials.verified_client") === "Verified"
-          ? "Office Tenant"
-          : "ผู้เช่าสำนักงาน",
-      role: t("home.property_types.office"),
+      name: t("home.testimonials.item3_name"),
+      role: t("home.testimonials.item3_role"),
       property: t("home.property_types.office"),
-      comment: t("home.testimonials.footer_desc").includes("Review")
-        ? "Finding office space was very easy. Complete information, great location, reasonable price. Closed deal quickly."
-        : "หาสำนักงานออฟฟิศให้เช่าง่ายมาก ข้อมูลออฟฟิศครบถ้วน ทำเลดี ราคาเหมาะสม ปิดดีลได้ไว",
+      comment: t("home.testimonials.item3_comment"),
       rating: 5,
       date: "2024-11",
-      image: "",
+      image: "🏢",
       verified: true,
     },
   ];
@@ -87,8 +69,10 @@ export function TestimonialsSection() {
     })),
   };
 
+  const subtitle = t("home.testimonials.subtitle");
+
   return (
-    <section className="py-12 md:py-16 lg:py-20 px-4 md:px-6 lg:px-8  bg-white relative overflow-hidden z-0">
+    <section className="py-12 md:py-16 lg:py-20 px-4 md:px-6 lg:px-8 bg-white relative overflow-hidden z-0">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
@@ -112,20 +96,7 @@ export function TestimonialsSection() {
           </div>
 
           <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-            {t("home.testimonials.subtitle")
-              .split(" ")
-              .map((word, i) => (
-                <span
-                  key={i}
-                  className={
-                    i === 2
-                      ? "text-transparent bg-clip-text bg-linear-to-r from-amber-600 via-orange-600 to-amber-600 block mt-2"
-                      : ""
-                  }
-                >
-                  {word}{" "}
-                </span>
-              ))}
+            {subtitle}
           </h2>
 
           <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">

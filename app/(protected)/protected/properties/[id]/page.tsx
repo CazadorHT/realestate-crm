@@ -214,31 +214,31 @@ export default async function PropertyDetailsPage({
           />
         </div>
         <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="lg"
-          asChild
-          className="rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
-        >
-          <Link
-            href={`/properties/${property.slug || property.id}`}
-            target="_blank"
+          <Button
+            variant="outline"
+            size="lg"
+            asChild
+            className="rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
           >
-            <Eye className="h-4 w-4 mr-2" />
-            ดูหน้าเว็บไซต์
-          </Link>
-        </Button>
-        <Button
-          variant="outline"
-          size="lg"
-          asChild
-          className="rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
-        >
-          <Link href={`/protected/properties/${property.id}/edit`}>
-            <Edit className="h-4 w-4 mr-2" />
-            แก้ไขข้อมูล
-          </Link>
-        </Button>
+            <Link
+              href={`/properties/${property.slug || property.id}`}
+              target="_blank"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              ดูหน้าเว็บไซต์
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            asChild
+            className="rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
+          >
+            <Link href={`/protected/properties/${property.id}/edit`}>
+              <Edit className="h-4 w-4 mr-2" />
+              แก้ไขข้อมูล
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -292,7 +292,7 @@ export default async function PropertyDetailsPage({
                 <PropertyBadgesSection property={property as any} />
 
                 {/* Description */}
-                <PropertyDescription description={property.description} />
+                <PropertyDescription property={property as any} />
 
                 {/* Nearby */}
                 <NearbyPlaces
@@ -440,6 +440,7 @@ export default async function PropertyDetailsPage({
                   listingType={property.listing_type || "SALE"}
                   price={property.price ?? null}
                   rentalPrice={property.rental_price ?? null}
+                  propertyType={property.property_type || undefined}
                 />
 
                 {/* Owner Card (Protected) */}

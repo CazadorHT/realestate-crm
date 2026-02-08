@@ -41,6 +41,7 @@
     "verified_100": "100% Verified",
     "safe_transaction": "Secure Transactions",
     "fast_response": "Fast Reply within 24h",
+    "professional_team": "Professional Team",
     "start_search": "Start Searching",
     "contact_line": "Contact via LINE",
     "free": "Free!",
@@ -167,9 +168,18 @@
       "title": "Customer Reviews",
       "subtitle": "Satisfied with our services",
       "description": "Real experiences from those who bought, sold, or rented with us.",
-      "review_stat": "From 1,250+ Reviews",
+      "review_stat": "Over 1,250+ reviews",
       "verified_client": "Verified",
-      "footer_desc": "All reviews verified and confirmed by real customers"
+      "footer_desc": "All reviews are checked and verified from real customers",
+      "item1_name": "Condo Owner",
+      "item1_role": "Rent Condo",
+      "item1_comment": "Very professional team. Helped from finding tenant to contract ending. Condo rented in 2 weeks at a great price!",
+      "item2_name": "House Tenant",
+      "item2_role": "Rent House",
+      "item2_comment": "Found a rental house quickly. Great filtering system. Answered all questions and showed the house. Very impressed.",
+      "item3_name": "Office Tenant",
+      "item3_role": "Rent Office",
+      "item3_comment": "Finding office space was very easy. Complete information, great location, reasonable price. Closed deal quickly."
     },
     "how_it_works": {
       "title": "3 Simple Steps",
@@ -211,6 +221,9 @@
       "line_label": "Line ID (Optional)",
       "line_placeholder": "Your ID",
       "type_label": "Property Type",
+      "details_label": "Location / Project / Details",
+      "details_placeholder": "e.g., Want to sell Rhythm Ratchada, 1 Bedroom, near BTS...",
+      "details_placeholder_office": "e.g., Want to rent office at G Tower, 20th floor, 200 sqm, near MRT...",
       "submit_btn": "Submit Property Info",
       "required_note": "Fill all info. Staff will contact back shortly."
     },
