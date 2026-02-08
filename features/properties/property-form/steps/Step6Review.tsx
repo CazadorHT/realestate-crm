@@ -16,7 +16,17 @@ import { SmartEditor } from "../components/SmartEditor";
 import { Button } from "@/components/ui/button";
 import { generatePropertyDescription } from "../utils/description-generator";
 import { toast } from "sonner";
-import { Sparkles, Pencil, Check, X, FileCheck } from "lucide-react";
+import {
+  Sparkles,
+  Pencil,
+  Check,
+  X,
+  FileCheck,
+  Languages,
+  Loader2,
+} from "lucide-react";
+import { translateTextAction } from "@/lib/ai/translation-actions";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ICON_MAP, DEFAULT_ICON } from "@/features/amenities/icons";
 import { createClient } from "@/lib/supabase/client";
 import { AgentSidebar } from "@/components/public/AgentSidebar";
@@ -47,6 +57,10 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [activeFeatures, setActiveFeatures] = useState<Feature[]>([]);
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
+  const [previewLanguage, setPreviewLanguage] = useState<"th" | "en" | "cn">(
+    "th",
+  );
+  const [isTranslating, setIsTranslating] = useState(false);
   const values = form.watch();
 
   // Load features and user profile
@@ -159,27 +173,82 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
     }
   }, [form]);
 
+  const handleTranslateDescription = async () => {
+    const desc = form.getValues("description");
+    if (!desc || desc.trim() === "" || desc === "<p></p>") {
+      toast.error("กรุณากรอกคำบรรยายภาษาไทยก่อนกดแปลครับ");
+      return;
+    }
+
+    setIsTranslating(true);
+    const toastId = toast.loading("กำลังแปลคำบรรยายเป็นภาษาอังกฤษและจีน...");
+
+    try {
+      const result = await translateTextAction(desc, "html");
+      form.setValue("description_en", result.en, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      form.setValue("description_cn", result.cn, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      toast.success("แปลคำบรรยายเรียบร้อยแล้ว ✨", { id: toastId });
+    } catch (error: any) {
+      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Review Header Alert */}
-      <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex items-start gap-4 shadow-sm">
-        <div className="p-2 bg-blue-100/50 rounded-lg text-blue-600">
-          <FileCheck className="h-6 w-6" />
+      <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
+        <div className="flex items-start gap-4">
+          <div className="p-2.5 bg-blue-100/50 rounded-xl text-blue-600">
+            <FileCheck className="h-7 w-7" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-blue-700">
+              ขั้นตอนสุดท้าย: ตรวจสอบและยืนยัน (Review & Publish)
+            </h3>
+            <p className="text-sm text-blue-600/80 leading-relaxed max-w-2xl">
+              นี่คือตัวอย่างหน้าประกาศของคุณที่จะแสดงให้ลูกค้าเห็นจริง
+              กรุณาตรวจสอบความถูกต้องของข้อมูลทั้งหมด โดยเฉพาะ
+              "รายละเอียดทรัพย์" และสามารถเลือกดูพรีวิวในภาษาต่างๆ
+              ได้ทางขวามือครับ
+            </p>
+          </div>
         </div>
-        <div className="space-y-1">
-          <h3 className="text-base font-bold text-blue-700">
-            ขั้นตอนสุดท้าย: ตรวจสอบและยืนยัน (Review & Publish)
-          </h3>
-          <p className="text-sm text-blue-600/80 leading-relaxed">
-            นี่คือตัวอย่างหน้าประกาศของคุณที่จะแสดงให้ลูกค้าเห็นจริง
-            กรุณาตรวจสอบความถูกต้องของข้อมูลทั้งหมด โดยเฉพาะ "รายละเอียดทรัพย์"
-            หากต้องการแก้ไขส่วนไหน สามารถกดย้อนกลับไปแก้ไขได้ทันที
-          </p>
+
+        {/* Language Switcher moved here */}
+        <div className="flex bg-white/80 backdrop-blur-sm border border-blue-100 p-1 rounded-2xl shadow-sm self-start md:self-center">
+          {(["th", "en", "cn"] as const).map((lang) => (
+            <button
+              key={lang}
+              onClick={() => setPreviewLanguage(lang)}
+              className={cn(
+                "px-5 py-2 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2",
+                previewLanguage === lang
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105"
+                  : "text-slate-500 hover:text-blue-600 hover:bg-blue-50",
+              )}
+            >
+              <Languages
+                className={cn(
+                  "w-4 h-4",
+                  previewLanguage === lang ? "text-blue-200" : "text-slate-400",
+                )}
+              />
+              {lang === "th" ? "ไทย" : lang === "en" ? "English" : "中文"}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* --- PREVIEW CONTENT (Based on public/properties/[slug]/page.tsx) --- */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-12">
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-12 relative">
         {/* 1. Header & Breadcrumb */}
         <PropertyHeader
           property={
@@ -196,6 +265,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
           }
           locationParts={locationParts}
           keySellingPoints={keySellingPoints}
+          language={previewLanguage}
         />
         <div className="pt-20 md:pt-24 px-5 md:px-6 lg:px-8 bg-white relative">
           <div className="max-w-screen-2xl mx-auto px-6 md:px-8 mt-4 md:mt-8">
@@ -223,6 +293,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                   landSize={values.land_size_sqwah}
                   floor={values.floor}
                   type={values.property_type}
+                  language={previewLanguage}
                 />
 
                 {/* Badges Section */}
@@ -234,6 +305,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                       created_at: new Date().toISOString(),
                     } as any
                   }
+                  language={previewLanguage}
                 />
 
                 {/* Description Editor / Preview Content */}
@@ -276,26 +348,112 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                   </div>
 
                   {isEditingDesc ? (
-                    <div className="p-6 bg-white rounded-2xl border border-slate-200 min-h-[300px] animate-in fade-in zoom-in-95 duration-200">
-                      <SmartEditor
-                        value={values.description || ""}
-                        onChange={(val) =>
-                          form.setValue("description", val, {
-                            shouldDirty: true,
-                          })
-                        }
-                        onAiGenerate={async () => {
-                          const newDesc = generatePropertyDescription(
-                            form.getValues(),
-                            activeFeatures,
-                          );
-                          toast.success("อัปเดตรายละเอียดเรียบร้อย");
-                          return newDesc;
-                        }}
-                      />
+                    <div className="p-6 bg-slate-50/50 rounded-3xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+                      <Tabs defaultValue="th" className="w-full">
+                        <div className="flex items-center justify-between mb-4 bg-white/50 p-1.5 rounded-2xl border border-slate-200/50">
+                          <TabsList className="bg-transparent h-auto p-0 gap-1">
+                            <TabsTrigger
+                              value="th"
+                              className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-6 py-2.5 rounded-xl text-sm font-bold border-transparent"
+                            >
+                              ไทย
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="en"
+                              className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-6 py-2.5 rounded-xl text-sm font-bold border-transparent"
+                            >
+                              English
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="cn"
+                              className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-6 py-2.5 rounded-xl text-sm font-bold border-transparent"
+                            >
+                              中文
+                            </TabsTrigger>
+                          </TabsList>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleTranslateDescription}
+                            disabled={isTranslating}
+                            className="border-blue-100 text-blue-600 hover:bg-white gap-2 h-10 px-5 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95"
+                          >
+                            {isTranslating ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Sparkles className="h-4 w-4 text-amber-500" />
+                            )}
+                            <span className="hidden sm:inline">
+                              AI แปลจากไทยเป็น EN/CN
+                            </span>
+                            <span className="sm:hidden">AI แปล</span>
+                          </Button>
+                        </div>
+
+                        <TabsContent
+                          value="th"
+                          className="mt-0 focus-visible:outline-none"
+                        >
+                          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <SmartEditor
+                              value={values.description || ""}
+                              onChange={(val) =>
+                                form.setValue("description", val, {
+                                  shouldDirty: true,
+                                })
+                              }
+                              onAiGenerate={async () => {
+                                const newDesc = generatePropertyDescription(
+                                  form.getValues(),
+                                  activeFeatures,
+                                );
+                                toast.success("อัปเดตรายละเอียดเรียบร้อย");
+                                return newDesc;
+                              }}
+                            />
+                          </div>
+                        </TabsContent>
+                        <TabsContent
+                          value="en"
+                          className="mt-0 focus-visible:outline-none"
+                        >
+                          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <SmartEditor
+                              value={values.description_en || ""}
+                              onChange={(val) =>
+                                form.setValue("description_en", val, {
+                                  shouldDirty: true,
+                                })
+                              }
+                              height={300}
+                            />
+                          </div>
+                        </TabsContent>
+                        <TabsContent
+                          value="cn"
+                          className="mt-0 focus-visible:outline-none"
+                        >
+                          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <SmartEditor
+                              value={values.description_cn || ""}
+                              onChange={(val) =>
+                                form.setValue("description_cn", val, {
+                                  shouldDirty: true,
+                                })
+                              }
+                              height={300}
+                            />
+                          </div>
+                        </TabsContent>
+                      </Tabs>
                     </div>
                   ) : (
-                    <PropertyDescription property={values as any} />
+                    <PropertyDescription
+                      property={values as any}
+                      language={previewLanguage}
+                    />
                   )}
                 </div>
 
@@ -327,12 +485,16 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                         : undefined,
                     })),
                   ]}
+                  language={previewLanguage}
                 />
 
                 <hr className="border-slate-100" />
 
                 {/* Amenities */}
-                <PropertyAmenities features={activeFeatures} />
+                <PropertyAmenities
+                  features={activeFeatures}
+                  language={previewLanguage}
+                />
 
                 <hr className="border-slate-100" />
 
@@ -349,6 +511,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                   price={values.price ?? null}
                   rentalPrice={values.rental_price ?? null}
                   propertyType={values.property_type || undefined}
+                  language={previewLanguage}
                 />
 
                 <div className="sticky top-24">

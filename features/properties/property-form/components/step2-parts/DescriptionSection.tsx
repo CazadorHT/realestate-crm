@@ -12,12 +12,14 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "../../components/SectionHeader";
 import { SmartEditor } from "../../components/SmartEditor";
-import { FileText } from "lucide-react";
+import { FileText, Sparkles, Languages, Loader2 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { generateAIPropertyDescriptionAction } from "../../actions/ai-actions";
 import { toast } from "sonner";
 import { generatePropertyDescription } from "../../utils/description-generator";
 import { PropertyFormValues } from "@/features/properties/schema";
+import { translateTextAction } from "@/lib/ai/translation-actions";
+import { Button } from "@/components/ui/button";
 
 interface DescriptionSectionProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -28,6 +30,36 @@ export function DescriptionSection({
   form,
   isReadOnly,
 }: DescriptionSectionProps) {
+  const [isTranslating, setIsTranslating] = React.useState(false);
+
+  const handleTranslateDescription = async () => {
+    const desc = form.getValues("description");
+    if (!desc || desc.trim() === "" || desc === "<p></p>") {
+      toast.error("กรุณากรอกคำบรรยายภาษาไทยก่อนกดแปลครับ");
+      return;
+    }
+
+    setIsTranslating(true);
+    const toastId = toast.loading("กำลังแปลคำบรรยายเป็นภาษาอังกฤษและจีน...");
+
+    try {
+      const result = await translateTextAction(desc, "html");
+      form.setValue("description_en", result.en, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      form.setValue("description_cn", result.cn, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      toast.success("แปลคำบรรยายเรียบร้อยแล้ว ✨", { id: toastId });
+    } catch (error: any) {
+      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const handleGenerate = useCallback(
     async (currentValue: string) => {
       // Get all form values
@@ -71,40 +103,118 @@ export function DescriptionSection({
   );
 
   return (
-    <Card className="lg:col-span-2 border-slate-200/70 bg-white">
-      <CardHeader className="space-y-3">
-        <SectionHeader
-          icon={FileText}
-          title="รายละเอียด"
-          desc="เขียนให้ขายง่าย: จุดเด่น, ใกล้อะไร, เฟอร์นิเจอร์, เงื่อนไข"
-          tone="blue"
-        />
-        <Separator className="bg-slate-200/70" />
-      </CardHeader>
+    <div className="space-y-6 lg:col-span-2">
+      <Card className="border-slate-200/70 bg-white">
+        <CardHeader className="space-y-3">
+          <div className="flex items-center justify-between">
+            <SectionHeader
+              icon={FileText}
+              title="รายละเอียด (ไทย)"
+              desc="เขียนให้ขายง่าย: จุดเด่น, ใกล้อะไร, เฟอร์นิเจอร์, เงื่อนไข"
+              tone="blue"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleTranslateDescription}
+              disabled={isTranslating}
+              className="border-blue-100 text-blue-600 hover:bg-blue-50 gap-2 h-9 px-4 rounded-xl shadow-sm"
+            >
+              {isTranslating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4 text-amber-500" />
+              )}
+              AI แปลเป็น EN/CN
+            </Button>
+          </div>
+          <Separator className="bg-slate-200/70" />
+        </CardHeader>
 
-      <CardContent>
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <SmartEditor
-                  value={field.value ?? ""}
-                  onChange={field.onChange}
-                  disabled={isReadOnly}
-                  placeholder={`ตัวอย่าง:\n• จุดเด่น: รีโนเวทใหม่ / วิวโล่ง / ใกล้ BTS\n• เฟอร์นิเจอร์/เครื่องใช้ไฟฟ้า: ...\n• เงื่อนไข: ...`}
-                  onAiGenerate={handleGenerate}
-                />
-              </FormControl>
-              <FormDescription className="text-xs text-slate-500">
-                แนะนำใส่ “สิ่งที่ทำให้ต่างจากทรัพย์อื่น” 3–5 ข้อ
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </CardContent>
-    </Card>
+        <CardContent>
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <SmartEditor
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    disabled={isReadOnly}
+                    placeholder={`ตัวอย่าง:\n• จุดเด่น: รีโนเวทใหม่ / วิวโล่ง / ใกล้ BTS\n• เฟอร์นิเจอร์/เครื่องใช้ไฟฟ้า: ...\n• เงื่อนไข: ...`}
+                    onAiGenerate={handleGenerate}
+                  />
+                </FormControl>
+                <FormDescription className="text-xs text-slate-500">
+                  แนะนำใส่ “สิ่งที่ทำให้ต่างจากทรัพย์อื่น” 3–5 ข้อ
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Multilingual Descriptions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="border-slate-200/70 bg-white shadow-sm overflow-hidden">
+          <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-2">
+            <Languages className="w-4 h-4 text-slate-400" />
+            <span className="text-sm font-medium text-slate-600 uppercase tracking-tight">
+              Description (English)
+            </span>
+          </div>
+          <CardContent className="p-4">
+            <FormField
+              control={form.control}
+              name="description_en"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <SmartEditor
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      disabled={isReadOnly}
+                      height={300}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-200/70 bg-white shadow-sm overflow-hidden">
+          <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-2">
+            <Languages className="w-4 h-4 text-slate-400" />
+            <span className="text-sm font-medium text-slate-600 uppercase tracking-tight">
+              物业详情 (Chinese)
+            </span>
+          </div>
+          <CardContent className="p-4">
+            <FormField
+              control={form.control}
+              name="description_cn"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <SmartEditor
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      disabled={isReadOnly}
+                      height={300}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

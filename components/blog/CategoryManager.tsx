@@ -22,6 +22,8 @@ import { toast } from "sonner";
 interface Category {
   id: string;
   name: string;
+  name_en?: string | null;
+  name_cn?: string | null;
   slug: string;
   created_at: string;
 }
@@ -34,16 +36,24 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryNameEn, setNewCategoryNameEn] = useState("");
+  const [newCategoryNameCn, setNewCategoryNameCn] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const handleCreate = () => {
     if (!newCategoryName.trim()) return;
 
     startTransition(async () => {
-      const result = await createCategoryAction(newCategoryName);
+      const result = await createCategoryAction(
+        newCategoryName,
+        newCategoryNameEn,
+        newCategoryNameCn,
+      );
       if (result.success && result.category) {
         setCategories((prev) => [...prev, result.category!]);
         setNewCategoryName("");
+        setNewCategoryNameEn("");
+        setNewCategoryNameCn("");
         toast.success("สร้างหมวดหมู่สำเร็จ");
         router.refresh();
       } else {
@@ -69,36 +79,67 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-4">
-        <Input
-          placeholder="ชื่อหมวดหมู่ใหม่ (เช่น 'ข่าวสารอสังหาฯ')"
-          value={newCategoryName}
-          onChange={(e) => setNewCategoryName(e.target.value)}
-          disabled={isPending}
-        />
-        <Button
-          onClick={handleCreate}
-          disabled={isPending || !newCategoryName.trim()}
-        >
-          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          เพิ่มหมวดหมู่
-        </Button>
+      <div className="space-y-4 bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 className="text-sm font-semibold text-slate-700">
+          เพิ่มหมวดหมู่ใหม่
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Input
+            placeholder="ชื่อภาษาไทย (เช่น ข่าวสาร)"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+            disabled={isPending}
+            className="bg-white"
+          />
+          <Input
+            placeholder="English Name"
+            value={newCategoryNameEn}
+            onChange={(e) => setNewCategoryNameEn(e.target.value)}
+            disabled={isPending}
+            className="bg-white"
+          />
+          <Input
+            placeholder="中文名称"
+            value={newCategoryNameCn}
+            onChange={(e) => setNewCategoryNameCn(e.target.value)}
+            disabled={isPending}
+            className="bg-white"
+          />
+        </div>
+        <div className="flex justify-end">
+          <Button
+            onClick={handleCreate}
+            disabled={isPending || !newCategoryName.trim()}
+            className="w-full md:w-48 bg-blue-600 hover:bg-blue-700"
+          >
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            เพิ่มหมวดหมู่
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-md border border-slate-200 shadow-sm p-6">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ชื่อหมวดหมู่</TableHead>
+              <TableHead>ชื่อหมวดหมู่ (TH)</TableHead>
+              <TableHead>English (EN)</TableHead>
+              <TableHead>中文 (CN)</TableHead>
               <TableHead>สลัก (Slug)</TableHead>
-              <TableHead className="w-[100px] text-right">การจัดการ</TableHead>
+              <TableHead className="w-[80px] text-right">การจัดการ</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {categories.map((category) => (
               <TableRow key={category.id}>
                 <TableCell className="font-medium">{category.name}</TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-slate-600">
+                  {category.name_en || "-"}
+                </TableCell>
+                <TableCell className="text-slate-600">
+                  {category.name_cn || "-"}
+                </TableCell>
+                <TableCell className="text-muted-foreground font-mono text-xs">
                   {category.slug}
                 </TableCell>
                 <TableCell className="text-right">

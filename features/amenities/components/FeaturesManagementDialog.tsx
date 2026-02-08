@@ -82,6 +82,8 @@ export function FeaturesManagementDialog({
     resolver: zodResolver(FeatureSchema),
     defaultValues: {
       name: "",
+      name_en: "",
+      name_cn: "",
       category: "",
       icon_key: "box",
     },
@@ -138,6 +140,8 @@ export function FeaturesManagementDialog({
     setEditingFeature(feature);
     form.reset({
       name: feature.name,
+      name_en: feature.name_en || "",
+      name_cn: feature.name_cn || "",
       category: feature.category || "",
       icon_key: feature.icon_key,
     });
@@ -146,7 +150,13 @@ export function FeaturesManagementDialog({
 
   const handleAddNew = () => {
     setEditingFeature(null);
-    form.reset({ name: "", category: "", icon_key: "box" });
+    form.reset({
+      name: "",
+      name_en: "",
+      name_cn: "",
+      category: "",
+      icon_key: "box",
+    });
     setIsFormOpen(true);
   };
 
@@ -307,7 +317,7 @@ export function FeaturesManagementDialog({
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ชื่อรายการ</FormLabel>
+                      <FormLabel>ชื่อรายการ (ไทย)</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="เช่น สระว่ายน้ำ, ฟิตเนส"
@@ -318,6 +328,36 @@ export function FeaturesManagementDialog({
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name_en"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>English Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Swimming Pool" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="name_cn"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>中文名称</FormLabel>
+                        <FormControl>
+                          <Input placeholder="游泳池" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}

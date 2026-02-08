@@ -13,10 +13,15 @@ interface PropertyDescriptionProps {
     description_en?: string | null;
     description_cn?: string | null;
   };
+  language?: "th" | "en" | "cn";
 }
 
-export function PropertyDescription({ property }: PropertyDescriptionProps) {
-  const { language, t } = useLanguage();
+export function PropertyDescription({
+  property,
+  language: customLanguage,
+}: PropertyDescriptionProps) {
+  const { language: globalLanguage, t } = useLanguage();
+  const language = customLanguage || globalLanguage;
   const [isExpanded, setIsExpanded] = useState(false);
   const [shouldShowButton, setShouldShowButton] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);

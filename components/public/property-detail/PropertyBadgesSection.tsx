@@ -31,12 +31,22 @@ type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 
 interface PropertyBadgesSectionProps {
   property: PropertyRow;
+  language?: "th" | "en" | "cn";
 }
 
 export function PropertyBadgesSection({
   property,
+  language: customLanguage,
 }: PropertyBadgesSectionProps) {
-  const { t } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Custom t function
+  const t = (key: string) => {
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollPosRef = useRef(0); // For float-based smooth scrolling
   const [isDragging, setIsDragging] = useState(false);

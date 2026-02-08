@@ -45,6 +45,8 @@ import { bulkDeletePopularAreasAction } from "@/features/admin/popular-areas-bul
 type PopularArea = {
   id: string;
   name: string;
+  name_en?: string | null;
+  name_cn?: string | null;
   created_at: string;
 };
 
@@ -54,9 +56,16 @@ export function PopularAreasTable({
   initialData: PopularArea[];
 }) {
   const [data, setData] = useState(initialData);
+
+  useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<PopularArea | null>(null);
   const [itemName, setItemName] = useState("");
+  const [itemNameEn, setItemNameEn] = useState("");
+  const [itemNameCn, setItemNameCn] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
@@ -127,9 +136,13 @@ export function PopularAreasTable({
     if (item) {
       setEditingItem(item);
       setItemName(item.name);
+      setItemNameEn(item.name_en || "");
+      setItemNameCn(item.name_cn || "");
     } else {
       setEditingItem(null);
       setItemName("");
+      setItemNameEn("");
+      setItemNameCn("");
     }
     setIsDialogOpen(true);
   };
@@ -140,9 +153,14 @@ export function PopularAreasTable({
     setIsLoading(true);
     let res;
     if (editingItem) {
-      res = await updatePopularAreaAction(editingItem.id, itemName);
+      res = await updatePopularAreaAction(
+        editingItem.id,
+        itemName,
+        itemNameEn,
+        itemNameCn,
+      );
     } else {
-      res = await createPopularAreaAction(itemName);
+      res = await createPopularAreaAction(itemName, itemNameEn, itemNameCn);
     }
     setIsLoading(false);
 
@@ -219,7 +237,9 @@ export function PopularAreasTable({
                 />
               </TableHead>
               <TableHead className="w-[100px]">No.</TableHead>
-              <TableHead>Popular Area Name</TableHead>
+              <TableHead>THA Name</TableHead>
+              <TableHead>ENG Name</TableHead>
+              <TableHead>CHN Name</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -261,6 +281,12 @@ export function PopularAreasTable({
                   </TableCell>
                   <TableCell className="font-medium text-slate-900">
                     {item.name}
+                  </TableCell>
+                  <TableCell className="text-slate-600">
+                    {item.name_en || "-"}
+                  </TableCell>
+                  <TableCell className="text-slate-600">
+                    {item.name_cn || "-"}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button
@@ -341,14 +367,34 @@ export function PopularAreasTable({
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">ชื่อทำเล (Keyword)</label>
-              <Input
-                value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
-                placeholder="เช่น สุขุมวิท, ทองหล่อ"
-                className="h-11"
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">ชื่อทำเล (ไทย)</label>
+                <Input
+                  value={itemName}
+                  onChange={(e) => setItemName(e.target.value)}
+                  placeholder="เช่น สุขุมวิท, ทองหล่อ"
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Name (English)</label>
+                <Input
+                  value={itemNameEn}
+                  onChange={(e) => setItemNameEn(e.target.value)}
+                  placeholder="Sukhumvit, Thong Lo"
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">名称 (Chinese)</label>
+                <Input
+                  value={itemNameCn}
+                  onChange={(e) => setItemNameCn(e.target.value)}
+                  placeholder="素坤逸, 通罗"
+                  className="h-11"
+                />
+              </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
@@ -359,7 +405,10 @@ export function PopularAreasTable({
                 disabled={
                   isLoading ||
                   !itemName.trim() ||
-                  (editingItem !== null && itemName.trim() === editingItem.name)
+                  (editingItem !== null &&
+                    itemName.trim() === editingItem.name &&
+                    itemNameEn.trim() === (editingItem.name_en || "") &&
+                    itemNameCn.trim() === (editingItem.name_cn || ""))
                 }
                 className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed px-8"
               >

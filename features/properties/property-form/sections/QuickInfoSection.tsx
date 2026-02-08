@@ -2,7 +2,17 @@
 
 import * as React from "react";
 import type { UseFormReturn } from "react-hook-form";
-import { Loader2, FileText, MapPin, Plus, Flag, Zap, X } from "lucide-react";
+import {
+  Loader2,
+  FileText,
+  MapPin,
+  Plus,
+  Flag,
+  Zap,
+  X,
+  Languages,
+  Sparkles,
+} from "lucide-react";
 
 import type { PropertyFormValues } from "@/features/properties/schema"; // ปรับตามจริง
 import {
@@ -21,6 +31,8 @@ import {
   SelectGroup,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { translateTextAction } from "@/lib/ai/translation-actions";
+import { toast } from "sonner";
 
 type Props = {
   form: UseFormReturn<PropertyFormValues>;
@@ -41,6 +53,35 @@ export function QuickInfoSection({
 }: Props) {
   const hasTitleError = !!form.formState.errors.title;
   const [showAddArea, setShowAddArea] = React.useState(false);
+  const [isTranslating, setIsTranslating] = React.useState(false);
+
+  const handleTranslateTitle = async () => {
+    const title = form.getValues("title");
+    if (!title || title.trim() === "") {
+      toast.error("กรุณากรอกชื่อภาษาไทยก่อนกดแปลครับ");
+      return;
+    }
+
+    setIsTranslating(true);
+    const toastId = toast.loading("กำลังแปลชื่อเป็นภาษาอังกฤษและจีน...");
+
+    try {
+      const result = await translateTextAction(title, "plain");
+      form.setValue("title_en", result.en, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      form.setValue("title_cn", result.cn, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      toast.success("แปลชื่อเรียบร้อยแล้ว ✨", { id: toastId });
+    } catch (error: any) {
+      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   return (
     <div
@@ -69,22 +110,39 @@ export function QuickInfoSection({
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <div className="space-y-6 md:col-span-2">
-          {/* title (ผูกกับ RHF ตรง ๆ) */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="space-y-6 lg:col-span-3">
+          {/* Main Thai Title */}
           <FormField
             control={form.control}
             name="title"
             render={({ field, fieldState }) => (
               <FormItem data-field="title" className="space-y-2">
-                <label
-                  htmlFor={field.name}
-                  className={`font-medium text-sm uppercase tracking-wider ${
-                    fieldState.error ? "text-red-700" : "text-slate-700"
-                  }`}
-                >
-                  ชื่อทรัพย์ <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor={field.name}
+                    className={`font-medium text-sm uppercase tracking-wider ${
+                      fieldState.error ? "text-red-700" : "text-slate-700"
+                    }`}
+                  >
+                    ชื่อทรัพย์ (ไทย) <span className="text-red-500">*</span>
+                  </label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleTranslateTitle}
+                    disabled={isTranslating}
+                    className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1.5 transition-all text-xs"
+                  >
+                    {isTranslating ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                    )}
+                    AI แปลเป็น EN/CN
+                  </Button>
+                </div>
 
                 <FormControl>
                   <div className="relative">
@@ -109,6 +167,48 @@ export function QuickInfoSection({
               </FormItem>
             )}
           />
+
+          {/* Multilingual Titles */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="title_en"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Languages className="w-3 h-3" /> Title (English)
+                  </label>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      className="h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm"
+                      placeholder="English title..."
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="title_cn"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Languages className="w-3 h-3" /> 物业名称 (Chinese)
+                  </label>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      className="h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm"
+                      placeholder="中文名称..."
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
         <div className="space-y-6 md:col-span-1 ">
           {/* popular_area (ผูกกับ RHF ตรง ๆ) */}

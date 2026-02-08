@@ -23,7 +23,9 @@ import {
   Tag,
   SortAsc,
   DollarSign,
+  Languages,
 } from "lucide-react";
+import { translateTextAction } from "@/lib/ai/translation-actions";
 import { toast } from "sonner";
 import {
   Form,
@@ -46,12 +48,18 @@ import { BlogImageUploader } from "@/components/blog/BlogImageUploader";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
+  title_en: z.string().optional(),
+  title_cn: z.string().optional(),
   slug: z
     .string()
     .min(1, "Slug is required")
     .regex(/^[a-z0-9-]+$/, "Slug must be lowercase, numbers, and hyphens only"),
   description: z.string().optional(),
+  description_en: z.string().optional(),
+  description_cn: z.string().optional(),
   content: z.string().optional(),
+  content_en: z.string().optional(),
+  content_cn: z.string().optional(),
   cover_image: z.string().optional(),
   gallery_images: z.array(z.string()).optional(),
   price_range: z.string().optional(),
@@ -82,9 +90,15 @@ export function ServiceForm({
     mode: "onChange",
     defaultValues: {
       title: initialData?.title || "",
+      title_en: initialData?.title_en || "",
+      title_cn: initialData?.title_cn || "",
       slug: initialData?.slug || "",
       description: initialData?.description || "",
+      description_en: initialData?.description_en || "",
+      description_cn: initialData?.description_cn || "",
       content: initialData?.content || "",
+      content_en: initialData?.content_en || "",
+      content_cn: initialData?.content_cn || "",
       cover_image: initialData?.cover_image || "",
       gallery_images: initialData?.gallery_images || [],
       price_range: initialData?.price_range || "",
@@ -149,6 +163,51 @@ export function ServiceForm({
     }
   }
 
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const handleTranslateService = async () => {
+    const title = form.getValues("title");
+    const description = form.getValues("description");
+    const content = form.getValues("content");
+
+    if (!title || title.trim() === "") {
+      toast.error("กรุณากรอกชื่อบริการภาษาไทยก่อนกดแปลครับ");
+      return;
+    }
+
+    setIsTranslating(true);
+    const toastId = toast.loading(
+      "กำลังแปลข้อมูลบริการเป็นภาษาอังกฤษและจีน...",
+    );
+
+    try {
+      // 1. Translate Title (Plain)
+      const titleRes = await translateTextAction(title, "plain");
+      form.setValue("title_en", titleRes.en, { shouldDirty: true });
+      form.setValue("title_cn", titleRes.cn, { shouldDirty: true });
+
+      // 2. Translate Description (Plain)
+      if (description && description.trim() !== "") {
+        const descRes = await translateTextAction(description, "plain");
+        form.setValue("description_en", descRes.en, { shouldDirty: true });
+        form.setValue("description_cn", descRes.cn, { shouldDirty: true });
+      }
+
+      // 3. Translate Content (HTML)
+      if (content && content.trim() !== "" && content !== "<p></p>") {
+        const contentRes = await translateTextAction(content, "html");
+        form.setValue("content_en", contentRes.en, { shouldDirty: true });
+        form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
+      }
+
+      toast.success("แปลข้อมูลบริการเรียบร้อยแล้ว ✨", { id: toastId });
+    } catch (error: any) {
+      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const isActive = form.watch("is_active");
 
   return (
@@ -184,14 +243,31 @@ export function ServiceForm({
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
-                        <Tag className="h-4 w-4 text-slate-400" />
-                        ชื่อบริการ
-                      </FormLabel>
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
+                          <Tag className="h-4 w-4 text-slate-400" />
+                          ชื่อบริการ (ไทย)
+                        </FormLabel>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleTranslateService}
+                          disabled={isTranslating}
+                          className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1.5 transition-all text-xs"
+                        >
+                          {isTranslating ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                          )}
+                          AI แปลเป็น EN/CN
+                        </Button>
+                      </div>
                       <FormControl>
                         <Input
                           placeholder="เช่น Interior Design, บริการทำความสะอาด"
-                          className="h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400 focus:ring-blue-400/20 transition-all"
+                          className="h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400 focus:ring-blue-400/20 transition-all font-medium"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
@@ -203,6 +279,47 @@ export function ServiceForm({
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="title_en"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <Languages className="w-3 h-3" /> Service Name (EN)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-10 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm"
+                            placeholder="English name..."
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="title_cn"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <Languages className="w-3 h-3" /> 服务名称 (CN)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-10 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm"
+                            placeholder="中文名称..."
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <FormField
@@ -300,7 +417,7 @@ export function ServiceForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-slate-700 font-medium">
-                        คำอธิบายสั้น (แสดงในหน้ารายการ)
+                        คำอธิบายสั้น (ไทย)
                       </FormLabel>
                       <FormControl>
                         <Textarea
@@ -314,13 +431,54 @@ export function ServiceForm({
                   )}
                 />
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="description_en"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <Languages className="w-3 h-3" /> Description (EN)
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-20 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm resize-none"
+                            placeholder="English description..."
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="description_cn"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <Languages className="w-3 h-3" /> 服务简介 (CN)
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-20 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm resize-none"
+                            placeholder="中文简介..."
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
                   name="content"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-slate-700 font-medium">
-                        เนื้อหาเต็ม (Rich Text)
+                        เนื้อหาเต็ม (ไทย)
                       </FormLabel>
                       <FormControl>
                         <div className="rounded-xl overflow-hidden border border-slate-200">
@@ -334,6 +492,53 @@ export function ServiceForm({
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+                  <div className="space-y-4">
+                    <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                      <Languages className="w-4 h-4" /> Content (English)
+                    </FormLabel>
+                    <FormField
+                      control={form.control}
+                      name="content_en"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <div className="rounded-xl overflow-hidden border border-slate-200">
+                              <TiptapEditor
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                      <Languages className="w-4 h-4" /> 服务详情 (Chinese)
+                    </FormLabel>
+                    <FormField
+                      control={form.control}
+                      name="content_cn"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <div className="rounded-xl overflow-hidden border border-slate-200">
+                              <TiptapEditor
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -8,6 +8,7 @@ interface PropertySuitabilityProps {
   price: number | null;
   rentalPrice: number | null;
   propertyType?: string | null;
+  language?: "th" | "en" | "cn";
 }
 
 export function PropertySuitability({
@@ -15,8 +16,17 @@ export function PropertySuitability({
   price,
   rentalPrice,
   propertyType,
+  language: customLanguage,
 }: PropertySuitabilityProps) {
-  const { t } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Custom t function
+  const t = (key: string) => {
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
 
   // Logic for rental yield if both prices exist
   const rentalYield =

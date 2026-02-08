@@ -40,6 +40,7 @@ interface PropertyHeaderProps {
   keySellingPoints: KeySellingPoint[];
   className?: string;
   hideBreadcrumbs?: boolean;
+  language?: "th" | "en" | "cn";
 }
 
 export function PropertyHeader({
@@ -48,8 +49,10 @@ export function PropertyHeader({
   keySellingPoints,
   className,
   hideBreadcrumbs = false,
+  language: customLanguage,
 }: PropertyHeaderProps) {
-  const { language, t } = useLanguage();
+  const { language: globalLanguage, t } = useLanguage();
+  const language = customLanguage || globalLanguage;
   // Office price override
   const officePrice = getOfficePrice(property);
   const typeColor = getTypeColor(property.property_type ?? null);

@@ -2,15 +2,21 @@ import { z } from "zod";
 
 export const blogPostSchema = z.object({
   title: z.string().min(1, "Title is required"),
+  title_en: z.string().optional(),
+  title_cn: z.string().optional(),
   slug: z
     .string()
     .min(1, "Slug is required")
     .regex(
       /^[a-z0-9-]+$/,
-      "Slug must contain only lowercase letters, numbers, and hyphens"
+      "Slug must contain only lowercase letters, numbers, and hyphens",
     ),
   excerpt: z.string().optional(),
+  excerpt_en: z.string().optional(),
+  excerpt_cn: z.string().optional(),
   content: z.string().optional(),
+  content_en: z.string().optional(),
+  content_cn: z.string().optional(),
   cover_image: z
     .string()
     .url("Must be a valid URL")

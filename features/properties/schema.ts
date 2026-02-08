@@ -16,8 +16,12 @@ import {
 export const FormSchema = z
   .object({
     title: z.string().trim().min(1, "คุณยังไม่ได้กรอกชื่อทรัพย์"),
+    title_en: z.string().optional(),
+    title_cn: z.string().optional(),
 
     description: z.string().optional(),
+    description_en: z.string().optional(),
+    description_cn: z.string().optional(),
 
     property_type: z.enum(PROPERTY_TYPE_ENUM, {
       message: "คุณยังไม่ได้เลือกประเภททรัพย์",

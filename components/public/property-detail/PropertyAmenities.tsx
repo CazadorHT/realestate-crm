@@ -14,10 +14,15 @@ interface PropertyAmenitiesProps {
     icon_key: string;
     category?: string | null;
   }[];
+  language?: "th" | "en" | "cn";
 }
 
-export function PropertyAmenities({ features }: PropertyAmenitiesProps) {
-  const { language, t } = useLanguage();
+export function PropertyAmenities({
+  features,
+  language: customLanguage,
+}: PropertyAmenitiesProps) {
+  const { language: globalLanguage, t } = useLanguage();
+  const language = customLanguage || globalLanguage;
   if (!features || features.length === 0) return null;
 
   return (

@@ -11,6 +11,7 @@ interface PropertySpecsProps {
   landSize?: number | null;
   floor?: number | null;
   type: string;
+  language?: "th" | "en" | "cn";
 }
 
 export function PropertySpecs({
@@ -21,8 +22,17 @@ export function PropertySpecs({
   landSize,
   floor,
   type: _type,
+  language: customLanguage,
 }: PropertySpecsProps) {
-  const { t } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Custom t function to use the selected language dictionary
+  const t = (key: string) => {
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
 
   const specs = [
     {

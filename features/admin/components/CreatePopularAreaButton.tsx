@@ -17,13 +17,15 @@ import { createPopularAreaAction } from "@/features/admin/popular-areas-actions"
 export function CreatePopularAreaButton() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [itemName, setItemName] = useState("");
+  const [itemNameEn, setItemNameEn] = useState("");
+  const [itemNameCn, setItemNameCn] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
     if (!itemName.trim()) return toast.error("ชื่อทำเลห้ามว่าง");
 
     setIsLoading(true);
-    const res = await createPopularAreaAction(itemName);
+    const res = await createPopularAreaAction(itemName, itemNameEn, itemNameCn);
     setIsLoading(false);
 
     if (res?.success === false) {
@@ -32,6 +34,8 @@ export function CreatePopularAreaButton() {
       toast.success(res.message || "เพิ่มทำเลสำเร็จ");
       setIsDialogOpen(false);
       setItemName("");
+      setItemNameEn("");
+      setItemNameCn("");
       window.location.reload();
     }
   };
@@ -52,13 +56,31 @@ export function CreatePopularAreaButton() {
           <DialogTitle>เพิ่มทำเลใหม่</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">ชื่อทำเล (Keyword)</label>
-            <Input
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-              placeholder="เช่น สุขุมวิท, ทองหล่อ"
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">ชื่อทำเล (ไทย)</label>
+              <Input
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                placeholder="เช่น สุขุมวิท, ทองหล่อ"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Name (English)</label>
+              <Input
+                value={itemNameEn}
+                onChange={(e) => setItemNameEn(e.target.value)}
+                placeholder="e.g. Sukhumvit, Thong Lo"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">名称 (Chinese)</label>
+              <Input
+                value={itemNameCn}
+                onChange={(e) => setItemNameCn(e.target.value)}
+                placeholder="例如：素坤逸, 通罗"
+              />
+            </div>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>

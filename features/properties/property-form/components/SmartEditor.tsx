@@ -42,6 +42,7 @@ interface SmartEditorProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  height?: number | string;
   onAiGenerate?: (currentValue: string) => Promise<string>;
 }
 
@@ -111,6 +112,7 @@ export function SmartEditor({
   onChange,
   disabled,
   placeholder,
+  height,
   onAiGenerate,
 }: SmartEditorProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -215,7 +217,10 @@ export function SmartEditor({
   };
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm transition-[border,box-shadow] duration-200 focus-within:border-slate-300 focus-within:shadow-md h-[650px] flex flex-col">
+    <div
+      className="rounded-xl border border-slate-200 bg-white shadow-sm transition-[border,box-shadow] duration-200 focus-within:border-slate-300 focus-within:shadow-md flex flex-col overflow-hidden"
+      style={{ height: height || 650 }}
+    >
       {/* Toolbar */}
       <div className="bg-slate-50/80 border-b border-slate-200 p-2 flex items-center gap-1.5 backdrop-blur-sm z-10 sticky top-0 rounded-t-xl overflow-x-auto">
         {/* Left side controls - scrollable if needed */}

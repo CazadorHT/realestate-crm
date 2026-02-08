@@ -16,7 +16,10 @@ import {
   Settings,
   LayoutGrid,
   ListOrdered,
+  Sparkles,
+  Languages,
 } from "lucide-react";
+import { translateTextAction } from "@/lib/ai/translation-actions";
 import Link from "next/link";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { toast } from "sonner";
@@ -39,12 +42,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   question: z.string().min(1, "กรุณาระบุคำถาม"),
+  question_en: z.string().optional(),
+  question_cn: z.string().optional(),
   answer: z.string().min(1, "กรุณาระบุคำตอบ"),
+  answer_en: z.string().optional(),
+  answer_cn: z.string().optional(),
   category: z.string().optional(),
   sort_order: z
     .string()
@@ -56,7 +64,11 @@ const formSchema = z.object({
 interface FAQFormProps {
   initialData?: {
     question: string;
+    question_en?: string | null;
+    question_cn?: string | null;
     answer: string;
+    answer_en?: string | null;
+    answer_cn?: string | null;
     category?: string | null;
     sort_order?: number | null;
     is_active?: boolean | null;
@@ -84,7 +96,11 @@ export function FAQForm({
     mode: "onChange",
     defaultValues: {
       question: initialData?.question || "",
+      question_en: initialData?.question_en || "",
+      question_cn: initialData?.question_cn || "",
       answer: initialData?.answer || "",
+      answer_en: initialData?.answer_en || "",
+      answer_cn: initialData?.answer_cn || "",
       category: initialData?.category || "General",
       sort_order: initialData?.sort_order || 0,
       is_active: initialData?.is_active ?? true,
@@ -114,6 +130,43 @@ export function FAQForm({
       setSaving(false);
     }
   }
+
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const handleTranslateFaq = async () => {
+    const question = form.getValues("question");
+    const answer = form.getValues("answer");
+
+    if (!question || question.trim() === "") {
+      toast.error("กรุณากรอกคำถามภาษาไทยก่อนกดแปลครับ");
+      return;
+    }
+
+    setIsTranslating(true);
+    const toastId = toast.loading(
+      "กำลังแปลคำถามและคำตอบเป็นภาษาอังกฤษและจีน...",
+    );
+
+    try {
+      // 1. Translate Question (Plain)
+      const questionRes = await translateTextAction(question, "plain");
+      form.setValue("question_en", questionRes.en, { shouldDirty: true });
+      form.setValue("question_cn", questionRes.cn, { shouldDirty: true });
+
+      // 2. Translate Answer (Plain/HTML depending on usage, FAQ answer usually plain or simple text)
+      if (answer && answer.trim() !== "") {
+        const answerRes = await translateTextAction(answer, "plain");
+        form.setValue("answer_en", answerRes.en, { shouldDirty: true });
+        form.setValue("answer_cn", answerRes.cn, { shouldDirty: true });
+      }
+
+      toast.success("แปลข้อมูลเรียบร้อยแล้ว ✨", { id: toastId });
+    } catch (error: any) {
+      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   return (
     <div className="container mx-auto max-w-full px-4 md:px-0">
@@ -178,16 +231,33 @@ export function FAQForm({
                     name="question"
                     render={({ field }) => (
                       <FormItem className="space-y-2">
-                        <div className="flex items-center gap-2 mb-1">
-                          <MessageCircle className="h-4 w-4 text-blue-600" />
-                          <FormLabel className="text-base font-semibold">
-                            คำถามที่พบบ่อย
-                          </FormLabel>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <MessageCircle className="h-4 w-4 text-blue-600" />
+                            <FormLabel className="text-base font-semibold">
+                              คำถามที่พบบ่อย (ไทย)
+                            </FormLabel>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleTranslateFaq}
+                            disabled={isTranslating}
+                            className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1.5 transition-all text-xs"
+                          >
+                            {isTranslating ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                            )}
+                            AI แปลเป็น EN/CN
+                          </Button>
                         </div>
                         <FormControl>
                           <Input
                             placeholder="เช่น รูปแบบการชำระเงินมีอะไรบ้าง?"
-                            className="h-12 text-base border-slate-200 focus:border-blue-400 focus:ring-blue-400 transition-all"
+                            className="h-12 text-base border-slate-200 focus:border-blue-400 focus:ring-blue-400 transition-all font-medium"
                             {...field}
                           />
                         </FormControl>
@@ -196,15 +266,58 @@ export function FAQForm({
                     )}
                   />
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
+                    <FormField
+                      control={form.control}
+                      name="question_en"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                            <Languages className="w-3 h-3" /> Question (English)
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value ?? ""}
+                              className="h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm"
+                              placeholder="English question..."
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="question_cn"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                            <Languages className="w-3 h-3" /> 常见问题 (Chinese)
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value ?? ""}
+                              className="h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm"
+                              placeholder="中文问题..."
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <Separator className="bg-slate-100" />
+
                   <FormField
                     control={form.control}
                     name="answer"
                     render={({ field }) => (
-                      <FormItem className="space-y-2">
+                      <FormItem className="space-y-2 pt-4">
                         <div className="flex items-center gap-2 mb-1">
                           <FileText className="h-4 w-4 text-blue-600" />
                           <FormLabel className="text-base font-semibold">
-                            คำตอบ (Answer)
+                            คำตอบ (ไทย)
                           </FormLabel>
                         </div>
                         <FormControl>
@@ -218,6 +331,47 @@ export function FAQForm({
                       </FormItem>
                     )}
                   />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="answer_en"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                            <Languages className="w-3 h-3" /> Answer (English)
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              value={field.value ?? ""}
+                              className="min-h-[100px] rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm resize-none"
+                              placeholder="English answer..."
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="answer_cn"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                            <Languages className="w-3 h-3" /> 回答 (Chinese)
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              value={field.value ?? ""}
+                              className="min-h-[100px] rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm resize-none"
+                              placeholder="中文回答..."
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
                 {/* Right Column: Settings & Meta (30%) */}

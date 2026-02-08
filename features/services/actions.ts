@@ -7,8 +7,14 @@ export type ServiceRow = {
   id: string;
   slug: string;
   title: string;
+  title_en: string | null;
+  title_cn: string | null;
   description: string | null;
+  description_en: string | null;
+  description_cn: string | null;
   content: string | null;
+  content_en: string | null;
+  content_cn: string | null;
   cover_image: string | null;
   gallery_images: string[] | null;
   price_range: string | null;
@@ -22,8 +28,14 @@ export type ServiceRow = {
 export type CreateServiceInput = {
   slug: string;
   title: string;
+  title_en?: string;
+  title_cn?: string;
   description?: string;
+  description_en?: string;
+  description_cn?: string;
   content?: string;
+  content_en?: string;
+  content_cn?: string;
   cover_image?: string;
   gallery_images?: string[];
   price_range?: string;

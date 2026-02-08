@@ -33,6 +33,7 @@ interface NearbyPlacesProps {
   location?: string;
   data?: NearbyPlaceItem[];
   transits?: TransitItem[];
+  language?: "th" | "en" | "cn";
 }
 
 const ICON_MAP: Record<string, any> = {
@@ -59,8 +60,17 @@ export function NearbyPlaces({
   location,
   data = [],
   transits = [],
+  language: customLanguage,
 }: NearbyPlacesProps) {
-  const { t } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Custom t function
+  const t = (key: string) => {
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
   // Group nearby places by category (NOT including transits)
   const grouped = data.reduce(
     (acc, item) => {

@@ -7,6 +7,8 @@ import { CreatePopularAreaButton } from "@/features/admin/components/CreatePopul
 import { PopularAreasStats } from "@/features/admin/components/PopularAreasStats";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPopularAreasPage() {
   const { role } = await requireAuthContext();
   assertStaff(role);

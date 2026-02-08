@@ -176,6 +176,8 @@ function BudgetRangesTab({
   const [form, setForm] = useState({
     purpose: "BUY" as "BUY" | "RENT" | "INVEST",
     label: "",
+    label_en: "",
+    label_cn: "",
     min_value: 0,
     max_value: 999999999999,
     sort_order: 0,
@@ -190,6 +192,8 @@ function BudgetRangesTab({
     setForm({
       purpose: "BUY",
       label: "",
+      label_en: "",
+      label_cn: "",
       min_value: 0,
       max_value: 999999999999,
       sort_order: data.length + 1,
@@ -203,6 +207,8 @@ function BudgetRangesTab({
     setForm({
       purpose: item.purpose,
       label: item.label,
+      label_en: item.label_en || "",
+      label_cn: item.label_cn || "",
       min_value: item.min_value,
       max_value: item.max_value,
       sort_order: item.sort_order ?? 0,
@@ -339,12 +345,34 @@ function BudgetRangesTab({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Label (แสดงใน Wizard)</Label>
+              <Label>Label (Thai)</Label>
               <Input
                 value={form.label}
                 onChange={(e) => setForm({ ...form, label: e.target.value })}
                 placeholder="เช่น: < 3 ล้าน"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Label (English)</Label>
+                <Input
+                  value={form.label_en}
+                  onChange={(e) =>
+                    setForm({ ...form, label_en: e.target.value })
+                  }
+                  placeholder="e.g. < 3M"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Label (Chinese)</Label>
+                <Input
+                  value={form.label_cn}
+                  onChange={(e) =>
+                    setForm({ ...form, label_cn: e.target.value })
+                  }
+                  placeholder="如：< 3 百万"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -457,6 +485,8 @@ function PropertyTypesTab({
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     label: "",
+    label_en: "",
+    label_cn: "",
     value: "",
     sort_order: 0,
     is_active: true,
@@ -466,6 +496,8 @@ function PropertyTypesTab({
     setEditItem(null);
     setForm({
       label: "",
+      label_en: "",
+      label_cn: "",
       value: "",
       sort_order: data.length + 1,
       is_active: true,
@@ -477,6 +509,8 @@ function PropertyTypesTab({
     setEditItem(item);
     setForm({
       label: item.label,
+      label_en: item.label_en || "",
+      label_cn: item.label_cn || "",
       value: item.value,
       sort_order: item.sort_order ?? 0,
       is_active: item.is_active ?? true,
@@ -586,12 +620,34 @@ function PropertyTypesTab({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Label (แสดงใน Wizard)</Label>
+              <Label>Label (Thai)</Label>
               <Input
                 value={form.label}
                 onChange={(e) => setForm({ ...form, label: e.target.value })}
                 placeholder="เช่น: 🏠 บ้าน"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Label (English)</Label>
+                <Input
+                  value={form.label_en}
+                  onChange={(e) =>
+                    setForm({ ...form, label_en: e.target.value })
+                  }
+                  placeholder="e.g. 🏠 House"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Label (Chinese)</Label>
+                <Input
+                  value={form.label_cn}
+                  onChange={(e) =>
+                    setForm({ ...form, label_cn: e.target.value })
+                  }
+                  placeholder="如：🏠 别墅"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Value (ค่า Enum)</Label>
@@ -668,12 +724,16 @@ function OfficeSizesTab({
 
   const [form, setForm] = useState<{
     label: string;
+    label_en: string;
+    label_cn: string;
     min_sqm: number;
     max_sqm: number;
     sort_order: number | null;
     is_active: boolean;
   }>({
     label: "",
+    label_en: "",
+    label_cn: "",
     min_sqm: 0,
     max_sqm: 0,
     sort_order: 0,
@@ -684,6 +744,8 @@ function OfficeSizesTab({
     setEditItem(null);
     setForm({
       label: "",
+      label_en: "",
+      label_cn: "",
       min_sqm: 0,
       max_sqm: 9999,
       sort_order: (data.length || 0) + 1,
@@ -696,6 +758,8 @@ function OfficeSizesTab({
     setEditItem(item);
     setForm({
       label: item.label,
+      label_en: item.label_en || "",
+      label_cn: item.label_cn || "",
       min_sqm: item.min_sqm,
       max_sqm: item.max_sqm,
       sort_order: item.sort_order,
@@ -716,6 +780,8 @@ function OfficeSizesTab({
         // Update
         const res = await updateOfficeSize(editItem.id, {
           label: form.label,
+          label_en: form.label_en,
+          label_cn: form.label_cn,
           min_sqm: form.min_sqm,
           max_sqm: form.max_sqm,
           sort_order: form.sort_order,
@@ -727,6 +793,8 @@ function OfficeSizesTab({
         // Create
         const res = await createOfficeSize({
           label: form.label,
+          label_en: form.label_en,
+          label_cn: form.label_cn,
           min_sqm: form.min_sqm,
           max_sqm: form.max_sqm,
           sort_order: form.sort_order,
@@ -809,12 +877,34 @@ function OfficeSizesTab({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>ชื่อขนาด (เช่น (S) &lt; 40 ตร.ม.)</Label>
+              <Label>Label (Thai)</Label>
               <Input
                 value={form.label}
                 onChange={(e) => setForm({ ...form, label: e.target.value })}
                 placeholder="ระบุชื่อขนาดที่แสดงผล"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Label (English)</Label>
+                <Input
+                  value={form.label_en}
+                  onChange={(e) =>
+                    setForm({ ...form, label_en: e.target.value })
+                  }
+                  placeholder="e.g. (S) < 40 sqm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Label (Chinese)</Label>
+                <Input
+                  value={form.label_cn}
+                  onChange={(e) =>
+                    setForm({ ...form, label_cn: e.target.value })
+                  }
+                  placeholder="如：(S) < 40 平方米"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -942,8 +1032,14 @@ function SettingsTab({
           form.transit_question_enabled,
         ),
         updateSmartMatchSetting("wizard_title", form.wizard_title),
+        updateSmartMatchSetting("wizard_title_en", form.wizard_title_en),
+        updateSmartMatchSetting("wizard_title_cn", form.wizard_title_cn),
         updateSmartMatchSetting("loading_text", form.loading_text),
+        updateSmartMatchSetting("loading_text_en", form.loading_text_en),
+        updateSmartMatchSetting("loading_text_cn", form.loading_text_cn),
         updateSmartMatchSetting("pdpa_text", form.pdpa_text),
+        updateSmartMatchSetting("pdpa_text_en", form.pdpa_text_en),
+        updateSmartMatchSetting("pdpa_text_cn", form.pdpa_text_cn),
       ]);
       onUpdate(form);
       toast.success("บันทึกเรียบร้อย");
@@ -985,32 +1081,100 @@ function SettingsTab({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>หัวข้อ Wizard</Label>
-            <Input
-              value={form.wizard_title}
-              onChange={(e) =>
-                setForm({ ...form, wizard_title: e.target.value })
-              }
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>หัวข้อ Wizard (Thai)</Label>
+              <Input
+                value={form.wizard_title}
+                onChange={(e) =>
+                  setForm({ ...form, wizard_title: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Wizard Title (English)</Label>
+                <Input
+                  value={form.wizard_title_en}
+                  onChange={(e) =>
+                    setForm({ ...form, wizard_title_en: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Wizard Title (Chinese)</Label>
+                <Input
+                  value={form.wizard_title_cn}
+                  onChange={(e) =>
+                    setForm({ ...form, wizard_title_cn: e.target.value })
+                  }
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>ข้อความ Loading</Label>
-            <Input
-              value={form.loading_text}
-              onChange={(e) =>
-                setForm({ ...form, loading_text: e.target.value })
-              }
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>ข้อความ Loading (Thai)</Label>
+              <Input
+                value={form.loading_text}
+                onChange={(e) =>
+                  setForm({ ...form, loading_text: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Loading Text (English)</Label>
+                <Input
+                  value={form.loading_text_en}
+                  onChange={(e) =>
+                    setForm({ ...form, loading_text_en: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Loading Text (Chinese)</Label>
+                <Input
+                  value={form.loading_text_cn}
+                  onChange={(e) =>
+                    setForm({ ...form, loading_text_cn: e.target.value })
+                  }
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>ข้อความ PDPA</Label>
-            <Input
-              value={form.pdpa_text}
-              onChange={(e) => setForm({ ...form, pdpa_text: e.target.value })}
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>ข้อความ PDPA (Thai)</Label>
+              <Input
+                value={form.pdpa_text}
+                onChange={(e) =>
+                  setForm({ ...form, pdpa_text: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>PDPA Text (English)</Label>
+                <Input
+                  value={form.pdpa_text_en}
+                  onChange={(e) =>
+                    setForm({ ...form, pdpa_text_en: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>PDPA Text (Chinese)</Label>
+                <Input
+                  value={form.pdpa_text_cn}
+                  onChange={(e) =>
+                    setForm({ ...form, pdpa_text_cn: e.target.value })
+                  }
+                />
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

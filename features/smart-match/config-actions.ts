@@ -9,6 +9,8 @@ export type BudgetRange = {
   id: string;
   purpose: "BUY" | "RENT" | "INVEST";
   label: string;
+  label_en: string | null;
+  label_cn: string | null;
   min_value: number;
   max_value: number;
   sort_order: number | null;
@@ -18,6 +20,8 @@ export type BudgetRange = {
 export type PropertyTypeOption = {
   id: string;
   label: string;
+  label_en: string | null;
+  label_cn: string | null;
   value: string;
   sort_order: number | null;
   is_active: boolean | null;
@@ -26,13 +30,21 @@ export type PropertyTypeOption = {
 export type SmartMatchSettings = {
   transit_question_enabled: boolean;
   wizard_title: string;
+  wizard_title_en: string;
+  wizard_title_cn: string;
   loading_text: string;
+  loading_text_en: string;
+  loading_text_cn: string;
   pdpa_text: string;
+  pdpa_text_en: string;
+  pdpa_text_cn: string;
 };
 
 export type OfficeSizeOption = {
   id: string;
   label: string;
+  label_en: string | null;
+  label_cn: string | null;
   min_sqm: number;
   max_sqm: number;
   sort_order: number | null;
@@ -331,8 +343,14 @@ export async function deleteOfficeSize(
 const DEFAULT_SETTINGS: SmartMatchSettings = {
   transit_question_enabled: true,
   wizard_title: "วันนี้คุณกำลังมองหา...",
+  wizard_title_en: "What are you looking for today?",
+  wizard_title_cn: "您今天在寻找什么？",
   loading_text: "กำลังวิเคราะห์ข้อมูล...",
+  loading_text_en: "Analyzing data...",
+  loading_text_cn: "正在分析数据...",
   pdpa_text: "ข้อมูลของคุณจะถูกเก็บเป็นความลับตามนโยบาย PDPA",
+  pdpa_text_en: "Your data will be kept confidential according to PDPA policy",
+  pdpa_text_cn: "您的数据将根据 PDPA 政策保密",
 };
 
 export async function getSmartMatchSettings(): Promise<SmartMatchSettings> {

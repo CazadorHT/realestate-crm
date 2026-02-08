@@ -34,9 +34,15 @@ export async function createBlogPostAction(
 
   const { data, error } = await supabase.from("blog_posts").insert({
     title: input.title,
+    title_en: input.title_en || null,
+    title_cn: input.title_cn || null,
     slug: input.slug,
     content: input.content || "",
+    content_en: input.content_en || null,
+    content_cn: input.content_cn || null,
     excerpt: input.excerpt || "",
+    excerpt_en: input.excerpt_en || null,
+    excerpt_cn: input.excerpt_cn || null,
     category: input.category,
     cover_image: input.cover_image || null,
     reading_time: input.reading_time || "5 min read",
@@ -88,9 +94,15 @@ export async function updateBlogPostAction(
     .from("blog_posts")
     .update({
       title: input.title,
+      title_en: input.title_en,
+      title_cn: input.title_cn,
       slug: input.slug,
       content: input.content,
+      content_en: input.content_en,
+      content_cn: input.content_cn,
       excerpt: input.excerpt,
+      excerpt_en: input.excerpt_en,
+      excerpt_cn: input.excerpt_cn,
       category: input.category,
       cover_image: input.cover_image,
       reading_time: input.reading_time,
@@ -223,6 +235,8 @@ export async function getCategoriesAction(): Promise<{
 
 export async function createCategoryAction(
   name: string,
+  name_en?: string,
+  name_cn?: string,
 ): Promise<{ success: boolean; category?: any; error?: string }> {
   const supabase = await createClient();
   const user = await getCurrentProfile();
@@ -239,7 +253,7 @@ export async function createCategoryAction(
 
   const { data, error } = await supabase
     .from("blog_categories")
-    .insert({ name, slug })
+    .insert({ name, name_en, name_cn, slug })
     .select()
     .single();
 

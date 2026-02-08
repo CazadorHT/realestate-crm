@@ -23,7 +23,9 @@ import {
   Link2,
   ExternalLink,
   List,
+  Languages,
 } from "lucide-react";
+import { translateTextAction } from "@/lib/ai/translation-actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -113,12 +115,24 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
         is_published: initialData.is_published || false,
         structured_data: initialStructuredData,
         published_at: initialData.published_at || undefined,
+        title_en: initialData.title_en || "",
+        title_cn: initialData.title_cn || "",
+        excerpt_en: initialData.excerpt_en || "",
+        excerpt_cn: initialData.excerpt_cn || "",
+        content_en: initialData.content_en || "",
+        content_cn: initialData.content_cn || "",
       }
     : {
         title: "",
+        title_en: "",
+        title_cn: "",
         slug: "",
         excerpt: "",
+        excerpt_en: "",
+        excerpt_cn: "",
         content: "",
+        content_en: "",
+        content_cn: "",
         category: "General",
         cover_image: "",
         reading_time: "5 min read",
@@ -218,6 +232,51 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     toast.success(
       "ข้อมูลบทความถูกเติมลงในฟอร์มเรียบร้อยแล้ว ✨ อย่าลืมตรวจสอบเนื้อหาก่อนบันทึกนะครับ",
     );
+  };
+
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const handleTranslateBlog = async () => {
+    const title = form.getValues("title");
+    const excerpt = form.getValues("excerpt");
+    const content = form.getValues("content");
+
+    if (!title || title.trim() === "") {
+      toast.error("กรุณากรอกหัวข้อภาษาไทยก่อนกดแปลครับ");
+      return;
+    }
+
+    setIsTranslating(true);
+    const toastId = toast.loading(
+      "กำลังแปลเนื้อหาบทความเป็นภาษาอังกฤษและจีน...",
+    );
+
+    try {
+      // 1. Translate Title (Plain)
+      const titleRes = await translateTextAction(title, "plain");
+      form.setValue("title_en", titleRes.en, { shouldDirty: true });
+      form.setValue("title_cn", titleRes.cn, { shouldDirty: true });
+
+      // 2. Translate Excerpt (Plain)
+      if (excerpt && excerpt.trim() !== "") {
+        const excerptRes = await translateTextAction(excerpt, "plain");
+        form.setValue("excerpt_en", excerptRes.en, { shouldDirty: true });
+        form.setValue("excerpt_cn", excerptRes.cn, { shouldDirty: true });
+      }
+
+      // 3. Translate Content (HTML)
+      if (content && content.trim() !== "" && content !== "<p></p>") {
+        const contentRes = await translateTextAction(content, "html");
+        form.setValue("content_en", contentRes.en, { shouldDirty: true });
+        form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
+      }
+
+      toast.success("แปลเนื้อหาบทความเรียบร้อยแล้ว ✨", { id: toastId });
+    } catch (error: any) {
+      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   async function onSubmit(data: BlogPostInput) {
@@ -446,9 +505,27 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-700 font-medium">
-                      หัวข้อบทความ <span className="text-red-500">*</span>
-                    </FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-slate-700 font-medium">
+                        หัวข้อบทความ (ไทย){" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleTranslateBlog}
+                        disabled={isTranslating}
+                        className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1.5 transition-all text-xs"
+                      >
+                        {isTranslating ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                        )}
+                        AI แปลทุกส่วนเป็น EN/CN
+                      </Button>
+                    </div>
                     <FormControl>
                       <Input
                         placeholder="เขียนหัวข้อที่น่าสนใจ..."
@@ -464,6 +541,47 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                   </FormItem>
                 )}
               />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <FormField
+                  control={form.control}
+                  name="title_en"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <Languages className="w-3 h-3" /> Title (English)
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          className="h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm"
+                          placeholder="English title..."
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="title_cn"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <Languages className="w-3 h-3" /> 文章标题 (Chinese)
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          className="h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm"
+                          placeholder="中文标题..."
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
@@ -526,6 +644,49 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                   </FormItem>
                 )}
               />
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                <div className="space-y-4">
+                  <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Languages className="w-4 h-4" /> Content (English)
+                  </FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="content_en"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <TiptapEditor
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-4">
+                  <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Languages className="w-4 h-4" /> 文章内容 (Chinese)
+                  </FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="content_cn"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <TiptapEditor
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </div>
           </TabsContent>
 
@@ -754,7 +915,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-slate-700 font-medium">
-                      ข้อความสรุป (Excerpt)
+                      ข้อความสรุป (ไทย)
                     </FormLabel>
                     <FormControl>
                       <Textarea
@@ -779,6 +940,47 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                   </FormItem>
                 )}
               />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <FormField
+                  control={form.control}
+                  name="excerpt_en"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <Languages className="w-3 h-3" /> Excerpt (English)
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          value={field.value ?? ""}
+                          className="min-h-[80px] resize-none border-slate-200 text-sm"
+                          placeholder="English excerpt..."
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="excerpt_cn"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <Languages className="w-3 h-3" /> 文章摘要 (Chinese)
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          value={field.value ?? ""}
+                          className="min-h-[80px] resize-none border-slate-200 text-sm"
+                          placeholder="中文摘要..."
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             {/* Structured Data */}

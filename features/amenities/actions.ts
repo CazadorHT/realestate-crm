@@ -34,7 +34,7 @@ export async function getFeatures(): Promise<FeatureRow[]> {
 }
 
 export async function createFeatureAction(
-  values: FeatureFormValues
+  values: FeatureFormValues,
 ): Promise<ActionState> {
   try {
     const { supabase, role } = await requireAuthContext();
@@ -49,10 +49,12 @@ export async function createFeatureAction(
       };
     }
 
-    const { name, icon_key, category } = parsed.data;
+    const { name, name_en, name_cn, icon_key, category } = parsed.data;
 
     const { error } = await supabase.from("features").insert({
       name,
+      name_en,
+      name_cn,
       icon_key,
       category,
     });
@@ -68,7 +70,7 @@ export async function createFeatureAction(
 
 export async function updateFeatureAction(
   id: string,
-  values: FeatureFormValues
+  values: FeatureFormValues,
 ): Promise<ActionState> {
   try {
     const { supabase, role } = await requireAuthContext();
@@ -83,12 +85,14 @@ export async function updateFeatureAction(
       };
     }
 
-    const { name, icon_key, category } = parsed.data;
+    const { name, name_en, name_cn, icon_key, category } = parsed.data;
 
     const { error } = await supabase
       .from("features")
       .update({
         name,
+        name_en,
+        name_cn,
         icon_key,
         category,
       })
