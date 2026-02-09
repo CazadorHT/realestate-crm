@@ -55,37 +55,97 @@ interface PropertyDataForSEO {
  * Preserves Thai characters while removing symbols/emojis
  * Enriched with: Title, Bedrooms, Bathrooms, Area, Type, Location
  */
-export function generatePropertySlug(data: PropertyDataForSEO): string {
-  // Map type to Thai
-  const typeMap: Record<string, string> = {
-    HOUSE: "บ้านเดี่ยว",
-    CONDO: "คอนโด",
-    TOWNHOME: "ทาวน์โฮม",
-    LAND: "ที่ดิน",
-    OFFICE_BUILDING: "อาคารสำนักงานออฟฟิศ",
-    COMMERCIAL_BUILDING: "อาคารพาณิชย์",
-    WAREHOUSE: "โกดัง",
+export function generatePropertySlug(
+  data: PropertyDataForSEO,
+  language: string = "th",
+): string {
+  // Map type to Localized Label
+  const typeMap: Record<string, Record<string, string>> = {
+    HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "别墅" },
+    CONDO: { th: "คอนโด", en: "Condo", cn: "公寓" },
+    TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅" },
+    LAND: { th: "ที่ดิน", en: "Land", cn: "土地" },
+    OFFICE_BUILDING: {
+      th: "อาคารสำนักงานออฟฟิศ",
+      en: "Office Building",
+      cn: "办公楼",
+    },
+    COMMERCIAL_BUILDING: {
+      th: "อาคารพาณิชย์",
+      en: "Commercial Building",
+      cn: "商业建筑",
+    },
+    WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库" },
   };
-  const typeLabel = data.property_type ? typeMap[data.property_type] : "";
+  const typeLabel = data.property_type
+    ? typeMap[data.property_type]?.[language] ||
+      typeMap[data.property_type]?.["th"]
+    : "";
 
   const seoKeywords = [
-    data.is_hot_sale && "ราคาถูก-ลดราคาพิเศษ",
-    data.near_transit && "ใกล้รถไฟฟ้า",
-    data.is_pet_friendly && "เลี้ยงสัตว์ได้",
-    data.is_corner_unit && "ห้องมุม",
-    data.is_renovated && "รีโนเวทใหม่",
-    data.is_fully_furnished && "แต่งครบ-พร้อมอยู่",
-    data.is_selling_with_tenant && "พร้อมผู้เช่า-ลงทุนคุ้ม",
-    data.is_foreigner_quota && "ต่างชาติซื้อได้",
+    data.is_hot_sale &&
+      (language === "th"
+        ? "ราคาถูก-ลดราคาพิเศษ"
+        : language === "en"
+          ? "cheap-hot-sale"
+          : "特价房源"),
+    data.near_transit &&
+      (language === "th"
+        ? "ใกล้รถไฟฟ้า"
+        : language === "en"
+          ? "near-transit"
+          : "靠近轻轨"),
+    data.is_pet_friendly &&
+      (language === "th"
+        ? "เลี้ยงสัตว์ได้"
+        : language === "en"
+          ? "pet-friendly"
+          : "可养宠物"),
+    data.is_corner_unit &&
+      (language === "th"
+        ? "ห้องมุม"
+        : language === "en"
+          ? "corner-unit"
+          : "边间"),
+    data.is_renovated &&
+      (language === "th"
+        ? "รีโนเวทใหม่"
+        : language === "en"
+          ? "renovated"
+          : "全新装修"),
+    data.is_fully_furnished &&
+      (language === "th"
+        ? "แต่งครบ-พร้อมอยู่"
+        : language === "en"
+          ? "fully-furnished"
+          : "家具齐全"),
+    data.is_selling_with_tenant &&
+      (language === "th"
+        ? "พร้อมผู้เช่า-ลงทุนคุ้ม"
+        : language === "en"
+          ? "with-tenant"
+          : "带租约"),
+    data.is_foreigner_quota &&
+      (language === "th"
+        ? "ต่างชาติซื้อได้"
+        : language === "en"
+          ? "foreigner-quota"
+          : "外籍配额"),
   ].filter(Boolean);
 
   // Extract Top 2 Nearby Places (Priority: Transit > Others)
   const nearbyKeywords: string[] = [];
+  const nearTransitLabel =
+    language === "th"
+      ? "ใกล้รถไฟฟ้าสถานี-"
+      : language === "en"
+        ? "near-transit-station-"
+        : "靠近轻轨站-";
 
   // 1. Priority: Main Transit Station from Form (Legacy/Simple)
   if (data.near_transit && data.transit_station_name) {
     const stationName = data.transit_station_name.trim().replace(/\s+/g, "-");
-    nearbyKeywords.push(`ใกล้รถไฟฟ้าสถานี-${stationName}`);
+    nearbyKeywords.push(`${nearTransitLabel}${stationName}`);
   }
 
   // 1.5 Priority: Transit List from Step 3 (nearby_transits) - Covers BTS, MRT, ARL, etc.
@@ -95,7 +155,7 @@ export function generatePropertySlug(data: PropertyDataForSEO): string {
         const type = transit.type || "";
         const name = transit.station_name.trim().replace(/\s+/g, "-");
         // e.g. "ใกล้รถไฟฟ้าสถานี-bts-ทองหล่อ" or "ใกล้รถไฟฟ้าสถานี-arl-มักกะสัน"
-        const keyword = `ใกล้รถไฟฟ้าสถานี-${type}-${name}`;
+        const keyword = `${nearTransitLabel}${type}-${name}`;
 
         if (!nearbyKeywords.includes(keyword)) {
           nearbyKeywords.push(keyword);
@@ -114,24 +174,17 @@ export function generatePropertySlug(data: PropertyDataForSEO): string {
         place.name.includes("สายสี");
 
       if (isTransit) {
-        // Use specific requested format: "ใกล้รถไฟฟ้าสถานี-X"
         const stationName = place.name.trim().replace(/\s+/g, "-");
-        const keyword = `ใกล้รถไฟฟ้าสถานี-${stationName}`;
+        const keyword = `${nearTransitLabel}${stationName}`;
 
-        // Avoid adding if it's the same as the main station we just added
         if (!nearbyKeywords.includes(keyword)) {
           nearbyKeywords.push(keyword);
         }
       }
     });
 
-    // Also keep existing logic but ensure no duplicates if needed, or just prioritize transit
-    // Refined Logic: Add max 3 nearby places, 1 per category (excluding transit we just handled)
     const addedCategories = new Set<string>();
     const selectedNearbyPlaces: any[] = [];
-
-    // Sort slightly to prioritize well-known categories if needed, or just keep original order
-    // Original order is likely user-defined order which is good.
 
     for (const place of data.nearby_places) {
       if (selectedNearbyPlaces.length >= 3) break;
@@ -141,28 +194,26 @@ export function generatePropertySlug(data: PropertyDataForSEO): string {
         place.name.includes("MRT") ||
         place.name.includes("สายสี");
 
-      // Skip if it's a transit station (already added above)
       if (isTransit) continue;
 
       const category = place.category || "Other";
 
-      // If we haven't added this category yet, add it
       if (!addedCategories.has(category)) {
         selectedNearbyPlaces.push(place);
         addedCategories.add(category);
       }
     }
 
-    // Add selected places to keywords
+    const nearLabel =
+      language === "th" ? "ใกล้-" : language === "en" ? "near-" : "靠近-";
     selectedNearbyPlaces.forEach((place) => {
-      const keyword = `ใกล้-${place.name.replace(/\s+/g, "-")}`;
+      const keyword = `${nearLabel}${place.name.replace(/\s+/g, "-")}`;
       if (!nearbyKeywords.includes(keyword)) {
         nearbyKeywords.push(keyword);
       }
     });
   }
 
-  // Extract Top 2 Special Features
   const featureKeywords: string[] = [];
   if (data.features && data.features.length > 0) {
     data.features.slice(0, 2).forEach((feat) => {
@@ -175,9 +226,20 @@ export function generatePropertySlug(data: PropertyDataForSEO): string {
     ...featureKeywords,
     ...nearbyKeywords,
     ...seoKeywords,
-    data.bedrooms && `${data.bedrooms} นอน`,
-    data.bathrooms && `${data.bathrooms} น้ำ`,
-    data.size_sqm && `${data.size_sqm} ตรม`,
+    data.bedrooms &&
+      (language === "th"
+        ? `${data.bedrooms} นอน`
+        : language === "en"
+          ? `${data.bedrooms}BR`
+          : `${data.bedrooms}卧`),
+    data.bathrooms &&
+      (language === "th"
+        ? `${data.bathrooms} น้ำ`
+        : language === "en"
+          ? `${data.bathrooms}BA`
+          : `${data.bathrooms}卫`),
+    data.size_sqm &&
+      (language === "th" ? `${data.size_sqm} ตรม` : `${data.size_sqm}sqm`),
     typeLabel,
     data.popular_area,
     data.subdistrict,
@@ -187,16 +249,13 @@ export function generatePropertySlug(data: PropertyDataForSEO): string {
 
   const rawString = parts.join(" ");
 
-  // Manual Cleaning to ensure Thai characters are preserved
-  // Keep Thai (\u0E00-\u0E7F), Alphanumeric, Hyphen, Underline, and Space
   const cleaned = rawString
     .replace(/[^\u0E00-\u0E7Fa-zA-Z0-9\s_-]/g, " ")
     .trim()
     .toLowerCase()
-    .replace(/[\s/_]+/g, "-") // Replace spaces and slashes with hyphens
-    .replace(/-+/g, "-"); // Remove duplicate hyphens
+    .replace(/[\s/_]+/g, "-")
+    .replace(/-+/g, "-");
 
-  // Add random suffix to ensure uniqueness (project standard)
   const suffix = Date.now().toString(36).slice(-4);
   return `${cleaned.slice(0, 220)}-${suffix}`;
 }
@@ -204,20 +263,27 @@ export function generatePropertySlug(data: PropertyDataForSEO): string {
 /**
  * Generate meta title (max 60 characters for SEO)
  */
-export function generateMetaTitle(data: PropertyDataForSEO): string {
+export function generateMetaTitle(
+  data: PropertyDataForSEO,
+  language: string = "th",
+): string {
   const parts = [data.title];
 
   if (data.listing_type === "RENT") {
-    parts.push("ให้เช่า");
+    parts.push(
+      language === "th" ? "ให้เช่า" : language === "en" ? "For Rent" : "出租",
+    );
   } else {
-    parts.push("ขาย");
+    parts.push(
+      language === "th" ? "ขาย" : language === "en" ? "For Sale" : "出售",
+    );
   }
 
   if (data.district) parts.push(data.district);
   if (data.province) parts.push(data.province);
 
   const title = parts.join(" | ");
-  const suffix = " - Real Estate CRM";
+  const suffix = language === "th" ? " - OMA Asset" : " - Real Estate Thailand";
 
   // Truncate if too long (max 60)
   if (title.length + suffix.length > 60) {
@@ -230,23 +296,60 @@ export function generateMetaTitle(data: PropertyDataForSEO): string {
 /**
  * Generate meta description (max 160 characters for SEO)
  */
-export function generateMetaDescription(data: PropertyDataForSEO): string {
+export function generateMetaDescription(
+  data: PropertyDataForSEO,
+  language: string = "th",
+): string {
   const parts = [data.title];
 
-  if (data.property_type) parts.push(data.property_type);
-  if (data.bedrooms) parts.push(`${data.bedrooms} ห้องนอน`);
-  if (data.bathrooms) parts.push(`${data.bathrooms} ห้องน้ำ`);
-  if (data.size_sqm) parts.push(`พื้นที่ ${data.size_sqm} ตร.ม.`);
+  if (data.bedrooms)
+    parts.push(
+      language === "th"
+        ? `${data.bedrooms} ห้องนอน`
+        : language === "en"
+          ? `${data.bedrooms} Bedrooms`
+          : `${data.bedrooms} 卧室`,
+    );
+  if (data.bathrooms)
+    parts.push(
+      language === "th"
+        ? `${data.bathrooms} ห้องน้ำ`
+        : language === "en"
+          ? `${data.bathrooms} Bathrooms`
+          : `${data.bathrooms} 浴室`,
+    );
+  if (data.size_sqm)
+    parts.push(
+      language === "th"
+        ? `พื้นที่ ${data.size_sqm} ตร.ม.`
+        : `Size ${data.size_sqm} sqm`,
+    );
   if (data.district && data.province)
-    parts.push(`ทำเล ${data.district} ${data.province}`);
+    parts.push(
+      language === "th"
+        ? `ทำเล ${data.district} ${data.province}`
+        : `Location ${data.district}, ${data.province}`,
+    );
 
   let description = parts.join(" ");
 
   // Add price
   if (data.price) {
-    description += ` ราคา ${data.price.toLocaleString()} บาท`;
+    const label =
+      language === "th" ? " ราคา " : language === "en" ? " Price " : " 价格 ";
+    const unit =
+      language === "th" ? " บาท" : language === "en" ? " THB" : " 泰铢";
+    description += `${label}${data.price.toLocaleString()}${unit}`;
   } else if (data.rental_price) {
-    description += ` ค่าเช่า ${data.rental_price.toLocaleString()} บาท/เดือน`;
+    const label =
+      language === "th" ? " ค่าเช่า " : language === "en" ? " Rent " : " 租金 ";
+    const unit =
+      language === "th"
+        ? " บาท/เดือน"
+        : language === "en"
+          ? " THB/month"
+          : " 泰铢/月";
+    description += `${label}${data.rental_price.toLocaleString()}${unit}`;
   }
 
   // Truncate if too long (max 160)
@@ -260,20 +363,34 @@ export function generateMetaDescription(data: PropertyDataForSEO): string {
 /**
  * Generate meta keywords
  */
-export function generateMetaKeywords(data: PropertyDataForSEO): string[] {
+export function generateMetaKeywords(
+  data: PropertyDataForSEO,
+  language: string = "th",
+): string[] {
   const keywords = new Set<string>();
 
   if (data.property_type) keywords.add(data.property_type);
   if (data.listing_type) keywords.add(data.listing_type);
   if (data.district) keywords.add(data.district);
   if (data.province) keywords.add(data.province);
-  if (data.bedrooms) keywords.add(`${data.bedrooms} ห้องนอน`);
+  if (data.bedrooms)
+    keywords.add(
+      language === "th"
+        ? `${data.bedrooms} ห้องนอน`
+        : `${data.bedrooms} Bedrooms`,
+    );
 
   // Add common keywords
-  keywords.add("ขายบ้าน");
-  keywords.add("เช่าบ้าน");
-  keywords.add("อสังหาริมทรัพย์");
-  keywords.add("บ้านมือสอง");
+  if (language === "th") {
+    keywords.add("ขายบ้าน");
+    keywords.add("เช่าบ้าน");
+    keywords.add("อสังหาริมทรัพย์");
+    keywords.add("บ้านมือสอง");
+  } else {
+    keywords.add("Property for Sale");
+    keywords.add("Property for Rent");
+    keywords.add("Real Estate Thailand");
+  }
 
   // Add title words (split by space)
   data.title.split(/\s+/).forEach((word) => {

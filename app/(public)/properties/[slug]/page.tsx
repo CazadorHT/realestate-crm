@@ -13,6 +13,7 @@ import { PropertySuitability } from "@/components/public/PropertySuitability";
 import { NearbyPlaces } from "@/components/public/NearbyPlaces";
 import { Database } from "@/lib/database.types";
 import { Metadata } from "next";
+import { getServerTranslations } from "@/lib/i18n";
 
 // New modular components
 import { PropertyHeader } from "@/components/public/property-detail/PropertyHeader";
@@ -480,16 +481,23 @@ export async function generateMetadata(props: {
 
   const { data } = await query.maybeSingle();
 
-  if (!data) return { title: "ไม่พบทรัพย์" };
+  const { t, language } = await getServerTranslations();
 
-  // Use centralized SEO logic
+  if (!data)
+    return {
+      title: t("errors.property_not_found_title") || "Property Not Found",
+    };
+
+  // Use localized title from SEO data if available
+  const localizedTitle =
+    language === "cn"
+      ? (data as any).title_cn
+      : language === "en"
+        ? (data as any).title_en
+        : data.title;
+
   const seoData = {
-    title: data.title,
-    title_en: (data as any).title_en,
-    title_cn: (data as any).title_cn,
-    description: data.description,
-    description_en: (data as any).description_en,
-    description_cn: (data as any).description_cn,
+    title: localizedTitle || data.title,
     property_type: data.property_type,
     listing_type: data.listing_type,
     bedrooms: data.bedrooms,
@@ -503,13 +511,12 @@ export async function generateMetadata(props: {
     subdistrict: data.subdistrict,
   };
 
-  // Import locally to avoid top-level side effects if any (though standard imports are fine too, but this file is huge)
   const { generateMetaTitle, generateMetaDescription, generateMetaKeywords } =
     await import("@/lib/seo-utils");
 
-  const pageTitle = generateMetaTitle(seoData as any);
-  const pageDesc = generateMetaDescription(seoData as any);
-  const keywords = generateMetaKeywords(seoData as any);
+  const pageTitle = generateMetaTitle(seoData as any, language);
+  const pageDesc = generateMetaDescription(seoData as any, language);
+  const keywords = generateMetaKeywords(seoData as any, language);
 
   const { getPublicImageUrl: getPublicImageUrlSeo } =
     await import("@/features/properties/image-utils");

@@ -15,6 +15,9 @@ export type RecommendedProperty = {
   original_price: number | null;
   rental_price: number | null;
   original_rental_price: number | null;
+  price_per_sqm?: number | null;
+  rent_price_per_sqm?: number | null;
+  size_sqm?: number | null;
   image_url: string | null;
   slug?: string | null;
 };
@@ -44,6 +47,9 @@ export async function getRecommendedProperties(
       original_price,
       rental_price,
       original_rental_price,
+      price_per_sqm,
+      rent_price_per_sqm,
+      size_sqm,
       slug,
       property_images(image_url, is_cover)
     `,
@@ -104,6 +110,9 @@ export async function getRecommendedProperties(
       original_price: prop.original_price,
       rental_price: prop.rental_price,
       original_rental_price: prop.original_rental_price,
+      price_per_sqm: prop.price_per_sqm,
+      rent_price_per_sqm: prop.rent_price_per_sqm,
+      size_sqm: prop.size_sqm,
       image_url: coverImage?.image_url || null,
       slug: prop.slug,
     };

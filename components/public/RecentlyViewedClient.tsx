@@ -110,6 +110,13 @@ function convertToRecentProperty(
     id: prop.id,
     title: prop.title,
     image_url: prop.image_url,
+    price: prop.price,
+    original_price: prop.original_price,
+    rental_price: prop.rental_price,
+    original_rental_price: prop.original_rental_price,
+    price_per_sqm: prop.price_per_sqm,
+    rent_price_per_sqm: prop.rent_price_per_sqm,
+    size_sqm: prop.size_sqm,
     price_text,
     province: prop.province,
     popular_area: prop.popular_area,
@@ -120,6 +127,63 @@ function convertToRecentProperty(
     slug: prop.slug,
     ts: Date.now(),
   };
+}
+
+// Helper to get consistent display price similar to PropertyCard
+function getCardPrice(item: RecentProperty, t: any) {
+  // Backward compatibility: If new price fields are missing (old history), use price_text
+  const hasNewFields =
+    item.price !== undefined ||
+    item.rental_price !== undefined ||
+    item.original_price !== undefined;
+
+  if (!hasNewFields) {
+    return item.price_text || t("common.contact_for_price");
+  }
+
+  const isSale =
+    item.listing_type === "SALE" || item.listing_type === "SALE_AND_RENT";
+  const isRent =
+    item.listing_type === "RENT" || item.listing_type === "SALE_AND_RENT";
+
+  const getPriceValue = (listingType: string) => {
+    const isR = listingType === "RENT";
+    const mainP = isR ? item.rental_price : item.price;
+    const originP = isR ? item.original_rental_price : item.original_price;
+    const sqmP = isR ? item.rent_price_per_sqm : item.price_per_sqm;
+
+    // Office logic
+    if (
+      item.property_type === "OFFICE_BUILDING" &&
+      !mainP &&
+      sqmP &&
+      item.size_sqm
+    ) {
+      return sqmP * item.size_sqm;
+    }
+    return mainP ?? originP; // Fallback to original price
+  };
+
+  const saleP = isSale ? getPriceValue("SALE") : null;
+  const rentP = isRent ? getPriceValue("RENT") : null;
+
+  if (item.listing_type === "SALE_AND_RENT") {
+    const parts = [];
+    if (saleP) parts.push(formatPrice(saleP));
+    if (rentP)
+      parts.push(
+        `${formatPrice(rentP)}/${t("recently_viewed.per_month_short")}`,
+      );
+    return (
+      parts.join(" | ") || item.price_text || t("common.contact_for_price")
+    );
+  }
+
+  if (isSale && saleP) return formatPrice(saleP);
+  if (isRent && rentP)
+    return `${formatPrice(rentP)}/${t("recently_viewed.per_month_short")}`;
+
+  return item.price_text || t("common.contact_for_price");
 }
 
 export function RecentlyViewedClient({
@@ -504,17 +568,59 @@ export function RecentlyViewedClient({
                   )}
 
                   {/* Price Badge */}
-                  {item.price_text && (
-                    <div
-                      className={`absolute top-3 left-3 backdrop-blur-md border text-xs font-medium px-3 py-1.5 rounded-full shadow-sm ${
-                        item.price_text.includes("(-")
-                          ? "bg-red-500 border-red-600 text-white"
-                          : "bg-white/70 border-white/40 text-blue-700"
-                      }`}
-                    >
-                      {item.price_text}
+                  <div
+                    className={`absolute top-3 left-3 backdrop-blur-md border text-xs font-medium px-3 py-1.5 rounded-full shadow-sm flex flex-col gap-0.5 ${
+                      (item.original_price &&
+                        item.price &&
+                        item.original_price > item.price) ||
+                      (item.original_rental_price &&
+                        item.rental_price &&
+                        item.original_rental_price > item.rental_price) ||
+                      item.price_text?.includes("(-")
+                        ? "bg-red-500 border-red-600 text-white"
+                        : "bg-white/90 border-white/40 text-blue-700"
+                    }`}
+                  >
+                    {/* Original Price (Line Through) */}
+                    {item.listing_type === "SALE" &&
+                      item.original_price &&
+                      item.price &&
+                      item.original_price > item.price && (
+                        <span className="text-[10px] text-white/80 line-through decoration-white/50">
+                          {formatPrice(item.original_price)}
+                        </span>
+                      )}
+                    {item.listing_type === "RENT" &&
+                      item.original_rental_price &&
+                      item.rental_price &&
+                      item.original_rental_price > item.rental_price && (
+                        <span className="text-[10px] text-white/80 line-through decoration-white/50">
+                          {formatPrice(item.original_rental_price)}
+                        </span>
+                      )}
+                    {item.listing_type === "SALE_AND_RENT" && (
+                      <div className="flex flex-col -space-y-0.5">
+                        {item.original_price &&
+                          item.price &&
+                          item.original_price > item.price && (
+                            <span className="text-[9px] text-white/80 line-through decoration-white/50">
+                              {formatPrice(item.original_price)}
+                            </span>
+                          )}
+                        {item.original_rental_price &&
+                          item.rental_price &&
+                          item.original_rental_price > item.rental_price && (
+                            <span className="text-[9px] text-white/80 line-through decoration-white/50">
+                              {formatPrice(item.original_rental_price)}
+                            </span>
+                          )}
+                      </div>
+                    )}
+                    {/* Current Price / Calculated Price */}
+                    <div className="font-bold whitespace-nowrap">
+                      {getCardPrice(item, t)}
                     </div>
-                  )}
+                  </div>
 
                   {/* Favorite Button */}
                   <div className="absolute top-3 right-3 z-10">
@@ -576,7 +682,7 @@ export function RecentlyViewedClient({
                           key={f.id}
                           className="text-[9px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200 truncate max-w-[80px]"
                         >
-                          {f.name}
+                          {getLocaleValue(f, "name", language)}
                         </span>
                       ))}
                     </div>

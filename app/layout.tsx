@@ -4,43 +4,14 @@ import "./globals.css";
 import "flag-icons/css/flag-icons.min.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { CookieConsent } from "@/components/common/CookieConsent";
+import { LanguageProvider } from "@/components/providers/LanguageProvider";
+import { getServerTranslations } from "@/lib/i18n";
+import { cookies } from "next/headers";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "http://localhost:3000";
-
-export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
-  title: {
-    default: "OMA Asset | ค้นหาและฝากขายอสังหาฯ ง่ายๆ ในที่เดียว",
-    template: "%s | OMA Asset",
-  },
-  description:
-    "รวม บ้าน คอนโด ออฟฟิศ ทั่วไทย ค้นหาง่าย ปิดการขายไว พร้อมเครื่องมืออัจฉริยะสำหรับคนหาบ้านและนายหน้ามืออาชีพ",
-  keywords: [
-    "ซื้อขายบ้าน",
-    "เช่าคอนโด",
-    "ค้นหาที่ดิน",
-    "ฝากขายอสังหาฟรี",
-    "นายหน้าอสังหาริมทรัพย์",
-    "ลงประกาศขายบ้าน",
-    "Real Estate Thailand",
-    "OMA Asset",
-  ],
-  openGraph: {
-    type: "website",
-    locale: "th_TH",
-    url: defaultUrl,title: "OMA Asset | ค้นหาและฝากขายอสังหาฯ ง่ายๆ ในที่เดียว",
-    description:
-      "รวม บ้าน คอนโด ออฟฟิศ ทั่วไทย ค้นหาง่าย ปิดการขายไว พร้อมเครื่องมืออัจฉริยะสำหรับคนหาบ้านและนายหน้ามืออาชีพ",
-    siteName: "OMA Asset",
-  },
-  twitter: {
-    card: "summary_large_image",title: "OMA Asset | ค้นหาและฝากขายอสังหาฯ ง่ายๆ ในที่เดียว",
-    description:
-      "รวม บ้าน คอนโด ออฟฟิศ ทั่วไทย ค้นหาง่าย ปิดการขายไว พร้อมเครื่องมืออัจฉริยะสำหรับคนหาบ้านและนายหน้ามืออาชีพ",
-  },
-};
 
 const prompt = Prompt({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -56,16 +27,52 @@ const notoThai = Noto_Sans_Thai({
   variable: "--font-noto-thai",
 });
 
-import { CookieConsent } from "@/components/common/CookieConsent";
-import { LanguageProvider } from "@/components/providers/LanguageProvider";
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerTranslations();
 
-export default function RootLayout({
+  return {
+    metadataBase: new URL(defaultUrl),
+    title: {
+      default: t("metadata.default_title"),
+      template: `%s | OMA Asset`,
+    },
+    description: t("metadata.default_description"),
+    keywords: [
+      "ซื้อขายบ้าน",
+      "เช่าคอนโด",
+      "ค้นหาที่ดิน",
+      "ฝากขายอสังหาฟรี",
+      "นายหน้าอสังหาริมทรัพย์",
+      "ลงประกาศขายบ้าน",
+      "Real Estate Thailand",
+      "OMA Asset",
+    ],
+    openGraph: {
+      type: "website",
+      locale: "th_TH",
+      url: defaultUrl,
+      title: t("metadata.default_title"),
+      description: t("metadata.default_description"),
+      siteName: "OMA Asset",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("metadata.default_title"),
+      description: t("metadata.default_description"),
+    },
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const lang = cookieStore.get("app-language")?.value || "th";
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <body className={`${prompt.className} ${notoThai.variable} antialiased`}>
         <ThemeProvider
           attribute="class"

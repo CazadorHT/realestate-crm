@@ -10,6 +10,7 @@ import {
   Key,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function MorphingLoader({ className }: { className?: string }) {
   const [index, setIndex] = useState(0);
@@ -30,6 +31,8 @@ export function MorphingLoader({ className }: { className?: string }) {
 
   const CurrentIcon = icons[index].icon;
   const currentColor = icons[index].color;
+
+  const { t } = useLanguage();
 
   return (
     <div
@@ -58,11 +61,9 @@ export function MorphingLoader({ className }: { className?: string }) {
 
       <div className="mt-8 text-center space-y-2">
         <h3 className="text-lg font-semibold text-slate-900 animate-pulse">
-          กำลังค้นหาบ้านในฝัน...
+          {t("loading.search_dream_home")}
         </h3>
-        <p className="text-slate-400 text-sm">
-          PropertyHub - แหล่งรวมอสังหาฯ คุณภาพ
-        </p>
+        <p className="text-slate-400 text-sm">{t("loading.subtitle")}</p>
       </div>
     </div>
   );

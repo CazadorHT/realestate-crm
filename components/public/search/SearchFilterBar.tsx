@@ -115,7 +115,7 @@ export function SearchFilterBar({
     },
     {
       value: "COMMERCIAL_BUILDING",
-      label: t("home.property_types.commercialbuilding"),
+      label: t("home.property_types.commercial_building"),
     },
     { value: "WAREHOUSE", label: t("home.property_types.warehouse") },
   ];

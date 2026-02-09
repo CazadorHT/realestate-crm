@@ -1,5 +1,7 @@
 // Force rebuild
 import dynamic from "next/dynamic";
+import { Metadata } from "next";
+import { getServerTranslations } from "@/lib/i18n";
 
 // Critical components loaded immediately
 import { HeroSection } from "@/components/public/HeroSection";
@@ -61,20 +63,20 @@ const FAQSection = dynamic(() =>
   import("@/components/public/FAQSection").then((mod) => mod.FAQSection),
 );
 
-import { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "ค้นหาบ้าน คอนโด ออฟฟิศ ขาย/เช่า | OMA Asset",
-  description:
-    "แหล่งรวมประกาศขาย/เช่า บ้าน คอนโด ออฟฟิศ ที่ดิน สำนักงาน อสังหาริมทรัพย์คุณภาพ ตรวจสอบแล้ว 100% พร้อมระบบ Smart Match ช่วยค้นหาบ้านในฝันของคุณ",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerTranslations();
+  return {
+    title: t("metadata.home_title"),
+    description: t("metadata.home_description"),
+  };
+}
 
 export default function LandingPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     name: "OMA Asset",
-    image: `${process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.com"}/images/logo.png`, // Replace with actual domain/logo
+    image: `${process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.com"}/images/logo.png`,
     description:
       "ศูนย์รวมประกาศอสังหาริมทรัพย์ออนไลน์ ค้นหาง่าย ฝากขายรวดเร็ว พร้อมบริการดูแลโดยมืออาชีพ",
     address: {
@@ -89,7 +91,7 @@ export default function LandingPage() {
       latitude: 13.7563,
       longitude: 100.5018,
     },
-    url: process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.com", // Replace with actual domain
+    url: process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.com",
     priceRange: "฿฿฿",
     openingHoursSpecification: [
       {
@@ -115,29 +117,20 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Awareness (ช่วงต้น: ดึงดูดสายตาและสร้างความเชื่อมั่นทันที) */}
       <HeroSection />
       <PropertyTypeGrid />
       <StatsBand />
       <PartnerSection />
-
-      {/* Interest (ช่วงกลาง: กระตุ้นความอยากดูต่อ) */}
       <PopularAreasSection />
       <HotDealsSection />
       <PropertyListingSection />
-
-      {/* Desire & Utility (ช่วงเสริม: ช่วยในการตัดสินใจ) */}
       <MortgageCalculatorSection />
       <RecentlyViewedSection />
       <TrustSection />
       <HowItWorksSection />
-
-      {/* Social Proof & Content (ช่วงสร้างความมั่นใจ) */}
       <TestimonialsSection />
       <BlogSection />
       <FAQSection />
-
-      {/* Action (ช่วงสุดท้าย: กระตุ้นการกระทำ) */}
       <DepositPropertySection />
       <CTASection />
     </div>

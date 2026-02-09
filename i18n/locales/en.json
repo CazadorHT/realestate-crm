@@ -127,7 +127,8 @@
       "pool_villa": "Pool Villa",
       "pool_villa_desc": "Private relaxation with private pool",
       "land": "Land",
-      "land_desc": "High potential land for investment"
+      "land_desc": "High potential land for investment",
+      "commercial_building": "Commercial Building"
     },
     "stats": {
       "properties_label": "Quality Properties",
@@ -204,6 +205,18 @@
       "subtitle": "Any Questions? We Have Answers",
       "description": "Frequently asked questions about buying, selling, renting, and mortgages to ensure your confidence in every step."
     }
+  },
+  "metadata": {
+    "default_title": "OMA Asset | Find and Sell Properties Easily",
+    "default_description": "Comprehensive list of houses, condos, and offices across Thailand. Easy search, fast closed deals with smart tools for seekers and professionals.",
+    "home_title": "Search House, Condo, Office for Sale/Rent | OMA Asset",
+    "home_description": "Real estate listings for Sale/Rent. Houses, Condos, Offices, Land. 100% Verified properties with Smart Match system.",
+    "search_title": "Search Properties | House, Condo, Office",
+    "search_description": "Find all types of real estate for sale and rent with our smart filtering system."
+  },
+  "loading": {
+    "search_dream_home": "Finding your dream places...",
+    "subtitle": "OMA Asset - Quality Real Estate Network"
   },
   "property_listing": {
     "title": "Houses, Condos, Offices | Buy · Sell · Rent",

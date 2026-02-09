@@ -127,8 +127,10 @@
       "pool_villa": "泳池别墅",
       "pool_villa_desc": "私人放松，带私人泳池",
       "land": "土地",
-      "land_desc": "极具投资潜力的土地"
+      "land_desc": "极具投资潜力的土地",
+      "commercial_building": "商业建筑"
     },
+
     "stats": {
       "properties_label": "优质房源",
       "properties_sub": "Verified Properties",
@@ -204,6 +206,18 @@
       "subtitle": "有疑问？我们有答案",
       "description": "关于买卖、租赁和贷款的常见问题，确保您在每一步都充满信心。"
     }
+  },
+  "metadata": {
+    "default_title": "OMA Asset | 轻松寻找和委托出售房产",
+    "default_description": "汇集全泰国别墅、公寓、办公楼。搜索快捷，成交迅速，为购房者和专业人士提供智能工具。",
+    "home_title": "搜索别墅、公寓、办公楼 出售/出租 | OMA Asset",
+    "home_description": "房地产出租/出售列表。别墅、公寓、办公楼、土地。100% 真实房源，配备智能匹配系统。",
+    "search_title": "搜索房产 | 别墅、公寓、办公楼",
+    "search_description": "通过我们的智能过滤系统查找所有类型的出售和出租房地产。"
+  },
+  "loading": {
+    "search_dream_home": "正在为您寻找梦想之所...",
+    "subtitle": "OMA Asset - 优质房地产网络"
   },
   "property_listing": {
     "title": "别墅、公寓、办公楼 | 买卖 · 租赁",

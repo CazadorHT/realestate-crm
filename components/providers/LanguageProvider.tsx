@@ -30,16 +30,36 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Priority: Cookie > LocalStorage > Default (th)
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(";").shift();
+      return null;
+    };
+
+    const cookieLang = getCookie("app-language") as Language;
     const saved = localStorage.getItem("app-language") as Language;
-    if (saved && ["th", "en", "cn"].includes(saved)) {
-      setLanguageState(saved);
-    }
+
+    const initialLang =
+      (cookieLang && ["th", "en", "cn"].includes(cookieLang) && cookieLang) ||
+      (saved && ["th", "en", "cn"].includes(saved) && saved) ||
+      "th";
+
+    setLanguageState(initialLang);
     setMounted(true);
+
+    // Ensure cookie and localStorage are in sync on mount
+    if (initialLang) {
+      document.cookie = `app-language=${initialLang}; path=/; max-age=31536000; SameSite=Lax`;
+      localStorage.setItem("app-language", initialLang);
+    }
   }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem("app-language", lang);
+    document.cookie = `app-language=${lang}; path=/; max-age=31536000; SameSite=Lax`;
   };
 
   const t = (key: string, params?: Record<string, string | number>) => {
