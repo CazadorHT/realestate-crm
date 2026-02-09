@@ -8,6 +8,7 @@ import { MorphingLoader } from "@/components/ui/MorphingLoader";
 import { SearchFilterBar } from "./search/SearchFilterBar";
 import { SearchPagination } from "./search/SearchPagination";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { toast } from "sonner";
 
 type ApiProperty = PropertyCardProps;
 
@@ -82,7 +83,12 @@ export function PropertySearchPage({
         const data = await res.json();
         setProperties(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error(err);
+        console.error("PropertySearchPage fetch error:", err);
+        toast.error(
+          t("common.error") ||
+            "Load failed: " +
+              (err instanceof Error ? err.message : String(err)),
+        );
       } finally {
         setIsLoading(false);
       }

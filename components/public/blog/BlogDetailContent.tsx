@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { User } from "lucide-react";
-import DOMPurify from "isomorphic-dompurify";
 import { useRef, useEffect, useState } from "react";
 import { ContactAgentDialog } from "@/components/public/ContactAgentDialog";
 
@@ -24,6 +23,28 @@ interface BlogDetailContentProps {
 export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
   const [contactOpen, setContactOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const [sanitizedContent, setSanitizedContent] = useState<string>(
+    post.content || "",
+  );
+
+  useEffect(() => {
+    if (!post.content) {
+      setSanitizedContent("");
+      return;
+    }
+
+    // Client-side only sanitization to avoid jsdom/SSR issues
+    import("dompurify").then((module) => {
+      const DOMPurify = module.default;
+      setSanitizedContent(
+        DOMPurify.sanitize(post.content || "", {
+          ADD_TAGS: ["iframe"],
+          ADD_ATTR: ["target", "class"],
+        }),
+      );
+    });
+  }, [post.content]);
 
   useEffect(() => {
     const handleContentClick = (e: MouseEvent) => {
@@ -63,10 +84,7 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
         ref={contentRef}
         className="prose prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline"
         dangerouslySetInnerHTML={{
-          __html: DOMPurify.sanitize(post.content || "", {
-            ADD_TAGS: ["iframe"],
-            ADD_ATTR: ["target", "class"],
-          }),
+          __html: sanitizedContent,
         }}
         itemProp="articleBody"
       />

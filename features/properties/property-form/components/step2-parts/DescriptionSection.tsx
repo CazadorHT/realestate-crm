@@ -103,7 +103,7 @@ export function DescriptionSection({
   );
 
   return (
-    <div className="space-y-6 lg:col-span-2">
+    <div className="space-y-6 lg:col-span-4">
       <Card className="border-slate-200/70 bg-white">
         <CardHeader className="space-y-3">
           <div className="flex items-center justify-between">
@@ -177,7 +177,7 @@ export function DescriptionSection({
                       value={field.value ?? ""}
                       onChange={field.onChange}
                       disabled={isReadOnly}
-                      height={300}
+                      height={500}
                     />
                   </FormControl>
                   <FormMessage />
@@ -205,7 +205,7 @@ export function DescriptionSection({
                       value={field.value ?? ""}
                       onChange={field.onChange}
                       disabled={isReadOnly}
-                      height={300}
+                      height={500}
                     />
                   </FormControl>
                   <FormMessage />

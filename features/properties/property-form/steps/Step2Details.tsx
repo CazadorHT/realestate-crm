@@ -33,7 +33,7 @@ function Step2DetailsComponent({ form, mode }: Step2Props) {
       <SpecsSection form={form} isReadOnly={isReadOnly} />
 
       {/* Description & Special Features */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-6">
         <DescriptionSection form={form} isReadOnly={isReadOnly} />
         <SpecialFeaturesSection form={form} isReadOnly={isReadOnly} />
       </div>

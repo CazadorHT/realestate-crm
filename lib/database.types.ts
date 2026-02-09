@@ -1670,6 +1670,8 @@ export type Database = {
         | "OFFICE_BUILDING"
         | "WAREHOUSE"
         | "COMMERCIAL_BUILDING"
+        | "VILLA"
+        | "POOL_VILLA"
       user_role: "ADMIN" | "USER" | "AGENT"
     }
     CompositeTypes: {
@@ -1854,6 +1856,8 @@ export const Constants = {
         "OFFICE_BUILDING",
         "WAREHOUSE",
         "COMMERCIAL_BUILDING",
+        "VILLA",
+        "POOL_VILLA",
       ],
       user_role: ["ADMIN", "USER", "AGENT"],
     },

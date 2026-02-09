@@ -192,7 +192,7 @@ export function SpecialFeaturesSection({
               name="is_bare_shell"
               label="ห้องเปล่า / พื้นที่เปล่า"
               icon={BoxSelect}
-              color="slate"
+              color="amber"
               disabled={isReadOnly}
             />
           </div>
@@ -314,7 +314,7 @@ export function SpecialFeaturesSection({
               name="is_grade_c"
               label="Grade C"
               icon={Medal}
-              color="slate"
+              color="blue"
               disabled={isReadOnly}
             />
             <FeatureChip
@@ -395,7 +395,7 @@ export function SpecialFeaturesSection({
               name="has_multi_parking"
               label="จอดรถ > 1 คัน"
               icon={CheckCircle2}
-              color="slate"
+              color="blue"
               disabled={isReadOnly}
             />
           </div>
@@ -408,6 +408,48 @@ export function SpecialFeaturesSection({
 // ----------------------------------------------------------------------
 // Styled Feature Chip Component
 // ----------------------------------------------------------------------
+
+// Color Maps for "Active" state
+const COLOR_MAP: Record<string, string> = {
+  orange:
+    "border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-300",
+  blue: "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300",
+  green: "border-green-200 bg-green-50 text-green-700 hover:border-green-300",
+  emerald:
+    "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300",
+  red: "border-red-200 bg-red-50 text-red-700 hover:border-red-300",
+  purple:
+    "border-purple-200 bg-purple-50 text-purple-700 hover:border-purple-300",
+  indigo:
+    "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-300",
+  amber: "border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-300",
+  cyan: "border-cyan-200 bg-cyan-50 text-cyan-700 hover:border-cyan-300",
+  violet:
+    "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-300",
+  sky: "border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-300",
+  teal: "border-teal-200 bg-teal-50 text-teal-700 hover:border-teal-300",
+  fuchsia:
+    "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 hover:border-fuchsia-300",
+  pink: "border-pink-200 bg-pink-50 text-pink-700 hover:border-pink-300",
+};
+
+// Icon Color Maps
+const ICON_COLOR_MAP: Record<string, string> = {
+  orange: "text-orange-500",
+  blue: "text-blue-500",
+  green: "text-green-500",
+  emerald: "text-emerald-500",
+  red: "text-red-500",
+  purple: "text-purple-500",
+  indigo: "text-indigo-500",
+  amber: "text-amber-500",
+  cyan: "text-cyan-500",
+  violet: "text-violet-500",
+  sky: "text-sky-500",
+  teal: "text-teal-500",
+  fuchsia: "text-fuchsia-500",
+  pink: "text-pink-500",
+};
 
 interface FeatureChipProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -424,7 +466,6 @@ interface FeatureChipProps {
     | "purple"
     | "indigo"
     | "amber"
-    | "slate"
     | "cyan"
     | "violet"
     | "sky"
@@ -442,50 +483,6 @@ function FeatureChip({
   color,
   disabled,
 }: FeatureChipProps) {
-  // Color Maps for "Active" state
-  const colorMap: Record<string, string> = {
-    orange:
-      "border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-300",
-    blue: "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300",
-    green: "border-green-200 bg-green-50 text-green-700 hover:border-green-300",
-    emerald:
-      "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300",
-    red: "border-red-200 bg-red-50 text-red-700 hover:border-red-300",
-    purple:
-      "border-purple-200 bg-purple-50 text-purple-700 hover:border-purple-300",
-    indigo:
-      "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-300",
-    amber: "border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-300",
-    slate: "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300",
-    cyan: "border-cyan-200 bg-cyan-50 text-cyan-700 hover:border-cyan-300",
-    violet:
-      "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-300",
-    sky: "border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-300",
-    teal: "border-teal-200 bg-teal-50 text-teal-700 hover:border-teal-300",
-    fuchsia:
-      "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 hover:border-fuchsia-300",
-    pink: "border-pink-200 bg-pink-50 text-pink-700 hover:border-pink-300",
-  };
-
-  // Icon Color Maps
-  const iconColorMap: Record<string, string> = {
-    orange: "text-orange-500",
-    blue: "text-blue-500",
-    green: "text-green-500",
-    emerald: "text-emerald-500",
-    red: "text-red-500",
-    purple: "text-purple-500",
-    indigo: "text-indigo-500",
-    amber: "text-amber-500",
-    slate: "text-slate-500",
-    cyan: "text-cyan-500",
-    violet: "text-violet-500",
-    sky: "text-sky-500",
-    teal: "text-teal-500",
-    fuchsia: "text-fuchsia-500",
-    pink: "text-pink-500",
-  };
-
   return (
     <FormField
       control={form.control}
@@ -503,10 +500,8 @@ function FeatureChip({
                   "flex items-center gap-2 rounded-lg border px-3 py-2 transition-all shadow-sm",
                   "hover:shadow-md active:scale-95",
                   isChecked
-                    ? colorMap[color] +
-                        " border-transparent ring-1 ring-offset-0" // Active style from map
-                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50/80", // Inactive style
-                  isChecked && `ring-${color}-400`, // Dynamic ring color if possible, else fallback
+                    ? `${COLOR_MAP[color]} border-transparent ring-1 ring-offset-0`
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50/80",
                   disabled &&
                     "opacity-50 cursor-not-allowed pointer-events-none",
                 )}
@@ -514,7 +509,7 @@ function FeatureChip({
                 <Icon
                   className={cn(
                     "h-4 w-4",
-                    isChecked ? iconColorMap[color] : "text-slate-400",
+                    isChecked ? ICON_COLOR_MAP[color] : "text-slate-400",
                   )}
                 />
                 <span className="text-sm font-medium whitespace-nowrap">

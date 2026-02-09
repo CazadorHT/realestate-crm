@@ -33,6 +33,8 @@ export type PropertyRow = {
   transit_station_name: string | null;
   transit_distance_meters: number | null;
   google_maps_link: string | null;
+  is_fully_furnished: boolean | null;
+  is_bare_shell: boolean | null;
 
   property_images?: Array<{
     image_url: string;
@@ -145,7 +147,9 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       transit_type,
       transit_station_name,
       transit_distance_meters,
-      google_maps_link
+      google_maps_link,
+      is_fully_furnished,
+      is_bare_shell
     `,
     )
     .eq("status", "ACTIVE");
@@ -281,6 +285,8 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       transit_station_name: typedRow.transit_station_name,
       transit_distance_meters: typedRow.transit_distance_meters,
       google_maps_link: typedRow.google_maps_link,
+      is_fully_furnished: typedRow.is_fully_furnished,
+      is_bare_shell: typedRow.is_bare_shell,
     };
   });
 

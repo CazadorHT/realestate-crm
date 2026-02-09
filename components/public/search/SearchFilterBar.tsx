@@ -96,8 +96,9 @@ export function SearchFilterBar({
 
   const PROPERTY_TYPES = [
     { value: "ALL", label: t("common.all") },
-    { value: "HOUSE", label: t("home.property_types.house") },
     { value: "CONDO", label: t("home.property_types.condo") },
+    { value: "VILLA", label: t("home.property_types.villa") },
+    { value: "POOL_VILLA", label: t("home.property_types.pool_villa") },
     { value: "TOWNHOME", label: t("home.property_types.townhome") },
     { value: "LAND", label: t("home.property_types.land") },
     {

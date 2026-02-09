@@ -40,6 +40,8 @@ type PropertyDetail = Database["public"]["Tables"]["properties"]["Row"] & {
       "id" | "name" | "name_en" | "name_cn" | "icon_key" | "category"
     > | null;
   }[];
+  is_fully_furnished: boolean | null;
+  is_bare_shell: boolean | null;
 };
 
 export default async function PublicPropertyDetailPage(props: {
@@ -146,15 +148,6 @@ export default async function PublicPropertyDetailPage(props: {
     .map((pf) => pf.features)
     .filter((f): f is NonNullable<typeof f> => f !== null && f !== undefined);
 
-  const locationParts = [
-    data.popular_area,
-    data.subdistrict,
-    data.district,
-    data.province,
-  ]
-    .filter(Boolean)
-    .join(", ");
-
   const formatPrice = (val: number | null) =>
     val
       ? new Intl.NumberFormat("th-TH", {
@@ -179,48 +172,6 @@ export default async function PublicPropertyDetailPage(props: {
       url: `https://your-domain.com/properties/${data.slug || data.id}`,
     },
   };
-
-  // Generate Key Selling Points with Icons (Prioritize unit-specific flags and "คุณสมบัติพิเศษ", limit to 5)
-  const unitSpecialFeatures = [
-    data.is_pet_friendly && {
-      name: "เลี้ยงสัตว์ได้ ",
-      icon: "dog",
-    },
-    data.is_corner_unit && { name: "ห้องมุม ", icon: "layout" },
-    data.is_renovated && { name: "รีโนเวทใหม่ ", icon: "sparkles" },
-    data.is_fully_furnished && {
-      name: "ตกแต่งครบ ",
-      icon: "armchair",
-    },
-    (data.floor || 0) > 15 && {
-      name: `วิวสวยชั้นสูง (ชั้น ${data.floor})`,
-      icon: "building-2",
-    },
-    data.has_city_view && { name: "วิวเมือง ", icon: "building-2" },
-    data.has_pool_view && { name: "วิวสระว่ายน้ำ ", icon: "waves" },
-    data.has_garden_view && { name: "วิวสวน ", icon: "trees" },
-    data.is_selling_with_tenant && { name: "ขายพร้อมผู้เช่า", icon: "users-2" },
-    data.is_foreigner_quota && {
-      name: "โควต้าต่างชาติ ",
-      icon: "globe",
-    },
-    data.is_tax_registered && {
-      name: "จดทะเบียนบริษัทได้",
-      icon: "file-check",
-    },
-  ].filter((f): f is { name: string; icon: string } => !!f);
-
-  const keySellingPoints = [
-    ...unitSpecialFeatures,
-    ...features
-      .filter((f) => f.category === "คุณสมบัติพิเศษ")
-      .map((f) => ({ name: f.name, icon: f.icon_key })),
-    ...features
-      .filter((f) => f.category !== "คุณสมบัติพิเศษ")
-      .map((f) => ({ name: f.name, icon: f.icon_key })),
-  ]
-    .filter((v, i, a) => a.findIndex((t) => t.name === v.name) === i) // Deduplicate by name
-    .slice(0, 6);
 
   const shareUrl = `https://your-domain.com/properties/${data.slug || slug}`;
 
@@ -257,11 +208,7 @@ export default async function PublicPropertyDetailPage(props: {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
       {/* 1. Header & Breadcrumb */}
-      <PropertyHeader
-        property={data}
-        locationParts={locationParts}
-        keySellingPoints={keySellingPoints}
-      />
+      <PropertyHeader property={data} features={features as any} />
 
       <div className="max-w-screen-2xl px-4 sm:px-6 lg:px-8 mx-auto mt-4 md:mt-8">
         {/* 2. Gallery (Mosaic) */}

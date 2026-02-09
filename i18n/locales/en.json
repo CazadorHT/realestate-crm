@@ -1,4 +1,3 @@
-
 {
   "nav": {
     "home": "Home",
@@ -103,6 +102,8 @@
         "Prime Location Condos",
         "Business Office Spaces",
         "Ready-move Townhomes",
+        "Private Luxury Villas",
+        "Exclusive Pool Villas",
         "Real Estate Investment",
         "High Potential Land"
       ]
@@ -111,17 +112,21 @@
       "title": "Property Types",
       "description": "Search House, Condo, Office by type",
       "condo": "Condominium",
-      "condo_desc": "Buy-Sell-Rent condos near BTS MRT at best prices. New and resale projects.",
-      "house": "Detached House",
-      "house_desc": "Houses, Twin houses. Spacious and ready to move in. Top projects.",
+      "condo_desc": "Near BTS/MRT, prime location, best value",
+      "house": "House",
+      "house_desc": "Spacious living, quality community",
       "townhome": "Townhome",
-      "townhome_desc": "Townhomes, Home offices. Perfect for living and business.",
-      "office": "Office Building",
-      "office_desc": "Ready-to-use office spaces. CBD locations for sale and rent.",
+      "townhome_desc": "Prime location, perfect for living & business",
+      "office": "Office",
+      "office_desc": "Ready-to-use office in CBD core",
       "warehouse": "Warehouse",
-      "warehouse_desc": "Large spaces for sale or rent. Ideal for logistics businesses.",
+      "warehouse_desc": "Large warehouse space for all businesses",
+      "villa": "Villa",
+      "villa_desc": "Private luxury villa, modern design",
+      "pool_villa": "Pool Villa",
+      "pool_villa_desc": "Private relaxation with private pool",
       "land": "Land",
-      "land_desc": "High potential plots. Perfect for building homes, projects, or investment."
+      "land_desc": "High potential land for investment"
     },
     "stats": {
       "properties_label": "Quality Properties",
@@ -543,6 +548,8 @@
     "commercial": "🏢 Commercial",
     "office_building": "🏬 Office",
     "office": "🏬 Office",
+    "villa": "🏝️ Villa",
+    "pool_villa": "🌊 Pool Villa",
     "other": "🔍 Other"
   },
   "property": {
@@ -567,14 +574,22 @@
     "trust_message": "Confidence, Convenience, Safety with professional team. Free mortgage service.",
     "specs": {
       "bedrooms": "Bedrooms",
-      "bathrooms": "Bathrooms",
-      "size_sqm": "Living Area",
+      "bathrooms_suffix": "Bathrooms",
+      "fully_furnished": "Fully Furnished",
+      "bare_shell": "Bare Shell",
+      "size_sqm": "Usable Area",
       "land_size": "Land Size",
       "parking": "Parking",
       "floor": "Floor",
       "unit_room": "room",
       "unit_car": "cars",
       "unit_floor": "floor"
+    },
+    "special_features": "Special Features",
+    "highlights": {
+      "great_location": "Great Location",
+      "ready_to_move": "Ready to Move In",
+      "family_friendly": "Family Friendly"
     },
     "suitability": {
       "title": "Who is this for?",
@@ -617,8 +632,9 @@
       "column_free": "Column Free",
       "bare_shell": "Bare Shell",
       "grade_a": "Grade A Building",
-      "tax_registered": "Tax Registered"
+      "tax_registered": "Tax Registered",
+      "high_floor": "High Floor",
+      "pool_view": "Pool View"
     }
   }
 }
-

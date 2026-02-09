@@ -1,5 +1,3 @@
-import * as XLSX from "xlsx";
-
 export interface ExcelColumn {
   key: string;
   header: string;
@@ -10,17 +8,19 @@ export interface ExcelColumn {
 /**
  * Generate an Excel file buffer from data array
  */
-export function generateExcelBuffer(
+export async function generateExcelBuffer(
   data: Record<string, any>[],
   columns: ExcelColumn[],
-  sheetName: string = "Sheet1"
-): Buffer {
+  sheetName: string = "Sheet1",
+): Promise<Buffer> {
+  const XLSX = await import("xlsx");
+
   // Transform data according to columns
   const rows = data.map((item) => {
     const row: Record<string, any> = {};
     for (const col of columns) {
       const value = item[col.key];
-      row[col.header] = col.format ? col.format(value) : value ?? "";
+      row[col.header] = col.format ? col.format(value) : (value ?? "");
     }
     return row;
   });
@@ -38,8 +38,7 @@ export function generateExcelBuffer(
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
 
   // Generate buffer
-  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
-  return buffer;
+  return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 }
 
 /**

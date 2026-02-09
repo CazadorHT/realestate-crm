@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { BsStars } from "react-icons/bs";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import DOMPurify from "isomorphic-dompurify";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 
@@ -34,12 +33,29 @@ export function PropertyDescription({
     language,
   );
 
+  const [sanitizedDescription, setSanitizedDescription] = useState<string>(
+    localizedDescription || "",
+  );
+
+  useEffect(() => {
+    if (!localizedDescription) {
+      setSanitizedDescription("");
+      return;
+    }
+
+    // Client-side only sanitization to avoid jsdom/SSR overhead and crashes
+    import("dompurify").then((module) => {
+      const DOMPurify = module.default;
+      setSanitizedDescription(DOMPurify.sanitize(localizedDescription));
+    });
+  }, [localizedDescription]);
+
   useEffect(() => {
     if (contentRef.current) {
       const height = contentRef.current.scrollHeight;
       setShouldShowButton(height > THRESHOLD_HEIGHT);
     }
-  }, [localizedDescription]);
+  }, [sanitizedDescription]);
 
   const handleToggle = () => {
     if (isExpanded && sectionRef.current) {
@@ -70,9 +86,7 @@ export function PropertyDescription({
             !isExpanded && shouldShowButton ? "max-h-[500px]" : "max-h-[2000px]"
           }`}
           dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(
-              localizedDescription || t("property.no_description"),
-            ),
+            __html: sanitizedDescription || t("property.no_description"),
           }}
         />
 

@@ -64,7 +64,7 @@ export function PropertyTypeSection({
         name="property_type"
         render={({ field }) => (
           <FormItem>
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-8 gap-4 ">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 ">
               {PROPERTY_TYPE_ORDER.map((type) => {
                 const Icon = PROPERTY_TYPE_ICONS[type];
                 const gradient = PROPERTY_TYPE_GRADIENTS[type];
@@ -78,12 +78,12 @@ export function PropertyTypeSection({
                       field.onChange(type);
                       onPropertyTypeSelect?.();
                     }}
-                    className={`rounded-xl border transition-all duration-300 flex flex-col items-center justify-center gap-3 p-2 group ${
+                    className={`rounded-xl border transition-all duration-300 flex flex-col items-center  justify-center gap-3 p-2 group ${
                       isActive
                         ? `bg-linear-to-br ${gradient} text-white shadow-xl scale-105 border-transparent`
                         : propertyTypeError
                           ? "border-red-300 bg-red-50 text-red-500 shadow-md hover:border-red-400 hover:bg-white"
-                          : "border-slate-100 bg-slate-50 text-slate-500 shadow-md hover:bg-white hover:text-blue-600 hover:shadow-lg hover:border-blue-200"
+                          : "border-slate-100 bg-slate-50 text-slate-600 shadow-md hover:bg-white hover:text-blue-600 hover:shadow-lg hover:border-blue-200"
                     }`}
                   >
                     <div

@@ -1,11 +1,3 @@
-/**
- * Duplicate detection utilities
- * - Simple rule-based duplicate detection
- * - No AI required, just fuzzy matching
- */
-
-import { distance } from 'fuzzball';
-
 export interface DuplicateCheckData {
   address_line1?: string;
   district?: string;
@@ -26,10 +18,19 @@ export interface DuplicateMatch {
 }
 
 /**
+ * Duplicate detection utilities
+ * - Simple rule-based duplicate detection
+ * - No AI required, just fuzzy matching
+ */
+
+/**
  * Calculate similarity score between two addresses
  * Using fuzzy string matching (Levenshtein distance)
  */
-function calculateAddressSimilarity(addr1: string, addr2: string): number {
+async function calculateAddressSimilarity(
+  addr1: string,
+  addr2: string,
+): Promise<number> {
   if (!addr1 || !addr2) return 0;
 
   // Normalize addresses
@@ -37,43 +38,44 @@ function calculateAddressSimilarity(addr1: string, addr2: string): number {
     str
       .toLowerCase()
       .trim()
-      .replace(/\s+/g, ' ')
-      .replace(/[^\u0E00-\u0E7Fa-z0-9\s]/g, '');
+      .replace(/\s+/g, " ")
+      .replace(/[^\u0E00-\u0E7Fa-z0-9\s]/g, "");
 
   const normalized1 = normalize(addr1);
   const normalized2 = normalize(addr2);
 
   // Use fuzzball (fuzzy string matching)
+  const { distance } = await import("fuzzball");
   return distance(normalized1, normalized2);
 }
 
 /**
  * Check if two properties are likely duplicates
  */
-export function checkDuplicate(
+export async function checkDuplicate(
   property1: DuplicateCheckData,
-  property2: DuplicateCheckData
-): {
+  property2: DuplicateCheckData,
+): Promise<{
   isDuplicate: boolean;
   matchScore: number;
   matchReasons: string[];
-} {
+}> {
   const matchReasons: string[] = [];
   let matchScore = 0;
 
   // 1. Address matching (most important - 40 points)
   if (property1.address_line1 && property2.address_line1) {
-    const addressSimilarity = calculateAddressSimilarity(
+    const addressSimilarity = await calculateAddressSimilarity(
       property1.address_line1,
-      property2.address_line1
+      property2.address_line1,
     );
 
     if (addressSimilarity >= 85) {
       matchScore += 40;
-      matchReasons.push('ที่อยู่เหมือนกัน');
+      matchReasons.push("ที่อยู่เหมือนกัน");
     } else if (addressSimilarity >= 70) {
       matchScore += 20;
-      matchReasons.push('ที่อยู่คล้ายกัน');
+      matchReasons.push("ที่อยู่คล้ายกัน");
     }
   }
 
@@ -91,7 +93,7 @@ export function checkDuplicate(
 
     if (districtMatch && provinceMatch) {
       matchScore += 20;
-      matchReasons.push('ตั้งอยู่ในเขตเดียวกัน');
+      matchReasons.push("ตั้งอยู่ในเขตเดียวกัน");
     }
   }
 
@@ -103,10 +105,10 @@ export function checkDuplicate(
 
     if (priceVariance < 5) {
       matchScore += 15;
-      matchReasons.push('ราคาเท่ากัน');
+      matchReasons.push("ราคาเท่ากัน");
     } else if (priceVariance < 10) {
       matchScore += 10;
-      matchReasons.push('ราคาใกล้เคียง');
+      matchReasons.push("ราคาใกล้เคียง");
     }
   }
 
@@ -114,14 +116,14 @@ export function checkDuplicate(
   if (property1.bedrooms && property2.bedrooms) {
     if (property1.bedrooms === property2.bedrooms) {
       matchScore += 8;
-      matchReasons.push('จำนวนห้องนอนเท่ากัน');
+      matchReasons.push("จำนวนห้องนอนเท่ากัน");
     }
   }
 
   if (property1.bathrooms && property2.bathrooms) {
     if (property1.bathrooms === property2.bathrooms) {
       matchScore += 7;
-      matchReasons.push('จำนวนห้องน้ำเท่ากัน');
+      matchReasons.push("จำนวนห้องน้ำเท่ากัน");
     }
   }
 
@@ -133,10 +135,10 @@ export function checkDuplicate(
 
     if (sizeVariance < 5) {
       matchScore += 10;
-      matchReasons.push('ขนาดพื้นที่เท่ากัน');
+      matchReasons.push("ขนาดพื้นที่เท่ากัน");
     } else if (sizeVariance < 10) {
       matchScore += 5;
-      matchReasons.push('ขนาดพื้นที่ใกล้เคียง');
+      matchReasons.push("ขนาดพื้นที่ใกล้เคียง");
     }
   }
 
@@ -153,15 +155,17 @@ export function checkDuplicate(
 /**
  * Find similar properties from a list
  */
-export function findSimilarProperties<T extends DuplicateCheckData & { id: string; title: string }>(
+export async function findSimilarProperties<
+  T extends DuplicateCheckData & { id: string; title: string },
+>(
   targetProperty: DuplicateCheckData,
   existingProperties: T[],
-  threshold: number = 60
-): DuplicateMatch[] {
+  threshold: number = 60,
+): Promise<DuplicateMatch[]> {
   const matches: DuplicateMatch[] = [];
 
   for (const existing of existingProperties) {
-    const result = checkDuplicate(targetProperty, existing);
+    const result = await checkDuplicate(targetProperty, existing);
 
     if (result.matchScore >= threshold) {
       const fullAddress = [
@@ -170,7 +174,7 @@ export function findSimilarProperties<T extends DuplicateCheckData & { id: strin
         existing.province,
       ]
         .filter(Boolean)
-        .join(', ');
+        .join(", ");
 
       matches.push({
         id: existing.id,
@@ -183,5 +187,8 @@ export function findSimilarProperties<T extends DuplicateCheckData & { id: strin
   }
 
   // Sort by match score (highest first)
-  return matches.sort((a, b) => b.matchScore - a.matchScore);
+  const sortedMatches = [...matches].sort(
+    (a, b) => b.matchScore - a.matchScore,
+  );
+  return sortedMatches;
 }

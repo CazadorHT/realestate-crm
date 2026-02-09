@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { Loader2 } from "lucide-react";
 import { useSmartMatchWizard } from "@/features/smart-match/hooks/useSmartMatchWizard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -67,6 +68,36 @@ export function SmartMatchWizard() {
         ? buyBudgetRanges
         : DEFAULT_BUY_RANGES;
 
+  // Combine DB types with default constants to ensure all types appear
+  // We prioritize DB types to respect their settings (is_active, sort_order)
+  const combinedPropertyTypes = React.useMemo(() => {
+    if (isOfficeMode) return [];
+
+    // Create a map of DB types by value
+    const dbMap = new Map(propertyTypes.map((t) => [t.value, t]));
+
+    // Start with all defaults
+    const combined = DEFAULT_PROPERTY_TYPES.map((def) => {
+      const dbMatch = dbMap.get(def.value);
+      if (dbMatch) {
+        return {
+          ...def,
+          ...dbMatch,
+          // Ensure we use the localized labels from translations if possible
+          // but fallback to DB label if specifically set there
+        };
+      }
+      return {
+        ...def,
+        id: def.value,
+        is_active: true,
+        sort_order: 999,
+      };
+    });
+
+    return combined;
+  }, [propertyTypes, isOfficeMode]);
+
   const currentPropertyTypes = isOfficeMode
     ? [
         {
@@ -74,9 +105,7 @@ export function SmartMatchWizard() {
           value: "OFFICE_BUILDING",
         },
       ]
-    : propertyTypes.length > 0
-      ? propertyTypes
-      : DEFAULT_PROPERTY_TYPES;
+    : combinedPropertyTypes;
 
   if (configLoading) {
     return (

@@ -29,6 +29,15 @@ const nextConfig: NextConfig = {
       ];
     })(),
   },
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "react-icons",
+      "@radix-ui/react-icons",
+      "date-fns",
+      "lodash",
+    ],
+  },
 };
 
 export default nextConfig;

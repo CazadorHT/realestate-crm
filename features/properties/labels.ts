@@ -12,9 +12,11 @@ export const PROPERTY_TYPE_LABELS = {
   CONDO: "คอนโด",
   TOWNHOME: "ทาวน์โฮม",
   LAND: "ที่ดิน",
-  OFFICE_BUILDING: "อาคารสำนักงาน",
+  OFFICE_BUILDING: "อาคารสำนักงาน/ออฟฟิศ",
   WAREHOUSE: "โกดัง",
   COMMERCIAL_BUILDING: "อาคารพาณิชย์",
+  VILLA: "วิลล่า",
+  POOL_VILLA: "พูลวิลล่า",
   OTHER: "อื่น ๆ",
 } satisfies Record<PropertyType, string>;
 
@@ -38,6 +40,8 @@ export const PROPERTY_STATUS_LABELS = {
 export const PROPERTY_TYPE_ORDER = [
   "HOUSE",
   "CONDO",
+  "VILLA",
+  "POOL_VILLA",
   "OFFICE_BUILDING",
   "TOWNHOME",
   "LAND",
@@ -166,6 +170,8 @@ export const PROPERTY_TYPE_GRADIENTS = {
   OFFICE_BUILDING: "from-sky-500 to-sky-600",
   WAREHOUSE: "from-yellow-500 to-yellow-600",
   COMMERCIAL_BUILDING: "from-indigo-500 to-indigo-600",
+  VILLA: "from-rose-500 to-rose-600",
+  POOL_VILLA: "from-cyan-500 to-blue-600",
   OTHER: "from-slate-500 to-slate-600",
 } satisfies Record<PropertyType, string>;
 
@@ -178,6 +184,8 @@ import {
   Briefcase,
   Warehouse,
   Store,
+  Waves,
+  Palmtree,
   MoreHorizontal,
 } from "lucide-react";
 
@@ -189,6 +197,8 @@ export const PROPERTY_TYPE_ICONS = {
   OFFICE_BUILDING: Briefcase,
   WAREHOUSE: Warehouse,
   COMMERCIAL_BUILDING: Store,
+  VILLA: Palmtree,
+  POOL_VILLA: Waves,
   OTHER: MoreHorizontal,
 } as const;
 

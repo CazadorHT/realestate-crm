@@ -75,7 +75,11 @@ export async function exportPropertiesAction(ids?: string[]) {
     return { success: false, message: "ไม่พบข้อมูลสำหรับ export" };
   }
 
-  const buffer = generateExcelBuffer(data, PROPERTY_COLUMNS, "Properties");
+  const buffer = await generateExcelBuffer(
+    data,
+    PROPERTY_COLUMNS,
+    "Properties",
+  );
   const base64 = buffer.toString("base64");
 
   return {

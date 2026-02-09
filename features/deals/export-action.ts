@@ -49,7 +49,7 @@ export async function exportDealsAction(ids?: string[]) {
       *,
       property:properties(title),
       lead:leads(full_name)
-    `
+    `,
     )
     .order("created_at", { ascending: false });
 
@@ -74,7 +74,7 @@ export async function exportDealsAction(ids?: string[]) {
     lead_name: d.lead?.full_name || "-",
   }));
 
-  const buffer = generateExcelBuffer(flatData, DEAL_COLUMNS, "Deals");
+  const buffer = await generateExcelBuffer(flatData, DEAL_COLUMNS, "Deals");
   const base64 = buffer.toString("base64");
 
   return {

@@ -5,10 +5,20 @@ export const metadata: Metadata = {
   title: "จัดการทรัพย์",
   description: "จัดการ เพิ่ม แก้ไข และติดตามอสังหาริมทรัพย์ทั้งหมดในระบบ",
 };
-import {
-  PropertiesTable,
-  PropertyTableData,
-} from "@/components/properties/PropertiesTable";
+import dynamic from "next/dynamic";
+import type { PropertyTableData } from "@/components/properties/PropertiesTable";
+const PropertiesTable = dynamic(
+  () =>
+    import("@/components/properties/PropertiesTable").then(
+      (mod) => mod.PropertiesTable,
+    ),
+  {
+    loading: () => (
+      <div className="h-96 animate-pulse bg-slate-100 rounded-xl" />
+    ),
+  },
+);
+
 import { PropertyFilters } from "@/components/properties/PropertyFilters";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Button } from "@/components/ui/button";
@@ -16,7 +26,18 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PlusCircle } from "lucide-react";
 import { getPropertiesDashboardStatsQuery } from "@/features/properties/queries";
-import { PropertiesDashboard } from "@/components/properties/PropertiesDashboard";
+
+const PropertiesDashboard = dynamic(
+  () =>
+    import("@/components/properties/PropertiesDashboard").then(
+      (mod) => mod.PropertiesDashboard,
+    ),
+  {
+    loading: () => (
+      <div className="h-32 animate-pulse bg-slate-100 rounded-xl" />
+    ),
+  },
+);
 import type { Database } from "@/lib/database.types";
 
 type PropertyStatus = Database["public"]["Enums"]["property_status"];

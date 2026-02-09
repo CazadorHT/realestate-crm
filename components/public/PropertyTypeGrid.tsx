@@ -7,6 +7,8 @@ import {
   Trees,
   BriefcaseBusiness,
   Warehouse,
+  Palmtree,
+  Waves,
 } from "lucide-react";
 import Link from "next/link";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -62,20 +64,20 @@ export function PropertyTypeCard({
         <div className="relative z-10">
           {/* Icon */}
           <div
-            className={`w-16 h-16 mx-auto rounded-xl bg-linear-to-br ${gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
+            className={`w-18 h-18 mx-auto rounded-xl bg-linear-to-br ${gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
           >
-            <Icon className="h-8 w-8 text-white" />
+            <Icon className="h-10 w-10 text-white stroke-[1.5]" />
           </div>
 
           {/* Title */}
           <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-2 min-h-[48px] flex items-center justify-center">
             {title}
           </h3>
-          <p className="text-xs font-medium text-blue-600 mb-3 uppercase tracking-wider">
+          {/* <p className="text-xs font-medium text-blue-600 mb-3 uppercase tracking-wider">
             {count} {t("property_listing.found_suffix")}
-          </p>
+          </p> */}
           {/* Description */}
-          <p className="text-xs md:text-sm text-slate-600 mb-4 min-h-[56px] leading-relaxed">
+          <p className="text-xs md:text-sm text-slate-500 mb-4 min-h-[56px] leading-relaxed">
             {description}
           </p>
 
@@ -113,6 +115,22 @@ export function PropertyTypeGrid({
       description: t("home.property_types.house_desc"),
       href: "/?type=HOUSE#latest-properties",
       gradient: "from-purple-500 to-purple-800",
+    },
+    {
+      icon: Palmtree,
+      title: t("home.property_types.villa"),
+      count: "412",
+      description: t("home.property_types.villa_desc"),
+      href: "/?type=VILLA#latest-properties",
+      gradient: "from-rose-500 to-rose-700",
+    },
+    {
+      icon: Waves,
+      title: t("home.property_types.pool_villa"),
+      count: "328",
+      description: t("home.property_types.pool_villa_desc"),
+      href: "/?type=POOL_VILLA#latest-properties",
+      gradient: "from-cyan-500 to-blue-700",
     },
     {
       icon: Building,
@@ -208,9 +226,9 @@ export function PropertyTypeGrid({
         </div>
 
         {/* PropertyTypeCard wrapper with AOS */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-6 text-center">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-3 md:gap-6 text-center">
           {isLoading
-            ? Array.from({ length: 6 }).map((_, idx) => (
+            ? Array.from({ length: 8 }).map((_, idx) => (
                 <PropertyTypeSkeleton key={idx} />
               ))
             : propertyTypes.map((type, idx) => (

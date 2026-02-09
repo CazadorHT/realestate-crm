@@ -50,7 +50,7 @@ export async function exportOwnersAction(ids?: string[]) {
     return { success: false, message: "ไม่พบข้อมูลสำหรับ export" };
   }
 
-  const buffer = generateExcelBuffer(data, OWNER_COLUMNS, "Owners");
+  const buffer = await generateExcelBuffer(data, OWNER_COLUMNS, "Owners");
   const base64 = buffer.toString("base64");
 
   return {

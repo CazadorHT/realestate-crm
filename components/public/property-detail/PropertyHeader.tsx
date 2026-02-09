@@ -34,10 +34,38 @@ interface PropertyHeaderProps {
     property_type?: string | null;
     province?: string | null;
     district?: string | null;
+    subdistrict?: string | null;
     popular_area?: string | null;
+    is_fully_furnished?: boolean | null;
+    is_bare_shell?: boolean | null;
+    floor?: number | null;
+    is_pet_friendly?: boolean | null;
+    is_corner_unit?: boolean | null;
+    is_renovated?: boolean | null;
+    has_city_view?: boolean | null;
+    has_pool_view?: boolean | null;
+    has_garden_view?: boolean | null;
+    is_selling_with_tenant?: boolean | null;
+    is_foreigner_quota?: boolean | null;
+    is_tax_registered?: boolean | null;
+    // Localized fields
+    province_en?: string | null;
+    province_cn?: string | null;
+    popular_area_en?: string | null;
+    popular_area_cn?: string | null;
+    district_en?: string | null;
+    district_cn?: string | null;
+    subdistrict_en?: string | null;
+    subdistrict_cn?: string | null;
   };
-  locationParts: string;
-  keySellingPoints: KeySellingPoint[];
+  features?: Array<{
+    id: string;
+    name: string;
+    name_en?: string | null;
+    name_cn?: string | null;
+    icon_key: string;
+    category?: string | null;
+  }>;
   className?: string;
   hideBreadcrumbs?: boolean;
   language?: "th" | "en" | "cn";
@@ -45,14 +73,88 @@ interface PropertyHeaderProps {
 
 export function PropertyHeader({
   property,
-  locationParts,
-  keySellingPoints,
+  features = [],
   className,
   hideBreadcrumbs = false,
   language: customLanguage,
 }: PropertyHeaderProps) {
   const { language: globalLanguage, t } = useLanguage();
   const language = customLanguage || globalLanguage;
+
+  const locationParts = [
+    getLocaleValue(property, "popular_area", language),
+    getLocaleValue(property, "subdistrict", language),
+    getLocaleValue(property, "district", language),
+    getLocaleValue(property, "province", language),
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const unitSpecialFeatures = [
+    property.is_pet_friendly && {
+      name: t("property.badges.pet_friendly"),
+      icon: "dog",
+    },
+    property.is_corner_unit && {
+      name: t("property.badges.corner_unit"),
+      icon: "layout",
+    },
+    property.is_renovated && {
+      name: t("property.badges.renovated"),
+      icon: "sparkles",
+    },
+    property.is_fully_furnished && {
+      name: t("property.specs.fully_furnished"),
+      icon: "armchair",
+    },
+    (property.floor || 0) > 15 && {
+      name: `${t("property.badges.high_floor")} (${t("property.specs.floor")} ${property.floor})`,
+      icon: "building-2",
+    },
+    property.has_city_view && {
+      name: t("property.badges.city_view"),
+      icon: "building-2",
+    },
+    property.has_pool_view && {
+      name: t("property.badges.pool_view"),
+      icon: "waves",
+    },
+    property.has_garden_view && {
+      name: t("property.badges.garden_view"),
+      icon: "trees",
+    },
+    property.is_selling_with_tenant && {
+      name: t("property.badges.selling_with_tenant"),
+      icon: "users-2",
+    },
+    property.is_foreigner_quota && {
+      name: t("property.badges.foreigner_quota"),
+      icon: "globe",
+    },
+    property.is_tax_registered && {
+      name: t("property.badges.tax_registered"),
+      icon: "file-check",
+    },
+  ].filter((f): f is { name: string; icon: string } => !!f);
+
+  const keySellingPoints = [
+    ...unitSpecialFeatures,
+    ...features
+      .filter((f) => f.category === "คุณสมบัติพิเศษ")
+      .map((f) => ({
+        name: getLocaleValue(f, "name", language),
+        icon: f.icon_key,
+      })),
+    ...features
+      .filter((f) => f.category !== "คุณสมบัติพิเศษ")
+      .map((f) => ({
+        name: getLocaleValue(f, "name", language),
+        icon: f.icon_key,
+      })),
+  ]
+    .filter((v, i, a) => a.findIndex((t) => t.name === v.name) === i)
+    .slice(0, 6);
+
   // Office price override
   const officePrice = getOfficePrice(property);
   const typeColor = getTypeColor(property.property_type ?? null);
@@ -191,7 +293,7 @@ export function PropertyHeader({
                   ...(property.province
                     ? [
                         {
-                          label: property.province,
+                          label: getLocaleValue(property, "province", language),
                           href: `/properties?province=${property.province}`,
                         },
                       ]
@@ -199,7 +301,11 @@ export function PropertyHeader({
                   ...(property.popular_area
                     ? [
                         {
-                          label: property.popular_area,
+                          label: getLocaleValue(
+                            property,
+                            "popular_area",
+                            language,
+                          ),
                           href: `/properties?popular_area=${property.popular_area}`,
                         },
                       ]
@@ -215,13 +321,13 @@ export function PropertyHeader({
           )}
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="space-y-3 grow min-w-0 max-w-[900px] ">
+            <div className="space-y-3 grow min-w-0 max-w-[950px] ">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge
                   className={`rounded-full px-8 py-2 text-md font-medium  ${
                     property.listing_type === "SALE"
-                      ? "bg-emerald-600"
-                      : "bg-linear-to-r from-sky-500 to-blue-600"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-linear-to-r from-sky-500 to-blue-600 text-white"
                   }`}
                 >
                   {property.listing_type === "SALE"
@@ -233,7 +339,7 @@ export function PropertyHeader({
                   <Badge
                     variant="outline"
                     className={cn(
-                      "rounded-full px-4 py-2 text-md font-medium border-transparent shadow-sm",
+                      "rounded-full px-4 py-2 text-white text-md font-medium border-transparent shadow-sm",
                       typeColor.bg,
                       typeColor.text,
                     )}
@@ -241,6 +347,24 @@ export function PropertyHeader({
                     {t(
                       `property_types.${property.property_type.toLowerCase()}`,
                     )}
+                  </Badge>
+                )}
+
+                {property.is_fully_furnished && (
+                  <Badge
+                    variant="outline"
+                    className="rounded-full px-4 py-2 text-md font-medium border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm"
+                  >
+                    ✨ {t("property.specs.fully_furnished")}
+                  </Badge>
+                )}
+
+                {property.is_bare_shell && (
+                  <Badge
+                    variant="outline"
+                    className="rounded-full px-4 py-2 text-md font-medium border-amber-200 bg-amber-50 text-amber-700 shadow-sm"
+                  >
+                    🏗️ {t("property.specs.bare_shell")}
                   </Badge>
                 )}
               </div>

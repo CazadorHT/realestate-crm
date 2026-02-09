@@ -108,15 +108,21 @@ export const DEFAULT_PROPERTY_TYPES = [
   },
   { label: "🏢 คอนโด", label_en: "Condo", label_cn: "公寓", value: "CONDO" },
   {
-    label: "🏬 ออฟฟิศ",
-    label_en: "Office",
-    label_cn: "办公室",
-    value: "OFFICE_BUILDING",
+    label: "🏝️ วิลล่า",
+    label_en: "Villa",
+    label_cn: "别墅",
+    value: "VILLA",
   },
   {
-    label: "👔 อาคารสำนักงาน",
-    label_en: "Commercial Bldg",
-    label_cn: "商用建筑",
+    label: "🌊 พูลวิลล่า",
+    label_en: "Pool Villa",
+    label_cn: "泳池别墅",
+    value: "POOL_VILLA",
+  },
+  {
+    label: "🏬 อาคารสำนักงาน / ออฟฟิศ",
+    label_en: "Office",
+    label_cn: "办公室",
     value: "OFFICE_BUILDING",
   },
   {
@@ -124,6 +130,24 @@ export const DEFAULT_PROPERTY_TYPES = [
     label_en: "Townhome",
     label_cn: "联排别墅/店屋",
     value: "TOWNHOME",
+  },
+  {
+    label: "🌳 ที่ดิน",
+    label_en: "Land",
+    label_cn: "土地",
+    value: "LAND",
+  },
+  {
+    label: "🛒 โกดัง",
+    label_en: "Warehouse",
+    label_cn: "仓库",
+    value: "WAREHOUSE",
+  },
+  {
+    label: "🏢 อาคารพาณิชย์",
+    label_en: "Commercial Bldg",
+    label_cn: "商用建筑",
+    value: "COMMERCIAL_BUILDING",
   },
 ];
 

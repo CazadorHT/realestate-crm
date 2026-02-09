@@ -67,7 +67,7 @@ export async function exportLeadsAction(ids?: string[]) {
     return { success: false, message: "ไม่พบข้อมูลสำหรับ export" };
   }
 
-  const buffer = generateExcelBuffer(data, LEAD_COLUMNS, "Leads");
+  const buffer = await generateExcelBuffer(data, LEAD_COLUMNS, "Leads");
   const base64 = buffer.toString("base64");
 
   return {

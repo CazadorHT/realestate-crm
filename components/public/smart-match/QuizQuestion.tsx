@@ -19,7 +19,7 @@ export function QuizQuestion({
         {title}
       </h2>
       <div className="overflow-y-auto pr-2 flex-1 custom-scrollbar">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 pb-4">
           {options.map((option) => {
             const isDisabled =
               availableOptions && !availableOptions.includes(option);
