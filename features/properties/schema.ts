@@ -102,6 +102,8 @@ export const FormSchema = z
           station_name: z.string().min(1, "Required"),
           distance_meters: z.coerce.number().optional(),
           time: z.string().optional(), // เวลาเดินทาง (นาที)
+          station_name_en: z.string().optional(),
+          station_name_cn: z.string().optional(),
         }),
       )
       .optional()
@@ -163,6 +165,8 @@ export const FormSchema = z
           name: z.string().min(1, "Required"),
           distance: z.string().optional(),
           time: z.string().optional(),
+          name_en: z.string().optional(),
+          name_cn: z.string().optional(),
         }),
       )
       .optional()

@@ -8,7 +8,8 @@
     "about": "About Us",
     "login": "Login",
     "dashboard": "Dashboard",
-    "deposit": "Deposit Property"
+    "deposit": "Deposit Property",
+    "favorites": "My Favorites"
   },
   "breadcrumb": {
     "home": "Home",
@@ -361,6 +362,16 @@
     "no_image": "No Image",
     "per_month_short": "mo"
   },
+  "similar_properties": {
+    "title": "Similar Properties",
+    "subtitle": "Properties of the same type you might be interested in",
+    "view_all": "View All"
+  },
+  "property_map": {
+    "title": "Map & Location",
+    "no_data": "Map coordinates not available",
+    "open_google_maps": "Open in Google Maps"
+  },
   "blog": {
     "title_badge": "Real Estate Articles",
     "title_main": "Tips for",
@@ -550,7 +561,12 @@
     "office": "🏬 Office",
     "villa": "🏝️ Villa",
     "pool_villa": "🌊 Pool Villa",
-    "other": "🔍 Other"
+    "other": "🔍 Other",
+    "warehouse": "Warehouse",
+    "factory": "Factory",
+    "apartment": "Apartment",
+    "hotel": "Hotel",
+    "commercial_building": "Commercial Building"
   },
   "property": {
     "details": "Property Details",
@@ -636,5 +652,65 @@
       "high_floor": "High Floor",
       "pool_view": "Pool View"
     }
+  },
+  "errors": {
+    "property_not_found_title": "Property Not Found",
+    "property_not_found_desc": "The property you are looking for might have been sold, rented out, or moved.",
+    "back_to_properties": "Back to Properties",
+    "go_home": "Go to Home"
+  },
+  "favorites": {
+    "title": "My Favorites",
+    "clear_all": "Clear All",
+    "confirm_clear": "Are you sure you want to clear all favorites?",
+    "clear_success": "All favorites have been cleared",
+    "empty_title": "No Favorites Yet",
+    "empty_desc": "Start saving properties you are interested in by clicking the heart icon.<br />Save them for comparison or view later.",
+    "go_search": "Go to Properties Search"
+  },
+  "compare_page": {
+    "title": "Compare Properties",
+    "empty_title": "No Properties to Compare",
+    "empty_desc": "Select properties you are interested in from the search page.<br />Click the \"Compare\" button to see them side-by-side.",
+    "go_search": "Go to Properties Search",
+    "topics": "Topics",
+    "view_details": "View Details",
+    "loading": "Loading...",
+    "labels": {
+      "verified": "Status",
+      "listing_type": "Listing Type",
+      "property_type": "Property Type",
+      "property_size": "Size",
+      "price": "Price",
+      "zone": "Zone / Area",
+      "location": "Location",
+      "google_maps_link": "Map",
+      "transportation": "Transit",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "floor": "Floor",
+      "parking_slots": "Parking",
+      "petFriendly": "Pets",
+      "features": "Features",
+      "province": "Province",
+      "description": "Description",
+      "updated_at": "Last Updated"
+    },
+    "values": {
+      "verified": "Verified",
+      "distance_meters": "{distance} m away",
+      "open_map": "Open Map",
+      "sqm": "sq.m.",
+      "pet_friendly": "Pet Friendly",
+      "floor_prefix": "Fl.",
+      "parking_unit": "slots",
+      "rent_per_month": "/mo",
+      "na": "-"
+    }
+  },
+  "compare_bar": {
+    "selected_count": "Selected to compare: {count}/4",
+    "clear": "Clear",
+    "compare_btn": "Compare"
   }
 }

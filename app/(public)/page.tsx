@@ -1,24 +1,65 @@
 // Force rebuild
-import { PublicNav } from "@/components/public/PublicNav";
+import dynamic from "next/dynamic";
+
+// Critical components loaded immediately
 import { HeroSection } from "@/components/public/HeroSection";
 import { PropertyTypeGrid } from "@/components/public/PropertyTypeGrid";
-import { MortgageCalculatorSkeleton } from "@/components/public/MortgageCalculatorSkeleton";
-import { HotDealsSkeleton } from "@/components/public/HotDealsSkeleton";
-import { PartnerSection } from "@/components/public/PartnerSection";
-import { PopularAreasSection } from "@/components/public/PopularAreasSection";
-import { PropertyListingSection } from "@/components/public/PropertyListingSection";
-import { RecentlyViewedSection } from "@/components/public/RecentlyViewedSection";
-import { HotDealsSection } from "@/components/public/HotDealsSection";
 import { StatsBand } from "@/components/public/StatsBand";
-import { TrustSection } from "@/components/public/TrustSection";
-import { HowItWorksSection } from "@/components/public/HowItWorksSection";
-import { DepositPropertySection } from "@/components/public/DepositPropertySection";
-import { TestimonialsSection } from "@/components/public/TestimonialsSection";
-import { CTASection } from "@/components/public/CTASection";
-import { PublicFooter } from "@/components/public/PublicFooter";
-import { MortgageCalculatorSection } from "@/components/public/MortgageCalculatorSection";
-import { BlogSection } from "@/components/public/BlogSection";
-import { FAQSection } from "@/components/public/FAQSection";
+import { PartnerSection } from "@/components/public/PartnerSection";
+
+// Lazy loaded components (below the fold)
+const PopularAreasSection = dynamic(() =>
+  import("@/components/public/PopularAreasSection").then(
+    (mod) => mod.PopularAreasSection,
+  ),
+);
+const PropertyListingSection = dynamic(() =>
+  import("@/components/public/PropertyListingSection").then(
+    (mod) => mod.PropertyListingSection,
+  ),
+);
+const RecentlyViewedSection = dynamic(() =>
+  import("@/components/public/RecentlyViewedSection").then(
+    (mod) => mod.RecentlyViewedSection,
+  ),
+);
+const HotDealsSection = dynamic(() =>
+  import("@/components/public/HotDealsSection").then(
+    (mod) => mod.HotDealsSection,
+  ),
+);
+const TrustSection = dynamic(() =>
+  import("@/components/public/TrustSection").then((mod) => mod.TrustSection),
+);
+const HowItWorksSection = dynamic(() =>
+  import("@/components/public/HowItWorksSection").then(
+    (mod) => mod.HowItWorksSection,
+  ),
+);
+const DepositPropertySection = dynamic(() =>
+  import("@/components/public/DepositPropertySection").then(
+    (mod) => mod.DepositPropertySection,
+  ),
+);
+const TestimonialsSection = dynamic(() =>
+  import("@/components/public/TestimonialsSection").then(
+    (mod) => mod.TestimonialsSection,
+  ),
+);
+const CTASection = dynamic(() =>
+  import("@/components/public/CTASection").then((mod) => mod.CTASection),
+);
+const MortgageCalculatorSection = dynamic(() =>
+  import("@/components/public/MortgageCalculatorSection").then(
+    (mod) => mod.MortgageCalculatorSection,
+  ),
+);
+const BlogSection = dynamic(() =>
+  import("@/components/public/BlogSection").then((mod) => mod.BlogSection),
+);
+const FAQSection = dynamic(() =>
+  import("@/components/public/FAQSection").then((mod) => mod.FAQSection),
+);
 
 import { Metadata } from "next";
 

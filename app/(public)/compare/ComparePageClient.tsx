@@ -16,12 +16,17 @@ import { CompareLoadingSkeleton } from "@/components/public/compare/CompareLoadi
 import { CompareTable } from "@/components/public/compare/CompareTable";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 export default function ComparePageClient() {
+  const { t } = useLanguage();
   return (
     <Suspense
       fallback={
         <div className="min-h-screen bg-slate-50 pb-12 md:pb-20 pt-20 md:pt-24 flex items-center justify-center">
-          <div className="animate-pulse text-slate-400">กำลังโหลด...</div>
+          <div className="animate-pulse text-slate-400">
+            {t("compare_page.loading")}
+          </div>
         </div>
       }
     >
@@ -34,6 +39,7 @@ function ComparePageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const ids = searchParams.get("ids") ?? "";
+  const { t } = useLanguage();
 
   const [properties, setProperties] = useState<CompareProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,8 +87,8 @@ function ComparePageContent() {
       <div className="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 relative z-10">
         <AppBreadcrumbs
           items={[
-            { label: "หน้าแรก", href: "/" },
-            { label: "เปรียบเทียบ", href: "/compare" },
+            { label: t("breadcrumb.home"), href: "/" },
+            { label: t("compare_page.title"), href: "/compare" },
           ]}
           className="mb-6"
         />

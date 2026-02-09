@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import dynamic from "next/dynamic";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { RecentPropertyTracker } from "@/components/public/RecentPropertyTracker";
+// Critical LCP components
 import { PropertyGallery } from "@/components/public/PropertyGallery";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { PropertySpecs } from "@/components/public/PropertySpecs";
 import { AgentSidebar } from "@/components/public/AgentSidebar";
 import { ShareButtons } from "@/components/public/ShareButtons";
-import { SimilarPropertiesSection } from "@/components/public/SimilarPropertiesSection";
 import { MobilePropertyActions } from "@/components/public/MobilePropertyActions";
 import { PropertySuitability } from "@/components/public/PropertySuitability";
 import { NearbyPlaces } from "@/components/public/NearbyPlaces";
@@ -19,13 +19,33 @@ import { PropertyHeader } from "@/components/public/property-detail/PropertyHead
 import { PropertyBadgesSection } from "@/components/public/property-detail/PropertyBadgesSection";
 import { PropertyDescription } from "@/components/public/property-detail/PropertyDescription";
 import { PropertyAmenities } from "@/components/public/property-detail/PropertyAmenities";
-import { PropertyMapSection } from "@/components/public/property-detail/PropertyMapSection";
+
+// Lazy loaded components
+const PropertyMapSection = dynamic(() =>
+  import("@/components/public/property-detail/PropertyMapSection").then(
+    (mod) => mod.PropertyMapSection,
+  ),
+);
+const SimilarPropertiesSection = dynamic(() =>
+  import("@/components/public/SimilarPropertiesSection").then(
+    (mod) => mod.SimilarPropertiesSection,
+  ),
+);
+const RecentPropertyTracker = dynamic(() =>
+  import("@/components/public/RecentPropertyTracker").then(
+    (mod) => mod.RecentPropertyTracker,
+  ),
+);
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // Define strict types for the query result
 type PropertyDetail = Database["public"]["Tables"]["properties"]["Row"] & {
+  popular_area_en?: string | null; // From separate fetch or join
+  popular_area_cn?: string | null;
+  title_en?: string | null; // Ensure present
+  title_cn?: string | null;
   property_images: Pick<
     Database["public"]["Tables"]["property_images"]["Row"],
     "id" | "image_url" | "storage_path" | "is_cover" | "sort_order"
@@ -99,6 +119,20 @@ export default async function PublicPropertyDetailPage(props: {
 
   // Cast to our defined type to ensure safety downstream
   const data = rawData as unknown as PropertyDetail;
+
+  // Fetch Popular Area translations if area exists
+  if (data.popular_area) {
+    const { data: areaData } = await supabase
+      .from("popular_areas")
+      .select("name_en, name_cn")
+      .eq("name", data.popular_area)
+      .maybeSingle();
+
+    if (areaData) {
+      data.popular_area_en = areaData.name_en;
+      data.popular_area_cn = areaData.name_cn;
+    }
+  }
 
   // Normalize images: Resolve public URL from storage_path if image_url is missing/relative
   const images = (rawData.property_images || []).map((img: any) => {
@@ -232,9 +266,13 @@ export default async function PublicPropertyDetailPage(props: {
           property={{
             id: data.id,
             title: data.title,
+            title_en: data.title_en,
+            title_cn: data.title_cn,
             image_url: images.find((i: any) => i.is_cover)?.image_url || null,
             province: data.province,
             popular_area: data.popular_area,
+            popular_area_en: data.popular_area_en,
+            popular_area_cn: data.popular_area_cn,
             price_text: (() => {
               // SALE_AND_RENT - Show both prices
               if (data.listing_type === "SALE_AND_RENT") {
@@ -252,7 +290,7 @@ export default async function PublicPropertyDetailPage(props: {
                       100,
                   );
                   parts.push(
-                    `฿${data.original_price!.toLocaleString()} (-${discountPercent}%)`,
+                    `฿${data.price!.toLocaleString()} (-${discountPercent}%)`,
                   );
                 } else if (data.price) {
                   parts.push(formatPrice(data.price));
@@ -272,7 +310,7 @@ export default async function PublicPropertyDetailPage(props: {
                       100,
                   );
                   parts.push(
-                    `฿${data.original_rental_price!.toLocaleString()}/ด (-${discountPercent}%)`,
+                    `฿${data.rental_price!.toLocaleString()}/ด (-${discountPercent}%)`,
                   );
                 } else if (data.rental_price) {
                   parts.push(`${formatPrice(data.rental_price)}/ด`);
@@ -295,7 +333,7 @@ export default async function PublicPropertyDetailPage(props: {
                       data.original_price!) *
                       100,
                   );
-                  return `฿${data.original_price!.toLocaleString()} (-${discountPercent}%)`;
+                  return `฿${data.price!.toLocaleString()} (-${discountPercent}%)`;
                 } else if (data.price) {
                   return formatPrice(data.price);
                 } else if (data.original_price) {
@@ -315,7 +353,7 @@ export default async function PublicPropertyDetailPage(props: {
                       data.original_rental_price!) *
                       100,
                   );
-                  return `฿${data.original_rental_price!.toLocaleString()}/ด (-${discountPercent}%)`;
+                  return `฿${data.rental_price!.toLocaleString()}/ด (-${discountPercent}%)`;
                 } else if (data.rental_price) {
                   return `${formatPrice(data.rental_price)}/ด`;
                 } else if (data.original_rental_price) {

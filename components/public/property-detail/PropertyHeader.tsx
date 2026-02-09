@@ -16,6 +16,8 @@ import {
 } from "@/lib/property-utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { getProvinceName } from "@/lib/utils/provinces";
+import { useAddressLocalization } from "@/hooks/useAddressLocalization";
 
 interface PropertyHeaderProps {
   property: {
@@ -49,6 +51,8 @@ interface PropertyHeaderProps {
     is_foreigner_quota?: boolean | null;
     is_tax_registered?: boolean | null;
     // Localized fields
+    title_en?: string | null;
+    title_cn?: string | null;
     province_en?: string | null;
     province_cn?: string | null;
     popular_area_en?: string | null;
@@ -81,11 +85,22 @@ export function PropertyHeader({
   const { language: globalLanguage, t } = useLanguage();
   const language = customLanguage || globalLanguage;
 
+  const { localized, loading: locationLoading } = useAddressLocalization(
+    property.province,
+    property.district,
+    property.subdistrict,
+  );
+
+  const displayProvince =
+    getProvinceName(property.province || "", language) || localized.province;
+  const displayDistrict = localized.district || property.district;
+  const displaySubdistrict = localized.subdistrict || property.subdistrict;
+
   const locationParts = [
     getLocaleValue(property, "popular_area", language),
-    getLocaleValue(property, "subdistrict", language),
-    getLocaleValue(property, "district", language),
-    getLocaleValue(property, "province", language),
+    displaySubdistrict, // Use localized or fallback
+    displayDistrict, // Use localized or fallback
+    displayProvince, // Use localized or fallback
   ]
     .filter(Boolean)
     .join(", ");
@@ -293,8 +308,16 @@ export function PropertyHeader({
                   ...(property.province
                     ? [
                         {
-                          label: getLocaleValue(property, "province", language),
+                          label: displayProvince || property.province,
                           href: `/properties?province=${property.province}`,
+                        },
+                      ]
+                    : []),
+                  ...(displayDistrict // Link to district if available
+                    ? [
+                        {
+                          label: displayDistrict,
+                          href: `/properties?province=${property.province}&district=${property.district}`,
                         },
                       ]
                     : []),

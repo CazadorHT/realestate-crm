@@ -19,7 +19,9 @@ import {
   clearRecentProperties,
   RecentProperty,
 } from "@/lib/recent-properties";
-import { getTypeColor, getTypeLabel } from "@/lib/property-utils";
+import { getTypeColor, getTypeLabel, getSafeText } from "@/lib/property-utils";
+import { getProvinceName } from "@/lib/utils/provinces";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { FavoriteButton } from "@/components/public/FavoriteButton";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,9 +51,7 @@ function convertToRecentProperty(
         const discountPercent = Math.round(
           ((prop.original_price! - prop.price) / prop.original_price!) * 100,
         );
-        parts.push(
-          `${formatPrice(prop.original_price!)} (-${discountPercent}%)`,
-        );
+        parts.push(`${formatPrice(prop.price)} (-${discountPercent}%)`);
       } else {
         parts.push(formatPrice(prop.price));
       }
@@ -67,7 +67,7 @@ function convertToRecentProperty(
             100,
         );
         parts.push(
-          `${formatPrice(prop.original_rental_price!)}/${t("recently_viewed.per_month_short")} (-${discountPercent}%)`,
+          `${formatPrice(prop.rental_price)}/${t("recently_viewed.per_month_short")} (-${discountPercent}%)`,
         );
       } else {
         parts.push(
@@ -83,9 +83,7 @@ function convertToRecentProperty(
       const discountPercent = Math.round(
         ((prop.original_price! - prop.price!) / prop.original_price!) * 100,
       );
-      price_text = `${formatPrice(
-        prop.original_price!,
-      )} (-${discountPercent}%)`;
+      price_text = `${formatPrice(prop.price!)} (-${discountPercent}%)`;
     } else if (prop.price) {
       price_text = formatPrice(prop.price);
     }
@@ -101,7 +99,7 @@ function convertToRecentProperty(
           100,
       );
       price_text = `${formatPrice(
-        prop.original_rental_price!,
+        prop.rental_price!,
       )}/${t("recently_viewed.per_month_short")} (-${discountPercent}%)`;
     } else if (prop.rental_price) {
       price_text = `${formatPrice(prop.rental_price)}/${t("recently_viewed.per_month_short")}`;
@@ -115,6 +113,8 @@ function convertToRecentProperty(
     price_text,
     province: prop.province,
     popular_area: prop.popular_area,
+    popular_area_en: prop.popular_area_en,
+    popular_area_cn: prop.popular_area_cn,
     property_type: prop.property_type,
     listing_type: prop.listing_type,
     slug: prop.slug,
@@ -131,7 +131,7 @@ export function RecentlyViewedClient({
   containerClassName?: string;
   disableAos?: boolean;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [items, setItems] = useState<RecentProperty[]>([]);
   const [showingRecommended, setShowingRecommended] = useState(false);
   const [initializing, setInitializing] = useState(true); // New state for client-side loading
@@ -539,7 +539,14 @@ export function RecentlyViewedClient({
                           getTypeColor(item.property_type).bg
                         } ${getTypeColor(item.property_type).text}`}
                       >
-                        {getTypeLabel(item.property_type)}
+                        {t(
+                          `property_types.${
+                            item.property_type.toLowerCase() ===
+                            "commercial_building"
+                              ? "commercial_building"
+                              : item.property_type.toLowerCase()
+                          }`,
+                        )}
                       </span>
                     )}
                     {item.listing_type && (
@@ -578,7 +585,10 @@ export function RecentlyViewedClient({
                   <div className="flex items-center text-xs text-slate-500 mb-4 bg-slate-50 p-2 rounded-lg">
                     <MapPin className="h-3 w-3 mr-1.5 text-blue-500" />
                     <span className="truncate">
-                      {[item.popular_area, item.province]
+                      {[
+                        getLocaleValue(item, "popular_area", language),
+                        getProvinceName(item.province || "", language),
+                      ]
                         .filter(Boolean)
                         .join(", ")}
                     </span>

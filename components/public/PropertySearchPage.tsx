@@ -108,18 +108,35 @@ export function PropertySearchPage({
 
   // Compute unique Popular Areas with Counts
   const availableAreas = useMemo(() => {
-    const map = new Map<string, number>();
+    const map = new Map<
+      string,
+      { count: number; name_en?: string | null; name_cn?: string | null }
+    >();
     properties.forEach((p) => {
       // Filter by province if selected
       if (province !== "ALL" && p.province !== province) return;
 
       if (p.popular_area) {
-        map.set(p.popular_area, (map.get(p.popular_area) || 0) + 1);
+        const existing = map.get(p.popular_area) || {
+          count: 0,
+          name_en: null,
+          name_cn: null,
+        };
+        map.set(p.popular_area, {
+          count: existing.count + 1,
+          name_en: p.popular_area_en || existing.name_en,
+          name_cn: p.popular_area_cn || existing.name_cn,
+        });
       }
     });
 
     return Array.from(map.entries())
-      .map(([name, count]) => ({ name, count }))
+      .map(([name, val]) => ({
+        name,
+        count: val.count,
+        name_en: val.name_en,
+        name_cn: val.name_cn,
+      }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [properties, province]);
 

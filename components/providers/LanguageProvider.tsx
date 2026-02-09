@@ -16,7 +16,7 @@ function getNestedValue(obj: any, path: string): string {
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
@@ -40,16 +40,21 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem("app-language", lang);
-    // Optional: Reload to refresh server components/metadata if needed later
-    // window.location.reload();
   };
 
-  const t = (key: string) => {
+  const t = (key: string, params?: Record<string, string | number>) => {
     const dict = dictionaries[language];
-    return getNestedValue(dict, key);
+    let value = getNestedValue(dict, key);
+
+    if (params && typeof value === "string") {
+      Object.entries(params).forEach(([k, v]) => {
+        value = value.replace(`{${k}}`, String(v));
+      });
+    }
+
+    return value;
   };
 
-  // We must always wrap children in Provider to avoid "useLanguage must be used within a LanguageProvider" error
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
       {children}
@@ -60,7 +65,23 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error("useLanguage must be used within a LanguageProvider");
+    // Fallback instead of crash to help debug
+    console.warn(
+      "useLanguage used outside of LanguageProvider. Providing fallback.",
+    );
+    return {
+      language: "th" as Language,
+      setLanguage: () => {},
+      t: (key: string, params?: Record<string, string | number>) => {
+        let value = key;
+        if (params) {
+          Object.entries(params).forEach(([k, v]) => {
+            value = value.replace(`{${k}}`, String(v));
+          });
+        }
+        return value;
+      },
+    };
   }
   return context;
 }

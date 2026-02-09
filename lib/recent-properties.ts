@@ -1,10 +1,14 @@
 export type RecentProperty = {
   id: string;
   title: string;
+  title_en?: string | null;
+  title_cn?: string | null;
   image_url?: string | null;
   price_text?: string | null;
   province?: string | null;
   popular_area?: string | null;
+  popular_area_en?: string | null;
+  popular_area_cn?: string | null;
   property_type?: string | null;
   listing_type?: string | null;
   slug?: string | null;

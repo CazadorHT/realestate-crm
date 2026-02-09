@@ -6,7 +6,11 @@ export type PropertyRow = {
   id: string;
   slug: string;
   title: string;
+  title_en: string | null;
+  title_cn: string | null;
   description: string | null;
+  description_en: string | null;
+  description_cn: string | null;
   property_type: string | null;
   price: number | null;
   rental_price: number | null;
@@ -22,7 +26,11 @@ export type PropertyRow = {
   district: string | null;
   subdistrict: string | null;
   address_line1: string | null;
+  address_line1_en: string | null;
+  address_line1_cn: string | null;
   popular_area: string | null;
+  popular_area_en?: string | null;
+  popular_area_cn?: string | null;
   original_price: number | null;
   original_rental_price: number | null;
   verified: boolean | null;
@@ -31,6 +39,8 @@ export type PropertyRow = {
   near_transit: boolean | null;
   transit_type: string | null;
   transit_station_name: string | null;
+  transit_station_name_en: string | null;
+  transit_station_name_cn: string | null;
   transit_distance_meters: number | null;
   google_maps_link: string | null;
   is_fully_furnished: boolean | null;
@@ -46,6 +56,8 @@ export type PropertyRow = {
     features: {
       id: string;
       name: string;
+      name_en: string | null;
+      name_cn: string | null;
       icon_key: string;
     } | null;
   }> | null;
@@ -108,7 +120,11 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       id,
       slug,
       title,
+      title_en,
+      title_cn,
       description,
+      description_en,
+      description_cn,
       property_type,
       price,
       rental_price,
@@ -130,6 +146,8 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       district,
       subdistrict,
       address_line1,
+      address_line1_en,
+      address_line1_cn,
       property_images (
         image_url,
         storage_path,
@@ -140,12 +158,16 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
         features (
           id,
           name,
+          name_en,
+          name_cn,
           icon_key
         )
       ),
       near_transit,
       transit_type,
       transit_station_name,
+      transit_station_name_en,
+      transit_station_name_cn,
       transit_distance_meters,
       google_maps_link,
       is_fully_furnished,
@@ -246,14 +268,45 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
     return [];
   }
 
+  // Fetch Popular Area Translations
+  const popularAreaNames = Array.from(
+    new Set(
+      data
+        .map((row) => row.popular_area)
+        .filter((area): area is string => !!area),
+    ),
+  );
+
+  const areaTranslationsMap = new Map<
+    string,
+    { en: string | null; cn: string | null }
+  >();
+
+  if (popularAreaNames.length > 0) {
+    const { data: areaData } = await supabase
+      .from("popular_areas")
+      .select("name, name_en, name_cn")
+      .in("name", popularAreaNames);
+
+    (areaData || []).forEach((a) => {
+      areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn });
+    });
+  }
+
   // Transform Data
   let items = (data ?? []).map((row) => {
     const typedRow = row as unknown as PropertyRow; // Cast because supabase types might be loose or strict
+    const trans = areaTranslationsMap.get(typedRow.popular_area || "");
+
     return {
       id: typedRow.id,
       slug: typedRow.slug,
       title: typedRow.title,
+      title_en: typedRow.title_en,
+      title_cn: typedRow.title_cn,
       description: typedRow.description,
+      description_en: typedRow.description_en,
+      description_cn: typedRow.description_cn,
       property_type: typedRow.property_type,
       price: typedRow.price,
       rental_price: typedRow.rental_price,
@@ -271,10 +324,14 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       updated_at: typedRow.updated_at,
       listing_type: typedRow.listing_type,
       popular_area: typedRow.popular_area,
+      popular_area_en: trans?.en ?? null,
+      popular_area_cn: trans?.cn ?? null,
       province: typedRow.province,
       district: typedRow.district,
       subdistrict: typedRow.subdistrict,
       address_line1: typedRow.address_line1,
+      address_line1_en: typedRow.address_line1_en,
+      address_line1_cn: typedRow.address_line1_cn,
       image_url: pickCoverImage(typedRow.property_images),
       location: buildLocation(typedRow),
       features: (typedRow.property_features || [])
@@ -283,6 +340,8 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       near_transit: typedRow.near_transit,
       transit_type: typedRow.transit_type,
       transit_station_name: typedRow.transit_station_name,
+      transit_station_name_en: typedRow.transit_station_name_en,
+      transit_station_name_cn: typedRow.transit_station_name_cn,
       transit_distance_meters: typedRow.transit_distance_meters,
       google_maps_link: typedRow.google_maps_link,
       is_fully_furnished: typedRow.is_fully_furnished,

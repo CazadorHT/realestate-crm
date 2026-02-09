@@ -2,6 +2,8 @@
 
 import { MapPin } from "lucide-react";
 import { LuMap } from "react-icons/lu";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 interface PropertyMapSectionProps {
   googleMapsLink: string | null;
 }
@@ -48,6 +50,8 @@ export function PropertyMapSection({
     }
   };
 
+  const { t } = useLanguage();
+
   const locationQuery = extractQuery(googleMapsLink);
   const embedUrl = locationQuery
     ? `https://maps.google.com/maps?q=${encodeURIComponent(locationQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`
@@ -56,7 +60,7 @@ export function PropertyMapSection({
   return (
     <section>
       <h3 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-bold text-blue-900 mb-6 flex items-center gap-2">
-        <LuMap className="w-5 h-5 text-blue-600" /> แผนที่ & ทำเลที่ตั้ง
+        <LuMap className="w-5 h-5 text-blue-600" /> {t("property_map.title")}
       </h3>
 
       <div className="space-y-4">
@@ -76,7 +80,7 @@ export function PropertyMapSection({
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 space-y-2">
               <MapPin className="h-10 w-10 text-slate-300" />
-              <p className="text-sm">ไม่พบข้อมูลพิกัดแผนที่</p>
+              <p className="text-sm">{t("property_map.no_data")}</p>
             </div>
           )}
         </div>
@@ -90,7 +94,7 @@ export function PropertyMapSection({
               className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-6 py-2.5 rounded-full text-sm font-semibold transition-all border border-slate-200 shadow-sm hover:shadow-md cursor-pointer group"
             >
               <MapPin className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
-              เปิดดูใน Google Maps
+              {t("property_map.open_google_maps")}
             </a>
           </div>
         )}

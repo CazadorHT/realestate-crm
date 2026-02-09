@@ -64,11 +64,11 @@ export default function FavoritesPageClient() {
   }
 
   function handleClearAll() {
-    if (confirm("คุณต้องการลบรายการโปรดทั้งหมดใช่หรือไม่?")) {
+    if (confirm(t("favorites.confirm_clear"))) {
       clearFavorites();
       setFavorites([]);
       setFavoriteIds([]);
-      toast.success("ลบรายการโปรดทั้งหมดเรียบร้อยแล้ว");
+      toast.success(t("favorites.clear_success"));
     }
   }
 
@@ -78,7 +78,7 @@ export default function FavoritesPageClient() {
         <AppBreadcrumbs
           items={[
             { label: t("breadcrumb.home"), href: "/" },
-            { label: "รายการโปรด", href: "/favorites" },
+            { label: t("nav.favorites"), href: "/favorites" },
           ]}
           className="mb-6"
         />

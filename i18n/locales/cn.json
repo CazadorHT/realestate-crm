@@ -8,7 +8,8 @@
     "about": "关于我们",
     "login": "登录",
     "dashboard": "仪表盘",
-    "deposit": "委托出租/出售"
+    "deposit": "委托出租/出售",
+    "favorites": "我的收藏"
   },
   "breadcrumb": {
     "home": "首页",
@@ -361,6 +362,16 @@
     "no_image": "无图片",
     "per_month_short": "月"
   },
+  "similar_properties": {
+    "title": "相似房源",
+    "subtitle": "您可能感兴趣的同类型房产",
+    "view_all": "查看全部"
+  },
+  "property_map": {
+    "title": "地图与位置",
+    "no_data": "未找到地图坐标",
+    "open_google_maps": "在 Google Maps 中打开"
+  },
   "blog": {
     "title_badge": "房地产文章",
     "title_main": "购房置业",
@@ -550,7 +561,12 @@
     "office": "🏬 办公室",
     "villa": "🏝️ 别墅",
     "pool_villa": "🌊 泳池别墅",
-    "other": "🔍 其他"
+    "other": "🔍 其他",
+    "warehouse": "仓库",
+    "factory": "工厂",
+    "apartment": "公寓",
+    "hotel": "酒店",
+    "commercial_building": "商业建筑"
   },
   "property": {
     "details": "房产详情",
@@ -636,5 +652,65 @@
       "high_floor": "高楼层",
       "pool_view": "泳池景观"
     }
+  },
+  "errors": {
+    "property_not_found_title": "未找到房源",
+    "property_not_found_desc": "您正在寻找的房源可能已售出、出租或已从系统中移除。",
+    "back_to_properties": "返回房源搜索",
+    "go_home": "返回首页"
+  },
+  "favorites": {
+    "title": "我的收藏",
+    "clear_all": "清空全部",
+    "confirm_clear": "您确定要清空所有收藏吗？",
+    "clear_success": "收藏夹已清空",
+    "empty_title": "暂无收藏",
+    "empty_desc": "点击心形图标保存您感兴趣的房产。<br />以便稍后比较或查看。",
+    "go_search": "前往房源搜索"
+  },
+  "compare_page": {
+    "title": "房产对比",
+    "empty_title": "暂无对比房源",
+    "empty_desc": "从搜索页面选择您感兴趣的房产。<br />点击“对比”按钮进行详细比较。",
+    "go_search": "前往房源搜索",
+    "topics": "项目",
+    "view_details": "查看详情",
+    "loading": "加载中...",
+    "labels": {
+      "verified": "状态",
+      "listing_type": "房源类型",
+      "property_type": "物业类型",
+      "property_size": "面积",
+      "price": "价格",
+      "zone": "区域",
+      "location": "位置",
+      "google_maps_link": "地图",
+      "transportation": "交通",
+      "bedrooms": "卧室",
+      "bathrooms": "浴室",
+      "floor": "楼层",
+      "parking_slots": "停车位",
+      "petFriendly": "宠物",
+      "features": "设施",
+      "province": "省份",
+      "description": "描述",
+      "updated_at": "最后更新"
+    },
+    "values": {
+      "verified": "已认证",
+      "distance_meters": "距离 {distance} 米",
+      "open_map": "打开地图",
+      "sqm": "平方米",
+      "pet_friendly": "允许宠物",
+      "floor_prefix": "层",
+      "parking_unit": "个",
+      "rent_per_month": "/月",
+      "na": "-"
+    }
+  },
+  "compare_bar": {
+    "selected_count": "选择对比: {count}/4",
+    "clear": "清空",
+    "compare_btn": "开始对比"
   }
 }

@@ -31,6 +31,9 @@ import {
 import { FilterBarSkeleton } from "../FilterBarSkeleton";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
+import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { getProvinceName } from "@/lib/utils/provinces";
+
 interface SearchFilterBarProps {
   isLoading: boolean;
   keyword: string;
@@ -54,7 +57,12 @@ interface SearchFilterBarProps {
   bedrooms: string;
   setBedrooms: (v: string) => void;
   filteredLength: number;
-  availableAreas: { name: string; count: number }[];
+  availableAreas: {
+    name: string;
+    count: number;
+    name_en?: string | null;
+    name_cn?: string | null;
+  }[];
   province: string;
   setProvince: (v: string) => void;
   availableProvinces: string[];
@@ -88,7 +96,7 @@ export function SearchFilterBar({
   setProvince,
   availableProvinces,
 }: SearchFilterBarProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAreaSection, setShowAreaSection] = useState(true);
 
@@ -178,7 +186,7 @@ export function SearchFilterBar({
                       </SelectItem>
                       {availableProvinces.map((p) => (
                         <SelectItem key={p} value={p}>
-                          {p}
+                          {getProvinceName(p, language)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -294,7 +302,16 @@ export function SearchFilterBar({
                       </SelectItem>
                       {availableAreas.map((a) => (
                         <SelectItem key={a.name} value={a.name}>
-                          {a.name} ({a.count})
+                          {getLocaleValue(
+                            {
+                              name: a.name,
+                              name_en: a.name_en,
+                              name_cn: a.name_cn,
+                            },
+                            "name",
+                            language,
+                          )}{" "}
+                          ({a.count})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -377,7 +394,7 @@ export function SearchFilterBar({
                   </SelectItem>
                   {availableProvinces.map((p) => (
                     <SelectItem key={p} value={p}>
-                      {p}
+                      {getProvinceName(p, language)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -568,7 +585,7 @@ export function SearchFilterBar({
               onClick={clearFilters}
               className="ml-auto h-12 px-5 rounded-xl border-2 border-slate-200 hover:border-red-400 hover:text-red-600 hover:bg-red-50 transition-all font-medium shadow-sm bg-white"
             >
-              <SlidersHorizontal className={`h-4 w-4 mr-2 text-rose-500`} />
+              <SlidersHorizontal className={`h-4 w-4 mr-2 text-rose-500 `} />
               {t("search.clear_filters")}
             </Button>
           </div>
@@ -577,7 +594,7 @@ export function SearchFilterBar({
           {availableAreas.length > 0 && (
             <div className="mt-4 pt-4  border-t border-slate-100 transition-all duration-300">
               {showAreaSection && (
-                <div className="flex flex-wrap gap-x-2 gap-y-2 px-2 animate-in fade-in slide-in-from-top-1">
+                <div className="flex flex-wrap gap-x-2 gap-y-2 px-2 animate-in fade-in slide-in-from-top-1 transition-all duration-300">
                   <button
                     onClick={() => setArea("ALL")}
                     className={`text-md transition-colors ${
@@ -600,7 +617,15 @@ export function SearchFilterBar({
                             : "text-slate-500 hover:text-blue-600"
                         }`}
                       >
-                        {a.name}
+                        {getLocaleValue(
+                          {
+                            name: a.name,
+                            name_en: a.name_en,
+                            name_cn: a.name_cn,
+                          },
+                          "name",
+                          language,
+                        )}
                         <span className="text-md text-slate-400 font-light">
                           ({a.count})
                         </span>

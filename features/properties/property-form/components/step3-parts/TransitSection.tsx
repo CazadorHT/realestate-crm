@@ -134,7 +134,7 @@ export function TransitSection({ form }: TransitSectionProps) {
         />
         <Separator className="bg-slate-200/70" />
       </CardHeader>
-      <CardContent className="pt-6">
+      <CardContent className="pt-6 ">
         <FormField
           control={form.control}
           name="near_transit"
@@ -177,7 +177,7 @@ export function TransitSection({ form }: TransitSectionProps) {
             {fields.map((item, index) => (
               <div
                 key={item.id}
-                className="flex gap-4 items-end p-4 bg-slate-50/50 rounded-xl border border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200"
+                className="flex gap-4 items-center p-4 bg-slate-50/50 rounded-xl border border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200"
               >
                 {/* Transit Type */}
                 <FormField
@@ -218,12 +218,13 @@ export function TransitSection({ form }: TransitSectionProps) {
                 <FormField
                   control={form.control}
                   name={`nearby_transits.${index}.station_name`}
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-xs uppercase tracking-wide">
-                        <MapPin className="h-3.5 w-3.5 text-blue-500" />
-                        ชื่อสถานี
-                      </FormLabel>
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-xs uppercase tracking-wide">
+                      <MapPin className="h-3.5 w-3.5 text-blue-500" />
+                      ชื่อสถานี
+                    </FormLabel>
+                    <div className="flex gap-2">
                       <FormControl>
                         <Input
                           {...field}
@@ -232,9 +233,72 @@ export function TransitSection({ form }: TransitSectionProps) {
                           placeholder="เช่น สถานีทองหล่อ"
                         />
                       </FormControl>
-                    </FormItem>
-                  )}
-                />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 shrink-0 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100"
+                        title="แปลภาษาด้วย AI"
+                        onClick={async () => {
+                          const text = field.value;
+                          if (!text) return;
+
+                          // Call server action
+                          try {
+                            const { translatePlaceNameAction } = await import(
+                              "../../actions/ai-actions"
+                            );
+                            const result = await translatePlaceNameAction(text);
+                            if (result.name_en) {
+                              form.setValue(
+                                `nearby_transits.${index}.station_name_en`,
+                                result.name_en,
+                              );
+                            }
+                            if (result.name_cn) {
+                              form.setValue(
+                                `nearby_transits.${index}.station_name_cn`,
+                                result.name_cn,
+                              );
+                            }
+                          } catch (e) {
+                            console.error("Translation failed", e);
+                          }
+                        }}
+                      >
+                        <span className="text-xs font-bold">AI</span>
+                      </Button>
+                    </div>
+                    {/* Hidden fields for EN/CN */}
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <FormField
+                        control={form.control}
+                        name={`nearby_transits.${index}.station_name_en`}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="English Name"
+                            className="h-8 text-xs bg-slate-50 text-slate-500"
+                          />
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`nearby_transits.${index}.station_name_cn`}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="Chinese Name"
+                            className="h-8 text-xs bg-slate-50 text-slate-500"
+                          />
+                        )}
+                      />
+                    </div>
+                  </FormItem>
+                )}
+              />
 
                 {/* Distance */}
                 <FormField

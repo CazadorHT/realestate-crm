@@ -92,3 +92,32 @@ export async function generateAIPropertyDescriptionAction(
     throw new Error("ไม่สามารถสร้างคำบรรยายด้วย AI ได้ในขณะนี้");
   }
 }
+
+export async function translatePlaceNameAction(text: string) {
+  if (!text) return { name_en: "", name_cn: "" };
+
+  const prompt = `
+    Translate the following place/station name from Thai to English and Simplified Chinese.
+    Input: "${text}"
+    
+    Return ONLY a valid JSON object with keys "en" and "cn".
+    Example: {"en": "Central World", "cn": "中央世界"}
+    Do not add markdown code blocks.
+  `;
+
+  try {
+    const response = await generateText(prompt);
+    const cleaned = response
+      .trim()
+      .replace(/^```json/, "")
+      .replace(/^```/, "")
+      .replace(/```$/, "");
+    const json = JSON.parse(cleaned);
+    return { name_en: json.en, name_cn: json.cn };
+  } catch (error) {
+    console.error("AI Translation Error:", error);
+    // Fallback: use empty strings or original text?
+    // Let's return empty to indicates failure so user can try again or manual fill
+    return { name_en: "", name_cn: "" };
+  }
+}

@@ -3,6 +3,7 @@
 import { ShieldCheck, MapPin, Check } from "lucide-react";
 import { CompareProperty, ComparisonRow } from "./types";
 import { formatMoney, cleanListingType, isPetFriendly } from "./utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface CompareRowProps {
   row: ComparisonRow;
@@ -11,6 +12,8 @@ interface CompareRowProps {
 }
 
 export function CompareRow({ row, properties, idx }: CompareRowProps) {
+  const { t, language } = useLanguage();
+
   // Calculation for max value to highlight Winner
   const isNumericCompare = [
     "property_size",
@@ -60,11 +63,12 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
             p.original_rental_price &&
             p.original_rental_price > p.rental_price && (
               <span className="text-[10px] md:text-xs text-slate-400 line-through mr-1 md:mr-2 block sm:inline">
-                {formatMoney(p.original_rental_price)}/ด
+                {formatMoney(p.original_rental_price)}{" "}
+                {t("compare_page.values.rent_per_month")}
               </span>
             )}
           <span className="text-orange-600 font-bold text-sm md:text-base">
-            {formatMoney(rentPrice)}/ด
+            {formatMoney(rentPrice)} {t("compare_page.values.rent_per_month")}
           </span>
         </div>
       ) : null;
@@ -86,12 +90,12 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
         idx % 2 === 0 ? "bg-slate-50/50" : "bg-white/50"
       }`}
       style={{
-        gridTemplateColumns: `100px repeat(${properties.length}, 1fr)`,
+        gridTemplateColumns: `150px repeat(${properties.length}, 1fr)`,
       }}
     >
       <div className="p-2 md:p-4 text-xs md:text-sm font-semibold text-slate-600 flex items-center gap-1 md:gap-2">
         <row.icon className="h-3 w-3 md:h-4 md:w-4 text-slate-400 shrink-0" />
-        <span className="truncate">{row.label}</span>
+        <span className="truncate">{t(`compare_page.labels.${row.key}`)}</span>
       </div>
       {properties.map((p) => {
         // Check overlap Winner
@@ -115,7 +119,8 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
             ) : row.key === "verified" ? (
               p.verified ? (
                 <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold border border-blue-100">
-                  <ShieldCheck className="h-3 w-3" /> Verified
+                  <ShieldCheck className="h-3 w-3" />{" "}
+                  {t("compare_page.values.verified")}
                 </div>
               ) : (
                 <span className="text-slate-300">-</span>
@@ -143,7 +148,9 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                   </span>
                   {p.transit_distance_meters && (
                     <span className="text-xs text-slate-500 pl-1">
-                      ห่าง {p.transit_distance_meters} ม.
+                      {t("compare_page.values.distance_meters", {
+                        distance: p.transit_distance_meters,
+                      })}
                     </span>
                   )}
                 </div>
@@ -161,7 +168,8 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-semibold hover:underline"
                 >
-                  <MapPin className="h-3 w-3" /> เปิดแผนที่
+                  <MapPin className="h-3 w-3" />{" "}
+                  {t("compare_page.values.open_map")}
                 </a>
               ) : (
                 <span className="text-slate-300">-</span>
@@ -169,7 +177,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
             ) : row.key === "property_size" ? (
               p.size_sqm ? (
                 <span className={isWinner ? "text-green-700 font-bold" : ""}>
-                  {p.size_sqm} ตร.ม.
+                  {p.size_sqm} {t("compare_page.values.sqm")}
                 </span>
               ) : (
                 "-"
@@ -177,7 +185,8 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
             ) : row.key === "petFriendly" ? (
               isPetFriendly(p) ? (
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold border border-orange-200">
-                  <Check className="h-3 w-3" /> เลี้ยงสัตว์ได้
+                  <Check className="h-3 w-3" />{" "}
+                  {t("compare_page.values.pet_friendly")}
                 </div>
               ) : (
                 <span className="text-slate-300">-</span>
@@ -187,17 +196,23 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                 {cleanListingType(p.listing_type)}
               </span>
             ) : row.key === "updated_at" ? (
-              new Date(p.updated_at).toLocaleDateString("th-TH")
+              new Date(p.updated_at).toLocaleDateString(
+                language === "th"
+                  ? "th-TH"
+                  : language === "cn"
+                    ? "zh-CN"
+                    : "en-US",
+              )
             ) : row.key === "floor" ? (
               p.floor ? (
-                `ชั้น ${p.floor}`
+                `${t("compare_page.values.floor_prefix")} ${p.floor}`
               ) : (
                 "-"
               )
             ) : row.key === "parking_slots" ? (
               p.parking_slots ? (
                 <span className={isWinner ? "text-green-700 font-bold" : ""}>
-                  {p.parking_slots} คัน
+                  {p.parking_slots} {t("compare_page.values.parking_unit")}
                 </span>
               ) : (
                 "-"

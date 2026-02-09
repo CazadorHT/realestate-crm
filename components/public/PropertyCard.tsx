@@ -13,6 +13,8 @@ import { PropertyCardInfo } from "./property-card/PropertyCardInfo";
 import { PropertyCardSpecs } from "./property-card/PropertyCardSpecs";
 import { PropertyCardFeatures } from "./property-card/PropertyCardFeatures";
 import { PropertyCardFooter } from "./property-card/PropertyCardFooter";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { getProvinceName } from "@/lib/utils/provinces";
 
 // Re-using types or defining subset
 export type PropertyCardProps = {
@@ -34,6 +36,8 @@ export type PropertyCardProps = {
   bedrooms?: number | null;
   bathrooms?: number | null;
   popular_area?: string | null;
+  popular_area_en?: string | null;
+  popular_area_cn?: string | null;
   province?: string | null;
   created_at: string;
   updated_at: string;
@@ -50,7 +54,15 @@ export type PropertyCardProps = {
   verified?: boolean;
   min_contract_months?: number | null;
   meta_keywords?: string[] | null;
-  features?: { id: string; name: string; icon_key: string }[] | null;
+  features?:
+    | {
+        id: string;
+        name: string;
+        name_en?: string | null;
+        name_cn?: string | null;
+        icon_key: string;
+      }[]
+    | null;
   footerVariant?: "default" | "minimal";
 };
 
@@ -69,7 +81,7 @@ export function PropertyCard({
   };
   footerVariant?: "default" | "minimal";
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isInCompare, setIsInCompare] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -114,7 +126,10 @@ export function PropertyCard({
     toggleFavoriteId(property.id);
   };
 
-  const areaProvince = [property.popular_area, property.province]
+  const areaProvince = [
+    getLocaleValue(property, "popular_area", language),
+    getProvinceName(property.province || "", language),
+  ]
     .filter(Boolean)
     .join(" • ");
 

@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import { X, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { clearCompare, readCompareIds } from "@/lib/compare-store";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function CompareBar() {
   const [ids, setIds] = useState<string[]>([]);
+  const { t } = useLanguage();
 
   useEffect(() => {
     setIds(readCompareIds());
@@ -32,7 +34,7 @@ export function CompareBar() {
           <div className="h-9 w-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center">
             <Scale className="h-4 w-4" />
           </div>
-          เลือกเพื่อเปรียบเทียบ: {ids.length}/4
+          {t("compare_bar.selected_count", { count: ids.length })}
         </div>
 
         <div className="flex  items-center gap-2">
@@ -45,11 +47,13 @@ export function CompareBar() {
             }}
           >
             <X className="h-4 w-4 mr-2" />
-            ล้าง
+            {t("compare_bar.clear")}
           </Button>
 
           <Button asChild className="h-10">
-            <Link href={`/compare?ids=${ids.join(",")}`}>เปรียบเทียบ</Link>
+            <Link href={`/compare?ids=${ids.join(",")}`}>
+              {t("compare_bar.compare_btn")}
+            </Link>
           </Button>
         </div>
       </div>

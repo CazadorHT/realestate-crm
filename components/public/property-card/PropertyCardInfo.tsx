@@ -3,6 +3,7 @@
 import { MapPin } from "lucide-react";
 import { getTypeColor, getSafeText } from "@/lib/property-utils";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { getProvinceName } from "@/lib/utils/provinces";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 

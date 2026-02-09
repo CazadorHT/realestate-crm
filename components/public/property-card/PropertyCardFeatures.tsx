@@ -8,12 +8,23 @@ import {
 } from "@/components/ui/tooltip";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
+import { getLocaleValue } from "@/lib/utils/locale-utils";
+
 export function PropertyCardFeatures({
   features,
 }: {
-  features: { id: string; name: string; icon_key: string }[] | null | undefined;
+  features:
+    | {
+        id: string;
+        name: string;
+        name_en?: string | null;
+        name_cn?: string | null;
+        icon_key: string;
+      }[]
+    | null
+    | undefined;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   if (!features || features.length === 0) return null;
 
@@ -24,7 +35,7 @@ export function PropertyCardFeatures({
           key={f.id}
           className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200 group-hover:bg-slate-100 duration-300 group-hover:text-slate-700"
         >
-          {f.name}
+          {getLocaleValue(f, "name", language)}
         </span>
       ))}
       {features.length > 3 && (
@@ -46,7 +57,9 @@ export function PropertyCardFeatures({
                 {features.slice(3, 8).map((f) => (
                   <li key={f.id} className="flex items-center gap-2">
                     <div className="w-1 h-1 rounded-full bg-blue-500 shrink-0"></div>
-                    <span className="truncate max-w-[150px]">{f.name}</span>
+                    <span className="truncate max-w-[150px]">
+                      {getLocaleValue(f, "name", language)}
+                    </span>
                   </li>
                 ))}
                 {features.length > 8 && (

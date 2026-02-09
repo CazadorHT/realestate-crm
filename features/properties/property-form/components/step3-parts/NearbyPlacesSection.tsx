@@ -108,13 +108,78 @@ export function NearbyPlacesSection({ form }: NearbyPlacesSectionProps) {
                       <MapPin className="h-3.5 w-3.5 text-blue-500" />
                       ชื่อสถานที่
                     </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="เช่น โรงเรียนสาธิต"
-                        className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium px-4 text-xs focus:ring-0 focus:border-blue-400"
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="เช่น โรงเรียนสาธิต"
+                          className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium px-4 text-xs focus:ring-0 focus:border-blue-400"
+                        />
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 shrink-0 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100"
+                        title="แปลภาษาด้วย AI"
+                        onClick={async () => {
+                          const text = field.value;
+                          if (!text) return;
+                          
+                          // Call server action
+                          try {
+                            const { translatePlaceNameAction } = await import(
+                              "../../actions/ai-actions"
+                            );
+                            // Add toast/loading here if needed
+                            const result = await translatePlaceNameAction(text);
+                            if (result.name_en) {
+                              form.setValue(
+                                `nearby_places.${index}.name_en`,
+                                result.name_en,
+                              );
+                            }
+                            if (result.name_cn) {
+                              form.setValue(
+                                `nearby_places.${index}.name_cn`,
+                                result.name_cn,
+                              );
+                            }
+                          } catch (e) {
+                            console.error("Translation failed", e);
+                          }
+                        }}
+                      >
+                        <span className="text-xs font-bold">AI</span>
+                      </Button>
+                    </div>
+                    {/* Hidden fields for EN/CN to ensure they are registered */}
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <FormField
+                        control={form.control}
+                        name={`nearby_places.${index}.name_en`}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="English Name"
+                            className="h-8 text-xs bg-slate-50 text-slate-500"
+                          />
+                        )}
                       />
-                    </FormControl>
+                      <FormField
+                        control={form.control}
+                        name={`nearby_places.${index}.name_cn`}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="Chinese Name"
+                            className="h-8 text-xs bg-slate-50 text-slate-500"
+                          />
+                        )}
+                      />
+                    </div>
                   </FormItem>
                 )}
               />

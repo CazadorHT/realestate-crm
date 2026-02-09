@@ -3,6 +3,7 @@
 import { Heart, ArrowLeft, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface FavoritesHeaderProps {
   favoriteIds: string[];
@@ -13,10 +14,10 @@ export function FavoritesHeader({
   favoriteIds,
   onClearAll,
 }: FavoritesHeaderProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-      
-
       {favoriteIds.length > 0 && (
         <Button
           variant="outline"
@@ -24,7 +25,7 @@ export function FavoritesHeader({
           onClick={onClearAll}
         >
           <Trash2 className="h-4 w-4 mr-2" />
-          ลบทั้งหมด
+          {t("favorites.clear_all")}
         </Button>
       )}
     </div>
