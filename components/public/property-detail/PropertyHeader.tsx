@@ -73,14 +73,18 @@ interface PropertyHeaderProps {
   className?: string;
   hideBreadcrumbs?: boolean;
   language?: "th" | "en" | "cn";
+  locationParts?: string;
+  keySellingPoints?: Array<{ name: string; icon: string }>;
 }
 
 export function PropertyHeader({
   property,
   features = [],
   className,
+  locationParts: incomingLocationParts,
   hideBreadcrumbs = false,
   language: customLanguage,
+  keySellingPoints: incomingKeySellingPoints,
 }: PropertyHeaderProps) {
   const { language: globalLanguage, t } = useLanguage();
   const language = customLanguage || globalLanguage;
@@ -96,7 +100,7 @@ export function PropertyHeader({
   const displayDistrict = localized.district || property.district;
   const displaySubdistrict = localized.subdistrict || property.subdistrict;
 
-  const locationParts = [
+  const locationParts = incomingLocationParts || [
     getLocaleValue(property, "popular_area", language),
     displaySubdistrict, // Use localized or fallback
     displayDistrict, // Use localized or fallback
@@ -104,7 +108,7 @@ export function PropertyHeader({
   ]
     .filter(Boolean)
     .join(", ");
-
+  
   const unitSpecialFeatures = [
     property.is_pet_friendly && {
       name: t("property.badges.pet_friendly"),
@@ -152,7 +156,7 @@ export function PropertyHeader({
     },
   ].filter((f): f is { name: string; icon: string } => !!f);
 
-  const keySellingPoints = [
+  const finalKeySellingPoints = incomingKeySellingPoints || [
     ...unitSpecialFeatures,
     ...features
       .filter((f) => f.category === "คุณสมบัติพิเศษ")
@@ -404,7 +408,7 @@ export function PropertyHeader({
               </div>
 
               <KeySellingPoints
-                points={keySellingPoints}
+                points={finalKeySellingPoints}
                 listingType={property.listing_type || "SALE"}
               />
             </div>
