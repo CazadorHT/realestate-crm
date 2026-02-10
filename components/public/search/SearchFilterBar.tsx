@@ -180,7 +180,7 @@ export function SearchFilterBar({
                     <SelectTrigger className="w-full h-12 rounded-xl bg-white">
                       <SelectValue placeholder={t("search.all_provinces")} />
                     </SelectTrigger>
-                    <SelectContent >
+                    <SelectContent>
                       <SelectItem value="ALL">
                         -- {t("search.all_provinces")} --
                       </SelectItem>
@@ -192,7 +192,66 @@ export function SearchFilterBar({
                     </SelectContent>
                   </Select>
                 </div>
+                {/* Location */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-slate-900">
+                    {t("search.location")}
+                  </label>
+                  <Select value={area} onValueChange={setArea}>
+                    <SelectTrigger className="w-full h-12 rounded-xl bg-white">
+                      <SelectValue placeholder={t("search.all_locations")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">
+                        -- {t("search.all_locations")} --
+                      </SelectItem>
+                      {availableAreas.map((a) => (
+                        <SelectItem key={a.name} value={a.name}>
+                          {getLocaleValue(
+                            {
+                              name: a.name,
+                              name_en: a.name_en,
+                              name_cn: a.name_cn,
+                            },
+                            "name",
+                            language,
+                          )}{" "}
+                          ({a.count})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
+                {/* Toggles */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all cursor-pointer ${
+                      nearTrain
+                        ? "bg-blue-600 border-blue-600 text-white"
+                        : "bg-white border-slate-200 text-slate-600"
+                    }`}
+                    onClick={() => setNearTrain(!nearTrain)}
+                  >
+                    <FaTrainSubway className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      {t("search.near_train")}
+                    </span>
+                  </div>
+                  <div
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all cursor-pointer ${
+                      petFriendly
+                        ? "bg-orange-600 border-orange-600 text-white"
+                        : "bg-white border-slate-200 text-slate-600"
+                    }`}
+                    onClick={() => setPetFriendly(!petFriendly)}
+                  >
+                    <MdOutlinePets className="h-5 w-5" />
+                    <span className="text-sm font-medium">
+                      {t("search.pet_allowed")}
+                    </span>
+                  </div>
+                </div>
                 {/* Property Type */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-900">
@@ -251,7 +310,7 @@ export function SearchFilterBar({
                     <Input
                       type="number"
                       placeholder={t("search.min_budget")}
-                      className="border-0 h-full w-full p-0 text-sm focus-visible:ring-0 bg-white"
+                      className="border-0  w-full p-2 text-sm focus-visible:ring-0 bg-white"
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
                     />
@@ -259,7 +318,7 @@ export function SearchFilterBar({
                     <Input
                       type="number"
                       placeholder={t("search.max_budget")}
-                      className="border-0 h-full w-full p-0 text-sm focus-visible:ring-0 bg-white"
+                      className="border-0  w-full p-2 text-sm focus-visible:ring-0 bg-white"
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
                     />
@@ -285,66 +344,6 @@ export function SearchFilterBar({
                         {bed === "ALL" ? t("common.all") : bed}
                       </button>
                     ))}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-slate-900">
-                    {t("search.location")}
-                  </label>
-                  <Select value={area} onValueChange={setArea}>
-                    <SelectTrigger className="w-full h-12 rounded-xl bg-white">
-                      <SelectValue placeholder={t("search.all_locations")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">
-                        -- {t("search.all_locations")} --
-                      </SelectItem>
-                      {availableAreas.map((a) => (
-                        <SelectItem key={a.name} value={a.name}>
-                          {getLocaleValue(
-                            {
-                              name: a.name,
-                              name_en: a.name_en,
-                              name_cn: a.name_cn,
-                            },
-                            "name",
-                            language,
-                          )}{" "}
-                          ({a.count})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Toggles */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all cursor-pointer ${
-                      nearTrain
-                        ? "bg-blue-600 border-blue-600 text-white"
-                        : "bg-white border-slate-200 text-slate-600"
-                    }`}
-                    onClick={() => setNearTrain(!nearTrain)}
-                  >
-                    <FaTrainSubway className="h-4 w-4" />
-                    <span className="text-sm font-medium">
-                      {t("search.near_train")}
-                    </span>
-                  </div>
-                  <div
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all cursor-pointer ${
-                      petFriendly
-                        ? "bg-orange-600 border-orange-600 text-white"
-                        : "bg-white border-slate-200 text-slate-600"
-                    }`}
-                    onClick={() => setPetFriendly(!petFriendly)}
-                  >
-                    <MdOutlinePets className="h-5 w-5" />
-                    <span className="text-sm font-medium">
-                      {t("search.pet_allowed")}
-                    </span>
                   </div>
                 </div>
               </div>
