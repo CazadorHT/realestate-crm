@@ -50,7 +50,7 @@ export function CompareBar() {
             {t("compare_bar.clear")}
           </Button>
 
-          <Button asChild className="h-10">
+          <Button asChild className="h-10 text-white!">
             <Link href={`/compare?ids=${ids.join(",")}`}>
               {t("compare_bar.compare_btn")}
             </Link>
