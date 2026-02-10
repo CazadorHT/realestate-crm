@@ -165,6 +165,7 @@ export function SearchFilterBar({
                 <SheetTitle>{t("search.filter_title")}</SheetTitle>
               </SheetHeader>
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
                 {/* Province (Mobile) */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-900">
@@ -177,7 +178,7 @@ export function SearchFilterBar({
                       setArea("ALL"); // Reset area when province changes
                     }}
                   >
-                    <SelectTrigger className="w-full h-12 rounded-xl bg-white">
+                    <SelectTrigger className="w-full h-12 rounded-xl bg-slate-50/50!">
                       <SelectValue placeholder={t("search.all_provinces")} />
                     </SelectTrigger>
                     <SelectContent>
@@ -198,7 +199,7 @@ export function SearchFilterBar({
                     {t("search.location")}
                   </label>
                   <Select value={area} onValueChange={setArea}>
-                    <SelectTrigger className="w-full h-12 rounded-xl bg-white">
+                    <SelectTrigger className="w-full h-12 rounded-xl bg-slate-50/50!">
                       <SelectValue placeholder={t("search.all_locations")} />
                     </SelectTrigger>
                     <SelectContent>
