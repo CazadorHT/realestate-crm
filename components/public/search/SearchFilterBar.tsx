@@ -161,7 +161,7 @@ export function SearchFilterBar({
               side="bottom"
               className="h-[90vh] rounded-t-4xl flex flex-col p-0 bg-slate-50"
             >
-              <SheetHeader className="px-6 py-4 border-b border-slate-100 bg-white rounded-t-4xl">
+              <SheetHeader className="px-6 py-4 border-b border-slate-100 bg-white text-slate-900 rounded-t-4xl">
                 <SheetTitle>{t("search.filter_title")}</SheetTitle>
               </SheetHeader>
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -180,7 +180,7 @@ export function SearchFilterBar({
                     <SelectTrigger className="w-full h-12 rounded-xl bg-white">
                       <SelectValue placeholder={t("search.all_provinces")} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent >
                       <SelectItem value="ALL">
                         -- {t("search.all_provinces")} --
                       </SelectItem>

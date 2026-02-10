@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
-import { softDeleteProperty } from "@/actions/property-trash";
+import { softDeleteProperty } from "@/features/properties/actions/property-trash";
 import {
   DropdownMenuItem,
   DropdownMenuSeparator,

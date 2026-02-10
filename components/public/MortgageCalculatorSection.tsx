@@ -137,7 +137,7 @@ export function MortgageCalculatorSection() {
                     type="number"
                     value={interestRate}
                     onChange={(e) => setInterestRate(Number(e.target.value))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-slate-50 border text-slate-900 border-slate-200 rounded-lg px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div className="space-y-2">
@@ -147,7 +147,7 @@ export function MortgageCalculatorSection() {
                   <select
                     value={termYears}
                     onChange={(e) => setTermYears(Number(e.target.value))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 font-bold focus:outline-none"
+                    className="w-full bg-slate-50 border text-slate-900 border-slate-200 rounded-lg px-3 py-2 font-bold focus:outline-none"
                   >
                     {[10, 15, 20, 25, 30, 35, 40].map((year) => (
                       <option key={year} value={year}>

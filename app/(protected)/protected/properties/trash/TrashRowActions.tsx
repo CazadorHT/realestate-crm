@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import {
   restoreProperty,
   permanentDeleteProperty,
-} from "@/actions/property-trash";
+} from "@/features/properties/actions/property-trash";
 import {
   AlertDialog,
   AlertDialogAction,

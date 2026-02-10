@@ -45,7 +45,6 @@ export async function createBlogPostAction(
     excerpt_cn: input.excerpt_cn || null,
     category: input.category,
     cover_image: input.cover_image || null,
-    reading_time: input.reading_time || "5 min read",
     is_published: input.is_published,
     published_at:
       input.published_at ||
@@ -105,7 +104,6 @@ export async function updateBlogPostAction(
       excerpt_cn: input.excerpt_cn,
       category: input.category,
       cover_image: input.cover_image,
-      reading_time: input.reading_time,
       is_published: input.is_published,
       published_at:
         input.published_at ||
@@ -367,7 +365,6 @@ export async function generateBlogPostAction(
       "content": "เนื้อหาบทความแบบ HTML...",
       "cover_image_prompt": "English description for cover image...",
       "tags": "tag1, tag2, tag3",
-      "reading_time": "... min read",
       "faqs": [
         { "question": "...", "answer": "..." },
         { "question": "...", "answer": "..." }

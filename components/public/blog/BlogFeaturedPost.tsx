@@ -15,7 +15,6 @@ interface BlogFeaturedPostProps {
     published_at: string | null;
     cover_image?: string | null;
     category?: string | null;
-    reading_time?: string | null;
     author: any;
     title_en?: string | null;
     title_cn?: string | null;
@@ -82,9 +81,6 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
                   : post.category}
               </span>
             )}
-            <span className="text-xs text-slate-400 font-medium">
-              {t("blog.reading_time", { min: post.reading_time || "5" })}
-            </span>
           </div>
           <Link href={`/blog/${post.slug}`} className="block">
             <h3

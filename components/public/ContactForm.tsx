@@ -197,7 +197,7 @@ export function ContactForm() {
             placeholder={t("contact.more_details_placeholder")}
             rows={4}
             aria-label={t("contact.more_details_label")}
-            className="resize-none pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+            className="resize-none pl-10 bg-slate-50! border-slate-200 focus:bg-white transition-colors"
           />
         </div>
       </div>
@@ -233,7 +233,7 @@ export function ContactForm() {
           href="/privacy-policy"
           className="text-blue-600 hover:underline hover:text-blue-700 ml-1"
         >
-          {t("nav.privacy")}
+          {t("nav.privacy_policy")}
         </a>
       </p>
     </form>

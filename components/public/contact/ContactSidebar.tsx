@@ -48,7 +48,7 @@ export function ContactSidebar() {
   return (
     <div className="space-y-6">
       {/* Business Hours */}
-      <Card className="border-slate-100 shadow-lg shadow-slate-100/50">
+      <Card className="border-slate-100 bg-white shadow-lg shadow-slate-100/50">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-50">
             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
@@ -77,7 +77,7 @@ export function ContactSidebar() {
       </Card>
 
       {/* Social Media */}
-      <Card className="border-slate-100 shadow-lg shadow-slate-100/50">
+      <Card className="border-slate-100 bg-white shadow-lg shadow-slate-100/50">
         <CardContent className="p-6">
           <h3 className="font-bold text-slate-800 text-lg mb-6">
             {t("contact.sidebar_follow")}

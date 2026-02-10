@@ -577,7 +577,7 @@ export function RecentlyViewedClient({
                         item.rental_price &&
                         item.original_rental_price > item.rental_price) ||
                       item.price_text?.includes("(-")
-                        ? "bg-red-500 border-red-600 text-white"
+                        ? "bg-red-500! border-red-600 text-white"
                         : "bg-white/90 border-white/40 text-blue-700"
                     }`}
                   >
@@ -704,7 +704,7 @@ export function RecentlyViewedClient({
                       {t("recently_viewed.view_details")}
                     </span>
                     <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4 text-slate-600 group-hover:text-white" />
                     </div>
                   </div>
                 </div>

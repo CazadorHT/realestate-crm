@@ -23,7 +23,6 @@ export const blogPostSchema = z.object({
     .optional()
     .or(z.literal("")),
   category: z.string().min(1, "Category is required"),
-  reading_time: z.string().optional(),
   tags: z.string().optional(), // Will handle comma-separated string in form, convert to array in action
   is_published: z.boolean().default(false),
   published_at: z.string().optional(),

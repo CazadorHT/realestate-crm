@@ -61,9 +61,6 @@ export function BlogDetailSidebar({
                       <h4 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2 text-sm">
                         {localizedTitle}
                       </h4>
-                      <p className="text-xs text-slate-500">
-                        {relatedPost.reading_time || "5 min read"}
-                      </p>
                     </div>
                   </Link>
                 );

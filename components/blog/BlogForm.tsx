@@ -8,7 +8,6 @@ import {
   Save,
   FileJson,
   Calendar as CalendarIcon,
-  Clock,
   Globe,
   ArrowLeft,
   Eye,
@@ -108,7 +107,6 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
         content: initialData.content || "",
         category: initialData.category || "General",
         cover_image: initialData.cover_image || "",
-        reading_time: initialData.reading_time || "5 min read",
         tags: Array.isArray(initialData.tags)
           ? initialData.tags.join(", ")
           : "",
@@ -135,7 +133,6 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
         content_cn: "",
         category: "General",
         cover_image: "",
-        reading_time: "5 min read",
         tags: "",
         is_published: false,
         structured_data: "",
@@ -220,8 +217,6 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     if (data.excerpt) setValue("excerpt", data.excerpt);
     if (data.content) setValue("content", data.content);
     if (data.tags) setValue("tags", data.tags);
-    if (data.reading_time) setValue("reading_time", data.reading_time);
-
     if (data.structured_data) {
       setValue(
         "structured_data",

@@ -19,19 +19,18 @@ export function HeroTitle() {
   }, [words.length]);
 
   return (
-    <div className="flex">
-      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight">
-        <p className="inline-block text-white">{t("home.hero.hero_find")}</p>
-
-        <div className="inline-block ml-2 sm:ml-3 relative">
+    <div className="flex justify-center lg:justify-start text-center lg:text-left w-full">
+      <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-5xl xl:text-6xl font-bold leading-tight flex flex-col items-center lg:block">
+        <p className="text-white lg:inline-block">{t("home.hero.hero_find")}</p>
+        <div className="relative lg:inline-block lg:ml-3">
           <span
             key={index}
-            className="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-8 duration-700 flex items-center h-full leading-normal"
+            className="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-8 duration-700 leading-normal flex items-center h-full"
           >
             {words[index] || ""}
           </span>
         </div>
-        <div className="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent leading-normal">
+        <div className="bg-linear-to-r text-white bg-clip-text leading-normal lg:block">
           {t("home.hero.hero_for_you")}
         </div>
       </h1>

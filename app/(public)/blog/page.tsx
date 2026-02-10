@@ -91,7 +91,7 @@ export default async function BlogListingPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
-      <div className="min-h-screen bg-slate-50/50 pb-20">
+      <div className="min-h-screen bg-slate-50 pb-20">
         {/* Premium Hero Section */}
         <BlogHero />
 

@@ -451,8 +451,8 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
               <div className="flex items-center">
-                <span>{t("deposit.form.submit_btn")}</span>
-                <Send className="ml-2 h-4 w-4 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                <span className="text-white">{t("deposit.form.submit_btn")}</span>
+                <Send className="ml-2 h-4 w-4 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform text-white" />
               </div>
             )}
           </Button>

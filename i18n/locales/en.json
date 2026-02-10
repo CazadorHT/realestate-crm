@@ -9,7 +9,10 @@
     "login": "Login",
     "dashboard": "Dashboard",
     "deposit": "Deposit Property",
-    "favorites": "My Favorites"
+    "favorites": "My Favorites",
+    "trash": "Trash",
+    "privacy_policy": "Privacy Policy",
+    "terms_of_use": "Terms of Use"
   },
   "breadcrumb": {
     "home": "Home",
@@ -109,7 +112,6 @@
     "tag_prefix": "Tag: #",
     "see_all": "See All",
     "no_posts": "No articles at the moment",
-    "reading_time": "{min} min read",
     "about_author": "About the Author",
     "author_bio_fallback": "Real estate expert ready to share knowledge and experience about buying, selling, renting houses, condos, and offices.",
     "author_fallback_bio": "Real estate expert ready to share knowledge and experience about buying, selling, renting houses, condos, and offices.",
@@ -644,11 +646,9 @@
     "villa": "🏝️ Villa",
     "pool_villa": "🌊 Pool Villa",
     "other": "🔍 Other",
-    "warehouse": "Warehouse",
-    "factory": "Factory",
-    "apartment": "Apartment",
-    "hotel": "Hotel",
-    "commercial_building": "Commercial Building"
+    "warehouse": "🏭 Warehouse",
+    "factory": "🏭 Factory",
+    "commercial_building": "🏦 Commercial Building"
   },
   "property": {
     "details": "Property Details",

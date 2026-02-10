@@ -101,7 +101,7 @@ export function Breadcrumb({
               <span
                 className={cn(
                   "font-medium truncate max-w-[100px] sm:max-w-[150px] md:max-w-[250px] lg:max-w-none",
-                  isOnDark ? "text-white" : "text-foreground",
+                  isOnDark ? "text-white" : "text-slate-900",
                   item.className,
                 )}
                 title={item.label} // tooltip for truncated text

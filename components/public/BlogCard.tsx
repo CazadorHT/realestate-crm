@@ -62,16 +62,22 @@ export function BlogCard({ post, className }: BlogCardProps) {
             <div className="absolute top-4 left-4">
               <Badge
                 variant="secondary"
-                className="bg-background/90 backdrop-blur-sm text-foreground hover:bg-background"
+                className={cn(
+                  "backdrop-blur-sm border-0 shadow-sm transition-colors",
+                  getCategoryColor(post.category),
+                )}
               >
-                {t(`blog.categories.${post.category}`)}
+                {t(`blog.categories.${post.category}`) !==
+                `blog.categories.${post.category}`
+                  ? t(`blog.categories.${post.category}`)
+                  : post.category}
               </Badge>
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="flex flex-col flex-1 p-6">
+        <div className="flex flex-col flex-1 p-6 bg-white">
           <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
             <div className="flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5" />
@@ -113,3 +119,33 @@ export function BlogCard({ post, className }: BlogCardProps) {
     </Link>
   );
 }
+
+const getCategoryColor = (category: string) => {
+  const colors = [
+    "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+    "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
+    "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+    "bg-lime-100 text-lime-800 dark:bg-lime-900/30 dark:text-lime-300",
+    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+    "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+    "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300",
+    "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300",
+    "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300",
+    "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+    "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
+    "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300",
+    "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+    "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/30 dark:text-fuchsia-300",
+    "bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300",
+    "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300",
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < category.length; i++) {
+    hash = category.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+};

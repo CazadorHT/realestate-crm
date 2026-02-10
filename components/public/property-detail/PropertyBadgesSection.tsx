@@ -288,8 +288,8 @@ export function PropertyBadgesSection({
             <Badge
               className={`rounded-full px-5 py-2 font-bold whitespace-nowrap shadow-sm ${
                 property.listing_type === "SALE"
-                  ? "bg-emerald-600 hover:bg-emerald-700"
-                  : "bg-blue-600 hover:bg-blue-700"
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
             >
               {property.listing_type === "SALE"
