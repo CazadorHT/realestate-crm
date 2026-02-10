@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getLocalizedField } from "@/lib/i18n";
+import { format } from "date-fns";
+import { th, enUS, zhCN } from "date-fns/locale";
 
 interface BlogFeaturedPostProps {
   post: {
@@ -13,26 +17,37 @@ interface BlogFeaturedPostProps {
     category?: string | null;
     reading_time?: string | null;
     author: any;
+    title_en?: string | null;
+    title_cn?: string | null;
+    excerpt_en?: string | null;
+    excerpt_cn?: string | null;
   };
 }
 
 export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
+  const { t, language } = useLanguage();
+
   if (!post) return null;
+
+  const title = getLocalizedField<string>(post, "title", language);
+  const excerpt = getLocalizedField<string>(post, "excerpt", language);
 
   return (
     <div className="mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
       <div className="flex items-center gap-2 mb-4">
         <div className="h-6 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
-        <h2 className="text-xl font-bold text-white">บทความแนะนำ</h2>
+        <h2 className="text-xl font-bold text-white">
+          {t("blog.featured_title")}
+        </h2>
       </div>
       <div
         className="grid lg:grid-cols-2 gap-0 bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 group cursor-pointer hover:shadow-3xl transition-all duration-500"
         itemScope
         itemType="https://schema.org/BlogPosting"
       >
-        <meta itemProp="headline" content={post.title} />
+        <meta itemProp="headline" content={title} />
         <meta itemProp="datePublished" content={post.published_at || ""} />
-        {post.excerpt && <meta itemProp="description" content={post.excerpt} />}
+        {excerpt && <meta itemProp="description" content={excerpt} />}
 
         <Link
           href={`/blog/${post.slug}`}
@@ -42,7 +57,7 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
           {post.cover_image ? (
             <img
               src={post.cover_image}
-              alt={post.title}
+              alt={title}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               itemProp="image"
             />
@@ -52,7 +67,7 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
             </div>
           )}
           <div className="absolute top-4 left-4 bg-linear-to-r from-blue-600 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-            Featured
+            {t("blog.featured_label")}
           </div>
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-linear-to-t from-blue-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -61,11 +76,14 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
           <div className="flex items-center gap-3 mb-4">
             {post.category && (
               <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wide border border-blue-100">
-                {post.category}
+                {t(`blog.categories.${post.category}`) !==
+                `blog.categories.${post.category}`
+                  ? t(`blog.categories.${post.category}`)
+                  : post.category}
               </span>
             )}
             <span className="text-xs text-slate-400 font-medium">
-              {post.reading_time || "5 min read"}
+              {t("blog.reading_time", { min: post.reading_time || "5" })}
             </span>
           </div>
           <Link href={`/blog/${post.slug}`} className="block">
@@ -73,14 +91,14 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
               className="text-xl lg:text-2xl font-bold text-slate-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all leading-tight"
               itemProp="name"
             >
-              {post.title}
+              {title}
             </h3>
           </Link>
           <p
             className="text-slate-600 mb-5 line-clamp-3 leading-relaxed"
             itemProp="description"
           >
-            {post.excerpt}
+            {excerpt}
           </p>
 
           <div
@@ -113,9 +131,14 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
                       dateTime={post.published_at || ""}
                     >
                       {post.published_at
-                        ? new Date(post.published_at).toLocaleDateString(
-                            "th-TH",
-                          )
+                        ? format(new Date(post.published_at), "PPP", {
+                            locale:
+                              language === "th"
+                                ? th
+                                : language === "cn"
+                                  ? zhCN
+                                  : enUS,
+                          })
                         : ""}
                     </time>
                   </p>

@@ -27,23 +27,17 @@ export function CTASection() {
   const STATS = [
     {
       icon: Users,
-      label: t("home.hero.title_sub").includes("dream")
-        ? "10,000+ Users"
-        : "ผู้ใช้งาน 10,000+ คน",
+      label: t("home.cta.stats.users"),
       color: "text-blue-600",
     },
     {
       icon: Award,
-      label: t("home.hero.title_sub").includes("dream")
-        ? "4.9/5 Satisfaction"
-        : "ความพึงพอใจ 4.9/5",
+      label: t("home.cta.stats.satisfaction"),
       color: "text-purple-600",
     },
     {
       icon: TrendingUp,
-      label: t("home.hero.title_sub").includes("dream")
-        ? "200% Growth"
-        : "การเติบโต 200%",
+      label: t("home.cta.stats.growth"),
       color: "text-green-600",
     },
   ];
@@ -142,9 +136,7 @@ export function CTASection() {
           className="text-xs md:text-sm text-slate-500 pt-2 md:pt-4"
           data-aos="fade-up"
         >
-          {t("home.hero.title_sub").includes("dream")
-            ? "🔒 Your data is safe | 🎯 No hidden costs | ⚡ Fast response"
-            : "🔒 ข้อมูลของคุณปลอดภัย | 🎯 ไม่มีค่าใช้จ่าย | ⚡ รวดเร็วทันใจ"}
+          {t("home.cta.trust_message")}
         </p>
       </div>
     </section>

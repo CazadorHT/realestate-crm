@@ -12,16 +12,22 @@ import { CircleHelp, MessageCircle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getLocalizedField } from "@/lib/i18n";
 
+// FAQ Type definition with localized fields
 type FAQ = {
   id: string;
   question: string;
+  question_en?: string;
+  question_cn?: string;
   answer: string;
+  answer_en?: string;
+  answer_cn?: string;
   category: string;
 };
 
 export function FAQSection() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,10 +58,10 @@ export function FAQSection() {
     "@type": "FAQPage",
     mainEntity: faqs.map((faq) => ({
       "@type": "Question",
-      name: faq.question,
+      name: getLocalizedField(faq, "question", language),
       acceptedAnswer: {
         "@type": "Answer",
-        text: faq.answer,
+        text: getLocalizedField(faq, "answer", language),
       },
     })),
   };
@@ -123,52 +129,65 @@ export function FAQSection() {
                   </div>
                 </div>
               ))
-            : faqs.map((faq, index) => (
-                <AccordionItem
-                  key={faq.id}
-                  value={faq.id}
-                  className="border-none group"
-                  data-aos="fade-up"
-                  data-aos-delay={index * 100}
-                >
-                  {/* Question Bubble (Left) */}
-                  <div className="flex justify-start mb-2">
-                    <AccordionTrigger
-                      className={cn(
-                        "hover:no-underline py-0 inline-flex",
-                        "[&[data-state=open]>div]:rounded-bl-none [&[data-state=open]>div]:bg-white/10", // Adjust shape/color when open
-                      )}
-                    >
-                      <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 rounded-xl md:rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 max-w-2xl text-left group-data-[state=open]:ring-1 group-data-[state=open]:ring-blue-500/50">
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20 mt-0.5">
-                          <CircleHelp className="w-4 h-4 md:w-5 md:h-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-base md:text-lg font-medium text-white leading-snug">
-                            {faq.question}
-                          </p>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                  </div>
+            : faqs.map((faq, index) => {
+                const question = getLocalizedField<string>(
+                  faq,
+                  "question",
+                  language,
+                );
+                const answer = getLocalizedField<string>(
+                  faq,
+                  "answer",
+                  language,
+                );
 
-                  {/* Answer Bubble (Right) */}
-                  <AccordionContent className="pb-3 md:pb-4 pt-1 md:pt-2">
-                    <div className="flex justify-end pl-8 md:pl-12 lg:pl-24">
-                      <div className="flex items-start gap-3 md:gap-4 p-4 md:p-6 rounded-xl md:rounded-2xl rounded-tr-sm bg-linear-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/10 max-w-2xl backdrop-blur-md">
-                        <div className="flex-1 text-right">
-                          <p className="text-slate-300 leading-relaxed text-sm md:text-base">
-                            {faq.answer}
-                          </p>
+                return (
+                  <AccordionItem
+                    key={faq.id}
+                    value={faq.id}
+                    className="border-none group"
+                    data-aos="fade-up"
+                    data-aos-delay={index * 100}
+                  >
+                    {/* Question Bubble (Left) */}
+                    <div className="flex justify-start mb-2">
+                      <AccordionTrigger
+                        className={cn(
+                          "hover:no-underline py-0 inline-flex",
+                          "[&[data-state=open]>div]:rounded-bl-none [&[data-state=open]>div]:bg-white/10", // Adjust shape/color when open
+                        )}
+                      >
+                        <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 rounded-xl md:rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 max-w-2xl text-left group-data-[state=open]:ring-1 group-data-[state=open]:ring-blue-500/50">
+                          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20 mt-0.5">
+                            <CircleHelp className="w-4 h-4 md:w-5 md:h-5 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-base md:text-lg font-medium text-white leading-snug">
+                              {question}
+                            </p>
+                          </div>
                         </div>
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 mt-0.5">
-                          <MessageCircle className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
+                      </AccordionTrigger>
+                    </div>
+
+                    {/* Answer Bubble (Right) */}
+                    <AccordionContent className="pb-3 md:pb-4 pt-1 md:pt-2">
+                      <div className="flex justify-end pl-8 md:pl-12 lg:pl-24">
+                        <div className="flex items-start gap-3 md:gap-4 p-4 md:p-6 rounded-xl md:rounded-2xl rounded-tr-sm bg-linear-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/10 max-w-2xl backdrop-blur-md">
+                          <div className="flex-1 text-right">
+                            <p className="text-slate-300 leading-relaxed text-sm md:text-base">
+                              {answer}
+                            </p>
+                          </div>
+                          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 mt-0.5">
+                            <MessageCircle className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
         </Accordion>
       </div>
     </section>

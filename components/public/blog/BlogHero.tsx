@@ -1,8 +1,19 @@
 "use client";
 
+import React from "react";
 import { BookOpen } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function BlogHero() {
+  const { t } = useLanguage();
+
+  const titleMain = t("blog.title_main");
+  const description = t("blog.desc");
+  const highlight = t("blog.title_highlight");
+
+  const mainParts = titleMain.split("{highlight}");
+  const descParts = description.split("{bold}");
+
   return (
     <section className="relative pt-32 pb-20 overflow-hidden">
       {/* Background Pattern */}
@@ -14,24 +25,21 @@ export function BlogHero() {
       <div className="container mx-auto relative z-10 px-4 md:px-6 text-center text-white">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs font-bold uppercase tracking-wider mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <BookOpen className="w-3.5 h-3.5" />
-          บทความอสังหาริมทรัพย์
+          {t("blog.title_badge")}
         </div>
 
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 animate-in fade-in slide-in-from-bottom-5 duration-700 delay-100">
-          เคล็ดลับ{" "}
+          {mainParts[0]}
           <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-purple-400 to-blue-400">
-            บ้าน คอนโด ออฟฟิศ
+            {highlight}
           </span>
+          {mainParts[1]}
         </h1>
 
         <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
-          ความรู้ครบจบในที่เดียว เกี่ยวกับการซื้อ ขาย เช่า ลงทุน
-          <span className="font-semibold text-white">
-            {" "}
-            บ้าน คอนโด สำนักงานออฟฟิศ
-          </span>
-          <br />
-          อัปเดตใหม่ทุกสัปดาห์โดยผู้เชี่ยวชาญ
+          {descParts[0]}
+          <span className="font-semibold text-white">{highlight}</span>
+          {descParts[1]}
         </p>
       </div>
     </section>

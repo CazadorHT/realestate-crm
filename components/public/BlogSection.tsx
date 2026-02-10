@@ -9,26 +9,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getLocalizedField } from "@/lib/i18n";
 import { format } from "date-fns";
 import { th, enUS, zhCN } from "date-fns/locale";
 
-// Author type matching database schema (Json field)
-type BlogAuthor = {
-  name?: string;
-  avatar_url?: string;
-} | null;
-
-type BlogPost = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string | null;
-  cover_image: string | null;
-  published_at: string;
-  reading_time: string | null;
-  category: string | null;
-  author: BlogAuthor;
-};
+import { BlogPost } from "@/lib/services/blog";
 
 export function BlogSection() {
   const { t, language } = useLanguage();
@@ -69,7 +54,7 @@ export function BlogSection() {
       datePublished: post.published_at,
       author: {
         "@type": "Person",
-        name: post.author?.name || "Admin",
+        name: (post.author as any)?.name || "Admin",
       },
       image: post.cover_image || "",
       url: `https://your-domain.com/blog/${post.slug}`,
@@ -106,7 +91,22 @@ export function BlogSection() {
                 {t("blog.title_highlight")}
               </span>
             </h2>
-            <p className="text-slate-600 mt-1.5 text-sm">{t("blog.desc")}</p>
+            <p className="text-slate-600 mt-1.5 text-sm">
+              {(() => {
+                const desc = t("blog.desc");
+                const highlight = t("blog.title_highlight");
+                const parts = desc.split("{bold}");
+                return (
+                  <>
+                    {parts[0]}
+                    <span className="font-semibold text-slate-900">
+                      {highlight}
+                    </span>
+                    {parts[1]}
+                  </>
+                );
+              })()}
+            </p>
           </div>
           <Link
             href="/blog"
@@ -150,116 +150,137 @@ export function BlogSection() {
                   </div>
                 </div>
               ))
-            : posts.map((post, index) => (
-                <div
-                  key={post.id}
-                  data-aos="fade-up"
-                  data-aos-delay={index * 100}
-                  itemScope
-                  itemType="https://schema.org/BlogPosting"
-                >
-                  <meta itemProp="headline" content={post.title} />
-                  <meta itemProp="datePublished" content={post.published_at} />
-                  {post.excerpt && (
-                    <meta itemProp="description" content={post.excerpt} />
-                  )}
-                  {post.cover_image && (
-                    <meta itemProp="image" content={post.cover_image} />
-                  )}
+            : posts.map((post, index) => {
+                const title = getLocalizedField<string>(
+                  post,
+                  "title",
+                  language,
+                );
+                const excerpt = getLocalizedField<string>(
+                  post,
+                  "excerpt",
+                  language,
+                );
 
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-slate-200 hover:border-blue-200 flex flex-col h-full"
-                    itemProp="url"
+                return (
+                  <div
+                    key={post.id}
+                    data-aos="fade-up"
+                    data-aos-delay={index * 100}
+                    itemScope
+                    itemType="https://schema.org/BlogPosting"
                   >
-                    {/* Image */}
-                    <div className="relative h-40 md:h-48 overflow-hidden bg-slate-100">
-                      {post.cover_image ? (
-                        <img
-                          src={post.cover_image}
-                          alt={post.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                          itemProp="image"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-300 bg-linear-to-br from-slate-50 to-slate-100">
-                          <BookOpen className="w-12 h-12 opacity-20" />
-                        </div>
-                      )}
-                      {post.category && (
-                        <Badge className="absolute top-4 left-4 bg-white/90 text-slate-900 backdrop-blur-sm hover:bg-white border border-white/50">
-                          {post.category}
-                        </Badge>
-                      )}
-                      {/* Gradient overlay on hover */}
-                      <div className="absolute inset-0 bg-linear-to-t from-blue-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    </div>
+                    <meta itemProp="headline" content={post.title} />
+                    <meta
+                      itemProp="datePublished"
+                      content={post.published_at || ""}
+                    />
+                    {post.excerpt && (
+                      <meta itemProp="description" content={post.excerpt} />
+                    )}
+                    {post.cover_image && (
+                      <meta itemProp="image" content={post.cover_image} />
+                    )}
 
-                    {/* Content */}
-                    <div className="p-4 md:p-6 flex flex-col flex-1">
-                      <div className="flex items-center gap-4 text-xs text-slate-400 mb-3">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          <time
-                            itemProp="datePublished"
-                            dateTime={post.published_at}
-                          >
-                            {format(new Date(post.published_at), "PPP", {
-                              locale:
-                                language === "th"
-                                  ? th
-                                  : language === "cn"
-                                    ? zhCN
-                                    : enUS,
-                            })}
-                          </time>
-                        </div>
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-slate-200 hover:border-blue-200 flex flex-col h-full"
+                      itemProp="url"
+                    >
+                      {/* Image */}
+                      <div className="relative h-40 md:h-48 overflow-hidden bg-slate-100">
+                        {post.cover_image ? (
+                          <img
+                            src={post.cover_image}
+                            alt={title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            itemProp="image"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-300 bg-linear-to-br from-slate-50 to-slate-100">
+                            <BookOpen className="w-12 h-12 opacity-20" />
+                          </div>
+                        )}
+                        {post.category && (
+                          <Badge className="absolute top-4 left-4 bg-white/90 text-slate-900 backdrop-blur-sm hover:bg-white border border-white/50">
+                            {t(`blog.categories.${post.category}`) !==
+                            `blog.categories.${post.category}`
+                              ? t(`blog.categories.${post.category}`)
+                              : post.category}
+                          </Badge>
+                        )}
+                        {/* Gradient overlay on hover */}
+                        <div className="absolute inset-0 bg-linear-to-t from-blue-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       </div>
 
-                      <h3
-                        className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300"
-                        itemProp="name"
-                      >
-                        {post.title}
-                      </h3>
+                      {/* Content */}
+                      <div className="p-4 md:p-6 flex flex-col flex-1">
+                        <div className="flex items-center gap-4 text-xs text-slate-400 mb-3">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            <time
+                              itemProp="datePublished"
+                              dateTime={post.published_at || ""}
+                            >
+                              {post.published_at
+                                ? format(new Date(post.published_at), "PPP", {
+                                    locale:
+                                      language === "th"
+                                        ? th
+                                        : language === "cn"
+                                          ? zhCN
+                                          : enUS,
+                                  })
+                                : ""}
+                            </time>
+                          </div>
+                        </div>
 
-                      <p
-                        className="text-slate-500 text-sm line-clamp-3 mb-4 md:mb-6 flex-1"
-                        itemProp="description"
-                      >
-                        {post.excerpt}
-                      </p>
-
-                      <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                        <div
-                          className="flex items-center gap-2"
-                          itemProp="author"
-                          itemScope
-                          itemType="https://schema.org/Person"
+                        <h3
+                          className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300"
+                          itemProp="name"
                         >
-                          <Avatar className="w-8 h-8 border border-slate-100">
-                            <AvatarImage
-                              src={post.author?.avatar_url || ""}
-                              alt={post.author?.name || "Admin"}
-                              className="object-cover"
-                            />
-                            <AvatarFallback className="bg-slate-100 flex items-center justify-center">
-                              <User className="w-4 h-4 text-slate-400" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <span
-                            className="text-sm font-medium text-slate-700 truncate"
-                            itemProp="name"
+                          {title}
+                        </h3>
+
+                        <p
+                          className="text-slate-500 text-sm line-clamp-3 mb-4 md:mb-6 flex-1"
+                          itemProp="description"
+                        >
+                          {excerpt}
+                        </p>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                          <div
+                            className="flex items-center gap-2"
+                            itemProp="author"
+                            itemScope
+                            itemType="https://schema.org/Person"
                           >
-                            {post.author?.name || "Admin"}
-                          </span>
+                            <Avatar className="w-8 h-8 border border-slate-100">
+                              <AvatarImage
+                                src={(post.author as any)?.avatar_url || ""}
+                                alt={(post.author as any)?.name || "Admin"}
+                                className="object-cover"
+                              />
+                              <AvatarFallback className="bg-slate-100 flex items-center justify-center">
+                                <User className="w-4 h-4 text-slate-400" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <span
+                              className="text-sm font-medium text-slate-700 truncate"
+                              itemProp="name"
+                            >
+                              {(post.author as any)?.name || "Admin"}
+                            </span>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
                         </div>
-                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
                       </div>
-                    </div>
-                  </Link>
-                </div>
-              ))}
+                    </Link>
+                  </div>
+                );
+              })}
         </div>
       </div>
     </section>

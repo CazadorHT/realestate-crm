@@ -80,7 +80,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <LanguageProvider>
+          <LanguageProvider initialLanguage={lang as any}>
             {children}
             <Toaster />
             <CookieConsent />

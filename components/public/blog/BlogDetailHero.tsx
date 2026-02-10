@@ -3,12 +3,16 @@
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getLocalizedField } from "@/lib/i18n";
 
 interface BlogDetailHeroProps {
   post: {
     title: string;
     cover_image?: string | null;
     category?: string | null;
+    title_en?: string | null;
+    title_cn?: string | null;
   };
   author: {
     name: string;
@@ -22,12 +26,15 @@ export function BlogDetailHero({
   author,
   formattedDate,
 }: BlogDetailHeroProps) {
+  const { language, t } = useLanguage();
+  const title = getLocalizedField<string>(post, "title", language);
+
   return (
     <div className="relative h-[350px] md:h-[450px] w-full">
       {post.cover_image ? (
         <Image
           src={post.cover_image}
-          alt={post.title}
+          alt={title}
           fill
           className="object-cover brightness-50"
           priority
@@ -47,11 +54,14 @@ export function BlogDetailHero({
               variant="secondary"
               className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border-transparent text-sm md:text-base px-4 py-1.5"
             >
-              {post.category}
+              {t(`blog.categories.${post.category}`) !==
+              `blog.categories.${post.category}`
+                ? t(`blog.categories.${post.category}`)
+                : post.category}
             </Badge>
           )}
           <h1 className="text-3xl md:text-5xl font-bold leading-tight max-w-4xl mx-auto drop-shadow-lg">
-            {post.title}
+            {title}
           </h1>
           <div className="flex items-center justify-center gap-4 text-white/90 text-sm md:text-base">
             <div className="flex items-center gap-2">

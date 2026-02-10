@@ -45,8 +45,18 @@ interface PropertyDataForSEO {
   is_hot_sale?: boolean;
   near_transit?: boolean;
   transit_station_name?: string; // Legacy/Single field
-  nearby_transits?: { type: string; station_name: string }[]; // Full list from Step 3
-  nearby_places?: any[];
+  nearby_transits?: {
+    type: string;
+    station_name: string;
+    station_name_en?: string;
+    station_name_cn?: string;
+  }[]; // Full list from Step 3
+  nearby_places?: {
+    category: string;
+    name: string;
+    name_en?: string;
+    name_cn?: string;
+  }[];
   features?: string[];
 }
 
@@ -150,11 +160,19 @@ export function generatePropertySlug(
 
   // 1.5 Priority: Transit List from Step 3 (nearby_transits) - Covers BTS, MRT, ARL, etc.
   if (data.nearby_transits && data.nearby_transits.length > 0) {
-    data.nearby_transits.forEach((transit) => {
-      if (transit.station_name) {
+    data.nearby_transits.forEach((transit: any) => {
+      // Use localized station name if available
+      let stationNameValue = transit.station_name;
+      if (language === "en" && transit.station_name_en) {
+        stationNameValue = transit.station_name_en;
+      } else if (language === "cn" && transit.station_name_cn) {
+        stationNameValue = transit.station_name_cn;
+      }
+
+      if (stationNameValue) {
         const type = transit.type || "";
-        const name = transit.station_name.trim().replace(/\s+/g, "-");
-        // e.g. "ใกล้รถไฟฟ้าสถานี-bts-ทองหล่อ" or "ใกล้รถไฟฟ้าสถานี-arl-มักกะสัน"
+        const name = stationNameValue.trim().replace(/\s+/g, "-");
+        // e.g. "ใกล้รถไฟฟ้าสถานี-bts-ทองหล่อ" or "near-transit-station-bts-thong-lo"
         const keyword = `${nearTransitLabel}${type}-${name}`;
 
         if (!nearbyKeywords.includes(keyword)) {
@@ -167,14 +185,22 @@ export function generatePropertySlug(
   // 2. Secondary: Transit from Nearby Places (Google Places API or similar)
   if (data.nearby_places && data.nearby_places.length > 0) {
     // Explicitly find transit stations and add them to URL
-    data.nearby_places.forEach((place) => {
+    data.nearby_places.forEach((place: any) => {
+      // Use name from item, or localized if available
+      let placeNameValue = place.name;
+      if (language === "en" && place.name_en) {
+        placeNameValue = place.name_en;
+      } else if (language === "cn" && place.name_cn) {
+        placeNameValue = place.name_cn;
+      }
+
       const isTransit =
-        place.name.includes("BTS") ||
-        place.name.includes("MRT") ||
-        place.name.includes("สายสี");
+        placeNameValue.includes("BTS") ||
+        placeNameValue.includes("MRT") ||
+        placeNameValue.includes("สายสี");
 
       if (isTransit) {
-        const stationName = place.name.trim().replace(/\s+/g, "-");
+        const stationName = placeNameValue.trim().replace(/\s+/g, "-");
         const keyword = `${nearTransitLabel}${stationName}`;
 
         if (!nearbyKeywords.includes(keyword)) {
@@ -189,10 +215,18 @@ export function generatePropertySlug(
     for (const place of data.nearby_places) {
       if (selectedNearbyPlaces.length >= 3) break;
 
+      // Localized name check for transit exclusion
+      let placeNameValue = place.name;
+      if (language === "en" && place.name_en) {
+        placeNameValue = place.name_en;
+      } else if (language === "cn" && place.name_cn) {
+        placeNameValue = place.name_cn;
+      }
+
       const isTransit =
-        place.name.includes("BTS") ||
-        place.name.includes("MRT") ||
-        place.name.includes("สายสี");
+        placeNameValue.includes("BTS") ||
+        placeNameValue.includes("MRT") ||
+        placeNameValue.includes("สายสี");
 
       if (isTransit) continue;
 
@@ -207,7 +241,15 @@ export function generatePropertySlug(
     const nearLabel =
       language === "th" ? "ใกล้-" : language === "en" ? "near-" : "靠近-";
     selectedNearbyPlaces.forEach((place) => {
-      const keyword = `${nearLabel}${place.name.replace(/\s+/g, "-")}`;
+      // Final localized name for Slug
+      let placeNameValue = place.name;
+      if (language === "en" && place.name_en) {
+        placeNameValue = place.name_en;
+      } else if (language === "cn" && place.name_cn) {
+        placeNameValue = place.name_cn;
+      }
+
+      const keyword = `${nearLabel}${placeNameValue.replace(/\s+/g, "-")}`;
       if (!nearbyKeywords.includes(keyword)) {
         nearbyKeywords.push(keyword);
       }

@@ -7,7 +7,14 @@ import { BlogCard } from "@/components/public/BlogCard";
 import { notFound } from "next/navigation";
 import { Home, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS as en, zhCN as zh } from "date-fns/locale";
+import {
+  dictionaries,
+  getServerTranslations,
+  getServerLanguage,
+  getLocalizedField,
+} from "@/lib/i18n";
+import type { Locale } from "date-fns";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -29,6 +36,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
   const post = await getBlogPostBySlug(decodedSlug);
+  const { t, language } = await getServerTranslations();
 
   if (!post) {
     return {
@@ -37,16 +45,16 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${post.title} | บทความ บ้าน คอนโด ออฟฟิศ`,
+    title: `${getLocalizedField(post, "title", language)} | ${t("blog.article_label")}`,
     description:
-      post.excerpt ||
-      `บทความเกี่ยวกับ ${post.category || "อสังหาริมทรัพย์"} - ${post.title}`,
+      getLocalizedField(post, "excerpt", language) ||
+      `${t("blog.schema_desc")} - ${getLocalizedField(post, "title", language)}`,
     keywords: `${
       post.category
-    }, บ้าน, คอนโด, สำนักงานออฟฟิศ, อสังหาริมทรัพย์, ${post.tags?.join(", ")}`,
+    }, ${t("home.hero.title_highlight")}, ${post.tags?.join(", ")}`,
     openGraph: {
-      title: post.title,
-      description: post.excerpt || "",
+      title: getLocalizedField(post, "title", language),
+      description: getLocalizedField(post, "excerpt", language) || "",
       images: post.cover_image ? [post.cover_image] : [],
       type: "article",
       publishedTime: post.published_at || undefined,
@@ -74,13 +82,22 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound();
   }
 
+  const language = await getServerLanguage();
+  const { t } = await import("@/lib/i18n").then((m) =>
+    m.getServerTranslations(),
+  );
+
   // Safe parsing for author field which is JSONB
   const author =
     typeof post.author === "object"
       ? (post.author as { name: string; avatar?: string; bio?: string })
       : { name: "Admin", avatar: "", bio: "" };
+
+  const dateLocales: Record<string, Locale> = { th, en, zh };
+  const locale = dateLocales[language === "cn" ? "zh" : language] || th;
+
   const formattedDate = post.published_at
-    ? format(new Date(post.published_at), "d MMMM yyyy", { locale: th })
+    ? format(new Date(post.published_at), "d MMMM yyyy", { locale })
     : "";
 
   const relatedPosts = post.category
@@ -91,8 +108,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    headline: post.title,
-    description: post.excerpt || "",
+    headline: getLocalizedField(post, "title", language),
+    description: getLocalizedField(post, "excerpt", language) || "",
     image: post.cover_image || "",
     datePublished: post.published_at,
     dateModified: post.updated_at || post.published_at,
@@ -126,8 +143,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       <div className="container mx-auto px-4 md:px-6 py-4">
         <AppBreadcrumbs
           items={[
-            { label: "หน้าแรก", href: "/" },
-            { label: "บทความ", href: "/blog" },
+            { label: t("common.home"), href: "/" },
+            { label: t("common.blog"), href: "/blog" },
             ...(post.category
               ? [
                   {
@@ -136,7 +153,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   },
                 ]
               : []),
-            { label: post.title, href: `/blog/${slug}` },
+            {
+              label: getLocalizedField(post, "title", language),
+              href: `/blog/${slug}`,
+            },
           ]}
         />
       </div>
@@ -171,7 +191,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <div className="flex items-center gap-2 mb-8">
             <div className="h-6 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
             <h2 className="text-2xl font-bold">
-              บทความอื่นๆ ใน {post.category}
+              {t("blog.more_articles_in")} {post.category}
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

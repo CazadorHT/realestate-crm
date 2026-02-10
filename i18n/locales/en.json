@@ -57,6 +57,7 @@
     "show_less": "Show Less",
     "submit": "Submit Info",
     "share": "Share",
+    "no_image": "No matching image",
     "call": "Call",
     "contact": "Contact",
     "meters_short": "m.",
@@ -86,6 +87,56 @@
     "rent_price": "Rent Price",
     "sale_price": "Sale Price"
   },
+  "blog": {
+    "title_badge": "Real Estate Articles",
+    "title_main": "Tips ",
+    "title_highlight": "Home, Condo, Office",
+    "desc": "Comprehensive knowledge in one place about buying, selling, renting, and investing in {bold}. Updated weekly by experts.",
+    "schema_name": "Real Estate Articles | Home, Condo, Office",
+    "schema_desc": "Comprehensive knowledge about buying, selling, renting houses, condos, and office spaces. Market trends and expert tips.",
+    "article_label": "Articles",
+    "latest_articles": "Latest Articles",
+    "category_label": "Category",
+    "tag_label": "Tag",
+    "view_all": "View All",
+    "no_articles": "No articles at the moment",
+    "more_articles_in": "More articles in",
+    "contact_agent_msg": "Interested in more info about",
+    "featured_title": "Featured Post",
+    "featured_label": "Featured",
+    "latest_title": "Latest Articles",
+    "category_prefix": "Category: ",
+    "tag_prefix": "Tag: #",
+    "see_all": "See All",
+    "no_posts": "No articles at the moment",
+    "reading_time": "{min} min read",
+    "about_author": "About the Author",
+    "author_bio_fallback": "Real estate expert ready to share knowledge and experience about buying, selling, renting houses, condos, and offices.",
+    "author_fallback_bio": "Real estate expert ready to share knowledge and experience about buying, selling, renting houses, condos, and offices.",
+    "related_title": "Other articles in {category}",
+    "share_title": "Share this article",
+    "contact_agent_desc": "Contact agent for more info",
+    "search_again": "Back to Blog",
+    "categories_title": "Categories",
+    "tags_title": "Popular Tags",
+    "no_categories": "No categories yet",
+    "no_tags": "No tags yet",
+    "newsletter_title": "Stay Updated",
+    "newsletter_desc": "Get new articles every week",
+    "newsletter_placeholder": "Your email",
+    "newsletter_btn": "Subscribe",
+    "related_articles": "Related Articles",
+    "need_help_title": "Need Help?",
+    "need_help_desc": "Consult with a real estate expert for free!",
+    "contact_us_btn": "Contact Us",
+    "categories": {
+      "General": "General",
+      "Investment": "Investment",
+      "Lifestyle": "Lifestyle",
+      "Market Trends": "Market Trends",
+      "Tips & Tricks": "Tips & Tricks"
+    }
+  },
   "home": {
     "search_btn": "Search Now",
     "hero": {
@@ -108,6 +159,14 @@
         "Real Estate Investment",
         "High Potential Land"
       ]
+    },
+    "cta": {
+      "stats": {
+        "users": "10,000+ Users",
+        "satisfaction": "4.9/5 Satisfaction",
+        "growth": "200% Growth"
+      },
+      "trust_message": "🔒 Your data is safe | 🎯 No hidden costs | ⚡ Fast response"
     },
     "property_types": {
       "title": "Property Types",
@@ -317,6 +376,25 @@
       "l_desc": "9-15 employees",
       "xl_size": "> 100 sqm",
       "xl_desc": "15-20+ employees"
+    },
+    "breakdown": {
+      "budget": "Budget",
+      "purpose": "Purchase/Rent Type",
+      "location": "Location/Area",
+      "transit": "Commute",
+      "type": "Property Type"
+    },
+    "reasons": {
+      "budget_ok": "Price is appropriate within budget",
+      "budget_near": "Price is close to budget",
+      "budget_slightly_over": "Slightly over budget but excellent location",
+      "investment": "Suitable for long-term investment",
+      "area_exact": "In the exact area you specified ✨",
+      "area_near": "In your specified area or nearby",
+      "area_bkk": "Bangkok location, convenient commute",
+      "transit_requested": "Near transit as you requested ✨",
+      "transit_bonus": "Convenient commute near public transit",
+      "type_match": "The property type you are looking for ✨"
     }
   },
   "search": {
@@ -384,15 +462,6 @@
     "title": "Map & Location",
     "no_data": "Map coordinates not available",
     "open_google_maps": "Open in Google Maps"
-  },
-  "blog": {
-    "title_badge": "Real Estate Articles",
-    "title_main": "Tips for",
-    "title_highlight": "Home, Condo, Office",
-    "desc": "Insights on buying, renting, and real estate investment",
-    "view_all": "View All Articles",
-    "schema_name": "Real Estate Articles - Home, Condo, Office",
-    "schema_desc": "Knowledge articles about buying and renting houses, condos, offices, and real estate investment."
   },
   "trust": {
     "title_badge": "High Standard Service",

@@ -24,7 +24,9 @@ export function usePropertyFormData(
 
   const fetchPopularAreas = async () => {
     try {
-      const areasData = await getPopularAreasAction({ onlyActive: false });
+      const areasData = (await getPopularAreasAction({
+        onlyActive: false,
+      })) as string[];
       // Merge DB areas with hardcoded defaults to ensure we have a good list
       const combinedAreas = Array.from(
         new Set([...areasData, ...(POPULAR_AREAS as unknown as string[])]),

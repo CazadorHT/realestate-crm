@@ -22,7 +22,7 @@ import {
 } from "./smart-match/constants";
 
 export function SmartMatchWizard() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const {
     step,
     setStep,
@@ -284,10 +284,38 @@ export function SmartMatchWizard() {
             {step === 3 && (
               <QuizQuestion
                 title={t("smart_match.area_q")}
-                options={popularAreas}
-                availableOptions={availableLocations}
+                options={popularAreas.map((a) => {
+                  const lang = language;
+                  return (
+                    (lang === "en"
+                      ? a.name_en
+                      : lang === "cn"
+                        ? a.name_cn
+                        : null) || a.name
+                  );
+                })}
+                availableOptions={availableLocations.map((a) => {
+                  const lang = language;
+                  return (
+                    (lang === "en"
+                      ? a.name_en
+                      : lang === "cn"
+                        ? a.name_cn
+                        : null) || a.name
+                  );
+                })}
                 onSelect={(val) => {
-                  setArea(val);
+                  const selected = popularAreas.find((a) => {
+                    const lang = language;
+                    const localized =
+                      (lang === "en"
+                        ? a.name_en
+                        : lang === "cn"
+                          ? a.name_cn
+                          : null) || a.name;
+                    return localized === val;
+                  });
+                  setArea(selected?.name || val);
                   handleSearch();
                 }}
               />

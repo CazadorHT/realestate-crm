@@ -1,12 +1,12 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import th from "@/i18n/locales/th.json";
 import en from "@/i18n/locales/en.json";
 import cn from "@/i18n/locales/cn.json";
 
-type Language = "th" | "en" | "cn";
-type Translations = typeof th;
+export type Language = "th" | "en" | "cn";
 
 // Helper to access nested keys "nav.home"
 function getNestedValue(obj: any, path: string): string {
@@ -25,12 +25,21 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 
 export const dictionaries = { th, en, cn };
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("th");
+export function LanguageProvider({
+  children,
+  initialLanguage = "th",
+}: {
+  children: React.ReactNode;
+  initialLanguage?: Language;
+}) {
+  const router = useRouter();
+  const [language, setLanguageState] = useState<Language>(initialLanguage);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Priority: Cookie > LocalStorage > Default (th)
+    setMounted(true);
+
+    // Recovery: If initialLanguage was somehow wrong but cookie says otherwise
     const getCookie = (name: string) => {
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
@@ -39,27 +48,22 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     };
 
     const cookieLang = getCookie("app-language") as Language;
-    const saved = localStorage.getItem("app-language") as Language;
-
-    const initialLang =
-      (cookieLang && ["th", "en", "cn"].includes(cookieLang) && cookieLang) ||
-      (saved && ["th", "en", "cn"].includes(saved) && saved) ||
-      "th";
-
-    setLanguageState(initialLang);
-    setMounted(true);
-
-    // Ensure cookie and localStorage are in sync on mount
-    if (initialLang) {
-      document.cookie = `app-language=${initialLang}; path=/; max-age=31536000; SameSite=Lax`;
-      localStorage.setItem("app-language", initialLang);
+    if (
+      cookieLang &&
+      ["th", "en", "cn"].includes(cookieLang) &&
+      cookieLang !== language
+    ) {
+      setLanguageState(cookieLang);
     }
-  }, []);
+  }, [language]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem("app-language", lang);
     document.cookie = `app-language=${lang}; path=/; max-age=31536000; SameSite=Lax`;
+
+    // Refresh to update server components (metadata, sidebars, etc)
+    router.refresh();
   };
 
   const t = (key: string, params?: Record<string, string | number>) => {

@@ -1,27 +1,40 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { BlogPost } from "@/lib/services/blog";
-import { Calendar, Clock, ArrowRight } from "lucide-react";
+import { Calendar, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS as en, zhCN as zh } from "date-fns/locale";
+import { getLocalizedField } from "@/lib/i18n";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import type { Locale } from "date-fns";
 
 interface BlogCardProps {
   post: BlogPost;
   className?: string;
 }
 
+const dateLocales: Record<string, Locale> = { th, en, zh };
+
 export function BlogCard({ post, className }: BlogCardProps) {
+  const { language, t } = useLanguage();
+
   // Safe parsing for author field which is JSONB
   const author =
     typeof post.author === "object" && post.author !== null
       ? (post.author as { name: string; avatar?: string })
       : { name: "Admin", avatar: "" };
 
+  const locale = dateLocales[language === "cn" ? "zh" : language] || th;
   const formattedDate = post.published_at
-    ? format(new Date(post.published_at), "d MMM yyyy", { locale: th })
+    ? format(new Date(post.published_at), "d MMM yyyy", { locale })
     : "";
+
+  const title = getLocalizedField<string>(post, "title", language);
+  const excerpt = getLocalizedField<string>(post, "excerpt", language);
 
   return (
     <Link
@@ -34,14 +47,14 @@ export function BlogCard({ post, className }: BlogCardProps) {
           {post.cover_image ? (
             <Image
               src={post.cover_image}
-              alt={post.title}
+              alt={title || post.title}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-              No Image
+            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+              {t("common.no_image")}
             </div>
           )}
 
@@ -51,7 +64,7 @@ export function BlogCard({ post, className }: BlogCardProps) {
                 variant="secondary"
                 className="bg-background/90 backdrop-blur-sm text-foreground hover:bg-background"
               >
-                {post.category}
+                {t(`blog.categories.${post.category}`)}
               </Badge>
             </div>
           )}
@@ -67,11 +80,11 @@ export function BlogCard({ post, className }: BlogCardProps) {
           </div>
 
           <h3 className="text-xl font-bold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-            {post.title}
+            {title}
           </h3>
 
           <p className="text-muted-foreground text-sm line-clamp-3 mb-6 flex-1">
-            {post.excerpt}
+            {excerpt}
           </p>
 
           <div className="flex items-center justify-between mt-auto">
@@ -92,7 +105,7 @@ export function BlogCard({ post, className }: BlogCardProps) {
             </div>
 
             <span className="inline-flex items-center text-sm font-semibold text-primary group-hover:translate-x-1 transition-transform">
-              Read more <ArrowRight className="ml-1 w-4 h-4" />
+              {t("common.read_more")} <ArrowRight className="ml-1 w-4 h-4" />
             </span>
           </div>
         </div>

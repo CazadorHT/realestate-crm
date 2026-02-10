@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { User } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import { ContactAgentDialog } from "@/components/public/ContactAgentDialog";
+import { ShareButtons } from "@/components/public/ShareButtons";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getLocalizedField } from "@/lib/i18n";
 
 interface BlogDetailContentProps {
   post: {
@@ -12,6 +15,12 @@ interface BlogDetailContentProps {
     content?: string | null;
     tags?: string[] | null;
     title: string;
+    excerpt_en?: string | null;
+    excerpt_cn?: string | null;
+    content_en?: string | null;
+    content_cn?: string | null;
+    title_en?: string | null;
+    title_cn?: string | null;
   };
   author: {
     name: string;
@@ -21,15 +30,20 @@ interface BlogDetailContentProps {
 }
 
 export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
+  const { t, language } = useLanguage();
   const [contactOpen, setContactOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  const title = getLocalizedField<string>(post, "title", language);
+  const excerpt = getLocalizedField<string>(post, "excerpt", language);
+  const content = getLocalizedField<string>(post, "content", language);
+
   const [sanitizedContent, setSanitizedContent] = useState<string>(
-    post.content || "",
+    content || "",
   );
 
   useEffect(() => {
-    if (!post.content) {
+    if (!content) {
       setSanitizedContent("");
       return;
     }
@@ -38,13 +52,13 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
     import("dompurify").then((module) => {
       const DOMPurify = module.default;
       setSanitizedContent(
-        DOMPurify.sanitize(post.content || "", {
+        DOMPurify.sanitize(content || "", {
           ADD_TAGS: ["iframe"],
           ADD_ATTR: ["target", "class"],
         }),
       );
     });
-  }, [post.content]);
+  }, [content]);
 
   useEffect(() => {
     const handleContentClick = (e: MouseEvent) => {
@@ -73,9 +87,9 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
   return (
     <div className="bg-white rounded-2xl p-6 md:p-10 shadow-xl border border-slate-200">
       {/* Excerpt */}
-      {post.excerpt && (
+      {excerpt && (
         <p className="text-xl md:text-2xl font-medium text-slate-600 mb-8 leading-relaxed border-l-4 border-blue-600 pl-6 py-2 bg-linear-to-r from-blue-50/50 to-transparent">
-          {post.excerpt}
+          {excerpt}
         </p>
       )}
 
@@ -123,12 +137,11 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-slate-900 mb-1">
-              เกี่ยวกับผู้เขียน
+              {t("blog.about_author")}
             </h3>
             <p className="text-blue-600 font-medium mb-2">{author.name}</p>
             <p className="text-sm text-slate-600 leading-relaxed">
-              {author.bio ||
-                "ผู้เชี่ยวชาญด้านอสังหาริมทรัพย์ที่พร้อมแชร์ความรู้และประสบการณ์เกี่ยวกับการซื้อ ขาย เช่า บ้าน คอนโด และสำนักงานออฟฟิศ"}
+              {author.bio || t("blog.author_bio_fallback")}
             </p>
           </div>
         </div>
@@ -137,8 +150,8 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
       <ContactAgentDialog
         open={contactOpen}
         onOpenChange={setContactOpen}
-        propertyTitle={`[Blog Inquiry] ${post.title}`}
-        defaultMessage={`สนใจสอบถามเพิ่มเติมเกี่ยวกับบทความ: ${post.title}`}
+        propertyTitle={`[Blog Inquiry] ${title}`}
+        defaultMessage={`${t("blog.contact_agent_msg")}: ${title}`}
       />
     </div>
   );

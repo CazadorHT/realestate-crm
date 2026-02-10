@@ -73,8 +73,12 @@ export function useSmartMatchWizard() {
   const [officeSizes, setOfficeSizes] = useState<OfficeSizeOption[]>([]);
   const [settings, setSettings] =
     useState<SmartMatchSettings>(DEFAULT_SETTINGS);
-  const [popularAreas, setPopularAreas] = useState<string[]>([]);
-  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
+  const [popularAreas, setPopularAreas] = useState<
+    { name: string; name_en?: string | null; name_cn?: string | null }[]
+  >([]);
+  const [availableLocations, setAvailableLocations] = useState<
+    { name: string; name_en?: string | null; name_cn?: string | null }[]
+  >([]);
   const [availablePropertyTypes, setAvailablePropertyTypes] = useState<
     string[]
   >([]);
@@ -163,10 +167,25 @@ export function useSmartMatchWizard() {
         budget: selectedBudget || undefined,
         nearTransit: nearTransit === null ? undefined : nearTransit,
       })
-        .then(setAvailableLocations)
+        .then((result) => {
+          // Map strings back to objects
+          const areaObjects = result.map((name) => {
+            const existing = popularAreas.find((a) => a.name === name);
+            return existing || { name, name_en: name, name_cn: name };
+          });
+          setAvailableLocations(areaObjects);
+        })
         .catch(console.error);
     }
-  }, [step, purpose, propertyType, officeSize, selectedBudget, nearTransit]);
+  }, [
+    step,
+    purpose,
+    propertyType,
+    officeSize,
+    selectedBudget,
+    nearTransit,
+    popularAreas,
+  ]);
 
   // Load config on mount
   useEffect(() => {
@@ -233,26 +252,26 @@ export function useSmartMatchWizard() {
           await import("@/features/properties/actions");
         const data = await getPopularAreasAction();
         if (data.length > 0) {
-          setPopularAreas(data);
+          setPopularAreas(data as any);
         } else {
           setPopularAreas([
-            t("search.locations.on_nut"),
-            t("search.locations.bangna"),
-            t("search.locations.lat_phrao"),
-            t("search.locations.rama_9"),
+            { name: "อ่อนนุช", name_en: "On Nut", name_cn: "On Nut" },
+            { name: "บางนา", name_en: "Bang Na", name_cn: "Bang Na" },
+            { name: "ลาดพร้าว", name_en: "Lat Phrao", name_cn: "Lat Phrao" },
+            { name: "พระราม 9", name_en: "Rama 9", name_cn: "Rama 9" },
           ]);
         }
       } catch (e) {
         setPopularAreas([
-          t("search.locations.on_nut"),
-          t("search.locations.bangna"),
-          t("search.locations.lat_phrao"),
-          t("search.locations.rama_9"),
+          { name: "อ่อนนุช", name_en: "On Nut", name_cn: "On Nut" },
+          { name: "บางนา", name_en: "Bang Na", name_cn: "Bang Na" },
+          { name: "ลาดพร้าว", name_en: "Lat Phrao", name_cn: "Lat Phrao" },
+          { name: "พระราม 9", name_en: "Rama 9", name_cn: "Rama 9" },
         ]);
       }
     }
     loadAreas();
-  }, [t]);
+  }, []);
 
   const handleBack = () => {
     if (step === 1.5) setStep(1);
@@ -295,6 +314,7 @@ export function useSmartMatchWizard() {
         nearTransit: nearTransit === null ? undefined : nearTransit,
         propertyType:
           propertyType || (isOfficeMode ? "OFFICE_BUILDING" : undefined),
+        language: languageContext.language,
       });
 
       setSessionId(results.sessionId || "");

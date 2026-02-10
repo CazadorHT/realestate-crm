@@ -84,7 +84,6 @@ export function prepareSEOData(
     postal_code: propertyData.postal_code ?? undefined,
     description: propertyData.description ?? undefined,
     transit_station_name: (propertyData as any).transit_station_name,
-    nearby_transits: (propertyData as any).nearby_transits,
     // SEO Flags
     is_pet_friendly: !!propertyData.is_pet_friendly,
     is_corner_unit: !!propertyData.is_corner_unit,
@@ -104,6 +103,7 @@ export function prepareSEOData(
       ((propertyData.nearby_transits as any[])?.length || 0) > 0 ||
       (propertyData as any).near_transit
     ),
+    nearby_transits: (propertyData as any).nearby_transits || [],
     nearby_places: (propertyData as any).nearby_places || [],
     features: (propertyData as any).features || [],
   });

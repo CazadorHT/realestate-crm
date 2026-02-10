@@ -3,12 +3,14 @@
 import { BookOpen } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface BlogSidebarProps {
   posts: any[];
 }
 
 export function BlogSidebar({ posts }: BlogSidebarProps) {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const currentTag = searchParams.get("tag");
   const currentCategory = searchParams.get("category");
@@ -20,7 +22,9 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-5 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
-            <h3 className="text-lg font-bold text-slate-900">หมวดหมู่</h3>
+            <h3 className="text-lg font-bold text-slate-900">
+              {t("blog.categories_title")}
+            </h3>
           </div>
           <div className="space-y-2">
             {(() => {
@@ -41,7 +45,7 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
               if (categories.length === 0) {
                 return (
                   <div className="text-center py-8 text-slate-400 text-sm">
-                    ยังไม่มีหมวดหมู่
+                    {t("blog.no_categories")}
                   </div>
                 );
               }
@@ -58,7 +62,11 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
                         : "bg-slate-50 text-slate-700 hover:bg-linear-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 font-medium border-transparent hover:border-blue-200"
                     }`}
                   >
-                    <span>{cat}</span>
+                    <span>
+                      {t(`blog.categories.${cat}`) !== `blog.categories.${cat}`
+                        ? t(`blog.categories.${cat}`)
+                        : cat}
+                    </span>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
                         isActive
@@ -79,7 +87,9 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
         <div className="bg-linear-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-5 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
-            <h3 className="text-lg font-bold text-slate-900">ป้ายยอดนิยม</h3>
+            <h3 className="text-lg font-bold text-slate-900">
+              {t("blog.tags_title")}
+            </h3>
           </div>
           <div className="flex flex-wrap gap-2">
             {(() => {
@@ -110,7 +120,7 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
               if (popularTags.length === 0) {
                 return (
                   <div className="text-center w-full py-4 text-slate-400 text-sm">
-                    ยังไม่มีแท็ก
+                    {t("blog.no_tags")}
                   </div>
                 );
               }
@@ -137,14 +147,16 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
 
         {/* Newsletter (Optional) */}
         <div className="bg-linear-to-br from-slate-900 to-blue-900 rounded-2xl p-6 text-white">
-          <h3 className="text-lg font-bold mb-2">รับข่าวสารใหม่ๆ</h3>
+          <h3 className="text-lg font-bold mb-2">
+            {t("blog.newsletter_title")}
+          </h3>
           <p className="text-sm text-slate-300 mb-4">
-            รับบทความใหม่ก่อนใคร ทุกสัปดาห์
+            {t("blog.newsletter_desc")}
           </p>
           <div className="flex gap-2">
             <input
               type="email"
-              placeholder="อีเมลของคุณ"
+              placeholder={t("blog.newsletter_placeholder")}
               className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled
             />
@@ -152,7 +164,7 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium text-sm whitespace-nowrap transition-colors"
               disabled
             >
-              สมัคร
+              {t("blog.newsletter_btn")}
             </button>
           </div>
           <p className="text-xs text-slate-400 mt-2">Coming Soon</p>

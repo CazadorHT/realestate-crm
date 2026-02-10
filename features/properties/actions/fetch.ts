@@ -87,7 +87,7 @@ export async function getPopularAreasAction(
 
   const { data: allAreas, error } = await supabase
     .from("popular_areas")
-    .select("name")
+    .select("name, name_cn, name_en")
     .order("name");
 
   if (error) {
@@ -111,8 +111,12 @@ export async function getPopularAreasAction(
 
   // Return intersection
   return allAreas
-    .map((item) => item.name)
-    .filter((name) => activeSet.has(name));
+    .filter((area) => activeSet.has(area.name))
+    .map((item) => ({
+      name: item.name,
+      name_en: item.name_en,
+      name_cn: item.name_cn,
+    }));
 }
 
 /**

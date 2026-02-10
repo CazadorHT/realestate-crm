@@ -18,6 +18,8 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 export interface NearbyPlaceItem {
   category: string;
   name: string;
+  name_en?: string;
+  name_cn?: string;
   distance?: string;
   time?: string;
 }
@@ -25,6 +27,8 @@ export interface NearbyPlaceItem {
 export interface TransitItem {
   type: string;
   station_name: string;
+  station_name_en?: string;
+  station_name_cn?: string;
   distance_meters?: number;
   time?: string;
 }
@@ -147,7 +151,11 @@ export function NearbyPlaces({
                     className="flex justify-between items-start text-sm gap-2"
                   >
                     <span className="text-slate-600 mr-auto wrap-break-word leading-tight">
-                      {item.name}
+                      {(language === "en"
+                        ? item.name_en
+                        : language === "cn"
+                          ? item.name_cn
+                          : null) || item.name}
                     </span>
                     <div className="flex items-center gap-1 shrink-0 mt-0.5">
                       {item.distance && (
@@ -202,7 +210,11 @@ export function NearbyPlaces({
                         {typeLabel}
                       </span>
                       <span className="text-slate-600 leading-tight">
-                        {transit.station_name}
+                        {(language === "en"
+                          ? transit.station_name_en
+                          : language === "cn"
+                            ? transit.station_name_cn
+                            : null) || transit.station_name}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 shrink-0 mt-0.5">

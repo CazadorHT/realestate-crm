@@ -35,19 +35,25 @@ type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 
 export function calculateMatchScore(
   property: PropertyRow,
-  criteria: SearchCriteria,
+  criteria: SearchCriteria & { language?: "en" | "th" | "cn" },
 ): { score: number; reasons: string[]; scoreBreakdown: ScoreBreakdown[] } {
   let score = 0;
   const reasons: string[] = [];
   const scoreBreakdown: ScoreBreakdown[] = [];
+  const lang = criteria.language || "th";
+
+  // Helper to get translated string (mock since we are on server)
+  // In a real app we might use a server-side i18n lib,
+  // but here we can just use the language to select the right string or key.
+  // Note: These should match the keys in our JSON locale files.
 
   // 1. Price Matching (40%)
+  // ... (price logic same)
   let price =
     criteria.purpose === "RENT"
       ? property.rental_price || property.original_rental_price
       : property.price || property.original_price;
 
-  // Fallback for offices if main price is missing
   if (!price && property.property_type === "OFFICE_BUILDING") {
     const sqmPrice =
       criteria.purpose === "RENT"
@@ -55,16 +61,12 @@ export function calculateMatchScore(
         : property.price_per_sqm;
 
     if (sqmPrice && property.size_sqm) {
-      // Estimate total price: sqm_price * size
       price = sqmPrice * property.size_sqm;
     } else {
-      // If we only have sqm price and no size, don't use it for budget matching
-      // as it's not a total price and will cause false positives (e.g. 1,300 matching 15k-50k budget)
       price = 0;
     }
   }
 
-  // Secondary fallback (Rent <-> Sale cross-check)
   if (!price) {
     price =
       criteria.purpose === "RENT"
@@ -75,7 +77,6 @@ export function calculateMatchScore(
   const effectivePrice = price || 0;
   let pricePoints = 0;
 
-  // Only award points if price is > 0
   if (effectivePrice > 0) {
     if (criteria.budgetMin && criteria.budgetMax) {
       if (
@@ -83,25 +84,25 @@ export function calculateMatchScore(
         effectivePrice <= criteria.budgetMax
       ) {
         pricePoints = 40;
-        reasons.push("งบไม่เกิน ราคาเหมาะสม");
+        reasons.push("budget_ok");
       } else if (effectivePrice <= criteria.budgetMax * 1.15) {
-        pricePoints = 30; // Close enough (within 15%)
-        reasons.push("ราคาใกล้เคียงงบประมาณ");
+        pricePoints = 30;
+        reasons.push("budget_near");
       }
     } else if (criteria.budgetMax) {
       if (effectivePrice <= criteria.budgetMax) {
         pricePoints = 40;
-        reasons.push("งบไม่เกิน ราคาเหมาะสม");
+        reasons.push("budget_ok");
       } else if (effectivePrice <= criteria.budgetMax * 1.1) {
         pricePoints = 25;
-        reasons.push("เกินงบเล็กน้อยแต่ทำเลดีเยี่ยม");
+        reasons.push("budget_slightly_over");
       }
     }
   }
 
   if (pricePoints > 0) {
     score += pricePoints;
-    scoreBreakdown.push({ label: "งบประมาณ", points: pricePoints });
+    scoreBreakdown.push({ label: "budget", points: pricePoints });
   }
 
   // 2. Purpose Match (20%)
@@ -122,11 +123,11 @@ export function calculateMatchScore(
     (listingType === "SALE" || listingType === "SALE_AND_RENT")
   ) {
     purposePoints = 20;
-    reasons.push("เหมาะสำหรับการลงทุนระยะยาว");
+    reasons.push("investment");
   }
   if (purposePoints > 0) {
     score += purposePoints;
-    scoreBreakdown.push({ label: "ประเภทการซื้อ/เช่า", points: purposePoints });
+    scoreBreakdown.push({ label: "purpose", points: purposePoints });
   }
 
   // 3. Area Match (30%)
@@ -134,12 +135,10 @@ export function calculateMatchScore(
   if (criteria.area) {
     const searchTerms = AREA_MAPPING[criteria.area] || [criteria.area];
 
-    // Priority 1: Exact match in the designated Popular Area field
     if (property.popular_area === criteria.area) {
       areaPoints = 30;
-      reasons.push(`อยู่ในย่าน ${criteria.area} ที่คุณระบุพอดี ✨`);
+      reasons.push("area_exact");
     } else {
-      // Priority 2: Keyword match in multiple fields (District, Subdistrict, Title, Description)
       const propertyText = `${property.popular_area || ""} ${
         property.district || ""
       } ${property.subdistrict || ""} ${property.title} ${
@@ -152,22 +151,21 @@ export function calculateMatchScore(
 
       if (isMatch) {
         areaPoints = 25;
-        reasons.push(`อยู่ในย่าน ${criteria.area} หรือพื้นที่ใกล้เคียง`);
+        reasons.push("area_near");
       } else {
-        // Bonus: if it's in the same province but not exact area
         if (
           property.province?.includes("กรุงเทพ") ||
           property.province?.includes("Bangkok")
         ) {
           areaPoints = 10;
-          reasons.push("ทำเลกรุงเทพฯ เดินทางสะดวกเข้าเมืองง่าย");
+          reasons.push("area_bkk");
         }
       }
     }
   }
   if (areaPoints > 0) {
     score += areaPoints;
-    scoreBreakdown.push({ label: "ทำเล/ย่าน", points: areaPoints });
+    scoreBreakdown.push({ label: "location", points: areaPoints });
   }
 
   // 4. Transit Match (10%)
@@ -175,16 +173,15 @@ export function calculateMatchScore(
   if (criteria.nearTransit) {
     if (property.near_transit) {
       transitPoints = 10;
-      reasons.push("ใกล้สถานีรถไฟฟ้าตามที่คุณต้องการ ✨");
+      reasons.push("transit_requested");
     }
   } else if (property.near_transit) {
-    // Even if not requested, it's a bonus
     transitPoints = 5;
-    reasons.push("เดินทางสะดวกใกล้ระบบขนส่งสาธารณะ");
+    reasons.push("transit_bonus");
   }
   if (transitPoints > 0) {
     score += transitPoints;
-    scoreBreakdown.push({ label: "การเดินทาง", points: transitPoints });
+    scoreBreakdown.push({ label: "transit", points: transitPoints });
   }
 
   // 5. Property Type Match (Bonus)
@@ -192,15 +189,14 @@ export function calculateMatchScore(
   if (criteria.propertyType) {
     if (property.property_type === criteria.propertyType) {
       typePoints = 30;
-      reasons.push(`เป็นประเภททรัพย์ที่กำลังมองหาพอดี ✨`);
+      reasons.push("type_match");
     } else {
-      // Small penalty or lower score if doesn't match requested type
       typePoints = -20;
     }
   }
   if (typePoints !== 0) {
     score += typePoints;
-    scoreBreakdown.push({ label: "ประเภททรัพย์", points: typePoints });
+    scoreBreakdown.push({ label: "type", points: typePoints });
   }
 
   if (score > 100) score = 100;

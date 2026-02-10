@@ -65,7 +65,9 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
                             key={i}
                             className="flex justify-between items-center text-xs"
                           >
-                            <span className="text-slate-600">{item.label}</span>
+                            <span className="text-slate-600">
+                              {t(`smart_match.breakdown.${item.label}`)}
+                            </span>
                             <span className="font-bold text-blue-600">
                               {item.points > 0
                                 ? `+${item.points}`
@@ -152,7 +154,7 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
                   <TrendingUp className="h-3 w-3" />
                   {match.transit_type || "BTS"} {match.transit_station_name}
                   {match.transit_distance_meters
-                    ? ` (${match.transit_distance_meters} ม.)`
+                    ? ` (${match.transit_distance_meters} ${t("common.meters_short")})`
                     : ""}
                 </div>
               )}

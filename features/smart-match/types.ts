@@ -15,6 +15,7 @@ export interface SearchCriteria {
   area?: string;
   nearTransit?: boolean;
   propertyType?: PropertyType;
+  language?: "en" | "th" | "cn"; // Add language support
 }
 
 export interface PropertyMatch {
