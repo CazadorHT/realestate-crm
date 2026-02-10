@@ -424,6 +424,7 @@
     },
     "near_train": "靠近 BTS/MRT",
     "pet_allowed": "允许宠物",
+    "fully_furnished": "全家具",
     "view_results": "查看结果",
     "items": "项目",
     "sort_by": "排序方式",
@@ -437,7 +438,13 @@
     "found_total": "共找到",
     "displaying": "显示",
     "show_more": "查看更多",
-    "show_less": "查看较少"
+    "show_less": "查看较少",
+    "price_presets": {
+      "range_1": "< 15,000",
+      "range_2": "1.5万 - 5万",
+      "range_3": "5万 - 15万",
+      "range_4": "> 15万"
+    }
   },
   "recently_viewed": {
     "title_recent": "您的浏览历史",

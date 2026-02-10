@@ -478,7 +478,7 @@ export function RecentlyViewedClient({
               variant="ghost"
               size="sm"
               onClick={handleClear}
-              className="text-slate-400 hover:text-red-500 transition-colors rounded-md gap-2"
+              className="text-slate-400 hover:text-red-500 transition-colors rounded-md gap-2 self-end sm:self-auto"
             >
               <Trash2 className="h-5 w-4" />
             </Button>

@@ -89,7 +89,7 @@ export function HotDealsSection() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-size-[32px_32px] z-2"></div>
 
       {/* Decorative Elements */}
-      <div className="absolute top-20 left-10 opacity-30 animate-pulse-slow z-3">
+      <div className="absolute top-20 left-10 opacity-30 animate-pulse-slow z-3 hidden md:block">
         <Sparkles className="h-12 w-12 text-white" />
       </div>
 
@@ -99,7 +99,7 @@ export function HotDealsSection() {
           <div className="space-y-4 max-w-screen-2xl">
             {/* Badge ที่ดู Modern ขึ้น */}
             <div
-              className="inline-flex items-center gap-2 bg-linear-to-r from-red-500 to-orange-500 text-white pl-2 pr-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/60 transform hover:scale-105 transition-all animate-pulse-scale"
+              className="inline-flex items-center gap-2 bg-linear-to-r from-red-500 to-orange-500 text-white pl-2 pr-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/60 transform hover:scale-105 transition-all animate-pulse-scale "
               data-aos="fade-right"
             >
               <div className="bg-white/20 p-1 rounded-full">
@@ -196,7 +196,7 @@ export function HotDealsSection() {
                 data-aos-delay={index * 100}
               >
                 {/* Floating Hot Badge Overlay - hidden on mobile */}
-                <div className="absolute -top-5 -left-3 md:-top-7 md:-left-5 z-30 hidden md:block">
+                <div className="absolute -top-5 -left-3 md:-top-7 md:-left-5 z-30 hidden md:block ">
                   <div className="relative">
                     <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
                     <div className="relative bg-linear-to-br from-red-500 to-orange-600 text-white p-2 md:p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.1)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-5 transition-all duration-300 scale-100 md:scale-110">

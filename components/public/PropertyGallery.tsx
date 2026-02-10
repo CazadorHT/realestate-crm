@@ -207,7 +207,7 @@ export function PropertyGallery({
 
         {/* Verified Badge - Icon only with hover text */}
         {verified && (
-          <div className="group/verified absolute top-3 left-3 md:top-4 md:left-6 z-50 flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
+          <div className="group/verified absolute top-3 left-3 md:top-4 md:left-6 z-40 flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
             {/* Icon stays visible */}
             <IoShieldCheckmark className="w-4 h-4 md:w-5 md:h-5" />
 
@@ -217,7 +217,7 @@ export function PropertyGallery({
             </span>
           </div>
         )}
-        <div className="absolute bottom-3 left-3 md:bottom-6 md:left-6 z-50 flex gap-2">
+        <div className="absolute bottom-3 left-3 md:bottom-6 md:left-6 z-40 flex gap-2">
           {petFriendly && (
             <Badge className="bg-white backdrop-blur-sm text-orange-600 border border-orange-200 rounded-full px-2 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-bold gap-1 md:gap-1.5 shadow-lg hover:bg-white/90 hover:text-orange-600 hover:border-orange-200">
               <PawPrint className="w-3.5 h-3.5 md:w-5 md:h-5" />

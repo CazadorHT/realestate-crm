@@ -44,6 +44,9 @@ export function PropertySearchPage({
   const [petFriendly, setPetFriendly] = useState(
     searchParams.get("pet_friendly") === "true",
   );
+  const [fullyFurnished, setFullyFurnished] = useState(
+    searchParams.get("fully_furnished") === "true",
+  );
   const [bedrooms, setBedrooms] = useState(
     searchParams.get("bedrooms") || "ALL",
   );
@@ -140,6 +143,34 @@ export function PropertySearchPage({
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [properties, province]);
 
+  // Compute property type counts
+  const availableTypes = useMemo(() => {
+    const counts: Record<string, number> = {};
+    properties.forEach((p) => {
+      // Respect province and listing type
+      if (province !== "ALL" && p.province !== province) return;
+
+      // Respect listing type (Sale/Rent)
+      if (listingType !== "ALL") {
+        if (listingType === "SALE") {
+          if (p.listing_type !== "SALE" && p.listing_type !== "SALE_AND_RENT")
+            return;
+        } else if (listingType === "RENT") {
+          if (p.listing_type !== "RENT" && p.listing_type !== "SALE_AND_RENT")
+            return;
+        } else if (listingType === "SALE_AND_RENT") {
+          if (p.listing_type !== "SALE_AND_RENT") return;
+        }
+      }
+
+      const t = p.property_type;
+      if (t) {
+        counts[t] = (counts[t] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [properties, province, listingType]);
+
   const filtered = useMemo(() => {
     let result = [...properties];
 
@@ -207,6 +238,13 @@ export function PropertySearchPage({
     if (petFriendly) {
       result = result.filter((p) => {
         return p.meta_keywords?.includes("Pet Friendly");
+      });
+    }
+
+    // Fully Furnished
+    if (fullyFurnished) {
+      result = result.filter((p) => {
+        return p.meta_keywords?.includes("Fully Furnished");
       });
     }
 
@@ -317,6 +355,8 @@ export function PropertySearchPage({
         setNearTrain={setNearTrain}
         petFriendly={petFriendly}
         setPetFriendly={setPetFriendly}
+        fullyFurnished={fullyFurnished}
+        setFullyFurnished={setFullyFurnished}
         bedrooms={bedrooms}
         setBedrooms={setBedrooms}
         filteredLength={filtered.length}
@@ -324,6 +364,7 @@ export function PropertySearchPage({
         province={province}
         setProvince={setProvince}
         availableProvinces={availableProvinces}
+        availableTypes={availableTypes}
       />
 
       {/* Results Grid */}

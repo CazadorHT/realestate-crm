@@ -110,7 +110,7 @@ export function BlogSection() {
           </div>
           <Link
             href="/blog"
-            className="group inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 font-medium transition-all duration-300 shadow-sm hover:shadow-md"
+            className="group self-end  inline-flex items-center  gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 font-medium transition-all duration-300 shadow-sm hover:shadow-md"
           >
             {t("blog.view_all")}
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

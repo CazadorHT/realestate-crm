@@ -22,6 +22,7 @@ import {
   ArrowUpDown,
   ChevronDown,
   ChevronUp,
+  Armchair,
 } from "lucide-react";
 import { MdOutlinePets } from "react-icons/md";
 import { FaTrainSubway } from "react-icons/fa6";
@@ -39,6 +40,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
+import { RiArmchairFill } from "react-icons/ri";
 
 interface SearchFilterBarProps {
   isLoading: boolean;
@@ -60,6 +62,8 @@ interface SearchFilterBarProps {
   setNearTrain: (v: boolean) => void;
   petFriendly: boolean;
   setPetFriendly: (v: boolean) => void;
+  fullyFurnished: boolean;
+  setFullyFurnished: (v: boolean) => void;
   bedrooms: string;
   setBedrooms: (v: string) => void;
   filteredLength: number;
@@ -72,6 +76,7 @@ interface SearchFilterBarProps {
   province: string;
   setProvince: (v: string) => void;
   availableProvinces: string[];
+  availableTypes: Record<string, number>;
 }
 
 export function SearchFilterBar({
@@ -94,6 +99,8 @@ export function SearchFilterBar({
   setNearTrain,
   petFriendly,
   setPetFriendly,
+  fullyFurnished,
+  setFullyFurnished,
   bedrooms,
   setBedrooms,
   filteredLength,
@@ -101,6 +108,7 @@ export function SearchFilterBar({
   province,
   setProvince,
   availableProvinces,
+  availableTypes,
 }: SearchFilterBarProps) {
   const { t, language } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -114,15 +122,13 @@ export function SearchFilterBar({
 
   const PROPERTY_TYPES = [
     { value: "ALL", label: t("common.all") },
+    { value: "HOUSE", label: t("home.property_types.house") },
     { value: "CONDO", label: t("home.property_types.condo") },
+    { value: "OFFICE_BUILDING", label: t("home.property_types.office") },
     { value: "VILLA", label: t("home.property_types.villa") },
     { value: "POOL_VILLA", label: t("home.property_types.pool_villa") },
     { value: "TOWNHOME", label: t("home.property_types.townhome") },
     { value: "LAND", label: t("home.property_types.land") },
-    {
-      value: "OFFICE_BUILDING",
-      label: t("home.property_types.office"),
-    },
     {
       value: "COMMERCIAL_BUILDING",
       label: t("home.property_types.commercial_building"),
@@ -141,6 +147,7 @@ export function SearchFilterBar({
     setProvince("ALL");
     setNearTrain(false);
     setPetFriendly(false);
+    setFullyFurnished(false);
     setBedrooms("ALL");
   };
 
@@ -169,7 +176,7 @@ export function SearchFilterBar({
             </SheetTrigger>
             <SheetContent
               side="bottom"
-              className="h-[90vh] rounded-t-4xl flex flex-col p-0 bg-slate-50"
+              className="h-[90vh] rounded-t-2xl flex flex-col p-0 bg-slate-50"
             >
               <SheetHeader className="px-6 py-4 border-b border-slate-100 bg-white text-slate-900 rounded-t-4xl">
                 <SheetTitle>{t("search.filter_title")}</SheetTitle>
@@ -306,54 +313,128 @@ export function SearchFilterBar({
                 </Accordion>
 
                 {/* Toggles */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all cursor-pointer ${
+                    className={`flex items-center justify-center gap-2 px-2 py-3 rounded-xl border-2 transition-all cursor-pointer ${
                       nearTrain
-                        ? "bg-blue-600 border-blue-600 text-white"
-                        : "bg-white border-slate-200 text-slate-600"
+                        ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20"
+                        : "bg-white border-slate-200 text-slate-600 hover:border-blue-200"
                     }`}
                     onClick={() => setNearTrain(!nearTrain)}
                   >
-                    <FaTrainSubway className="h-4 w-4" />
-                    <span className="text-sm font-medium">
+                    <FaTrainSubway
+                      className={`h-4 w-4 ${nearTrain ? "text-white" : "text-blue-500"}`}
+                    />
+                    <span className="text-[11px] font-semibold">
                       {t("search.near_train")}
                     </span>
                   </div>
                   <div
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all cursor-pointer ${
+                    className={`flex items-center justify-center gap-2 px-2 py-3 rounded-xl border-2 transition-all cursor-pointer ${
                       petFriendly
-                        ? "bg-orange-600 border-orange-600 text-white"
-                        : "bg-white border-slate-200 text-slate-600"
+                        ? "bg-orange-600 border-orange-600 text-white shadow-md shadow-orange-500/20"
+                        : "bg-white border-slate-200 text-slate-600 hover:border-orange-200"
                     }`}
                     onClick={() => setPetFriendly(!petFriendly)}
                   >
-                    <MdOutlinePets className="h-5 w-5" />
-                    <span className="text-sm font-medium">
+                    <MdOutlinePets
+                      className={`h-5 w-5 ${petFriendly ? "text-white" : "text-orange-500"}`}
+                    />
+                    <span className="text-[11px] font-semibold">
                       {t("search.pet_allowed")}
                     </span>
                   </div>
+                  <div
+                    className={`flex items-center justify-center gap-2 px-2 py-3 rounded-xl border-2 transition-all cursor-pointer ${
+                      fullyFurnished
+                        ? "bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                        : "bg-white border-slate-200 text-slate-600 hover:border-emerald-200"
+                    }`}
+                    onClick={() => setFullyFurnished(!fullyFurnished)}
+                  >
+                    <RiArmchairFill 
+                      className={`h-5 w-5 ${fullyFurnished ? "text-white" : "text-emerald-500"}`}
+                    />
+                    <span className="text-[11px] font-semibold">
+                      {t("search.fully_furnished")}
+                    </span>
+                  </div>
                 </div>
-                {/* Property Type */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-900">
                     {t("search.property_type")}
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {PROPERTY_TYPES.map((t) => (
-                      <button
-                        key={t.value}
-                        onClick={() => setType(t.value)}
-                        className={`px-3 py-2.5 rounded-xl text-sm font-medium border transition-all ${
-                          type === t.value
-                            ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                            : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
-                        }`}
-                      >
-                        {t.label}
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <button className="w-full flex items-center justify-between px-4 h-12 bg-white rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:border-blue-300 transition-all shadow-sm">
+                        <span className="flex items-center gap-2">
+                          {type === "ALL" ? (
+                            t("common.all")
+                          ) : (
+                            <>
+                              {
+                                PROPERTY_TYPES.find((pt) => pt.value === type)
+                                  ?.label
+                              }
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            </>
+                          )}
+                        </span>
+                        <ChevronDown className="h-4 w-4 text-slate-400" />
                       </button>
-                    ))}
-                  </div>
+                    </SheetTrigger>
+                    <SheetContent
+                      side="bottom"
+                      className="h-[60vh] rounded-t-lg p-0 flex flex-col bg-white"
+                    >
+                      <SheetHeader className="px-6 py-4 border-b border-slate-100 shrink-0">
+                        <SheetTitle className="text-left font-semibold text-lg">
+                          {t("search.property_type")}
+                        </SheetTitle>
+                      </SheetHeader>
+                      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                        {PROPERTY_TYPES.map((pt) => {
+                          const count = availableTypes[pt.value] || 0;
+                          const hasItems = pt.value === "ALL" || count > 0;
+                          const isActive = type === pt.value;
+
+                          return (
+                            <SheetClose asChild key={pt.value}>
+                              <button
+                                disabled={!hasItems}
+                                onClick={() => setType(pt.value)}
+                                className={`w-full flex items-center justify-between px-4 py-4 rounded-2xl text-sm font-medium border transition-all ${
+                                  isActive
+                                    ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
+                                    : hasItems
+                                      ? "bg-white border-slate-100 text-slate-600 hover:border-blue-200 hover:bg-slate-50"
+                                      : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed opacity-60"
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span
+                                    className={`h-2 w-2 rounded-full transition-all ${
+                                      isActive
+                                        ? "bg-blue-600"
+                                        : hasItems
+                                          ? "bg-emerald-500"
+                                          : "bg-slate-200"
+                                    }`}
+                                  />
+                                  <span>{pt.label}</span>
+                                </div>
+                                {count > 0 && pt.value !== "ALL" && (
+                                  <span className="text-xs font-normal text-slate-400">
+                                    {count} {t("search.items")}
+                                  </span>
+                                )}
+                              </button>
+                            </SheetClose>
+                          );
+                        })}
+                      </div>
+                    </SheetContent>
+                  </Sheet>
                 </div>
 
                 {/* Listing Type */}
@@ -388,22 +469,36 @@ export function SearchFilterBar({
                   <label className="text-sm font-medium text-slate-900">
                     {t("search.price_range")}
                   </label>
-                  <div className="flex items-center gap-2 h-12 bg-white rounded-xl px-2">
-                    <Input
-                      type="number"
-                      placeholder={t("search.min_budget")}
-                      className="border-0  w-full p-2 text-sm focus-visible:ring-0 bg-white"
-                      value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value)}
-                    />
-                    <span className="text-slate-400">—</span>
-                    <Input
-                      type="number"
-                      placeholder={t("search.max_budget")}
-                      className="border-0  w-full p-2 text-sm focus-visible:ring-0 bg-white"
-                      value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value)}
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { min: "0", max: "15000", key: "range_1" },
+                      { min: "15000", max: "50000", key: "range_2" },
+                      { min: "50000", max: "150000", key: "range_3" },
+                      { min: "150000", max: "", key: "range_4" },
+                    ].map((preset) => (
+                      <button
+                        key={preset.key}
+                        onClick={() => {
+                          if (
+                            minPrice === preset.min &&
+                            maxPrice === preset.max
+                          ) {
+                            setMinPrice("");
+                            setMaxPrice("");
+                          } else {
+                            setMinPrice(preset.min);
+                            setMaxPrice(preset.max);
+                          }
+                        }}
+                        className={`px-3 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+                          minPrice === preset.min && maxPrice === preset.max
+                            ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                        }`}
+                      >
+                        {t(`search.price_presets.${preset.key}`)}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -488,11 +583,31 @@ export function SearchFilterBar({
                   <SelectValue placeholder={t("search.property_type")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {PROPERTY_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
+                  {PROPERTY_TYPES.map((pt) => {
+                    const count = availableTypes[pt.value] || 0;
+                    const hasItems = pt.value === "ALL" || count > 0;
+
+                    return (
+                      <SelectItem
+                        key={pt.value}
+                        value={pt.value}
+                        disabled={!hasItems}
+                        className={!hasItems ? "opacity-50" : ""}
+                      >
+                        <div className="flex items-center justify-between w-full gap-4">
+                          <span>{pt.label}</span>
+                          {pt.value !== "ALL" && count > 0 && (
+                            <span className="flex items-center gap-1.5">
+                              <span className="h-1 w-1 rounded-full bg-emerald-500" />
+                              <span className="text-[10px] text-slate-400 font-normal">
+                                {count}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -542,12 +657,12 @@ export function SearchFilterBar({
               </div>
             </div>
 
-            <div className="col-span-2">
+            <div className="col-span-2 ">
               <div className="flex items-center gap-2 h-12 bg-white rounded-xl">
                 <Input
                   type="number"
                   placeholder={t("search.min_budget")}
-                  className="h-full w-full p-0 text-sm focus-visible:ring-0 bg-white shadow-sm border-slate-200 border px-2"
+                  className="h-full w-full p-0 text-sm focus-visible:ring-0 bg-white shadow-sm text-slate-700 border-slate-200 border px-2"
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
                 />
@@ -555,7 +670,7 @@ export function SearchFilterBar({
                 <Input
                   type="number"
                   placeholder={t("search.max_budget")}
-                  className="  h-full w-full p-0 text-sm focus-visible:ring-0 bg-white shadow-sm border-slate-200 border px-2"
+                  className="  h-full w-full p-0 text-sm focus-visible:ring-0 bg-white shadow-sm text-slate-700 border-slate-200 border px-2"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
                 />
@@ -634,6 +749,24 @@ export function SearchFilterBar({
               />
               <span className="text-sm font-medium select-none">
                 {t("search.pet_allowed")}
+              </span>
+            </div>
+
+            <div
+              className={`flex items-center justify-center gap-2 px-4 h-12 rounded-xl border-2 transition-all cursor-pointer shadow-sm ${
+                fullyFurnished
+                  ? "bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-500/30"
+                  : "bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700"
+              }`}
+              onClick={() => setFullyFurnished(!fullyFurnished)}
+            >
+              <RiArmchairFill 
+                className={`h-5 w-5 ${
+                  fullyFurnished ? "text-white" : "text-emerald-600"
+                }`}
+              />
+              <span className="text-sm font-medium select-none">
+                {t("search.fully_furnished")}
               </span>
             </div>
 

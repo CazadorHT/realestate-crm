@@ -424,6 +424,7 @@
     },
     "near_train": "ใกล้รถไฟฟ้า",
     "pet_allowed": "เลี้ยงสัตว์ได้",
+    "fully_furnished": "เฟอร์ครบ",
     "view_results": "ดูผลลัพธ์",
     "items": "รายการ",
     "sort_by": "เรียงลำดับ",
@@ -437,7 +438,13 @@
     "found_total": "พบทรัพย์ทั้งหมด",
     "displaying": "แสดง",
     "show_more": "ดูเพิ่ม",
-    "show_less": "น้อยลง"
+    "show_less": "น้อยลง",
+    "price_presets": {
+      "range_1": "< 15,000",
+      "range_2": "1.5 หมื่น - 5 หมื่น",
+      "range_3": "5 หมื่น - 1.5 แสน",
+      "range_4": "> 1.5 แสน"
+    }
   },
   "recently_viewed": {
     "title_recent": "ที่คุณสนใจล่าสุด",

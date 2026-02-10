@@ -426,6 +426,7 @@
     },
     "near_train": "Near BTS/MRT",
     "pet_allowed": "Pet Friendly",
+    "fully_furnished": "Fully Furnished",
     "view_results": "View Results",
     "items": "Items",
     "sort_by": "Sort By",
@@ -439,7 +440,13 @@
     "found_total": "Found total",
     "displaying": "Displaying",
     "show_more": "Show More",
-    "show_less": "Show Less"
+    "show_less": "Show Less",
+    "price_presets": {
+      "range_1": "< 15,000",
+      "range_2": "15k - 50k",
+      "range_3": "50k - 150k",
+      "range_4": "> 150k"
+    }
   },
   "recently_viewed": {
     "title_recent": "You recently viewed",

@@ -100,15 +100,17 @@ export function PropertyHeader({
   const displayDistrict = localized.district || property.district;
   const displaySubdistrict = localized.subdistrict || property.subdistrict;
 
-  const locationParts = incomingLocationParts || [
-    getLocaleValue(property, "popular_area", language),
-    displaySubdistrict, // Use localized or fallback
-    displayDistrict, // Use localized or fallback
-    displayProvince, // Use localized or fallback
-  ]
-    .filter(Boolean)
-    .join(", ");
-  
+  const locationParts =
+    incomingLocationParts ||
+    [
+      getLocaleValue(property, "popular_area", language),
+      displaySubdistrict, // Use localized or fallback
+      displayDistrict, // Use localized or fallback
+      displayProvince, // Use localized or fallback
+    ]
+      .filter(Boolean)
+      .join(", ");
+
   const unitSpecialFeatures = [
     property.is_pet_friendly && {
       name: t("property.badges.pet_friendly"),
@@ -156,23 +158,25 @@ export function PropertyHeader({
     },
   ].filter((f): f is { name: string; icon: string } => !!f);
 
-  const finalKeySellingPoints = incomingKeySellingPoints || [
-    ...unitSpecialFeatures,
-    ...features
-      .filter((f) => f.category === "คุณสมบัติพิเศษ")
-      .map((f) => ({
-        name: getLocaleValue(f, "name", language),
-        icon: f.icon_key,
-      })),
-    ...features
-      .filter((f) => f.category !== "คุณสมบัติพิเศษ")
-      .map((f) => ({
-        name: getLocaleValue(f, "name", language),
-        icon: f.icon_key,
-      })),
-  ]
-    .filter((v, i, a) => a.findIndex((t) => t.name === v.name) === i)
-    .slice(0, 6);
+  const finalKeySellingPoints =
+    incomingKeySellingPoints ||
+    [
+      ...unitSpecialFeatures,
+      ...features
+        .filter((f) => f.category === "คุณสมบัติพิเศษ")
+        .map((f) => ({
+          name: getLocaleValue(f, "name", language),
+          icon: f.icon_key,
+        })),
+      ...features
+        .filter((f) => f.category !== "คุณสมบัติพิเศษ")
+        .map((f) => ({
+          name: getLocaleValue(f, "name", language),
+          icon: f.icon_key,
+        })),
+    ]
+      .filter((v, i, a) => a.findIndex((t) => t.name === v.name) === i)
+      .slice(0, 6);
 
   // Office price override
   const officePrice = getOfficePrice(property);
@@ -349,9 +353,9 @@ export function PropertyHeader({
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-3 grow min-w-0 max-w-[950px] ">
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 md:gap-2 flex-wrap sm:flex-nowrap">
                 <Badge
-                  className={`rounded-full px-8 py-2 text-md font-medium  ${
+                  className={`rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
                     property.listing_type === "SALE"
                       ? "bg-emerald-600 text-white"
                       : "bg-linear-to-r from-sky-500 to-blue-600 text-white"
@@ -366,7 +370,7 @@ export function PropertyHeader({
                   <Badge
                     variant="outline"
                     className={cn(
-                      "rounded-full px-4 py-2 text-white text-md font-medium border-transparent shadow-sm",
+                      "rounded-full px-3 md:px-4 py-1.5 md:py-2 text-white text-[11px] md:text-sm font-bold border-transparent shadow-sm whitespace-nowrap",
                       typeColor.bg,
                       typeColor.text,
                     )}
@@ -380,7 +384,7 @@ export function PropertyHeader({
                 {property.is_fully_furnished && (
                   <Badge
                     variant="outline"
-                    className="rounded-full px-4 py-2 text-md font-medium border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm"
+                    className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm whitespace-nowrap"
                   >
                     ✨ {t("property.specs.fully_furnished")}
                   </Badge>
@@ -389,7 +393,7 @@ export function PropertyHeader({
                 {property.is_bare_shell && (
                   <Badge
                     variant="outline"
-                    className="rounded-full px-4 py-2 text-md font-medium border-amber-200 bg-amber-50 text-amber-700 shadow-sm"
+                    className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
                   >
                     🏗️ {t("property.specs.bare_shell")}
                   </Badge>

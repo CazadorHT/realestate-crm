@@ -120,7 +120,7 @@ export function PublicNav() {
       />
 
       <div
-        className={`border-b fixed border-b-slate-200 top-0 w-full z-50 transition-all duration-300 ${
+        className={`border-b fixed border-b-slate-200 top-0 w-full z-100 transition-all duration-300 ${
           scrolled
             ? "bg-white/95 shadow-lg border-slate-200"
             : "bg-white border-slate-200"
