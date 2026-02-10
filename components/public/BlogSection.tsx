@@ -117,12 +117,12 @@ export function BlogSection() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+        <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 pb-4 md:grid md:grid-cols-4 md:gap-6 md:mx-0 md:px-0 md:pb-0 md:overflow-visible ">
           {loading
             ? Array.from({ length: 4 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col h-full"
+                  className="w-[260px] flex-none md:w-auto md:flex-1 snap-center shrink-0 mr-4 md:mr-0 bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col h-full"
                 >
                   {/* Image Skeleton */}
                   <div className="h-40 md:h-48 bg-slate-100 relative">
@@ -169,6 +169,7 @@ export function BlogSection() {
                     data-aos-delay={index * 100}
                     itemScope
                     itemType="https://schema.org/BlogPosting"
+                    className="w-[260px] flex-none md:w-auto md:flex-1 snap-center shrink-0 mr-4 md:mr-0 h-full"
                   >
                     <meta itemProp="headline" content={post.title} />
                     <meta

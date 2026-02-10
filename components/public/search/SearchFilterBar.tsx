@@ -9,6 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { useState } from "react";
 import {
   Search,
@@ -99,6 +105,10 @@ export function SearchFilterBar({
   const { t, language } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAreaSection, setShowAreaSection] = useState(true);
+  const [showAllProvincesMobile, setShowAllProvincesMobile] = useState(false);
+  const [showAllAreasMobile, setShowAllAreasMobile] = useState(false);
+
+  const MOBILE_ITEMS_LIMIT = 9;
 
   if (isLoading) return <FilterBarSkeleton />;
 
@@ -165,64 +175,135 @@ export function SearchFilterBar({
                 <SheetTitle>{t("search.filter_title")}</SheetTitle>
               </SheetHeader>
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="location" className="border-0">
+                    <AccordionTrigger className="hover:no-underline py-2">
+                      <span className="text-sm font-medium text-slate-900">
+                        {t("search.province")} & {t("search.location")}
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-2 px-1">
+                      {/* Province (Mobile) */}
+                      <div className="space-y-2">
+                        <label className="text-xs text-slate-500 font-medium block">
+                          {t("search.province")}
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => {
+                              setProvince("ALL");
+                              setArea("ALL");
+                            }}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
+                              province === "ALL"
+                                ? "bg-blue-600 text-white border-blue-600"
+                                : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                            }`}
+                          >
+                            {t("search.all_provinces")}
+                          </button>
+                          {availableProvinces
+                            .slice(
+                              0,
+                              showAllProvincesMobile
+                                ? undefined
+                                : MOBILE_ITEMS_LIMIT,
+                            )
+                            .map((p) => (
+                              <button
+                                key={p}
+                                onClick={() => {
+                                  setProvince(p);
+                                  setArea("ALL");
+                                }}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
+                                  province === p
+                                    ? "bg-blue-600 text-white border-blue-600"
+                                    : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                                }`}
+                              >
+                                {getProvinceName(p, language)}
+                              </button>
+                            ))}
+                          {availableProvinces.length > MOBILE_ITEMS_LIMIT && (
+                            <button
+                              onClick={() =>
+                                setShowAllProvincesMobile(
+                                  !showAllProvincesMobile,
+                                )
+                              }
+                              className="px-3 py-2 rounded-lg text-sm font-medium border border-dashed border-slate-300 text-slate-500 hover:text-slate-700 hover:border-slate-400"
+                            >
+                              {showAllProvincesMobile
+                                ? t("search.show_less")
+                                : `+${availableProvinces.length - MOBILE_ITEMS_LIMIT} ${t("common.more")}`}
+                            </button>
+                          )}
+                        </div>
+                      </div>
 
-                {/* Province (Mobile) */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-slate-900">
-                    {t("search.province")}
-                  </label>
-                  <Select
-                    value={province}
-                    onValueChange={(val) => {
-                      setProvince(val);
-                      setArea("ALL"); // Reset area when province changes
-                    }}
-                  >
-                    <SelectTrigger className="w-full h-12 rounded-xl bg-slate-50/50!">
-                      <SelectValue placeholder={t("search.all_provinces")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">
-                        -- {t("search.all_provinces")} --
-                      </SelectItem>
-                      {availableProvinces.map((p) => (
-                        <SelectItem key={p} value={p}>
-                          {getProvinceName(p, language)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* Location */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-slate-900">
-                    {t("search.location")}
-                  </label>
-                  <Select value={area} onValueChange={setArea}>
-                    <SelectTrigger className="w-full h-12 rounded-xl bg-slate-50/50!">
-                      <SelectValue placeholder={t("search.all_locations")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">
-                        -- {t("search.all_locations")} --
-                      </SelectItem>
-                      {availableAreas.map((a) => (
-                        <SelectItem key={a.name} value={a.name}>
-                          {getLocaleValue(
-                            {
-                              name: a.name,
-                              name_en: a.name_en,
-                              name_cn: a.name_cn,
-                            },
-                            "name",
-                            language,
-                          )}{" "}
-                          ({a.count})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                      {/* Location */}
+                      <div className="space-y-2">
+                        <label className="text-xs text-slate-500 font-medium block">
+                          {t("search.location")}
+                        </label>
+                        <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
+                          <button
+                            onClick={() => setArea("ALL")}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
+                              area === "ALL"
+                                ? "bg-blue-600 text-white border-blue-600"
+                                : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                            }`}
+                          >
+                            {t("search.all_locations")}
+                          </button>
+                          {availableAreas
+                            .slice(
+                              0,
+                              showAllAreasMobile
+                                ? undefined
+                                : MOBILE_ITEMS_LIMIT,
+                            )
+                            .map((a) => (
+                              <button
+                                key={a.name}
+                                onClick={() => setArea(a.name)}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
+                                  area === a.name
+                                    ? "bg-blue-600 text-white border-blue-600"
+                                    : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                                }`}
+                              >
+                                {getLocaleValue(
+                                  {
+                                    name: a.name,
+                                    name_en: a.name_en,
+                                    name_cn: a.name_cn,
+                                  },
+                                  "name",
+                                  language,
+                                )}{" "}
+                                {/* <span className="opacity-70 text-xs ml-1">({a.count})</span> */}
+                              </button>
+                            ))}
+                          {availableAreas.length > MOBILE_ITEMS_LIMIT && (
+                            <button
+                              onClick={() =>
+                                setShowAllAreasMobile(!showAllAreasMobile)
+                              }
+                              className="px-3 py-2 rounded-lg text-sm font-medium border border-dashed border-slate-300 text-slate-500 hover:text-slate-700 hover:border-slate-400"
+                            >
+                              {showAllAreasMobile
+                                ? t("search.show_less")
+                                : `+${availableAreas.length - MOBILE_ITEMS_LIMIT} ${t("common.more")}`}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
 
                 {/* Toggles */}
                 <div className="grid grid-cols-2 gap-3">

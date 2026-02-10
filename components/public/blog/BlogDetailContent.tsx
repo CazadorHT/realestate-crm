@@ -96,7 +96,7 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
       {/* Main Content Render */}
       <div
         ref={contentRef}
-        className="prose prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline"
+        className="prose prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline text-slate-600"
         dangerouslySetInnerHTML={{
           __html: sanitizedContent,
         }}
