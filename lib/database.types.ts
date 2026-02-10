@@ -734,6 +734,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string | null
+          deleted_at: string | null
           description: string | null
           description_cn: string | null
           description_en: string | null
@@ -846,6 +847,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string | null
+          deleted_at?: string | null
           description?: string | null
           description_cn?: string | null
           description_en?: string | null
@@ -958,6 +960,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string | null
+          deleted_at?: string | null
           description?: string | null
           description_cn?: string | null
           description_en?: string | null

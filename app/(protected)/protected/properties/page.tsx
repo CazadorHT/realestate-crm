@@ -91,6 +91,7 @@ export default async function PropertiesPage({
   let query = supabase
     .from("properties")
     .select("*", { count: "exact" }) // Get count for pagination
+    .is("deleted_at", null)
     .range(from, to);
 
   // Search

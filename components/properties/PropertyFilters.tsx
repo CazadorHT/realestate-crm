@@ -10,7 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, SlidersHorizontal, X, ArrowUpDown } from "lucide-react";
+import {
+  Search,
+  SlidersHorizontal,
+  X,
+  ArrowUpDown,
+  Trash2,
+} from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   Sheet,
@@ -90,7 +97,7 @@ export function PropertyFilters() {
         if (!v) return;
         if (v === "ALL") return;
         params.set(String(key), v);
-      }
+      },
     );
 
     const qs = params.toString();
@@ -372,6 +379,16 @@ export function PropertyFilters() {
           </div>
         </SheetContent>
       </Sheet>
+      <Button
+        asChild
+        variant="outline"
+        className="gap-2 text-red-600  border-red-200 hover:border-red-600! hover:bg-red-600!  hover:text-white!" 
+      >
+        <Link href="/protected/properties/trash">
+          <Trash2 className="h-4 w-4" />
+          <span className="hidden sm:inline">ถังขยะ</span>
+        </Link>
+      </Button>
     </div>
   );
 }

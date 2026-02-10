@@ -1,15 +1,5 @@
-export type PropertyStatus = 'active' | 'sold' | 'rented' | 'inactive';
+import { Database } from "@/lib/database.types";
 
-export interface Property {
-  id: string; // uuid
-  title: string;
-  description: string | null;
-  slug: string;
-  listing_type: 'sale' | 'rent';
-  price: number;
-  location_text: string | null;
-  status: PropertyStatus;
-  created_at: string;
-  updated_at: string;
-  // Add other fields as necessary, matching the DB schema
-}
+export type Property = Database["public"]["Tables"]["properties"]["Row"] & {
+  images?: string[] | null;
+};

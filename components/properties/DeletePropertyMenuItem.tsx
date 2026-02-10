@@ -4,9 +4,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
-import { deletePropertyAction } from "@/features/properties/actions";
+import { softDeleteProperty } from "@/actions/property-trash";
 import {
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -17,6 +19,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 export function DeletePropertyMenuItem({ id }: { id: string }) {
@@ -27,13 +30,14 @@ export function DeletePropertyMenuItem({ id }: { id: string }) {
   const onConfirm = () =>
     startTransition(async () => {
       try {
-        const fd = new FormData();
-        fd.append("id", id);
-        await deletePropertyAction(fd);
-
-        toast.success("ลบข้อมูลทรัพย์เรียบร้อยแล้ว");
-        setOpen(false);
-        router.refresh();
+        const res = await softDeleteProperty(id);
+        if (res.success) {
+          toast.success("ย้ายทรัพย์ลงถังขยะเรียบร้อยแล้ว");
+          setOpen(false);
+          router.refresh();
+        } else {
+          toast.error(res.error || "เกิดข้อผิดพลาดในการลบ");
+        }
       } catch (e: any) {
         toast.error(e?.message || "ลบไม่สำเร็จ");
       }
@@ -49,7 +53,7 @@ export function DeletePropertyMenuItem({ id }: { id: string }) {
         }}
       >
         <Trash2 className="mr-2 h-4 w-4" />
-        ลบ
+        ลบ (ย้ายลงถังขยะ)
       </DropdownMenuItem>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
@@ -57,7 +61,8 @@ export function DeletePropertyMenuItem({ id }: { id: string }) {
           <AlertDialogHeader>
             <AlertDialogTitle>ยืนยันการลบ</AlertDialogTitle>
             <AlertDialogDescription>
-              การลบไม่สามารถย้อนกลับได้ คุณต้องการลบทรัพย์นี้ใช่ไหม
+              คุณต้องการย้ายทรัพย์นี้ลงถังขยะใช่หรือไม่?
+              คุณสามารถกู้คืนได้ภายหลังในหน้าถังขยะ (Trash)
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
