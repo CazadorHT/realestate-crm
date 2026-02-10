@@ -409,7 +409,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
                   );
                 })}
               </div>
-              <FormMessage className="font-medium" />
+              <FormMessage className="font-medium " />
             </FormItem>
           )}
         />
@@ -431,7 +431,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
                         ? t("deposit.form.details_placeholder_office")
                         : t("deposit.form.details_placeholder")
                     }
-                    className="min-h-[100px] resize-none border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
+                    className="min-h-[100px] resize-none border-slate-200 bg-white focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
                     {...field}
                   />
                 </FormControl>
