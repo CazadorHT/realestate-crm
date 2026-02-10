@@ -794,5 +794,12 @@
     "selected_count": "Selected to compare: {count}/4",
     "clear": "Clear",
     "compare_btn": "Compare"
+  },
+  "chat": {
+    "welcome_message": "Hello! Looking for a house or condo in any specific area? Or need mortgage advice? Feel free to ask! 🏠",
+    "input_placeholder": "Type a message...",
+    "error_message": "Sorry, a connection error occurred. Please try again later.",
+    "online_status": "Online",
+    "assistant_name": "AI Assistant"
   }
 }

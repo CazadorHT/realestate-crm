@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { X, Send, Bot, User, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { chatWithAI } from "@/features/chatbot/actions";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface Message {
   id: string;
@@ -30,15 +31,22 @@ interface ChatWindowProps {
 }
 
 export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "bot",
-      content:
-        "สวัสดีครับ! สนใจหาบ้านหรือคอนโดแถวไหน หรือต้องการคำแนะนำเรื่องสินเชื่อ สอบถามได้เลยนะครับ 🏠",
-      timestamp: new Date(),
-    },
-  ]);
+  const { t } = useLanguage();
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  // Initialize welcome message when language changes or component mounts
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([
+        {
+          id: "1",
+          role: "bot",
+          content: t("chat.welcome_message"),
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  }, [t]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -92,7 +100,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "bot",
-        content: "ขออภัยครับ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่ภายหลัง",
+        content: t("chat.error_message"),
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -106,9 +114,13 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
   return (
     <div
       className={cn(
-        "fixed bottom-24 right-4 z-50 w-[380px] h-[600px] max-h-[80vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden transition-all duration-300 animate-in slide-in-from-bottom-5 fade-in",
+        "fixed z-50 flex flex-col overflow-hidden transition-all duration-300 animate-in slide-in-from-bottom-5 fade-in bg-white shadow-2xl",
+        // Mobile styles: Full screen
+        "inset-0 w-full h-full rounded-none",
+        // Desktop styles: Fixed size widget
+        "md:w-[380px] md:h-[600px] md:max-h-[80vh] md:rounded-2xl md:bottom-24 md:right-4 md:inset-auto md:border md:border-slate-200",
         isOpen
-          ? "opacity-100 translate-y-0"
+          ? "opacity-100 translate-y-0 pointer-events-auto"
           : "opacity-0 translate-y-10 pointer-events-none",
       )}
     >
@@ -119,10 +131,14 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
             <Bot className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h3 className="text-white font-bold text-sm">AI Assistant</h3>
+            <h3 className="text-white font-bold text-sm">
+              {t("chat.assistant_name")}
+            </h3>
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-blue-100 text-xs">Online</span>
+              <span className="text-blue-100 text-xs">
+                {t("chat.online_status")}
+              </span>
             </span>
           </div>
         </div>
@@ -272,7 +288,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="พิมพ์ข้อความ..."
+            placeholder={t("chat.input_placeholder")}
             className="rounded-full border-slate-200 focus-visible:ring-blue-500"
           />
           <Button

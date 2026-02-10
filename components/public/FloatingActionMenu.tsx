@@ -86,7 +86,7 @@ export function FloatingActionMenu() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-30 flex flex-col gap-3 items-end">
+    <div className="fixed bottom-6 right-4 md:right-6 z-30 flex flex-col gap-3 items-end">
       {/* Scroll To Top Button */}
       <div
         className={`transition-all duration-300 transform ${
@@ -97,11 +97,11 @@ export function FloatingActionMenu() {
       >
         <Button
           size="icon"
-          className="h-12 w-12 rounded-full shadow-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
+          className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
           onClick={scrollToTop}
           aria-label="Scroll to top"
         >
-          <ArrowUp className="h-5 w-5" />
+          <ArrowUp className="h-6 w-6" />
         </Button>
       </div>
 

@@ -214,7 +214,7 @@ export function FloatingContactDial() {
       {/* Main Toggle Button */}
       <button
         onClick={toggleMenu}
-        className={`group relative flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300 focus:outline-none ${
+        className={`group relative flex items-center justify-center h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg transition-all duration-300 focus:outline-none ${
           isOpen ? "bg-slate-800 rotate-90" : "bg-blue-600 hover:scale-110"
         }`}
         aria-label="Contact Options"
