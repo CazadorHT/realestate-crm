@@ -7,7 +7,7 @@ import {
   FaTimes,
   FaFacebook,
   FaLine,
-  FaCommentDots,
+  FaCommentDots,  
 } from "react-icons/fa";
 import { createClient } from "@/lib/supabase/client";
 

@@ -14,7 +14,7 @@ export function ChatWidget() {
     <>
       <div
         className={cn(
-          "fixed bottom-28 right-4 md:right-6 z-50 flex items-center gap-4 transition-all duration-300",
+          "fixed bottom-28 md:bottom-26 right-4 md:right-6 z-50 flex items-center gap-4 transition-all duration-300",
           isOpen ? "translate-y-0" : "translate-y-0",
         )}
       >
@@ -28,7 +28,7 @@ export function ChatWidget() {
               : "bg-linear-to-tr from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700",
           )}
         >
-          <FaRobot className="h-6 w-6 md:h-7 md:w-7 text-white" />
+          <FaRobot className="h-6 w-6 md:h-6! md:w-6! text-white" />
         </Button>
       </div>
 
