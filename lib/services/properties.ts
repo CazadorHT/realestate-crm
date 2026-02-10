@@ -45,6 +45,8 @@ export type PropertyRow = {
   google_maps_link: string | null;
   is_fully_furnished: boolean | null;
   is_bare_shell: boolean | null;
+  nearby_places: any | null;
+  nearby_transits: any | null;
 
   property_images?: Array<{
     image_url: string;
@@ -148,6 +150,8 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       address_line1,
       address_line1_en,
       address_line1_cn,
+      nearby_places,
+      nearby_transits,
       property_images (
         image_url,
         storage_path,
@@ -346,6 +350,8 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       google_maps_link: typedRow.google_maps_link,
       is_fully_furnished: typedRow.is_fully_furnished,
       is_bare_shell: typedRow.is_bare_shell,
+      nearby_places: typedRow.nearby_places,
+      nearby_transits: typedRow.nearby_transits,
     };
   });
 

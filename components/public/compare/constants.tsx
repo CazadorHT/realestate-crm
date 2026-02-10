@@ -19,6 +19,7 @@ import {
 import { ComparisonRow } from "./types";
 
 export const COMPARISON_ROWS: ComparisonRow[] = [
+  { key: "title", label: "หัวข้อ", icon: FileText },
   { key: "verified", label: "สถานะ", icon: ShieldCheck },
   { key: "listing_type", label: "ประเภทประกาศ", icon: Tag },
   { key: "property_type", label: "ประเภทอสังหาฯ", icon: Home },
@@ -34,6 +35,7 @@ export const COMPARISON_ROWS: ComparisonRow[] = [
   { key: "parking_slots", label: "ที่จอดรถ", icon: Car },
   { key: "petFriendly", label: "สัตว์เลี้ยง", icon: PawPrint },
   { key: "features", label: "สิ่งอำนวยความสะดวก", icon: LayoutGrid },
+  { key: "nearby_places", label: "สถานที่ใกล้เคียง", icon: MapPin },
   { key: "province", label: "จังหวัด", icon: Map },
   { key: "description", label: "รายละเอียด", icon: FileText },
   { key: "updated_at", label: "อัปเดตล่าสุด", icon: Clock },

@@ -124,7 +124,7 @@ export function SearchFilterBar({
     { value: "ALL", label: t("common.all") },
     { value: "HOUSE", label: t("home.property_types.house") },
     { value: "CONDO", label: t("home.property_types.condo") },
-    { value: "OFFICE_BUILDING", label: t("home.property_types.office") },
+    { value: "OFFICE_BUILDING", label: t("property_types.office_building") },
     { value: "VILLA", label: t("home.property_types.villa") },
     { value: "POOL_VILLA", label: t("home.property_types.pool_villa") },
     { value: "TOWNHOME", label: t("home.property_types.townhome") },
@@ -352,7 +352,7 @@ export function SearchFilterBar({
                     }`}
                     onClick={() => setFullyFurnished(!fullyFurnished)}
                   >
-                    <RiArmchairFill 
+                    <RiArmchairFill
                       className={`h-5 w-5 ${fullyFurnished ? "text-white" : "text-emerald-500"}`}
                     />
                     <span className="text-[11px] font-semibold">
@@ -760,7 +760,7 @@ export function SearchFilterBar({
               }`}
               onClick={() => setFullyFurnished(!fullyFurnished)}
             >
-              <RiArmchairFill 
+              <RiArmchairFill
                 className={`h-5 w-5 ${
                   fullyFurnished ? "text-white" : "text-emerald-600"
                 }`}

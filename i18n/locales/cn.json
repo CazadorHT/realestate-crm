@@ -646,7 +646,7 @@
     "townhome": "🏡 联排别墅",
     "land": "🌳 土地",
     "commercial": "🏢 商业地产",
-    "office_building": "🏬 办公室",
+    "office_building": "🏢 写字楼",
     "office": "🏬 办公室",
     "villa": "🏝️ 别墅",
     "pool_villa": "🌊 泳池别墅",
@@ -764,6 +764,7 @@
     "view_details": "查看详情",
     "loading": "加载中...",
     "labels": {
+      "title": "标题",
       "verified": "状态",
       "listing_type": "房源类型",
       "property_type": "物业类型",
@@ -779,6 +780,7 @@
       "parking_slots": "停车位",
       "petFriendly": "宠物",
       "features": "设施",
+      "nearby_places": "附近地点",
       "province": "省份",
       "description": "描述",
       "updated_at": "最后更新"

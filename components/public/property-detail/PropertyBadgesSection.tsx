@@ -60,12 +60,18 @@ export function PropertyBadgesSection({
     if (!scrollContainer || isDragging || isHovered) return;
 
     let animationId: number;
-    const speed = 0.5; // Pixels per frame (~30px/sec)
+    let lastTime = performance.now();
+    const speed = 0.8; // Normalized pixels per frame (~48px/sec at 60fps)
 
-    const scroll = () => {
+    const scroll = (currentTime: number) => {
       if (scrollContainer) {
-        // Update float position
-        scrollPosRef.current += speed;
+        // Calculate delta time for consistent speed across different refresh rates (60Hz vs 120Hz)
+        const deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        // Move calculation (deltaTime / 16.67ms per frame @ 60fps)
+        const move = (speed * deltaTime) / 16.67;
+        scrollPosRef.current += move;
 
         // Loop back logic
         const maxScroll =
@@ -74,7 +80,7 @@ export function PropertyBadgesSection({
           scrollPosRef.current = 0;
         }
 
-        // Sync to DOM (rounds to nearest pixel)
+        // Sync to DOM
         scrollContainer.scrollLeft = scrollPosRef.current;
       }
       animationId = requestAnimationFrame(scroll);

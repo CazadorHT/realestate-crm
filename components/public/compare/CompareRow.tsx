@@ -2,8 +2,10 @@
 
 import { ShieldCheck, MapPin, Check } from "lucide-react";
 import { CompareProperty, ComparisonRow } from "./types";
-import { formatMoney, cleanListingType, isPetFriendly } from "./utils";
+import { formatMoney, getListingTypeKey, isPetFriendly } from "./utils";
+import { getProvinceName } from "@/lib/utils/provinces";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getLocalizedField } from "@/lib/i18n";
 
 interface CompareRowProps {
   row: ComparisonRow;
@@ -13,6 +15,8 @@ interface CompareRowProps {
 
 export function CompareRow({ row, properties, idx }: CompareRowProps) {
   const { t, language } = useLanguage();
+  const locale =
+    language === "th" ? "th-TH" : language === "cn" ? "zh-CN" : "en-US";
 
   // Calculation for max value to highlight Winner
   const isNumericCompare = [
@@ -47,11 +51,11 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
         <div className="block mb-1">
           {p.price && p.original_price && p.original_price > p.price && (
             <span className="text-[10px] md:text-xs text-slate-400 line-through mr-1 md:mr-2 block sm:inline">
-              {formatMoney(p.original_price)}
+              {formatMoney(p.original_price, locale)}
             </span>
           )}
           <span className="text-blue-600 font-bold text-sm md:text-base">
-            {formatMoney(salePrice)}
+            {formatMoney(salePrice, locale)}
           </span>
         </div>
       ) : null;
@@ -63,12 +67,13 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
             p.original_rental_price &&
             p.original_rental_price > p.rental_price && (
               <span className="text-[10px] md:text-xs text-slate-400 line-through mr-1 md:mr-2 block sm:inline">
-                {formatMoney(p.original_rental_price)}{" "}
+                {formatMoney(p.original_rental_price, locale)}{" "}
                 {t("compare_page.values.rent_per_month")}
               </span>
             )}
           <span className="text-orange-600 font-bold text-sm md:text-base">
-            {formatMoney(rentPrice)} {t("compare_page.values.rent_per_month")}
+            {formatMoney(rentPrice, locale)}{" "}
+            {t("compare_page.values.rent_per_month")}
           </span>
         </div>
       ) : null;
@@ -133,32 +138,15 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                       key={f.id}
                       className="text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1 bg-slate-100 rounded text-slate-600 whitespace-nowrap"
                     >
-                      {f.name}
+                      {getLocalizedField<string>(f, "name", language)}
                     </div>
                   ))}
                 </div>
               ) : (
                 <span className="text-slate-300">-</span>
               )
-            ) : row.key === "transportation" ? (
-              p.near_transit && p.transit_station_name ? (
-                <div className="flex flex-col items-start gap-1">
-                  <span className="inline-flex px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100 uppercase">
-                    {p.transit_type} {p.transit_station_name}
-                  </span>
-                  {p.transit_distance_meters && (
-                    <span className="text-xs text-slate-500 pl-1">
-                      {t("compare_page.values.distance_meters", {
-                        distance: p.transit_distance_meters,
-                      })}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <span className="text-slate-300">-</span>
-              )
             ) : row.key === "zone" ? (
-              p.popular_area ||
+              getLocalizedField<string>(p, "popular_area", language) ||
               p.district || <span className="text-slate-300">-</span>
             ) : row.key === "google_maps_link" ? (
               p.google_maps_link ? (
@@ -193,16 +181,17 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
               )
             ) : row.key === "listing_type" ? (
               <span className="inline-block px-2 py-1 rounded bg-slate-100 text-xs font-semibold text-slate-600">
-                {cleanListingType(p.listing_type)}
+                {(() => {
+                  const key = getListingTypeKey(p.listing_type);
+                  if (key) return t(key);
+                  // Resilient check for Thai leaking from DB
+                  if (p.listing_type === "เช่า") return t("common.for_rent");
+                  if (p.listing_type === "ขาย") return t("common.for_sale");
+                  return p.listing_type || "-";
+                })()}
               </span>
             ) : row.key === "updated_at" ? (
-              new Date(p.updated_at).toLocaleDateString(
-                language === "th"
-                  ? "th-TH"
-                  : language === "cn"
-                    ? "zh-CN"
-                    : "en-US",
-              )
+              new Date(p.updated_at).toLocaleDateString(locale)
             ) : row.key === "floor" ? (
               p.floor ? (
                 `${t("compare_page.values.floor_prefix")} ${p.floor}`
@@ -221,6 +210,149 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
               <span className={isWinner ? "text-green-700 font-bold" : ""}>
                 {(p as any)[row.key] || "-"}
               </span>
+            ) : row.key === "description" ? (
+              <div className="line-clamp-3 text-[10px] md:text-xs">
+                {getLocalizedField<string>(p, "description", language) || "-"}
+              </div>
+            ) : row.key === "property_type" ? (
+              p.property_type ? (
+                <span className="inline-block px-2 py-1 rounded bg-slate-100 text-xs font-semibold text-slate-600">
+                  {(() => {
+                    const pt = p.property_type.toLowerCase();
+                    // Basic fallback to handle potential raw or slightly off enums
+                    const key = `property_types.${pt}`;
+                    const translated = t(key);
+                    if (translated !== key) return translated;
+                    // Extra fallback if key is missing in dict
+                    if (pt === "office_building" || pt === "ออฟฟิศ")
+                      return t("property_types.office_building");
+                    return p.property_type;
+                  })()}
+                </span>
+              ) : (
+                <span className="text-slate-300">-</span>
+              )
+            ) : row.key === "title" ? (
+              <span className="font-semibold text-slate-900">
+                {getLocalizedField<string>(p, "title", language)}
+              </span>
+            ) : row.key === "location" ? (
+              <div className="flex flex-col gap-0.5">
+                <span className="line-clamp-2">
+                  {[
+                    getLocalizedField(p, "address_line1", language),
+                    p.subdistrict,
+                    p.district,
+                    p.province ? getProvinceName(p.province, language) : null,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                </span>
+              </div>
+            ) : row.key === "province" ? (
+              p.province ? (
+                getProvinceName(p.province, language)
+              ) : (
+                <span className="text-slate-300">-</span>
+              )
+            ) : row.key === "nearby_places" ? (
+              p.nearby_places ? (
+                <div className="flex flex-col gap-1.5">
+                  {(() => {
+                    try {
+                      const places =
+                        typeof p.nearby_places === "string"
+                          ? JSON.parse(p.nearby_places)
+                          : p.nearby_places;
+
+                      if (Array.isArray(places) && places.length > 0) {
+                        return places
+                          .slice(0, 5)
+                          .map((place: any, i: number) => (
+                            <div
+                              key={i}
+                              className="text-[10px] md:text-xs flex items-center gap-1.5 text-slate-600"
+                            >
+                              <span className="line-clamp-1">
+                                • {getLocalizedField(place, "name", language)}
+                              </span>
+                            </div>
+                          ));
+                      }
+                      return <span className="text-slate-300">-</span>;
+                    } catch (e) {
+                      return <span className="text-slate-300">-</span>;
+                    }
+                  })()}
+                </div>
+              ) : (
+                <span className="text-slate-300">-</span>
+              )
+            ) : row.key === "transportation" ? (
+              <div className="flex flex-col gap-2">
+                {/* Primary Transit */}
+                {p.near_transit &&
+                (p.transit_station_name ||
+                  p.transit_station_name_en ||
+                  p.transit_station_name_cn) ? (
+                  <div className="flex flex-col items-start gap-1">
+                    <span className="inline-flex px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[10px] md:text-xs font-bold border border-indigo-100 uppercase">
+                      {p.transit_type}{" "}
+                      {getLocalizedField<string>(
+                        p,
+                        "transit_station_name",
+                        language,
+                      )}
+                    </span>
+                    {p.transit_distance_meters && (
+                      <span className="text-[10px] md:text-xs text-slate-500 pl-1">
+                        {t("compare_page.values.distance_meters", {
+                          distance: p.transit_distance_meters,
+                        })}
+                      </span>
+                    )}
+                  </div>
+                ) : null}
+
+                {/* Other Transits (JSON) */}
+                {p.nearby_transits &&
+                  (() => {
+                    try {
+                      const transits =
+                        typeof p.nearby_transits === "string"
+                          ? JSON.parse(p.nearby_transits)
+                          : p.nearby_transits;
+
+                      if (Array.isArray(transits) && transits.length > 0) {
+                        return (
+                          <div className="flex flex-col gap-1 border-t border-slate-50 pt-1 mt-1">
+                            {transits
+                              .slice(0, 3)
+                              .map((item: any, i: number) => (
+                                <div
+                                  key={i}
+                                  className="text-[10px] text-slate-500"
+                                >
+                                  •{" "}
+                                  {getLocalizedField(
+                                    item,
+                                    "station_name",
+                                    language,
+                                  )}{" "}
+                                  ({item.distance_meters}m)
+                                </div>
+                              ))}
+                          </div>
+                        );
+                      }
+                    } catch (e) {}
+                    return null;
+                  })()}
+
+                {!p.near_transit && !p.nearby_transits && (
+                  <span className="text-slate-300">-</span>
+                )}
+              </div>
             ) : (
               (p as any)[row.key] || <span className="text-slate-300">-</span>
             )}

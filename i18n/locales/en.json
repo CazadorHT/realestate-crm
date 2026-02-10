@@ -648,7 +648,7 @@
     "townhome": "🏡 Townhome",
     "land": "🌳 Land",
     "commercial": "🏢 Commercial",
-    "office_building": "🏬 Office",
+    "office_building": "🏢 Office Building",
     "office": "🏬 Office",
     "villa": "🏝️ Villa",
     "pool_villa": "🌊 Pool Villa",
@@ -766,6 +766,7 @@
     "view_details": "View Details",
     "loading": "Loading...",
     "labels": {
+      "title": "Title",
       "verified": "Status",
       "listing_type": "Listing Type",
       "property_type": "Property Type",
@@ -781,6 +782,7 @@
       "parking_slots": "Parking",
       "petFriendly": "Pets",
       "features": "Features",
+      "nearby_places": "Nearby Places",
       "province": "Province",
       "description": "Description",
       "updated_at": "Last Updated"

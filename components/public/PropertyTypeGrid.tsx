@@ -142,7 +142,7 @@ export function PropertyTypeGrid({
     },
     {
       icon: BriefcaseBusiness,
-      title: t("home.property_types.office"),
+      title: t("property_types.office_building"),
       count: "264",
       description: t("home.property_types.office_desc"),
       href: "/?type=OFFICE_BUILDING#latest-properties",

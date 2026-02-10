@@ -115,10 +115,10 @@ function PropertyListingContent() {
     ALL: `🏡 ${t("common.all")}`,
     HOUSE: `🏠 ${t("home.property_types.house")}`,
     CONDO: `🏢 ${t("home.property_types.condo")}`,
-    OFFICE: `👔 ${t("home.property_types.office")}`,
+    OFFICE: t("property_types.office_building"),
     TOWNHOME: `🏡 ${t("home.property_types.townhome")}`,
     WAREHOUSE: `🏭 ${t("home.property_types.warehouse")}`,
-    COMMERCIAL: `🏪 ${t("home.property_types.townhome")}`, // Using townhome as placeholder for commercial if missing
+    COMMERCIAL: t("property_types.commercial_building"),
     LAND: `🌳 ${t("home.property_types.land")}`,
     OTHER: `🔹 ${t("common.all")}`,
   };
@@ -315,7 +315,6 @@ function PropertyListingContent() {
                 {t("property_listing.title")}
               </span>
               <br />
-              
             </h2>
             <p className="text-base md:text-lg text-slate-600 max-w-2xl leading-relaxed">
               {t("property_listing.description")}

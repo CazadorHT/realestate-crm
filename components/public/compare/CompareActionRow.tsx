@@ -15,7 +15,7 @@ export function CompareActionRow({ properties }: CompareActionRowProps) {
     <div
       className="grid divide-x divide-slate-100 bg-white border-t border-slate-100"
       style={{
-        gridTemplateColumns: `100px repeat(${properties.length}, 1fr)`,
+        gridTemplateColumns: `150px repeat(${properties.length}, 1fr)`,
       }}
     >
       <div className="p-3 md:p-6"></div>
