@@ -5,12 +5,14 @@ interface OfficeSizeStepProps {
   officeSizes: OfficeSizeOption[];
   availableSizes: Record<string, number>;
   onSelect: (min: number, max: number) => void;
+  isLoading?: boolean;
 }
 
 export function OfficeSizeStep({
   officeSizes,
   availableSizes,
   onSelect,
+  isLoading,
 }: OfficeSizeStepProps) {
   const { t } = useLanguage();
   const hasChecked = Object.keys(availableSizes).length > 0;
@@ -20,7 +22,7 @@ export function OfficeSizeStep({
       return officeSizes.map((opt) => {
         const sizeKey = opt.label.match(/\((S|M|L|XL)\)/)?.[1] || "";
         const count = availableSizes[sizeKey] ?? 0;
-        const isDisabled = hasChecked && count === 0;
+        const isDisabled = isLoading || (hasChecked && count === 0);
 
         // Try to translate based on size key (S, M, L, XL)
         const lowerKey = sizeKey.toLowerCase();
@@ -59,7 +61,7 @@ export function OfficeSizeStep({
               isDisabled
                 ? "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed opacity-60"
                 : "border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-700 hover:text-blue-600"
-            }`}
+            } ${isLoading ? "opacity-60" : ""}`}
           >
             {!isDisabled && hasChecked && (
               <span className="absolute top-2 right-2 flex h-2 w-2">
@@ -114,7 +116,7 @@ export function OfficeSizeStep({
       },
     ].map((opt) => {
       const count = availableSizes[opt.key] ?? 0;
-      const isDisabled = hasChecked && count === 0;
+      const isDisabled = isLoading || (hasChecked && count === 0);
 
       return (
         <button
@@ -125,7 +127,7 @@ export function OfficeSizeStep({
             isDisabled
               ? "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed opacity-60"
               : "border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-700 hover:text-blue-600"
-          }`}
+          } ${isLoading ? "opacity-60" : ""}`}
         >
           {!isDisabled && hasChecked && (
             <span className="absolute top-2 right-2 flex h-2 w-2">

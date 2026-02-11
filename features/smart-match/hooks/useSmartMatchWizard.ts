@@ -63,6 +63,7 @@ export function useSmartMatchWizard() {
   const [sessionId, setSessionId] = useState("");
   const [isOfficeMode, setIsOfficeMode] = useState(false);
   const [configLoading, setConfigLoading] = useState(true);
+  const [isInventoryLoading, setIsInventoryLoading] = useState(false);
 
   // Initial data from constants (Source of Truth)
   const [buyBudgetRanges, setBuyBudgetRanges] =
@@ -94,41 +95,48 @@ export function useSmartMatchWizard() {
   // Load property type availability based on purpose
   useEffect(() => {
     if (step === 1.5) {
+      setIsInventoryLoading(true);
       checkPropertyTypeAvailability(purpose as "RENT" | "BUY")
         .then(setAvailablePropertyTypes)
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => setIsInventoryLoading(false));
     }
   }, [step, purpose]);
 
   // Load transit availability when entering transit step (2.5)
   useEffect(() => {
     if (step === 2.5) {
+      setIsInventoryLoading(true);
       checkTransitAvailability(purpose as "RENT" | "BUY", {
         propertyType: propertyType || undefined,
         officeSize: officeSize || undefined,
         budget: selectedBudget || undefined,
       })
         .then(setAvailableTransitOptions)
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => setIsInventoryLoading(false));
     }
   }, [step, purpose, propertyType, officeSize, selectedBudget]);
 
   // Load inventory for office sizes
   useEffect(() => {
     if (isOfficeMode && step === 1.7) {
+      setIsInventoryLoading(true);
       checkOfficeSizeAvailability(purpose as "RENT" | "BUY")
         .then((res) => {
           const map: Record<string, number> = {};
           res.forEach((r) => (map[r.size] = r.count));
           setAvailableSizes(map);
         })
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => setIsInventoryLoading(false));
     }
   }, [isOfficeMode, step, purpose]);
 
   // Load inventory for budgets
   useEffect(() => {
     if (step === 2) {
+      setIsInventoryLoading(true);
       const ranges = purpose === "RENT" ? rentBudgetRanges : buyBudgetRanges;
       const budgetOptions =
         ranges.length > 0
@@ -147,7 +155,8 @@ export function useSmartMatchWizard() {
         })),
       })
         .then(setAvailableBudgetIds)
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => setIsInventoryLoading(false));
     }
   }, [
     step,
@@ -161,6 +170,7 @@ export function useSmartMatchWizard() {
   // Load inventory for locations
   useEffect(() => {
     if (step === 3 || step === 2.5) {
+      setIsInventoryLoading(true);
       checkLocationAvailability(purpose as "RENT" | "BUY", {
         propertyType: propertyType || undefined,
         officeSize: officeSize || undefined,
@@ -175,7 +185,8 @@ export function useSmartMatchWizard() {
           });
           setAvailableLocations(areaObjects);
         })
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => setIsInventoryLoading(false));
     }
   }, [
     step,
@@ -243,6 +254,17 @@ export function useSmartMatchWizard() {
     }
     loadConfig();
   }, []);
+
+  // Initial Load for step 1 purpose availability
+  useEffect(() => {
+    if (step === 1) {
+      setIsInventoryLoading(true);
+      checkPurposeAvailability()
+        .then(setAvailablePurposes)
+        .catch(console.error)
+        .finally(() => setIsInventoryLoading(false));
+    }
+  }, [step]);
 
   // Load Popular Areas
   useEffect(() => {
@@ -373,5 +395,6 @@ export function useSmartMatchWizard() {
     reset,
     currentStepIndex,
     totalSteps,
+    isInventoryLoading,
   };
 }

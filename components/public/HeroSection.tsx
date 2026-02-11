@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollDownButton } from "@/components/public/ScrollDownButton";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import Image from "next/image";
 
 export function HeroSection() {
   const { t } = useLanguage();
@@ -51,7 +52,15 @@ export function HeroSection() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[url('/images/hero-realestate.png')] bg-cover bg-center bg-no-repeat overflow-x-hidden">
+    <div className="relative min-h-screen bg-slate-900 overflow-x-hidden">
+      <Image
+        src="/images/hero-realestate.png"
+        alt="Hero Background"
+        fill
+        priority
+        className="object-cover"
+        quality={90}
+      />
       {/* Gradient Overlay สำหรับความคมของ text */}
       <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/70" />
 

@@ -5,6 +5,7 @@ interface QuizQuestionProps {
   options: string[];
   onSelect: (val: string) => void;
   availableOptions?: string[];
+  isLoading?: boolean;
 }
 
 export function QuizQuestion({
@@ -12,6 +13,7 @@ export function QuizQuestion({
   options,
   onSelect,
   availableOptions,
+  isLoading,
 }: QuizQuestionProps) {
   return (
     <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex flex-col h-full">
@@ -22,7 +24,8 @@ export function QuizQuestion({
         <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 pb-4">
           {options.map((option) => {
             const isDisabled =
-              availableOptions && !availableOptions.includes(option);
+              isLoading ||
+              (availableOptions && !availableOptions.includes(option));
 
             return (
               <button
@@ -33,7 +36,7 @@ export function QuizQuestion({
                   isDisabled
                     ? "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed"
                     : "border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-700 hover:text-blue-600"
-                }`}
+                } ${isLoading ? "opacity-60" : ""}`}
               >
                 {!isDisabled && availableOptions && (
                   <span className="absolute top-2 right-2 flex h-2 w-2">

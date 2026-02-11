@@ -28,7 +28,7 @@ export function ComparePropertyHeader({
       >
         <X className="h-3 w-3 md:h-4 md:w-4" />
       </button>
-      <div className="relative aspect-4/3 rounded-xl md:rounded-2xl overflow-hidden bg-slate-100 mb-2 md:mb-4 border border-slate-100 shadow-inner group-hover:scale-[1.02] transition-transform duration-500">
+      <div className="relative aspect-video max-h-[160px] md:max-h-[200px] rounded-xl md:rounded-2xl overflow-hidden bg-slate-100 mb-2 md:mb-4 border border-slate-100 shadow-inner group-hover:scale-[1.02] transition-transform duration-500">
         {property.image_url ? (
           <Image
             src={property.image_url}

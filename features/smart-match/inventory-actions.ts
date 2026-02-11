@@ -252,7 +252,7 @@ export async function checkPurposeAvailability(): Promise<string[]> {
 
   const { data, error } = await supabase
     .from("properties")
-    .select("listing_type")
+    .select("listing_type, property_type")
     .eq("status", "ACTIVE");
 
   if (error || !data) {
@@ -268,6 +268,10 @@ export async function checkPurposeAvailability(): Promise<string[]> {
     if (p.listing_type === "SALE" || p.listing_type === "SALE_AND_RENT") {
       available.add("BUY");
       available.add("INVEST");
+    }
+    // Explicitly add OFFICE if any Office Building is found
+    if ((p as any).property_type === "OFFICE_BUILDING") {
+      available.add("OFFICE");
     }
   });
 

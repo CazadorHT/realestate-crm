@@ -130,7 +130,8 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
                   } px-2 py-0.5 rounded-full uppercase tracking-wide`}
                 >
                   {match.property_type
-                    ? t(
+                    ? PROPERTY_TYPE_NAMES[match.property_type] ||
+                      t(
                         `home.property_types.${match.property_type.toLowerCase()}`,
                       )
                     : t("common.all")}

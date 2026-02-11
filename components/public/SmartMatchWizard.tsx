@@ -56,6 +56,7 @@ export function SmartMatchWizard() {
     reset,
     currentStepIndex,
     totalSteps,
+    isInventoryLoading,
   } = useSmartMatchWizard();
 
   // Helpers derived from state
@@ -138,14 +139,12 @@ export function SmartMatchWizard() {
             {step === 1 && (
               <QuizQuestion
                 title={t("smart_match.purpose_q")}
+                isLoading={isInventoryLoading}
                 options={purposeOptions.map((o) => o.label)}
                 availableOptions={purposeOptions
                   .filter((o) => {
                     if (o.value === "OFFICE")
-                      return (
-                        availablePropertyTypes.includes("OFFICE_BUILDING") ||
-                        availablePurposes.includes("RENT")
-                      );
+                      return availablePurposes.includes("OFFICE");
                     // Fallback: if purpose is available
                     return (
                       availablePurposes.length === 0 ||
@@ -172,6 +171,7 @@ export function SmartMatchWizard() {
             {step === 1.5 && (
               <QuizQuestion
                 title={t("smart_match.type_q")}
+                isLoading={isInventoryLoading}
                 options={currentPropertyTypes
                   .filter((t) =>
                     !isOfficeMode ? t.value !== "OFFICE_BUILDING" : true,
@@ -213,6 +213,7 @@ export function SmartMatchWizard() {
               <OfficeSizeStep
                 officeSizes={officeSizes}
                 availableSizes={availableSizes}
+                isLoading={isInventoryLoading}
                 onSelect={(min, max) => {
                   setOfficeSize({ min, max });
                   setStep(2);
@@ -227,6 +228,7 @@ export function SmartMatchWizard() {
                     ? t("smart_match.budget_rent_q")
                     : t("smart_match.budget_buy_q")
                 }
+                isLoading={isInventoryLoading}
                 options={currentBudgetRanges.map((r) => {
                   const key = `smart_match.budget_labels.${r.id}`;
                   const res = t(key);
@@ -262,6 +264,7 @@ export function SmartMatchWizard() {
             {step === 2.5 && settings.transit_question_enabled && (
               <QuizQuestion
                 title={t("smart_match.transit_q")}
+                isLoading={isInventoryLoading}
                 options={[
                   t("smart_match.transit_yes"),
                   t("smart_match.transit_no"),
@@ -284,6 +287,7 @@ export function SmartMatchWizard() {
             {step === 3 && (
               <QuizQuestion
                 title={t("smart_match.area_q")}
+                isLoading={isInventoryLoading}
                 options={popularAreas.map((a) => {
                   const lang = language;
                   return (
