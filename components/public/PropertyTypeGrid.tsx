@@ -101,6 +101,14 @@ export function PropertyTypeGrid({
   const { t } = useLanguage();
   const propertyTypes = [
     {
+      icon: Home,
+      title: t("home.property_types.house"),
+      count: "1,653",
+      description: t("home.property_types.house_desc"),
+      href: "/?type=HOUSE#latest-properties",
+      gradient: "from-purple-500 to-purple-800",
+    },
+    {
       icon: Building2,
       title: t("home.property_types.condo"),
       count: "2,847",
@@ -108,13 +116,13 @@ export function PropertyTypeGrid({
       href: "/?type=CONDO#latest-properties",
       gradient: "from-blue-600 to-indigo-600",
     },
-    {
-      icon: Home,
-      title: t("home.property_types.house"),
-      count: "1,653",
-      description: t("home.property_types.house_desc"),
-      href: "/?type=HOUSE#latest-properties",
-      gradient: "from-purple-500 to-purple-800",
+     {
+      icon: BriefcaseBusiness,
+      title: t("home.property_types.office_building"),
+      count: "264",
+      description: t("home.property_types.office_desc"),
+      href: "/?type=OFFICE_BUILDING#latest-properties",
+      gradient: "from-sky-500 to-cyan-800",
     },
     {
       icon: Palmtree,
@@ -140,14 +148,7 @@ export function PropertyTypeGrid({
       href: "/?type=TOWNHOME#latest-properties",
       gradient: "from-orange-500 to-orange-800",
     },
-    {
-      icon: BriefcaseBusiness,
-      title: t("property_types.office_building"),
-      count: "264",
-      description: t("home.property_types.office_desc"),
-      href: "/?type=OFFICE_BUILDING#latest-properties",
-      gradient: "from-sky-500 to-cyan-800",
-    },
+   
     {
       icon: Warehouse,
       title: t("home.property_types.warehouse"),
@@ -225,14 +226,24 @@ export function PropertyTypeGrid({
           </p>
         </div>
 
-        {/* PropertyTypeCard wrapper with AOS */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-3 md:gap-6 text-center">
+        {/* PropertyTypeCard wrapper - Mobile: horizontal scroll, Desktop: grid */}
+        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4 md:gap-6 overflow-x-auto pb-6 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {isLoading
             ? Array.from({ length: 8 }).map((_, idx) => (
-                <PropertyTypeSkeleton key={idx} />
+                <div
+                  key={idx}
+                  className="shrink-0 w-[160px] md:w-auto snap-center"
+                >
+                  <PropertyTypeSkeleton />
+                </div>
               ))
             : propertyTypes.map((type, idx) => (
-                <div key={idx} data-aos="fade-up" data-aos-delay={idx * 50}>
+                <div
+                  key={idx}
+                  data-aos="fade-up"
+                  data-aos-delay={idx * 50}
+                  className="shrink-0 w-[160px] md:w-auto snap-center"
+                >
                   <PropertyTypeCard {...type} />
                 </div>
               ))}
