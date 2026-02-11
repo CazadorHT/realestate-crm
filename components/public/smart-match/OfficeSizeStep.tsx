@@ -154,7 +154,7 @@ export function OfficeSizeStep({
         {t("smart_match.office_size_q")}
       </h2>
       <div className="overflow-y-auto pr-2 flex-1 custom-scrollbar">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 pb-4">
           {renderOptions()}
         </div>
       </div>
