@@ -69,12 +69,12 @@ export function OfficeSizeStep({
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
               </span>
             )}
-            <span className="font-bold text-lg">
+            <span className="font-bold text-lg line-clamp-2 wrap-break-word text-balance">
               ({sizeKey}) {displaySize}
             </span>
             {displayDesc && (
               <p
-                className={`text-[11px] leading-tight mt-1 font-medium ${isDisabled ? "text-slate-300" : "text-blue-500"}`}
+                className={`text-[11px] leading-tight mt-1 font-medium line-clamp-2 wrap-break-word ${isDisabled ? "text-slate-300" : "text-blue-500"}`}
               >
                 {displayDesc}
               </p>
@@ -135,11 +135,11 @@ export function OfficeSizeStep({
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </span>
           )}
-          <span className="font-bold text-lg">
+          <span className="font-bold text-lg line-clamp-2 wrap-break-word text-balance">
             ({opt.key}) {opt.size}
           </span>
           <p
-            className={`text-[11px] leading-tight mt-1 font-medium ${isDisabled ? "text-slate-300" : "text-blue-500"}`}
+            className={`text-[11px] leading-tight mt-1 font-medium line-clamp-2 wrap-break-word ${isDisabled ? "text-slate-300" : "text-blue-500"}`}
           >
             {opt.desc}
           </p>

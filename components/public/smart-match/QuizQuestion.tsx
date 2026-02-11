@@ -17,7 +17,7 @@ export function QuizQuestion({
 }: QuizQuestionProps) {
   return (
     <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 flex flex-col h-full">
-      <h2 className="text-2xl sm:text-3xl font-medium md:text-2xl mb-4 sm:mb-6 text-slate-900 shrink-0">
+      <h2 className="text-xl sm:text-2xl font-medium md:text-2xl mb-4 sm:mb-6 text-slate-900 shrink-0">
         {title}
       </h2>
       <div className="overflow-y-auto pr-2 flex-1 custom-scrollbar">
@@ -44,7 +44,9 @@ export function QuizQuestion({
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                   </span>
                 )}
-                {option}
+                <span className="line-clamp-2 wrap-break-word text-balance">
+                  {option}
+                </span>
               </button>
             );
           })}

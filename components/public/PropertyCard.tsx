@@ -54,6 +54,8 @@ export type PropertyCardProps = {
   verified?: boolean;
   min_contract_months?: number | null;
   meta_keywords?: string[] | null;
+  near_transit?: boolean | null;
+  is_fully_furnished?: boolean | null;
   features?:
     | {
         id: string;
