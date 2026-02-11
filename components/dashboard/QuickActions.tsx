@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export function QuickActions() {
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+    <div className="grid grid-cols-3 gap-2 sm:grid-cols-3">
       <Button
         asChild
         variant="outline"

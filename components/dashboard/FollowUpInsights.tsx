@@ -12,14 +12,14 @@ interface FollowUpInsightsProps {
 export function FollowUpInsights({ leads = [] }: FollowUpInsightsProps) {
   return (
     <Card className="shadow-sm h-full border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-950/10">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 px-4 sm:px-6">
         <CardTitle className="text-sm font-semibold flex items-center gap-2 text-orange-800 dark:text-orange-200">
           <Phone className="h-4 w-4" />
           ต้องติดตาม (Follow Up)
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="space-y-3 max-h-[250px] overflow-y-auto px-6 py-4">
+        <div className="space-y-3 max-h-[250px] overflow-y-auto px-4 sm:px-6 py-4">
           {leads.length === 0 ? (
             <p className="text-xs text-muted-foreground">
               ไม่มีรายการค้างติดตาม

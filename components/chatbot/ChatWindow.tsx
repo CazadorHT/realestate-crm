@@ -289,15 +289,15 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={t("chat.input_placeholder")}
-            className="rounded-full border-slate-200 focus-visible:ring-blue-500"
+            className="rounded-full bg-slate-100! text-slate-600! border-slate-200 focus-visible:ring-blue-500"
           />
           <Button
             type="submit"
             size="icon"
             disabled={!input.trim() || isLoading}
-            className="rounded-full bg-blue-600 hover:bg-blue-700 shrink-0"
+            className="rounded-full bg-blue-600 hover:bg-blue-700  shrink-0"
           >
-            <Send className="h-4 w-4" />
+            <Send className="h-4 w-4 text-white" />
           </Button>
         </form>
       </div>

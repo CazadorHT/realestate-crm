@@ -33,7 +33,7 @@ import type {
   ListingType,
 } from "@/features/properties/types";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit3 } from "lucide-react";
+import { Eye, Edit3, MapPin } from "lucide-react";
 import { DuplicatePropertyButton } from "./DuplicatePropertyButton";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpDown, ArrowUp, ArrowDown, Download } from "lucide-react";
@@ -221,420 +221,536 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
         actionableCount={selectedCount - blockedCount}
       />
 
-      <div className="rounded-md border border-gray-200 shadow-sm bg-card">
-        <Table>
-          <TableHeader>
-            {/* Rest of the table header content ... */}
-            <TableRow className="bg-muted/50 hover:bg-muted/50 ">
-              <TableHead className="w-[50px]">
-                <Checkbox
-                  checked={isAllSelected}
-                  onCheckedChange={() => toggleSelectAll(allIds)}
-                  aria-label="เลือกทั้งหมด"
-                  className={
-                    isPartialSelected
-                      ? "data-[state=checked]:bg-primary/50"
-                      : ""
-                  }
-                />
-              </TableHead>
-              <TableHead className="w-[320px]">
-                <SortableHead label="ทรัพย์สิน" sortKey="created_at" />
-              </TableHead>
-              <TableHead className="w-[120px]">
-                <SortableHead label="ประเภท" sortKey="property_type" />
-              </TableHead>
-              <TableHead className="w-[180px]">ทำเล/ขนาด</TableHead>
-              <TableHead className="w-[140px]">
-                <SortableHead label="ราคา" sortKey="price" />
-              </TableHead>
-              <TableHead className="w-[120px]">ความสนใจ</TableHead>
-              <TableHead className="w-[140px]">
-                <SortableHead label="อัปเดต" sortKey="updated_at" />
-              </TableHead>
-              <TableHead className="w-[200px]">
-                ผู้ซื้อ/ผู้เช่า/ผู้ดูแล
-              </TableHead>
-              <TableHead className="w-[140px]">
-                <SortableHead label="สถานะ" sortKey="status" />
-              </TableHead>
-              <TableHead className="w-[100px]">สัญญา</TableHead>
-              <TableHead className="w-[100px] text-right pr-4">
-                จัดการ
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((property) => (
-              <TableRow
-                key={property.id}
-                className={`group hover:bg-slate-50/50 ${
-                  isSelected(property.id) ? "bg-blue-50/50 " : ""
-                }`}
-              >
-                {/* CHECKBOX */}
-                <TableCell className="w-[50px]">
+      <div className="rounded-md border border-gray-200 shadow-sm bg-card overflow-hidden">
+        {/* Desktop Table View */}
+        <div className="hidden lg:block">
+          <Table>
+            <TableHeader>
+              {/* Rest of the table header content ... */}
+              <TableRow className="bg-muted/50 hover:bg-muted/50 ">
+                <TableHead className="w-[50px]">
                   <Checkbox
-                    checked={isSelected(property.id)}
-                    onCheckedChange={() => toggleSelect(property.id)}
-                    aria-label={`เลือก ${property.title}`}
+                    checked={isAllSelected}
+                    onCheckedChange={() => toggleSelectAll(allIds)}
+                    aria-label="เลือกทั้งหมด"
+                    className={
+                      isPartialSelected
+                        ? "data-[state=checked]:bg-primary/50"
+                        : ""
+                    }
                   />
-                </TableCell>
-                {/* PROPERTY NAME & COVER */}
-                <TableCell>
-                  <div className="flex items-start gap-4">
-                    <div className="relative h-[80px] w-[100px] shrink-0 overflow-hidden rounded-lg  bg-slate-100 group/image cursor-zoom-in">
-                      {property.image_url ? (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <div className="w-full h-full overflow-hidden">
+                </TableHead>
+                <TableHead className="w-[320px]">
+                  <SortableHead label="ทรัพย์สิน" sortKey="created_at" />
+                </TableHead>
+                <TableHead className="w-[120px]">
+                  <SortableHead label="ประเภท" sortKey="property_type" />
+                </TableHead>
+                <TableHead className="w-[180px]">ทำเล/ขนาด</TableHead>
+                <TableHead className="w-[140px]">
+                  <SortableHead label="ราคา" sortKey="price" />
+                </TableHead>
+                <TableHead className="w-[120px]">ความสนใจ</TableHead>
+                <TableHead className="w-[140px]">
+                  <SortableHead label="อัปเดต" sortKey="updated_at" />
+                </TableHead>
+                <TableHead className="w-[200px]">
+                  ผู้ซื้อ/ผู้เช่า/ผู้ดูแล
+                </TableHead>
+                <TableHead className="w-[140px]">
+                  <SortableHead label="สถานะ" sortKey="status" />
+                </TableHead>
+                <TableHead className="w-[100px]">สัญญา</TableHead>
+                <TableHead className="w-[100px] text-right pr-4">
+                  จัดการ
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((property) => (
+                <TableRow
+                  key={property.id}
+                  className={`group hover:bg-slate-50/50 ${
+                    isSelected(property.id) ? "bg-blue-50/50 " : ""
+                  }`}
+                >
+                  {/* CHECKBOX */}
+                  <TableCell className="w-[50px]">
+                    <Checkbox
+                      checked={isSelected(property.id)}
+                      onCheckedChange={() => toggleSelect(property.id)}
+                      aria-label={`เลือก ${property.title}`}
+                    />
+                  </TableCell>
+                  {/* PROPERTY NAME & COVER */}
+                  <TableCell>
+                    <div className="flex items-start gap-4">
+                      <div className="relative h-[80px] w-[100px] shrink-0 overflow-hidden rounded-lg  bg-slate-100 group/image cursor-zoom-in">
+                        {property.image_url ? (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <div className="w-full h-full overflow-hidden">
+                                <img
+                                  src={property.image_url}
+                                  alt={property.title}
+                                  className="h-full w-full object-cover transition-transform duration-300 group-hover/image:scale-110"
+                                />
+                              </div>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-3xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
+                              <VisuallyHidden>
+                                <DialogTitle>{property.title}</DialogTitle>
+                              </VisuallyHidden>
                               <img
                                 src={property.image_url}
                                 alt={property.title}
-                                className="h-full w-full object-cover transition-transform duration-300 group-hover/image:scale-110"
+                                className="max-h-[80vh] w-auto rounded-lg object-contain shadow-2xl"
                               />
-                            </div>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-3xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
-                            <VisuallyHidden>
-                              <DialogTitle>{property.title}</DialogTitle>
-                            </VisuallyHidden>
-                            <img
-                              src={property.image_url}
-                              alt={property.title}
-                              className="max-h-[80vh] w-auto rounded-lg object-contain shadow-2xl"
-                            />
-                          </DialogContent>
-                        </Dialog>
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-slate-100">
-                          <ImageIcon className="h-6 w-6 text-slate-300" />
+                            </DialogContent>
+                          </Dialog>
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-slate-100">
+                            <ImageIcon className="h-6 w-6 text-slate-300" />
+                          </div>
+                        )}
+                        {property.is_new && (
+                          <Badge className="absolute top-1 left-1 h-5 px-1.5 text-[10px] bg-blue-500 hover:bg-blue-600 border-0 pointer-events-none shadow-sm">
+                            NEW
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1 w-72">
+                        <Link
+                          href={`/protected/properties/${property.id}`}
+                          style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                          className="font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm"
+                        >
+                          {property.title || "ไม่ระบุชื่อ"}
+                        </Link>
+                        <span className="text-xs text-slate-500 line-clamp-1">
+                          {property.popular_area || property.description || "-"}
+                        </span>
+                        <div className="flex items-center gap-2 mt-auto">
+                          <span className="text-[10px] text-slate-400 flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-100">
+                            <Clock className="h-3 w-3" />
+                            {formatDistanceToNow(
+                              new Date(property.created_at),
+                              {
+                                addSuffix: true,
+                                locale: th,
+                              },
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  {/* TYPE */}
+                  <TableCell>
+                    <div className="flex flex-col items-start gap-1.5">
+                      <PropertyTypeBadge type={property.property_type} />
+                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                        {property.listing_type === "SALE"
+                          ? "ขาย"
+                          : property.listing_type === "RENT"
+                            ? "เช่า"
+                            : "ขาย/เช่า"}
+                      </span>
+                    </div>
+                  </TableCell>
+
+                  {/* LOCATION & ASSET INFO */}
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <div className="font-medium text-xs text-slate-700">
+                        {property.popular_area ||
+                          property.subdistrict ||
+                          property.district ||
+                          "-"}
+                      </div>
+                      <div className="text-xs text-slate-500 flex items-center gap-2">
+                        {property.size_sqm ? (
+                          <span>{property.size_sqm} ตร.ม.</span>
+                        ) : null}
+                        {property.land_size_sqwah ? (
+                          <span>{property.land_size_sqwah} ตร.ว.</span>
+                        ) : null}
+                      </div>
+                      <div className="text-[10px] text-slate-400 flex gap-2">
+                        {property.bedrooms ? (
+                          <span>{property.bedrooms} นอน</span>
+                        ) : null}
+                        {property.bathrooms ? (
+                          <span>{property.bathrooms} น้ำ</span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  {/* PRICE */}
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      {(() => {
+                        const isSale =
+                          property.listing_type === "SALE" ||
+                          property.listing_type === "SALE_AND_RENT";
+                        const isRent =
+                          property.listing_type === "RENT" ||
+                          property.listing_type === "SALE_AND_RENT";
+
+                        const salePrice = property.price;
+                        const originalSalePrice = property.original_price;
+                        const hasSaleDiscount =
+                          originalSalePrice &&
+                          salePrice &&
+                          originalSalePrice > salePrice;
+
+                        const rentPrice = property.rental_price;
+                        const originalRentPrice =
+                          property.original_rental_price;
+                        const hasRentDiscount =
+                          originalRentPrice &&
+                          rentPrice &&
+                          originalRentPrice > rentPrice;
+
+                        if (
+                          !salePrice &&
+                          !rentPrice &&
+                          !originalSalePrice &&
+                          !originalRentPrice
+                        ) {
+                          return (
+                            <span className="text-sm text-slate-300">-</span>
+                          );
+                        }
+
+                        return (
+                          <>
+                            {/* Sale Price */}
+                            {isSale && (
+                              <>
+                                {hasSaleDiscount ? (
+                                  <div className="flex flex-col items-start gap-0.5">
+                                    <span className="text-xs text-slate-400 line-through decoration-slate-300">
+                                      ฿{originalSalePrice?.toLocaleString()}
+                                    </span>
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-[10px] text-red-500 font-medium">
+                                        ลดขาย
+                                      </span>
+                                      <span className="font-bold text-sm text-red-600">
+                                        ฿{salePrice?.toLocaleString()}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ) : salePrice ? (
+                                  <span className="font-bold text-sm text-emerald-600">
+                                    ฿{salePrice.toLocaleString()}
+                                  </span>
+                                ) : originalSalePrice ? (
+                                  <span className="font-bold text-sm text-emerald-600">
+                                    ฿{originalSalePrice.toLocaleString()}
+                                  </span>
+                                ) : null}
+                              </>
+                            )}
+
+                            {/* Rent Price */}
+                            {isRent && (
+                              <>
+                                {hasRentDiscount ? (
+                                  <div className="flex flex-col items-start gap-0.5">
+                                    <span className="text-xs text-slate-400 line-through decoration-slate-300">
+                                      ฿{originalRentPrice?.toLocaleString()}/ด
+                                    </span>
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-[10px] text-orange-500 font-medium">
+                                        ลดเช่า
+                                      </span>
+                                      <span className="font-bold text-sm text-orange-600">
+                                        ฿{rentPrice?.toLocaleString()}/ด
+                                      </span>
+                                    </div>
+                                  </div>
+                                ) : rentPrice ? (
+                                  <span className="text-xs font-semibold text-blue-600">
+                                    เช่า: ฿{rentPrice.toLocaleString()}/ด
+                                  </span>
+                                ) : originalRentPrice ? (
+                                  <span className="text-xs font-semibold text-blue-600">
+                                    เช่า: ฿{originalRentPrice.toLocaleString()}
+                                    /ด
+                                  </span>
+                                ) : null}
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </TableCell>
+
+                  {/* INTEREST & STOCK */}
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <div
+                        className="flex items-center gap-1.5 text-xs font-medium text-slate-700"
+                        title="จำนวนผู้สนใจ (Leads)"
+                      >
+                        <Users className="h-3.5 w-3.5 text-blue-500" />
+                        <span>{property.leads_count} คน</span>
+                      </div>
+                      <div
+                        className="flex items-center gap-1.5 text-[10px] text-slate-400"
+                        title="ยอดเข้าชม (Views)"
+                      >
+                        <Eye className="h-3 w-3" />
+                        <span>{property.view_count || 0}</span>
+                      </div>
+                      {/* Stock Display */}
+                      {(property.total_units || 0) > 1 && (
+                        <div className="flex items-center gap-1.5 text-[10px] bg-slate-100 px-1.5 py-0.5 rounded-full w-fit border border-slate-200">
+                          <span
+                            className={cn(
+                              "font-medium",
+                              (property.total_units || 0) -
+                                (property.sold_units || 0) >
+                                0
+                                ? "text-emerald-600"
+                                : "text-red-500",
+                            )}
+                          >
+                            ยูนิตเหลือ{" "}
+                            {(property.total_units || 0) -
+                              (property.sold_units || 0)}
+                          </span>
+                          <span className="text-slate-400">
+                            / {property.total_units}
+                          </span>
                         </div>
                       )}
-                      {property.is_new && (
-                        <Badge className="absolute top-1 left-1 h-5 px-1.5 text-[10px] bg-blue-500 hover:bg-blue-600 border-0 pointer-events-none shadow-sm">
-                          NEW
-                        </Badge>
-                      )}
                     </div>
-                    <div className="flex flex-col gap-1 w-72">
-                      <Link
-                        href={`/protected/properties/${property.id}`}
-                        style={{
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                        className="font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm"
-                      >
-                        {property.title || "ไม่ระบุชื่อ"}
-                      </Link>
-                      <span className="text-xs text-slate-500 line-clamp-1">
-                        {property.popular_area || property.description || "-"}
-                      </span>
-                      <div className="flex items-center gap-2 mt-auto">
-                        <span className="text-[10px] text-slate-400 flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-100">
-                          <Clock className="h-3 w-3" />
-                          {formatDistanceToNow(new Date(property.created_at), {
-                            addSuffix: true,
-                            locale: th,
-                          })}
+                  </TableCell>
+
+                  {/* UPDATED */}
+                  <TableCell className="items-center ">
+                    <div
+                      className="text-xs text-slate-500 line-clamp-1 max-w-[100px] text-ellipsis"
+                      title={new Date(property.updated_at).toLocaleString(
+                        "th-TH",
+                      )}
+                    >
+                      {formatDistanceToNow(new Date(property.updated_at), {
+                        addSuffix: true,
+                        locale: th,
+                      })}
+                    </div>
+                  </TableCell>
+
+                  {/* BUYER / TENANT / AGENT */}
+                  <TableCell className="items-center ">
+                    {property.status === "SOLD" ||
+                    property.status === "RENTED" ? (
+                      property.closed_lead_name ? (
+                        <Link
+                          href={`/protected/leads?stage=CLOSED`}
+                          className="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-800 px-3 py-1 text-xs font-bold hover:bg-emerald-100 transition-colors border border-emerald-100"
+                          title="ดู Leads ที่ปิดดีล"
+                        >
+                          {property.status === "SOLD" ? "ผู้ซื้อ:" : "ผู้เช่า:"}
+                          <span className="max-w-[80px] truncate">
+                            {property.closed_lead_name}
+                          </span>
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">
+                          (ปิดดีลแล้ว)
+                        </span>
+                      )
+                    ) : (
+                      /* Show Assigned Agent if available (mock/placeholder) */
+                      <div className="text-xs text-slate-500">
+                        <span className="text-[10px] text-slate-400 block mb-0.5">
+                          ผู้ดูแล:
+                        </span>
+                        <span className="font-medium text-blue-600">
+                          {property.agent_name || "คุณ (Me)"}
                         </span>
                       </div>
-                    </div>
-                  </div>
-                </TableCell>
+                    )}
+                  </TableCell>
 
-                {/* TYPE */}
-                <TableCell>
-                  <div className="flex flex-col items-start gap-1.5">
-                    <PropertyTypeBadge type={property.property_type} />
-                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                      {property.listing_type === "SALE"
-                        ? "ขาย"
-                        : property.listing_type === "RENT"
-                          ? "เช่า"
-                          : "ขาย/เช่า"}
+                  {/* STATUS */}
+                  <TableCell>
+                    <PropertyStatusSelect
+                      id={property.id}
+                      value={property.status as PropertyStatus}
+                    />
+                  </TableCell>
+
+                  {/* EXPIRY (MOCK) */}
+                  <TableCell>
+                    <span className="text-xs text-slate-400">-</span>
+                  </TableCell>
+
+                  {/* ACTIONS */}
+                  <TableCell className="text-right">
+                    <div className="flex justify-end items-center gap-1">
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 cursor-pointer  hover:text-blue-700 hover:bg-blue-50"
+                        title="ดู"
+                        aria-label="ดู"
+                      >
+                        <Link href={`/protected/properties/${property.id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 cursor-pointer  hover:text-amber-700 hover:bg-amber-50"
+                        title="แก้ไข"
+                        aria-label="แก้ไข"
+                      >
+                        <Link
+                          href={`/protected/properties/${property.id}/edit`}
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </Link>
+                      </Button>
+
+                      <DuplicatePropertyButton
+                        id={property.id}
+                        className="cursor-pointer hover:text-purple-600 hover:bg-purple-50"
+                      />
+
+                      {/* delete อยู่ในนี้ */}
+                      <PropertyRowActions id={property.id} />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Mobile/Tablet Card View */}
+        <div className="lg:hidden divide-y divide-slate-100 dark:divide-slate-800">
+          {data.map((property) => (
+            <div
+              key={property.id}
+              className={`p-4 transition-colors ${
+                isSelected(property.id)
+                  ? "bg-blue-50/50 dark:bg-blue-900/10"
+                  : "hover:bg-slate-50"
+              }`}
+            >
+              <div className="flex gap-4">
+                <div className="flex flex-col gap-3 shrink-0">
+                  <Checkbox
+                    checked={isSelected(property.id)}
+                    onCheckedChange={() => toggleSelect(property.id)}
+                  />
+                  <div className="h-[70px] w-[90px] rounded-lg overflow-hidden bg-slate-100">
+                    {property.image_url ? (
+                      <img
+                        src={property.image_url}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center">
+                        <ImageIcon className="h-5 w-5 text-slate-300" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start gap-2">
+                    <Link
+                      href={`/protected/properties/${property.id}`}
+                      className="font-bold text-slate-900 dark:text-white text-sm line-clamp-1 flex-1"
+                    >
+                      {property.title}
+                    </Link>
+                    <PropertyStatusSelect
+                      id={property.id}
+                      value={property.status as PropertyStatus}
+                      className="h-7 w-24 text-[10px]"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-1">
+                    <PropertyTypeBadge
+                      type={property.property_type}
+                      className="h-4 text-[9px] px-1.5"
+                    />
+                    <span className="text-[10px] text-slate-500 font-medium bg-slate-100 px-1.5 py-0 rounded-full">
+                      {property.listing_type}
                     </span>
                   </div>
-                </TableCell>
 
-                {/* LOCATION & ASSET INFO */}
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <div className="font-medium text-xs text-slate-700">
-                      {property.popular_area ||
-                        property.subdistrict ||
-                        property.district ||
-                        "-"}
+                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
+                    <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {property.district || "-"}
                     </div>
-                    <div className="text-xs text-slate-500 flex items-center gap-2">
-                      {property.size_sqm ? (
-                        <span>{property.size_sqm} ตร.ม.</span>
-                      ) : null}
-                      {property.land_size_sqwah ? (
-                        <span>{property.land_size_sqwah} ตร.ว.</span>
-                      ) : null}
+                    <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      {property.leads_count} Leads
                     </div>
-                    <div className="text-[10px] text-slate-400 flex gap-2">
-                      {property.bedrooms ? (
-                        <span>{property.bedrooms} นอน</span>
-                      ) : null}
-                      {property.bathrooms ? (
-                        <span>{property.bathrooms} น้ำ</span>
-                      ) : null}
+                    <div className="text-sm font-bold text-emerald-600">
+                      ฿{property.price?.toLocaleString() || "-"}
+                    </div>
+                    <div className="text-[10px] text-right text-slate-400 self-center">
+                      {formatDistanceToNow(new Date(property.updated_at), {
+                        addSuffix: true,
+                        locale: th,
+                      })}
                     </div>
                   </div>
-                </TableCell>
 
-                {/* PRICE */}
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    {(() => {
-                      const isSale =
-                        property.listing_type === "SALE" ||
-                        property.listing_type === "SALE_AND_RENT";
-                      const isRent =
-                        property.listing_type === "RENT" ||
-                        property.listing_type === "SALE_AND_RENT";
-
-                      const salePrice = property.price;
-                      const originalSalePrice = property.original_price;
-                      const hasSaleDiscount =
-                        originalSalePrice &&
-                        salePrice &&
-                        originalSalePrice > salePrice;
-
-                      const rentPrice = property.rental_price;
-                      const originalRentPrice = property.original_rental_price;
-                      const hasRentDiscount =
-                        originalRentPrice &&
-                        rentPrice &&
-                        originalRentPrice > rentPrice;
-
-                      if (
-                        !salePrice &&
-                        !rentPrice &&
-                        !originalSalePrice &&
-                        !originalRentPrice
-                      ) {
-                        return (
-                          <span className="text-sm text-slate-300">-</span>
-                        );
-                      }
-
-                      return (
-                        <>
-                          {/* Sale Price */}
-                          {isSale && (
-                            <>
-                              {hasSaleDiscount ? (
-                                <div className="flex flex-col items-start gap-0.5">
-                                  <span className="text-xs text-slate-400 line-through decoration-slate-300">
-                                    ฿{originalSalePrice?.toLocaleString()}
-                                  </span>
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-[10px] text-red-500 font-medium">
-                                      ลดขาย
-                                    </span>
-                                    <span className="font-bold text-sm text-red-600">
-                                      ฿{salePrice?.toLocaleString()}
-                                    </span>
-                                  </div>
-                                </div>
-                              ) : salePrice ? (
-                                <span className="font-bold text-sm text-emerald-600">
-                                  ฿{salePrice.toLocaleString()}
-                                </span>
-                              ) : originalSalePrice ? (
-                                <span className="font-bold text-sm text-emerald-600">
-                                  ฿{originalSalePrice.toLocaleString()}
-                                </span>
-                              ) : null}
-                            </>
-                          )}
-
-                          {/* Rent Price */}
-                          {isRent && (
-                            <>
-                              {hasRentDiscount ? (
-                                <div className="flex flex-col items-start gap-0.5">
-                                  <span className="text-xs text-slate-400 line-through decoration-slate-300">
-                                    ฿{originalRentPrice?.toLocaleString()}/ด
-                                  </span>
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-[10px] text-orange-500 font-medium">
-                                      ลดเช่า
-                                    </span>
-                                    <span className="font-bold text-sm text-orange-600">
-                                      ฿{rentPrice?.toLocaleString()}/ด
-                                    </span>
-                                  </div>
-                                </div>
-                              ) : rentPrice ? (
-                                <span className="text-xs font-semibold text-blue-600">
-                                  เช่า: ฿{rentPrice.toLocaleString()}/ด
-                                </span>
-                              ) : originalRentPrice ? (
-                                <span className="text-xs font-semibold text-blue-600">
-                                  เช่า: ฿{originalRentPrice.toLocaleString()}/ด
-                                </span>
-                              ) : null}
-                            </>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                </TableCell>
-
-                {/* INTEREST & STOCK */}
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <div
-                      className="flex items-center gap-1.5 text-xs font-medium text-slate-700"
-                      title="จำนวนผู้สนใจ (Leads)"
-                    >
-                      <Users className="h-3.5 w-3.5 text-blue-500" />
-                      <span>{property.leads_count} คน</span>
-                    </div>
-                    <div
-                      className="flex items-center gap-1.5 text-[10px] text-slate-400"
-                      title="ยอดเข้าชม (Views)"
-                    >
-                      <Eye className="h-3 w-3" />
-                      <span>{property.view_count || 0}</span>
-                    </div>
-                    {/* Stock Display */}
-                    {(property.total_units || 0) > 1 && (
-                      <div className="flex items-center gap-1.5 text-[10px] bg-slate-100 px-1.5 py-0.5 rounded-full w-fit border border-slate-200">
-                        <span
-                          className={cn(
-                            "font-medium",
-                            (property.total_units || 0) -
-                              (property.sold_units || 0) >
-                              0
-                              ? "text-emerald-600"
-                              : "text-red-500",
-                          )}
-                        >
-                          ยูนิตเหลือ{" "}
-                          {(property.total_units || 0) -
-                            (property.sold_units || 0)}
-                        </span>
-                        <span className="text-slate-400">
-                          / {property.total_units}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
-
-                {/* UPDATED */}
-                <TableCell className="items-center ">
-                  <div
-                    className="text-xs text-slate-500 line-clamp-1 max-w-[100px] text-ellipsis"
-                    title={new Date(property.updated_at).toLocaleString(
-                      "th-TH",
-                    )}
-                  >
-                    {formatDistanceToNow(new Date(property.updated_at), {
-                      addSuffix: true,
-                      locale: th,
-                    })}
-                  </div>
-                </TableCell>
-
-                {/* BUYER / TENANT / AGENT */}
-                <TableCell className="items-center ">
-                  {property.status === "SOLD" ||
-                  property.status === "RENTED" ? (
-                    property.closed_lead_name ? (
-                      <Link
-                        href={`/protected/leads?stage=CLOSED`}
-                        className="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-800 px-3 py-1 text-xs font-bold hover:bg-emerald-100 transition-colors border border-emerald-100"
-                        title="ดู Leads ที่ปิดดีล"
-                      >
-                        {property.status === "SOLD" ? "ผู้ซื้อ:" : "ผู้เช่า:"}
-                        <span className="max-w-[80px] truncate">
-                          {property.closed_lead_name}
-                        </span>
-                      </Link>
-                    ) : (
-                      <span className="text-xs text-slate-400 italic">
-                        (ปิดดีลแล้ว)
-                      </span>
-                    )
-                  ) : (
-                    /* Show Assigned Agent if available (mock/placeholder) */
-                    <div className="text-xs text-slate-500">
-                      <span className="text-[10px] text-slate-400 block mb-0.5">
-                        ผู้ดูแล:
-                      </span>
-                      <span className="font-medium text-blue-600">
-                        {property.agent_name || "คุณ (Me)"}
-                      </span>
-                    </div>
-                  )}
-                </TableCell>
-
-                {/* STATUS */}
-                <TableCell>
-                  <PropertyStatusSelect
-                    id={property.id}
-                    value={property.status as PropertyStatus}
-                  />
-                </TableCell>
-
-                {/* EXPIRY (MOCK) */}
-                <TableCell>
-                  <span className="text-xs text-slate-400">-</span>
-                </TableCell>
-
-                {/* ACTIONS */}
-                <TableCell className="text-right">
-                  <div className="flex justify-end items-center gap-1">
+                  <div className="flex justify-end gap-1 mt-3">
                     <Button
                       asChild
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 cursor-pointer  hover:text-blue-700 hover:bg-blue-50"
-                      title="ดู"
-                      aria-label="ดู"
+                      className="h-8 w-8 text-slate-500"
                     >
                       <Link href={`/protected/properties/${property.id}`}>
                         <Eye className="h-4 w-4" />
                       </Link>
                     </Button>
-
                     <Button
                       asChild
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 cursor-pointer  hover:text-amber-700 hover:bg-amber-50"
-                      title="แก้ไข"
-                      aria-label="แก้ไข"
+                      className="h-8 w-8 text-slate-500"
                     >
                       <Link href={`/protected/properties/${property.id}/edit`}>
                         <Edit3 className="h-4 w-4" />
                       </Link>
                     </Button>
-
-                    <DuplicatePropertyButton
-                      id={property.id}
-                      className="cursor-pointer hover:text-purple-600 hover:bg-purple-50"
-                    />
-
-                    {/* delete อยู่ในนี้ */}
                     <PropertyRowActions id={property.id} />
                   </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

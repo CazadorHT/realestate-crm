@@ -54,6 +54,7 @@ function statusTone(status: PropertyStatus) {
 export function PropertyStatusSelect(props: {
   id: string;
   value: PropertyStatus;
+  className?: string;
 }) {
   const [value, setValue] = useState<PropertyStatus>(props.value);
   const [isPending, startTransition] = useTransition();
@@ -62,7 +63,7 @@ export function PropertyStatusSelect(props: {
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<PropertyStatus | null>(
-    null
+    null,
   );
 
   const commitChange = (nextStatus: PropertyStatus) => {
@@ -108,7 +109,8 @@ export function PropertyStatusSelect(props: {
           className={cn(
             "h-8 w-[150px] rounded-full px-3 shadow-none",
             "transition-colors",
-            statusTone(value)
+            statusTone(value),
+            props.className,
           )}
           aria-label="เปลี่ยนสถานะทรัพย์"
         >

@@ -118,41 +118,61 @@ export function StatsOverview({ initialStats }: StatsOverviewProps) {
         </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statItems.map((stat, index) => (
-          <Card
-            key={index}
-            className={`shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105 ${
-              loading ? "opacity-50" : ""
-            }`}
-            onClick={cycleTimeRange}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <stat.icon
-                className={`h-4 w-4 ${stat.color || "text-muted-foreground"}`}
-              />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="flex items-center gap-2 mt-1">
-                <p
-                  className={`text-xs font-medium ${
-                    stat.change.startsWith("+")
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }`}
-                >
-                  {stat.change}
-                </p>
-                <span className="text-muted-foreground text-[10px]">•</span>
-                <p className="text-xs text-muted-foreground">{stat.context}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        {statItems.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <Card
+              key={index}
+              className={`relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 bg-white dark:bg-slate-900 group cursor-pointer ${
+                loading ? "opacity-60" : ""
+              }`}
+              onClick={cycleTimeRange}
+            >
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={`p-2.5 rounded-xl ${
+                      index === 0
+                        ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                        : index === 1
+                          ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+                          : index === 2
+                            ? "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
+                            : "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div
+                    className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                      stat.change.startsWith("+")
+                        ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400"
+                        : "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400"
+                    }`}
+                  >
+                    {stat.change}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">
+                    {stat.title}
+                  </p>
+                  <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
+                    {stat.value}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-medium mt-1 truncate">
+                    {stat.context}
+                  </p>
+                </div>
+
+                {/* Decorative subtle background icon */}
+                <Icon className="absolute -bottom-2 -right-2 h-16 w-16 text-slate-100 dark:text-slate-800/50 opacity-10 group-hover:scale-110 transition-transform duration-500" />
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {loading && (

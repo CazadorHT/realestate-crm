@@ -9,14 +9,14 @@ interface RiskAlertsProps {
 export function RiskAlerts({ deals = [] }: RiskAlertsProps) {
   return (
     <Card className="shadow-sm h-full border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-950/10">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 px-4 sm:px-6">
         <CardTitle className="text-sm font-semibold flex items-center gap-2 text-red-800 dark:text-red-200">
           <AlertTriangle className="h-4 w-4" />
           ดีลเสี่ยง / ค้างนาน
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="space-y-3 max-h-[200px] overflow-y-auto px-6 py-4">
+        <div className="space-y-3 max-h-[200px] overflow-y-auto px-4 sm:px-6 py-4">
           {deals.length === 0 ? (
             <p className="text-xs text-muted-foreground">
               ไม่มีดีลที่มีความเสี่ยง

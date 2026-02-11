@@ -164,19 +164,19 @@ export default async function DashboardPage() {
             {/* LEFT COLUMN (2/3 width on large screens) */}
             <div className="xl:col-span-2 flex flex-col gap-6">
               {/* PIPELINE & FUNNEL ROW */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <PipelineSummary data={pipelineData} />
                 <FunnelChart data={funnelData} />
               </div>
 
               {/* REVENUE CHART */}
-              <div className="h-[350px]">
+              <div className="min-h-[400px]">
                 <RevenueChart initialData={revenueData} />
               </div>
 
               {/* TOP AGENTS & INSIGHTS */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-2">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
                   <TopAgents data={topAgents} />
                 </div>
                 <div className="flex flex-col gap-4">
@@ -187,7 +187,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* RIGHT COLUMN (1/3 width) */}
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 ">
               <QuickActions />
               <UpcomingEvents events={upcomingEvents} />
               <NotificationCenter notifications={notifications} />

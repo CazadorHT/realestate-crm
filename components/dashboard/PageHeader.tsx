@@ -73,20 +73,20 @@ export function PageHeader({
       <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
       <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-white/5 rounded-full blur-xl" />
 
-      <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             {Icon && (
-              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
+              <div className="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl shrink-0">
                 <Icon className="h-6 w-6 text-white" />
               </div>
             )}
-            <h1 className="text-2xl md:text-3xl font-bold text-white">
+            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
               {title}
             </h1>
           </div>
           {(subtitle || count !== undefined) && (
-            <p className="text-white/80 text-sm md:text-base max-w-md">
+            <p className="text-white/80 text-sm md:text-base max-w-md ml-1">
               {subtitle}
               {count !== undefined && (
                 <>
@@ -100,22 +100,24 @@ export function PageHeader({
         </div>
 
         {/* Action Slot - for custom components like dialogs */}
-        {actionSlot ? (
-          <div className="[&_button]:bg-white [&_button]:text-slate-800 [&_button]:hover:bg-white/90 [&_button]:shadow-lg [&_button]:font-semibold">
-            {actionSlot}
-          </div>
-        ) : actionLabel && actionHref ? (
-          <Button
-            asChild
-            size="lg"
-            className="bg-white text-slate-800 hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
-          >
-            <Link href={actionHref}>
-              {ActionIcon && <ActionIcon className="h-5 w-5 mr-2" />}
-              {actionLabel}
-            </Link>
-          </Button>
-        ) : null}
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          {actionSlot ? (
+            <div className="w-full sm:w-auto [&_button]:w-full [&_button]:sm:w-auto [&_button]:bg-white [&_button]:text-slate-800 [&_button]:hover:bg-white/90 [&_button]:shadow-lg [&_button]:font-semibold [&_button]:rounded-xl">
+              {actionSlot}
+            </div>
+          ) : actionLabel && actionHref ? (
+            <Button
+              asChild
+              size="lg"
+              className="w-full sm:w-auto bg-white text-slate-800 hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold rounded-xl"
+            >
+              <Link href={actionHref}>
+                {ActionIcon && <ActionIcon className="h-5 w-5 mr-2" />}
+                {actionLabel}
+              </Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {children && (

@@ -25,9 +25,9 @@ export function PropertyFormNavigation({
 }: PropertyFormNavigationProps) {
   return (
     <div className="mt-6">
-      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-6">
+      <div className="bg-white p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-lg border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
         {/* Left: Tertiary Action (Cancel) */}
-        <div className="w-full sm:w-auto flex justify-center sm:justify-start">
+        <div className="w-full sm:w-auto">
           <CancelButton sessionId={uploadSessionId} />
         </div>
 

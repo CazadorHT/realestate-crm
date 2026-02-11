@@ -234,6 +234,32 @@ export async function getFunnelStats(): Promise<FunnelData[]> {
     else if (l.stage === "CLOSED") counts.CLOSED++;
   });
 
+  // Also count Deals and Properties as "Closed"
+  const { count: dealClosedCount } = await supabase
+    .from("deals")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "CLOSED_WIN");
+
+  const { count: propertySoldOrRentedCount } = await supabase
+    .from("properties")
+    .select("*", { count: "exact", head: true })
+    .in("status", ["SOLD", "RENTED"]);
+
+  // Deduplicate roughly by taking the max or summing specific types
+  // For simplicity, let's use the CLOSED stage from leads + any SOLD properties not linked to leads
+  // Actually, just taking the max of leads.CLOSED or properties.SOLD is a safe bet for "Closed" step
+  counts.CLOSED = Math.max(
+    counts.CLOSED,
+    dealClosedCount || 0,
+    propertySoldOrRentedCount || 0,
+  );
+
+  // If Negotiating is 0 but we have deals/sold properties, fallback
+  counts.NEGOTIATING = Math.max(counts.NEGOTIATING, counts.CLOSED);
+  counts.VIEWED = Math.max(counts.VIEWED, counts.NEGOTIATING);
+  counts.CONTACTED = Math.max(counts.CONTACTED, counts.VIEWED);
+  counts.NEW = Math.max(counts.NEW, counts.CONTACTED);
+
   // Also consider "SOLD" properties as CLOSED wins if we want to mix data,
   // but better to stick to Lead stages for now to consisteny.
 

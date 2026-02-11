@@ -45,18 +45,18 @@ export default async function ProtectedLayout({
       <SidebarNav role={profile.role} />
 
       <div className="flex flex-1 flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 bg-white/80 dark:bg-slate-900/80 px-6 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-sm supports-backdrop-filter:bg-white/60 dark:supports-backdrop-filter:bg-slate-900/60">
-          <div className="flex items-center gap-4">
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 bg-white/80 dark:bg-slate-900/80 px-4 md:px-6 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-sm supports-backdrop-filter:bg-white/60 dark:supports-backdrop-filter:bg-slate-900/60">
+          <div className="flex items-center gap-2 sm:gap-4">
             <MobileNav role={profile.role} />
 
-            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight sm:hidden">
-              CAZADOR
+            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight sm:hidden truncate max-w-[120px]">
+              OMA ASSET
             </h1>
           </div>
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex items-center gap-2 sm:gap-4">
             <NotificationBell notifications={notifications} />
             <ThemeToggle />
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2 hidden sm:block" />
+            <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block" />
             <UserNav profile={profile} />
           </div>
         </header>
