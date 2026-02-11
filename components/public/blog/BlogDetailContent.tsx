@@ -85,10 +85,10 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
   }, []);
 
   return (
-    <div className="bg-white rounded-2xl p-6 md:p-10 shadow-xl border border-slate-200">
+    <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-10 shadow-xl border border-slate-200">
       {/* Excerpt */}
       {excerpt && (
-        <p className="text-xl md:text-2xl font-medium text-slate-600 mb-8 leading-relaxed border-l-4 border-blue-600 pl-6 py-2 bg-linear-to-r from-blue-50/50 to-transparent">
+        <p className="text-lg md:text-2xl font-medium text-slate-600 mb-6 md:mb-8 leading-relaxed border-l-4 border-blue-600 pl-4 md:pl-6 py-2 bg-linear-to-r from-blue-50/50 to-transparent">
           {excerpt}
         </p>
       )}
@@ -96,7 +96,7 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
       {/* Main Content Render */}
       <div
         ref={contentRef}
-        className="prose prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline text-slate-600"
+        className="prose prose-base md:prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline text-slate-600"
         dangerouslySetInnerHTML={{
           __html: sanitizedContent,
         }}
@@ -105,12 +105,12 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
 
       {/* Tags */}
       {post.tags && post.tags.length > 0 && (
-        <div className="mt-12 pt-8 border-t flex flex-wrap gap-2">
+        <div className="mt-8 md:mt-12 pt-6 md:pt-8 border-t flex flex-wrap gap-2">
           {post.tags.map((tag) => (
             <Badge
               key={tag}
               variant="outline"
-              className="text-sm px-3 py-1.5 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-colors cursor-pointer"
+              className="text-xs sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-colors cursor-pointer"
             >
               #{tag}
             </Badge>
@@ -119,8 +119,8 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
       )}
 
       {/* Author Bio */}
-      <div className="mt-12 pt-8 border-t">
-        <div className="flex items-start gap-4 p-6 bg-linear-to-br from-slate-50 to-blue-50/30 rounded-2xl border border-slate-200">
+      <div className="mt-10 md:mt-12 pt-8 border-t">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 p-5 sm:p-6 bg-linear-to-br from-slate-50 to-blue-50/30 rounded-2xl border border-slate-200">
           <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md shrink-0">
             {author.avatar ? (
               <Image

@@ -143,8 +143,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       <div className="container mx-auto px-4 md:px-6 py-4">
         <AppBreadcrumbs
           items={[
-            { label: t("common.home"), href: "/" },
-            { label: t("common.blog"), href: "/blog" },
+            { label: t("breadcrumb.home"), href: "/" },
+            { label: t("breadcrumb.blog"), href: "/blog" },
             ...(post.category
               ? [
                   {

@@ -97,11 +97,11 @@ export function TrustSection() {
         </div>
 
         {/* Enhanced Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+        <div className="flex md:grid md:grid-cols-3 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-hide gap-4 md:gap-6 lg:gap-8 pb-8 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-2 overflow-hidden"
+              className="group relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-2 overflow-hidden shrink-0 w-[85vw] md:w-full snap-center"
               data-aos="fade-up"
               data-aos-delay={index * 100}
             >

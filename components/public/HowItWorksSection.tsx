@@ -152,14 +152,14 @@ export function HowItWorksSection() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 relative">
+          <div className="flex md:grid md:grid-cols-3 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-hide gap-4 md:gap-6 lg:gap-8 pb-8 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 relative">
             {STEPS.map((item, idx) => {
               const tone = STEP_TONES[item.tone];
 
               return (
                 <div
                   key={idx}
-                  className="relative group"
+                  className="relative group shrink-0 w-[85vw] md:w-full snap-center"
                   data-aos="fade-up"
                   data-aos-delay={idx * 100}
                   id={`step-${idx + 1}`}
