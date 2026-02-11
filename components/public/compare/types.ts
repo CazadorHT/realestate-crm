@@ -28,7 +28,11 @@ export type CompareProperty = {
     name_cn: string | null;
   }>;
   district: string | null;
+  district_en: string | null;
+  district_cn: string | null;
   subdistrict: string | null;
+  subdistrict_en: string | null;
+  subdistrict_cn: string | null;
   popular_area: string | null;
   popular_area_en: string | null;
   popular_area_cn: string | null;

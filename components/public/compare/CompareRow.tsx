@@ -6,6 +6,8 @@ import { formatMoney, getListingTypeKey, isPetFriendly } from "./utils";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
+import { useAddressLocalization } from "@/hooks/useAddressLocalization";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 interface CompareRowProps {
   row: ComparisonRow;
@@ -17,6 +19,40 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
   const { t, language } = useLanguage();
   const locale =
     language === "th" ? "th-TH" : language === "cn" ? "zh-CN" : "en-US";
+
+  function CompareLocationCell({
+    property,
+    language,
+  }: {
+    property: CompareProperty;
+    language: any;
+  }) {
+    const { localized } = useAddressLocalization(
+      property.province,
+      property.district,
+      property.subdistrict,
+    );
+
+    const displayProvince =
+      getProvinceName(property.province || "", language) || localized.province;
+    const displayDistrict = localized.district || property.district;
+    const displaySubdistrict = localized.subdistrict || property.subdistrict;
+
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="line-clamp-2">
+          {[
+            getLocaleValue(property, "address_line1", language),
+            displaySubdistrict,
+            displayDistrict,
+            displayProvince,
+          ]
+            .filter(Boolean)
+            .join(", ")}
+        </span>
+      </div>
+    );
+  }
 
   // Calculation for max value to highlight Winner
   const isNumericCompare = [
@@ -237,18 +273,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                 {getLocalizedField<string>(p, "title", language)}
               </span>
             ) : row.key === "location" ? (
-              <div className="flex flex-col gap-0.5">
-                <span className="line-clamp-2">
-                  {[
-                    getLocalizedField(p, "address_line1", language),
-                    p.subdistrict,
-                    p.district,
-                    p.province ? getProvinceName(p.province, language) : null,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                </span>
-              </div>
+              <CompareLocationCell property={p} language={language} />
             ) : row.key === "province" ? (
               p.province ? (
                 getProvinceName(p.province, language)

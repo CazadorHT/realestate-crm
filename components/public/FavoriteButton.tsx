@@ -55,9 +55,11 @@ export function FavoriteButton({
       variant="outline"
       size={showText ? "default" : "icon"}
       className={cn(
-        "rounded-full transition-all duration-300 border-slate-200 hover:border-red-200 hover:bg-red-50",
-        favorited ? "text-red-500 border-red-200 bg-red-50" : "text-slate-400",
-        className
+        "rounded-full transition-all duration-300 border-slate-200! hover:border-red-200! hover:bg-red-50! bg-white!",
+        favorited
+          ? "text-red-500! border-red-200! bg-red-50!"
+          : "text-slate-400! bg-slate-200!",
+        className,
       )}
       onClick={handleToggle}
       title={favorited ? "ลบจากรายการโปรด" : "บันทึกรายการโปรด"}
@@ -66,14 +68,14 @@ export function FavoriteButton({
         className={cn(
           "h-5 w-5 transition-all duration-500",
           favorited ? "fill-current scale-110" : "scale-100",
-          isAnimating && "animate-pulse"
+          isAnimating && "animate-pulse",
         )}
       />
       {showText && (
         <span
           className={cn(
             "ml-2",
-            favorited ? "text-red-600 font-medium" : "text-slate-600"
+            favorited ? "text-red-600! font-medium" : "text-slate-600!",
           )}
         >
           {favorited ? "บันทึกแล้ว" : "บันทึก"}

@@ -4,6 +4,8 @@ import { Link as LinkIcon } from "lucide-react";
 import { FaFacebook } from "react-icons/fa";
 import { AiFillInstagram } from "react-icons/ai";
 import { useState } from "react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { toast } from "sonner";
 
 interface ShareButtonsProps {
   url: string;
@@ -16,6 +18,7 @@ export function ShareButtons({
   title: _title,
   variant = "default",
 }: ShareButtonsProps) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   const shareLinks = {
@@ -31,9 +34,11 @@ export function ShareButtons({
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      toast.success(t("common.link_copied"));
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Failed to copy:", err);
+      toast.error("Failed to copy link");
     }
   };
 
@@ -45,14 +50,16 @@ export function ShareButtons({
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center w-10 h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors"
+          title="Share on Facebook"
         >
-          <FaFacebook className="w-5 h-5" />
+          <FaFacebook className="w-5 h-5 " />
         </a>
         <a
           href={shareLinks.line}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors"
+          title="Share on LINE"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -68,12 +75,14 @@ export function ShareButtons({
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center w-10 h-10 bg-linear-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white rounded-full transition-colors"
+          title="Instagram"
         >
           <AiFillInstagram className="w-5 h-5" />
         </a>
         <button
           onClick={copyToClipboard}
           className="flex items-center justify-center w-10 h-10 bg-slate-600 hover:bg-slate-700 text-white rounded-full transition-colors"
+          title={t("common.copy_link")}
         >
           <LinkIcon className="w-5 h-5" />
         </button>
@@ -122,7 +131,7 @@ export function ShareButtons({
         className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-xl transition-colors font-medium text-sm"
       >
         <LinkIcon className="w-5 h-5" />
-        {copied ? "Copied!" : "Copy Link"}
+        {copied ? t("common.link_copied") : t("common.copy_link")}
       </button>
     </div>
   );
