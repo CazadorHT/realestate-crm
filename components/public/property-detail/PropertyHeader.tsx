@@ -291,7 +291,7 @@ export function PropertyHeader({
   return (
     <div
       className={cn(
-        "pt-20 md:pt-24 px-5 md:px-6 lg:px-8 bg-white relative",
+        "pt-20 lg:pt-24 px-5 md:px-6 lg:px-8 bg-white relative",
         className,
       )}
     >
@@ -351,7 +351,7 @@ export function PropertyHeader({
             </div>
           )}
 
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div className="space-y-3 grow min-w-0 max-w-[950px] ">
               <div className="flex items-center gap-1.5 md:gap-2 flex-wrap sm:flex-nowrap">
                 <Badge

@@ -31,18 +31,18 @@ export function PropertyAmenities({
         <LuLayoutGrid className="w-5 h-5 text-blue-600" />{" "}
         {t("property.amenities")}
       </h3>
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-y-4 md:gap-x-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-y-4 lg:gap-x-8">
         {features.map((item, i) => {
           const Icon = ICON_MAP[item.icon_key] || DEFAULT_ICON;
           const localizedName = getLocaleValue(item, "name", language);
           return (
             <div
-              key={i}
-              className="flex items-center gap-2 md:gap-3 text-sm md:text-base text-slate-600"
-            >
-              <div className="p-1.5 md:p-2 rounded-full bg-blue-50 text-blue-600">
-                <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-              </div>
+            key={i}
+            className="flex items-center gap-2 lg:gap-3 text-sm lg:text-base text-slate-600"
+          >
+            <div className="p-1.5 lg:p-2 rounded-full bg-blue-50 text-blue-600">
+              <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+            </div>
               <span className="truncate">{localizedName}</span>
             </div>
           );

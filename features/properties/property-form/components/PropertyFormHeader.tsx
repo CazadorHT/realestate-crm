@@ -10,7 +10,7 @@ interface PropertyFormHeaderProps {
   onSubmit: () => void;
 }
 
-export function   PropertyFormHeader({
+export function PropertyFormHeader({
   mode,
   title,
   uploadSessionId,

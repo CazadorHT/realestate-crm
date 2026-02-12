@@ -19,7 +19,7 @@ export function Step3Location({ form, mode }: Step3Props) {
       <AddressSection form={form} />
 
       {/* Transportation & Nearby Places Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <TransitSection form={form} />
         <NearbyPlacesSection form={form} />
       </div>

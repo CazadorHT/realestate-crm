@@ -136,7 +136,7 @@ export function DescriptionSection({
       </Card>
 
       {/* Multilingual Descriptions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card className="border-slate-200/70 bg-white shadow-sm overflow-hidden">
           <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-2">
             <Languages className="w-4 h-4 text-slate-400" />

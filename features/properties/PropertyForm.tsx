@@ -438,7 +438,7 @@ export function PropertyForm({
   };
 
   return (
-    <div className="relative pb-24 sm:pb-0 px-4 sm:px-6 md:px-8 max-w-screen-2xl mx-auto">
+    <div className="relative pb-24 sm:pb-0  lg:px-8 max-w-screen-2xl mx-auto">
       {/* 1. Header */}
       <PropertyFormHeader
         mode={mode}

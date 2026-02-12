@@ -143,8 +143,8 @@ export function PropertyFilters({
   }, [searchParams]);
 
   return (
-    <div className="flex flex-col md:flex-row items-center gap-2 w-full">
-      <div className="flex items-center gap-2 w-full md:w-auto flex-1">
+    <div className="flex flex-col lg:flex-row items-center gap-2 w-full">
+      <div className="flex items-center gap-2 w-full lg:w-auto flex-1">
         <QuickSearch
           value={filters.q}
           onChange={(q) => setFilters({ ...filters, q })}
@@ -152,7 +152,7 @@ export function PropertyFilters({
         />
 
         {/* Mobile Filter Trigger */}
-        <div className="flex md:hidden gap-2">
+        <div className="flex lg:hidden gap-2">
           <AdvancedFilters
             open={open}
             setOpen={setOpen}
@@ -168,7 +168,7 @@ export function PropertyFilters({
         </div>
       </div>
 
-      <div className="hidden md:flex items-center gap-2">
+      <div className="hidden lg:flex items-center gap-2">
         <QuickSort
           value={`${filters.sortBy}-${filters.sortOrder}`}
           onValueChange={(value) => {

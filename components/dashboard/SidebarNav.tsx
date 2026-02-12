@@ -28,14 +28,38 @@ import {
   Activity,
   Layout,
   Sparkles,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function SidebarNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState<string[]>(["crm", "public"]);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Initialize collapse state from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("sidebar-collapsed");
+    if (saved !== null) {
+      setIsCollapsed(saved === "true");
+    }
+  }, []);
+
+  const toggleCollapse = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem("sidebar-collapsed", String(newState));
+  };
 
   const toggleGroup = (groupId: string) => {
     setOpenGroups((prev) =>
@@ -255,127 +279,250 @@ export function SidebarNav({ role }: { role: UserRole }) {
 
   const filteredGroups = filterGroups(groups);
 
-  return (
-    <aside className="hidden w-72 flex-col border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 sm:flex shadow-sm z-40 h-screen sticky top-0">
-      <div className="p-8 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/30">
-            <Building2 className="text-white h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-medium tracking-tight text-slate-700 dark:text-slate-200 uppercase">
-              OMA ASSET
-            </h1>
-            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-bold">
-              Real Estate CRM
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto">
-        {/* Dashboard - Top Level */}
-        <Link
-          href="/protected"
+  const NavItemContent = ({
+    item,
+    isCollapsed,
+  }: {
+    item: NavItem;
+    isCollapsed: boolean;
+  }) => (
+    <Link
+      href={item.href}
+      className={cn(
+        "flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-300 text-sm relative overflow-hidden group",
+        item.active
+          ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-semibold"
+          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium",
+        isCollapsed && "justify-center px-0",
+      )}
+    >
+      {item.active && (
+        <div
           className={cn(
-            "flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all duration-300 font-bold text-sm relative overflow-hidden group",
-            pathname === "/protected"
-              ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm"
-              : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800",
+            "absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 bg-blue-600 rounded-r-full",
+            isCollapsed && "h-8 w-1",
+          )}
+        />
+      )}
+      <item.icon
+        className={cn(
+          "h-4 w-4 transition-colors shrink-0",
+          item.active
+            ? "text-blue-600 dark:text-blue-400"
+            : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300",
+        )}
+      />
+      {!isCollapsed && <span>{item.title}</span>}
+    </Link>
+  );
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <aside
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={cn(
+          "hidden flex-col border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 sm:flex shadow-sm z-50 h-screen sticky top-0 transition-all duration-300 ease-in-out",
+          isCollapsed ? "w-20" : "w-72",
+        )}
+      >
+        <div
+          className={cn(
+            "p-8 pb-4 relative",
+            isCollapsed && "p-4 flex justify-center",
           )}
         >
-          {pathname === "/protected" && (
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-blue-600 rounded-r-full" />
-          )}
-          <BarChart3
-            className={cn(
-              "h-5 w-5 transition-colors",
-              pathname === "/protected"
-                ? "text-blue-600 dark:text-blue-400"
-                : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300",
-            )}
-          />
-          แดชบอร์ด
-        </Link>
-
-        {/* Grouped Menus */}
-        {filteredGroups.map((group) => {
-          const isOpen = openGroups.includes(group.id);
-          const hasActiveItem = group.items.some((item) => item.active);
-
-          return (
-            <div key={group.id} className="space-y-1">
-              {/* Group Header */}
-              <button
-                onClick={() => toggleGroup(group.id)}
-                className={cn(
-                  "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition-all duration-300 font-semibold text-xs uppercase tracking-wider",
-                  hasActiveItem
-                    ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
-                    : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800",
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <group.icon className="h-4 w-4" />
-                  {group.title}
-                </div>
-                {isOpen ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-              </button>
-
-              {/* Group Items */}
-              {isOpen && (
-                <div className="space-y-1 ml-2">
-                  {group.items.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-300 text-sm relative overflow-hidden group",
-                        item.active
-                          ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-semibold"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium",
-                      )}
-                    >
-                      {item.active && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 bg-blue-600 rounded-r-full" />
-                      )}
-                      <item.icon
-                        className={cn(
-                          "h-4 w-4 transition-colors",
-                          item.active
-                            ? "text-blue-600 dark:text-blue-400"
-                            : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300",
-                        )}
-                      />
-                      {item.title}
-                    </Link>
-                  ))}
-                </div>
-              )}
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/30 shrink-0">
+              <Building2 className="text-white h-6 w-6" />
             </div>
-          );
-        })}
-      </nav>
+            {!isCollapsed && (
+              <div className="overflow-hidden whitespace-nowrap">
+                <h1 className="text-xl font-medium tracking-tight text-slate-700 dark:text-slate-200 uppercase">
+                  OMA ASSET
+                </h1>
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-bold">
+                  Real Estate CRM
+                </p>
+              </div>
+            )}
+          </div>
 
-      <div className="p-4 m-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="bg-emerald-100 dark:bg-emerald-900/50 p-2 rounded-lg">
-            <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-              สถานะทีม
-            </p>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">
-              ออนไลน์
-            </p>
-          </div>
+          <button
+            onClick={toggleCollapse}
+            className={cn(
+              "absolute -right-3 top-10 h-6 w-6 rounded-full border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-sm transition-opacity duration-300",
+              !isHovered && "opacity-0",
+            )}
+          >
+            {isCollapsed ? (
+              <PanelLeftOpen className="h-3.5 w-3.5" />
+            ) : (
+              <PanelLeftClose className="h-3.5 w-3.5" />
+            )}
+          </button>
         </div>
-      </div>
-    </aside>
+
+        <nav className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto scrollbar-hide">
+          {/* Dashboard - Top Level */}
+          {isCollapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/protected"
+                  className={cn(
+                    "flex items-center justify-center rounded-xl h-12 w-full transition-all duration-300 font-bold text-sm relative overflow-hidden group",
+                    pathname === "/protected"
+                      ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800",
+                  )}
+                >
+                  {pathname === "/protected" && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-blue-600 rounded-r-full" />
+                  )}
+                  <BarChart3
+                    className={cn(
+                      "h-5 w-5 transition-colors",
+                      pathname === "/protected"
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300",
+                    )}
+                  />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">แดชบอร์ด</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Link
+              href="/protected"
+              className={cn(
+                "flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all duration-300 font-bold text-sm relative overflow-hidden group",
+                pathname === "/protected"
+                  ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800",
+              )}
+            >
+              {pathname === "/protected" && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-blue-600 rounded-r-full" />
+              )}
+              <BarChart3
+                className={cn(
+                  "h-5 w-5 transition-colors",
+                  pathname === "/protected"
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300",
+                )}
+              />
+              แดชบอร์ด
+            </Link>
+          )}
+
+          {/* Grouped Menus */}
+          {filteredGroups.map((group) => {
+            const isOpen = openGroups.includes(group.id);
+            const hasActiveItem = group.items.some((item) => item.active);
+
+            if (isCollapsed) {
+              return (
+                <div key={group.id} className="space-y-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => toggleGroup(group.id)}
+                        className={cn(
+                          "w-full flex items-center justify-center rounded-xl h-12 transition-all duration-300 font-semibold text-xs uppercase tracking-wider relative",
+                          hasActiveItem
+                            ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
+                            : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800",
+                        )}
+                      >
+                        <group.icon className="h-4 w-4" />
+                        {hasActiveItem && (
+                          <div className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-blue-600" />
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">{group.title}</TooltipContent>
+                  </Tooltip>
+
+                  {isOpen && (
+                    <div className="space-y-1">
+                      {group.items.map((item) => (
+                        <Tooltip key={item.href}>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <NavItemContent item={item} isCollapsed={true} />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            {item.title}
+                          </TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <div key={group.id} className="space-y-1">
+                {/* Group Header */}
+                <button
+                  onClick={() => toggleGroup(group.id)}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition-all duration-300 font-semibold text-xs uppercase tracking-wider",
+                    hasActiveItem
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
+                      : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800",
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <group.icon className="h-4 w-4" />
+                    {group.title}
+                  </div>
+                  {isOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </button>
+
+                {/* Group Items */}
+                {isOpen && (
+                  <div className="space-y-1 ml-2">
+                    {group.items.map((item) => (
+                      <NavItemContent
+                        key={item.href}
+                        item={item}
+                        isCollapsed={false}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
+
+        {!isCollapsed && (
+          <div className="p-4 m-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-emerald-100 dark:bg-emerald-900/50 p-2 rounded-lg">
+                <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                  สถานะทีม
+                </p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  ออนไลน์
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </aside>
+    </TooltipProvider>
   );
 }

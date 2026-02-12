@@ -125,7 +125,7 @@ export function NearbyPlaces({
         <MdOutlineExplore className="w-5 h-5 text-blue-600" />{" "}
         {t("property.nearby_places")}
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Nearby Places Categories (Transport = ทางด่วน) */}
         {categories.map((catKey) => {
           const items = grouped[catKey];

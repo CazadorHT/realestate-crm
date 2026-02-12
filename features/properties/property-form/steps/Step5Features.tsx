@@ -185,7 +185,7 @@ function Step5FeaturesComponent() {
                 {categoryFeatures.length} items
               </span>
             </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2.5 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2.5 sm:gap-4">
               {categoryFeatures.map((feature) => {
                 const isSelected = selectedFeatureIds.includes(feature.id);
 

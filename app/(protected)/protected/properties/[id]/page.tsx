@@ -203,7 +203,7 @@ export default async function PropertyDetailsPage({
   return (
     <div className="min-h-screen bg-white pb-24 lg:pb-32 font-sans ">
       {/* 1. Admin Breadcrumb & Edit Button */}
-      <div className="pt-6 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="pt-6 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Breadcrumb
             backHref={`/protected/properties`}
@@ -213,12 +213,12 @@ export default async function PropertyDetailsPage({
             ]}
           />
         </div>
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-3 lg:gap-4">
           <Button
             variant="outline"
             size="sm"
             asChild
-            className="flex-1 sm:flex-none rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+            className="flex-1 lg:flex-none rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
           >
             <Link
               href={`/properties/${property.slug || property.id}`}
@@ -232,7 +232,7 @@ export default async function PropertyDetailsPage({
             variant="outline"
             size="sm"
             asChild
-            className="flex-1 sm:flex-none rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+            className="flex-1 lg:flex-none rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
           >
             <Link href={`/protected/properties/${property.id}/edit`}>
               <Edit className="h-4 w-4 mr-2" />
@@ -244,7 +244,7 @@ export default async function PropertyDetailsPage({
 
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-6">
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-8 sm:pb-12 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
-          <div className="mx-auto px-4 sm:px-6 md:px-8 mt-4 sm:mt-8">
+          <div className="mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-8">
             <Badge
               variant="outline"
               className="bg-blue-50 px-3 py-2 sm:px-4 sm:py-3 text-blue-700 border-blue-200 font-bold uppercase tracking-widest rounded-full text-sm sm:text-xl shadow-sm flex items-center gap-1.5 w-fit"
@@ -258,13 +258,13 @@ export default async function PropertyDetailsPage({
             property={property as any}
             locationParts={locationParts}
             keySellingPoints={keySellingPoints}
-            className="pt-4 md:pt-6"
+            className="pt-4 lg:pt-6"
             hideBreadcrumbs={true}
           />
 
-          <div className="max-w-7xl mx-auto px-6 md:px-8 mt-4 md:mt-8">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-4 lg:mt-8">
             {/* 3. Gallery */}
-            <section className="mb-6 md:mb-10">
+            <section className="mb-6 lg:mb-10">
               <PropertyGallery
                 images={images as any[]}
                 title={property.title ?? ""}
@@ -360,7 +360,7 @@ export default async function PropertyDetailsPage({
                       </Button>
                     </div>
 
-                    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mt-4">
+                    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-4">
                       <div className="rounded-xl border border-slate-200 p-4 bg-white shadow-sm">
                         <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1">
                           ค่าคอมมิชชั่น
@@ -387,7 +387,7 @@ export default async function PropertyDetailsPage({
                       </div>
                     </div>
 
-                    <div className="grid gap-8 grid-cols-1 md:grid-cols-2 mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-slate-200">
+                    <div className="grid gap-8 grid-cols-1 lg:grid-cols-2 mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-slate-200">
                       <div>
                         <div className="text-xs sm:text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />

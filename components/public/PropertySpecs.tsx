@@ -82,7 +82,7 @@ export function PropertySpecs({
   );
 
   return (
-    <div className="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-4">
+    <div className="grid grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4">
       {specs.map((spec, index) => (
         <div
           key={index}

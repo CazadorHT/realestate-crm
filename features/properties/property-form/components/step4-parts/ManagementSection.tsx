@@ -233,13 +233,13 @@ export const ManagementSection = ({
           />
 
           {/* 🏢 Stock Management - Responsive Column Layout */}
-          <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-12 gap-4 bg-slate-50 p-4 rounded-xl border border-dashed border-slate-200">
+          <div className="col-span-1 md:col-span-2 grid grid-cols-1 lg:grid-cols-12 gap-4 bg-slate-50 p-4 rounded-xl border border-dashed border-slate-200">
             {/* Total Units */}
             <FormField
               control={form.control}
               name="total_units"
               render={({ field }) => (
-                <div className="sm:col-span-4 flex items-center justify-between sm:justify-start gap-2">
+                <div className="lg:col-span-4 flex items-center justify-between lg:justify-start gap-2">
                   <span className="text-[10px] sm:text-xs font-semibold text-slate-600 uppercase tracking-tight whitespace-nowrap">
                     ยูนิตทั้งหมด:
                   </span>
@@ -285,7 +285,7 @@ export const ManagementSection = ({
               control={form.control}
               name="sold_units"
               render={({ field }) => (
-                <div className="sm:col-span-4 flex items-center justify-between sm:justify-start gap-2">
+                <div className="lg:col-span-4 flex items-center justify-between lg:justify-start gap-2">
                   <span className="text-[10px] sm:text-xs font-semibold text-slate-600 uppercase tracking-tight whitespace-nowrap">
                     ปล่อยแล้ว:
                   </span>
@@ -327,7 +327,7 @@ export const ManagementSection = ({
             />
 
             {/* Remaining - Highlight */}
-            <div className="sm:col-span-4 flex items-center justify-between sm:justify-end gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 mt-2 sm:mt-0">
+            <div className="lg:col-span-4 flex items-center justify-between lg:justify-end gap-2 border-t lg:border-t-0 pt-3 lg:pt-0 mt-2 lg:mt-0">
               <span className="text-[10px] sm:text-xs font-semibold text-slate-600 uppercase tracking-tight">
                 คงเหลือ:
               </span>

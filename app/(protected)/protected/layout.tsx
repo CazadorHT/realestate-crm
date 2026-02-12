@@ -45,7 +45,7 @@ export default async function ProtectedLayout({
       <SidebarNav role={profile.role} />
 
       <div className="flex flex-1 flex-col min-w-0">
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 bg-white/80 dark:bg-slate-900/80 px-4 md:px-6 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-sm supports-backdrop-filter:bg-white/60 dark:supports-backdrop-filter:bg-slate-900/60">
+        <header className="sticky top-0 z-50 flex h-16 items-center gap-4 bg-white dark:bg-slate-900 px-4 md:px-6 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-sm  dark:supports-backdrop-filter:bg-slate-900/60">
           <div className="flex items-center gap-2 sm:gap-4">
             <MobileNav role={profile.role} />
 
