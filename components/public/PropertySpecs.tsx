@@ -1,7 +1,10 @@
 "use client";
 
 import { BedDouble, Bath, Car, Maximize, Building2, Home } from "lucide-react";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import {
+  useLanguage,
+  dictionaries,
+} from "@/components/providers/LanguageProvider";
 
 interface PropertySpecsProps {
   bedrooms?: number | null;
@@ -27,11 +30,13 @@ export function PropertySpecs({
   const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
 
-  // Custom t function to use the selected language dictionary
-  const t = (key: string) => {
-    const { dictionaries } = require("@/components/providers/LanguageProvider");
-    const dict = dictionaries[language];
-    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  // Translation helper for potential language override
+  const t = (key: string): string => {
+    if (!customLanguage) return globalT(key);
+
+    const dict = dictionaries[language] as any;
+    const value = key.split(".").reduce((prev, curr) => prev?.[curr], dict);
+    return typeof value === "string" ? value : key;
   };
 
   const specs = [

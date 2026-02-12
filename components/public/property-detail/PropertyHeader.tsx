@@ -163,13 +163,21 @@ export function PropertyHeader({
     [
       ...unitSpecialFeatures,
       ...features
-        .filter((f) => f.category === "คุณสมบัติพิเศษ")
+        .filter(
+          (f) =>
+            f.category === "คุณสมบัติพิเศษ" ||
+            f.category === "Special Features",
+        )
         .map((f) => ({
           name: getLocaleValue(f, "name", language),
           icon: f.icon_key,
         })),
       ...features
-        .filter((f) => f.category !== "คุณสมบัติพิเศษ")
+        .filter(
+          (f) =>
+            f.category !== "คุณสมบัติพิเศษ" &&
+            f.category !== "Special Features",
+        )
         .map((f) => ({
           name: getLocaleValue(f, "name", language),
           icon: f.icon_key,

@@ -1,7 +1,10 @@
 "use client";
 
 import { Wallet, Briefcase, TrendingUp } from "lucide-react";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import {
+  useLanguage,
+  dictionaries,
+} from "@/components/providers/LanguageProvider";
 
 interface PropertySuitabilityProps {
   listingType: "SALE" | "RENT" | "SALE_AND_RENT";
@@ -21,11 +24,13 @@ export function PropertySuitability({
   const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
 
-  // Custom t function
-  const t = (key: string) => {
-    const { dictionaries } = require("@/components/providers/LanguageProvider");
-    const dict = dictionaries[language];
-    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  // Translation helper for potential language override
+  const t = (key: string): string => {
+    if (!customLanguage) return globalT(key);
+
+    const dict = dictionaries[language] as any;
+    const value = key.split(".").reduce((prev, curr) => prev?.[curr], dict);
+    return typeof value === "string" ? value : key;
   };
 
   // Logic for rental yield if both prices exist

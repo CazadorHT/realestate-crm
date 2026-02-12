@@ -689,6 +689,7 @@
     "trust_message": "专业团队，放心便捷安全。免费贷款咨询服务。",
     "specs": {
       "bedrooms": "卧室",
+      "bathrooms": "浴室",
       "bathrooms_suffix": "浴室",
       "fully_furnished": "精装修 / Fully Furnished",
       "bare_shell": "毛坯房 / Bare Shell",

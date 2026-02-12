@@ -691,6 +691,7 @@
     "trust_message": "Confidence, Convenience, Safety with professional team. Free mortgage service.",
     "specs": {
       "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
       "bathrooms_suffix": "Bathrooms",
       "fully_furnished": "Fully Furnished",
       "bare_shell": "Bare Shell",

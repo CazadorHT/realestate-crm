@@ -39,7 +39,7 @@ export function PropertyCardInfo({
           <span className="text-xs">
             {getSafeText(
               areaProvince,
-              t("nav.home").includes("Home") ? "Bangkok" : "กรุงเทพฯ",
+              getProvinceName("กรุงเทพมหานคร", language),
             )}
           </span>
         </div>

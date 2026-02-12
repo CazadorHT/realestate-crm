@@ -112,7 +112,8 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
 
                       {match.secondary_price && (
                         <span className="text-[10px] text-slate-400 font-normal ml-1">
-                          (฿ {match.secondary_price.toLocaleString()} / ตร.ม.)
+                          (฿ {match.secondary_price.toLocaleString()} /{" "}
+                          {t("common.sqm")})
                         </span>
                       )}
                     </div>

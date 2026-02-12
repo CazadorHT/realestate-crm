@@ -31,8 +31,8 @@ import { getRecommendedProperties } from "@/features/properties/recommended-acti
 import "aos/dist/aos.css";
 import { SectionBackground } from "./SectionBackground";
 
-function formatPrice(price: number) {
-  return `฿${price.toLocaleString()}`;
+function formatPrice(price: number, t: any) {
+  return `${t("common.baht") || "฿"}${price.toLocaleString()}`;
 }
 
 function convertToRecentProperty(
@@ -51,9 +51,9 @@ function convertToRecentProperty(
         const discountPercent = Math.round(
           ((prop.original_price! - prop.price) / prop.original_price!) * 100,
         );
-        parts.push(`${formatPrice(prop.price)} (-${discountPercent}%)`);
+        parts.push(`${formatPrice(prop.price, t)} (-${discountPercent}%)`);
       } else {
-        parts.push(formatPrice(prop.price));
+        parts.push(formatPrice(prop.price, t));
       }
     }
     if (prop.rental_price) {
@@ -67,11 +67,11 @@ function convertToRecentProperty(
             100,
         );
         parts.push(
-          `${formatPrice(prop.rental_price)}/${t("recently_viewed.per_month_short")} (-${discountPercent}%)`,
+          `${formatPrice(prop.rental_price, t)}/${t("recently_viewed.per_month_short")} (-${discountPercent}%)`,
         );
       } else {
         parts.push(
-          `${formatPrice(prop.rental_price)}/${t("recently_viewed.per_month_short")}`,
+          `${formatPrice(prop.rental_price, t)}/${t("recently_viewed.per_month_short")}`,
         );
       }
     }
@@ -83,9 +83,9 @@ function convertToRecentProperty(
       const discountPercent = Math.round(
         ((prop.original_price! - prop.price!) / prop.original_price!) * 100,
       );
-      price_text = `${formatPrice(prop.price!)} (-${discountPercent}%)`;
+      price_text = `${formatPrice(prop.price!, t)} (-${discountPercent}%)`;
     } else if (prop.price) {
-      price_text = formatPrice(prop.price);
+      price_text = formatPrice(prop.price, t);
     }
   } else if (prop.listing_type === "RENT") {
     const hasDiscount =
@@ -100,9 +100,10 @@ function convertToRecentProperty(
       );
       price_text = `${formatPrice(
         prop.rental_price!,
+        t,
       )}/${t("recently_viewed.per_month_short")} (-${discountPercent}%)`;
     } else if (prop.rental_price) {
-      price_text = `${formatPrice(prop.rental_price)}/${t("recently_viewed.per_month_short")}`;
+      price_text = `${formatPrice(prop.rental_price, t)}/${t("recently_viewed.per_month_short")}`;
     }
   }
 
@@ -169,19 +170,19 @@ function getCardPrice(item: RecentProperty, t: any) {
 
   if (item.listing_type === "SALE_AND_RENT") {
     const parts = [];
-    if (saleP) parts.push(formatPrice(saleP));
+    if (saleP) parts.push(formatPrice(saleP, t));
     if (rentP)
       parts.push(
-        `${formatPrice(rentP)}/${t("recently_viewed.per_month_short")}`,
+        `${formatPrice(rentP, t)}/${t("recently_viewed.per_month_short")}`,
       );
     return (
       parts.join(" | ") || item.price_text || t("common.contact_for_price")
     );
   }
 
-  if (isSale && saleP) return formatPrice(saleP);
+  if (isSale && saleP) return formatPrice(saleP, t);
   if (isRent && rentP)
-    return `${formatPrice(rentP)}/${t("recently_viewed.per_month_short")}`;
+    return `${formatPrice(rentP, t)}/${t("recently_viewed.per_month_short")}`;
 
   return item.price_text || t("common.contact_for_price");
 }
@@ -587,7 +588,7 @@ export function RecentlyViewedClient({
                       item.price &&
                       item.original_price > item.price && (
                         <span className="text-[10px] text-white/80 line-through decoration-white/50">
-                          {formatPrice(item.original_price)}
+                          {formatPrice(item.original_price, t)}
                         </span>
                       )}
                     {item.listing_type === "RENT" &&
@@ -595,7 +596,7 @@ export function RecentlyViewedClient({
                       item.rental_price &&
                       item.original_rental_price > item.rental_price && (
                         <span className="text-[10px] text-white/80 line-through decoration-white/50">
-                          {formatPrice(item.original_rental_price)}
+                          {formatPrice(item.original_rental_price, t)}
                         </span>
                       )}
                     {item.listing_type === "SALE_AND_RENT" && (
@@ -604,14 +605,14 @@ export function RecentlyViewedClient({
                           item.price &&
                           item.original_price > item.price && (
                             <span className="text-[9px] text-white/80 line-through decoration-white/50">
-                              {formatPrice(item.original_price)}
+                              {formatPrice(item.original_price, t)}
                             </span>
                           )}
                         {item.original_rental_price &&
                           item.rental_price &&
                           item.original_rental_price > item.rental_price && (
                             <span className="text-[9px] text-white/80 line-through decoration-white/50">
-                              {formatPrice(item.original_rental_price)}
+                              {formatPrice(item.original_rental_price, t)}
                             </span>
                           )}
                       </div>
