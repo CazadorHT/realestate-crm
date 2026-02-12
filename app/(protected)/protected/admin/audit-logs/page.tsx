@@ -83,7 +83,7 @@ export default async function AuditLogsPage({
 
       <AuditLogTable data={data} />
 
-      <div className="flex justify-end">
+      <div className="flex justify-center lg:justify-end">
         <PaginationControls
           totalCount={count}
           pageSize={pageSize}

@@ -78,7 +78,7 @@ export default async function UserDetailPage({
         ]}
         className="mb-4"
       />
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-center justify-between">
           <div className="space-y-1">
             <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
               ข้อมูลผู้ใช้งาน

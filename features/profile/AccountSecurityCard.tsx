@@ -39,7 +39,7 @@ export function AccountSecurityCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-muted/50 transition-colors">
+        <div className="flex gap-4 items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-muted/50 transition-colors">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-full bg-primary/10">
               <KeyRound className="h-5 w-5 text-primary" />
@@ -58,7 +58,7 @@ export function AccountSecurityCard() {
 
         <Separator />
 
-        <div className="flex items-center justify-between p-4 border rounded-lg border-destructive/20 bg-destructive/5">
+        <div className="flex gap-4 items-center justify-between p-4 border rounded-lg border-destructive/20 bg-destructive/5">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-full bg-destructive/10">
               <LogOut className="h-5 w-5 text-destructive" />

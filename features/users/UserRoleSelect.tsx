@@ -14,17 +14,20 @@ import { updateUserRoleAction } from "./actions/updateUserRoleAction";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { type UserRole } from "@/lib/auth-shared";
+import { cn } from "@/lib/utils";
 
 interface UserRoleSelectProps {
   userId: string;
   currentRole: UserRole;
   disabled?: boolean;
+  className?: string;
 }
 
 export function UserRoleSelect({
   userId,
   currentRole,
   disabled,
+  className,
 }: UserRoleSelectProps) {
   const router = useRouter();
   const [selectedRole, setSelectedRole] = useState<UserRole>(currentRole);
@@ -56,13 +59,13 @@ export function UserRoleSelect({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={cn("flex items-center gap-2", className)}>
       <Select
         value={selectedRole}
         onValueChange={(value) => handleRoleChange(value as UserRole)}
         disabled={disabled || isLoading}
       >
-        <SelectTrigger className="w-32">
+        <SelectTrigger className={cn("w-32", className)}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

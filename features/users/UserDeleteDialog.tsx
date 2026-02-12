@@ -12,12 +12,14 @@ interface UserDeleteDialogProps {
   userId: string;
   fullName: string | null;
   disabled?: boolean;
+  className?: string;
 }
 
 export function UserDeleteDialog({
   userId,
   fullName,
   disabled,
+  className,
 }: UserDeleteDialogProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -48,6 +50,7 @@ export function UserDeleteDialog({
         size="sm"
         disabled={disabled}
         onClick={() => setIsOpen(true)}
+        className={className}
       >
         <Trash2 className="h-4 w-4" />
       </Button>
