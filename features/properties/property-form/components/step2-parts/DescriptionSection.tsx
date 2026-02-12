@@ -78,8 +78,8 @@ export function DescriptionSection({
   return (
     <div className="space-y-6 lg:col-span-4">
       <Card className="border-slate-200/70 bg-white">
-        <CardHeader className="space-y-3">
-          <div className="flex items-center justify-between">
+        <CardHeader className="space-y-3 px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <SectionHeader
               icon={FileText}
               title="รายละเอียด (ไทย)"
@@ -92,7 +92,7 @@ export function DescriptionSection({
               size="sm"
               onClick={() => translateDescription()}
               disabled={isTranslating}
-              className="border-blue-100 text-blue-600 hover:bg-blue-50 gap-2 h-9 px-4 rounded-xl shadow-sm"
+              className="border-blue-100 text-blue-600 hover:bg-blue-50 gap-2 h-10 sm:h-9 px-4 rounded-xl shadow-sm w-full sm:w-auto justify-center"
             >
               {isTranslating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -105,7 +105,7 @@ export function DescriptionSection({
           <Separator className="bg-slate-200/70" />
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="px-3 sm:px-6">
           <FormField
             control={form.control}
             name="description"
@@ -118,6 +118,11 @@ export function DescriptionSection({
                     disabled={isReadOnly}
                     placeholder={`ตัวอย่าง:\n• จุดเด่น: รีโนเวทใหม่ / วิวโล่ง / ใกล้ BTS\n• เฟอร์นิเจอร์/เครื่องใช้ไฟฟ้า: ...\n• เงื่อนไข: ...`}
                     onAiGenerate={handleGenerate}
+                    height={
+                      typeof window !== "undefined" && window.innerWidth < 640
+                        ? 300
+                        : 500
+                    }
                   />
                 </FormControl>
                 <FormDescription className="text-xs text-slate-500">
@@ -131,15 +136,15 @@ export function DescriptionSection({
       </Card>
 
       {/* Multilingual Descriptions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         <Card className="border-slate-200/70 bg-white shadow-sm overflow-hidden">
-          <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-2">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-2">
             <Languages className="w-4 h-4 text-slate-400" />
-            <span className="text-sm font-medium text-slate-600 uppercase tracking-tight">
+            <span className="text-xs sm:text-sm font-medium text-slate-600 uppercase tracking-tight">
               Description (English)
             </span>
           </div>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <FormField
               control={form.control}
               name="description_en"
@@ -150,7 +155,11 @@ export function DescriptionSection({
                       value={field.value ?? ""}
                       onChange={field.onChange}
                       disabled={isReadOnly}
-                      height={500}
+                      height={
+                        typeof window !== "undefined" && window.innerWidth < 640
+                          ? 300
+                          : 500
+                      }
                     />
                   </FormControl>
                   <FormMessage />
@@ -161,13 +170,13 @@ export function DescriptionSection({
         </Card>
 
         <Card className="border-slate-200/70 bg-white shadow-sm overflow-hidden">
-          <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-2">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-2">
             <Languages className="w-4 h-4 text-slate-400" />
-            <span className="text-sm font-medium text-slate-600 uppercase tracking-tight">
+            <span className="text-xs sm:text-sm font-medium text-slate-600 uppercase tracking-tight">
               物业详情 (Chinese)
             </span>
           </div>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <FormField
               control={form.control}
               name="description_cn"
@@ -178,7 +187,11 @@ export function DescriptionSection({
                       value={field.value ?? ""}
                       onChange={field.onChange}
                       disabled={isReadOnly}
-                      height={500}
+                      height={
+                        typeof window !== "undefined" && window.innerWidth < 640
+                          ? 300
+                          : 500
+                      }
                     />
                   </FormControl>
                   <FormMessage />

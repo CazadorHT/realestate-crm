@@ -52,21 +52,23 @@ export function SpecialFeaturesSection({
 }: SpecialFeaturesSectionProps) {
   return (
     <Card className="col-span-2 border-slate-200/70 bg-white h-full relative overflow-hidden">
-      <CardHeader className="space-y-4 pb-4">
+      <CardHeader className="space-y-3 sm:space-y-4 pb-4 px-4 sm:px-6 py-4 sm:py-6">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-purple-100 text-purple-600">
             <Star className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-800 text-lg">คุณสมบัติพิเศษ</h3>
-            <p className="text-sm text-slate-500">
+            <h3 className="font-bold text-slate-800 text-base sm:text-lg">
+              คุณสมบัติพิเศษ
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500">
               ฟีเจอร์และจุดขายที่ใช้วางแผนการตลาด
             </p>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-8">
+      <CardContent className="space-y-6 sm:space-y-8 px-3 sm:px-6">
         {/* Verified Listing Banner */}
         <FormField
           control={form.control}
@@ -162,7 +164,7 @@ export function SpecialFeaturesSection({
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
             <Armchair className="h-4 w-4" /> สภาพและเฟอร์นิเจอร์
           </h4>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <FeatureChip
               form={form}
               name="is_renovated"
@@ -203,7 +205,7 @@ export function SpecialFeaturesSection({
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
             <CloudSun className="h-4 w-4" /> วิวและบรรยากาศ
           </h4>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <FeatureChip
               form={form}
               name="has_garden_view"

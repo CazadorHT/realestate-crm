@@ -129,14 +129,15 @@ export function PriceSection({
         <Separator className="bg-slate-200/70" />
       </CardHeader>
 
-      <CardContent>
-        <div className="grid grid-cols-12 gap-8 lg:gap-10 relative">
+      <CardContent className="px-3 sm:px-6">
+        <div className="grid grid-cols-12 gap-6 sm:gap-8 lg:gap-10 relative">
           {/* Vertical Separator for Dual Mode (Large Screens) */}
           {showSale && showRent && (
-            <div className="hidden lg:block absolute left-1/3 top-0 bottom-0 w-px bg-slate-100 -ml-2" />
-          )}
-          {showSale && showRent && (
-            <div className="hidden lg:block absolute right-1/3 top-0 bottom-0 w-px bg-slate-100 -mr-2" />
+            <>
+              <div className="hidden lg:block absolute left-1/3 top-0 bottom-0 w-px bg-slate-100 -ml-2" />
+              <div className="hidden lg:block absolute right-1/3 top-0 bottom-0 w-px bg-slate-100 -mr-2" />
+              <div className="hidden md:block lg:hidden absolute left-1/2 top-0 bottom-0 w-px bg-slate-100" />
+            </>
           )}
 
           {/* ================= SALE ZONE ================= */}
@@ -572,8 +573,6 @@ export function PriceSection({
             </div>
           )}
         </div>
-
-       
 
         {/* Tips Footer */}
         <div className="mt-8 rounded-xl bg-slate-50 p-4 border border-slate-100 flex gap-3 text-slate-600">

@@ -52,96 +52,98 @@ export function PropertyFormStepper({
   ];
 
   return (
-    <div className="bg-white py-6 rounded-2xl shadow-sm border border-slate-100 mb-6 px-4">
-      <div className="relative w-full max-w-5xl mx-auto">
-        {/* Background Line */}
-        <div
-          className="absolute top-5 h-0.5 bg-slate-100 z-0"
-          style={{ left: "8.3333%", width: "83.3333%" }}
-        />
+    <div className="bg-white py-4 sm:py-6 rounded-xl sm:rounded-2xl shadow-sm border border-slate-100 mb-6 px-2 sm:px-4 overflow-hidden">
+      <div className="relative w-full max-w-5xl mx-auto overflow-x-auto no-scrollbar pb-2 sm:pb-0">
+        <div className="min-w-[500px] sm:min-w-0 relative">
+          {/* Background Line */}
+          <div
+            className="absolute top-5 h-0.5 bg-slate-100 z-0"
+            style={{ left: "8.3333%", width: "83.3333%" }}
+          />
 
-        {/* Active Line */}
-        <div
-          className="absolute top-5 h-0.5 bg-blue-600 transition-all duration-700 ease-in-out z-0"
-          style={{
-            left: "8.3333%",
-            width: `${((currentStep - 1) / 5) * 83.3333}%`,
-          }}
-        />
+          {/* Active Line */}
+          <div
+            className="absolute top-5 h-0.5 bg-blue-600 transition-all duration-700 ease-in-out z-0"
+            style={{
+              left: "8.3333%",
+              width: `${((currentStep - 1) / 5) * 83.3333}%`,
+            }}
+          />
 
-        <div
-          className="grid grid-cols-6 relative"
-          role="tablist"
-          aria-label="Progress"
-        >
-          {steps.map((item) => {
-            const completed = isStepComplete(item.step, form.getValues());
-            const isCurrent = currentStep === item.step;
-            const isPassed = item.step < currentStep;
+          <div
+            className="flex sm:grid sm:grid-cols-6 relative"
+            role="tablist"
+            aria-label="Progress"
+          >
+            {steps.map((item) => {
+              const completed = isStepComplete(item.step, form.getValues());
+              const isCurrent = currentStep === item.step;
+              const isPassed = item.step < currentStep;
 
-            const showCheck =
-              isPassed || (mode === "edit" && completed && !isCurrent);
-            const showGreen = showCheck;
+              const showCheck =
+                isPassed || (mode === "edit" && completed && !isCurrent);
+              const showGreen = showCheck;
 
-            return (
-              <div
-                key={item.step}
-                role="tab"
-                aria-selected={isCurrent}
-                aria-label={`ขั้นตอนที่ ${item.step} ${item.label}`}
-                tabIndex={mode === "edit" || item.step < currentStep ? 0 : -1}
-                className={`flex flex-col items-center gap-3 group transition-all duration-300 ${
-                  mode === "edit" || item.step < currentStep
-                    ? "cursor-pointer"
-                    : "cursor-not-allowed"
-                }`}
-                onKeyDown={(e) => {
-                  if (
-                    (mode === "edit" || item.step < currentStep) &&
-                    (e.key === "Enter" || e.key === " ")
-                  ) {
-                    e.preventDefault();
-                    setCurrentStep(item.step);
-                  }
-                }}
-                onClick={async () => {
-                  if (mode === "edit") {
-                    setCurrentStep(item.step);
-                    return;
-                  }
-                  if (item.step < currentStep) setCurrentStep(item.step);
-                  else if (item.step === currentStep + 1) handleNext();
-                }}
-              >
+              return (
                 <div
-                  className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center font-medium transition-all duration-500 ${
-                    isCurrent
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-200 scale-110 ring-4 ring-blue-50"
-                      : showGreen
-                        ? "bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-100"
-                        : "bg-white text-slate-400 border-2 border-slate-100 group-hover:border-blue-200"
+                  key={item.step}
+                  role="tab"
+                  aria-selected={isCurrent}
+                  aria-label={`ขั้นตอนที่ ${item.step} ${item.label}`}
+                  tabIndex={mode === "edit" || item.step < currentStep ? 0 : -1}
+                  className={`flex flex-col items-center gap-2 sm:gap-3 group transition-all duration-300 flex-1 min-w-[80px] sm:min-w-0 ${
+                    mode === "edit" || item.step < currentStep
+                      ? "cursor-pointer"
+                      : "cursor-not-allowed"
                   }`}
+                  onKeyDown={(e) => {
+                    if (
+                      (mode === "edit" || item.step < currentStep) &&
+                      (e.key === "Enter" || e.key === " ")
+                    ) {
+                      e.preventDefault();
+                      setCurrentStep(item.step);
+                    }
+                  }}
+                  onClick={async () => {
+                    if (mode === "edit") {
+                      setCurrentStep(item.step);
+                      return;
+                    }
+                    if (item.step < currentStep) setCurrentStep(item.step);
+                    else if (item.step === currentStep + 1) handleNext();
+                  }}
                 >
-                  {showCheck ? (
-                    "✓"
-                  ) : (
-                    <span className="text-sm">{item.step}</span>
-                  )}
+                  <div
+                    className={`relative z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-medium transition-all duration-500 ${
+                      isCurrent
+                        ? "bg-blue-600 text-white shadow-md shadow-blue-200 scale-105 sm:scale-110 ring-4 ring-blue-50"
+                        : showGreen
+                          ? "bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-100"
+                          : "bg-white text-slate-400 border-2 border-slate-100 group-hover:border-blue-200"
+                    }`}
+                  >
+                    {showCheck ? (
+                      "✓"
+                    ) : (
+                      <span className="text-xs sm:text-sm">{item.step}</span>
+                    )}
+                  </div>
+                  <span
+                    className={`text-[9px] sm:text-[10px] md:text-xs font-medium uppercase tracking-wider text-center transition-colors duration-300 px-1 line-clamp-1 sm:line-clamp-none ${
+                      isCurrent
+                        ? "text-blue-600"
+                        : showGreen
+                          ? "text-emerald-600"
+                          : "text-slate-400"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
                 </div>
-                <span
-                  className={`text-[10px] md:text-xs font-medium uppercase tracking-wider text-center transition-colors duration-300 px-1 ${
-                    isCurrent
-                      ? "text-blue-600"
-                      : showGreen
-                        ? "text-emerald-600"
-                        : "text-slate-400"
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

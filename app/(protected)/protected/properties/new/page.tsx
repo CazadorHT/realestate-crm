@@ -3,7 +3,7 @@ import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export default function NewPropertyPage() {
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 sm:p-6">
       <Breadcrumb
         backHref={`/protected/properties`}
         items={[

@@ -82,16 +82,16 @@ export function AddressSection({ form }: AddressSectionProps) {
         <Separator className="bg-slate-200/70" />
       </CardHeader>
 
-      <CardContent className="pt-6 space-y-8">
+      <CardContent className="pt-6 px-4 sm:px-6">
         {/* Address Grid */}
-        <div className="flex gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
           {/* Province */}
           <FormField
             control={form.control}
             name="province"
             render={({ field }) => (
-              <FormItem className="w-[175px]">
-                <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-xs uppercase tracking-wide">
+              <FormItem className="col-span-1">
+                <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <Map className="h-3.5 w-3.5 text-blue-500" />
                   จังหวัด{" "}
                   {addressLoading && (
@@ -130,8 +130,8 @@ export function AddressSection({ form }: AddressSectionProps) {
             control={form.control}
             name="district"
             render={({ field }) => (
-              <FormItem className="w-[175px]">
-                <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-xs uppercase tracking-wide">
+              <FormItem className="col-span-1">
+                <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <MapPinned className="h-3.5 w-3.5 text-blue-500" />
                   เขต / อำเภอ
                 </FormLabel>
@@ -167,8 +167,8 @@ export function AddressSection({ form }: AddressSectionProps) {
             control={form.control}
             name="subdistrict"
             render={({ field }) => (
-              <FormItem className="w-[175px]">
-                <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-xs uppercase tracking-wide">
+              <FormItem className="col-span-1">
+                <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <SignpostBig className="h-3.5 w-3.5 text-blue-500" />
                   แขวง / ตำบล
                 </FormLabel>
@@ -209,8 +209,8 @@ export function AddressSection({ form }: AddressSectionProps) {
             control={form.control}
             name="postal_code"
             render={({ field }) => (
-              <FormItem className="w-[175px]">
-                <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-xs uppercase tracking-wide">
+              <FormItem className="col-span-1">
+                <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <Mail className="h-3.5 w-3.5 text-blue-500" />
                   รหัสไปรษณีย์
                 </FormLabel>
@@ -233,8 +233,8 @@ export function AddressSection({ form }: AddressSectionProps) {
             control={form.control}
             name="google_maps_link"
             render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-xs uppercase tracking-wider">
+              <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
+                <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <Map className="w-4 h-4 text-blue-500" />
                   Google Maps Link
                 </FormLabel>
@@ -242,7 +242,7 @@ export function AddressSection({ form }: AddressSectionProps) {
                   <Input
                     {...field}
                     value={field.value ?? ""}
-                    placeholder="วางลิงก์จาก Google Maps ที่นี่ (รองรับทั้งแบบยาว และแบบสั้น .goo.gl)"
+                    placeholder="วลิงก์จาก Google Maps..."
                     className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
                   />
                 </FormControl>

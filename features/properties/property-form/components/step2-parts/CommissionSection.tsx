@@ -90,7 +90,7 @@ export function CommissionSection({
         />
       </CardHeader>
 
-      <CardContent className="pt-6 grid grid-cols-1 gap-8 md:grid-cols-3">
+      <CardContent className="pt-6 px-3 sm:px-6 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
         {/* Commission Sale */}
         {showSale && (
           <div className="space-y-4 relative group">
@@ -111,7 +111,7 @@ export function CommissionSection({
                   name="commission_sale_percentage"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3">
                         {/* Buttons First */}
                         {[3, 4, 5].map((val) => {
                           const active = Number(field.value) === val;
@@ -137,13 +137,13 @@ export function CommissionSection({
 
                         {/* Input Last */}
                         <FormControl>
-                          <div className="relative w-28">
+                          <div className="relative w-full sm:w-28 col-span-2 sm:col-span-1">
                             <NumberInput
                               {...field}
                               value={field.value ?? undefined}
                               onChange={(v) => field.onChange(v)}
                               decimals={2}
-                              placeholder="0"
+                              placeholder="ระบุเอง"
                               disabled={isReadOnly}
                               className="pl-3 pr-8 h-10 text-center font-medium text-emerald-700 border-slate-200 focus:border-emerald-500 focus:ring-0 rounded-xl bg-slate-50"
                             />
@@ -203,7 +203,7 @@ export function CommissionSection({
                   name="commission_rent_months"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3">
                         {/* Buttons First */}
                         {[0.5, 1, 1.5].map((val) => {
                           const active = Number(field.value) === val;
@@ -229,13 +229,13 @@ export function CommissionSection({
 
                         {/* Input Last */}
                         <FormControl>
-                          <div className="relative w-28">
+                          <div className="relative w-full sm:w-28 col-span-2 sm:col-span-1">
                             <NumberInput
                               {...field}
                               value={field.value ?? undefined}
                               onChange={(v) => field.onChange(v)}
                               decimals={1}
-                              placeholder="0"
+                              placeholder="ระบุเอง"
                               disabled={isReadOnly}
                               className="pl-3 pr-10 h-10 text-center font-medium text-indigo-700 border-slate-200 focus:border-indigo-500 focus:ring-0 rounded-xl bg-slate-50"
                             />

@@ -60,7 +60,7 @@ export function ListingTypeSection({ form }: ListingTypeSectionProps) {
         name="listing_type"
         render={({ field }) => (
           <FormItem>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 md:grid-cols-3 gap-4">
               {LISTING_TYPE_ORDER.map((type) => (
                 <button
                   key={type}

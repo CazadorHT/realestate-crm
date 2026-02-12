@@ -19,7 +19,7 @@ export default async function EditPropertyPage({
   }));
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 sm:p-6">
       <Breadcrumb
         backHref={`/protected/properties/${id}`}
         items={[
