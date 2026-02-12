@@ -70,7 +70,8 @@ export function BlogsTable({ posts }: BlogsTableProps) {
         entityName="บทความ"
       />
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>
@@ -135,7 +136,9 @@ export function BlogsTable({ posts }: BlogsTableProps) {
                     <TableCell className="font-medium">
                       <div className="flex flex-col">
                         <Link href={`/protected/blogs/${post.id}`}>
-                          <span className="line-clamp-1 text-blue-600 underline">{post.title}</span>
+                          <span className="line-clamp-1 text-blue-600 underline">
+                            {post.title}
+                          </span>
                         </Link>
                         <span className="text-xs text-slate-500 font-mono">
                           URL : /{post.slug}
@@ -235,6 +238,149 @@ export function BlogsTable({ posts }: BlogsTableProps) {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-4">
+        {posts.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <div className="flex flex-col items-center justify-center gap-2">
+              <FileText className="h-12 w-12 text-slate-300" />
+              <p className="text-sm font-medium">ยังไม่มีบทความ</p>
+              <p className="text-xs text-slate-400">
+                สร้างบทความแรกของคุณเพื่อเริ่มต้น
+              </p>
+            </div>
+          </div>
+        ) : (
+          posts.map((post) => {
+            const isScheduled =
+              post.published_at && new Date(post.published_at) > now;
+            const publishedDate = post.published_at
+              ? new Date(post.published_at)
+              : null;
+            const selected = isSelected(post.id);
+
+            return (
+              <div
+                key={post.id}
+                className={`rounded-xl border shadow-sm p-4 bg-white transition-all space-y-3 ${
+                  selected
+                    ? "border-blue-500 ring-1 ring-blue-500"
+                    : "border-slate-200"
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={selected}
+                      onCheckedChange={() => toggleSelect(post.id)}
+                      aria-label={`เลือก ${post.title}`}
+                      className="mt-1"
+                    />
+                    <div className="space-y-1">
+                      <Link
+                        href={`/protected/blogs/${post.id}`}
+                        className="block"
+                      >
+                        <span className="font-semibold text-slate-900 line-clamp-2 hover:text-blue-600 transition-colors">
+                          {post.title}
+                        </span>
+                      </Link>
+                      <div className="flex items-center gap-2">
+                        {post.category && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] bg-blue-50 text-blue-700 border-blue-200"
+                          >
+                            {post.category}
+                          </Badge>
+                        )}
+                        <span className="text-[10px] font-mono text-slate-500 truncate max-w-[120px]">
+                          /{post.slug}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      asChild
+                    >
+                      <Link href={`/blog/${post.slug}`} target="_blank">
+                        <Eye className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      asChild
+                    >
+                      <Link href={`/protected/blogs/${post.id}`}>
+                        <Pencil className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <DeleteBlogPostButton id={post.id} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                      สถานะ
+                    </span>
+                    <div className="flex">
+                      {isScheduled ? (
+                        <Badge
+                          variant="outline"
+                          className="gap-1 bg-blue-50 text-blue-700 border-blue-200 text-[10px]"
+                        >
+                          <Clock className="h-3 w-3" /> Scheduled
+                        </Badge>
+                      ) : post.is_published ? (
+                        <Badge
+                          variant="outline"
+                          className="gap-1 bg-green-50 text-green-700 border-green-200 text-[10px]"
+                        >
+                          <Globe className="h-3 w-3" /> Published
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="gap-1 bg-orange-50 text-orange-700 border-orange-200 text-[10px]"
+                        >
+                          <EyeOff className="h-3 w-3" /> Draft
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                      วันที่เผยแพร่
+                    </span>
+                    <div className="flex flex-col">
+                      {publishedDate ? (
+                        <>
+                          <span className="text-xs font-medium text-slate-700">
+                            {format(publishedDate, "dd MMM yyyy")}
+                          </span>
+                          <span className="text-[10px] text-slate-500">
+                            {format(publishedDate, "HH:mm")}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-xs text-slate-400">-</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

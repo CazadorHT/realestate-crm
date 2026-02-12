@@ -25,7 +25,7 @@ export default async function BlogListPage() {
         icon="fileText"
         gradient="purple"
         actionSlot={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col md:flex-row items-center gap-2">
             <Button
               variant="outline"
               asChild

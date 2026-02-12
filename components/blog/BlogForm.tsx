@@ -308,92 +308,100 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="pb-20">
         {/* Premium Sticky Header */}
-        <div className=" top-16 z-50 -mx-6 px-6 mb-6">
-          <div className="bg-white/95 backdrop-blur-md border-b border-slate-200 rounded-xl shadow-sm py-4 px-6 -mx-6">
-            <div className="flex items-center justify-between">
+        <div className="sticky top-16 z-50 -mx-6 px-4 md:px-6 mb-6">
+          <div className="bg-white/95 backdrop-blur-md border-b border-slate-200 rounded-xl shadow-sm py-4 px-4 md:px-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               {/* Left - Back & Title */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 md:gap-4">
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   onClick={() => router.back()}
-                  className="hover:bg-slate-100 rounded-full "
+                  className="hover:bg-slate-100 rounded-full shrink-0"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <div>
-                  <div className="flex items-center gap-3 ">
-                    <h1 className="text-xl font-bold text-slate-900">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap md:flex-nowrap items-center gap-2">
+                    <h1 className="text-lg md:text-xl font-bold text-slate-900 truncate">
                       {initialData ? "แก้ไขบทความ" : "สร้างบทความใหม่"}
                     </h1>
                     {watchedIsPublished ? (
-                      <Badge className="bg-emerald-500 hover:bg-emerald-600 gap-1 ">
+                      <Badge className="bg-emerald-500 hover:bg-emerald-600 gap-1 text-[10px] md:text-xs">
                         <Eye className="h-3 w-3" />
-                        เผยแพร่แล้ว
+                        <span className="hidden xs:inline">เผยแพร่แล้ว</span>
                       </Badge>
                     ) : (
-                      <Badge variant="secondary" className="gap-1">
+                      <Badge
+                        variant="secondary"
+                        className="gap-1 text-[10px] md:text-xs"
+                      >
                         <EyeOff className="h-3 w-3" />
-                        แบบร่าง
+                        <span className="hidden xs:inline">แบบร่าง</span>
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-slate-500 mt-0.5">
+                  <p className="text-[10px] md:text-sm text-slate-500 mt-0.5">
                     {characterCount.toLocaleString()} ตัวอักษร
                   </p>
                 </div>
               </div>
 
               {/* Right - Actions */}
-              <div className="flex items-center gap-3">
-                <Dialog open={importJsonOpen} onOpenChange={setImportJsonOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="hidden md:flex gap-2 h-12"
-                    >
-                      <FileJson className="h-4 w-4" />
-                      นำเข้า JSON
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>นำเข้าข้อมูลจาก JSON</DialogTitle>
-                      <DialogDescription>
-                        วาง JSON object เพื่อกรอกข้อมูลอัตโนมัติ
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <Textarea
-                        placeholder='{ "title": "...", "content": "..." }'
-                        className="font-mono min-h-[300px]"
-                        value={jsonInput}
-                        onChange={(e) => setJsonInput(e.target.value)}
-                      />
-                      <div className="flex justify-end gap-2 h">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setImportJsonOpen(false)}
-                        >
-                          ยกเลิก
-                        </Button>
-                        <Button type="button" onClick={handleImport}>
-                          นำเข้า
-                        </Button>
+              <div className="flex md:flex-wrap items-center justify-end gap-2 sm:gap-3">
+                <div className="hidden lg:block">
+                  <Dialog
+                    open={importJsonOpen}
+                    onOpenChange={setImportJsonOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="flex gap-2 h-10 md:h-12"
+                      >
+                        <FileJson className="h-4 w-4" />
+                        <span className="hidden md:inline">นำเข้า JSON</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl w-[95vw]">
+                      <DialogHeader>
+                        <DialogTitle>นำเข้าข้อมูลจาก JSON</DialogTitle>
+                        <DialogDescription>
+                          วาง JSON object เพื่อกรอกข้อมูลอัตโนมัติ
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <Textarea
+                          placeholder='{ "title": "...", "content": "..." }'
+                          className="font-mono min-h-[300px]"
+                          value={jsonInput}
+                          onChange={(e) => setJsonInput(e.target.value)}
+                        />
+                        <div className="flex justify-end gap-2 h">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setImportJsonOpen(false)}
+                          >
+                            ยกเลิก
+                          </Button>
+                          <Button type="button" onClick={handleImport}>
+                            นำเข้า
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                    </DialogContent>
+                  </Dialog>
+                </div>
 
                 {/* AI Blog Generator */}
                 <BlogAiGenerator onGenerated={handleAiGenerated} />
 
                 {/* AI Content Refiner */}
-                <div className="hidden md:block">
+                <div className="hidden lg:block">
                   <BlogContentRefiner
                     currentContent={form.watch("content") || ""}
                     onRefined={(newContent) =>
@@ -409,8 +417,8 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                   control={form.control}
                   name="is_published"
                   render={({ field }) => (
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 h-12 ">
-                      <span className="text-sm font-medium text-slate-600">
+                    <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 h-10 md:h-12 overflow-hidden">
+                      <span className="text-[10px] md:text-sm font-medium text-slate-600">
                         เผยแพร่
                       </span>
                       <Switch
@@ -423,7 +431,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                               : "ปิดการเผยแพร่บทความสำเร็จ",
                           );
                         }}
-                        className="data-[state=checked]:bg-blue-600"
+                        className="data-[state=checked]:bg-blue-600 scale-75 md:scale-90"
                       />
                     </div>
                   )}
@@ -437,7 +445,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                     characterCount === 0 ||
                     !form.formState.isDirty
                   }
-                  className="gap-2 bg-linear-to-r h-12 from-emerald-600 to-emerald-600 hover:from-emerald-700 hover:to-emerald-700 shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="gap-2 bg-linear-to-r h-10 md:h-12 from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg shadow-green-500/25 disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm"
                 >
                   {isSubmitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -453,27 +461,28 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
         {/* Main Content with Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6  bg-slate-100 rounded-xl h-20">
+          <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-100 rounded-xl h-14 md:h-20 p-1">
             <TabsTrigger
               value="content"
-              className="gap-2 rounded-lg p-6 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="gap-2 rounded-lg py-2 md:py-6 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm"
             >
               <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">เนื้อหา</span>
+              <span className="hidden xs:inline">เนื้อหา</span>
             </TabsTrigger>
             <TabsTrigger
               value="media"
-              className="gap-2 rounded-lg p-6 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="gap-2 rounded-lg py-2 md:py-6 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm"
             >
               <ImageIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">รูปภาพ & หมวดหมู่</span>
+              <span className="hidden xs:inline">รูปภาพ</span>
+              <span className="hidden md:inline">& หมวดหมู่</span>
             </TabsTrigger>
             <TabsTrigger
               value="seo"
-              className="gap-2 rounded-lg p-6 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="gap-2 rounded-lg py-2 md:py-6 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm"
             >
               <Search className="h-4 w-4" />
-              <span className="hidden sm:inline">SEO</span>
+              <span className="hidden xs:inline">SEO</span>
             </TabsTrigger>
           </TabsList>
 
@@ -1027,15 +1036,15 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
         </Tabs>
 
         {/* Sticky Bottom Action Bar */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2  z-40 w-full max-w-6xl px-4 sm:px-6">
-          <div className="bg-white/80 backdrop-blur-md border border-slate-200 shadow-2xl rounded-2xl py-6 px-12 flex items-center justify-between">
-            <div className="flex items-center gap-4 text-xs text-slate-500">
-              <span className="hidden sm:inline">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[95%] sm:w-max md:min-w-[600px]  lg:min-w-6xl max-w-6xl px-4">
+          <div className="bg-white/80 backdrop-blur-md border border-slate-200 shadow-2xl rounded-2xl py-3 md:py-4 px-6 md:px-10 flex items-center justify-center lg:justify-between gap-6">
+            <div className="hidden lg:flex items-center gap-4 text-xs text-slate-500">
+              <span className="hidden md:inline">
                 {watchedIsPublished
                   ? "บทความนี้ถูกเผยแพร่แล้ว"
                   : "บทความนี้ยังเป็นแบบร่าง"}
               </span>
-              <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+              <div className="h-4 w-px bg-slate-200 hidden md:block" />
               <span>
                 {(watchedContent || "")
                   .replace(/<[^>]*>?/gm, "")
@@ -1044,14 +1053,14 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
               </span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4 sm:gap-6 justify-center lg:justify-end">
               {/* Publication Switch - duplicate of top for convenience */}
               <FormField
                 control={form.control}
                 name="is_published"
                 render={({ field }) => (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 h-12">
-                    <span className="text-sm font-medium text-slate-600">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 h-10 md:h-12 overflow-hidden">
+                    <span className="text-[10px] md:text-sm font-medium text-slate-600">
                       เผยแพร่
                     </span>
                     <Switch
@@ -1064,37 +1073,39 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                             : "ปิดการเผยแพร่บทความสำเร็จ",
                         );
                       }}
-                      className="h-5 w-9 data-[state=checked]:bg-blue-600 scale-90"
+                      className="h-5 w-9 data-[state=checked]:bg-blue-600 scale-75 md:scale-90"
                     />
                   </div>
                 )}
               />
 
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => router.back()}
-                className="hover:bg-slate-100 h-12"
-              >
-                ยกเลิก
-              </Button>
-              <Button
-                type="submit"
-                disabled={
-                  isSubmitting ||
-                  !watchedTitle?.trim() ||
-                  characterCount === 0 ||
-                  !form.formState.isDirty
-                }
-                className="gap-2 bg-linear-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg shadow-green-500/25 min-w-[120px]  h-12"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                บันทึก
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => router.back()}
+                  className="hover:bg-slate-100 h-10 md:h-12 px-2 md:px-4 text-xs md:text-sm"
+                >
+                  ยกเลิก
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={
+                    isSubmitting ||
+                    !watchedTitle?.trim() ||
+                    characterCount === 0 ||
+                    !form.formState.isDirty
+                  }
+                  className="gap-2 bg-linear-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg shadow-green-500/25 min-w-[80px] md:min-w-[120px] h-10 md:h-12 text-xs md:text-sm"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  บันทึก
+                </Button>
+              </div>
             </div>
           </div>
         </div>
