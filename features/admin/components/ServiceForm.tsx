@@ -127,6 +127,10 @@ export function ServiceForm({
   const addGalleryImage = (url: string) => {
     if (url) {
       const current = form.getValues("gallery_images") || [];
+      if (current.length >= 20) {
+        toast.error("สามารถอัพรูปได้สูงสุด 20 รูปครับ");
+        return;
+      }
       form.setValue("gallery_images", [...current, url], { shouldDirty: true });
     }
   };
@@ -552,8 +556,7 @@ export function ServiceForm({
                   <div>
                     <h3 className="font-semibold text-slate-800">แกลเลอรี่</h3>
                     <p className="text-xs text-slate-500">
-                      อัพโหลดรูปผลงานหรือตัวอย่างบริการ ({galleryImages.length}{" "}
-                      รูป)
+                      อัพโหลดรูปผลงานหรือตัวอย่างบริการ (สูงสุด 20 รูป)
                     </p>
                   </div>
                 </div>
@@ -585,19 +588,21 @@ export function ServiceForm({
                   ))}
 
                   {/* Uploader Trigger */}
-                  <div className="aspect-square relative group/add">
-                    <div className="absolute inset-0 border-2 border-dashed border-slate-200 group-hover/add:border-amber-400 rounded-xl transition-colors bg-slate-50/50 group-hover/add:bg-amber-50/50" />
-                    <BlogImageUploader
-                      onChange={(url) => {
-                        if (url) addGalleryImage(url);
-                      }}
-                    />
-                    <div className="absolute inset-x-0 bottom-3 text-center pointer-events-none">
-                      <span className="text-xs text-slate-400 group-hover/add:text-amber-600 transition-colors font-medium">
-                        + เพิ่มรูป
-                      </span>
+                  {galleryImages.length < 20 && (
+                    <div className="aspect-square relative group/add">
+                      <div className="absolute inset-0 border-2 border-dashed border-slate-200 group-hover/add:border-amber-400 rounded-xl transition-colors bg-slate-50/50 group-hover/add:bg-amber-50/50" />
+                      <BlogImageUploader
+                        onChange={(url) => {
+                          if (url) addGalleryImage(url);
+                        }}
+                      />
+                      <div className="absolute inset-x-0 bottom-3 text-center pointer-events-none">
+                        <span className="text-xs text-slate-400 group-hover/add:text-amber-600 transition-colors font-medium">
+                          + เพิ่มรูป ({galleryImages.length}/20)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>

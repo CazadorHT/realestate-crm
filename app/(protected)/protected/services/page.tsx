@@ -21,8 +21,8 @@ async function ServicesContent() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <PageHeader
-        title="Service Showcase"
-        subtitle="Manage your services (Interior, Moving, etc.) and galleries."
+        title="บริการที่นำเสนอ"
+        subtitle="จัดการบริการของคุณ (ตกแต่งภายใน, ขนย้าย ฯลฯ) และแกลเลอรีรูปภาพ"
         icon="layout"
         count={services.length}
         actionSlot={
@@ -33,12 +33,12 @@ async function ServicesContent() {
                 className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25"
               >
                 <Plus className="h-5 w-5 mr-2" />
-                Add New Service
+                สร้างบริการใหม่
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-7xl! max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Create New Service</DialogTitle>
+                <DialogTitle>สร้างบริการใหม่</DialogTitle>
               </DialogHeader>
               <ServiceForm />
             </DialogContent>
@@ -54,7 +54,13 @@ async function ServicesContent() {
 
 export default function ServicesPage() {
   return (
-    <Suspense fallback={<div>Loading services...</div>}>
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-slate-500">
+          กำลังโหลดข้อมูลบริการ...
+        </div>
+      }
+    >
       <ServicesContent />
     </Suspense>
   );
