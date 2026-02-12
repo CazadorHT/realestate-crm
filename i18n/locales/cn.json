@@ -444,10 +444,18 @@
     "show_more": "查看更多",
     "show_less": "查看较少",
     "price_presets": {
-      "range_1": "< 15,000",
-      "range_2": "1.5万 - 5万",
-      "range_3": "5万 - 15万",
-      "range_4": "> 15万"
+      "rent": {
+        "range_1": "< 15,000",
+        "range_2": "1.5万 - 5万",
+        "range_3": "5万 - 15万",
+        "range_4": "> 15万"
+      },
+      "sale": {
+        "range_1": "< 300万",
+        "range_2": "300万 - 700万",
+        "range_3": "700万 - 1500万",
+        "range_4": "> 1500万"
+      }
     }
   },
   "recently_viewed": {

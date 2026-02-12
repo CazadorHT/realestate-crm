@@ -446,10 +446,18 @@
     "show_more": "Show More",
     "show_less": "Show Less",
     "price_presets": {
-      "range_1": "< 15,000",
-      "range_2": "15k - 50k",
-      "range_3": "50k - 150k",
-      "range_4": "> 150k"
+      "rent": {
+        "range_1": "< 15,000",
+        "range_2": "15k - 50k",
+        "range_3": "50k - 150k",
+        "range_4": "> 150k"
+      },
+      "sale": {
+        "range_1": "< 3M",
+        "range_2": "3M - 7M",
+        "range_3": "7M - 15M",
+        "range_4": "> 15M"
+      }
     }
   },
   "recently_viewed": {

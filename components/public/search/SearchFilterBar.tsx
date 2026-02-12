@@ -124,7 +124,10 @@ export function SearchFilterBar({
     { value: "ALL", label: t("common.all") },
     { value: "HOUSE", label: t("home.property_types.house") },
     { value: "CONDO", label: t("home.property_types.condo") },
-    { value: "OFFICE_BUILDING", label: t("home.property_types.office_building") },
+    {
+      value: "OFFICE_BUILDING",
+      label: t("home.property_types.office_building"),
+    },
     { value: "VILLA", label: t("home.property_types.villa") },
     { value: "POOL_VILLA", label: t("home.property_types.pool_villa") },
     { value: "TOWNHOME", label: t("home.property_types.townhome") },
@@ -464,43 +467,95 @@ export function SearchFilterBar({
                   </div>
                 </div>
 
-                {/* Price Range */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-slate-900">
-                    {t("search.price_range")}
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { min: "0", max: "15000", key: "range_1" },
-                      { min: "15000", max: "50000", key: "range_2" },
-                      { min: "50000", max: "150000", key: "range_3" },
-                      { min: "150000", max: "", key: "range_4" },
-                    ].map((preset) => (
-                      <button
-                        key={preset.key}
-                        onClick={() => {
-                          if (
-                            minPrice === preset.min &&
-                            maxPrice === preset.max
-                          ) {
-                            setMinPrice("");
-                            setMaxPrice("");
-                          } else {
-                            setMinPrice(preset.min);
-                            setMaxPrice(preset.max);
-                          }
-                        }}
-                        className={`px-3 py-2.5 rounded-xl text-sm font-medium border transition-all ${
-                          minPrice === preset.min && maxPrice === preset.max
-                            ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                            : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
-                        }`}
-                      >
-                        {t(`search.price_presets.${preset.key}`)}
-                      </button>
-                    ))}
+                {/* Price Range RENT */}
+                {(listingType === "RENT" ||
+                  listingType === "ALL" ||
+                  listingType === "SALE_AND_RENT") && (
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-slate-900">
+                      {t("search.price_range")}{" "}
+                      {(listingType === "ALL" ||
+                        listingType === "SALE_AND_RENT") &&
+                        `(${t("search.rent")})`}
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { min: "0", max: "15000", key: "range_1" },
+                        { min: "15000", max: "50000", key: "range_2" },
+                        { min: "50000", max: "150000", key: "range_3" },
+                        { min: "150000", max: "", key: "range_4" },
+                      ].map((preset) => (
+                        <button
+                          key={preset.key}
+                          onClick={() => {
+                            if (
+                              minPrice === preset.min &&
+                              maxPrice === preset.max
+                            ) {
+                              setMinPrice("");
+                              setMaxPrice("");
+                            } else {
+                              setMinPrice(preset.min);
+                              setMaxPrice(preset.max);
+                            }
+                          }}
+                          className={`px-3 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+                            minPrice === preset.min && maxPrice === preset.max
+                              ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                              : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                          }`}
+                        >
+                          {t(`search.price_presets.rent.${preset.key}`)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Price Range SALE */}
+                {(listingType === "SALE" ||
+                  listingType === "ALL" ||
+                  listingType === "SALE_AND_RENT") && (
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-slate-900">
+                      {t("search.price_range")}{" "}
+                      {(listingType === "ALL" ||
+                        listingType === "SALE_AND_RENT") &&
+                        `(${t("search.buy")})`}
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { min: "0", max: "3000000", key: "range_1" },
+                        { min: "3000000", max: "7000000", key: "range_2" },
+                        { min: "7000000", max: "15000000", key: "range_3" },
+                        { min: "15000000", max: "", key: "range_4" },
+                      ].map((preset) => (
+                        <button
+                          key={preset.key}
+                          onClick={() => {
+                            if (
+                              minPrice === preset.min &&
+                              maxPrice === preset.max
+                            ) {
+                              setMinPrice("");
+                              setMaxPrice("");
+                            } else {
+                              setMinPrice(preset.min);
+                              setMaxPrice(preset.max);
+                            }
+                          }}
+                          className={`px-3 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+                            minPrice === preset.min && maxPrice === preset.max
+                              ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                              : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                          }`}
+                        >
+                          {t(`search.price_presets.sale.${preset.key}`)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Bedroom */}
                 <div className="space-y-3">
