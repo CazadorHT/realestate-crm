@@ -54,7 +54,7 @@ export default async function DealsPage() {
       />
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">ดีลทั้งหมด</CardTitle>
@@ -184,22 +184,24 @@ export default async function DealsPage() {
 
       {/* Footer Stats */}
       {data.length > 0 && (
-        <div className="flex items-center justify-between text-sm text-slate-500 px-2">
-          <div className="flex items-center gap-4">
-            <span>แสดงทั้งหมด {totalDeals} ดีล</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm text-slate-500 px-2 mt-2">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="font-medium text-slate-700">
+              แสดงทั้งหมด {totalDeals} ดีล
+            </span>
             {activeDeals > 0 && (
-              <span className="flex items-center gap-1 text-blue-600 font-medium">
+              <span className="flex items-center gap-1 text-blue-600 font-medium whitespace-nowrap">
                 <Clock className="h-4 w-4" />
                 {activeDeals} กำลังดำเนินการ
               </span>
             )}
             {wonDeals > 0 && (
-              <span className="text-green-600 font-medium">
+              <span className="text-green-600 font-medium whitespace-nowrap">
                 {wonDeals} สำเร็จ
               </span>
             )}
           </div>
-          <div className="text-right">
+          <div className="text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
             <p className="text-xs">
               อัพเดทล่าสุด: {new Date().toLocaleDateString("th-TH")}
             </p>

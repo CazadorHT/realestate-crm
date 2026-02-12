@@ -306,7 +306,7 @@ export function DealsTable({
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table Section */}
       <div className="relative">
         {loading && (
           <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
@@ -314,250 +314,397 @@ export function DealsTable({
           </div>
         )}
 
-        <Table>
-          <TableHeader className="bg-slate-50">
-            <TableRow>
-              <TableHead className="w-[50px]">
-                <Checkbox
-                  checked={isAllSelected}
-                  onCheckedChange={() => toggleSelectAll(allIds)}
-                  aria-label="เลือกทั้งหมด"
-                  className={
-                    isPartialSelected
-                      ? "data-[state=checked]:bg-primary/50"
-                      : ""
-                  }
-                />
-              </TableHead>
-              <TableHead className="font-semibold">ประเภท</TableHead>
-              <TableHead className="font-semibold">ทรัพย์</TableHead>
-              <TableHead className="font-semibold">ลีด</TableHead>
-              <TableHead className="font-semibold">
-                ราคา{" "}
-                <span className="text-xs font-normal text-muted-foreground">
-                  (เดิม)
-                </span>
-              </TableHead>
-              <TableHead className="font-semibold">ค่าคอม</TableHead>
-              <TableHead className="font-semibold">ระยะสัญญา</TableHead>
-              <TableHead className="font-semibold">วันที่</TableHead>
-              <TableHead className="font-semibold">สถานะ</TableHead>
-              <TableHead className="text-right font-semibold">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={10} className="h-auto py-0 border-0">
-                  {/* Premium Empty State */}
-                  <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50 to-white p-12 my-4">
-                    {/* Decorative Background */}
-                    <div className="absolute inset-0 opacity-5">
-                      <div className="absolute top-10 left-10 w-20 h-20 border-4 border-slate-400 rounded-xl rotate-12" />
-                      <div className="absolute bottom-10 right-10 w-16 h-16 border-4 border-slate-400 rounded-full" />
-                      <div className="absolute top-1/2 left-1/3 w-12 h-12 border-4 border-slate-400 rounded-lg -rotate-6" />
-                    </div>
-
-                    <div className="relative flex flex-col items-center justify-center text-center space-y-6">
-                      {/* Icon */}
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-xl scale-150" />
-                        <div className="relative p-6 bg-linear-to-br from-amber-500 to-orange-600 rounded-2xl shadow-xl shadow-amber-500/30">
-                          <Handshake className="h-12 w-12 text-white" />
-                        </div>
-                      </div>
-
-                      {/* Text */}
-                      <div className="space-y-2 max-w-md">
-                        <h3 className="text-2xl font-bold text-slate-800">
-                          {hasActiveFilters
-                            ? "ไม่พบดีลที่ค้นหา"
-                            : "ยังไม่มีดีลในระบบ"}
-                        </h3>
-                        <p className="text-slate-500 leading-relaxed">
-                          {hasActiveFilters
-                            ? "ลองปรับตัวกรองใหม่หรือค้นหาด้วยคำอื่น"
-                            : "เริ่มต้นสร้างดีลแรกของคุณเพื่อติดตามการขายและการเช่าทรัพย์"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.map((deal) => (
-                <TableRow
-                  key={deal.id}
-                  className={`hover:bg-slate-50/50 ${
-                    isSelected(deal.id) ? "bg-blue-50/50" : ""
-                  }`}
-                >
-                  <TableCell className="w-[50px]">
+        <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
+          {/* Desktop Table View */}
+          <div className="hidden lg:block overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50">
+                <TableRow>
+                  <TableHead className="w-[50px]">
                     <Checkbox
-                      checked={isSelected(deal.id)}
-                      onCheckedChange={() => toggleSelect(deal.id)}
-                      aria-label={`เลือก ${deal.property?.title || deal.id}`}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        deal.deal_type === "RENT" ? "secondary" : "default"
+                      checked={isAllSelected}
+                      onCheckedChange={() => toggleSelectAll(allIds)}
+                      aria-label="เลือกทั้งหมด"
+                      className={
+                        isPartialSelected
+                          ? "data-[state=checked]:bg-primary/50"
+                          : ""
                       }
-                      className="font-normal w-[60px] justify-center"
-                    >
-                      {deal.deal_type === "RENT" ? "เช่า" : "ขาย"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2 max-w-[200px] md:max-w-[400px]">
-                      <Link
-                        href={`/protected/properties/${deal.property_id}`}
-                        className="font-medium text-blue-600 hover:text-blue-500 hover:underline transition-colors line-clamp-2 whitespace-normal wrap-break-word"
-                      >
-                        {deal.property?.title || "-"}
-                      </Link>
-                      {deal.created_at &&
-                        differenceInHours(
-                          new Date(),
-                          new Date(deal.created_at),
-                        ) < 24 && (
-                          <div className="w-fit">
-                            <div className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">
-                              NEW
+                    />
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    ประเภท
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    ทรัพย์
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    ลีด
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    ราคา{" "}
+                    <span className="text-xs font-normal text-slate-400">
+                      (เดิม)
+                    </span>
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    ค่าคอม
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    ระยะสัญญา
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    วันที่
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    สถานะ
+                  </TableHead>
+                  <TableHead className="text-right font-semibold text-slate-700 whitespace-nowrap">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={10} className="h-auto py-0 border-0">
+                      <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50 to-white p-12 my-4">
+                        <div className="relative flex flex-col items-center justify-center text-center space-y-6">
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-xl scale-150" />
+                            <div className="relative p-6 bg-linear-to-br from-amber-500 to-orange-600 rounded-2xl shadow-xl shadow-amber-500/30">
+                              <Handshake className="h-12 w-12 text-white" />
                             </div>
                           </div>
-                        )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/protected/leads/${deal.lead_id}`}
-                      className="text-sm text-slate-600 hover:text-blue-600 hover:underline transition-colors"
+
+                          <div className="space-y-2 max-w-md">
+                            <h3 className="text-2xl font-bold text-slate-800">
+                              {hasActiveFilters
+                                ? "ไม่พบดีลที่ค้นหา"
+                                : "ยังไม่มีดีลในระบบ"}
+                            </h3>
+                            <p className="text-slate-500 leading-relaxed">
+                              {hasActiveFilters
+                                ? "ลองปรับตัวกรองใหม่หรือค้นหาด้วยคำอื่น"
+                                : "เริ่มต้นสร้างดีลแรกของคุณเพื่อติดตามการขายและการเช่าทรัพย์"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  data.map((deal) => (
+                    <TableRow
+                      key={deal.id}
+                      className={`hover:bg-slate-50/50 transition-colors ${
+                        isSelected(deal.id) ? "bg-blue-50/50" : ""
+                      }`}
                     >
-                      {deal.lead?.full_name || "-"}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="font-medium text-slate-700">
-                    <div className="flex flex-col items-start">
-                      {(() => {
-                        const isRent = deal.deal_type === "RENT";
-                        const rawCurrent = isRent
-                          ? deal.property?.rental_price
-                          : deal.property?.price;
-                        const rawOriginal = isRent
-                          ? deal.property?.original_rental_price
-                          : deal.property?.original_price;
-
-                        const current = rawCurrent || 0;
-                        const original = rawOriginal || 0;
-
-                        // Fallback: If current is 0 but original exists, show original as current
-                        // Logic matching Deal Details page
-                        const displayPrice =
-                          current === 0 && original > 0 ? original : current;
-                        const showOriginal = current > 0 && original > current;
-
-                        if (displayPrice === 0 && original === 0) {
-                          return "-";
-                        }
-
-                        return (
-                          <>
-                            <span>{displayPrice.toLocaleString()} ฿</span>
-                            {showOriginal && (
-                              <span className="text-xs text-muted-foreground line-through">
-                                {original.toLocaleString()}
-                              </span>
+                      <TableCell className="w-[50px]">
+                        <Checkbox
+                          checked={isSelected(deal.id)}
+                          onCheckedChange={() => toggleSelect(deal.id)}
+                          aria-label={`เลือก ${deal.property?.title || deal.id}`}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            deal.deal_type === "RENT" ? "secondary" : "default"
+                          }
+                          className="font-normal w-[60px] justify-center"
+                        >
+                          {deal.deal_type === "RENT" ? "เช่า" : "ขาย"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2 max-w-[300px]">
+                          <Link
+                            href={`/protected/properties/${deal.property_id}`}
+                            className="font-medium text-blue-600 hover:text-blue-500 hover:underline transition-colors line-clamp-2"
+                          >
+                            {deal.property?.title || "-"}
+                          </Link>
+                          {deal.created_at &&
+                            differenceInHours(
+                              new Date(),
+                              new Date(deal.created_at),
+                            ) < 24 && (
+                              <Badge className="h-4 px-1 text-[9px] bg-amber-500 hover:bg-amber-600 font-bold border-0">
+                                NEW
+                              </Badge>
                             )}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {deal.commission_amount ? (
-                      <span className="text-green-600 font-medium">
-                        {deal.commission_amount.toLocaleString()} ฿
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-slate-600">
-                    {deal.deal_type === "RENT" && deal.duration_months ? (
-                      <span className="text-sm whitespace-nowrap">
-                        {deal.duration_months} เดือน
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-slate-600">
-                    {deal.transaction_date
-                      ? formatDate(deal.transaction_date)
-                      : "-"}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={deal.status} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        asChild
-                        className="hover:bg-blue-50 hover:text-blue-600"
-                        title="ดูรายละเอียด"
-                      >
-                        <Link href={`/protected/deals/${deal.id}`}>
-                          <Eye className="h-4 w-4" />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/protected/leads/${deal.lead_id}`}
+                          className="text-sm text-slate-600 hover:text-blue-600 hover:underline transition-colors line-clamp-1"
+                        >
+                          {deal.lead?.full_name || "-"}
                         </Link>
-                      </Button>
+                      </TableCell>
+                      <TableCell className="font-medium text-slate-700">
+                        <div className="flex flex-col items-start gap-0.5">
+                          {(() => {
+                            const isRent = deal.deal_type === "RENT";
+                            const current =
+                              (isRent
+                                ? deal.property?.rental_price
+                                : deal.property?.price) || 0;
+                            const original =
+                              (isRent
+                                ? deal.property?.original_rental_price
+                                : deal.property?.original_price) || 0;
+                            const displayPrice =
+                              current === 0 && original > 0
+                                ? original
+                                : current;
+                            const showOriginal =
+                              current > 0 && original > current;
 
-                      <DealFormDialog
-                        leadId={deal.lead_id}
-                        properties={properties}
-                        deal={deal}
-                        trigger={
+                            if (displayPrice === 0) return "-";
+                            return (
+                              <>
+                                <span className="whitespace-nowrap">
+                                  {displayPrice.toLocaleString()} ฿
+                                </span>
+                                {showOriginal && (
+                                  <span className="text-[10px] text-slate-400 line-through">
+                                    {original.toLocaleString()}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {deal.commission_amount ? (
+                          <span className="text-green-600 font-semibold whitespace-nowrap">
+                            {deal.commission_amount.toLocaleString()} ฿
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell className="text-slate-600">
+                        {deal.deal_type === "RENT" && deal.duration_months ? (
+                          <span className="text-sm whitespace-nowrap">
+                            {deal.duration_months} เดือน
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-slate-600">
+                        <span className="whitespace-nowrap">
+                          {deal.transaction_date
+                            ? formatDate(deal.transaction_date)
+                            : "-"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={deal.status} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="hover:bg-purple-50 hover:text-purple-600 cursor-pointer"
-                            title="แก้ไข"
+                            asChild
+                            className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
+                            title="ดูรายละเอียด"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Link href={`/protected/deals/${deal.id}`}>
+                              <Eye className="h-4 w-4" />
+                            </Link>
                           </Button>
-                        }
-                        onSuccess={() => {
-                          setPage(1);
-                          setReloadKey((k) => k + 1);
-                        }}
-                      />
 
-                      <DeleteDealButton
-                        dealId={deal.id}
-                        leadId={deal.lead_id}
-                        onSuccess={() => {
-                          setPage(1);
-                          setReloadKey((k) => k + 1);
-                        }}
+                          <DealFormDialog
+                            leadId={deal.lead_id}
+                            properties={properties}
+                            deal={deal}
+                            trigger={
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-purple-50 hover:text-purple-600 cursor-pointer"
+                                title="แก้ไข"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            }
+                            onSuccess={() => {
+                              setPage(1);
+                              setReloadKey((k) => k + 1);
+                            }}
+                          />
+
+                          <DeleteDealButton
+                            dealId={deal.id}
+                            leadId={deal.lead_id}
+                            onSuccess={() => {
+                              setPage(1);
+                              setReloadKey((k) => k + 1);
+                            }}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile/Tablet Card View */}
+          <div className="lg:hidden divide-y divide-slate-100">
+            {data.length === 0 ? (
+              <div className="p-12 text-center text-slate-500">
+                {hasActiveFilters ? "ไม่พบดีลที่ค้นหา" : "ยังไม่มีดีลในระบบ"}
+              </div>
+            ) : (
+              data.map((deal) => (
+                <div
+                  key={deal.id}
+                  className={`p-4 transition-colors ${
+                    isSelected(deal.id) ? "bg-blue-50/50" : "hover:bg-slate-50"
+                  }`}
+                >
+                  <div className="flex gap-4">
+                    <div className="flex flex-col gap-3 shrink-0 py-1">
+                      <Checkbox
+                        checked={isSelected(deal.id)}
+                        onCheckedChange={() => toggleSelect(deal.id)}
                       />
+                      <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                        <Handshake className="h-5 w-5" />
+                      </div>
                     </div>
-                  </TableCell>
-                </TableRow>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex flex-col gap-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Link
+                              href={`/protected/deals/${deal.id}`}
+                              className="font-bold text-slate-900 text-sm hover:underline line-clamp-2"
+                            >
+                              {deal.property?.title || "ไม่ระบุทรัพย์"}
+                            </Link>
+                            {deal.created_at &&
+                              differenceInHours(
+                                new Date(),
+                                new Date(deal.created_at),
+                              ) < 24 && (
+                                <Badge className="h-4 px-1.5 text-[9px] bg-amber-500 hover:bg-amber-600 border-0">
+                                  NEW
+                                </Badge>
+                              )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge
+                              variant={
+                                deal.deal_type === "RENT"
+                                  ? "secondary"
+                                  : "default"
+                              }
+                              className="h-4 text-[9px] px-1.5 font-bold"
+                            >
+                              {deal.deal_type === "RENT" ? "เช่า" : "ขาย"}
+                            </Badge>
+                            <StatusBadge status={deal.status} />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            asChild
+                            className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
+                          >
+                            <Link href={`/protected/deals/${deal.id}`}>
+                              <Eye className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          <DealFormDialog
+                            leadId={deal.lead_id}
+                            properties={properties}
+                            deal={deal}
+                            trigger={
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-purple-50 hover:text-purple-600"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            }
+                            onSuccess={() => {
+                              setPage(1);
+                              setReloadKey((k) => k + 1);
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-slate-400">ลูกค้า (Lead):</span>
+                          <Link
+                            href={`/protected/leads/${deal.lead_id}`}
+                            className="font-medium text-blue-600 hover:underline line-clamp-1"
+                          >
+                            {deal.lead?.full_name || "-"}
+                          </Link>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-slate-400">ราคา:</span>
+                          <span className="font-semibold text-slate-900">
+                            {(() => {
+                              const isRent = deal.deal_type === "RENT";
+                              const current =
+                                (isRent
+                                  ? deal.property?.rental_price
+                                  : deal.property?.price) || 0;
+                              return current > 0
+                                ? `${current.toLocaleString()} ฿`
+                                : "-";
+                            })()}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-slate-400">ค่าคอมมิชชั่น:</span>
+                          <span className="font-semibold text-green-600">
+                            {deal.commission_amount
+                              ? `${deal.commission_amount.toLocaleString()} ฿`
+                              : "-"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-slate-400">วันที่:</span>
+                          <span className="text-slate-600">
+                            {deal.transaction_date
+                              ? formatDate(deal.transaction_date)
+                              : "-"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ))
             )}
-          </TableBody>
-        </Table>
+          </div>
+        </div>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination Section */}
       {data.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 px-4">
-          <div className="text-sm text-slate-600">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 px-4 bg-white border border-slate-200 rounded-lg shadow-xs">
+          <div className="text-sm text-slate-600 text-center sm:text-left">
             แสดง{" "}
             <span className="font-medium text-slate-900">
               {Math.min(count, (page - 1) * pageSize + 1)}
@@ -572,20 +719,22 @@ export function DealsTable({
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
+              size="sm"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+              className="h-9 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
             >
               ก่อนหน้า
             </Button>
-            <div className="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-medium text-slate-700">
+            <div className="h-9 px-4 flex items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-sm font-medium text-slate-700">
               {page} / {totalPages}
             </div>
             <Button
               variant="outline"
+              size="sm"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+              className="h-9 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
             >
               ถัดไป
             </Button>

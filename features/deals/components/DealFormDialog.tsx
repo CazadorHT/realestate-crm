@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { PropertyCombobox } from "@/components/PropertyCombobox";
 import {
   Select,
   SelectContent,
@@ -255,29 +256,20 @@ export function DealFormDialog({
               control={form.control}
               name="property_id"
               render={({ field }) => (
-                <FormItem className="w-full overflow-hidden">
+                <FormItem className="w-full min-w-0">
                   <FormLabel>เลือกทรัพย์ *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue
-                          placeholder="เลือกทรัพย์ที่ต้องการ"
-                          className="truncate"
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="max-h-[400px] overflow-y-auto">
-                      {properties.map((p) => (
-                        <SelectItem
-                          key={p.id}
-                          value={p.id}
-                          className="truncate"
-                        >
-                          {p.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <PropertyCombobox
+                      value={field.value}
+                      onChange={(id) => field.onChange(id)}
+                      placeholder="พิมพ์เพื่อค้นหาทรัพย์..."
+                      initialProperty={
+                        deal?.property
+                          ? { id: deal.property.id, title: deal.property.title }
+                          : undefined
+                      }
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -291,50 +283,57 @@ export function DealFormDialog({
                 const rentalPrice = p.rental_price || p.original_rental_price;
                 const salePrice = p.price || p.original_price;
                 return (
-                  <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3 text-sm">
-                    <div className="flex gap-3">
-                      {/* Cover Image - on top */}
+                  <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4 text-sm">
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                      {/* Cover Image */}
                       {p.cover_image && (
-                        <div className="">
+                        <div className="w-full sm:w-24 sm:h-24 shrink-0">
                           <img
                             src={p.cover_image}
                             alt={p.title}
-                            className="w-48 h-48 rounded-lg object-cover border border-slate-200"
+                            className="w-full h-40 sm:w-24 sm:h-24 rounded-lg object-cover border border-slate-200 shadow-sm"
                           />
                         </div>
                       )}
                       {/* Price Info */}
-                      <div className="flex flex-col gap-3">
-                        {rentalPrice ? (
-                          <div>
-                            <span className="text-slate-500">ค่าเช่า:</span>{" "}
-                            <span className="font-bold text-blue-700">
-                              {new Intl.NumberFormat("th-TH").format(
-                                rentalPrice,
-                              )}{" "}
-                              ฿/ด.
-                            </span>
-                            {p.commission_rent_months && (
-                              <span className="text-xs text-slate-500 ml-1">
-                                (คอม {p.commission_rent_months} ด.)
+                      <div className="flex flex-col gap-2 min-w-0 flex-1">
+                        <div className="font-semibold text-slate-900 truncate mb-1 line-clamp-1 max-w-[250px]">
+                          {p.title}
+                        </div>
+                        <div className="flex flex-wrap gap-x-6 gap-y-2">
+                          {rentalPrice ? (
+                            <div>
+                              <span className="text-slate-500">ค่าเช่า:</span>{" "}
+                              <span className="font-bold text-blue-700">
+                                {new Intl.NumberFormat("th-TH").format(
+                                  rentalPrice,
+                                )}{" "}
+                                ฿/ด.
                               </span>
-                            )}
-                          </div>
-                        ) : null}
-                        {salePrice ? (
-                          <div>
-                            <span className="text-slate-500">ราคาขาย:</span>{" "}
-                            <span className="font-bold text-green-700">
-                              {new Intl.NumberFormat("th-TH").format(salePrice)}{" "}
-                              ฿
-                            </span>
-                            {p.commission_sale_percentage && (
-                              <span className="text-xs text-slate-500 ml-1">
-                                (คอม {p.commission_sale_percentage}%)
+                              {p.commission_rent_months && (
+                                <span className="text-[10px] text-slate-400 ml-1 block sm:inline">
+                                  (คอม {p.commission_rent_months} ด.)
+                                </span>
+                              )}
+                            </div>
+                          ) : null}
+                          {salePrice ? (
+                            <div>
+                              <span className="text-slate-500">ราคาขาย:</span>{" "}
+                              <span className="font-bold text-green-700">
+                                {new Intl.NumberFormat("th-TH").format(
+                                  salePrice,
+                                )}{" "}
+                                ฿
                               </span>
-                            )}
-                          </div>
-                        ) : null}
+                              {p.commission_sale_percentage && (
+                                <span className="text-[10px] text-slate-400 ml-1 block sm:inline">
+                                  (คอม {p.commission_sale_percentage}%)
+                                </span>
+                              )}
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -356,8 +355,8 @@ export function DealFormDialog({
               />
             )}
 
-            {/* Deal Type, Status & Commission - 3 columns */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Deal Type, Status & Commission */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-4">
               {/* Deal Type as Toggle Buttons */}
               <FormField
                 control={form.control}
@@ -474,7 +473,7 @@ export function DealFormDialog({
             </div>
 
             {/* Transaction Dates & Duration */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-4">
               <FormField
                 control={form.control}
                 name="transaction_date"
@@ -503,46 +502,57 @@ export function DealFormDialog({
                   name="duration_months"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ระยะเวลาสัญญา (ปี)</FormLabel>
+                      <FormLabel>
+                        ระยะเวลาสัญญา ({field.value ? field.value / 12 : 0} ปี)
+                      </FormLabel>
                       <FormControl>
-                        <div className="flex gap-2">
-                          {[1, 2, 3].map((year) => {
-                            const months = year * 12;
-                            const isSelected = field.value === months;
-                            return (
-                              <Button
-                                key={year}
-                                type="button"
-                                variant={isSelected ? "default" : "outline"}
-                                size="lg"
-                                className={`flex-1  ${
-                                  isSelected
-                                    ? "bg-blue-600 hover:bg-blue-700"
-                                    : "text-slate-600"
-                                }`}
-                                onClick={() => field.onChange(months)}
-                              >
-                                {year} ปี
-                              </Button>
-                            );
-                          })}
-                          <Input
-                            type="number"
-                            placeholder="ระบุ"
-                            className="w-[80px] text-center h-10"
-                            value={field.value ? String(field.value / 12) : ""}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === "") {
-                                field.onChange(undefined);
-                                return;
+                        <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-1 gap-2">
+                            {[1, 2, 3].map((year) => {
+                              const months = year * 12;
+                              const isSelected = field.value === months;
+                              return (
+                                <Button
+                                  key={year}
+                                  type="button"
+                                  variant={isSelected ? "default" : "outline"}
+                                  size="sm"
+                                  className={`flex-1 h-10 ${
+                                    isSelected
+                                      ? "bg-blue-600 hover:bg-blue-700"
+                                      : "text-slate-600"
+                                  }`}
+                                  onClick={() => field.onChange(months)}
+                                >
+                                  {year} ปี
+                                </Button>
+                              );
+                            })}
+                          </div>
+                          <div className="flex items-center gap-2 min-w-[100px] flex-1">
+                            <Input
+                              type="number"
+                              placeholder="อื่นๆ (ปี)"
+                              className="text-center h-10"
+                              value={
+                                field.value ? String(field.value / 12) : ""
                               }
-                              const years = parseFloat(v);
-                              if (!isNaN(years)) {
-                                field.onChange(years * 12);
-                              }
-                            }}
-                          />
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                if (v === "") {
+                                  field.onChange(undefined);
+                                  return;
+                                }
+                                const years = parseFloat(v);
+                                if (!isNaN(years)) {
+                                  field.onChange(years * 12);
+                                }
+                              }}
+                            />
+                            <span className="text-xs text-slate-400 sm:hidden">
+                              ปี
+                            </span>
+                          </div>
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -552,69 +562,75 @@ export function DealFormDialog({
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="co_agent_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ชื่อ Co-Agent (ถ้ามี)</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value ?? ""}
-                        placeholder="ชื่อ Co-Agent"
-                        onChange={(e) =>
-                          field.onChange(e.target.value || undefined)
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* Co-Agent Info Section */}
+            <div className="pt-2 border-t border-slate-100 mt-2">
+              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                ข้อมูล Co-Agent (หากมี)
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4">
+                <FormField
+                  control={form.control}
+                  name="co_agent_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ชื่อ Co-Agent (ถ้ามี)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          placeholder="ชื่อ Co-Agent"
+                          onChange={(e) =>
+                            field.onChange(e.target.value || undefined)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="co_agent_contact"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>เบอร์ Co-Agent</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="เช่น 081-xxx-xxxx"
-                        {...field}
-                        value={field.value ?? ""}
-                        onChange={(e) =>
-                          field.onChange(e.target.value || undefined)
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="co_agent_contact"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>เบอร์ Co-Agent</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="เช่น 081-xxx-xxxx"
+                          {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(e.target.value || undefined)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="co_agent_online"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ช่องทางติดต่อ</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="ตัวอย่าง: LINE:@agent, Facebook, Email"
-                        {...field}
-                        value={field.value ?? ""}
-                        onChange={(e) =>
-                          field.onChange(e.target.value || undefined)
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="co_agent_online"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ช่องทางติดต่อ</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="ตัวอย่าง: LINE:@agent, Facebook, Email"
+                          {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(e.target.value || undefined)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <DialogFooter className="gap-2 sm:gap-2 my-3">

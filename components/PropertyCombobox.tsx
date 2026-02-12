@@ -78,14 +78,19 @@ export function PropertyCombobox({
         <Button
           type="button"
           variant="outline"
-          className="w-full justify-between"
+          className="w-full justify-between flex items-center min-w-0 overflow-hidden px-3"
         >
-          <span className="truncate">{selected?.title ?? placeholder}</span>
-          <ChevronsUpDown className="h-4 w-4 opacity-60" />
+          <span className="truncate flex-1 text-left">
+            {selected?.title ?? placeholder}
+          </span>
+          <ChevronsUpDown className="h-4 w-4 opacity-50 ml-2 shrink-0" />
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[420px] p-0 bg-white" align="start">
+      <PopoverContent
+        className="w-[calc(100vw-2rem)] sm:w-[420px] p-0 bg-white"
+        align="start"
+      >
         <Command>
           <CommandInput
             className="p-2 "
