@@ -90,7 +90,7 @@ export default async function LeadDetailPage({
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 px-4 py-8 border-b border-slate-200 bg-linear-to-r from-slate-800 to-slate-900 rounded-xl">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-4 py-8 border-b border-slate-200 bg-linear-to-r from-slate-800 to-slate-900 rounded-xl">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold text-white">K. {lead.full_name}</h1>
           <div className="flex items-center gap-2 text-sm">
