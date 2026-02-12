@@ -25,6 +25,7 @@ import { PropertyRowActions } from "./PropertyRowActions";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
 import Link from "next/link";
+import { PropertyPrice } from "./PropertyPrice";
 import { PropertiesEmptyState } from "./PropertiesEmptyState";
 import { PropertyStatusSelect } from "./PropertyStatusDropdown";
 import type {
@@ -396,105 +397,14 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
 
                   {/* PRICE */}
                   <TableCell>
-                    <div className="flex flex-col gap-1">
-                      {(() => {
-                        const isSale =
-                          property.listing_type === "SALE" ||
-                          property.listing_type === "SALE_AND_RENT";
-                        const isRent =
-                          property.listing_type === "RENT" ||
-                          property.listing_type === "SALE_AND_RENT";
-
-                        const salePrice = property.price;
-                        const originalSalePrice = property.original_price;
-                        const hasSaleDiscount =
-                          originalSalePrice &&
-                          salePrice &&
-                          originalSalePrice > salePrice;
-
-                        const rentPrice = property.rental_price;
-                        const originalRentPrice =
-                          property.original_rental_price;
-                        const hasRentDiscount =
-                          originalRentPrice &&
-                          rentPrice &&
-                          originalRentPrice > rentPrice;
-
-                        if (
-                          !salePrice &&
-                          !rentPrice &&
-                          !originalSalePrice &&
-                          !originalRentPrice
-                        ) {
-                          return (
-                            <span className="text-sm text-slate-300">-</span>
-                          );
-                        }
-
-                        return (
-                          <>
-                            {/* Sale Price */}
-                            {isSale && (
-                              <>
-                                {hasSaleDiscount ? (
-                                  <div className="flex flex-col items-start gap-0.5">
-                                    <span className="text-xs text-slate-400 line-through decoration-slate-300">
-                                      ฿{originalSalePrice?.toLocaleString()}
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-[10px] text-red-500 font-medium">
-                                        ลดขาย
-                                      </span>
-                                      <span className="font-bold text-sm text-red-600">
-                                        ฿{salePrice?.toLocaleString()}
-                                      </span>
-                                    </div>
-                                  </div>
-                                ) : salePrice ? (
-                                  <span className="font-bold text-sm text-emerald-600">
-                                    ฿{salePrice.toLocaleString()}
-                                  </span>
-                                ) : originalSalePrice ? (
-                                  <span className="font-bold text-sm text-emerald-600">
-                                    ฿{originalSalePrice.toLocaleString()}
-                                  </span>
-                                ) : null}
-                              </>
-                            )}
-
-                            {/* Rent Price */}
-                            {isRent && (
-                              <>
-                                {hasRentDiscount ? (
-                                  <div className="flex flex-col items-start gap-0.5">
-                                    <span className="text-xs text-slate-400 line-through decoration-slate-300">
-                                      ฿{originalRentPrice?.toLocaleString()}/ด
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-[10px] text-orange-500 font-medium">
-                                        ลดเช่า
-                                      </span>
-                                      <span className="font-bold text-sm text-orange-600">
-                                        ฿{rentPrice?.toLocaleString()}/ด
-                                      </span>
-                                    </div>
-                                  </div>
-                                ) : rentPrice ? (
-                                  <span className="text-xs font-semibold text-blue-600">
-                                    เช่า: ฿{rentPrice.toLocaleString()}/ด
-                                  </span>
-                                ) : originalRentPrice ? (
-                                  <span className="text-xs font-semibold text-blue-600">
-                                    เช่า: ฿{originalRentPrice.toLocaleString()}
-                                    /ด
-                                  </span>
-                                ) : null}
-                              </>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
+                    <PropertyPrice
+                      variant="table"
+                      listingType={property.listing_type}
+                      price={property.price}
+                      originalPrice={property.original_price}
+                      rentalPrice={property.rental_price}
+                      originalRentalPrice={property.original_rental_price}
+                    />
                   </TableCell>
 
                   {/* INTEREST & STOCK */}
@@ -646,110 +556,157 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
           </Table>
         </div>
 
-        {/* Mobile/Tablet Card View */}
-        <div className="lg:hidden divide-y divide-slate-100 dark:divide-slate-800">
-          {data.map((property) => (
-            <div
-              key={property.id}
-              className={`p-4 transition-colors ${
-                isSelected(property.id)
-                  ? "bg-blue-50/50 dark:bg-blue-900/10"
-                  : "hover:bg-slate-50"
-              }`}
-            >
-              <div className="flex gap-4">
-                <div className="flex flex-col gap-3 shrink-0">
+        {/* Mobile/Tablet Card View - Premium Responsive Grid */}
+        <div className="lg:hidden p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {data.map((property) => (
+              <div
+                key={property.id}
+                className={cn(
+                  "relative group bg-white dark:bg-slate-900 rounded-xl border transition-all duration-300 shadow-sm hover:shadow-md",
+                  isSelected(property.id)
+                    ? "border-blue-500 dark:border-blue-600 ring-1 ring-blue-500/20"
+                    : "border-slate-200 dark:border-slate-800",
+                )}
+              >
+                {/* Checkbox Overlay */}
+                <div className="absolute top-3 left-3 z-30">
                   <Checkbox
                     checked={isSelected(property.id)}
                     onCheckedChange={() => toggleSelect(property.id)}
+                    className="h-5 w-5 bg-white/80 backdrop-blur-sm border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                   />
-                  <div className="h-[70px] w-[90px] rounded-lg overflow-hidden bg-slate-100">
-                    {property.image_url ? (
-                      <img
-                        src={property.image_url}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center">
-                        <ImageIcon className="h-5 w-5 text-slate-300" />
-                      </div>
-                    )}
+                </div>
+
+                {/* Card Header/Actions Button */}
+                <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">
+                  <div className="p-1 bg-white/80 backdrop-blur-sm rounded-lg border border-slate-200 shadow-sm">
+                    <PropertyRowActions id={property.id} />
                   </div>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start gap-2">
-                    <Link
-                      href={`/protected/properties/${property.id}`}
-                      className="font-bold text-slate-900 dark:text-white text-sm line-clamp-1 flex-1"
-                    >
-                      {property.title}
-                    </Link>
-                    <PropertyStatusSelect
-                      id={property.id}
-                      value={property.status as PropertyStatus}
-                      className="h-7 w-24 text-[10px]"
+                <Link
+                  href={`/protected/properties/${property.id}`}
+                  className="block relative aspect-16/10 overflow-hidden rounded-t-xl"
+                >
+                  {property.image_url ? (
+                    <img
+                      src={property.image_url}
+                      alt={property.title}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center bg-slate-50">
+                      <ImageIcon className="h-10 w-10 text-slate-200" />
+                    </div>
+                  )}
+
+                  {/* Status Badges Overlay */}
+                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <PropertyTypeBadge
+                        type={property.property_type}
+                        className="h-5 text-[10px] px-2 bg-white/90 backdrop-blur-sm shadow-sm border-none font-medium text-white"
+                      />
+                      {property.is_new && (
+                        <Badge className="h-5 text-[10px] px-2 bg-blue-600 text-white border-none shadow-sm font-bold">
+                          NEW
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+
+                {/* Property Details */}
+                <div className="p-4 space-y-3">
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-start gap-2">
+                      <Link
+                        href={`/protected/properties/${property.id}`}
+                        className="font-bold text-slate-900 dark:text-white text-base leading-snug line-clamp-1 hover:text-blue-600 transition-colors"
+                      >
+                        {property.title || "ไม่ระบุชื่อ"}
+                      </Link>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                      <span className="truncate">
+                        {property.popular_area || "-"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="py-2.5 border-y border-slate-100 dark:border-slate-800">
+                    <PropertyPrice
+                      variant="card"
+                      listingType={property.listing_type}
+                      price={property.price}
+                      originalPrice={property.original_price}
+                      rentalPrice={property.rental_price}
+                      originalRentalPrice={property.original_rental_price}
                     />
                   </div>
 
-                  <div className="flex items-center gap-2 mt-1">
-                    <PropertyTypeBadge
-                      type={property.property_type}
-                      className="h-4 text-[9px] px-1.5"
-                    />
-                    <span className="text-[10px] text-slate-500 font-medium bg-slate-100 px-1.5 py-0 rounded-full">
-                      {property.listing_type}
-                    </span>
+                  {/* Meta Stats & Agent */}
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-slate-600">
+                        <Users className="h-3.5 w-3.5 text-blue-500" />
+                        {property.leads_count}
+                      </div>
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-slate-600">
+                        <Eye className="h-3.5 w-3.5 text-slate-400" />
+                        {property.view_count || 0}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <PropertyStatusSelect
+                        id={property.id}
+                        value={property.status as PropertyStatus}
+                        className="h-7 w-26 text-[10px] font-bold shadow-xs transition-shadow hover:shadow-md"
+                      />
+                    </div>
                   </div>
 
-                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
-                    <div className="text-[10px] text-slate-500 flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {property.district || "-"}
-                    </div>
-                    <div className="text-[10px] text-slate-500 flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      {property.leads_count} Leads
-                    </div>
-                    <div className="text-sm font-bold text-emerald-600">
-                      ฿{property.price?.toLocaleString() || "-"}
-                    </div>
-                    <div className="text-[10px] text-right text-slate-400 self-center">
+                  {/* Card Actions Footer */}
+                  <div className="flex items-center justify-between gap-2 pt-2">
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      อัปเดต{" "}
                       {formatDistanceToNow(new Date(property.updated_at), {
                         addSuffix: true,
                         locale: th,
                       })}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                      >
+                        <Link href={`/protected/properties/${property.id}`}>
+                          <Eye className="h-4.5 w-4.5" />
+                        </Link>
+                      </Button>
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="icon"                                                                                                                                                                                                                                               
+                        className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50"
+                      >
+                        <Link
+                          href={`/protected/properties/${property.id}/edit`}
+                        >
+                          <Edit3 className="h-4.5 w-4.5" />
+                        </Link>
+                      </Button>
                     </div>
-                  </div>
-
-                  <div className="flex justify-end gap-1 mt-3">
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-slate-500"
-                    >
-                      <Link href={`/protected/properties/${property.id}`}>
-                        <Eye className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-slate-500"
-                    >
-                      <Link href={`/protected/properties/${property.id}/edit`}>
-                        <Edit3 className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <PropertyRowActions id={property.id} />
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

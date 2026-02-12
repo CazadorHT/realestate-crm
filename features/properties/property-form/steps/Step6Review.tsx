@@ -16,6 +16,7 @@ import { SmartEditor } from "../components/SmartEditor";
 import { Button } from "@/components/ui/button";
 import { generatePropertyDescription } from "../utils/description-generator";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
 import {
   Sparkles,
   Pencil,
@@ -24,7 +25,9 @@ import {
   FileCheck,
   Languages,
   Loader2,
+  Clock,
 } from "lucide-react";
+import { useAITranslation } from "../hooks/use-ai-translation";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ICON_MAP, DEFAULT_ICON } from "@/features/amenities/icons";
@@ -60,8 +63,14 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
   const [previewLanguage, setPreviewLanguage] = useState<"th" | "en" | "cn">(
     "th",
   );
-  const [isTranslating, setIsTranslating] = useState(false);
   const values = form.watch();
+
+  const {
+    isTranslating,
+    isTranslatingAll,
+    translateDescription,
+    translateAll,
+  } = useAITranslation(form);
 
   // Load features and user profile
   React.useEffect(() => {
@@ -173,34 +182,6 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
     }
   }, [form]);
 
-  const handleTranslateDescription = async () => {
-    const desc = form.getValues("description");
-    if (!desc || desc.trim() === "" || desc === "<p></p>") {
-      toast.error("กรุณากรอกคำบรรยายภาษาไทยก่อนกดแปลครับ");
-      return;
-    }
-
-    setIsTranslating(true);
-    const toastId = toast.loading("กำลังแปลคำบรรยายเป็นภาษาอังกฤษและจีน...");
-
-    try {
-      const result = await translateTextAction(desc, "html");
-      form.setValue("description_en", result.en, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      form.setValue("description_cn", result.cn, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      toast.success("แปลคำบรรยายเรียบร้อยแล้ว ✨", { id: toastId });
-    } catch (error: any) {
-      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
-    } finally {
-      setIsTranslating(false);
-    }
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Review Header Alert */}
@@ -222,34 +203,52 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
           </div>
         </div>
 
-        {/* Language Switcher moved here */}
-        <div className="flex bg-white/80 backdrop-blur-sm border border-blue-100 p-1 rounded-2xl shadow-sm self-start md:self-center">
-          {(["th", "en", "cn"] as const).map((lang) => (
-            <button
-              key={lang}
-              onClick={() => setPreviewLanguage(lang)}
-              className={cn(
-                "px-5 py-2 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2",
-                previewLanguage === lang
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105"
-                  : "text-slate-500 hover:text-blue-600 hover:bg-blue-50",
-              )}
-            >
-              <Languages
+        <div className="flex bg-white/80 backdrop-blur-sm border border-blue-100 p-1 rounded-2xl shadow-sm self-start md:self-center items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={translateAll}
+            disabled={isTranslatingAll}
+            className="h-8 gap-2 border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 font-bold px-3 rounded-xl shadow-xs transition-all active:scale-95"
+          >
+            {isTranslatingAll ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+            )}
+            AI {isTranslatingAll ? "กำลังแปลรวดเดียว..." : "Global AI Fix"}
+          </Button>
+
+          <Separator orientation="vertical" className="h-4 bg-blue-100" />
+
+          <div className="flex">
+            {(["th", "en", "cn"] as const).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setPreviewLanguage(lang)}
                 className={cn(
-                  "w-4 h-4",
-                  previewLanguage === lang ? "text-blue-200" : "text-slate-400",
+                  "px-5 py-2 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2",
+                  previewLanguage === lang
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105"
+                    : "text-slate-500 hover:text-blue-600 hover:bg-blue-50",
                 )}
-              />
-              {lang === "th" ? "ไทย" : lang === "en" ? "English" : "中文"}
-            </button>
-          ))}
+              >
+                <Languages
+                  className={cn(
+                    "w-4 h-4",
+                    previewLanguage === lang ? "text-blue-200" : "text-slate-400",
+                  )}
+                />
+                {lang === "th" ? "ไทย" : lang === "en" ? "English" : "中文"}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* --- PREVIEW CONTENT (Based on public/properties/[slug]/page.tsx) --- */}
+      {/* --- PREVIEW CONTENT --- */}
       <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-12 relative">
-        {/* 1. Header & Breadcrumb */}
         <PropertyHeader
           property={
             {
@@ -269,7 +268,6 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
         />
         <div className="pt-20 md:pt-24 px-5 md:px-6 lg:px-8 bg-white relative">
           <div className="max-w-screen-2xl mx-auto px-6 md:px-8 mt-4 md:mt-8">
-            {/* 2. Gallery */}
             <section className="mb-6 md:mb-10">
               <PropertyGallery
                 images={images}
@@ -280,11 +278,8 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
               />
             </section>
 
-            {/* 3. Main Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-10">
-              {/* Left Column */}
               <div className="space-y-10">
-                {/* Specs */}
                 <PropertySpecs
                   bedrooms={values.bedrooms}
                   bathrooms={values.bathrooms}
@@ -296,7 +291,6 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                   language={previewLanguage}
                 />
 
-                {/* Badges Section */}
                 <PropertyBadgesSection
                   property={
                     {
@@ -308,7 +302,6 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                   language={previewLanguage}
                 />
 
-                {/* Description Editor / Preview Content */}
                 <div className="space-y-4 relative group">
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-lg flex items-center gap-2 text-slate-800">
@@ -376,7 +369,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={handleTranslateDescription}
+                            onClick={() => translateDescription()}
                             disabled={isTranslating}
                             className="border-blue-100 text-blue-600 hover:bg-white gap-2 h-10 px-5 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95"
                           >
@@ -392,57 +385,33 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                           </Button>
                         </div>
 
-                        <TabsContent
-                          value="th"
-                          className="mt-0 focus-visible:outline-none"
-                        >
+                        <TabsContent value="th" className="mt-0 focus-visible:outline-none">
                           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                             <SmartEditor
                               value={values.description || ""}
-                              onChange={(val) =>
-                                form.setValue("description", val, {
-                                  shouldDirty: true,
-                                })
-                              }
+                              onChange={(val) => form.setValue("description", val, { shouldDirty: true })}
                               onAiGenerate={async () => {
-                                const newDesc = generatePropertyDescription(
-                                  form.getValues(),
-                                  activeFeatures,
-                                );
+                                const newDesc = generatePropertyDescription(form.getValues(), activeFeatures);
                                 toast.success("อัปเดตรายละเอียดเรียบร้อย");
                                 return newDesc;
                               }}
                             />
                           </div>
                         </TabsContent>
-                        <TabsContent
-                          value="en"
-                          className="mt-0 focus-visible:outline-none"
-                        >
+                        <TabsContent value="en" className="mt-0 focus-visible:outline-none">
                           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                             <SmartEditor
                               value={values.description_en || ""}
-                              onChange={(val) =>
-                                form.setValue("description_en", val, {
-                                  shouldDirty: true,
-                                })
-                              }
+                              onChange={(val) => form.setValue("description_en", val, { shouldDirty: true })}
                               height={300}
                             />
                           </div>
                         </TabsContent>
-                        <TabsContent
-                          value="cn"
-                          className="mt-0 focus-visible:outline-none"
-                        >
+                        <TabsContent value="cn" className="mt-0 focus-visible:outline-none">
                           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                             <SmartEditor
                               value={values.description_cn || ""}
-                              onChange={(val) =>
-                                form.setValue("description_cn", val, {
-                                  shouldDirty: true,
-                                })
-                              }
+                              onChange={(val) => form.setValue("description_cn", val, { shouldDirty: true })}
                               height={300}
                             />
                           </div>
@@ -457,7 +426,6 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                   )}
                 </div>
 
-                {/* Nearby */}
                 <NearbyPlaces
                   location={values.popular_area || undefined}
                   data={[
@@ -466,13 +434,9 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                       ? [
                           {
                             category: "Transport",
-                            name: `${values.transit_type || "BTS/MRT"} ${
-                              values.transit_station_name
-                            }`,
+                            name: `${values.transit_type || "BTS/MRT"} ${values.transit_station_name}`,
                             distance: values.transit_distance_meters
-                              ? (
-                                  values.transit_distance_meters / 1000
-                                ).toString()
+                              ? (values.transit_distance_meters / 1000).toString()
                               : undefined,
                           },
                         ]
@@ -480,31 +444,17 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                     ...(values.nearby_transits || []).map((t) => ({
                       category: "Transport",
                       name: `${t.type} ${t.station_name}`,
-                      distance: t.distance_meters
-                        ? (t.distance_meters / 1000).toString()
-                        : undefined,
+                      distance: t.distance_meters ? (t.distance_meters / 1000).toString() : undefined,
                     })),
                   ]}
                   language={previewLanguage}
                 />
-
                 <hr className="border-slate-100" />
-
-                {/* Amenities */}
-                <PropertyAmenities
-                  features={activeFeatures}
-                  language={previewLanguage}
-                />
-
+                <PropertyAmenities features={activeFeatures} language={previewLanguage} />
                 <hr className="border-slate-100" />
-
-                {/* Map */}
-                <PropertyMapSection
-                  googleMapsLink={values.google_maps_link || null}
-                />
+                <PropertyMapSection googleMapsLink={values.google_maps_link || null} />
               </div>
 
-              {/* Right Column (Sidebar) */}
               <div className="space-y-6">
                 <PropertySuitability
                   listingType={values.listing_type || "SALE"}
@@ -513,7 +463,6 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                   propertyType={values.property_type || undefined}
                   language={previewLanguage}
                 />
-
                 <div className="sticky top-24">
                   <AgentSidebar
                     agentName={currentUser?.full_name}

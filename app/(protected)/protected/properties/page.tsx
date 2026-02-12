@@ -58,8 +58,12 @@ export default async function PropertiesPage({
     bathrooms?: string;
     province?: string;
     district?: string;
+    popular_area?: string;
     sortBy?: string;
     sortOrder?: string;
+    nearTransit?: string;
+    petFriendly?: string;
+    fullyFurnished?: string;
     page?: string;
   }>;
 }) {
@@ -76,8 +80,12 @@ export default async function PropertiesPage({
     bathrooms,
     province,
     district,
+    popular_area,
     sortBy = "created_at",
     sortOrder = "desc",
+    nearTransit,
+    petFriendly,
+    fullyFurnished,
     page,
   } = params;
 
@@ -109,7 +117,13 @@ export default async function PropertiesPage({
     query = query.eq("property_type", type as PropertyType);
   }
   if (listing) {
-    query = query.eq("listing_type", listing as ListingType);
+    if (listing === "SALE") {
+      query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+    } else if (listing === "RENT") {
+      query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+    } else {
+      query = query.eq("listing_type", listing as ListingType);
+    }
   }
   if (bedrooms) {
     query = query.eq("bedrooms", Number(bedrooms));
@@ -123,13 +137,43 @@ export default async function PropertiesPage({
   if (district) {
     query = query.ilike("district", `%${district}%`);
   }
-
-  // Price Range
-  if (minPrice) {
-    query = query.gte("price", Number(minPrice));
+  if (popular_area) {
+    query = query.ilike("popular_area", `%${popular_area}%`);
   }
-  if (maxPrice) {
-    query = query.lte("price", Number(maxPrice));
+  if (nearTransit === "true") {
+    query = query.eq("near_transit", true);
+  }
+  if (petFriendly === "true") {
+    query = query.eq("is_pet_friendly", true);
+  }
+  if (fullyFurnished === "true") {
+    query = query.eq("is_fully_furnished", true);
+  }
+
+  // Price Range with fallback
+  const priceField = listing === "RENT" ? "rental_price" : "price";
+  const fallbackField =
+    listing === "RENT" ? "original_rental_price" : "original_price";
+
+  if (
+    (minPrice && minPrice.trim() !== "") ||
+    (maxPrice && maxPrice.trim() !== "")
+  ) {
+    const min = minPrice && minPrice.trim() !== "" ? Number(minPrice) : 0;
+    const maxStr = maxPrice && maxPrice.trim() !== "" ? maxPrice : null;
+
+    if (maxStr !== null) {
+      const max = Number(maxStr);
+      // (price >= min AND price <= max) OR (price IS NULL AND original_price >= min AND original_price <= max)
+      query = query.or(
+        `and(${priceField}.gte.${min},${priceField}.lte.${max}),and(${priceField}.is.null,${fallbackField}.gte.${min},${fallbackField}.lte.${max})`,
+      );
+    } else {
+      // (price >= min) OR (price IS NULL AND original_price >= min)
+      query = query.or(
+        `${priceField}.gte.${min},and(${priceField}.is.null,${fallbackField}.gte.${min})`,
+      );
+    }
   }
 
   // Sorting
@@ -283,25 +327,32 @@ export default async function PropertiesPage({
   // Check if truly empty (no properties at all, not just filtered)
   const isEmptyState = properties.length === 0 && currentPage === 1;
 
+  const { data: filterMetadata } = await supabase
+    .from("properties")
+    .select(
+      "status, property_type, province, popular_area, listing_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, near_transit, is_pet_friendly, is_fully_furnished",
+    )
+    .is("deleted_at", null);
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 md:space-y-6 animate-fade-in">
       {/* Premium Header Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 p-5 md:p-8 shadow-xl">
         {/* Decorative Elements */}
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
         <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-white/5 rounded-full blur-xl" />
 
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
+        <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
+          <div className="space-y-1.5 md:space-y-2">
+            <div className="flex items-center gap-2.5 md:gap-3">
               <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
-                <PlusCircle className="h-6 w-6 text-white" />
+                <PlusCircle className="h-5 w-5 md:h-6 md:w-6 text-white" />
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white">
+              <h1 className="text-xl md:text-3xl font-bold text-white tracking-tight">
                 ทรัพย์ทั้งหมด
               </h1>
             </div>
-            <p className="text-blue-100 text-sm md:text-base max-w-md">
+            <p className="text-blue-100/90 text-xs md:text-base max-w-md">
               จัดการและติดตามทรัพย์สินของคุณ • มีทั้งหมด{" "}
               <span className="font-bold text-white">{count || 0}</span> รายการ
             </p>
@@ -310,10 +361,10 @@ export default async function PropertiesPage({
           <Button
             asChild
             size="lg"
-            className="bg-white text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+            className="w-full md:w-auto bg-white text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 font-bold h-11 md:h-12"
           >
             <Link href="/protected/properties/new">
-              <PlusCircle className="h-5 w-5 mr-2" />
+              <PlusCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
               เพิ่มทรัพย์ใหม่
             </Link>
           </Button>
@@ -339,11 +390,14 @@ export default async function PropertiesPage({
           </div>
         </div>
 
-        <PropertyFilters />
+        <PropertyFilters
+          totalCount={count ?? 0}
+          filterMetadata={filterMetadata ?? []}
+        />
 
         {/* Empty State UI */}
         {isEmptyState ? (
-          <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50 to-white p-12">
+          <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50 to-white p-8 md:p-12">
             {/* Decorative Background */}
             <div className="absolute inset-0 opacity-5">
               <div className="absolute top-10 left-10 w-20 h-20 border-4 border-slate-400 rounded-xl rotate-12" />
@@ -351,21 +405,21 @@ export default async function PropertiesPage({
               <div className="absolute top-1/2 left-1/3 w-12 h-12 border-4 border-slate-400 rounded-lg -rotate-6" />
             </div>
 
-            <div className="relative flex flex-col items-center justify-center text-center space-y-6">
+            <div className="relative flex flex-col items-center justify-center text-center space-y-5 md:space-y-6">
               {/* Icon */}
               <div className="relative">
                 <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl scale-150" />
-                <div className="relative p-6 bg-linear-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/30">
-                  <PlusCircle className="h-12 w-12 text-white" />
+                <div className="relative p-5 md:p-6 bg-linear-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/30">
+                  <PlusCircle className="h-10 w-10 md:h-12 md:w-12 text-white" />
                 </div>
               </div>
 
               {/* Text */}
               <div className="space-y-2 max-w-md">
-                <h3 className="text-2xl font-bold text-slate-800">
+                <h3 className="text-xl md:text-2xl font-bold text-slate-800">
                   ยังไม่มีทรัพย์ในระบบ
                 </h3>
-                <p className="text-slate-500 leading-relaxed">
+                <p className="text-xs md:text-sm text-slate-500 leading-relaxed px-4">
                   เริ่มต้นสร้างรายการทรัพย์สินแรกของคุณเลย! ระบบจะช่วยจัดการ
                   ติดตาม และนำเสนอทรัพย์ของคุณอย่างมืออาชีพ
                 </p>
@@ -375,10 +429,10 @@ export default async function PropertiesPage({
               <Button
                 asChild
                 size="lg"
-                className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8"
+                className="w-full sm:w-auto bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 font-bold"
               >
                 <Link href="/protected/properties/new">
-                  <PlusCircle className="h-5 w-5 mr-2" />
+                  <PlusCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                   เพิ่มทรัพย์แรกของคุณ
                 </Link>
               </Button>

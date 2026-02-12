@@ -1,56 +1,31 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Search,
-  SlidersHorizontal,
-  X,
-  ArrowUpDown,
-  Trash2,
-} from "lucide-react";
-import Link from "next/link";
-import { useMemo, useState } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Label } from "@/components/ui/label";
-import {
-  PROPERTY_TYPE_ORDER,
-  PROPERTY_TYPE_LABELS,
-  LISTING_TYPE_ORDER,
-  LISTING_TYPE_LABELS,
-  PROPERTY_STATUS_ORDER,
-  PROPERTY_STATUS_LABELS,
-} from "@/features/properties/labels";
-import { useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { QuickSearch } from "./filters/QuickSearch";
+import { QuickSort } from "./filters/QuickSort";
+import { QuickStatus } from "./filters/QuickStatus";
+import { QuickType } from "./filters/QuickType";
+import { AdvancedFilters } from "./filters/AdvancedFilters";
+import { TrashButton } from "./filters/TrashButton";
 
 type Filters = {
   q: string;
-  status: string; // "ALL" | PropertyStatus
-  type: string; // "ALL" | PropertyType
-  listing: string; // "ALL" | ListingType
+  status: string;
+  type: string;
+  listing: string;
   bedrooms: string;
   bathrooms: string;
   province: string;
   district: string;
+  popular_area: string;
   minPrice: string;
   maxPrice: string;
   sortBy: string;
   sortOrder: string;
+  nearTransit: string;
+  petFriendly: string;
+  fullyFurnished: string;
 };
 
 const DEFAULT_FILTERS: Filters = {
@@ -62,13 +37,25 @@ const DEFAULT_FILTERS: Filters = {
   bathrooms: "",
   province: "",
   district: "",
+  popular_area: "",
   minPrice: "",
   maxPrice: "",
   sortBy: "created_at",
   sortOrder: "desc",
+  nearTransit: "",
+  petFriendly: "",
+  fullyFurnished: "",
 };
 
-export function PropertyFilters() {
+interface PropertyFiltersProps {
+  totalCount: number;
+  filterMetadata?: any[];
+}
+
+export function PropertyFilters({
+  totalCount,
+  filterMetadata,
+}: PropertyFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
@@ -82,10 +69,14 @@ export function PropertyFilters() {
     bathrooms: searchParams.get("bathrooms") || "",
     province: searchParams.get("province") || "",
     district: searchParams.get("district") || "",
+    popular_area: searchParams.get("popular_area") || "",
     minPrice: searchParams.get("minPrice") || "",
     maxPrice: searchParams.get("maxPrice") || "",
     sortBy: searchParams.get("sortBy") || "created_at",
     sortOrder: searchParams.get("sortOrder") || "desc",
+    nearTransit: searchParams.get("nearTransit") || "",
+    petFriendly: searchParams.get("petFriendly") || "",
+    fullyFurnished: searchParams.get("fullyFurnished") || "",
   });
 
   const applyFilters = () => {
@@ -101,13 +92,16 @@ export function PropertyFilters() {
     );
 
     const qs = params.toString();
-    router.push(qs ? `/protected/properties?${qs}` : "/protected/properties");
+    const url = qs
+      ? `/protected/properties?${qs}#table`
+      : "/protected/properties#table";
+    router.push(url, { scroll: false });
     setOpen(false);
   };
 
   const clearFilters = () => {
     setFilters(DEFAULT_FILTERS);
-    router.push("/protected/properties");
+    router.push("/protected/properties#table", { scroll: false });
     setOpen(false);
   };
 
@@ -116,19 +110,15 @@ export function PropertyFilters() {
       const val = String(v ?? "").trim();
       if (!val) return false;
 
-      // default ที่ไม่ถือว่าเป็น filter
       if (k === "sortBy" && val === DEFAULT_FILTERS.sortBy) return false;
       if (k === "sortOrder" && val === DEFAULT_FILTERS.sortOrder) return false;
-
-      // ค่า ALL ไม่ถือว่า filter
       if (val === "ALL") return false;
 
       return true;
     });
   }, [filters]);
-  useEffect(() => {
-    const qs = searchParams.toString();
 
+  useEffect(() => {
     setFilters((prev) => ({
       ...prev,
       q: searchParams.get("q") || "",
@@ -141,254 +131,95 @@ export function PropertyFilters() {
       district: searchParams.get("district") || "",
       minPrice: searchParams.get("minPrice") || "",
       maxPrice: searchParams.get("maxPrice") || "",
-      sortBy: searchParams.get("sortBy") || "created_at",
-      sortOrder: searchParams.get("sortOrder") || "desc",
+      sortBy: searchParams.get("sortBy") || DEFAULT_FILTERS.sortBy,
+      sortOrder: searchParams.get("sortOrder") || DEFAULT_FILTERS.sortOrder,
+      nearTransit:
+        searchParams.get("nearTransit") || DEFAULT_FILTERS.nearTransit,
+      petFriendly:
+        searchParams.get("petFriendly") || DEFAULT_FILTERS.petFriendly,
+      fullyFurnished:
+        searchParams.get("fullyFurnished") || DEFAULT_FILTERS.fullyFurnished,
     }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.toString()]);
+  }, [searchParams]);
 
   return (
-    <div className="flex items-center gap-2">
-      {/* Quick Search */}
-      <div className="relative flex-1 max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="ค้นหาทรัพย์..."
+    <div className="flex flex-col md:flex-row items-center gap-2 w-full">
+      <div className="flex items-center gap-2 w-full md:w-auto flex-1">
+        <QuickSearch
           value={filters.q}
-          onChange={(e) => setFilters({ ...filters, q: e.target.value })}
-          onKeyDown={(e) => e.key === "Enter" && applyFilters()}
-          className="pl-9"
+          onChange={(q) => setFilters({ ...filters, q })}
+          onSearch={applyFilters}
         />
+
+        {/* Mobile Filter Trigger */}
+        <div className="flex md:hidden gap-2">
+          <AdvancedFilters
+            open={open}
+            setOpen={setOpen}
+            filters={filters}
+            setFilters={setFilters}
+            applyFilters={applyFilters}
+            clearFilters={clearFilters}
+            hasActiveFilters={hasActiveFilters}
+            totalCount={totalCount}
+            filterMetadata={filterMetadata}
+          />
+          <TrashButton />
+        </div>
       </div>
 
-      {/* Quick Sort */}
-      <Select
-        value={`${filters.sortBy}-${filters.sortOrder}`}
-        onValueChange={(value) => {
-          const [sortBy, sortOrder] = value.split("-");
-          setFilters({ ...filters, sortBy, sortOrder });
+      <div className="hidden md:flex items-center gap-2">
+        <QuickSort
+          value={`${filters.sortBy}-${filters.sortOrder}`}
+          onValueChange={(value) => {
+            const [sortBy, sortOrder] = value.split("-");
+            setFilters({ ...filters, sortBy, sortOrder });
 
-          const params = new URLSearchParams(searchParams.toString());
-          params.set("sortBy", sortBy);
-          params.set("sortOrder", sortOrder);
-          router.push(`/protected/properties?${params.toString()}`);
-        }}
-      >
-        <SelectTrigger className="w-[180px]">
-          <ArrowUpDown className="h-4 w-4 mr-2" />
-          <SelectValue placeholder="เรียงตาม" />
-        </SelectTrigger>
-        <SelectContent className="overflow-y-auto bg-white">
-          <SelectItem value="created_at-desc">ใหม่ล่าสุด</SelectItem>
-          <SelectItem value="created_at-asc">เก่าสุด</SelectItem>
-          <SelectItem value="updated_at-desc">อัปเดตล่าสุด</SelectItem>
-          <SelectItem value="updated_at-asc">อัปเดตเก่าสุด</SelectItem>
-          <SelectItem value="price-desc">ราคาสูงสุด</SelectItem>
-          <SelectItem value="price-asc">ราคาต่ำสุด</SelectItem>
-          <SelectItem value="rental_price-desc">ค่าเช่าสูงสุด</SelectItem>
-          <SelectItem value="rental_price-asc">ค่าเช่าต่ำสุด</SelectItem>
-          <SelectItem value="title-asc">ชื่อ A-Z</SelectItem>
-          <SelectItem value="title-desc">ชื่อ Z-A</SelectItem>
-          <SelectItem value="bedrooms-desc">ห้องนอนมากสุด</SelectItem>
-        </SelectContent>
-      </Select>
-      {/* Quick Status */}
-      <Select
-        value={filters.status}
-        onValueChange={(status) => {
-          setFilters({ ...filters, status });
+            const params = new URLSearchParams(searchParams.toString());
+            params.set("sortBy", sortBy);
+            params.set("sortOrder", sortOrder);
+            router.push(`/protected/properties?${params.toString()}`);
+          }}
+        />
 
-          const params = new URLSearchParams(searchParams.toString());
-          if (status === "ALL") params.delete("status");
-          else params.set("status", status);
-          params.delete("page");
-          router.push(`/protected/properties?${params.toString()}`);
-        }}
-      >
-        <SelectTrigger className="w-[160px]">
-          <SelectValue placeholder="สถานะ" />
-        </SelectTrigger>
-        <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
-          <SelectItem value="ALL">ทุกสถานะ</SelectItem>
-          {PROPERTY_STATUS_ORDER.map((s) => (
-            <SelectItem key={s} value={s}>
-              {PROPERTY_STATUS_LABELS[s]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <QuickStatus
+          value={filters.status}
+          onValueChange={(status) => {
+            setFilters({ ...filters, status });
+            const params = new URLSearchParams(searchParams.toString());
+            if (status === "ALL") params.delete("status");
+            else params.set("status", status);
+            params.delete("page");
+            router.push(`/protected/properties?${params.toString()}`);
+          }}
+        />
 
-      {/* Quick Type */}
-      <Select
-        value={filters.type}
-        onValueChange={(type) => {
-          setFilters({ ...filters, type });
+        <QuickType
+          value={filters.type}
+          onValueChange={(type) => {
+            setFilters({ ...filters, type });
+            const params = new URLSearchParams(searchParams.toString());
+            if (type === "ALL") params.delete("type");
+            else params.set("type", type);
+            params.delete("page");
+            router.push(`/protected/properties?${params.toString()}`);
+          }}
+        />
 
-          const params = new URLSearchParams(searchParams.toString());
-          if (type === "ALL") params.delete("type");
-          else params.set("type", type);
-          params.delete("page");
-          router.push(`/protected/properties?${params.toString()}`);
-        }}
-      >
-        <SelectTrigger className="w-[190px]">
-          <SelectValue placeholder="ประเภท" />
-        </SelectTrigger>
-        <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
-          <SelectItem value="ALL">ทุกประเภท</SelectItem>
-          {PROPERTY_TYPE_ORDER.map((t) => (
-            <SelectItem key={t} value={t}>
-              {PROPERTY_TYPE_LABELS[t]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <AdvancedFilters
+          open={open}
+          setOpen={setOpen}
+          filters={filters}
+          setFilters={setFilters}
+          applyFilters={applyFilters}
+          clearFilters={clearFilters}
+          hasActiveFilters={hasActiveFilters}
+          totalCount={totalCount}
+          filterMetadata={filterMetadata}
+        />
 
-      {/* Advanced Filters */}
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild>
-          <Button variant={hasActiveFilters ? "default" : "outline"}>
-            <SlidersHorizontal className="h-4 w-4 mr-2" />
-            ตัวกรอง
-            {hasActiveFilters && (
-              <span className="ml-2 px-1.5 py-0.5 bg-primary-foreground text-primary rounded-full text-xs">
-                •
-              </span>
-            )}
-          </Button>
-        </SheetTrigger>
-
-        <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto bg-white">
-          <SheetHeader>
-            <SheetTitle>ตัวกรองขั้นสูง</SheetTitle>
-            <SheetDescription>กรองทรัพย์ตามเงื่อนไขที่ต้องการ</SheetDescription>
-          </SheetHeader>
-
-          <div className="space-y-6 mt-6 px-6 py-4">
-            {/* Listing Type */}
-            <div className="space-y-2">
-              <Label>รูปแบบ</Label>
-              <Select
-                value={filters.listing}
-                onValueChange={(value) =>
-                  setFilters({ ...filters, listing: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="เลือกรูปแบบ" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[200px] overflow-y-auto bg-white">
-                  <SelectItem className="border-b" value="ALL">
-                    ทั้งหมด
-                  </SelectItem>
-                  {LISTING_TYPE_ORDER.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {LISTING_TYPE_LABELS[t]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Bedrooms & Bathrooms */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>ห้องนอน</Label>
-                <Input
-                  type="number"
-                  placeholder="จำนวน"
-                  value={filters.bedrooms}
-                  onChange={(e) =>
-                    setFilters({ ...filters, bedrooms: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>ห้องน้ำ</Label>
-                <Input
-                  type="number"
-                  placeholder="จำนวน"
-                  value={filters.bathrooms}
-                  onChange={(e) =>
-                    setFilters({ ...filters, bathrooms: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Price Range */}
-            <div className="space-y-2">
-              <Label>ช่วงราคา (บาท)</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  type="number"
-                  placeholder="ราคาต่ำสุด"
-                  value={filters.minPrice}
-                  onChange={(e) =>
-                    setFilters({ ...filters, minPrice: e.target.value })
-                  }
-                />
-                <Input
-                  type="number"
-                  placeholder="ราคาสูงสุด"
-                  value={filters.maxPrice}
-                  onChange={(e) =>
-                    setFilters({ ...filters, maxPrice: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Location */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>จังหวัด</Label>
-                <Input
-                  placeholder="เช่น กรุงเทพ"
-                  value={filters.province}
-                  onChange={(e) =>
-                    setFilters({ ...filters, province: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>เขต/อำเภอ</Label>
-                <Input
-                  placeholder="เช่น ปทุมวัน"
-                  value={filters.district}
-                  onChange={(e) =>
-                    setFilters({ ...filters, district: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2 pt-4">
-              <Button onClick={applyFilters} className="flex-1 text-white">
-                ค้นหา
-              </Button>
-              <Button
-                onClick={clearFilters}
-                variant="outline"
-                className="flex-1"
-              >
-                <X className="h-4 w-4 mr-2" />
-                ล้างตัวกรอง
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-      <Button
-        asChild
-        variant="outline"
-        className="gap-2 text-red-600  border-red-200 hover:border-red-600! hover:bg-red-600!  hover:text-white!" 
-      >
-        <Link href="/protected/properties/trash">
-          <Trash2 className="h-4 w-4" />
-          <span className="hidden sm:inline">ถังขยะ</span>
-        </Link>
-      </Button>
+        <TrashButton />
+      </div>
     </div>
   );
 }

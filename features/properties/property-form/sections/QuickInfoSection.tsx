@@ -13,6 +13,7 @@ import {
   Languages,
   Sparkles,
 } from "lucide-react";
+import { useAITranslation } from "../hooks/use-ai-translation";
 
 import type { PropertyFormValues } from "@/features/properties/schema"; // ปรับตามจริง
 import {
@@ -53,35 +54,7 @@ export function QuickInfoSection({
 }: Props) {
   const hasTitleError = !!form.formState.errors.title;
   const [showAddArea, setShowAddArea] = React.useState(false);
-  const [isTranslating, setIsTranslating] = React.useState(false);
-
-  const handleTranslateTitle = async () => {
-    const title = form.getValues("title");
-    if (!title || title.trim() === "") {
-      toast.error("กรุณากรอกชื่อภาษาไทยก่อนกดแปลครับ");
-      return;
-    }
-
-    setIsTranslating(true);
-    const toastId = toast.loading("กำลังแปลชื่อเป็นภาษาอังกฤษและจีน...");
-
-    try {
-      const result = await translateTextAction(title, "plain");
-      form.setValue("title_en", result.en, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      form.setValue("title_cn", result.cn, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      toast.success("แปลชื่อเรียบร้อยแล้ว ✨", { id: toastId });
-    } catch (error: any) {
-      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
-    } finally {
-      setIsTranslating(false);
-    }
-  };
+  const { isTranslating, translateTitle } = useAITranslation(form);
 
   return (
     <div
@@ -131,7 +104,7 @@ export function QuickInfoSection({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={handleTranslateTitle}
+                    onClick={() => translateTitle()}
                     disabled={isTranslating}
                     className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1.5 transition-all text-xs"
                   >

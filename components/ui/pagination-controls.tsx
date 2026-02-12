@@ -24,7 +24,7 @@ export function PaginationControls({
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams);
     params.set("page", page.toString());
-    router.replace(`${pathname}?${params.toString()}`);
+    router.replace(`${pathname}?${params.toString()}#table`, { scroll: false });
   };
 
   if (totalPages <= 1) return null;
@@ -46,7 +46,7 @@ export function PaginationControls({
           ก่อนหน้า
         </Button>
         <span className="text-sm font-medium">
-           หน้า {currentPage} / {totalPages}
+          หน้า {currentPage} / {totalPages}
         </span>
         <Button
           variant="outline"

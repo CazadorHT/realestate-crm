@@ -30,13 +30,14 @@ import { useRouter } from "next/navigation";
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   CONDO: { label: "คอนโด", color: "#3b82f6" }, // Blue
   HOUSE: { label: "บ้านเดี่ยว", color: "#10b981" }, // Green
-  TOWNHOUSE: { label: "ทาวน์เฮ้าส์", color: "#f59e0b" }, // Amber
+  TOWNHOME: { label: "ทาวน์โฮม", color: "#f59e0b" }, // Amber
+  VILLA: { label: "วิลล่า", color: "#f43f5e" }, // Rose
+  POOL_VILLA: { label: "พูลวิลล่า", color: "#06b6d4" }, // Cyan
+  OFFICE_BUILDING: { label: "สำนักงานออฟฟิศ", color: "#0ea5e9" }, // Sky
   LAND: { label: "ที่ดิน", color: "#8b5cf6" }, // Purple
-  COMMERCIAL: { label: "อาคารพาณิชย์", color: "#06b6d4" }, // Cyan
-  HOTEL: { label: "โรงแรม", color: "#ec4899" }, // Pink
-  APARTMENT: { label: "อพาร์ทเมนท์", color: "#f97316" }, // Orange
-  WAREHOUSE: { label: "โกดัง", color: "#6366f1" }, // Indigo
-  FACTORY: { label: "โรงงาน", color: "#475569" }, // Slate
+  COMMERCIAL_BUILDING: { label: "อาคารพาณิชย์", color: "#6366f1" }, // Indigo
+  WAREHOUSE: { label: "โกดัง", color: "#f97316" }, // Orange
+  OTHER: { label: "อื่น ๆ", color: "#64748b" }, // Slate
   Unknown: { label: "ไม่ระบุ", color: "#cbd5e1" }, // Gray
 };
 
@@ -151,104 +152,101 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
   };
 
   return (
-    <div className="space-y-6 mb-8">
+    <div className="space-y-4 md:space-y-6 mb-8 mt-2">
       {/* Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
               ทรัพย์ทั้งหมด
             </CardTitle>
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Building2 className="h-4 w-4 text-blue-600" />
+            <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg shrink-0">
+              <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground mt-1">รายการในระบบ</p>
+          <CardContent className="p-3 sm:p-4 pt-0 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+              รายการในระบบ
+            </p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
               ประกาศ Active
             </CardTitle>
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <Home className="h-4 w-4 text-emerald-600" />
+            <div className="p-1.5 sm:p-2 bg-emerald-100 rounded-lg shrink-0">
+              <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">
+          <CardContent className="p-3 sm:p-4 pt-0 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-emerald-600">
               {stats.available}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
               กำลังประกาศขาย/เช่า
             </p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
               คอมมิชชั่นปิดได้
             </CardTitle>
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <CheckCircle2 className="h-4 w-4 text-purple-600" />
+            <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg shrink-0">
+              <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+          <CardContent className="p-3 sm:p-4 pt-0 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-purple-600">
               {new Intl.NumberFormat("th-TH", {
                 notation: "compact",
                 maximumFractionDigits: 1,
               }).format(stats.totalRealizedCommission || 0)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              บาท (จาก Sold & Rented)
+            <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+              บาท (Sold & Rented)
             </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              คอมมิชชั่นคาดการณ์
+        <Card className="hover:shadow-md transition-shadow cursor-default">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
+              คาดการณ์คอมฯ
             </CardTitle>
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <Coins className="h-4 w-4 text-amber-600" />
+            <div className="p-1.5 sm:p-2 bg-amber-100 rounded-lg shrink-0">
+              <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-600" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2 mt-1">
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
-                    ขาย (Sale)
-                  </p>
-                  <div className="text-xl font-bold text-amber-600">
-                    {new Intl.NumberFormat("th-TH", {
-                      notation: "compact",
-                      maximumFractionDigits: 1,
-                    }).format(stats.totalSaleCommission || 0)}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
-                    เช่า (Rent)
-                  </p>
-                  <div className="text-xl font-bold text-blue-600">
-                    {new Intl.NumberFormat("th-TH", {
-                      notation: "compact",
-                      maximumFractionDigits: 1,
-                    }).format(stats.totalRentCommission || 0)}
-                  </div>
-                </div>
+          <CardContent className="p-3 sm:p-4 pt-0 sm:pt-0">
+            <div className="flex flex-col gap-1 mt-1">
+              <div className="flex justify-between items-baseline gap-2">
+                <span className="text-[9px] text-muted-foreground uppercase font-bold shrink-0">
+                  ขาย
+                </span>
+                <span className="text-sm sm:text-lg font-bold text-amber-600 truncate">
+                  {new Intl.NumberFormat("th-TH", {
+                    notation: "compact",
+                    maximumFractionDigits: 1,
+                  }).format(stats.totalSaleCommission || 0)}
+                </span>
+              </div>
+              <div className="flex justify-between items-baseline gap-2">
+                <span className="text-[9px] text-muted-foreground uppercase font-bold shrink-0">
+                  เช่า
+                </span>
+                <span className="text-sm sm:text-lg font-bold text-blue-600 truncate">
+                  {new Intl.NumberFormat("th-TH", {
+                    notation: "compact",
+                    maximumFractionDigits: 1,
+                  }).format(stats.totalRentCommission || 0)}
+                </span>
               </div>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-2 text-center bg-slate-50 py-1 rounded">
-              จากทรัพย์ Active ทั้งหมด
-            </p>
           </CardContent>
         </Card>
       </div>

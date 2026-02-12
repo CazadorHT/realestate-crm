@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "../../components/SectionHeader";
 import { SmartEditor } from "../../components/SmartEditor";
 import { FileText, Sparkles, Languages, Loader2 } from "lucide-react";
+import { useAITranslation } from "../../hooks/use-ai-translation";
 import { UseFormReturn } from "react-hook-form";
 import { generateAIPropertyDescriptionAction } from "../../actions/ai-actions";
 import { toast } from "sonner";
@@ -30,35 +31,7 @@ export function DescriptionSection({
   form,
   isReadOnly,
 }: DescriptionSectionProps) {
-  const [isTranslating, setIsTranslating] = React.useState(false);
-
-  const handleTranslateDescription = async () => {
-    const desc = form.getValues("description");
-    if (!desc || desc.trim() === "" || desc === "<p></p>") {
-      toast.error("กรุณากรอกคำบรรยายภาษาไทยก่อนกดแปลครับ");
-      return;
-    }
-
-    setIsTranslating(true);
-    const toastId = toast.loading("กำลังแปลคำบรรยายเป็นภาษาอังกฤษและจีน...");
-
-    try {
-      const result = await translateTextAction(desc, "html");
-      form.setValue("description_en", result.en, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      form.setValue("description_cn", result.cn, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      toast.success("แปลคำบรรยายเรียบร้อยแล้ว ✨", { id: toastId });
-    } catch (error: any) {
-      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
-    } finally {
-      setIsTranslating(false);
-    }
-  };
+  const { isTranslating, translateDescription } = useAITranslation(form);
 
   const handleGenerate = useCallback(
     async (currentValue: string) => {
@@ -117,7 +90,7 @@ export function DescriptionSection({
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleTranslateDescription}
+              onClick={() => translateDescription()}
               disabled={isTranslating}
               className="border-blue-100 text-blue-600 hover:bg-blue-50 gap-2 h-9 px-4 rounded-xl shadow-sm"
             >

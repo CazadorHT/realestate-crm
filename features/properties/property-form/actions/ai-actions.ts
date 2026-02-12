@@ -95,13 +95,22 @@ export async function generateAIPropertyDescriptionAction(
 
 export async function translatePlaceNameAction(text: string) {
   if (!text) return { name_en: "", name_cn: "" };
+  const results = await translatePlaceNamesAction([text]);
+  return results[0] || { name_en: "", name_cn: "" };
+}
+
+export async function translatePlaceNamesAction(texts: string[]) {
+  const filteredTexts = texts.map((t) => t?.trim()).filter(Boolean);
+  if (filteredTexts.length === 0)
+    return texts.map(() => ({ name_en: "", name_cn: "" }));
 
   const prompt = `
-    Translate the following place/station name from Thai to English and Simplified Chinese.
-    Input: "${text}"
+    Translate the following list of Thai place/station names to English and Simplified Chinese.
+    Inputs:
+    ${filteredTexts.map((t, i) => `${i + 1}. ${t}`).join("\n")}
     
-    Return ONLY a valid JSON object with keys "en" and "cn".
-    Example: {"en": "Central World", "cn": "中央世界"}
+    Return ONLY a valid JSON array of objects with keys "en" and "cn".
+    Example: [{"en": "Central World", "cn": "中央世界"}, ...]
     Do not add markdown code blocks.
   `;
 
@@ -113,11 +122,19 @@ export async function translatePlaceNameAction(text: string) {
       .replace(/^```/, "")
       .replace(/```$/, "");
     const json = JSON.parse(cleaned);
-    return { name_en: json.en, name_cn: json.cn };
+
+    // Map back to guarantee order and length matching input texts
+    let jsonIdx = 0;
+    return texts.map((t) => {
+      if (!t?.trim()) return { name_en: "", name_cn: "" };
+      const item = json[jsonIdx++];
+      return {
+        name_en: item?.en || "",
+        name_cn: item?.cn || "",
+      };
+    });
   } catch (error) {
-    console.error("AI Translation Error:", error);
-    // Fallback: use empty strings or original text?
-    // Let's return empty to indicates failure so user can try again or manual fill
-    return { name_en: "", name_cn: "" };
+    console.error("AI Batch Translation Error:", error);
+    return texts.map(() => ({ name_en: "", name_cn: "" }));
   }
 }
