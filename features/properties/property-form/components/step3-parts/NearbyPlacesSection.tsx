@@ -108,11 +108,8 @@ export function NearbyPlacesSection({ form }: NearbyPlacesSectionProps) {
                     </FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger className="w-full h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs truncate">
-                          <SelectValue
-                            placeholder="เลือก..."
-                            className="truncate"
-                          />
+                        <SelectTrigger className="w-full min-w-0 h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs">
+                          <SelectValue placeholder="เลือก..." />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-white rounded-xl">

@@ -8,7 +8,7 @@ import {
   Loader2,
   Box,
   Shield,
-  Zap,
+  Sparkles,
   Armchair,
   Utensils,
   Bath,
@@ -23,6 +23,7 @@ import {
 import { FeaturesManagementDialog } from "@/features/amenities/components/FeaturesManagementDialog";
 import { PropertyFormValues } from "../../schema";
 import { DynamicIcon } from "@/components/dynamic-icon";
+import { cn } from "@/lib/utils";
 
 type Feature = {
   id: string;
@@ -151,30 +152,40 @@ function Step5FeaturesComponent() {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 mb-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-lg font-semibold text-blue-900 mb-1">
-              สิ่งอำนวยความสะดวก
-            </h3>
-            <p className="text-sm text-blue-700">
-              เลือกสิ่งอำนวยความสะดวกที่ทรัพย์สินนี้มี
-            </p>
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
+      <div className="bg-blue-50/50 p-4 sm:p-5 rounded-2xl border border-blue-100 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-xl text-blue-600">
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-blue-900 leading-tight">
+                สิ่งอำนวยความสะดวก
+              </h3>
+              <p className="text-[10px] sm:text-xs text-blue-700/70 font-medium">
+                เลือกสิ่งอำนวยความสะดวกที่ทรัพย์สินนี้มี
+              </p>
+            </div>
           </div>
-          <FeaturesManagementDialog onUpdate={reloadFeatures} />
+          <div className="w-full sm:w-auto self-end sm:self-center">
+            <FeaturesManagementDialog onUpdate={reloadFeatures} />
+          </div>
         </div>
       </div>
 
       {Object.entries(groupedFeatures).map(([category, categoryFeatures]) => {
         const CategoryIcon = CATEGORY_ICONS[category] || Box;
         return (
-          <div key={category} className="space-y-3">
-            <h4 className="flex items-center gap-2 text-sm font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">
-              <CategoryIcon className="w-4 h-4 text-slate-400" />
+          <div key={category} className="space-y-3 sm:space-y-4">
+            <h4 className="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100 pb-2 sm:pb-3">
+              <CategoryIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
               {category}
+              <span className="ml-auto text-[9px] font-normal text-slate-400 lowercase">
+                {categoryFeatures.length} items
+              </span>
             </h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2.5 sm:gap-4">
               {categoryFeatures.map((feature) => {
                 const isSelected = selectedFeatureIds.includes(feature.id);
 
@@ -183,39 +194,38 @@ function Step5FeaturesComponent() {
                     key={feature.id}
                     type="button"
                     onClick={() => toggleFeature(feature.id)}
-                    className={`
-                    relative flex items-center gap-3 p-4 rounded-xl border text-left transition-all duration-200 group
-                    ${
+                    className={cn(
+                      "relative flex flex-row lg:flex-col items-center gap-2.5 sm:gap-3 p-2.5 sm:p-4 rounded-xl border text-left lg:text-center transition-all duration-200 group",
                       isSelected
                         ? "bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500 shadow-sm"
-                        : "bg-white border-slate-200 hover:border-emerald-300 hover:shadow-md hover:bg-slate-50/50"
-                    }
-                  `}
+                        : "bg-white border-slate-200 hover:border-emerald-300 hover:shadow-md hover:bg-slate-50/50",
+                    )}
                   >
                     <div
-                      className={`
-                    p-2.5 rounded-lg transition-colors shrink-0
-                    ${
-                      isSelected
-                        ? "bg-emerald-100 text-emerald-600"
-                        : "bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-emerald-500"
-                    }
-                  `}
+                      className={cn(
+                        "p-2 sm:p-2.5 rounded-lg transition-colors shrink-0",
+                        isSelected
+                          ? "bg-emerald-100 text-emerald-600"
+                          : "bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-emerald-500",
+                      )}
                     >
                       <DynamicIcon
                         name={feature.icon_key}
-                        className="w-5 h-5"
+                        className="w-4 h-4 sm:w-5 sm:h-5"
                       />
                     </div>
                     <span
-                      className={`text-sm font-medium line-clamp-2 ${
-                        isSelected ? "text-emerald-900" : "text-slate-700"
-                      }`}
+                      className={cn(
+                        "text-[11px] sm:text-xs font-semibold line-clamp-2 transition-colors",
+                        isSelected
+                          ? "text-emerald-900"
+                          : "text-slate-600 group-hover:text-slate-900",
+                      )}
                     >
                       {feature.name}
                     </span>
                     {isSelected && (
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full animate-in zoom-in" />
+                      <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full animate-in zoom-in" />
                     )}
                   </button>
                 );

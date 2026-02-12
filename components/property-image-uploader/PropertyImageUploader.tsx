@@ -137,7 +137,7 @@ export function PropertyImageUploader({
 
   // Sync images state to parent (react-hook-form)
   useEffect(() => {
-    const paths = imagesRef.current
+    const paths = images
       .filter((img) => img.storage_path)
       .map((img) => img.storage_path);
     if (onChange) onChange(paths);
@@ -304,45 +304,48 @@ export function PropertyImageUploader({
     maxFiles,
   });
 
-  const handleRemove = async (index: number) => {
-    const imageToRemove = images[index];
+  const handleRemove = async (imageId: string) => {
+    setImages((prev) => {
+      const imageToRemove = prev.find((img) => img.id === imageId);
+      if (!imageToRemove) return prev;
 
-    // 1. Optimistic Update: Update UI Immediately
-    const newImages = images.filter((_, i) => i !== index);
+      const newImages = prev.filter((img) => img.id !== imageId);
 
-    // If we removed the cover image, set the first available image as cover
-    if (imageToRemove.is_cover && newImages.length > 0) {
-      newImages[0].is_cover = true;
-    }
+      // If we removed the cover image, set the first available image as cover
+      if (imageToRemove.is_cover && newImages.length > 0) {
+        newImages[0] = { ...newImages[0], is_cover: true };
+      }
 
-    setImages(newImages);
-    toast.success("ลบรูปสำเร็จ"); // Show success immediately
+      // SIDE EFFECT: Background cleanup (can't await in functional update, but can trigger)
+      if (
+        imageToRemove.origin === "temp" &&
+        imageToRemove.storage_path &&
+        !imageToRemove.is_uploading
+      ) {
+        deletePropertyImageFromStorage(imageToRemove.storage_path).catch(
+          (error) => {
+            console.error("Failed to delete from storage:", error);
+          },
+        );
+      }
 
-    // 2. Cleanup Resources (Blob URLs)
-    if (imageToRemove.preview_url.startsWith("blob:")) {
-      URL.revokeObjectURL(imageToRemove.preview_url);
-    }
+      if (imageToRemove.preview_url.startsWith("blob:")) {
+        URL.revokeObjectURL(imageToRemove.preview_url);
+      }
 
-    // 3. Background Action: Delete from storage if it's a temp file
-    if (
-      imageToRemove.origin === "temp" &&
-      imageToRemove.storage_path &&
-      !imageToRemove.is_uploading
-    ) {
-      deletePropertyImageFromStorage(imageToRemove.storage_path).catch(
-        (error) => {
-          console.error("Failed to delete from storage:", error);
-        },
-      );
-    }
+      return newImages;
+    });
+
+    toast.success("ลบรูปสำเร็จ");
   };
 
-  const handleSetCover = (index: number) => {
-    const newImages = images.map((img, i) => ({
-      ...img,
-      is_cover: i === index,
-    }));
-    setImages(newImages);
+  const handleSetCover = (imageId: string) => {
+    setImages((prev) =>
+      prev.map((img) => ({
+        ...img,
+        is_cover: img.id === imageId,
+      })),
+    );
     toast.success("ตั้งรูปปกสำเร็จ");
   };
 
@@ -369,11 +372,15 @@ export function PropertyImageUploader({
     setActiveId(null);
 
     if (over && active.id !== over.id) {
-      const oldIndex = images.findIndex((img) => img.id === active.id);
-      const newIndex = images.findIndex((img) => img.id === over.id);
+      setImages((prev) => {
+        const oldIndex = prev.findIndex((img) => img.id === active.id);
+        const newIndex = prev.findIndex((img) => img.id === over.id);
 
-      const newImages = arrayMove(images, oldIndex, newIndex);
-      setImages(newImages);
+        if (oldIndex === -1 || newIndex === -1) return prev;
+
+        const newImages = arrayMove(prev, oldIndex, newIndex);
+        return newImages;
+      });
       toast.success("จัดเรียงรูปสำเร็จ");
     }
   };
@@ -388,7 +395,7 @@ export function PropertyImageUploader({
         <div
           {...getRootProps()}
           className={cn(
-            "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
+            "border-2 border-dashed rounded-lg p-4 sm:p-8 text-center cursor-pointer transition-colors",
             isDragActive
               ? "border-primary bg-primary/5"
               : "border-border hover:border-primary/50",
@@ -396,13 +403,13 @@ export function PropertyImageUploader({
           )}
         >
           <input {...getInputProps()} />
-          <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-sm text-muted-foreground mb-2">
+          <Upload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+          <p className="text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-2 font-medium">
             {isDragActive
               ? "วางไฟล์ที่นี่..."
               : "ลากไฟล์มาวางหรือคลิกเพื่อเลือกรูป"}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[10px] sm:text-xs text-slate-400">
             รองรับ JPG, PNG, WebP • ไม่เกิน {maxFileSizeMB}MB ต่อรูป • สูงสุด{" "}
             {maxFiles} รูป
           </p>
@@ -410,12 +417,12 @@ export function PropertyImageUploader({
       )}
 
       {images.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium">
+        <div className="pt-2">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <p className="text-xs sm:text-sm font-semibold text-slate-800">
               รูปภาพทั้งหมด ({images.length}/{maxFiles})
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="hidden sm:block text-[10px] sm:text-xs text-slate-500 italic">
               ลากเพื่อจัดเรียง • ⭐ = รูปปก
             </p>
           </div>
@@ -430,7 +437,7 @@ export function PropertyImageUploader({
               items={images.map((img) => img.id)}
               strategy={rectSortingStrategy}
             >
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4">
                 {images.map((image, index) => (
                   <SortableImageItem
                     key={image.id}
@@ -448,7 +455,7 @@ export function PropertyImageUploader({
             {/* Drag Overlay - Shows a preview while dragging */}
             <DragOverlay adjustScale>
               {activeImage ? (
-                <div className="aspect-square bg-white rounded-lg overflow-hidden border-2 border-primary shadow-2xl opacity-95">
+                <div className="aspect-square bg-white rounded-lg overflow-hidden border-2 border-primary shadow-2xl opacity-90 scale-105 transition-transform">
                   {activeImage.preview_url ? (
                     <img
                       src={activeImage.preview_url}
@@ -468,9 +475,9 @@ export function PropertyImageUploader({
       )}
 
       {images.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          <Upload className="mx-auto h-12 w-12 mb-2" />
-          <p className="text-sm">ยังไม่มีรูปภาพ</p>
+        <div className="text-center py-10 sm:py-12 text-slate-400 bg-slate-50/50 rounded-lg border border-dashed border-slate-200">
+          <ImageIcon className="mx-auto h-10 w-10 sm:h-12 sm:w-12 mb-2 opacity-20" />
+          <p className="text-xs sm:text-sm font-medium">ยังไม่มีรูปภาพ</p>
         </div>
       )}
     </div>

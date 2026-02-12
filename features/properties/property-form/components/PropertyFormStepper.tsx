@@ -42,6 +42,8 @@ export function PropertyFormStepper({
   handleNext,
   form,
 }: PropertyFormStepperProps) {
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
   const steps = [
     { step: 1, label: "ข้อมูลประกาศ" },
     { step: 2, label: "รายละเอียด" },
@@ -51,9 +53,34 @@ export function PropertyFormStepper({
     { step: 6, label: "ตรวจสอบ" },
   ];
 
+  // Auto-scroll to active step on mobile
+  React.useEffect(() => {
+    if (!scrollContainerRef.current) return;
+
+    const activeItem = scrollContainerRef.current.querySelector(
+      `[data-step="${currentStep}"]`,
+    );
+
+    if (activeItem) {
+      const container = scrollContainerRef.current;
+      const scrollLeft =
+        (activeItem as HTMLElement).offsetLeft -
+        container.offsetWidth / 2 +
+        (activeItem as HTMLElement).offsetWidth / 2;
+
+      container.scrollTo({
+        left: scrollLeft,
+        behavior: "smooth",
+      });
+    }
+  }, [currentStep]);
+
   return (
     <div className="bg-white py-4 sm:py-6 rounded-xl sm:rounded-2xl shadow-sm border border-slate-100 mb-6 px-2 sm:px-4 overflow-hidden">
-      <div className="relative w-full max-w-5xl mx-auto overflow-x-auto no-scrollbar pb-2 sm:pb-0">
+      <div
+        ref={scrollContainerRef}
+        className="relative w-full max-w-5xl mx-auto overflow-x-auto no-scrollbar! pb-2 sm:pb-0  scroll-smooth"
+      >
         <div className="min-w-[500px] sm:min-w-0 relative">
           {/* Background Line */}
           <div
@@ -87,11 +114,12 @@ export function PropertyFormStepper({
               return (
                 <div
                   key={item.step}
+                  data-step={item.step}
                   role="tab"
                   aria-selected={isCurrent}
                   aria-label={`ขั้นตอนที่ ${item.step} ${item.label}`}
                   tabIndex={mode === "edit" || item.step < currentStep ? 0 : -1}
-                  className={`flex flex-col items-center gap-2 sm:gap-3 group transition-all duration-300 flex-1 min-w-[80px] sm:min-w-0 ${
+                  className={`flex flex-col items-center gap-2 sm:gap-3 group transition-all duration-300 flex-1 min-w-[100px] sm:min-w-0 ${
                     mode === "edit" || item.step < currentStep
                       ? "cursor-pointer"
                       : "cursor-not-allowed"

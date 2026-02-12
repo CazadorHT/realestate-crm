@@ -133,12 +133,12 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
   };
 
   return (
-    <section className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/60 space-y-5">
+    <section className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-100/60 space-y-4 sm:space-y-5">
       <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
-        <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+        <div className="p-1.5 sm:p-2 bg-indigo-50 rounded-lg text-indigo-600">
           <LinkIcon className="w-4 h-4" />
         </div>
-        <h3 className="font-medium text-slate-800">
+        <h3 className="text-sm sm:text-base font-medium text-slate-800">
           ข้อมูลเพิ่มเติม (Additional)
         </h3>
       </div>
@@ -149,7 +149,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
         name="property_source"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-slate-700 font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+            <FormLabel className="text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wide flex items-center gap-2">
               <FileText className="w-3 h-3 text-indigo-600" />
               ที่มาของทรัพย์ (Source) 🔒
             </FormLabel>
@@ -171,14 +171,14 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
         control={form.control}
         name="is_co_agent"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-xl border border-blue-100 bg-blue-50/50 p-3 shadow-sm transition-all hover:bg-blue-50">
+          <FormItem className="flex flex-row items-center justify-between rounded-xl border border-blue-100 bg-blue-50/50 p-3 sm:p-4 shadow-sm transition-all hover:bg-blue-50">
             <div className="space-y-0.5">
-              <FormLabel className="text-blue-900 font-medium text-sm flex items-center gap-2">
+              <FormLabel className="text-blue-900 font-bold text-xs sm:text-sm flex items-center gap-2">
                 <Users className="w-4 h-4 text-blue-600" />
                 Co-Agent
               </FormLabel>
               <p className="text-[10px] font-medium text-blue-600/70">
-                มีนายหน้าร่วมหรือไม่?
+                เปิดเพื่อทำงานร่วมกับ Agent ท่านอื่น
               </p>
             </div>
             <FormControl>
@@ -199,14 +199,14 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
 
       {/* Co-Agent Details */}
       {isCoAgent && (
-        <div className="space-y-4 pt-2 animate-in fade-in zoom-in-95 duration-300">
-          <div className="grid grid-cols-4 gap-3">
+        <div className="space-y-4 pt-1 animate-in fade-in zoom-in-95 duration-300">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <FormField
               control={form.control}
               name="co_agent_name"
               render={({ field }) => (
                 <FormItem className="col-span-1">
-                  <FormLabel className="text-slate-700 text-[10px] font-medium uppercase flex items-center gap-2">
+                  <FormLabel className="text-slate-700 text-[10px] font-semibold uppercase flex items-center gap-2">
                     <User className="w-3 h-3 text-slate-400" />
                     ชื่อ Co-Agent
                   </FormLabel>
@@ -214,8 +214,8 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                     <Input
                       {...field}
                       value={field.value || ""}
-                      className="h-9 bg-slate-50 border-slate-200"
-                      placeholder="ชื่อ"
+                      className="h-10 bg-slate-50 border-slate-200 text-xs sm:text-sm"
+                      placeholder="ระบุชื่อ"
                     />
                   </FormControl>
                   <FormMessage />
@@ -228,7 +228,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
               name="co_agent_phone"
               render={({ field }) => (
                 <FormItem className="col-span-1">
-                  <FormLabel className="text-slate-700 text-[10px] font-medium uppercase flex items-center gap-2">
+                  <FormLabel className="text-slate-700 text-[10px] font-semibold uppercase flex items-center gap-2">
                     <Phone className="w-3 h-3 text-slate-400" />
                     เบอร์โทร
                   </FormLabel>
@@ -236,7 +236,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                     <Input
                       {...field}
                       value={field.value || ""}
-                      className="h-9 bg-slate-50 border-slate-200"
+                      className="h-10 bg-slate-50 border-slate-200 text-xs sm:text-sm"
                       placeholder="08x-xxx-xxxx"
                     />
                   </FormControl>
@@ -249,7 +249,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
               name="co_agent_contact_channel"
               render={({ field }) => (
                 <FormItem className="col-span-1">
-                  <FormLabel className="text-slate-700 text-[10px] font-medium uppercase flex items-center gap-2">
+                  <FormLabel className="text-slate-700 text-[10px] font-semibold uppercase flex items-center gap-2">
                     <MessageCircle className="w-3 h-3 text-slate-400" />
                     ช่องทางติดต่อ
                   </FormLabel>
@@ -258,15 +258,15 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                     value={field.value ?? undefined}
                   >
                     <FormControl>
-                      <SelectTrigger className="h-9 bg-slate-50 border-slate-200">
+                      <SelectTrigger className="h-10 bg-slate-50 border-slate-200 text-xs sm:text-sm">
                         <SelectValue placeholder="เลือก" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="bg-white">
                       <SelectItem value="Line">Line</SelectItem>
-                      <SelectItem value="Facebook">FB</SelectItem>
-                      <SelectItem value="PHONE">Tel</SelectItem>
-                      <SelectItem value="OTHER">Other</SelectItem>
+                      <SelectItem value="Facebook">Facebook</SelectItem>
+                      <SelectItem value="PHONE">โทรสาร</SelectItem>
+                      <SelectItem value="OTHER">อื่นๆ</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>
@@ -278,16 +278,16 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
               name="co_agent_contact_id"
               render={({ field }) => (
                 <FormItem className="col-span-1">
-                  <FormLabel className="text-slate-700 text-[10px] font-medium uppercase flex items-center gap-2">
+                  <FormLabel className="text-slate-700 text-[10px] font-semibold uppercase flex items-center gap-2">
                     <LinkIcon className="w-3 h-3 text-slate-400" />
-                    Contact ID / Link
+                    ID / Link
                   </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       value={field.value || ""}
-                      className="h-9 bg-slate-50 border-slate-200"
-                      placeholder="ระบุ ID หรือ ลิงก์"
+                      className="h-10 bg-slate-50 border-slate-200 text-xs sm:text-sm"
+                      placeholder="LINE ID / ลิงก์"
                     />
                   </FormControl>
                 </FormItem>
@@ -295,24 +295,25 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
             />
           </div>
 
-          {/* Commission */}
+          {/* Commission Split */}
           {(showSaleCommission || showRentCommission) && (
-            <div className="bg-orange-50/50 p-3 rounded-xl border border-orange-100 space-y-3">
-              <p className="text-xs font-medium text-orange-700 uppercase flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" /> ส่วนแบ่งค่าคอมมิชชั่น
+            <div className="bg-orange-50/40 p-3 sm:p-4 rounded-xl border border-orange-100 shadow-sm space-y-3">
+              <p className="text-[10px] sm:text-xs font-bold text-orange-700 uppercase flex items-center gap-1.5 active:scale-95 transition-transform cursor-default">
+                <AlertCircle className="w-3.5 h-3.5" />{" "}
+                ส่วนแบ่งค่าคอมมิชชั่นสำหรับ Co-Agent
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {showSaleCommission && (
                   <FormField
                     control={form.control}
                     name="co_agent_sale_commission_percent"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-600 text-xs font-medium flex justify-between items-center">
+                        <FormLabel className="text-slate-600 text-[10px] font-semibold flex justify-between items-center px-0.5">
                           <span>ขาย (%)</span>
                           {coAgentSalePercent ? (
                             activePrice ? (
-                              <span className="text-emerald-600 font-medium">
+                              <span className="text-emerald-700 font-bold">
                                 {formatCurrency(
                                   (Number(activePrice) *
                                     Number(coAgentSalePercent)) /
@@ -327,18 +328,25 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                           ) : null}
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            value={field.value ?? ""}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value ? Number(e.target.value) : null,
-                              )
-                            }
-                            className="h-9 bg-white border-orange-200 focus:border-orange-400"
-                            placeholder="%"
-                          />
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value
+                                    ? Number(e.target.value)
+                                    : null,
+                                )
+                              }
+                              className="h-10 bg-white border-orange-200 focus:border-orange-400 focus:ring-orange-100 pr-8 font-medium"
+                              placeholder="0.0"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-medium">
+                              %
+                            </span>
+                          </div>
                         </FormControl>
                       </FormItem>
                     )}
@@ -350,11 +358,11 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                     name="co_agent_rent_commission_months"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-600 text-xs font-medium flex justify-between items-center">
+                        <FormLabel className="text-slate-600 text-[10px] font-semibold flex justify-between items-center px-0.5">
                           <span>เช่า (เดือน)</span>
                           {coAgentRentMonths ? (
                             activeRentalPrice ? (
-                              <span className="text-emerald-600 font-medium">
+                              <span className="text-emerald-700 font-bold">
                                 {formatCurrency(
                                   Number(activeRentalPrice) *
                                     Number(coAgentRentMonths),
@@ -368,18 +376,25 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                           ) : null}
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            value={field.value ?? ""}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value ? Number(e.target.value) : null,
-                              )
-                            }
-                            className="h-9 bg-white border-orange-200 focus:border-orange-400"
-                            placeholder="เดือน"
-                          />
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value
+                                    ? Number(e.target.value)
+                                    : null,
+                                )
+                              }
+                              className="h-10 bg-white border-orange-200 focus:border-orange-400 focus:ring-orange-100 pr-12 font-medium"
+                              placeholder="0.0"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-medium">
+                              เดือน
+                            </span>
+                          </div>
                         </FormControl>
                       </FormItem>
                     )}

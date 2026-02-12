@@ -51,26 +51,30 @@ export const ManagementSection = ({
   const soldUnits = useWatch({ control: form.control, name: "sold_units" });
 
   return (
-    <section className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/60 space-y-6">
+    <section className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-100/60 space-y-5 sm:space-y-6">
       <div className="flex  items-center gap-2 pb-3 border-b border-slate-50">
-        <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+        <div className="p-1.5 sm:p-2 bg-emerald-50 rounded-lg text-emerald-600">
           <ShieldCheck className="w-4 h-4" />
         </div>
         <div className="flex flex-col">
-          <h3 className="font-medium text-slate-800">การจัดการ (Management)</h3>
-          <p className="text-xs text-slate-500">จัดการข้อมูลทรัพย์สิน</p>
+          <h3 className="text-sm sm:text-base font-medium text-slate-800">
+            การจัดการ (Management)
+          </h3>
+          <p className="text-[10px] sm:text-xs text-slate-500">
+            จัดการข้อมูลทรัพย์สิน
+          </p>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {/* Status */}
           <FormField
             control={form.control}
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-slate-900 font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+                <FormLabel className="text-slate-900 font-medium text-[10px] sm:text-xs uppercase tracking-wide flex items-center gap-2">
                   <Activity className="w-3 h-3 text-emerald-600" />
                   สถานะประกาศ
                 </FormLabel>
@@ -123,13 +127,14 @@ export const ManagementSection = ({
               </FormItem>
             )}
           />
+
           {/* Owner */}
           <FormField
             control={form.control}
             name="owner_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-slate-900 font-medium text-xs uppercase tracking-wide flex items-center justify-between">
+                <FormLabel className="text-slate-900 font-medium text-[10px] sm:text-xs uppercase tracking-wide flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <User className="w-3 h-3 text-emerald-600" />
                     เจ้าของทรัพย์
@@ -138,7 +143,7 @@ export const ManagementSection = ({
                     ส่วนตัว 🔒
                   </span>
                 </FormLabel>
-                <div className="flex items-center gap-8">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                   <Select
                     value={field.value ?? "NONE"}
                     onValueChange={(v) =>
@@ -146,7 +151,7 @@ export const ManagementSection = ({
                     }
                   >
                     <FormControl>
-                      <SelectTrigger className="h-11 flex-1 rounded-lg bg-white border border-slate-200 font-normal px-4 text-sm">
+                      <SelectTrigger className="h-11 flex-1 min-w-0 rounded-lg bg-white border border-slate-200 font-normal px-4 text-xs sm:text-sm">
                         <SelectValue placeholder="เลือกเจ้าของ" />
                       </SelectTrigger>
                     </FormControl>
@@ -175,7 +180,7 @@ export const ManagementSection = ({
                       type="button"
                       variant="outline"
                       size="icon"
-                      className=" shrink-0 rounded-lg border-slate-200 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200 transition-all shadow-sm"
+                      className="h-11 w-11 shrink-0 rounded-lg border-slate-200 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200 transition-all shadow-sm"
                       onClick={() => setIsAddingOwner(true)}
                       title="เพิ่มเจ้าของใหม่"
                     >
@@ -226,16 +231,17 @@ export const ManagementSection = ({
               </FormItem>
             )}
           />
-          {/* 🏢 Stock Management - Compact Row Layout */}
-          <div className="col-span-2 flex flex-wrap items-center gap-4 bg-slate-50 p-4 rounded-xl border border-dashed border-slate-200">
+
+          {/* 🏢 Stock Management - Responsive Column Layout */}
+          <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-12 gap-4 bg-slate-50 p-4 rounded-xl border border-dashed border-slate-200">
             {/* Total Units */}
             <FormField
               control={form.control}
               name="total_units"
               render={({ field }) => (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-slate-600 whitespace-nowrap">
-                    จำนวนยูนิต:
+                <div className="sm:col-span-4 flex items-center justify-between sm:justify-start gap-2">
+                  <span className="text-[10px] sm:text-xs font-semibold text-slate-600 uppercase tracking-tight whitespace-nowrap">
+                    ยูนิตทั้งหมด:
                   </span>
                   <div className="flex items-center gap-0.5">
                     <button
@@ -244,9 +250,9 @@ export const ManagementSection = ({
                         const val = (field.value || 0) - 1;
                         if (val >= 1) field.onChange(val);
                       }}
-                      className="h-8 w-8 flex items-center justify-center rounded-l-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
+                      className="h-9 w-9 flex items-center justify-center rounded-l-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
                     >
-                      <Minus className="w-3 h-3" />
+                      <Minus className="w-3.5 h-3.5" />
                     </button>
                     <input
                       type="number"
@@ -257,7 +263,7 @@ export const ManagementSection = ({
                         const val = e.target.value;
                         field.onChange(val === "" ? undefined : Number(val));
                       }}
-                      className="h-8 w-12 text-center border-y border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="h-9 w-12 text-center border-y border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <button
                       type="button"
@@ -265,9 +271,9 @@ export const ManagementSection = ({
                         const val = (field.value ?? 1) + 1;
                         field.onChange(val);
                       }}
-                      className="h-8 w-8 flex items-center justify-center rounded-r-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
+                      className="h-9 w-9 flex items-center justify-center rounded-r-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -279,9 +285,9 @@ export const ManagementSection = ({
               control={form.control}
               name="sold_units"
               render={({ field }) => (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-slate-600 whitespace-nowrap">
-                    ยูนิตปล่อยแล้ว:
+                <div className="sm:col-span-4 flex items-center justify-between sm:justify-start gap-2">
+                  <span className="text-[10px] sm:text-xs font-semibold text-slate-600 uppercase tracking-tight whitespace-nowrap">
+                    ปล่อยแล้ว:
                   </span>
                   <div className="flex items-center gap-0.5">
                     <button
@@ -290,9 +296,9 @@ export const ManagementSection = ({
                         const val = (field.value || 0) - 1;
                         if (val >= 0) field.onChange(val);
                       }}
-                      className="h-8 w-8 flex items-center justify-center rounded-l-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
+                      className="h-9 w-9 flex items-center justify-center rounded-l-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
                     >
-                      <Minus className="w-3 h-3" />
+                      <Minus className="w-3.5 h-3.5" />
                     </button>
                     <input
                       type="number"
@@ -303,7 +309,7 @@ export const ManagementSection = ({
                         const val = e.target.value;
                         field.onChange(val === "" ? undefined : Number(val));
                       }}
-                      className="h-8 w-12 text-center border-y border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="h-9 w-12 text-center border-y border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <button
                       type="button"
@@ -311,9 +317,9 @@ export const ManagementSection = ({
                         const val = (field.value ?? 0) + 1;
                         field.onChange(val);
                       }}
-                      className="h-8 w-8 flex items-center justify-center rounded-r-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
+                      className="h-9 w-9 flex items-center justify-center rounded-r-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -321,15 +327,15 @@ export const ManagementSection = ({
             />
 
             {/* Remaining - Highlight */}
-            <div className="flex items-center gap-2 ml-auto">
-              <span className="text-xs font-medium text-slate-600">
+            <div className="sm:col-span-4 flex items-center justify-between sm:justify-end gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 mt-2 sm:mt-0">
+              <span className="text-[10px] sm:text-xs font-semibold text-slate-600 uppercase tracking-tight">
                 คงเหลือ:
               </span>
               <span
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-sm ${
                   (totalUnits ?? 1) - (soldUnits ?? 0) > 0
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-red-100 text-red-700"
+                    ? "bg-emerald-500 text-white"
+                    : "bg-red-500 text-white"
                 }`}
               >
                 {(totalUnits ?? 1) - (soldUnits ?? 0)} ยูนิต
@@ -340,8 +346,9 @@ export const ManagementSection = ({
             </div>
           </div>
         </div>
+
         {/* Divider */}
-        <div className="h-px bg-slate-100 my-2" />
+        <div className="h-px bg-slate-100 my-1 sm:my-2" />
 
         {/* Agent Multi Select */}
         <AgentMultiSelect form={form} agents={agents} />

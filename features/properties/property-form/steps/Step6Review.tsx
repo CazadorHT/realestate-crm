@@ -185,59 +185,67 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Review Header Alert */}
-      <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
-        <div className="flex items-start gap-4">
-          <div className="p-2.5 bg-blue-100/50 rounded-xl text-blue-600">
-            <FileCheck className="h-7 w-7" />
+      <div className="bg-blue-50/50 border border-blue-100 p-4 sm:p-5 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6 shadow-sm">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="p-2 sm:p-2.5 bg-blue-100/50 rounded-xl text-blue-600 shrink-0">
+            <FileCheck className="h-6 w-6 sm:h-7 sm:w-7" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-bold text-blue-700">
-              ขั้นตอนสุดท้าย: ตรวจสอบและยืนยัน (Review & Publish)
+            <h3 className="text-sm sm:text-base font-bold text-blue-700">
+              ขั้นตอนที่ 6: ตรวจสอบหน้าประกาศ (Review & Publish)
             </h3>
-            <p className="text-sm text-blue-600/80 leading-relaxed max-w-2xl">
+            <p className="text-[11px] sm:text-sm text-blue-600/80 leading-relaxed max-w-2xl">
               นี่คือตัวอย่างหน้าประกาศของคุณที่จะแสดงให้ลูกค้าเห็นจริง
-              กรุณาตรวจสอบความถูกต้องของข้อมูลทั้งหมด โดยเฉพาะ
-              "รายละเอียดทรัพย์" และสามารถเลือกดูพรีวิวในภาษาต่างๆ
-              ได้ทางขวามือครับ
+              กรุณาตรวจสอบความถูกต้องของข้อมูลทั้งหมด
+              และสามารถเลือกดูพรีวิวในภาษาต่างๆ ได้ทางขวามือครับ
             </p>
           </div>
         </div>
 
-        <div className="flex bg-white/80 backdrop-blur-sm border border-blue-100 p-1 rounded-2xl shadow-sm self-start md:self-center items-center gap-3">
+        <div className="flex flex-col sm:flex-row bg-white/50 backdrop-blur-sm border border-blue-100 p-1.5 rounded-2xl shadow-sm items-center gap-2 sm:gap-3">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={translateAll}
             disabled={isTranslatingAll}
-            className="h-8 gap-2 border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 font-bold px-3 rounded-xl shadow-xs transition-all active:scale-95"
+            className="w-full sm:w-auto h-9 gap-2 border-blue-200 text-blue-600 bg-blue-50 hover:bg-white font-bold px-4 rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
           >
             {isTranslatingAll ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
               <Sparkles className="h-3.5 w-3.5 text-amber-500" />
             )}
-            AI {isTranslatingAll ? "กำลังแปลรวดเดียว..." : "Global AI Fix"}
+            AI Global Fix
           </Button>
 
-          <Separator orientation="vertical" className="h-4 bg-blue-100" />
+          <Separator
+            orientation="vertical"
+            className="hidden sm:block h-5 bg-blue-100"
+          />
+          <Separator
+            orientation="horizontal"
+            className="sm:hidden w-full bg-blue-100/50"
+          />
 
-          <div className="flex">
+          <div className="flex w-full sm:w-auto overflow-x-auto no-scrollbar rounded-xl">
             {(["th", "en", "cn"] as const).map((lang) => (
               <button
                 key={lang}
                 onClick={() => setPreviewLanguage(lang)}
                 className={cn(
-                  "px-5 py-2 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2",
+                  "flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-xl text-[11px] sm:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap",
                   previewLanguage === lang
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105 z-10"
                     : "text-slate-500 hover:text-blue-600 hover:bg-blue-50",
                 )}
               >
                 <Languages
                   className={cn(
-                    "w-4 h-4",
-                    previewLanguage === lang ? "text-blue-200" : "text-slate-400",
+                    "w-3.5 h-3.5 sm:w-4 sm:h-4",
+                    previewLanguage === lang
+                      ? "text-blue-200"
+                      : "text-slate-400",
                   )}
                 />
                 {lang === "th" ? "ไทย" : lang === "en" ? "English" : "中文"}
@@ -248,7 +256,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
       </div>
 
       {/* --- PREVIEW CONTENT --- */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-12 relative">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-8 sm:pb-12 relative">
         <PropertyHeader
           property={
             {
@@ -266,8 +274,8 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
           keySellingPoints={keySellingPoints}
           language={previewLanguage}
         />
-        <div className="pt-20 md:pt-24 px-5 md:px-6 lg:px-8 bg-white relative">
-          <div className="max-w-screen-2xl mx-auto px-6 md:px-8 mt-4 md:mt-8">
+        <div className="pt-16 sm:pt-20 md:pt-24 px-4 sm:px-6 lg:px-8 bg-white relative">
+          <div className="max-w-screen-2xl mx-auto mt-4 sm:mt-6 md:mt-8">
             <section className="mb-6 md:mb-10">
               <PropertyGallery
                 images={images}
@@ -304,8 +312,8 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
 
                 <div className="space-y-4 relative group">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-lg flex items-center gap-2 text-slate-800">
-                      <Sparkles className="w-4 h-4 text-amber-500" />
+                    <h3 className="font-bold text-base sm:text-lg flex items-center gap-2 text-slate-800">
+                      <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
                       แก้ไขรายละเอียด
                     </h3>
                     <div className="flex gap-2">
@@ -344,22 +352,22 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                     <div className="p-6 bg-slate-50/50 rounded-3xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
                       <Tabs defaultValue="th" className="w-full">
                         <div className="flex items-center justify-between mb-4 bg-white/50 p-1.5 rounded-2xl border border-slate-200/50">
-                          <TabsList className="bg-transparent h-auto p-0 gap-1">
+                          <TabsList className="bg-transparent h-auto p-0 gap-1 flex-1 sm:flex-none">
                             <TabsTrigger
                               value="th"
-                              className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-6 py-2.5 rounded-xl text-sm font-bold border-transparent"
+                              className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent"
                             >
                               ไทย
                             </TabsTrigger>
                             <TabsTrigger
                               value="en"
-                              className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-6 py-2.5 rounded-xl text-sm font-bold border-transparent"
+                              className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent"
                             >
                               English
                             </TabsTrigger>
                             <TabsTrigger
                               value="cn"
-                              className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-6 py-2.5 rounded-xl text-sm font-bold border-transparent"
+                              className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent"
                             >
                               中文
                             </TabsTrigger>
@@ -371,47 +379,68 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                             size="sm"
                             onClick={() => translateDescription()}
                             disabled={isTranslating}
-                            className="border-blue-100 text-blue-600 hover:bg-white gap-2 h-10 px-5 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95"
+                            className="w-full sm:w-auto mt-2 sm:mt-0 border-blue-100 text-blue-600 hover:bg-white gap-2 h-9 sm:h-10 px-4 sm:px-5 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95 text-[11px] sm:text-xs"
                           >
                             {isTranslating ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             ) : (
-                              <Sparkles className="h-4 w-4 text-amber-500" />
+                              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                             )}
-                            <span className="hidden sm:inline">
-                              AI แปลจากไทยเป็น EN/CN
-                            </span>
-                            <span className="sm:hidden">AI แปล</span>
+                            <span className="sm:inline">AI แปลรวดเดียว</span>
                           </Button>
                         </div>
 
-                        <TabsContent value="th" className="mt-0 focus-visible:outline-none">
+                        <TabsContent
+                          value="th"
+                          className="mt-0 focus-visible:outline-none"
+                        >
                           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                             <SmartEditor
                               value={values.description || ""}
-                              onChange={(val) => form.setValue("description", val, { shouldDirty: true })}
+                              onChange={(val) =>
+                                form.setValue("description", val, {
+                                  shouldDirty: true,
+                                })
+                              }
                               onAiGenerate={async () => {
-                                const newDesc = generatePropertyDescription(form.getValues(), activeFeatures);
+                                const newDesc = generatePropertyDescription(
+                                  form.getValues(),
+                                  activeFeatures,
+                                );
                                 toast.success("อัปเดตรายละเอียดเรียบร้อย");
                                 return newDesc;
                               }}
                             />
                           </div>
                         </TabsContent>
-                        <TabsContent value="en" className="mt-0 focus-visible:outline-none">
+                        <TabsContent
+                          value="en"
+                          className="mt-0 focus-visible:outline-none"
+                        >
                           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                             <SmartEditor
                               value={values.description_en || ""}
-                              onChange={(val) => form.setValue("description_en", val, { shouldDirty: true })}
+                              onChange={(val) =>
+                                form.setValue("description_en", val, {
+                                  shouldDirty: true,
+                                })
+                              }
                               height={300}
                             />
                           </div>
                         </TabsContent>
-                        <TabsContent value="cn" className="mt-0 focus-visible:outline-none">
+                        <TabsContent
+                          value="cn"
+                          className="mt-0 focus-visible:outline-none"
+                        >
                           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                             <SmartEditor
                               value={values.description_cn || ""}
-                              onChange={(val) => form.setValue("description_cn", val, { shouldDirty: true })}
+                              onChange={(val) =>
+                                form.setValue("description_cn", val, {
+                                  shouldDirty: true,
+                                })
+                              }
                               height={300}
                             />
                           </div>
@@ -436,7 +465,9 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                             category: "Transport",
                             name: `${values.transit_type || "BTS/MRT"} ${values.transit_station_name}`,
                             distance: values.transit_distance_meters
-                              ? (values.transit_distance_meters / 1000).toString()
+                              ? (
+                                  values.transit_distance_meters / 1000
+                                ).toString()
                               : undefined,
                           },
                         ]
@@ -444,15 +475,22 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                     ...(values.nearby_transits || []).map((t) => ({
                       category: "Transport",
                       name: `${t.type} ${t.station_name}`,
-                      distance: t.distance_meters ? (t.distance_meters / 1000).toString() : undefined,
+                      distance: t.distance_meters
+                        ? (t.distance_meters / 1000).toString()
+                        : undefined,
                     })),
                   ]}
                   language={previewLanguage}
                 />
                 <hr className="border-slate-100" />
-                <PropertyAmenities features={activeFeatures} language={previewLanguage} />
+                <PropertyAmenities
+                  features={activeFeatures}
+                  language={previewLanguage}
+                />
                 <hr className="border-slate-100" />
-                <PropertyMapSection googleMapsLink={values.google_maps_link || null} />
+                <PropertyMapSection
+                  googleMapsLink={values.google_maps_link || null}
+                />
               </div>
 
               <div className="space-y-6">

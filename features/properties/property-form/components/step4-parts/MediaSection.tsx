@@ -26,17 +26,17 @@ export const MediaSection = ({
   initialImages,
 }: MediaSectionProps) => {
   return (
-    <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100/60 h-full">
-      <div className="border-b border-slate-50 pb-4 mb-6">
+    <section className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100/60 h-full">
+      <div className="border-b border-slate-50 pb-3 sm:pb-4 mb-4 sm:mb-6">
         <div className="flex items-center gap-2 mb-1">
-          <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-            <Image className="w-5 h-5" />
+          <div className="p-1.5 sm:p-2 bg-blue-50 rounded-lg text-blue-600">
+            <Image className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div className="flex flex-col">
-            <h3 className="text-lg font-medium text-slate-900 tracking-tight">
+            <h3 className="text-base sm:text-lg font-medium text-slate-900 tracking-tight">
               คลังรูปภาพ (Media Gallery)
             </h3>
-            <p className="text-xs text-slate-500 ">
+            <p className="text-[10px] sm:text-xs text-slate-500 ">
               จัดการรูปภาพทรัพย์สิน อัปโหลดได้สูงสุด{" "}
               {IMAGE_UPLOAD_POLICY.maxFiles} รูป
             </p>
@@ -48,7 +48,7 @@ export const MediaSection = ({
         control={form.control}
         name="images"
         render={({ field }) => (
-          <FormItem className="bg-slate-50/50 p-6 rounded-xl border-2 border-dashed border-slate-200">
+          <FormItem className="bg-slate-50/50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-slate-200">
             <FormControl>
               <PropertyImageUploader
                 sessionId={uploadSessionId}

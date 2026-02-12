@@ -226,7 +226,7 @@ export function TransitSection({ form }: TransitSectionProps) {
                         value={field.value ?? "BTS"}
                       >
                         <FormControl>
-                          <SelectTrigger className="w-full h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs truncate">
+                          <SelectTrigger className="w-full min-w-0 h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>

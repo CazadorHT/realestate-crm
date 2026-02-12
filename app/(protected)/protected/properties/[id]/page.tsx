@@ -203,7 +203,7 @@ export default async function PropertyDetailsPage({
   return (
     <div className="min-h-screen bg-white pb-24 lg:pb-32 font-sans ">
       {/* 1. Admin Breadcrumb & Edit Button */}
-      <div className="pt-6 px-4 md:px-6 lg:px-8 max-w-screen-2xl mx-auto flex items-center justify-between">
+      <div className="pt-6 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Breadcrumb
             backHref={`/protected/properties`}
@@ -213,43 +213,44 @@ export default async function PropertyDetailsPage({
             ]}
           />
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <Button
             variant="outline"
-            size="lg"
+            size="sm"
             asChild
-            className="rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
+            className="flex-1 sm:flex-none rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
           >
             <Link
               href={`/properties/${property.slug || property.id}`}
               target="_blank"
             >
               <Eye className="h-4 w-4 mr-2" />
-              ดูหน้าเว็บไซต์
+              ดูหน้าเว็บ
             </Link>
           </Button>
           <Button
             variant="outline"
-            size="lg"
+            size="sm"
             asChild
-            className="rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
+            className="flex-1 sm:flex-none rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
           >
             <Link href={`/protected/properties/${property.id}/edit`}>
               <Edit className="h-4 w-4 mr-2" />
-              แก้ไขข้อมูล
+              แก้ไข
             </Link>
           </Button>
         </div>
       </div>
 
-      <div className="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 mt-6">
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-12 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
-          <div className="mx-auto px-6  md:px-8 mt-4 md:mt-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-6">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-8 sm:pb-12 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
+          <div className="mx-auto px-4 sm:px-6 md:px-8 mt-4 sm:mt-8">
             <Badge
               variant="outline"
-              className="bg-blue-50 px-4 py-3 text-blue-700 border-blue-200 font-bold uppercase tracking-widest rounded-full text-xl shadow-sm flex items-center gap-1.5"
+              className="bg-blue-50 px-3 py-2 sm:px-4 sm:py-3 text-blue-700 border-blue-200 font-bold uppercase tracking-widest rounded-full text-sm sm:text-xl shadow-sm flex items-center gap-1.5 w-fit"
             >
-              <BsStars className="h-8 w-8 mr-2 text-sky-500" /> Preview Mode
+              <BsStars className="h-5 w-5 sm:h-8 sm:w-8 text-sky-500" /> Preview
+              Mode
             </Badge>
           </div>
           {/* 2. Public Header Component */}
@@ -338,75 +339,84 @@ export default async function PropertyDetailsPage({
 
                 {/* Deal & Contracts (CRM only) */}
                 {isClosed && relatedDeal && (
-                  <section className="space-y-4 rounded-2xl border p-8 bg-slate-50/50 mt-12">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-bold flex items-center gap-2 text-slate-800">
+                  <section className="space-y-6 rounded-2xl border p-5 sm:p-8 bg-slate-50/50 mt-8 sm:mt-12">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <h3 className="text-lg sm:text-xl font-bold flex flex-wrap items-center gap-2 text-slate-800">
                         <PropertyStatusBadge
                           status={property.status || "DRAFT"}
-                          className="text-sm px-3 py-1"
+                          className="text-[10px] sm:text-sm px-2 py-0.5 sm:px-3 sm:py-1"
                         />
                         CRM ดีลสถานะสำเร็จ
                       </h3>
-                      <Button variant="outline" size="sm" asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="w-full sm:w-auto rounded-xl"
+                      >
                         <Link href={`/protected/deals/${relatedDeal.id}`}>
                           ไปยังหน้า Deal
                         </Link>
                       </Button>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-3 mt-4">
+                    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mt-4">
                       <div className="rounded-xl border border-slate-200 p-4 bg-white shadow-sm">
-                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                        <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1">
                           ค่าคอมมิชชั่น
                         </div>
-                        <div className="text-xl font-bold text-emerald-600">
+                        <div className="text-lg sm:text-xl font-bold text-emerald-600">
                           {commissionLabel}
                         </div>
                       </div>
                       <div className="rounded-xl border border-slate-200 p-4 bg-white shadow-sm">
-                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                        <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1">
                           ลูกค้า (Lead)
                         </div>
-                        <div className="font-bold text-slate-900 text-lg">
+                        <div className="font-bold text-slate-900 text-base sm:text-lg">
                           {relatedDeal.lead?.full_name ?? "-"}
                         </div>
                       </div>
                       <div className="rounded-xl border border-slate-200 p-4 bg-white shadow-sm">
-                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                        <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1">
                           เคสโดย
                         </div>
-                        <div className="font-bold text-slate-900 text-lg">
+                        <div className="font-bold text-slate-900 text-base sm:text-lg">
                           {property.agent?.full_name ?? "-"}
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid gap-8 md:grid-cols-2 mt-8 pt-8 border-t border-slate-200">
+                    <div className="grid gap-8 grid-cols-1 md:grid-cols-2 mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-slate-200">
                       <div>
-                        <div className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <div className="text-xs sm:text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                           เอกสารสัญญา (Contract)
                         </div>
                         {relatedContract?.id ? (
-                          <DocumentList
-                            ownerId={relatedContract.id}
-                            ownerType="RENTAL_CONTRACT"
-                          />
+                          <div className="overflow-x-auto no-scrollbar">
+                            <DocumentList
+                              ownerId={relatedContract.id}
+                              ownerType="RENTAL_CONTRACT"
+                            />
+                          </div>
                         ) : (
-                          <div className="text-center py-10 text-slate-400 border border-dashed rounded-xl bg-white">
+                          <div className="text-center py-8 sm:py-10 text-slate-400 border border-dashed rounded-xl bg-white text-sm">
                             ยังไม่มีสัญญา
                           </div>
                         )}
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <div className="text-xs sm:text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                           เอกสารดีล (Documents)
                         </div>
-                        <DocumentList
-                          ownerId={relatedDeal.id}
-                          ownerType="DEAL"
-                        />
+                        <div className="overflow-x-auto no-scrollbar">
+                          <DocumentList
+                            ownerId={relatedDeal.id}
+                            ownerType="DEAL"
+                          />
+                        </div>
                       </div>
                     </div>
                   </section>
@@ -414,24 +424,28 @@ export default async function PropertyDetailsPage({
               </div>
 
               {/* Right Column (Sidebar) */}
-              <div className="space-y-6">
+              <div className="space-y-5 sm:space-y-6">
                 {/* Admin Status Card */}
-                <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-xl space-y-4">
+                <div className="bg-slate-900 text-white rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                       Property Status
                     </span>
                     <PropertyStatusBadge status={property.status || "DRAFT"} />
                   </div>
                   <Separator className="bg-white/10" />
                   <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <span className="text-slate-400">สร้างเมื่อ:</span>
-                      <span>{formatDate(property.created_at)}</span>
+                      <span className="font-medium">
+                        {formatDate(property.created_at)}
+                      </span>
                     </div>
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <span className="text-slate-400">อัปเดตล่าสุด:</span>
-                      <span>{formatDate(property.updated_at)}</span>
+                      <span className="font-medium">
+                        {formatDate(property.updated_at)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -446,38 +460,43 @@ export default async function PropertyDetailsPage({
                 {/* Owner Card (Protected) */}
                 {property.owner && (
                   <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-right-4 duration-700">
-                    <div className="px-5 py-4 bg-orange-500 flex items-center gap-3">
-                      <div className="p-2 bg-white/20 rounded-lg">
-                        <User className="h-5 w-5 text-white" />
+                    <div className="px-5 py-3.5 bg-orange-500 flex items-center gap-3">
+                      <div className="p-1.5 bg-white/20 rounded-lg">
+                        <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-white">เจ้าของทรัพย์</h3>
-                        <p className="text-xs text-orange-100/80">
+                        <h3 className="font-bold text-white text-sm sm:text-base">
+                          เจ้าของทรัพย์
+                        </h3>
+                        <p className="text-[10px] text-orange-100/80">
                           CRM internal data
                         </p>
                       </div>
                     </div>
-                    <div className="p-6 space-y-4 text-center">
-                      <div className="mx-auto h-16 w-16 rounded-full bg-linear-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg border-2 border-white">
+                    <div className="p-5 sm:p-6 space-y-4 text-center">
+                      <div className="mx-auto h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-linear-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white font-bold text-xl sm:text-2xl shadow-lg border-2 border-white">
                         {property.owner.full_name?.charAt(0).toUpperCase() ||
                           "O"}
                       </div>
                       <div>
-                        <h4 className="font-bold text-slate-900 text-lg">
+                        <h4 className="font-bold text-slate-900 text-base sm:text-lg line-clamp-1">
                           {property.owner.full_name}
                         </h4>
                         {property.property_source && (
-                          <Badge variant="secondary" className="mt-1">
+                          <Badge
+                            variant="secondary"
+                            className="mt-1 text-[10px] sm:text-xs h-auto max-w-full break-all whitespace-normal px-3 py-1.5"
+                          >
                             {property.property_source}
                           </Badge>
                         )}
                       </div>
 
-                      <div className="space-y-3 pt-2">
+                      <div className="space-y-3 pt-1 sm:pt-2">
                         {property.owner.phone && (
                           <Button
                             variant="outline"
-                            className="w-full rounded-full gap-2 border-slate-200"
+                            className="w-full rounded-full gap-2 border-slate-200 h-10 sm:h-11 shadow-xs"
                             asChild
                           >
                             <a href={`tel:${property.owner.phone}`}>
@@ -487,9 +506,14 @@ export default async function PropertyDetailsPage({
                           </Button>
                         )}
                         {property.owner.line_id && (
-                          <div className="flex items-center justify-center gap-2 text-slate-600 bg-slate-50 py-2 rounded-full text-sm font-medium">
-                            <FaLine className="h-4 w-4 text-[#06C755]" />
-                            {property.owner.line_id}
+                          <div className="flex items-center justify-center gap-2 text-slate-600 bg-slate-50 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold border border-slate-100 px-4">
+                            <FaLine className="h-4 w-4 text-[#06C755] shrink-0" />
+                            <span
+                              className="break-all line-clamp-1"
+                              title={property.owner.line_id}
+                            >
+                              {property.owner.line_id}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -497,7 +521,7 @@ export default async function PropertyDetailsPage({
                       <Button
                         asChild
                         variant="ghost"
-                        className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full"
+                        className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full text-xs sm:text-sm font-bold h-9 sm:h-10"
                       >
                         <Link href={`/protected/owners/${property.owner.id}`}>
                           ดูประวัติเจ้าของ
@@ -510,38 +534,44 @@ export default async function PropertyDetailsPage({
                 {/* Agent Card */}
                 {property.agent && (
                   <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-right-4 duration-1000">
-                    <div className="px-5 py-4 bg-slate-800 flex items-center gap-3">
-                      <div className="p-2 bg-white/10 rounded-lg">
-                        <User className="h-5 w-5 text-white" />
+                    <div className="px-5 py-3.5 bg-slate-800 flex items-center gap-3">
+                      <div className="p-1.5 bg-white/10 rounded-lg">
+                        <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                       </div>
-                      <h3 className="font-bold text-white tracking-tight">
+                      <h3 className="font-bold text-white tracking-tight text-sm sm:text-base">
                         ผู้รับผิดชอบ (Agent)
                       </h3>
                     </div>
-                    <div className="p-6">
+                    <div className="p-5 sm:p-6">
                       <div className="flex items-center gap-4">
-                        <Avatar className="h-14 w-14 border-2 border-slate-100 shadow-sm">
+                        <Avatar className="h-12 w-12 sm:h-14 sm:w-14 border-2 border-slate-100 shadow-sm">
                           <AvatarImage
                             src={property.agent.avatar_url || ""}
                             alt={property.agent.full_name || ""}
                           />
-                          <AvatarFallback className="bg-linear-to-br from-blue-500 to-indigo-600 text-white font-bold text-xl">
+                          <AvatarFallback className="bg-linear-to-br from-blue-500 to-indigo-600 text-white font-bold text-lg sm:text-xl">
                             {property.agent.full_name
                               ?.charAt(0)
                               .toUpperCase() || "A"}
                           </AvatarFallback>
                         </Avatar>
                         <div className="space-y-0.5">
-                          <p className="font-bold text-slate-900 text-lg">
+                          <p className="font-bold text-slate-900 text-base sm:text-lg">
                             {property.agent.full_name}
                           </p>
-                          <div className="flex items-center gap-2 text-slate-500 text-sm">
-                            <Phone className="w-3.5 h-3.5" />
+                          <div className="flex items-center gap-2 text-slate-500 text-xs sm:text-sm">
+                            <Phone className="w-3.5 h-3.5 text-blue-500" />
                             {property.agent.phone || "ไม่ระบุเบอร์"}
                           </div>
                           {property.agent.line_id && (
-                            <div className="text-xs text-slate-400 mt-1">
-                              Line: {property.agent.line_id}
+                            <div className="flex items-start gap-1.5 text-[10px] sm:text-xs text-slate-400 mt-1 max-w-full">
+                              <FaLine className="h-3 w-3 text-[#06C755] shrink-0 mt-0.5" />
+                              <span
+                                className="break-all"
+                                title={property.agent.line_id}
+                              >
+                                Line: {property.agent.line_id}
+                              </span>
                             </div>
                           )}
                         </div>

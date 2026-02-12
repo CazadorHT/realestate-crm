@@ -18,8 +18,8 @@ interface SortableImageItemProps {
   image: ImageItem;
   index: number;
   disabled: boolean;
-  onSetCover: (index: number) => void;
-  onRemove: (index: number) => void;
+  onSetCover: (id: string) => void;
+  onRemove: (id: string) => void;
   setImages: React.Dispatch<React.SetStateAction<ImageItem[]>>;
 }
 
@@ -91,47 +91,60 @@ export function SortableImageItem({
         </div>
       )}
 
-      {/* Drag Handle - Always visible at top-left */}
+      {/* Drag Handle - Always visible at top-left, slightly more transparent on mobile */}
       {!image.is_uploading && !disabled && (
         <div
           {...attributes}
           {...listeners}
           className={cn(
-            "absolute top-1.5 left-1.5 z-20 p-2 rounded-md cursor-grab active:cursor-grabbing",
-            "bg-black/50 hover:bg-primary text-white transition-colors",
+            "absolute top-1 left-1 z-30 p-1.5 sm:p-2 rounded-md cursor-grab active:cursor-grabbing",
+            "bg-black/40 sm:bg-black/50 hover:bg-primary text-white transition-colors",
             "touch-none select-none",
           )}
           title="ลากเพื่อจัดเรียง"
         >
-          <GripVertical className="h-5 w-5" />
+          <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
       )}
 
-      {/* Cover Badge */}
+      {/* Cover Badge - Adjusted size for mobile */}
       {image.is_cover && (
-        <div className="absolute top-1.5 left-12 z-10 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
-          <Star className="h-3 w-3 fill-current" />
+        <div className="absolute top-1 left-9 sm:left-12 z-20 bg-emerald-500 text-white text-[9px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full flex items-center gap-1 shadow-md border border-white/20">
+          <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 fill-current" />
           รูปปก
         </div>
       )}
 
-      {/* Hover Actions */}
+      {/* Actions Container - More visible on mobile (not just hover) */}
       {!image.is_uploading && (
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 pointer-events-none">
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 pointer-events-auto">
+        <div
+          className={cn(
+            "absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 pointer-events-none z-10",
+            "sm:group-hover:bg-black/40",
+          )}
+        >
+          <div
+            className={cn(
+              "flex gap-1.5 sm:gap-2 pointer-events-auto transition-all duration-200",
+              "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 translate-y-0 sm:translate-y-2 sm:group-hover:translate-y-0",
+            )}
+          >
             <Button
               type="button"
               size="icon"
               variant="secondary"
-              className="h-9 w-9 bg-white/95 hover:bg-white shadow-md"
-              onClick={() => onSetCover(index)}
+              className="h-8 w-8 sm:h-9 sm:w-9 bg-white/95 hover:bg-white shadow-xl rounded-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSetCover(image.id);
+              }}
               disabled={image.is_cover}
               title={image.is_cover ? "รูปปกปัจจุบัน" : "ตั้งเป็นรูปปก"}
             >
               {image.is_cover ? (
-                <Star className="h-5 w-5 fill-primary text-primary" />
+                <Star className="h-4 w-4 sm:h-5 sm:w-5 fill-emerald-500 text-emerald-500" />
               ) : (
-                <StarOff className="h-5 w-5" />
+                <StarOff className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
               )}
             </Button>
 
@@ -139,20 +152,23 @@ export function SortableImageItem({
               type="button"
               size="icon"
               variant="destructive"
-              className="h-9 w-9 shadow-md"
-              onClick={() => onRemove(index)}
+              className="h-8 w-8 sm:h-9 sm:w-9 shadow-xl rounded-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(image.id);
+              }}
               disabled={disabled}
               title="ลบรูปนี้"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>
         </div>
       )}
 
-      {/* Image Number Badge */}
-      <div className="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-xs px-2 py-1 rounded-md font-medium">
-        #{index + 1}
+      {/* Image Number Badge - Compact and less intrusive */}
+      <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[9px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md font-bold backdrop-blur-sm border border-white/10">
+        {index + 1}
       </div>
     </div>
   );
