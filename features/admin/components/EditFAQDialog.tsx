@@ -34,7 +34,7 @@ export function EditFAQDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-slate-50 border-0 shadow-2xl rounded-2xl">
+      <DialogContent className="md:max-w-2xl lg:max-w-4xl p-0 overflow-hidden bg-slate-50 border-0 shadow-2xl rounded-2xl">
         <DialogHeader className="bg-linear-to-r from-slate-800 to-slate-900 p-6">
           <DialogTitle className="text-xl font-bold text-white flex items-center gap-3">
             <div className="p-2 bg-blue-500/20 rounded-lg">

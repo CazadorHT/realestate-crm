@@ -60,7 +60,7 @@ export default async function AdminPopularAreasPage() {
       />
 
       {/* Popular Areas Table */}
-      <div className="rounded-xl border border-slate-200   bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl lg:border lg:border-slate-200 lg:bg-white shadow-sm overflow-hidden">
         <PopularAreasTable initialData={areas || []} />
       </div>
 

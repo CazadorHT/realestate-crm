@@ -41,6 +41,7 @@ import {
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeletePopularAreasAction } from "@/features/admin/popular-areas-bulk-actions";
+import { cn } from "@/lib/utils";
 
 type PopularArea = {
   id: string;
@@ -199,32 +200,37 @@ export function PopularAreasTable({
         entityName="ทำเล"
       />
 
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-4 border border-slate-200 shadow-sm rounded-xl">
-        <div>
-          <h2 className="text-lg font-bold flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-indigo-600" />
-            Popular Areas ({filteredData.length})
-          </h2>
-          <p className="text-sm text-slate-500">
-            จัดการรายชื่อทำเลยอดนิยมในระบบ
-          </p>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-5 border border-slate-200 shadow-sm rounded-2xl animate-in fade-in duration-500">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0 border border-indigo-100">
+            <MapPin className="h-6 w-6" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 leading-tight">
+              ทำเลยอดนิยม ({filteredData.length})
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              จัดการรายชื่อทำเลยอดนิยมในระบบ
+            </p>
+          </div>
         </div>
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder="ค้นหาทำเล..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-10 bg-slate-50 border-slate-200 focus:bg-white transition-all"
+            className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all rounded-xl"
           />
         </div>
       </div>
 
-      <div className="rounded-xl bg-white overflow-hidden shadow-sm">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block rounded-xl bg-white overflow-hidden shadow-sm border border-slate-200 animate-in fade-in duration-500">
         <Table>
-          <TableHeader className="bg-slate-50">
+          <TableHeader className="bg-slate-50/50">
             <TableRow>
-              <TableHead className="w-[50px]">
+              <TableHead className="w-[60px] px-6">
                 <Checkbox
                   checked={isAllSelected}
                   onCheckedChange={() => toggleSelectAll(allIds)}
@@ -232,88 +238,209 @@ export function PopularAreasTable({
                   className={
                     isPartialSelected
                       ? "data-[state=checked]:bg-primary/50"
-                      : ""
+                      : "rounded-md"
                   }
                 />
               </TableHead>
-              <TableHead className="w-[100px]">No.</TableHead>
-              <TableHead>THA Name</TableHead>
-              <TableHead>ENG Name</TableHead>
-              <TableHead>CHN Name</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[80px] font-bold text-slate-900 px-6">
+                ลำดับ
+              </TableHead>
+              <TableHead className="font-bold text-slate-900 px-6">
+                ชื่อภาษาไทย (THA)
+              </TableHead>
+              <TableHead className="font-bold text-slate-900 px-6">
+                ชื่อภาษาอังกฤษ (ENG)
+              </TableHead>
+              <TableHead className="font-bold text-slate-900 px-6">
+                ชื่อภาษาจีน (CHN)
+              </TableHead>
+              <TableHead className="text-right font-bold text-slate-900 px-6">
+                จัดการ
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
-                  className="text-center h-24 text-slate-500"
+                  colSpan={6}
+                  className="text-center py-20 text-slate-400 bg-white"
                 >
-                  {searchQuery ? (
-                    <span>
-                      ไม่พบผลลัพธ์สำหรับ "
-                      <span className="font-semibold text-slate-900">
-                        {searchQuery}
-                      </span>
-                      "
-                    </span>
-                  ) : (
-                    "ยังไม่มีข้อมูล"
-                  )}
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="p-4 bg-slate-50 rounded-full">
+                      <Search className="h-10 w-10 text-slate-200" />
+                    </div>
+                    <div>
+                      {searchQuery ? (
+                        <>
+                          <p className="font-semibold text-slate-600">
+                            ไม่พบผลลัพธ์
+                          </p>
+                          <p className="text-sm">
+                            ไม่พบทำเลที่ตรงกับ "{searchQuery}"
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-semibold text-slate-600">
+                            ยังไม่มีข้อมูล
+                          </p>
+                          <p className="text-sm">เริ่มต้นเพิ่มทำเลใหม่ได้เลย</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               displayData.map((item, index) => (
                 <TableRow
                   key={item.id}
-                  className={isSelected(item.id) ? "bg-blue-50/50" : ""}
+                  className={`group hover:bg-slate-50/80 transition-all duration-200 ${isSelected(item.id) ? "bg-blue-50/50" : ""}`}
                 >
-                  <TableCell className="w-[50px]">
+                  <TableCell className="px-6 py-4">
                     <Checkbox
                       checked={isSelected(item.id)}
                       onCheckedChange={() => toggleSelect(item.id)}
                       aria-label={`เลือก ${item.name}`}
+                      className="rounded-md"
                     />
                   </TableCell>
-                  <TableCell className="font-mono text-slate-500">
+                  <TableCell className="font-mono text-sm text-slate-500 px-6">
                     {start + index + 1}
                   </TableCell>
-                  <TableCell className="font-medium text-slate-900">
+                  <TableCell className="font-bold text-slate-900 px-6">
                     {item.name}
                   </TableCell>
-                  <TableCell className="text-slate-600">
-                    {item.name_en || "-"}
+                  <TableCell className="text-slate-600 px-6 font-medium">
+                    {item.name_en || <span className="text-slate-300">-</span>}
                   </TableCell>
-                  <TableCell className="text-slate-600">
-                    {item.name_cn || "-"}
+                  <TableCell className="text-slate-600 px-6 font-medium">
+                    {item.name_cn || <span className="text-slate-300">-</span>}
                   </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      onClick={() => handleOpenDialog(item)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                      onClick={() => {
-                        setDeleteConfirmId(item.id);
-                        setDeleteConfirmName(item.name);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <TableCell className="text-right px-6">
+                    <div className="flex justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer transition-colors"
+                        onClick={() => handleOpenDialog(item)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
+                        onClick={() => {
+                          setDeleteConfirmId(item.id);
+                          setDeleteConfirmName(item.name);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile & Tablet Card View */}
+      <div className="lg:hidden space-y-4  animate-in fade-in duration-500">
+        {filteredData.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-400 font-medium">
+            <div className="flex flex-col items-center gap-3">
+              <Search className="h-10 w-10 text-slate-200" />
+              <p>ไม่พบข้อมูลทำเล</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {displayData.map((item, index) => (
+              <div
+                key={item.id}
+                className={cn(
+                  "p-5 bg-white rounded-2xl border transition-all active:scale-[0.98] shadow-sm",
+                  isSelected(item.id)
+                    ? "border-indigo-200 bg-indigo-50/30"
+                    : "border-slate-200",
+                )}
+                onClick={() => toggleSelect(item.id)}
+              >
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Checkbox
+                      checked={isSelected(item.id)}
+                      onCheckedChange={() => toggleSelect(item.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="rounded-md shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 block w-fit mb-1">
+                        #{start + index + 1}
+                      </span>
+                      <h4 className="font-bold text-slate-900 leading-tight truncate">
+                        {item.name}
+                      </h4>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50 rounded-xl"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenDialog(item);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-50 rounded-xl"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirmId(item.id);
+                        setDeleteConfirmName(item.name);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                      English
+                    </span>
+                    <p className="text-xs font-semibold text-slate-600 truncate">
+                      {item.name_en || (
+                        <span className="text-slate-300 font-normal">N/A</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                      Chinese
+                    </span>
+                    <p className="text-xs font-semibold text-slate-600 truncate">
+                      {item.name_cn || (
+                        <span className="text-slate-300 font-normal">N/A</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <AlertDialog

@@ -89,7 +89,7 @@ function PartnersContent() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm  flex items-center gap-4 transition-all hover:shadow-md">
           <div className="h-12 w-12 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600">
             <Handshake className="h-6 w-6" />
           </div>

@@ -101,10 +101,13 @@ export function PartnerForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 p-1">
-        <div className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-6 sm:space-y-8 p-1 h-[calc(100vh-200px)] overflow-y-auto"
+      >
+        <div className="space-y-4 sm:space-y-6">
           {/* Main Info Section */}
-          <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4 shadow-xs">
+          <div className="bg-slate-50/50 p-4 sm:p-6 rounded-2xl border border-slate-100 space-y-4 shadow-xs">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
                 <Globe className="h-4 w-4" />
@@ -112,50 +115,54 @@ export function PartnerForm({
               <h3 className="font-semibold text-slate-800">ข้อมูลพื้นฐาน</h3>
             </div>
 
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-slate-600">
-                    ชื่อพาร์ทเนอร์
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="เช่น SCB, Sansiri, PropertyGuru..."
-                      className="bg-white border-slate-200 focus:border-blue-500 transition-all h-11"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="website_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-slate-600">URL เว็บไซต์</FormLabel>
-                  <FormControl>
-                    <div className="relative">
+            <div className="grid grid-cols-1 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-600">
+                      ชื่อพาร์ทเนอร์
+                    </FormLabel>
+                    <FormControl>
                       <Input
-                        placeholder="https://www.example.com"
-                        className="bg-white border-slate-200 focus:border-blue-500 pl-9 transition-all h-11"
+                        placeholder="เช่น SCB, Sansiri, PropertyGuru..."
+                        className="bg-white border-slate-200 focus:border-blue-500 transition-all h-11 rounded-xl"
                         {...field}
                       />
-                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="website_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-600">
+                      URL เว็บไซต์
+                    </FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          placeholder="https://www.example.com"
+                          className="bg-white border-slate-200 focus:border-blue-500 pl-9 transition-all h-11 rounded-xl"
+                          {...field}
+                        />
+                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
 
           {/* Identity Section (Logo) */}
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_200px] gap-6 p-6 rounded-2xl border border-slate-100 bg-white">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-6 p-4 sm:p-6 rounded-2xl border border-slate-100 bg-white">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="h-8 w-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
@@ -175,11 +182,11 @@ export function PartnerForm({
                     <FormControl>
                       <Input
                         placeholder="https://..."
-                        className="bg-slate-50/50 border-slate-200 focus:border-blue-500 transition-all h-11"
+                        className="bg-slate-50/50 border-slate-200 focus:border-blue-500 transition-all h-11 rounded-xl"
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription className="text-xs text-slate-400">
+                    <FormDescription className="text-[11px] text-slate-400 leading-tight">
                       ควรเป็นไฟล์โปร่งใส PNG หรือ SVG เพื่อการแสดงผลที่สวยงาม
                     </FormDescription>
                     <FormMessage />
@@ -191,7 +198,7 @@ export function PartnerForm({
             <div className="flex flex-col items-center justify-center">
               <div
                 className={cn(
-                  "w-full aspect-video md:h-32 border-2 border-dashed rounded-xl flex items-center justify-center bg-white overflow-hidden relative transition-all duration-300 shadow-xs",
+                  "w-full aspect-video lg:h-32 border-2 border-dashed rounded-xl flex items-center justify-center bg-white overflow-hidden relative transition-all duration-300 shadow-xs",
                   logoUrl
                     ? "border-blue-200 bg-blue-50/20"
                     : "border-slate-200 bg-slate-50",
@@ -226,7 +233,7 @@ export function PartnerForm({
 
           {/* Visibility Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-5 rounded-2xl border border-slate-100 bg-slate-50/30">
+            <div className="p-4 sm:p-5 rounded-2xl border border-slate-100 bg-slate-50/30">
               <FormField
                 control={form.control}
                 name="sort_order"
@@ -239,7 +246,7 @@ export function PartnerForm({
                     <FormControl>
                       <Input
                         type="number"
-                        className="bg-white border-slate-200 focus:border-blue-500 h-11"
+                        className="bg-white border-slate-200 focus:border-blue-500 h-11 rounded-xl"
                         {...field}
                       />
                     </FormControl>
@@ -249,7 +256,7 @@ export function PartnerForm({
               />
             </div>
 
-            <div className="p-5 rounded-2xl border border-slate-100 bg-slate-50/30 flex items-center">
+            <div className="p-4 sm:p-5 rounded-2xl border border-slate-100 bg-slate-50/30 flex items-center">
               <FormField
                 control={form.control}
                 name="is_active"
@@ -259,7 +266,7 @@ export function PartnerForm({
                       <FormLabel className="text-slate-700 font-bold">
                         เผยแพร่บนเว็บไซต์
                       </FormLabel>
-                      <FormDescription className="text-xs text-slate-400">
+                      <FormDescription className="text-[11px] text-slate-400 leading-tight">
                         เปิด/ปิด การแสดงผลสำหรับบุคคลภายนอก
                       </FormDescription>
                     </div>
@@ -285,13 +292,13 @@ export function PartnerForm({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-100 mt-6 overflow-hidden">
           {onCancel && (
             <Button
               variant="outline"
               type="button"
               onClick={onCancel}
-              className="border-slate-200 hover:bg-slate-50 text-slate-600 h-11 px-6 rounded-xl transition-all"
+              className="w-full sm:w-auto border-slate-200 hover:bg-slate-50 text-slate-600 h-11 px-6 rounded-xl transition-all"
             >
               ยกเลิก
             </Button>
@@ -301,7 +308,7 @@ export function PartnerForm({
             disabled={
               saving || !form.formState.isValid || !form.formState.isDirty
             }
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 h-11 px-10 rounded-xl transition-all active:scale-95 flex items-center font-semibold disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 h-11 px-10 rounded-xl transition-all active:scale-95 flex items-center font-semibold disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
           >
             {saving ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
