@@ -322,7 +322,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "hidden flex-col border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 sm:flex shadow-sm z-50 h-screen sticky top-0 transition-all duration-300 ease-in-out",
+          "hidden flex-col border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 sm:flex shadow-sm z-60 h-screen sticky top-0 transition-all duration-300 ease-in-out",
           isCollapsed ? "w-20" : "w-72",
         )}
       >
@@ -351,14 +351,17 @@ export function SidebarNav({ role }: { role: UserRole }) {
           <button
             onClick={toggleCollapse}
             className={cn(
-              "absolute -right-3 top-10 h-6 w-6 rounded-full border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-sm transition-opacity duration-300",
-              !isHovered && "opacity-0",
+              "absolute -right-3.5 top-10 h-7 w-7 rounded-full border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-md hover:shadow-lg hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 transition-all duration-300 z-70 hover:scale-110 active:scale-95 group/toggle",
+              isHovered
+                ? "opacity-100 translate-x-0"
+                : "opacity-50 -translate-x-1",
             )}
+            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
             {isCollapsed ? (
-              <PanelLeftOpen className="h-3.5 w-3.5" />
+              <PanelLeftOpen className="h-4 w-4 transition-transform group-hover/toggle:rotate-12" />
             ) : (
-              <PanelLeftClose className="h-3.5 w-3.5" />
+              <PanelLeftClose className="h-4 w-4 transition-transform group-hover/toggle:-rotate-12" />
             )}
           </button>
         </div>
