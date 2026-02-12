@@ -130,7 +130,7 @@ export function CalendarView({
   return (
     <div className="space-y-4">
       {/* Header controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+      <div className="flex flex-col lg:flex-row md:items-center justify-between gap-4 p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
         {/* Left: Navigation & Title */}
         <div className="flex items-center justify-between w-full md:w-auto md:gap-4">
           <div className="flex items-center gap-2">
