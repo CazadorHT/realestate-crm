@@ -227,7 +227,7 @@ export function PropertyTypeGrid({
         </div>
 
         {/* PropertyTypeCard wrapper - Mobile: horizontal scroll, Desktop: grid */}
-        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4 md:gap-6 overflow-x-auto pb-6 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4 md:gap-6 overflow-x-auto pb-6  snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {isLoading
             ? Array.from({ length: 8 }).map((_, idx) => (
                 <div
