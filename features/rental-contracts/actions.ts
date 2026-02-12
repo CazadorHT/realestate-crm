@@ -16,7 +16,7 @@ import { logAudit } from "@/lib/audit"; // Need to update audit types if I log s
 import { revalidatePath } from "next/cache";
 
 export async function getContractByDealId(
-  dealId: string
+  dealId: string,
 ): Promise<RentalContract | null> {
   try {
     const ctx = await requireAuthContext();
@@ -24,22 +24,25 @@ export async function getContractByDealId(
     assertStaff(role);
 
     // Load contract
-    const { data: contract, error } = await supabase
+    // Use .order and .limit instead of .single to handle cases where duplicates might exist
+    // This prevents the whole section from failing if multiple contracts were created for one deal.
+    const { data: contracts, error } = await supabase
       .from("rental_contracts")
       .select("*")
       .eq("deal_id", dealId)
-      .single();
+      .order("created_at", { ascending: false })
+      .limit(1);
 
-    if (error || !contract) return null;
+    if (error || !contracts || contracts.length === 0) return null;
 
-    return contract as RentalContract;
+    return contracts[0] as RentalContract;
   } catch (err) {
     return null;
   }
 }
 
 export async function upsertContractAction(
-  input: ContractFormInput & { id?: string }
+  input: ContractFormInput & { id?: string },
 ) {
   try {
     const { supabase, user, role } = await requireAuthContext();
@@ -77,6 +80,21 @@ export async function upsertContractAction(
       // Create - Use full schema
       const validatedCreate = contractFormSchema.parse(input);
       dealIdForAudit = validatedCreate.deal_id;
+
+      // Check if a contract already exists for this deal to prevent duplicates
+      const { data: existingContract } = await supabase
+        .from("rental_contracts")
+        .select("id")
+        .eq("deal_id", validatedCreate.deal_id)
+        .maybeSingle();
+
+      if (existingContract) {
+        return {
+          success: false,
+          message:
+            "A contract already exists for this deal. Please edit the existing one.",
+        };
+      }
 
       // Validate deal type
       const { data: deal, error: dealErr } = await supabase
@@ -135,6 +153,10 @@ export async function upsertContractAction(
     } catch (e) {
       // ignore audit errors
     }
+
+    // revalidate deal pages
+    revalidatePath(`/protected/deals/${dealIdForAudit}`);
+    revalidatePath(`/protected/contracts`);
 
     return { success: true, data: data };
   } catch (error: unknown) {

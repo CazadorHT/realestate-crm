@@ -25,8 +25,12 @@ import {
   Box,
   History,
   CalendarDays,
+  MessageSquare,
+  Activity,
+  Layout,
+  Sparkles,
 } from "lucide-react";
-import { isStaff, type UserRole } from "@/lib/auth-shared";
+import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import {
@@ -93,12 +97,6 @@ export function MobileNav({ role }: { role: UserRole }) {
       active: pathname?.startsWith("/protected/deals") ?? false,
     },
     {
-      title: "สิ่งอำนวยความสะดวก",
-      href: "/protected/features",
-      icon: Box,
-      active: pathname?.startsWith("/protected/features") ?? false,
-    },
-    {
       title: "ปฏิทิน",
       href: "/protected/calendar",
       icon: CalendarDays,
@@ -129,6 +127,13 @@ export function MobileNav({ role }: { role: UserRole }) {
       active: pathname?.startsWith("/protected/blogs") ?? false,
     },
     {
+      title: "บริการ (Services)",
+      href: "/protected/services",
+      icon: Layout,
+      active: pathname?.startsWith("/protected/services") ?? false,
+      roles: ["ADMIN", "AGENT"],
+    },
+    {
       title: "คำถามที่พบบ่อย",
       href: "/protected/faqs",
       icon: CircleHelp,
@@ -157,6 +162,27 @@ export function MobileNav({ role }: { role: UserRole }) {
       active: pathname === "/protected/profile",
     },
     {
+      title: "AI Monitor",
+      href: "/protected/ai-monitor",
+      icon: Activity,
+      active: pathname?.startsWith("/protected/ai-monitor") ?? false,
+      roles: ["ADMIN", "AGENT"],
+    },
+    {
+      title: "ตั้งค่าเว็บไซต์",
+      href: "/protected/settings",
+      icon: Settings,
+      active: pathname === "/protected/settings",
+      roles: ["ADMIN", "AGENT"],
+    },
+    {
+      title: "SmartMatch Config",
+      href: "/protected/settings/smart-match",
+      icon: Sparkles,
+      active: pathname?.startsWith("/protected/settings/smart-match") ?? false,
+      roles: ["ADMIN"],
+    },
+    {
       title: "จัดการผู้ใช้",
       href: "/protected/settings/users",
       icon: Shield,
@@ -168,6 +194,13 @@ export function MobileNav({ role }: { role: UserRole }) {
       href: "/protected/admin/audit-logs",
       icon: History,
       active: pathname?.startsWith("/protected/admin/audit-logs") ?? false,
+      roles: ["ADMIN"],
+    },
+    {
+      title: "Line Manager",
+      href: "/protected/line-manager",
+      icon: MessageSquare,
+      active: pathname?.startsWith("/protected/line-manager") ?? false,
       roles: ["ADMIN"],
     },
   ];
@@ -232,46 +265,51 @@ export function MobileNav({ role }: { role: UserRole }) {
           <Menu className="h-6 w-6 text-slate-700 dark:text-slate-300" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] p-0 overflow-y-auto">
+      <SheetContent
+        side="left"
+        className="w-[300px] p-0 overflow-y-auto border-r border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xl"
+      >
         <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
-        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-20">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/30">
+            <div className="h-11 w-11 rounded-xl bg-linear-to-br from-blue-600 via-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/40 transform transition-transform group-hover:scale-105">
               <Building2 className="text-white h-6 w-6" />
             </div>
-            <div>
-              <h1 className="text-xl font-medium tracking-tight text-slate-700 dark:text-slate-200 uppercase">
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 uppercase leading-none">
                 OMA ASSET
               </h1>
-              <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-bold">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 font-black mt-1">
                 Real Estate CRM
               </p>
             </div>
           </div>
         </div>
 
-        <nav className="flex flex-col gap-1 p-4">
+        <nav className="flex flex-col gap-1 p-4 pb-12">
           <Link
             href="/protected"
             onClick={() => setOpen(false)}
             className={cn(
-              "flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all duration-300 font-bold text-sm relative overflow-hidden group",
+              "flex items-center gap-4 rounded-xl px-4 py-4 transition-all duration-300 font-bold text-sm relative overflow-hidden group",
               pathname === "/protected"
-                ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800",
+                ? "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-[0_4px_12px_-2px_rgba(59,130,246,0.12)] border border-blue-100/50 dark:border-blue-900/20"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm",
             )}
           >
             {pathname === "/protected" && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-blue-600 rounded-r-full" />
+              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600 rounded-r-full shadow-[2px_0_8px_rgba(37,99,235,0.4)]" />
             )}
-            <BarChart3
+            <div
               className={cn(
-                "h-5 w-5 transition-colors",
+                "h-8 w-8 rounded-lg flex items-center justify-center transition-colors shrink-0",
                 pathname === "/protected"
-                  ? "text-blue-600 dark:text-blue-400"
-                  : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300",
+                  ? "bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-500",
               )}
-            />
+            >
+              <BarChart3 className="h-5 w-5" />
+            </div>
             แดชบอร์ด
           </Link>
 
@@ -284,46 +322,53 @@ export function MobileNav({ role }: { role: UserRole }) {
                 <button
                   onClick={() => toggleGroup(group.id)}
                   className={cn(
-                    "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition-all duration-300 font-semibold text-xs uppercase tracking-wider",
+                    "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3.5 transition-all duration-300 font-bold text-[10px] uppercase tracking-[0.15em]",
                     hasActiveItem
-                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
-                      : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800",
+                      ? "bg-blue-100/50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                      : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-white dark:hover:bg-slate-800",
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <group.icon className="h-4 w-4" />
+                    <div
+                      className={cn(
+                        "h-6 w-6 rounded flex items-center justify-center transition-colors",
+                        hasActiveItem ? "text-blue-600" : "text-slate-400",
+                      )}
+                    >
+                      <group.icon className="h-4 w-4" />
+                    </div>
                     {group.title}
                   </div>
                   {isOpen ? (
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className="h-4 w-4 opacity-50" />
                   ) : (
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 opacity-50" />
                   )}
                 </button>
 
                 {isOpen && (
-                  <div className="space-y-1 ml-2">
+                  <div className="space-y-1 ml-3 pl-3 border-l border-slate-100 dark:border-slate-800">
                     {group.items.map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}
                         onClick={() => setOpen(false)}
                         className={cn(
-                          "flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-300 text-sm relative overflow-hidden group",
+                          "flex items-center gap-3 rounded-lg px-4 py-3 transition-all duration-300 text-sm relative overflow-hidden group",
                           item.active
-                            ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-semibold"
-                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium",
+                            ? "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 font-bold shadow-sm border border-blue-50/50"
+                            : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 font-semibold",
                         )}
                       >
                         {item.active && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 bg-blue-600 rounded-r-full" />
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-blue-600 rounded-r-full shadow-[1px_0_4px_rgba(37,99,235,0.4)]" />
                         )}
                         <item.icon
                           className={cn(
-                            "h-4 w-4 transition-colors",
+                            "h-4 w-4 transition-colors shrink-0",
                             item.active
                               ? "text-blue-600 dark:text-blue-400"
-                              : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300",
+                              : "text-slate-400 group-hover:text-blue-500",
                           )}
                         />
                         {item.title}

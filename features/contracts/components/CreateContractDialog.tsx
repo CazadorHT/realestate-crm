@@ -130,18 +130,18 @@ export function CreateContractDialog() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[750px] p-0 overflow-hidden border-none shadow-2xl bg-slate-50">
-        <DialogHeader className="p-6 pb-4 bg-white border-b border-slate-200">
+      <DialogContent className="sm:max-w-[750px] w-[calc(100vw-1.5rem)] max-h-[92vh] p-0 overflow-hidden border-none shadow-2xl bg-slate-50 flex flex-col rounded-2xl sm:rounded-xl">
+        <DialogHeader className="p-4 sm:p-6 pb-4 bg-white border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-              <FileText className="h-6 w-6" />
+            <div className="p-2 bg-blue-50 rounded-lg text-blue-600 shrink-0">
+              <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <div>
-              <DialogTitle className="text-xl font-bold text-slate-900">
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="text-lg sm:text-xl font-bold text-slate-900 truncate">
                 สร้างสัญญาใหม่
               </DialogTitle>
-              <DialogDescription className="text-slate-500">
-                กรอกรายละเอียดสัญญาสำหรับดีลที่ปิดการขายแล้ว
+              <DialogDescription className="text-xs sm:text-sm text-slate-500">
+                รายละเอียดสัญญาสำหรับดีลที่ปิดการขายแล้ว
               </DialogDescription>
             </div>
           </div>
@@ -150,16 +150,16 @@ export function CreateContractDialog() {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col max-h-[75vh]"
+            className="flex flex-col flex-1 min-h-0 overflow-hidden"
           >
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-6 min-h-0">
               {/* Deal Selection Section */}
               <div className="space-y-4">
                 <FormField
                   control={form.control}
                   name="deal_id"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
+                    <FormItem className="space-y-2 min-w-0">
                       <FormLabel className="text-sm font-bold text-slate-700">
                         ดีลที่เกี่ยวข้อง
                       </FormLabel>
@@ -213,8 +213,8 @@ export function CreateContractDialog() {
                 />
 
                 {selectedDeal && (
-                  <div className="flex gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 max-w-[600px]">
-                    <div className="relative w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-200 line-clamp-2 whitespace-normal wrap-break-word">
+                  <div className="flex flex-col sm:flex-row gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 max-w-full">
+                    <div className="relative w-full sm:w-24 h-48 sm:h-24 shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-200">
                       {selectedDeal.cover_image_url ? (
                         <img
                           src={selectedDeal.cover_image_url}
@@ -228,7 +228,7 @@ export function CreateContractDialog() {
                       )}
                       <div
                         className={cn(
-                          "absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider",
+                          "absolute top-2 left-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider",
                           selectedDeal.deal_type === "RENT"
                             ? "bg-indigo-600 text-white"
                             : "bg-emerald-600 text-white",
@@ -238,10 +238,10 @@ export function CreateContractDialog() {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0 space-y-1 py-1">
-                      <h4 className="font-bold text-slate-900 text-base leading-tight truncate">
+                      <h4 className="font-bold text-slate-900 text-base leading-tight sm:truncate line-clamp-2">
                         {selectedDeal.property_title}
                       </h4>
-                      <p className="text-sm text-slate-600 font-medium">
+                      <p className="text-sm text-slate-600 font-medium truncate">
                         ลูกค้า: {selectedDeal.lead_name}
                       </p>
                       <div className="flex flex-wrap gap-2 mt-2">
@@ -254,7 +254,9 @@ export function CreateContractDialog() {
                               selectedDeal.original_rental_price >
                                 selectedDeal.rental_price && (
                                 <span className="text-[9px] text-slate-400 line-through ml-1">
-                                  {selectedDeal.original_rental_price.toLocaleString()}
+                                  {(
+                                    selectedDeal.original_rental_price || 0
+                                  ).toLocaleString()}
                                 </span>
                               )}
                             <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-100 font-bold">
@@ -275,7 +277,9 @@ export function CreateContractDialog() {
                               selectedDeal.original_price >
                                 selectedDeal.price && (
                                 <span className="text-[9px] text-slate-400 line-through ml-1">
-                                  {selectedDeal.original_price.toLocaleString()}
+                                  {(
+                                    selectedDeal.original_price || 0
+                                  ).toLocaleString()}
                                 </span>
                               )}
                             <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-100 font-bold">
@@ -601,19 +605,19 @@ export function CreateContractDialog() {
               )}
             </div>
 
-            <DialogFooter className="p-6 bg-white border-t border-slate-200 gap-3 sm:gap-3">
+            <DialogFooter className="p-4 sm:p-6 bg-white border-t border-slate-200 flex-col sm:flex-row gap-3">
               <Button
                 variant="ghost"
                 type="button"
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="text-slate-500 font-semibold px-10 h-11 cursor-pointer"
+                className="w-full sm:w-auto text-slate-500 font-semibold px-10 h-11 cursor-pointer order-2 sm:order-1"
               >
                 ยกเลิก
               </Button>
               <Button
                 type="submit"
-                className="bg-emerald-600 hover:bg-emerald-700 font-bold px-10 h-11 shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer rounded-xl"
+                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 font-bold px-10 h-11 shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer rounded-xl order-1 sm:order-2"
                 disabled={isSubmitting || !selectedDealId}
               >
                 {isSubmitting ? (

@@ -20,9 +20,10 @@ import {
   CheckCircle2,
   XCircle,
   Calendar,
+  Users,
 } from "lucide-react";
 import { differenceInHours } from "date-fns";
-import { formatDate } from "@/lib/utils";
+import { formatDate, cn } from "@/lib/utils";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteRentalContractsAction } from "@/features/contracts/bulk-actions";
@@ -108,7 +109,8 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
         entityName="สัญญา"
       />
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      {/* Desktop Table */}
+      <div className="hidden lg:block rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>
@@ -271,55 +273,235 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
             ) : (
               <TableRow>
                 <TableCell colSpan={8} className="h-auto py-0 border-0">
-                  {/* Premium Empty State */}
-                  <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50 to-white p-12 my-4">
-                    {/* Decorative Background */}
-                    <div className="absolute inset-0 opacity-5">
-                      <div className="absolute top-10 left-10 w-20 h-20 border-4 border-slate-400 rounded-xl rotate-12" />
-                      <div className="absolute bottom-10 right-10 w-16 h-16 border-4 border-slate-400 rounded-full" />
-                      <div className="absolute top-1/2 left-1/3 w-12 h-12 border-4 border-slate-400 rounded-lg -rotate-6" />
-                    </div>
-
-                    <div className="relative flex flex-col items-center justify-center text-center space-y-6">
-                      {/* Icon */}
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl scale-150" />
-                        <div className="relative p-6 bg-linear-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-xl shadow-emerald-500/30">
-                          <FileText className="h-12 w-12 text-white" />
-                        </div>
-                      </div>
-
-                      {/* Text */}
-                      <div className="space-y-2 ">
-                        <h3 className="text-2xl font-bold text-slate-800">
-                          ยังไม่มีสัญญาเช่าในระบบ
-                        </h3>
-                        <p className="text-slate-500 leading-relaxed">
-                          การสร้างสัญญาเช่าต้องมีดีลที่มีสถานะ{" "}
-                          <span className="font-semibold text-emerald-600">
-                            "สำเร็จ"
-                          </span>{" "}
-                          เท่านั้น กรุณาไปหน้าดีลเพื่อปิดการขาย/เช่าก่อน
-                        </p>
-                      </div>
-
-                      {/* Button */}
-                      <Button
-                        asChild
-                        className="mt-2 gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20"
-                      >
-                        <Link href="/protected/deals">
-                          ไปหน้าดีล
-                          <ArrowUpRight className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
+                  <EmptyState />
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Grid */}
+      <div className="lg:hidden space-y-4">
+        <div className="flex items-center justify-between px-2 mb-2">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="select-all-mobile"
+              checked={isAllSelected}
+              onCheckedChange={() => toggleSelectAll(allIds)}
+            />
+            <label
+              htmlFor="select-all-mobile"
+              className="text-xs font-bold text-slate-500 uppercase tracking-wider"
+            >
+              เลือกทั้งหมด
+            </label>
+          </div>
+          <p className="text-[10px] font-medium text-slate-400">
+            Displaying {contracts.length} contracts
+          </p>
+        </div>
+
+        {contracts && contracts.length > 0 ? (
+          contracts.map((contract) => {
+            const statusInfo = getContractStatus(contract.end_date);
+            const propertyTitle =
+              contract.deal?.property?.title || "ไม่ระบุทรัพย์สิน";
+            const isSel = isSelected(contract.id);
+
+            return (
+              <div
+                key={contract.id}
+                className={cn(
+                  "relative group rounded-3xl border transition-all duration-300 overflow-hidden",
+                  isSel
+                    ? "bg-blue-50/50 border-blue-200 shadow-sm"
+                    : "bg-white border-slate-100 shadow-xs hover:border-slate-300",
+                )}
+              >
+                {/* Selection Checkbox (Top Right) */}
+                <div className="absolute top-4 right-4 z-10">
+                  <Checkbox
+                    checked={isSel}
+                    onCheckedChange={() => toggleSelect(contract.id)}
+                    className="h-5 w-5 rounded-md border-slate-300"
+                  />
+                </div>
+
+                <div className="p-5">
+                  <div className="flex items-start gap-4 pr-10">
+                    <div
+                      className={cn(
+                        "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm",
+                        statusInfo.status === "expired"
+                          ? "bg-red-50 text-red-500"
+                          : statusInfo.status === "expiring-soon"
+                            ? "bg-orange-50 text-orange-500"
+                            : "bg-blue-50 text-blue-500",
+                      )}
+                    >
+                      <FileText className="h-6 w-6" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono text-xs font-bold text-slate-400 uppercase tracking-tight">
+                          #{contract.contract_number}
+                        </span>
+                        {contract.created_at &&
+                          differenceInHours(
+                            new Date(),
+                            new Date(contract.created_at),
+                          ) < 24 && (
+                            <span className="bg-amber-500 text-white text-[8px] px-1.5 py-0.5 rounded font-black">
+                              NEW
+                            </span>
+                          )}
+                      </div>
+                      <Link
+                        href={`/protected/deals/${contract.deal_id}`}
+                        className="block font-bold text-slate-800 text-sm leading-tight hover:text-blue-600 transition-colors line-clamp-2"
+                      >
+                        {propertyTitle}
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        ผู้เช่า
+                      </p>
+                      <p className="text-xs font-bold text-slate-700 truncate">
+                        {contract.tenant_name}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        ค่าเช่า/เดือน
+                      </p>
+                      <p className="text-xs font-black text-blue-600">
+                        {contract.monthly_rent
+                          ? new Intl.NumberFormat("th-TH").format(
+                              contract.monthly_rent,
+                            )
+                          : "-"}{" "}
+                        ฿
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        ระยะเวลา
+                      </p>
+                      <p className="text-[10px] font-semibold text-slate-600">
+                        {formatDate(contract.start_date)} -{" "}
+                        {formatDate(contract.end_date)}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        สถานะ
+                      </p>
+                      {statusInfo.status === "expired" ? (
+                        <div className="inline-flex items-center gap-1.5 text-red-600">
+                          <XCircle className="h-3 w-3" />
+                          <span className="text-[10px] font-black uppercase tracking-tight">
+                            {statusInfo.label}
+                          </span>
+                        </div>
+                      ) : statusInfo.status === "expiring-soon" ? (
+                        <div className="inline-flex items-center gap-1.5 text-orange-600">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span className="text-[10px] font-black uppercase tracking-tight">
+                            {statusInfo.label} (อีก {statusInfo.days} ว.)
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1.5 text-emerald-600">
+                          <CheckCircle2 className="h-3 w-3" />
+                          <span className="text-[10px] font-black uppercase tracking-tight">
+                            {statusInfo.label}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 pt-5 border-t border-slate-50 flex items-center justify-between gap-3">
+                    <div className="flex -space-x-1">
+                      {/* Placeholder for tenant avatar or similar if needed */}
+                      <div className="h-6 w-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center">
+                        <Users className="h-3 w-3 text-slate-400" />
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="h-9 rounded-xl text-xs font-bold border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-all"
+                    >
+                      <Link
+                        href={`/protected/deals/${contract.deal_id}?tab=contract`}
+                      >
+                        ดูรายละเอียด{" "}
+                        <ArrowUpRight className="ml-1.5 h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="px-2">
+            <EmptyState />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50 to-white py-12 px-6 sm:p-12 my-4">
+      {/* Decorative Background */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-10 left-10 w-20 h-20 border-4 border-slate-400 rounded-xl rotate-12" />
+        <div className="absolute bottom-10 right-10 w-16 h-16 border-4 border-slate-400 rounded-full" />
+        <div className="absolute top-1/2 left-1/3 w-12 h-12 border-4 border-slate-400 rounded-lg -rotate-6" />
+      </div>
+
+      <div className="relative flex flex-col items-center justify-center text-center space-y-6">
+        {/* Icon */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl scale-150" />
+          <div className="relative p-6 bg-linear-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-xl shadow-emerald-500/30">
+            <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
+          </div>
+        </div>
+
+        {/* Text */}
+        <div className="space-y-2">
+          <h3 className="text-xl sm:text-2xl font-bold text-slate-800">
+            ยังไม่มีสัญญาเช่าในระบบ
+          </h3>
+          <p className="text-sm text-slate-500 leading-relaxed max-w-sm mx-auto">
+            การสร้างสัญญาเช่าต้องมีดีลที่มีสถานะ{" "}
+            <span className="font-semibold text-emerald-600">"สำเร็จ"</span>{" "}
+            เท่านั้น กรุณาไปหน้าดีลเพื่อปิดการขาย/เช่าก่อน
+          </p>
+        </div>
+
+        {/* Button */}
+        <Button
+          asChild
+          className="mt-2 gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 rounded-xl h-11"
+        >
+          <Link href="/protected/deals">
+            ไปหน้าดีล
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </Button>
       </div>
     </div>
   );

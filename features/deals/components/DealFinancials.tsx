@@ -12,7 +12,7 @@ interface DealFinancialsProps {
 
 export function DealFinancials({ deal, isRent }: DealFinancialsProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Commission Card */}
       <div className="rounded-xl border border-slate-200 bg-linear-to-br from-emerald-50 to-white p-4 shadow-sm">
         <div className="flex items-center gap-2 text-emerald-600 mb-2">
