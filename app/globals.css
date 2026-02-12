@@ -343,4 +343,13 @@
     @apply bg-indigo-100!;
     background: #e0e7ff !important;
   }
+
+  /* Darken blockquote text for better readability on mobile */
+  .prose blockquote {
+    @apply text-slate-900 font-normal border-l-blue-600 not-italic!;
+  }
+
+  .prose blockquote p {
+    @apply text-slate-900! opacity-100!;
+  }
 }
