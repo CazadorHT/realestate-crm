@@ -101,19 +101,19 @@ export function TrustSection() {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-2 overflow-hidden shrink-0 w-[85vw] md:w-full snap-center"
+              className="group relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-xl transition-all! duration-500! hover:-translate-y-2! overflow-hidden shrink-0 w-[85vw] md:w-full snap-center"
               data-aos="fade-up"
               data-aos-delay={index * 100}
             >
               {/* Gradient Background on Hover */}
               <div
-                className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
+                className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity! duration-500!`}
               />
 
               <div className="relative z-10">
                 {/* Icon */}
                 <div
-                  className={`w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl ${feature.iconBg} flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3`}
+                  className={`w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl ${feature.iconBg} flex items-center justify-center mb-4 md:mb-6 transition-all! duration-300! group-hover:scale-110 group-hover:rotate-3`}
                 >
                   <feature.icon
                     className={`h-6 w-6 md:h-7 md:w-7 ${feature.iconColor}`}
