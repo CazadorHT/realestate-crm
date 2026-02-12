@@ -81,15 +81,15 @@ export default async function OwnersPage({ searchParams }: PageProps) {
           <>
             <OwnersTable owners={owners} />
 
-            <div className="flex items-center justify-between text-sm bg-slate-50 rounded-xl p-4 border border-gray-200">
-              <div className="text-slate-600 font-medium">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-sm bg-slate-50 rounded-xl p-4 border border-gray-200 shadow-xs">
+              <div className="text-slate-600 font-medium order-2 lg:order-1 text-center lg:text-left">
                 ทั้งหมด <span className="text-slate-900">{count}</span> รายการ •
                 หน้า <span className="text-slate-900">{page}</span> จาก{" "}
                 <span className="text-slate-900">{totalPages}</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 order-1 lg:order-2 w-full lg:w-auto">
                 <Link
-                  className={`rounded-lg border border-gray-200 bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
+                  className={`flex-1 lg:flex-none text-center rounded-lg border border-gray-200 bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
                     page <= 1 ? "pointer-events-none opacity-50" : ""
                   }`}
                   href={makeHref(page - 1)}
@@ -98,7 +98,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
                   ← ก่อนหน้า
                 </Link>
                 <Link
-                  className={`rounded-lg border border-gray-200 bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
+                  className={`flex-1 lg:flex-none text-center rounded-lg border border-gray-200 bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
                     page >= totalPages ? "pointer-events-none opacity-50" : ""
                   }`}
                   href={makeHref(page + 1)}

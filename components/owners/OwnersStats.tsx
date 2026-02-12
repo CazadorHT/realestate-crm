@@ -40,7 +40,7 @@ export function OwnersStats({ stats }: OwnersStatsProps) {
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-3 lg:grid-cols-3">
       {statItems.map((item, index) => (
         <Card key={index} className="transition-all hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

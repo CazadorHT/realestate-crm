@@ -183,7 +183,7 @@ export function OwnerForm(props: Props) {
             ข้อมูลการติดต่อ
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-2">
             {/* Phone */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">
