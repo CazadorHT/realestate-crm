@@ -3,6 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Phone, Mail, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 export function ContactInfoCards() {
   const { t } = useLanguage();
@@ -11,27 +12,27 @@ export function ContactInfoCards() {
     {
       icon: Phone,
       title: t("contact.info_phone"),
-      value: "02-XXX-XXXX",
+      value: siteConfig.contact.phone,
       subtitle: t("contact.info_phone_sub"),
-      href: "tel:02XXXXXXX",
+      href: `tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, "")}`,
       color: "bg-blue-100 text-blue-600",
       borderColor: "group-hover:border-blue-200",
     },
     {
       icon: Mail,
       title: t("contact.info_email"),
-      value: "contact@yourdomain.com",
+      value: siteConfig.contact.email,
       subtitle: t("contact.info_email_sub"),
-      href: "mailto:contact@yourdomain.com",
+      href: `mailto:${siteConfig.contact.email}`,
       color: "bg-purple-100 text-purple-600",
       borderColor: "group-hover:border-purple-200",
     },
     {
       icon: MessageCircle,
       title: t("contact.info_line"),
-      value: "@your-line-id",
+      value: siteConfig.contact.lineId,
       subtitle: t("contact.info_line_sub"),
-      href: "https://line.me/R/ti/p/@your-line-id",
+      href: siteConfig.links.line,
       color: "bg-green-100 text-green-600",
       borderColor: "group-hover:border-green-200",
     },

@@ -8,10 +8,7 @@ import { CookieConsent } from "@/components/common/CookieConsent";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { getServerTranslations } from "@/lib/i18n";
 import { cookies } from "next/headers";
-
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+import { siteConfig } from "@/lib/site-config";
 
 const prompt = Prompt({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -31,10 +28,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
 
   return {
-    metadataBase: new URL(defaultUrl),
+    metadataBase: new URL(siteConfig.url),
     title: {
       default: t("metadata.default_title"),
-      template: `%s | OMA Asset`,
+      template: `%s | ${siteConfig.name}`,
     },
     description: t("metadata.default_description"),
     keywords: [
@@ -45,15 +42,15 @@ export async function generateMetadata(): Promise<Metadata> {
       "นายหน้าอสังหาริมทรัพย์",
       "ลงประกาศขายบ้าน",
       "Real Estate Thailand",
-      "OMA Asset",
+      siteConfig.name,
     ],
     openGraph: {
       type: "website",
       locale: "th_TH",
-      url: defaultUrl,
+      url: siteConfig.url,
       title: t("metadata.default_title"),
       description: t("metadata.default_description"),
-      siteName: "OMA Asset",
+      siteName: siteConfig.name,
     },
     twitter: {
       card: "summary_large_image",

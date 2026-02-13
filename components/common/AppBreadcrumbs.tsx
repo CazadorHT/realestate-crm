@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Breadcrumb, BreadcrumbItem } from "@/components/ui/breadcrumb";
 import { useMemo } from "react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 const routeLabels: Record<string, string> = {
   // Common
@@ -95,7 +96,7 @@ export function AppBreadcrumbs({
         "@type": "ListItem",
         position: index + 1,
         name: item.label,
-        item: item.href ? `https://your-domain.com${item.href}` : undefined,
+        item: item.href ? `${siteConfig.url}${item.href}` : undefined,
       })),
     };
   }, [breadcrumbs]);

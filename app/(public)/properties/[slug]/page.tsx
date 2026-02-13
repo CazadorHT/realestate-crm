@@ -20,6 +20,7 @@ import { PropertyHeader } from "@/components/public/property-detail/PropertyHead
 import { PropertyBadgesSection } from "@/components/public/property-detail/PropertyBadgesSection";
 import { PropertyDescription } from "@/components/public/property-detail/PropertyDescription";
 import { PropertyAmenities } from "@/components/public/property-detail/PropertyAmenities";
+import { siteConfig } from "@/lib/site-config";
 
 // Lazy loaded components
 const PropertyMapSection = dynamic(() =>
@@ -204,11 +205,11 @@ export default async function PublicPropertyDetailPage(props: {
       priceCurrency: "THB",
       price: data.listing_type === "RENT" ? data.rental_price : data.price,
       availability: "https://schema.org/InStock",
-      url: `https://your-domain.com/properties/${data.slug || data.id}`,
+      url: `${siteConfig.url}/properties/${data.slug || data.id}`,
     },
   };
 
-  const shareUrl = `https://your-domain.com/properties/${data.slug || slug}`;
+  const shareUrl = `${siteConfig.url}/properties/${data.slug || slug}`;
 
   // Helper: Try to resolve short links (server-side)
   async function resolveGoogleMapsLink(url: string | null) {
@@ -536,9 +537,7 @@ export async function generateMetadata(props: {
     propertyImages?.[0]?.image_url ||
     "/images/hero-realestate.png";
 
-  const canonicalUrl = `https://your-domain.com/properties/${
-    data.slug || slug
-  }`;
+  const canonicalUrl = `${siteConfig.url}/properties/${data.slug || slug}`;
 
   return {
     title: pageTitle,

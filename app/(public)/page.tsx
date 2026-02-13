@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 import { Metadata } from "next";
 import { getServerTranslations } from "@/lib/i18n";
+import { siteConfig } from "@/lib/site-config";
 
 // Critical components loaded immediately
 import { HeroSection } from "@/components/public/HeroSection";
@@ -75,13 +76,13 @@ export default function LandingPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    name: "OMA Asset",
-    image: `${process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.com"}/images/logo.png`,
+    name: siteConfig.name,
+    image: `${siteConfig.url}/images/logo.png`,
     description:
       "ศูนย์รวมประกาศอสังหาริมทรัพย์ออนไลน์ ค้นหาง่าย ฝากขายรวดเร็ว พร้อมบริการดูแลโดยมืออาชีพ",
     address: {
       "@type": "PostalAddress",
-      streetAddress: "123 Business Road",
+      streetAddress: siteConfig.contact.address.split(",")[0],
       addressLocality: "Bangkok",
       postalCode: "10110",
       addressCountry: "TH",
@@ -91,7 +92,7 @@ export default function LandingPage() {
       latitude: 13.7563,
       longitude: 100.5018,
     },
-    url: process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.com",
+    url: siteConfig.url,
     priceRange: "฿฿฿",
     openingHoursSpecification: [
       {

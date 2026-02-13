@@ -13,6 +13,7 @@ import {
 import { BlogHero } from "@/components/public/blog/BlogHero";
 import { BlogFeaturedPost } from "@/components/public/blog/BlogFeaturedPost";
 import { BlogSidebar } from "@/components/public/blog/BlogSidebar";
+import { siteConfig } from "@/lib/site-config";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -78,7 +79,7 @@ export default async function BlogListingPage({
               : "Admin",
         },
         image: post.cover_image || "",
-        url: `https://your-domain.com/blog/${post.slug}`,
+        url: `${siteConfig.url}/blog/${post.slug}`,
       })),
     },
   };

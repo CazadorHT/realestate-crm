@@ -23,6 +23,7 @@ import { BlogDetailHero } from "@/components/public/blog/BlogDetailHero";
 import { BlogDetailContent } from "@/components/public/blog/BlogDetailContent";
 import { BlogDetailSidebar } from "@/components/public/blog/BlogDetailSidebar";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
+import { siteConfig } from "@/lib/site-config";
 
 interface BlogPostPageProps {
   params: Promise<{
@@ -122,12 +123,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       name: "Your Real Estate Company",
       logo: {
         "@type": "ImageObject",
-        url: "https://your-domain.com/logo.png",
+        url: `${siteConfig.url}/logo.png`,
       },
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `https://your-domain.com/blog/${slug}`,
+      "@id": `${siteConfig.url}/blog/${slug}`,
     },
     keywords: post.tags?.join(", ") || "",
   };

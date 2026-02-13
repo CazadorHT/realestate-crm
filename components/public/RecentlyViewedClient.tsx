@@ -30,6 +30,7 @@ import type { RecommendedProperty } from "@/features/properties/recommended-acti
 import { getRecommendedProperties } from "@/features/properties/recommended-actions";
 import "aos/dist/aos.css";
 import { SectionBackground } from "./SectionBackground";
+import { siteConfig } from "@/lib/site-config";
 
 function formatPrice(price: number, t: any) {
   return `${t("common.baht") || "฿"}${price.toLocaleString()}`;
@@ -414,8 +415,8 @@ export function RecentlyViewedClient({
       "@type": "ListItem",
       position: index + 1,
       url: item.slug
-        ? `https://your-domain.com/properties/${item.slug}`
-        : `https://your-domain.com/properties/${item.id}`,
+        ? `${siteConfig.url}/properties/${item.slug}`
+        : `${siteConfig.url}/properties/${item.id}`,
     })),
   };
 

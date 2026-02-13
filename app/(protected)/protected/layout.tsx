@@ -7,6 +7,7 @@ import { isStaff } from "@/lib/auth-shared";
 import { UserNav } from "@/components/dashboard/UserNav";
 import { MobileNav } from "@/components/dashboard/MobileNav";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { siteConfig } from "@/lib/site-config";
 
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
@@ -49,8 +50,8 @@ export default async function ProtectedLayout({
           <div className="flex items-center gap-2 sm:gap-4">
             <MobileNav role={profile.role} />
 
-            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight sm:hidden truncate max-w-[120px]">
-              OMA ASSET
+            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight sm:hidden truncate max-w-[120px] uppercase">
+              {siteConfig.name}
             </h1>
           </div>
           <div className="ml-auto flex items-center gap-2 sm:gap-4">

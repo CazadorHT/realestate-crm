@@ -12,6 +12,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
 import { format } from "date-fns";
 import { th, enUS, zhCN } from "date-fns/locale";
+import { siteConfig } from "@/lib/site-config";
 
 import { BlogPost } from "@/lib/services/blog";
 
@@ -57,7 +58,7 @@ export function BlogSection() {
         name: (post.author as any)?.name || "Admin",
       },
       image: post.cover_image || "",
-      url: `https://your-domain.com/blog/${post.slug}`,
+      url: `${siteConfig.url}/blog/${post.slug}`,
     })),
   };
 

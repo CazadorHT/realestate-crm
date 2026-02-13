@@ -7,23 +7,24 @@ import Image from "next/image";
 import { useState, useTransition, Suspense } from "react";
 import { subscribeToLineAction } from "@/features/leads/public-actions";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 export function PublicFooter() {
   const { t } = useLanguage();
   const currentYear = new Date().getFullYear();
   const companyMeta = {
-    name_th: "OMA ASSET",
+    name_th: siteConfig.name,
   };
 
   // Schema.org Organization for SEO
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    name: "OMA ASSET",
+    name: siteConfig.name,
     description: t("footer.company_desc"),
-    url: "https://oma-asset.com",
-    telephone: "+66-XX-XXX-XXXX",
-    email: "contact@oma-asset.com",
+    url: siteConfig.url,
+    telephone: siteConfig.contact.phone,
+    email: siteConfig.contact.email,
     address: {
       "@type": "PostalAddress",
       addressCountry: "TH",
@@ -31,9 +32,9 @@ export function PublicFooter() {
       addressRegion: "Bangkok",
     },
     sameAs: [
-      "https://facebook.com/omaasset",
-      "https://instagram.com/omaasset",
-      "https://line.me/ti/p/@omaasset",
+      siteConfig.links.facebook,
+      siteConfig.links.instagram,
+      siteConfig.links.line,
     ],
     areaServed: {
       "@type": "Country",
@@ -119,7 +120,7 @@ export function PublicFooter() {
                 >
                   <Image
                     src="/images/brand-logo-dark.svg"
-                    alt="OMA ASSET Logo"
+                    alt={`${siteConfig.name} Logo`}
                     width={180}
                     height={60}
                     className="w-auto h-12"
@@ -138,7 +139,7 @@ export function PublicFooter() {
                     <Phone className="w-4 h-4 text-blue-400" />
                   </div>
                   <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
-                    +66-XX-XXX-XXXX
+                    {siteConfig.contact.phone}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 group cursor-pointer transition-colors">
@@ -146,7 +147,7 @@ export function PublicFooter() {
                     <Mail className="w-4 h-4 text-blue-400" />
                   </div>
                   <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
-                    contact@oma-asset.com
+                    {siteConfig.contact.email}
                   </span>
                 </div>
                 <div className="flex items-start gap-3 group cursor-pointer transition-colors">
@@ -216,7 +217,13 @@ export function PublicFooter() {
                   {socialMedia.map((social) => (
                     <a
                       key={social.name}
-                      href={social.href}
+                      href={
+                        siteConfig.links[
+                          social.name
+                            .toLowerCase()
+                            .split(" ")[0] as keyof typeof siteConfig.links
+                        ] || "#"
+                      }
                       className={`w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:border-slate-600 ${social.color}`}
                       aria-label={social.name}
                     >

@@ -5,6 +5,7 @@ import { Share2 } from "lucide-react";
 import { ShareButtons } from "@/components/public/ShareButtons";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
+import { siteConfig } from "@/lib/site-config";
 
 interface BlogDetailSidebarProps {
   slug: string;
@@ -32,7 +33,7 @@ export function BlogDetailSidebar({
             url={
               typeof window !== "undefined"
                 ? window.location.href
-                : `https://your-domain.com/blog/${slug}`
+                : `${siteConfig.url}/blog/${slug}`
             }
             title={title}
           />

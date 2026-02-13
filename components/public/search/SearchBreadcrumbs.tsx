@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Home, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 interface SearchBreadcrumbsProps {
   breadcrumbSchema: any;
@@ -39,7 +40,7 @@ export function SearchBreadcrumbs({
             <span itemProp="name" className="hidden xs:inline sm:inline">
               {t("breadcrumb.home")}
             </span>
-            <meta itemProp="item" content="https://your-domain.com" />
+            <meta itemProp="item" content={siteConfig.url} />
           </Link>
           {/* Responsive chevron size */}
           <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 shrink-0" />
@@ -51,10 +52,7 @@ export function SearchBreadcrumbs({
           >
             <meta itemProp="position" content="2" />
             <span itemProp="name">{t("breadcrumb.properties")}</span>
-            <meta
-              itemProp="item"
-              content="https://your-domain.com/properties"
-            />
+            <meta itemProp="item" content={`${siteConfig.url}/properties`} />
           </span>
         </nav>
       </div>

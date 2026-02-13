@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { readFavoriteIds } from "@/lib/favorite-store";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -101,7 +102,7 @@ export function PublicNav() {
     url: navigationLinks.map((link) => ({
       "@type": "WebPage",
       name: link.name,
-      url: `https://oma-asset.com${link.href}`,
+      url: `${siteConfig.url}${link.href}`,
     })),
   };
 
@@ -138,7 +139,7 @@ export function PublicNav() {
                   <Image
                     // src="/images/oma-asset-logo.svg"
                     src="/images/Frame 85.svg"
-                    alt="OMA ASSET Logo"
+                    alt={`${siteConfig.name} Logo`}
                     width={220}
                     height={70}
                     className="h-12 w-auto"
