@@ -137,12 +137,11 @@ export function PublicNav() {
                   className="hover:scale-105 transition-transform block"
                 >
                   <Image
-                    // src="/images/oma-asset-logo.svg"
-                    src="/images/Frame 85.svg"
+                    src={siteConfig.logo}
                     alt={`${siteConfig.name} Logo`}
                     width={220}
                     height={70}
-                    className="h-12 w-auto"
+                    className="h-16 w-auto"
                     priority
                   />
                 </Link>
@@ -177,7 +176,10 @@ export function PublicNav() {
                         </span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[150px] z-101">
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-[150px] z-101"
+                    >
                       <DropdownMenuItem
                         onClick={() => setLanguage("th")}
                         className={`cursor-pointer ${language === "th" ? "bg-slate-50" : ""}`}

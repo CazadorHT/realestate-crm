@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -360,9 +361,14 @@ export function SidebarNav({ role }: { role: UserRole }) {
           )}
         >
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/30 shrink-0">
-              <Building2 className="text-white h-6 w-6" />
-            </div>
+            
+            <Image
+              src={siteConfig.logo}
+              alt={`${siteConfig.name} Logo`}
+              width={70}
+              height={70}
+              className="rounded-lg object-contain"
+            />
             {!isCollapsed && (
               <div className="overflow-hidden whitespace-nowrap">
                 <h1 className="text-xl font-medium tracking-tight text-slate-700 dark:text-slate-200 uppercase">

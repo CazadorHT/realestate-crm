@@ -18,6 +18,7 @@ import { useState } from "react";
 import { AuthLayout } from "@/components/auth-layout";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { notifySignupAction } from "@/features/audit/actions";
+import { siteConfig } from "@/lib/site-config";
 
 export function SignUpForm({
   className,
@@ -71,7 +72,7 @@ export function SignUpForm({
         <>
           เริ่มต้นการใช้งาน
           <br />
-          PropertyHub CRM
+          {siteConfig.name} CRM
         </>
       }
       subtitle="สมัครสมาชิกเพื่อเริ่มจัดการธุรกิจอสังหาริมทรัพย์ของคุณอย่างมืออาชีพ"
@@ -215,7 +216,7 @@ export function SignUpForm({
       <p className="text-center text-sm text-slate-500">
         มีปัญหาในการสมัครสมาชิก?{" "}
         <Link
-          href="mailto:support@propertyhub.com"
+          href={`mailto:${siteConfig.contact.email}`}
           className="text-blue-600 hover:underline"
         >
           ติดต่อเรา

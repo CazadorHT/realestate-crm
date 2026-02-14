@@ -12,6 +12,7 @@ export async function RecentPropertiesSection() {
       *,
       property_images (
          image_url,
+         storage_path,
          is_cover,
          sort_order
       )

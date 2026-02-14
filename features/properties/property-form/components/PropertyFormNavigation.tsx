@@ -65,8 +65,8 @@ export function PropertyFormNavigation({
               aria-label={
                 mode === "create" ? "ยืนยันสร้างประกาศ" : "บันทึกการแก้ไข"
               }
-              disabled={!isDirty}
-              className="h-12 sm:h-14 px-8 sm:px-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 font-bold text-base sm:text-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex-[1.5] sm:flex-none"
+              disabled={mode === "edit" && !isDirty}
+              className="h-12 sm:h-14 px-8 sm:px-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 hover:-translate-y-1 text-white shadow-lg shadow-emerald-100 font-bold text-base sm:text-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex-[1.5] sm:flex-none"
             >
               {mode === "create" ? "ยืนยัน" : "บันทึก"}
               <span className="hidden sm:inline ml-1">

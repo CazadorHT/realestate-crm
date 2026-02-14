@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import {
   Table,
   TableBody,
@@ -290,23 +291,31 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                         {property.image_url ? (
                           <Dialog>
                             <DialogTrigger asChild>
-                              <div className="w-full h-full overflow-hidden">
-                                <img
+                              <div className="w-full h-full overflow-hidden relative">
+                                <Image
                                   src={property.image_url}
-                                  alt={property.title}
-                                  className="h-full w-full object-cover transition-transform duration-300 group-hover/image:scale-110"
+                                  alt={property.title || "Property"}
+                                  fill
+                                  sizes="100px"
+                                  className="object-cover transition-transform duration-300 group-hover/image:scale-110"
                                 />
                               </div>
                             </DialogTrigger>
                             <DialogContent className="max-w-3xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
                               <VisuallyHidden>
-                                <DialogTitle>{property.title}</DialogTitle>
+                                <DialogTitle>
+                                  {property.title || "Property Image"}
+                                </DialogTitle>
                               </VisuallyHidden>
-                              <img
-                                src={property.image_url}
-                                alt={property.title}
-                                className="max-h-[80vh] w-auto rounded-lg object-contain shadow-2xl"
-                              />
+                              <div className="relative w-full h-[80vh] flex items-center justify-center bg-transparent">
+                                <Image
+                                  src={property.image_url}
+                                  alt={property.title || "Property Image"}
+                                  fill
+                                  sizes="100vw"
+                                  className="object-contain shadow-2xl rounded-lg"
+                                />
+                              </div>
                             </DialogContent>
                           </Dialog>
                         ) : (
@@ -692,7 +701,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                       <Button
                         asChild
                         variant="ghost"
-                        size="icon"                                                                                                                                                                                                                                               
+                        size="icon"
                         className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50"
                       >
                         <Link

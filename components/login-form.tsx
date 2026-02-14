@@ -19,6 +19,7 @@ import { useState } from "react";
 import { Home, ArrowLeft, Lock, Mail, Eye, EyeOff } from "lucide-react";
 
 import { AuthLayout } from "@/components/auth-layout";
+import { siteConfig } from "@/lib/site-config";
 
 export function LoginForm({
   className,
@@ -188,7 +189,7 @@ export function LoginForm({
       <p className="text-center text-sm text-slate-500">
         มีปัญหาในการเข้าสู่ระบบ?{" "}
         <Link
-          href="mailto:support@propertyhub.com"
+          href={`mailto:${siteConfig.contact.email}`}
           className="text-blue-600 hover:underline"
         >
           ติดต่อเรา

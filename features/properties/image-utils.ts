@@ -12,19 +12,28 @@ const BUCKET_NAME = "property-images";
  * @returns public URL
  */
 export function getPublicImageUrl(storagePath: string): string {
+  if (!storagePath) return "";
+
+  // 0. If it's already a full URL, return as is
+  if (storagePath.trim().startsWith("http")) {
+    return storagePath.trim();
+  }
+
   // 1. Clean up SUPABASE_URL (ensure no trailing slash)
   const baseUrl = SUPABASE_URL?.replace(/\/+$/, "");
 
-  // 2. Clean up storagePath (remove whitespace and potential leading/trailing slashes)
-  const cleanPath =
-    storagePath
-      ?.trim()
-      .replace(/\s/g, "")
-      .replace(/^\/+|\/+$/g, "") || "";
+  // 2. Clean up storagePath (remove leading/trailing slashes and encode special chars)
+  const cleanPath = storagePath?.trim().replace(/^\/+|\/+$/g, "") || "";
 
   if (!baseUrl || !cleanPath) return "";
 
-  return `${baseUrl}/storage/v1/object/public/${BUCKET_NAME}/${cleanPath}`;
+  // Encode the path to handle spaces and special characters correctly
+  const encodedPath = cleanPath
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+
+  return `${baseUrl}/storage/v1/object/public/${BUCKET_NAME}/${encodedPath}`;
 }
 
 /**

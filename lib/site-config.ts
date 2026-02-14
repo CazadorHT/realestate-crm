@@ -5,10 +5,12 @@ const getBaseUrl = () => {
 };
 
 export const siteConfig = {
-  name: "OMA Asset",
-  company: "OMA Asset Co., Ltd.",
+  name: "V-LINK ASSET",
+  company: "V-LINK ASSET Co., Ltd.",
   description: "Real Estate CRM & Listing Portal",
   url: getBaseUrl(),
+  logo: "/images/v-link-svg-png-logo.svg",
+  logoDark: "/images/v-link-svg-png-dark.svg",
   ogImage: "/opengraph-image.png",
   links: {
     facebook: "https://facebook.com/omaasset",
@@ -17,7 +19,7 @@ export const siteConfig = {
     tiktok: "https://tiktok.com/@omaasset",
   },
   contact: {
-    email: "contact@oma-asset.com",
+    email: "vlink.asset@gmail.com",
     phone: "+66-XX-XXX-XXXX",
     lineId: "@omaasset",
     address: "123 Business Road, Bangkok, Thailand 10110",

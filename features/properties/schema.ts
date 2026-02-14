@@ -73,12 +73,15 @@ export const FormSchema = z
 
     currency: z.string().default("THB"),
 
-    address_line1: z.string().optional(),
-    province: z.string().optional(),
-    district: z.string().optional(),
-    subdistrict: z.string().optional(),
+    address_line1: z.string().trim().min(1, "กรุณากรอกที่อยู่ หรือชื่อโครงการ"),
+    province: z.string().min(1, "กรุณาเลือกจังหวัด"),
+    district: z.string().min(1, "กรุณาเลือกจังหวัดเขต / อำเภอ"),
+    subdistrict: z.string().min(1, "กรุณาเลือกจังหวัดแขวง / ตำบล"),
     postal_code: z.string().optional(),
-    google_maps_link: z.string().optional().nullable(),
+    google_maps_link: z
+      .string()
+      .trim()
+      .min(1, "กรุณาใส่ลิงก์ Google Maps "),
     popular_area: z.string().optional().nullable(),
 
     owner_id: z.string().uuid().nullable().optional(),

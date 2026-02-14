@@ -44,13 +44,26 @@ export function PropertyImageUploader({
 }: PropertyImageUploaderProps) {
   const [images, setImages] = useState<ImageItem[]>(() => {
     if (initialImages && initialImages.length > 0) {
-      return initialImages.map((img, index) => ({
-        id: `initial-${index}`,
-        storage_path: img.storage_path,
-        preview_url: img.image_url,
-        is_cover: img.is_cover ?? index === 0,
-        origin: "initial",
-      }));
+      const {
+        getPublicImageUrl,
+      } = require("@/features/properties/image-utils");
+      return initialImages.map((img, index) => {
+        // Use image_url if it looks like a full URL, otherwise generate from storage_path
+        const preview_url =
+          img.image_url && img.image_url.startsWith("http")
+            ? img.image_url
+            : img.storage_path
+              ? getPublicImageUrl(img.storage_path)
+              : "";
+
+        return {
+          id: `initial-${index}`,
+          storage_path: img.storage_path,
+          preview_url: preview_url,
+          is_cover: img.is_cover ?? index === 0,
+          origin: "initial",
+        };
+      });
     }
 
     // If no initialImages but value has paths, generate preview URLs

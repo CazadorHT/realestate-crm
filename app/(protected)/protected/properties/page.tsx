@@ -216,12 +216,13 @@ export default async function PropertiesPage({
     .map((p) => p.id);
 
   const [imagesResult, leadsResult, closedLeadsResult] = await Promise.all([
-    // Images: cover
+    // Images: fetch all for these properties to find cover or first available
     supabase
       .from("property_images")
-      .select("property_id, image_url")
+      .select("property_id, image_url, storage_path, is_cover")
       .in("property_id", propertyIds)
-      .eq("is_cover", true),
+      .order("is_cover", { ascending: false })
+      .order("sort_order", { ascending: true }),
 
     // Leads: count
     supabase.from("leads").select("property_id").in("property_id", propertyIds),
@@ -250,9 +251,18 @@ export default async function PropertiesPage({
         }),
   ]);
   // 3. Map Data
-  const coverMap = new Map(
-    imagesResult.data?.map((img) => [img.property_id, img.image_url]),
-  );
+  // Build a map of property_id -> best available image URL or Storage Path
+  const bestImageMap = new Map<string, string>();
+  imagesResult.data?.forEach((img) => {
+    // Since we ordered by is_cover DESC and sort_order ASC,
+    // the first image we encounter for a property_id is the best one.
+    if (!bestImageMap.has(img.property_id)) {
+      const bestUrl = img.image_url || img.storage_path;
+      if (bestUrl) {
+        bestImageMap.set(img.property_id, bestUrl);
+      }
+    }
+  });
 
   // Count leads per property
   const leadsCountMap = new Map<string, number>();
@@ -298,11 +308,30 @@ export default async function PropertiesPage({
       p.address_line1 ||
       "";
 
+    const { getPublicImageUrl } = require("@/features/properties/image-utils");
+
+    // Fallback logic for image_url:
+    // 1. Check bestImageMap (property_images table: cover or first)
+    // 2. Check p.images (legacy JSONB column)
+    let rawImageUrl = bestImageMap.get(p.id) || null;
+
+    if (!rawImageUrl && p.images) {
+      const legacyImages = p.images as any;
+      if (Array.isArray(legacyImages) && legacyImages.length > 0) {
+        rawImageUrl =
+          typeof legacyImages[0] === "string"
+            ? legacyImages[0]
+            : legacyImages[0]?.url || legacyImages[0]?.image_url;
+      }
+    }
+
+    const imageUrl = rawImageUrl ? getPublicImageUrl(rawImageUrl) : null;
+
     return {
       id: p.id,
       title: p.title,
       description: locationHint || p.description,
-      image_url: coverMap.get(p.id) || null,
+      image_url: imageUrl,
       property_type: p.property_type,
       listing_type: p.listing_type,
       price: p.price,

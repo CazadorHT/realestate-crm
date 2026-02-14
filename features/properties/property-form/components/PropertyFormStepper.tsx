@@ -28,7 +28,13 @@ function isStepComplete(step: number, values: PropertyFormValues) {
     return saleOk && rentOk;
   }
   if (step === 3)
-    return !!(values.province && values.district && values.subdistrict);
+    return !!(
+      values.province &&
+      values.district &&
+      values.subdistrict &&
+      values.address_line1 &&
+      values.google_maps_link
+    );
   if (step === 4) return (values.images?.length || 0) > 0;
   if (step === 5) return true; // อุปกรณ์อำนวยความสะดวก (Optional)
   if (step === 6) return !!values.status;

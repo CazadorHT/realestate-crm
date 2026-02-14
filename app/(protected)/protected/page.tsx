@@ -20,6 +20,7 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { PendingApprovalCard } from "@/components/dashboard/PendingApprovalCard";
 import { RecentPropertiesTable } from "@/components/dashboard/RecentPropertiesTable";
+import { SystemStatus } from "@/components/dashboard/SystemStatus";
 
 // Queries
 import {
@@ -109,6 +110,8 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-6 p-2 pb-20">
       {/* 1. HEADER & SEARCH */}
       <DashboardHeader email={user?.email} name={profile?.full_name} />
+
+      <SystemStatus />
 
       <>
         {/* 2. SMART SUMMARY (AI GATED) */}

@@ -2,6 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import Image from "next/image";
 import {
   Star,
   StarOff,
@@ -70,18 +71,22 @@ export function SortableImageItem({
             <ImageIcon className="h-8 w-8 text-slate-300" />
           </div>
         ) : image.preview_url ? (
-          <img
-            src={image.preview_url}
-            alt={`Property image ${index + 1}`}
-            className="h-full w-full object-cover"
-            onError={() => {
-              setImages((prev) =>
-                prev.map((img) =>
-                  img.id === image.id ? { ...img, hasError: true } : img,
-                ),
-              );
-            }}
-          />
+          <div className="relative w-full h-full">
+            <Image
+              src={image.preview_url}
+              alt={`Property image ${index + 1}`}
+              fill
+              sizes="(max-width: 640px) 50vw, 25vw"
+              className="object-cover"
+              onError={() => {
+                setImages((prev) =>
+                  prev.map((img) =>
+                    img.id === image.id ? { ...img, hasError: true } : img,
+                  ),
+                );
+              }}
+            />
+          </div>
         ) : null}
       </div>
 

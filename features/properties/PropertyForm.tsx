@@ -233,7 +233,7 @@ export function PropertyForm({
   const handleNext = async () => {
     const isStepValid = await validateStep(currentStep);
     if (isStepValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, 6));
+      setCurrentStep((prev) => Math.min(prev + 1, 7));
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -560,7 +560,7 @@ export function PropertyForm({
             <div className="flex flex-col gap-3 py-4">
               <Button
                 variant="outline"
-                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200 hover:bg-slate-50 hover:text-slate-900 rounded-xl"
+                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200 hover:bg-slate-50  rounded-xl hover:text-white!"
                 onClick={() => {
                   if (successData?.slug) {
                     window.open(`/properties/${successData.slug}`, "_blank");
@@ -570,10 +570,10 @@ export function PropertyForm({
                   }
                 }}
               >
-                <ExternalLink className="w-5 h-5 text-blue-600" />
+                <ExternalLink className="w-5 h-5 text-blue-600 hover:text-white!" />
                 <div className="flex flex-col items-start">
-                  <span>ดูหน้าเว็บไซต์ (Public Page)</span>
-                  <span className="text-xs text-slate-400 font-normal">
+                  <span className="hover:text-white!">ดูหน้าเว็บไซต์ (Public Page)</span>
+                  <span className="text-xs text-slate-400 font-normal hover:text-white!">
                     เปิดแท็บใหม่เพื่อดูตัวอย่าง
                   </span>
                 </div>

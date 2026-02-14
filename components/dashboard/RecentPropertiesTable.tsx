@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,6 +35,7 @@ type PropertyWithRelations = PropertyRow & {
   property_images?:
     | {
         image_url: string;
+        storage_path: string;
         is_cover: boolean | null;
       }[]
     | null;
@@ -93,65 +95,50 @@ export function RecentPropertiesTable({
                       {/* Image Thumbnail */}
                       <div className="relative h-[60px] w-[80px] shrink-0 overflow-hidden rounded-lg bg-slate-100 group/image cursor-zoom-in">
                         {(() => {
-                          if (
-                            property.property_images &&
-                            property.property_images.length > 0
-                          ) {
-                            const cover =
-                              property.property_images.find(
-                                (img) => img.is_cover,
-                              ) || property.property_images[0];
-                            if (cover?.image_url) {
-                              return (
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <div className="w-full h-full overflow-hidden">
-                                      <img
-                                        src={cover.image_url}
-                                        alt={property.title || "Property Image"}
-                                        className="h-full w-full object-cover transition-transform duration-300 group-hover/image:scale-110"
-                                      />
-                                    </div>
-                                  </DialogTrigger>
-                                  <DialogContent className="max-w-3xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
-                                    <VisuallyHidden>
-                                      <DialogTitle>
-                                        {property.title || "Property Image"}
-                                      </DialogTitle>
-                                    </VisuallyHidden>
-                                    <img
-                                      src={cover.image_url}
-                                      alt={property.title || "Property Image"}
-                                      className="max-h-[80vh] w-auto rounded-lg object-contain shadow-2xl"
-                                    />
-                                  </DialogContent>
-                                </Dialog>
-                              );
+                          const {
+                            getPublicImageUrl,
+                          } = require("@/features/properties/image-utils");
+
+                          // Best image: Cover or the first image in property_images
+                          const bestImageFromTable =
+                            property.property_images?.find(
+                              (img: any) => img.is_cover,
+                            ) || property.property_images?.[0];
+
+                          let rawImageUrl =
+                            bestImageFromTable?.image_url ||
+                            bestImageFromTable?.storage_path ||
+                            null;
+
+                          // Fallback to legacy images if new table is empty
+                          if (!rawImageUrl && property.images) {
+                            const legacyImages = property.images as any;
+                            if (
+                              Array.isArray(legacyImages) &&
+                              legacyImages.length > 0
+                            ) {
+                              rawImageUrl =
+                                typeof legacyImages[0] === "string"
+                                  ? legacyImages[0]
+                                  : legacyImages[0]?.url ||
+                                    legacyImages[0]?.image_url;
                             }
                           }
 
-                          const legacyImages = property.images as
-                            | string[]
-                            | { url?: string; image_url?: string }[]
-                            | null;
-
-                          const imageUrl =
-                            Array.isArray(legacyImages) &&
-                            legacyImages.length > 0
-                              ? typeof legacyImages[0] === "string"
-                                ? legacyImages[0]
-                                : legacyImages[0]?.url ||
-                                  legacyImages[0]?.image_url
-                              : null;
+                          const imageUrl = rawImageUrl
+                            ? getPublicImageUrl(rawImageUrl)
+                            : null;
 
                           return imageUrl ? (
                             <Dialog>
                               <DialogTrigger asChild>
-                                <div className="w-full h-full overflow-hidden">
-                                  <img
+                                <div className="w-full h-full overflow-hidden relative">
+                                  <Image
                                     src={imageUrl}
                                     alt={property.title || "Property Image"}
-                                    className="h-full w-full object-cover transition-transform duration-300 group-hover/image:scale-110"
+                                    fill
+                                    sizes="100px"
+                                    className="object-cover transition-transform duration-300 group-hover/image:scale-110"
                                   />
                                 </div>
                               </DialogTrigger>
@@ -161,11 +148,15 @@ export function RecentPropertiesTable({
                                     {property.title || "Property Image"}
                                   </DialogTitle>
                                 </VisuallyHidden>
-                                <img
-                                  src={imageUrl}
-                                  alt={property.title || "Property Image"}
-                                  className="max-h-[80vh] w-auto rounded-lg object-contain shadow-2xl"
-                                />
+                                <div className="relative w-full h-[80vh] flex items-center justify-center bg-transparent">
+                                  <Image
+                                    src={imageUrl}
+                                    alt={property.title || "Property Image"}
+                                    fill
+                                    sizes="100vw"
+                                    className="object-contain shadow-2xl rounded-lg"
+                                  />
+                                </div>
                               </DialogContent>
                             </Dialog>
                           ) : (
@@ -417,11 +408,28 @@ export function RecentPropertiesTable({
                 <tr>
                   <td
                     colSpan={5}
-                    className="text-center py-12 text-slate-500 bg-slate-50/50"
+                    className="text-center py-20 text-slate-500 bg-slate-50/30"
                   >
-                    <div className="flex flex-col items-center gap-2">
-                      <Building className="h-8 w-8 text-slate-300" />
-                      <p>ไม่พบข้อมูลทรัพย์ล่าสุด</p>
+                    <div className="flex flex-col items-center gap-4 max-w-sm mx-auto">
+                      <div className="p-4 bg-white rounded-full shadow-sm border border-slate-100">
+                        <Building className="h-10 w-10 text-slate-300" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-bold text-slate-900">
+                          ยังไม่มีทรัพย์ในระบบ
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          เริ่มเพิ่มทรัพย์พเพื่อจัดการข้อมูลและประกาศขาย/เช่าได้ทันที
+                        </p>
+                      </div>
+                      <Button
+                        asChild
+                        className="rounded-full px-8 bg-blue-600 hover:bg-blue-700 font-bold shadow-lg shadow-blue-100 transition-all hover:scale-105"
+                      >
+                        <Link href="/protected/properties/new">
+                          เพิ่มทรัพย์รายการแรก +
+                        </Link>
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -638,9 +646,27 @@ export function RecentPropertiesTable({
             </Card>
           ))}
           {properties.length === 0 && (
-            <div className="col-span-full p-12 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200">
-              <Building className="h-10 w-10 mx-auto mb-3 text-slate-300 opacity-50" />
-              <p className="text-sm font-medium">ไม่พบข้อมูลทรัพย์ล่าสุด</p>
+            <div className="col-span-full p-16 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200">
+              <div className="flex flex-col items-center gap-4">
+                <div className="p-3 bg-slate-50 rounded-full">
+                  <Building className="h-10 w-10 text-slate-300" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-bold text-slate-900">
+                    ยังไม่มีทรัพย์ในระบบ
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    เริ่มสร้างทรัพย์รายการแรกของคุณวันนี้
+                  </p>
+                </div>
+                <Button
+                  asChild
+                  size="sm"
+                  className="rounded-full bg-blue-600 font-bold"
+                >
+                  <Link href="/protected/properties/new">เพิ่มทรัพย์ใหม่</Link>
+                </Button>
+              </div>
             </div>
           )}
         </div>

@@ -93,7 +93,7 @@ export function AddressSection({ form }: AddressSectionProps) {
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <Map className="h-3.5 w-3.5 text-blue-500" />
-                  จังหวัด{" "}
+                  จังหวัด <span className="text-red-500">*</span>{" "}
                   {addressLoading && (
                     <Loader2 className="inline h-3 w-3 animate-spin text-slate-400" />
                   )}
@@ -121,6 +121,7 @@ export function AddressSection({ form }: AddressSectionProps) {
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -133,7 +134,7 @@ export function AddressSection({ form }: AddressSectionProps) {
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <MapPinned className="h-3.5 w-3.5 text-blue-500" />
-                  เขต / อำเภอ
+                  เขต / อำเภอ <span className="text-red-500">*</span>
                 </FormLabel>
                 <Select
                   key={`district-${activeProvinceId || "none"}`}
@@ -158,6 +159,7 @@ export function AddressSection({ form }: AddressSectionProps) {
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -170,7 +172,7 @@ export function AddressSection({ form }: AddressSectionProps) {
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <SignpostBig className="h-3.5 w-3.5 text-blue-500" />
-                  แขวง / ตำบล
+                  แขวง / ตำบล <span className="text-red-500">*</span>
                 </FormLabel>
                 <Select
                   key={`subdistrict-${activeDistrictId || "none"}`}
@@ -200,6 +202,7 @@ export function AddressSection({ form }: AddressSectionProps) {
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -228,6 +231,29 @@ export function AddressSection({ form }: AddressSectionProps) {
             )}
           />
 
+          {/* Address Line 1 / Project Name */}
+          <FormField
+            control={form.control}
+            name="address_line1"
+            render={({ field }) => (
+              <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
+                <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
+                  <SignpostBig className="w-4 h-4 text-blue-500" />
+                  ที่อยู่ / โครงการ <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    placeholder="เลขที่บ้าน / ชื่อโครงการ..."
+                    className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Google Maps Link */}
           <FormField
             control={form.control}
@@ -236,7 +262,7 @@ export function AddressSection({ form }: AddressSectionProps) {
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
                 <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <Map className="w-4 h-4 text-blue-500" />
-                  Google Maps Link
+                  Google Maps Link <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -246,6 +272,7 @@ export function AddressSection({ form }: AddressSectionProps) {
                     className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />

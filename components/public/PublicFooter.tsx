@@ -119,11 +119,11 @@ export function PublicFooter() {
                   className="block w-48 transition-opacity hover:opacity-90"
                 >
                   <Image
-                    src="/images/brand-logo-dark.svg"
+                    src={siteConfig.logoDark}
                     alt={`${siteConfig.name} Logo`}
                     width={180}
                     height={60}
-                    className="w-auto h-12"
+                    className="w-auto h-26"
                     priority
                   />
                 </Link>

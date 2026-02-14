@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Home, ArrowLeft } from "lucide-react";
 import React from "react";
+import Image from "next/image";
+import { siteConfig } from "@/lib/site-config";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -30,8 +32,13 @@ export function AuthLayout({
         {/* Content */}
         <div className="relative z-10 animate-in fade-in zoom-in-95 duration-1000 delay-300 fill-mode-backwards">
           <Link href="/" className="flex items-center gap-2 text-white group">
-            <Home className="h-8 w-8 group-hover:scale-110 transition-transform" />
-            <span className="text-2xl font-bold">PropertyHub</span>
+            <Image
+              src={siteConfig.logoDark}
+              alt={`${siteConfig.name} Logo`}
+              width={150}
+              height={50}
+              className="h-10 w-auto"
+            />
           </Link>
         </div>
 
@@ -59,7 +66,8 @@ export function AuthLayout({
         </div>
 
         <div className="relative z-10 text-blue-100 text-sm animate-in fade-in duration-1000 delay-1000 fill-mode-backwards">
-          © 2025 PropertyHub. All rights reserved.
+          © {new Date().getFullYear()} {siteConfig.company}. All rights
+          reserved.
         </div>
       </div>
 
@@ -78,9 +86,14 @@ export function AuthLayout({
           </div>
 
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-2 text-blue-600">
-            <Home className="h-6 w-6" />
-            <span className="text-xl font-bold">PropertyHub</span>
+          <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
+            <Image
+              src={siteConfig.logo}
+              alt={`${siteConfig.name} Logo`}
+              width={150}
+              height={50}
+              className="h-10 w-auto"
+            />
           </div>
 
           {/* Desktop Back Button */}
