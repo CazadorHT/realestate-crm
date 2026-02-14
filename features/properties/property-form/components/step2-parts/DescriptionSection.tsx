@@ -21,6 +21,7 @@ import { generatePropertyDescription } from "../../utils/description-generator";
 import { PropertyFormValues } from "@/features/properties/schema";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { Button } from "@/components/ui/button";
+import { isFeatureEnabled } from "@/lib/features";
 
 interface DescriptionSectionProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -86,21 +87,23 @@ export function DescriptionSection({
               desc="เขียนให้ขายง่าย: จุดเด่น, ใกล้อะไร, เฟอร์นิเจอร์, เงื่อนไข"
               tone="blue"
             />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => translateDescription()}
-              disabled={isTranslating}
-              className="border-blue-100 text-blue-600 hover:bg-blue-50 gap-2 h-10 sm:h-9 px-4 rounded-xl shadow-sm w-full sm:w-auto justify-center"
-            >
-              {isTranslating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4 text-amber-500" />
-              )}
-              AI แปลเป็น EN/CN
-            </Button>
+            {isFeatureEnabled("ai_auto_description") && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => translateDescription()}
+                disabled={isTranslating}
+                className="border-blue-100 text-blue-600 hover:bg-blue-50 gap-2 h-10 sm:h-9 px-4 rounded-xl shadow-sm w-full sm:w-auto justify-center"
+              >
+                {isTranslating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4 text-amber-500" />
+                )}
+                AI แปลเป็น EN/CN
+              </Button>
+            )}
           </div>
           <Separator className="bg-slate-200/70" />
         </CardHeader>
@@ -117,7 +120,11 @@ export function DescriptionSection({
                     onChange={field.onChange}
                     disabled={isReadOnly}
                     placeholder={`ตัวอย่าง:\n• จุดเด่น: รีโนเวทใหม่ / วิวโล่ง / ใกล้ BTS\n• เฟอร์นิเจอร์/เครื่องใช้ไฟฟ้า: ...\n• เงื่อนไข: ...`}
-                    onAiGenerate={handleGenerate}
+                    onAiGenerate={
+                      isFeatureEnabled("ai_auto_description")
+                        ? handleGenerate
+                        : undefined
+                    }
                     height={
                       typeof window !== "undefined" && window.innerWidth < 640
                         ? 300

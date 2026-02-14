@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
+import { siteConfig } from "@/lib/site-config";
 import { useState, useEffect } from "react";
 import {
   Tooltip,
@@ -40,6 +41,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { isFeatureEnabled } from "@/lib/features";
 
 export function SidebarNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
@@ -104,6 +106,12 @@ export function SidebarNav({ role }: { role: UserRole }) {
       href: "/protected/leads",
       icon: Users,
       active: pathname?.startsWith("/protected/leads") ?? false,
+    },
+    {
+      title: "กล่องข้อความ",
+      href: "/protected/inbox",
+      icon: MessageSquare,
+      active: pathname === "/protected/inbox",
     },
     {
       title: "ดีล",
@@ -254,9 +262,28 @@ export function SidebarNav({ role }: { role: UserRole }) {
 
   const filterItems = (items: NavItem[]) => {
     return items.filter((item) => {
+      // Role Check
       if (item.roles && item.roles.length > 0) {
         if (!role || !item.roles.includes(role)) return false;
       }
+
+      // Feature Gating Checks
+      if (
+        item.href.includes("line-manager") &&
+        !isFeatureEnabled("line_integration")
+      )
+        return false;
+      if (
+        item.href.includes("ai-monitor") &&
+        !isFeatureEnabled("ai_smart_summary")
+      )
+        return false;
+      if (
+        item.href.includes("smart-match") &&
+        !isFeatureEnabled("ai_smart_summary")
+      )
+        return false;
+
       return true;
     });
   };
@@ -339,10 +366,10 @@ export function SidebarNav({ role }: { role: UserRole }) {
             {!isCollapsed && (
               <div className="overflow-hidden whitespace-nowrap">
                 <h1 className="text-xl font-medium tracking-tight text-slate-700 dark:text-slate-200 uppercase">
-                  OMA ASSET
+                  {siteConfig.name}
                 </h1>
                 <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-bold">
-                  Real Estate CRM
+                  {siteConfig.description}
                 </p>
               </div>
             )}
@@ -511,15 +538,15 @@ export function SidebarNav({ role }: { role: UserRole }) {
         {!isCollapsed && (
           <div className="p-4 m-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
             <div className="flex items-center gap-3 mb-2">
-              <div className="bg-emerald-100 dark:bg-emerald-900/50 p-2 rounded-lg">
-                <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-lg">
+                <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="overflow-hidden">
                 <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  สถานะทีม
+                  {siteConfig.tier} VERSION
                 </p>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                  ออนไลน์
+                  Active Tier
                 </p>
               </div>
             </div>

@@ -396,3 +396,36 @@ export async function generateLeadSummaryAction(leadId: string) {
     throw new Error("ไม่สามารถสรุปข้อมูลด้วย AI ได้ในขณะนี้");
   }
 }
+
+export async function updateLeadPDPAAction(
+  id: string,
+  consent: boolean,
+): Promise<{ success: true } | { success: false; message: string }> {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+
+    const { error } = await ctx.supabase
+      .from("leads")
+      .update({
+        pdpa_consent: consent,
+        consent_date: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) return { success: false, message: error.message };
+
+    await logAudit(ctx, {
+      action: "lead.pdpa_update",
+      entity: "leads",
+      entityId: id,
+      metadata: { consent },
+    });
+
+    revalidatePath(`/protected/leads/${id}`);
+    return { success: true };
+  } catch (err) {
+    return authzFail(err);
+  }
+}

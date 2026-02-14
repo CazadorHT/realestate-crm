@@ -47,6 +47,7 @@ import { Step3Location } from "./property-form/steps/Step3Location";
 import { Step4Media } from "./property-form/steps/Step4Media";
 import { Step5Features } from "./property-form/steps/Step5Features";
 import { Step6Review } from "./property-form/steps/Step6Review";
+import { Step7Syndication } from "./property-form/steps/Step7Syndication";
 
 // Hooks
 import { usePropertyFormDraft } from "./hooks/usePropertyFormDraft";
@@ -507,10 +508,12 @@ export function PropertyForm({
 
           {currentStep === 6 && <Step6Review form={form} mode={mode} />}
 
+          {currentStep === 7 && <Step7Syndication form={form} mode={mode} />}
+
           {/* Navigation Buttons: Fixed Layout */}
           <PropertyFormNavigation
             currentStep={currentStep}
-            totalSteps={6}
+            totalSteps={7}
             mode={mode}
             uploadSessionId={uploadSessionId}
             isDirty={form.formState.isDirty}

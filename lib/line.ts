@@ -77,3 +77,58 @@ export async function sendLineNotification(
     console.error("ไม่สามารถส่งแจ้งเตือน LINE ได้:", error);
   }
 }
+
+/**
+ * ดึงข้อมูลโปรไฟล์จาก LINE (ชื่อ และ รูป)
+ */
+export async function getLineProfile(userId: string) {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token) return null;
+
+  try {
+    const response = await fetch(
+      `https://api.line.me/v2/bot/profile/${userId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (err) {
+    console.error("Error fetching LINE profile:", err);
+    return null;
+  }
+}
+
+/**
+ * บันทึกข้อความลงในตาราง omni_messages
+ */
+export async function saveOmniMessage(data: {
+  lead_id: string;
+  source:
+    | "LINE"
+    | "FACEBOOK"
+    | "INSTAGRAM"
+    | "WEBSITE"
+    | "PORTAL"
+    | "REFERRAL"
+    | "OTHER";
+  external_message_id?: string;
+  content: string;
+  payload?: any;
+  direction: "INCOMING" | "OUTGOING";
+}) {
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("omni_messages").insert({
+    lead_id: data.lead_id,
+    source: data.source,
+    external_message_id: data.external_message_id,
+    content: data.content,
+    payload: data.payload,
+    direction: data.direction,
+  });
+
+  if (error) {
+    console.error("Error saving omni message:", error);
+  }
+}

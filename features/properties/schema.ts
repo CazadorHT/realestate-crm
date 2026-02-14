@@ -15,6 +15,7 @@ import {
 /** Shared Zod schema for property forms */
 export const FormSchema = z
   .object({
+    id: z.string().uuid().optional(),
     title: z.string().trim().min(1, "คุณยังไม่ได้กรอกชื่อทรัพย์"),
     title_en: z.string().optional(),
     title_cn: z.string().optional(),

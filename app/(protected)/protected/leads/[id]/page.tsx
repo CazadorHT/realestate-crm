@@ -22,6 +22,7 @@ import type { Database } from "@/lib/database.types";
 import { LeadContactCard } from "@/features/leads/components/LeadContactCard";
 import { LeadRequirementsCard } from "@/features/leads/components/LeadRequirementsCard";
 import { LeadSummaryCard } from "@/features/leads/components/LeadSummaryCard";
+import { PDPAStatus } from "@/features/leads/components/PDPAStatus";
 
 type LeadActivity = Database["public"]["Tables"]["lead_activities"]["Row"];
 
@@ -120,8 +121,19 @@ export default async function LeadDetailPage({
         </div>
       </div>
 
-      {/* AI Summary Section */}
-      <LeadSummaryCard leadId={id} />
+      {/* PDPA & AI Summary Section */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-1">
+          <PDPAStatus
+            leadId={id}
+            consent={!!lead.pdpa_consent}
+            consentDate={lead.consent_date}
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <LeadSummaryCard leadId={id} />
+        </div>
+      </div>
 
       {/* Top Row - Contact & Requirements (2 columns) */}
       <div className="grid gap-6 lg:grid-cols-2">

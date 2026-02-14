@@ -177,7 +177,7 @@ export function PublicNav() {
                         </span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[150px]">
+                    <DropdownMenuContent align="end" className="w-[150px] z-101">
                       <DropdownMenuItem
                         onClick={() => setLanguage("th")}
                         className={`cursor-pointer ${language === "th" ? "bg-slate-50" : ""}`}

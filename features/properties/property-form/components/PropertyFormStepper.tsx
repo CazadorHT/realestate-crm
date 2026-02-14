@@ -31,7 +31,8 @@ function isStepComplete(step: number, values: PropertyFormValues) {
     return !!(values.province && values.district && values.subdistrict);
   if (step === 4) return (values.images?.length || 0) > 0;
   if (step === 5) return true; // อุปกรณ์อำนวยความสะดวก (Optional)
-  if (step === 6) return !!values.status; // ตรวจสอบและบันทึก (Required Status)
+  if (step === 6) return !!values.status;
+  if (step === 7) return true; // Syndication is optional
   return false;
 }
 
@@ -51,6 +52,7 @@ export function PropertyFormStepper({
     { step: 4, label: "รูปภาพ" },
     { step: 5, label: "สิ่งอำนวยความสะดวก" },
     { step: 6, label: "ตรวจสอบ" },
+    { step: 7, label: "การส่งข้อมูล" },
   ];
 
   // Auto-scroll to active step on mobile
@@ -92,13 +94,13 @@ export function PropertyFormStepper({
           <div
             className="absolute top-5 h-0.5 bg-blue-600 transition-all duration-700 ease-in-out z-0"
             style={{
-              left: "8.3333%",
-              width: `${((currentStep - 1) / 5) * 83.3333}%`,
+              left: "7.14%",
+              width: `${((currentStep - 1) / 6) * 85.71}%`,
             }}
           />
 
           <div
-            className="flex sm:grid sm:grid-cols-6 relative"
+            className="flex sm:grid sm:grid-cols-7 relative"
             role="tablist"
             aria-label="Progress"
           >

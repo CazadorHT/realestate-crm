@@ -22,6 +22,39 @@ export const siteConfig = {
     lineId: "@omaasset",
     address: "123 Business Road, Bangkok, Thailand 10110",
   },
+  tier: (process.env.NEXT_PUBLIC_APP_TIER || process.env.APP_TIER || "PRO") as
+    | "LITE"
+    | "PRO"
+    | "ENTERPRISE",
+};
+
+export const FEATURES = {
+  LITE: {
+    dashboard_analytics: false,
+    ai_smart_summary: false,
+    ai_auto_description: false,
+    advanced_reports: false,
+    line_integration: true,
+    max_properties: 50,
+  },
+  PRO: {
+    dashboard_analytics: true,
+    ai_smart_summary: true,
+    ai_auto_description: true,
+    advanced_reports: true,
+    line_integration: true,
+    max_properties: 500,
+  },
+  ENTERPRISE: {
+    dashboard_analytics: true,
+    ai_smart_summary: true,
+    ai_auto_description: true,
+    advanced_reports: true,
+    line_integration: true,
+    max_properties: 10000,
+  },
 };
 
 export type SiteConfig = typeof siteConfig;
+export type AppTier = keyof typeof FEATURES;
+export type FeatureName = keyof (typeof FEATURES)["PRO"];

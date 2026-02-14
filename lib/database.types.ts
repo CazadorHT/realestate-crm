@@ -438,12 +438,15 @@ export type Database = {
           assigned_to: string | null
           budget_max: number | null
           budget_min: number | null
+          consent_date: string | null
           created_at: string
           created_by: string | null
           email: string | null
+          facebook_psid: string | null
           full_name: string
           has_pets: boolean | null
           id: string
+          instagram_sid: string | null
           is_foreigner: boolean
           lead_type: Database["public"]["Enums"]["lead_type"]
           line_id: string | null
@@ -455,6 +458,7 @@ export type Database = {
           need_company_registration: boolean | null
           note: string | null
           num_occupants: number | null
+          pdpa_consent: boolean | null
           phone: string | null
           preferences: Json | null
           preferred_locations: string[] | null
@@ -471,12 +475,15 @@ export type Database = {
           assigned_to?: string | null
           budget_max?: number | null
           budget_min?: number | null
+          consent_date?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          facebook_psid?: string | null
           full_name: string
           has_pets?: boolean | null
           id?: string
+          instagram_sid?: string | null
           is_foreigner?: boolean
           lead_type?: Database["public"]["Enums"]["lead_type"]
           line_id?: string | null
@@ -488,6 +495,7 @@ export type Database = {
           need_company_registration?: boolean | null
           note?: string | null
           num_occupants?: number | null
+          pdpa_consent?: boolean | null
           phone?: string | null
           preferences?: Json | null
           preferred_locations?: string[] | null
@@ -504,12 +512,15 @@ export type Database = {
           assigned_to?: string | null
           budget_max?: number | null
           budget_min?: number | null
+          consent_date?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          facebook_psid?: string | null
           full_name?: string
           has_pets?: boolean | null
           id?: string
+          instagram_sid?: string | null
           is_foreigner?: boolean
           lead_type?: Database["public"]["Enums"]["lead_type"]
           line_id?: string | null
@@ -521,6 +532,7 @@ export type Database = {
           need_company_registration?: boolean | null
           note?: string | null
           num_occupants?: number | null
+          pdpa_consent?: boolean | null
           phone?: string | null
           preferences?: Json | null
           preferred_locations?: string[] | null
@@ -562,6 +574,50 @@ export type Database = {
           label?: string
         }
         Relationships: []
+      }
+      omni_messages: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          direction: string | null
+          external_message_id: string | null
+          id: string
+          is_read: boolean | null
+          lead_id: string | null
+          payload: Json | null
+          source: Database["public"]["Enums"]["lead_source"]
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          direction?: string | null
+          external_message_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          lead_id?: string | null
+          payload?: Json | null
+          source: Database["public"]["Enums"]["lead_source"]
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          direction?: string | null
+          external_message_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          lead_id?: string | null
+          payload?: Json | null
+          source?: Database["public"]["Enums"]["lead_source"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "omni_messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       owners: {
         Row: {
@@ -667,6 +723,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           email: string | null
+          facebook_psid: string | null
           facebook_url: string | null
           full_name: string | null
           id: string
@@ -683,6 +740,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          facebook_psid?: string | null
           facebook_url?: string | null
           full_name?: string | null
           id: string
@@ -699,6 +757,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          facebook_psid?: string | null
           facebook_url?: string | null
           full_name?: string | null
           id?: string
@@ -1322,6 +1381,50 @@ export type Database = {
           },
         ]
       }
+      property_syndication: {
+        Row: {
+          created_at: string | null
+          external_id: string | null
+          id: string
+          last_sync: string | null
+          portal_name: string
+          property_id: string | null
+          status: string | null
+          sync_error: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          external_id?: string | null
+          id?: string
+          last_sync?: string | null
+          portal_name: string
+          property_id?: string | null
+          status?: string | null
+          sync_error?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          external_id?: string | null
+          id?: string
+          last_sync?: string | null
+          portal_name?: string
+          property_id?: string | null
+          status?: string | null
+          sync_error?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_syndication_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rental_contracts: {
         Row: {
           advance_payment_amount: number | null
@@ -1653,6 +1756,7 @@ export type Database = {
         | "WEBSITE"
         | "REFERRAL"
         | "OTHER"
+        | "INSTAGRAM"
       lead_stage: "NEW" | "CONTACTED" | "VIEWED" | "NEGOTIATING" | "CLOSED"
       lead_type: "INDIVIDUAL" | "COMPANY" | "JURISTIC_PERSON"
       listing_type: "SALE" | "RENT" | "SALE_AND_RENT"
@@ -1837,6 +1941,7 @@ export const Constants = {
         "WEBSITE",
         "REFERRAL",
         "OTHER",
+        "INSTAGRAM",
       ],
       lead_stage: ["NEW", "CONTACTED", "VIEWED", "NEGOTIATING", "CLOSED"],
       lead_type: ["INDIVIDUAL", "COMPANY", "JURISTIC_PERSON"],

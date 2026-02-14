@@ -56,14 +56,14 @@ export function NotificationBell({
     }
   }, []);
 
-  // Polling for new notifications every 10 seconds
+  // Polling for new notifications every 5 minutes
   useEffect(() => {
     const interval = setInterval(async () => {
       const latest = await refreshNotificationsAction();
       if (latest && latest.length > 0) {
         setServerNotifications(latest);
       }
-    }, 10000);
+    }, 300000);
 
     return () => clearInterval(interval);
   }, []);

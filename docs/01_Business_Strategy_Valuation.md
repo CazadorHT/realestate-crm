@@ -17,6 +17,7 @@
 | **5. Core Architecture & i18n** (SEO, Multilingual)    | 200,000 - 300,000   |
 
 **รวมมูลค่าโครงการโดยประมาณ:** **1,850,000 – 2,600,000 บาท**
+_(สามารถอัปเกรดเป็นหลักล้านได้ด้วยฟีเจอร์ Omni-channel ในเฟสถัดไป)_
 
 ---
 
@@ -46,6 +47,8 @@
 - **AI-First:** ลดภาระงานด้วย AI Content Generator และ Smart Match
 - **Modern Tech:** Next.js 16 + Tailwind 4 (เร็วและสวยที่สุดในตลาด)
 - **LINE-Native:** แจ้งเตือนและตาม Lead ได้ทันทีผ่าน LINE
+- **Roadmap Omni-channel:** เตรียมพร้อมเชื่อมต่อ FB, IG เพื่อรวมทุกแชทไว้ที่เดียว
+
 - **3 Languages:** พร้อมรับลูกค้า ไทย, อังกฤษ, จีน
 
 ---
@@ -54,13 +57,29 @@
 
 - **Professional Branding:** ใช้เอกสารชุดนี้สร้างความน่าเชื่อถือเทียบเท่าบริษัทใหญ่
 - **Service Excellence:** รับทำเว็บให้นายหน้าโดยใช้โปรเจคนี้เป็นฐาน (กำไรสูงเพราะต้นทุนเวลาต่ำ)
+- **Data Compliance (PDPA):** วางรากฐานระบบให้รองรับ PDPA ตั้งแต่แรกเริ่ม เพื่อความปลอดภัยในระดับ Enterprise
 - **Scalability:** ใช้ระบบ Feature Flags เพื่อเปิด-ปิดความสามารถของระบบตามราคาที่ลูกค้าจ่าย
 
 ---
 
 ## 5. แผนการพัฒนาในอนาคต (Future Roadmap)
 
-- **Omni-channel:** เชื่อมต่อ Facebook, Instagram, WhatsApp
+- **Omni-channel (High-Value Future):** รวมทุกแชท ทุกช่องทาง (FB, IG, LINE, WhatsApp , WeChat) มาจบที่หน้าจอเดียว
+  - **Centralized Inbox:** ดึงแชทจาก FB, IG, LINE, WhatsApp, WeChat เข้าหน้า Dashboard ของระบบทันที
+  - **Direct Reply:** พิมพ์ตอบกลับจากในระบบ CRM ได้เลย ไม่ต้องสลับแอป
+  - **Lead Auto-Capture:** สร้างข้อมูลผู้มุ่งหวังพร้อมที่มา (Source) ให้อัตโนมัติเมื่อมีการทักแชท
+  - **Business Impact:** ลดเวลาตอบ (Response Time), ป้องกันแชทตกหล่น, และเห็นประวัติลูกค้าแบบ Unified Journey
+
+- **Listing Syndication (One-Click Posting):** ลงขายที่เดียว ข้อมูลกระจายไปทุกที่อัตโนมัติ
+  - **Multi-Platform Export:** ส่งข้อมูลทรัพย์ไปยัง DDProperty, LivingInsider, DotProperty และ FB Marketplace
+  - **Auto-Sync:** เมื่อมีการอัปเดตราคาหรือสถานะทรัพย์ (เช่น ขายแล้ว) ระบบจะ Sync ไปทุกเว็บทันที
+  - **Value:** ลดงาน Admin ลง 80% และเพิ่ม Reach ในการหาลูกค้ามหาศาล
+
+- **Enterprise Security & PDPA Compliance:**
+  - **Consent Management:** ระบบขอความยินยอมจากลูกค้าในการเก็บข้อมูลตามกฎหมาย
+  - **Audit Logs:** บันทึกประวัติการเข้าถึงข้อมูลลูกค้า ป้องกันการขโมยฐานข้อมูล Lead
+  - **Encrypted Database:** จัดเก็บข้อมูลสำคัญลูกค้าด้วยการเข้ารหัสระดับสูง
+
 - **Business Tools:** ระบบชำระเงินออนไลน์, Virtual Tour 360, e-Signature
 - **Mobile Native:** พัฒนาแอปพลิเคชันมือถือ (React Native)
 - **AI Insights:** ระบบวิเคราะห์แนวโน้มราคาตลาดและ Lead Scoring

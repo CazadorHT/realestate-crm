@@ -36,6 +36,8 @@ export type AuditAction =
   | "faq.bulk_delete"
   | "partner.bulk_delete"
   | "popular_area.bulk_delete"
+  | "lead.pdpa_update"
+  | "property.syndication.update"
   | "document.bulk_delete";
 
 type AuditInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];

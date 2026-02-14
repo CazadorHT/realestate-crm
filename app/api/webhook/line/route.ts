@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { LINE_MESSAGING_API, lineConfig } from "../../../../lib/line-config";
 import { searchPropertiesForBot } from "@/features/properties/queries.public";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getLineProfile, saveOmniMessage } from "@/lib/line";
 
 type LineEvent = {
   type: string;
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     for (const event of events) {
       if (event.type === "message" && event.message?.type === "text") {
-        await handleTextMessage(event);
+        await handleIncomingChannelMessage(event);
       }
     }
 
@@ -48,6 +50,59 @@ export async function POST(req: NextRequest) {
     console.error("Webhook error:", error);
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
+}
+
+async function handleIncomingChannelMessage(event: LineEvent) {
+  const userId = event.source.userId;
+  const text = event.message?.text || "";
+
+  if (!userId || !text) return;
+
+  const supabase = createAdminClient();
+
+  // 1. Find or Create Lead
+  let { data: lead } = await supabase
+    .from("leads")
+    .select("id")
+    .eq("line_id", userId)
+    .single();
+
+  if (!lead) {
+    // Fetch profile from LINE
+    const profile = await getLineProfile(userId);
+    const { data: newLead, error: createError } = await supabase
+      .from("leads")
+      .insert({
+        full_name: profile?.displayName || "LINE Contact",
+        line_id: userId,
+        source: "LINE",
+        stage: "NEW",
+        note: `Auto-captured from LINE. Profile: ${JSON.stringify(profile)}`,
+      })
+      .select("id")
+      .single();
+
+    if (createError) {
+      console.error("Error creating auto-lead:", createError);
+      return;
+    }
+    lead = newLead;
+  }
+
+  // 2. Log Message to Omni-channel
+  if (lead) {
+    await saveOmniMessage({
+      lead_id: lead.id,
+      source: "LINE",
+      external_message_id: event.message?.id,
+      content: text,
+      payload: event,
+      direction: "INCOMING",
+    });
+  }
+
+  // 3. Fallback to existing search logic (AI Search)
+  await handleTextMessage(event);
 }
 
 async function handleTextMessage(event: LineEvent) {
