@@ -188,6 +188,7 @@ export function PropertyImageUploader({
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (disabled) return;
+
       // Validate file count
       const remainingSlots = maxFiles - images.length;
       if (acceptedFiles.length > remainingSlots) {
@@ -195,63 +196,11 @@ export function PropertyImageUploader({
         acceptedFiles = acceptedFiles.slice(0, remainingSlots);
       }
 
-      // Step 1: Validate files (magic bytes + MIME)
-      const { validateImageFile } = await import("@/lib/file-validation");
+      if (acceptedFiles.length === 0) return;
 
-      const validatedFiles: File[] = [];
-      for (const file of acceptedFiles) {
-        if (file.size > maxFileSizeMB * 1024 * 1024) {
-          toast.error(`${file.name} ใหญ่เกิน ${maxFileSizeMB}MB`);
-          continue;
-        }
-
-        const validation = await validateImageFile(file);
-        if (!validation.valid) {
-          toast.error(`${file.name}: ${validation.error}`);
-          continue;
-        }
-
-        validatedFiles.push(file);
-      }
-
-      if (validatedFiles.length === 0) {
-        toast.error("ไม่มีไฟล์ที่ผ่านการตรวจสอบ");
-        return;
-      }
-
-      // Step 2: Compress images
-      const { compressImage } = await import("@/lib/image-compression");
-
-      let didShowCompressToast = false;
-      const compressedFiles: File[] = [];
-
-      for (const file of validatedFiles) {
-        try {
-          if (!didShowCompressToast && file.size > 1.5 * 1024 * 1024) {
-            didShowCompressToast = true;
-            toast.info("กำลังบีบอัดรูปภาพ...");
-          }
-
-          const result = await compressImage(file);
-
-          // ✅ สำคัญ: normalize ชื่อไฟล์หลังบีบอัด ให้ไม่กลายเป็น "blob" ไม่มี extension
-          const normalized = normalizeImageFileName(
-            result.compressedFile,
-            file.name,
-          );
-
-          compressedFiles.push(normalized);
-        } catch (error) {
-          console.error(`Compression failed for ${file.name}:`, error);
-          // fallback: ใช้ไฟล์เดิม (ชื่อถูกแน่นอน)
-          compressedFiles.push(file);
-        }
-      }
-
-      // Step 3: Create preview items
-      isUploadingRef.current = true; // Mark as uploading
-
-      const newItems: ImageItem[] = compressedFiles.map((file, index) => ({
+      // Step 1: Create immediate preview items (Non-blocking)
+      isUploadingRef.current = true;
+      const newItems: ImageItem[] = acceptedFiles.map((file, index) => ({
         id: `new-${Date.now()}-${index}`,
         storage_path: "",
         preview_url: URL.createObjectURL(file),
@@ -261,17 +210,50 @@ export function PropertyImageUploader({
         origin: "temp",
       }));
 
+      // Update state immediately to show skeletons/placeholders
       setImages((prev) => [...prev, ...newItems]);
 
-      // Step 4: Upload files (sequential)
+      // Step 2: Process each file in background (Sequential to avoid overloading)
+      const { validateImageFile } = await import("@/lib/file-validation");
+      const { compressImage } = await import("@/lib/image-compression");
+
       for (const item of newItems) {
+        const file = item.file!;
         try {
+          // A. Size Validation (already mostly handled by browser, but double check)
+          if (file.size > maxFileSizeMB * 1024 * 1024) {
+            throw new Error(`ไฟล์ใหญ่เกิน ${maxFileSizeMB}MB`);
+          }
+
+          // B. Magic Bytes Validation
+          const validation = await validateImageFile(file);
+          if (!validation.valid) {
+            throw new Error(validation.error || "ไฟล์ไม่ถูกต้อง");
+          }
+
+          // C. Compression
+          let fileToUpload = file;
+          try {
+            const result = await compressImage(file);
+            fileToUpload = normalizeImageFileName(
+              result.compressedFile,
+              file.name,
+            );
+          } catch (err) {
+            console.warn(
+              `Compression failed for ${file.name}, using original.`,
+              err,
+            );
+          }
+
+          // D. Upload
           const formData = new FormData();
-          formData.append("file", item.file!);
+          formData.append("file", fileToUpload);
           formData.append("sessionId", sessionId);
 
           const result = await uploadPropertyImageAction(formData);
 
+          // Update state for this specific item
           setImages((prev) =>
             prev.map((img) =>
               img.id === item.id
@@ -280,29 +262,28 @@ export function PropertyImageUploader({
                     storage_path: result.path,
                     preview_url: result.publicUrl,
                     is_uploading: false,
+                    file: undefined, // Clear file reference after success
                   }
                 : img,
             ),
           );
 
-          toast.success(`อัปโหลด ${item.file!.name} สำเร็จ`);
+          toast.success(`อัปโหลด ${file.name} สำเร็จ`);
         } catch (error) {
-          console.error("Upload error:", error);
-          const msg = error instanceof Error ? error.message : "อัปโหลดล้มเหลว";
-          toast.error(`${item.file!.name}: ${msg}`);
+          console.error(`Error processing ${file.name}:`, error);
+          const msg = error instanceof Error ? error.message : "ล้มเหลว";
+          toast.error(`${file.name}: ${msg}`);
 
-          // revoke preview blob before removing
+          // Remove item and revoke its blob
           if (item.preview_url?.startsWith("blob:")) {
             try {
               URL.revokeObjectURL(item.preview_url);
             } catch {}
           }
-
           setImages((prev) => prev.filter((img) => img.id !== item.id));
         }
       }
 
-      // Mark upload as complete
       isUploadingRef.current = false;
     },
     [disabled, images.length, maxFiles, maxFileSizeMB, sessionId],
@@ -318,32 +299,35 @@ export function PropertyImageUploader({
   });
 
   const handleRemove = async (imageId: string) => {
-    setImages((prev) => {
-      const imageToRemove = prev.find((img) => img.id === imageId);
-      if (!imageToRemove) return prev;
+    // 1. Find the image to remove from the CURRENT state (safer than inside updater for effects)
+    const imageToRemove = images.find((img) => img.id === imageId);
+    if (!imageToRemove) return;
 
+    // 2. Perform side effects (Background cleanup) OUTSIDE of setState
+    if (
+      imageToRemove.origin === "temp" &&
+      imageToRemove.storage_path &&
+      !imageToRemove.is_uploading
+    ) {
+      // Trigger deletion but don't strictly await it to keep UI snappy
+      deletePropertyImageFromStorage(imageToRemove.storage_path).catch(
+        (error) => {
+          console.error("Failed to delete from storage:", error);
+        },
+      );
+    }
+
+    if (imageToRemove.preview_url?.startsWith("blob:")) {
+      URL.revokeObjectURL(imageToRemove.preview_url);
+    }
+
+    // 3. Update state to remove the item
+    setImages((prev) => {
       const newImages = prev.filter((img) => img.id !== imageId);
 
       // If we removed the cover image, set the first available image as cover
       if (imageToRemove.is_cover && newImages.length > 0) {
         newImages[0] = { ...newImages[0], is_cover: true };
-      }
-
-      // SIDE EFFECT: Background cleanup (can't await in functional update, but can trigger)
-      if (
-        imageToRemove.origin === "temp" &&
-        imageToRemove.storage_path &&
-        !imageToRemove.is_uploading
-      ) {
-        deletePropertyImageFromStorage(imageToRemove.storage_path).catch(
-          (error) => {
-            console.error("Failed to delete from storage:", error);
-          },
-        );
-      }
-
-      if (imageToRemove.preview_url.startsWith("blob:")) {
-        URL.revokeObjectURL(imageToRemove.preview_url);
       }
 
       return newImages;

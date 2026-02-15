@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   images: {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    qualities: [75, 90],
     remotePatterns: (() => {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       if (!supabaseUrl) return [];
@@ -15,7 +16,7 @@ const nextConfig: NextConfig = {
       return [
         {
           protocol: "https",
-          hostname: "*.supabase.co",
+          hostname,
           pathname: "/storage/v1/object/public/**",
         },
         {

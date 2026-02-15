@@ -28,9 +28,14 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
   const [selectedYear, setSelectedYear] = useState<string>("6months");
   const [data, setData] = useState<RevenueChartData[]>(initialData);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Generate year options (current year and 2 years back)
   const yearOptions = Array.from({ length: 3 }, (_, i) => currentYear - i);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -123,7 +128,7 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
                 ไม่มีข้อมูลรายได้ในช่วงนี้
               </p>
             </div>
-          ) : (
+          ) : mounted ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={data}
@@ -188,6 +193,8 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
                 />
               </BarChart>
             </ResponsiveContainer>
+          ) : (
+            <div className="h-full w-full" />
           )}
         </div>
       </CardContent>

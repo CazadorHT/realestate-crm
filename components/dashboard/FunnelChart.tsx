@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Bar,
@@ -17,6 +18,12 @@ interface FunnelChartProps {
 }
 
 export function FunnelChart({ data }: FunnelChartProps) {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <Card className="shadow-sm h-full">
       <CardHeader>
@@ -30,45 +37,49 @@ export function FunnelChart({ data }: FunnelChartProps) {
         ) : (
           <div className="h-[250px] w-full flex gap-2">
             <div className="flex-1 min-w-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={data}
-                  layout="vertical"
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                >
-                  <XAxis type="number" hide />
-                  <YAxis
-                    dataKey="step"
-                    type="category"
-                    width={80}
-                    tick={{ fontSize: 10, fill: "#64748b" }}
-                    axisLine={false}
-                    tickLine={false}
-                    interval={0}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "rgba(0,0,0,0.02)" }}
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "none",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    }}
-                    formatter={(value: any) => [
-                      <span className="font-bold">{value} รายการ</span>,
-                      "จำนวน",
-                    ]}
-                  />
-                  <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={20}>
-                    {data.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.fill}
-                        fillOpacity={0.8}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              {mounted ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={data}
+                    layout="vertical"
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  >
+                    <XAxis type="number" hide />
+                    <YAxis
+                      dataKey="step"
+                      type="category"
+                      width={80}
+                      tick={{ fontSize: 10, fill: "#64748b" }}
+                      axisLine={false}
+                      tickLine={false}
+                      interval={0}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "rgba(0,0,0,0.02)" }}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      formatter={(value: any) => [
+                        <span className="font-bold">{value} รายการ</span>,
+                        "จำนวน",
+                      ]}
+                    />
+                    <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={20}>
+                      {data.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.fill}
+                          fillOpacity={0.8}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full w-full" />
+              )}
             </div>
 
             {/* Drop-off Stats */}
