@@ -4,9 +4,10 @@ import { generateMetaCatalogFeed } from "@/lib/services/meta-catalog";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { portal: string } },
+  { params }: { params: Promise<{ portal: string }> },
 ) {
-  const portal = params.portal.toLowerCase();
+  const { portal: portalParam } = await params;
+  const portal = portalParam.toLowerCase();
 
   try {
     if (portal === "meta" || portal === "facebook" || portal === "instagram") {

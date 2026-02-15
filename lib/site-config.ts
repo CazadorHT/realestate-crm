@@ -12,17 +12,31 @@ export const siteConfig = {
   logo: "/images/v-link-svg-png-logo.svg",
   logoDark: "/images/v-link-svg-png-dark.svg",
   ogImage: "/opengraph-image.png",
+  keywords: [
+    "ซื้อขายบ้าน",
+    "เช่าคอนโด",
+    "ค้นหาที่ดิน",
+    "ฝากขายอสังหาฟรี",
+    "นายหน้าอสังหาริมทรัพย์",
+    "ลงประกาศขายบ้าน",
+    "Real Estate Thailand",
+    "V-LINK ASSET",
+  ],
+  googleMapsUrl: "https://maps.app.goo.gl/xxxx", // ลิงก์แผนที่ของออฟฟิศ
+  pagination: {
+    defaultPerPage: 12,
+  },
   links: {
-    facebook: "https://facebook.com/omaasset",
-    instagram: "https://instagram.com/omaasset",
-    line: "https://line.me/ti/p/@omaasset",
-    tiktok: "https://tiktok.com/@omaasset",
+    facebook: "https://facebook.com/vlinkasset",
+    instagram: "https://instagram.com/vlinkasset",
+    line: "https://line.me/ti/p/@vlinkasset",
+    tiktok: "https://tiktok.com/@vlinkasset",
   },
   contact: {
     email: "vlink.asset@gmail.com",
-    phone: "+66-XX-XXX-XXXX",
-    lineId: "@omaasset",
-    address: "123 Business Road, Bangkok, Thailand 10110",
+    phone: "0XX-XXX-XXXX",
+    lineId: "@vlinkasset",
+    address: "ที่ตั้งออฟฟิศของคุณ...",
   },
   tier: (process.env.NEXT_PUBLIC_APP_TIER || process.env.APP_TIER || "PRO") as
     | "LITE"

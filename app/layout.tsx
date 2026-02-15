@@ -34,16 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${siteConfig.name}`,
     },
     description: t("metadata.default_description"),
-    keywords: [
-      "ซื้อขายบ้าน",
-      "เช่าคอนโด",
-      "ค้นหาที่ดิน",
-      "ฝากขายอสังหาฟรี",
-      "นายหน้าอสังหาริมทรัพย์",
-      "ลงประกาศขายบ้าน",
-      "Real Estate Thailand",
-      siteConfig.name,
-    ],
+    keywords: [...siteConfig.keywords, "Real Estate Thailand", siteConfig.name],
     openGraph: {
       type: "website",
       locale: "th_TH",

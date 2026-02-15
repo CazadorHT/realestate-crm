@@ -10,6 +10,7 @@ export type LeadActivityType =
 export const LEAD_SOURCE_LABELS = {
   PORTAL: "ติดต่อเข้ามาเอง",
   FACEBOOK: "มาจากช่องทางเฟซบุ๊ก",
+  INSTAGRAM: "มาจากช่องทางอินสตาแกรม",
   LINE: "มาจากช่องทางไลน์",
   WEBSITE: "มาจากช่องทางเว็บไซต์",
   REFERRAL: "ถูกแนะนำมา",
@@ -47,6 +48,7 @@ export const LEAD_STAGE_ORDER = [
 export const LEAD_SOURCE_ORDER = [
   "PORTAL",
   "FACEBOOK",
+  "INSTAGRAM",
   "LINE",
   "WEBSITE",
   "REFERRAL",
@@ -73,7 +75,7 @@ export function leadSourceLabelNullable(v: LeadSource | null | undefined) {
   return LEAD_SOURCE_LABELS[v];
 }
 export function leadActivityTypeLabelNullable(
-  v: LeadActivityType | null | undefined
+  v: LeadActivityType | null | undefined,
 ) {
   if (!v) return "-";
   return LEAD_ACTIVITY_TYPE_LABELS[v];

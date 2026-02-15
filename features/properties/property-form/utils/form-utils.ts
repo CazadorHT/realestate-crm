@@ -85,6 +85,14 @@ export const EMPTY_VALUES: PropertyFormValues = {
   nearby_places: [],
   nearby_transits: [],
 
+  // Location
+  province: "",
+  district: "",
+  subdistrict: "",
+  address_line1: "",
+  postal_code: "",
+  google_maps_link: "",
+
   // Stock Management
   total_units: 1,
   sold_units: 0,
@@ -305,10 +313,10 @@ export function mapRowToFormValues(
     district: row.district ?? "",
     subdistrict: row.subdistrict ?? "",
     postal_code: row.postal_code ?? "",
-    google_maps_link: row.google_maps_link ?? undefined,
+    google_maps_link: row.google_maps_link ?? "",
     popular_area: row.popular_area ?? undefined,
     owner_id: row.owner_id ?? undefined,
-    property_source: row.property_source ?? undefined,
+    property_source: row.property_source ?? "",
     assigned_to: row.assigned_to ?? undefined,
     agent_ids: [],
     images: images ?? [],

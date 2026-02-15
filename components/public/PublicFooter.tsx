@@ -150,14 +150,19 @@ export function PublicFooter() {
                     {siteConfig.contact.email}
                   </span>
                 </div>
-                <div className="flex items-start gap-3 group cursor-pointer transition-colors">
+                <a
+                  href={siteConfig.googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-3 group cursor-pointer transition-colors"
+                >
                   <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center mt-1 group-hover:bg-blue-600/20 transition-colors">
                     <MapPin className="w-4 h-4 text-blue-400" />
                   </div>
                   <span className="text-sm text-slate-300 leading-snug group-hover:text-white transition-colors pt-2">
-                    {t("footer.address")}
+                    {siteConfig.contact.address}
                   </span>
-                </div>
+                </a>
               </div>
             </div>
 

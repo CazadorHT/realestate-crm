@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+ import { createClient } from "@/lib/supabase/server";
 import { Database } from "@/lib/database.types";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -42,6 +42,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
       phone: null,
       line_id: null,
       facebook_url: null,
+      facebook_psid: null,
       whatsapp_id: null,
       wechat_id: null,
       other_contact: null,
