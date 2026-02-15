@@ -1,6 +1,7 @@
 "use server";
 
 import { generateText } from "./gemini";
+import { logAiUsage } from "@/features/ai-monitor/actions";
 
 export interface TranslationResult {
   en: string;
@@ -49,16 +50,42 @@ export async function translateTextAction(
         .replace(/```$/, "");
 
       const result = JSON.parse(cleanedResponse) as TranslationResult;
+
+      // Log success
+      await logAiUsage({
+        model: "gemini-2.5-flash",
+        feature: "translation",
+        status: "success",
+      });
+
       return {
         en: result.en || "",
         cn: result.cn || "",
       };
     } catch (parseError) {
       console.error("Failed to parse AI translation JSON:", response);
+
+      // Log parsing error
+      await logAiUsage({
+        model: "gemini-2.5-flash",
+        feature: "translation",
+        status: "error",
+        errorMessage: "JSON Parse Error",
+      });
+
       throw new Error("ระบบแปลภาษาขัดข้อง (JSON Parse Error)");
     }
   } catch (error: any) {
     console.error("Translation Action Error:", error);
+
+    // Log general error (e.g., Rate Limit)
+    await logAiUsage({
+      model: "gemini-2.5-flash",
+      feature: "translation",
+      status: "error",
+      errorMessage: error.message,
+    });
+
     throw new Error(error.message || "ไม่สามารถแปลภาษาได้ในขณะนี้");
   }
 }
