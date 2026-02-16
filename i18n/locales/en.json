@@ -574,12 +574,28 @@
     "sidebar_line_button": "Add Line"
   },
   "services": {
-    "title_badge": "Premium Services",
-    "hero_title": "Professional Real Estate Services | More Than Just Property",
-    "hero_desc": "Discover our curated selection of verified partners and premium services designed to make your move and living experience seamless.",
+    "title_badge": "Professional Services",
+    "hero_title": "Elevating Real Estate Management",
+    "hero_desc": "We deliver services beyond standards with a professional team and cutting-edge technology, ensuring every real estate transaction is easy, safe, and of the highest value.",
+    "buy": {
+      "title": "Property Buying Services",
+      "desc": "Curating your dream property and handling mortgage and documentation at every step until ownership transfer."
+    },
+    "sell": {
+      "title": "Property Selling Services",
+      "desc": "Aggressive marketing planning, premium photography, and reaching targets quickly for the best closing results."
+    },
+    "rent": {
+      "title": "Rental & Leasing Services",
+      "desc": "Matching quality tenants with the right space, managing lease agreements, and acting as a trusted intermediary."
+    },
+    "consulting": {
+      "title": "Investment Consulting",
+      "desc": "Analyzing location potential and yield for real estate investors to ensure maximum ROI."
+    },
     "no_image": "No Image",
     "view_details": "View Details",
-    "coming_soon": "Services coming soon..."
+    "coming_soon": "New services coming soon..."
   },
   "leads": {
     "requirements_title": "Requirements",

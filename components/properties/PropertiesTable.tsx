@@ -632,7 +632,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                   </div>
 
                   {/* Meta Stats & Agent */}
-                  <div className="flex items-center justify-between gap-2 pt-1">
+                  <div className="flex items-center justify-between gap-2 pt-1 flex-col">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1 text-[11px] font-bold text-slate-600">
                         <Users className="h-3.5 w-3.5 text-blue-500" />
@@ -644,11 +644,11 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 w-full">
                       <PropertyStatusSelect
                         id={property.id}
                         value={property.status as PropertyStatus}
-                        className="h-7 w-26 text-[10px] font-bold shadow-xs transition-shadow hover:shadow-md"
+                        className="h-7 w-full text-[10px] font-bold shadow-xs transition-shadow hover:shadow-md"
                       />
                     </div>
                   </div>
