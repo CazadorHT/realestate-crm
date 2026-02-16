@@ -81,14 +81,38 @@ export async function generateAIPropertyDescriptionAction(
   `;
 
   try {
-    const response = await generateText(prompt);
+    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+    const aiConfig = await getAiModelConfig();
+    const modelName = aiConfig.description_model;
+
+    const response = await generateText(prompt, modelName);
+
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    await logAiUsage({
+      model: modelName,
+      feature: "description_generator",
+      status: "success",
+    });
+
     // Cleanup simple AI artifacts if any
     return response
       .trim()
       .replace(/^```html/, "")
       .replace(/```$/, "");
-  } catch (error) {
+  } catch (error: any) {
     console.error("AI Generation Error:", error);
+
+    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+    const aiConfig = await getAiModelConfig();
+    const modelName = aiConfig.description_model;
+
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    await logAiUsage({
+      model: modelName || "unknown",
+      feature: "description_generator",
+      status: "error",
+      errorMessage: error.message,
+    });
     throw new Error("ไม่สามารถสร้างคำบรรยายด้วย AI ได้ในขณะนี้");
   }
 }

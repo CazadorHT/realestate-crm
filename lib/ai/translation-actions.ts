@@ -38,8 +38,14 @@ export async function translateTextAction(
     ${text}
   `;
 
+  let modelName: string | undefined;
+
   try {
-    const response = await generateText(prompt);
+    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+    const aiConfig = await getAiModelConfig();
+    modelName = aiConfig.translation_model;
+
+    const response = await generateText(prompt, modelName);
 
     // Attempt to parse JSON
     try {
@@ -53,7 +59,7 @@ export async function translateTextAction(
 
       // Log success
       await logAiUsage({
-        model: "gemini-2.5-flash",
+        model: modelName || "unknown",
         feature: "translation",
         status: "success",
       });
@@ -67,7 +73,7 @@ export async function translateTextAction(
 
       // Log parsing error
       await logAiUsage({
-        model: "gemini-2.5-flash",
+        model: modelName || "unknown",
         feature: "translation",
         status: "error",
         errorMessage: "JSON Parse Error",
@@ -80,7 +86,7 @@ export async function translateTextAction(
 
     // Log general error (e.g., Rate Limit)
     await logAiUsage({
-      model: "gemini-2.5-flash",
+      model: modelName || "unknown",
       feature: "translation",
       status: "error",
       errorMessage: error.message,

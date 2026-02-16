@@ -389,10 +389,34 @@ export async function generateLeadSummaryAction(leadId: string) {
   `;
 
   try {
-    const summary = await generateText(prompt);
+    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+    const aiConfig = await getAiModelConfig();
+    const modelName = aiConfig.lead_model;
+
+    const summary = await generateText(prompt, modelName);
+
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    await logAiUsage({
+      model: modelName,
+      feature: "lead_summary",
+      status: "success",
+    });
+
     return summary;
-  } catch (error) {
+  } catch (error: any) {
     console.error("AI Lead Summary Error:", error);
+
+    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+    const aiConfig = await getAiModelConfig();
+    const modelName = aiConfig.lead_model;
+
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    await logAiUsage({
+      model: modelName || "unknown",
+      feature: "lead_summary",
+      status: "error",
+      errorMessage: error.message,
+    });
     throw new Error("ไม่สามารถสรุปข้อมูลด้วย AI ได้ในขณะนี้");
   }
 }

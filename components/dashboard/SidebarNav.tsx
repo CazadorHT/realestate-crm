@@ -31,6 +31,7 @@ import {
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
+  Cpu,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -198,6 +199,13 @@ export function SidebarNav({ role }: { role: UserRole }) {
       roles: ["ADMIN", "AGENT"],
     },
     {
+      title: "ตั้งค่า AI Model",
+      href: "/protected/admin/ai-config",
+      icon: Cpu,
+      active: pathname?.startsWith("/protected/admin/ai-config") ?? false,
+      roles: ["ADMIN"],
+    },
+    {
       title: "ตั้งค่าเว็บไซต์",
       href: "/protected/settings",
       icon: Settings,
@@ -361,7 +369,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
           )}
         >
           <div className="flex items-center gap-3">
-            
             <Image
               src={siteConfig.logo}
               alt={`${siteConfig.name} Logo`}

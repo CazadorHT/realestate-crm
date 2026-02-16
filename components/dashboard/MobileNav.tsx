@@ -14,6 +14,7 @@ import {
   MapPin,
   FolderOpen,
   CircleHelp,
+  Cpu,
   Globe,
   LayoutTemplate,
   ChevronDown,
@@ -167,6 +168,13 @@ export function MobileNav({ role }: { role: UserRole }) {
       icon: Activity,
       active: pathname?.startsWith("/protected/ai-monitor") ?? false,
       roles: ["ADMIN", "AGENT"],
+    },
+    {
+      title: "ตั้งค่า AI Model",
+      href: "/protected/admin/ai-config",
+      icon: Cpu,
+      active: pathname?.startsWith("/protected/admin/ai-config") ?? false,
+      roles: ["ADMIN"],
     },
     {
       title: "ตั้งค่าเว็บไซต์",

@@ -133,7 +133,15 @@ const CHATBOT_SYSTEM_INSTRUCTION = `
 
 export async function chatWithAI(history: ChatMessage[], newMessage: string) {
   try {
-    if (!geminiModel) {
+    // Fetch AI Config
+    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+    const aiConfig = await getAiModelConfig();
+    const modelName = aiConfig.chatbot_model;
+
+    const { getModel } = await import("@/lib/ai/gemini");
+    const model = getModel(modelName);
+
+    if (!model) {
       return {
         text: "ขออภัยครับ ระบบ AI ยังไม่พร้อมใช้งานในขณะนี้ (API Key Missing)",
         toolCalls: null,
@@ -141,7 +149,7 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
     }
 
     // Initialize chat session with System Instruction
-    const chat = geminiModel.startChat({
+    const chat = model.startChat({
       history: history,
       tools: [propertySearchTool],
       systemInstruction: {
