@@ -773,3 +773,86 @@ export async function getRiskDeals(): Promise<RiskDeal[]> {
     };
   });
 }
+
+export type PropertyAnalytics = {
+  id: string;
+  title: string;
+  slug: string;
+  view_count: number;
+  listing_type: string;
+  price: number | null;
+  rental_price: number | null;
+};
+
+export type AreaAnalytics = {
+  name: string;
+  view_count: number;
+  leads_count: number;
+};
+
+export async function getAnalyticsStats(): Promise<{
+  topProperties: PropertyAnalytics[];
+  topAreas: AreaAnalytics[];
+  totalViews: number;
+}> {
+  const supabase = await createClient();
+
+  // 1. Get Top 10 Properties by Views
+  const { data: topProps } = await supabase
+    .from("properties")
+    .select("id, title, slug, view_count, listing_type, price, rental_price")
+    .order("view_count", { ascending: false })
+    .limit(10);
+
+  // 2. Get Top Areas by Views
+  // Since view_count is per property, we sum them by popular_area
+  const { data: areasData } = await supabase
+    .from("properties")
+    .select("popular_area, view_count")
+    .not("popular_area", "is", null);
+
+  const areaMap = new Map<string, { views: number; leads: number }>();
+  areasData?.forEach((p) => {
+    const area = p.popular_area!;
+    const current = areaMap.get(area) || { views: 0, leads: 0 };
+    areaMap.set(area, {
+      views: current.views + (p.view_count || 0),
+      leads: current.leads,
+    });
+  });
+
+  // 3. Get Leads per Area (to show conversion potential)
+  const { data: leadsData } = await supabase
+    .from("leads")
+    .select("preferred_locations");
+
+  leadsData?.forEach((l) => {
+    (l.preferred_locations as string[])?.forEach((loc) => {
+      const current = areaMap.get(loc) || { views: 0, leads: 0 };
+      areaMap.set(loc, {
+        views: current.views,
+        leads: current.leads + 1,
+      });
+    });
+  });
+
+  const topAreas = Array.from(areaMap.entries())
+    .map(([name, stats]) => ({
+      name,
+      view_count: stats.views,
+      leads_count: stats.leads,
+    }))
+    .sort((a, b) => b.view_count - a.view_count)
+    .slice(0, 10);
+
+  const totalViews = (topProps || []).reduce(
+    (sum, p) => sum + (p.view_count || 0),
+    0,
+  );
+
+  return {
+    topProperties: (topProps as any) || [],
+    topAreas,
+    totalViews,
+  };
+}

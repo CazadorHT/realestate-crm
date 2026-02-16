@@ -41,6 +41,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/lib/site-config";
 
 export function MobileNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
@@ -73,6 +74,7 @@ export function MobileNav({ role }: { role: UserRole }) {
 
   // Same configuration as SidebarNav
   const crmItems: NavItem[] = [
+    
     {
       title: "ทรัพย์สิน",
       href: "/protected/properties",
@@ -102,6 +104,13 @@ export function MobileNav({ role }: { role: UserRole }) {
       href: "/protected/calendar",
       icon: CalendarDays,
       active: pathname?.startsWith("/protected/calendar") ?? false,
+    },
+    {
+      title: "ข้อมูลวิเคราะห์",
+      href: "/protected/admin/analytics",
+      icon: BarChart3,
+      active: pathname?.startsWith("/protected/admin/analytics") ?? false,
+      roles: ["ADMIN"],
     },
   ];
 
@@ -275,20 +284,18 @@ export function MobileNav({ role }: { role: UserRole }) {
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="w-[300px] p-0 overflow-y-auto border-r border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xl"
+        className="w-[300px] p-0 overflow-y-auto border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95 "
       >
         <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
-        <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-20">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 sticky top-0 z-20">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-xl bg-linear-to-br from-blue-600 via-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/40 transform transition-transform group-hover:scale-105">
-              <Building2 className="text-white h-6 w-6" />
-            </div>
+            
             <div className="flex flex-col">
-              <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 uppercase leading-none">
-                OMA ASSET
+              <h1 className="text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-100 uppercase leading-none">
+                {siteConfig.name}
               </h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 font-black mt-1">
-                Real Estate CRM
+              <p className="text-[10px] uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 font-normal mt-1">
+                {siteConfig.description || "Real Estate CRM"}
               </p>
             </div>
           </div>
@@ -299,7 +306,7 @@ export function MobileNav({ role }: { role: UserRole }) {
             href="/protected"
             onClick={() => setOpen(false)}
             className={cn(
-              "flex items-center gap-4 rounded-xl px-4 py-4 transition-all duration-300 font-bold text-sm relative overflow-hidden group",
+              "flex items-center gap-4 rounded-xl px-4 py-4 transition-all duration-300 font-medium text-sm relative overflow-hidden group",
               pathname === "/protected"
                 ? "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-[0_4px_12px_-2px_rgba(59,130,246,0.12)] border border-blue-100/50 dark:border-blue-900/20"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm",
@@ -330,7 +337,7 @@ export function MobileNav({ role }: { role: UserRole }) {
                 <button
                   onClick={() => toggleGroup(group.id)}
                   className={cn(
-                    "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3.5 transition-all duration-300 font-bold text-[10px] uppercase tracking-[0.15em]",
+                    "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3.5 transition-all duration-300 font-medium text-xs uppercase tracking-[0.15em]",
                     hasActiveItem
                       ? "bg-blue-100/50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
                       : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-white dark:hover:bg-slate-800",
@@ -364,8 +371,8 @@ export function MobileNav({ role }: { role: UserRole }) {
                         className={cn(
                           "flex items-center gap-3 rounded-lg px-4 py-3 transition-all duration-300 text-sm relative overflow-hidden group",
                           item.active
-                            ? "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 font-bold shadow-sm border border-blue-50/50"
-                            : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 font-semibold",
+                            ? "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 font-medium shadow-sm border border-blue-50/50"
+                            : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 font-medium",
                         )}
                       >
                         {item.active && (

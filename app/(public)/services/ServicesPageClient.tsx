@@ -132,7 +132,7 @@ function ServicesContent() {
             {CORE_SERVICES.map((service, idx) => (
               <div
                 key={service.id}
-                className="group p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-100 transition-all duration-500 animate-in fade-in-0 slide-in-from-bottom-12"
+                className="group p-8 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-100 transition-all duration-500 animate-in fade-in-0 slide-in-from-bottom-12"
                 style={{ animationDelay: `${idx * 150}ms` }}
               >
                 <div
@@ -175,7 +175,7 @@ function ServicesContent() {
                   key={service.id}
                   className="group relative bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 flex flex-col h-full border border-slate-100"
                 >
-                  <div className="aspect-[16/10] bg-slate-100 relative overflow-hidden">
+                  <div className="aspect-16/10  bg-slate-100 relative overflow-hidden">
                     {service.cover_image ? (
                       <img
                         src={service.cover_image}

@@ -50,7 +50,7 @@ export function RecentPropertiesTable({
     <div className="space-y-6 mt-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 sm:px-0">
         <div className="space-y-1">
-          <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
             <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
             ทรัพย์มาใหม่
             <span className="text-slate-400 font-medium text-sm hidden xs:inline">
@@ -65,7 +65,7 @@ export function RecentPropertiesTable({
           variant="outline"
           size="sm"
           asChild
-          className="w-fit rounded-full font-bold border-slate-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-all"
+          className="w-fit rounded-full font-semibold border-slate-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-all"
         >
           <Link href="/protected/properties">ดูทั้งหมด →</Link>
         </Button>
@@ -439,7 +439,7 @@ export function RecentPropertiesTable({
         </div>
 
         {/* Mobile & Tablet Grid View */}
-        <div className="lg:hidden grid grid-cols-2 gap-4 sm:gap-6 ">
+        <div className="lg:hidden grid grid-cols-1 gap-4 sm:gap-6 ">
           {properties.map((property) => (
             <Card
               key={property.id}
@@ -497,7 +497,7 @@ export function RecentPropertiesTable({
                 <div className="space-y-1.5 mb-3">
                   <Link
                     href={`/protected/properties/${property.id}`}
-                    className="font-black text-slate-900 dark:text-slate-100 hover:text-blue-600 transition-colors line-clamp-1 text-sm sm:text-base leading-tight"
+                    className="font-semibold text-slate-900 dark:text-slate-100 hover:text-blue-600 transition-colors line-clamp-1 text-sm sm:text-base leading-tight"
                   >
                     {property.title || "ไม่ระบุชื่อ"}
                   </Link>
@@ -567,10 +567,10 @@ export function RecentPropertiesTable({
                                       )}
                                     </span>
                                     <div className="flex items-center gap-1 mt-0.5">
-                                      <span className="text-[8px] text-red-500 font-bold bg-red-50 px-1 rounded border border-red-100">
+                                      <span className="text-[8px] text-red-500 font-semibold bg-red-50 px-1 rounded border border-red-100">
                                         ลดขาย
                                       </span>
-                                      <span className="font-black text-[12px] sm:text-[14px] text-red-600 leading-tight">
+                                      <span className="font-semibold text-[12px] sm:text-[14px] text-red-600 leading-tight">
                                         ฿{salePrice?.toLocaleString("th-TH")}
                                       </span>
                                     </div>
@@ -601,13 +601,13 @@ export function RecentPropertiesTable({
                                       <span className="text-[8px] text-orange-500 font-bold bg-orange-50 px-1 rounded border border-orange-100">
                                         ลดเช่า
                                       </span>
-                                      <span className="font-bold text-[10px] sm:text-[12px] text-orange-600 leading-tight">
+                                      <span className="font-semibold text-[10px] sm:text-[12px] text-orange-600 leading-tight">
                                         ฿{rentPrice?.toLocaleString("th-TH")}/ด
                                       </span>
                                     </div>
                                   </div>
                                 ) : (
-                                  <span className="font-bold text-[10px] sm:text-[12px] text-orange-600 dark:text-orange-400 leading-tight wrap-break-word">
+                                  <span className="font-semibold text-[10px] sm:text-[12px] text-orange-600 dark:text-orange-400 leading-tight wrap-break-word">
                                     เช่า: ฿
                                     {(
                                       rentPrice || originalRentPrice

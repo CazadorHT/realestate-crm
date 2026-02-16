@@ -27,7 +27,7 @@ export default async function AiDashboardPage() {
       <div className="absolute top-20 right-20 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="absolute top-40 left-20 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
 
-      <div className="p-8 max-w-7xl mx-auto space-y-10">
+      <div className=" max-w-7xl mx-auto space-y-10">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -35,17 +35,17 @@ export default async function AiDashboardPage() {
               <Sparkles className="w-4 h-4" />
               <span>Intelligence Center</span>
             </div>
-            <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-4xl font-semibold text-slate-900 tracking-tight">
               AI Monitor & Analytics
             </h1>
-            <p className="text-slate-500 text-lg max-w-2xl">
+            <p className="text-slate-500 text-md max-w-2xl">
               ติดตามประสิทธิภาพการทำงานของ AI ทั้งระบบ Chatbot และ Content
               Generator แบบ Real-time
             </p>
           </div>
           <div className="shrink-0">
             <div className="bg-white/80 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-slate-200/60">
-              <AiUsageMonitor className="w-72 shadow-none bg-transparent border-0" />
+              <AiUsageMonitor className="w-full shadow-none bg-transparent border-0" />
             </div>
           </div>
         </div>
@@ -245,7 +245,7 @@ function StatsCard({
       </div>
 
       <div>
-        <div className="text-3xl font-extrabold text-slate-900 tracking-tight mb-1">
+        <div className="text-3xl font-semibold text-blue-700 tracking-tight mb-1">
           {value}
         </div>
         <div className="text-sm font-semibold text-slate-600">{title}</div>

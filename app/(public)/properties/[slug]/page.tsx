@@ -561,7 +561,7 @@ export async function generateMetadata(props: {
       images: [COVER_IMAGE],
       url: canonicalUrl,
       type: "website",
-      siteName: "Real Estate CRM", // Branding
+      siteName: siteConfig.name, // Branding
     },
     twitter: {
       card: "summary_large_image",

@@ -62,43 +62,59 @@ export function AiUsageMonitor({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-100",
+        "flex flex-col gap-2 p-3.5 rounded-[20px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden",
         className,
       )}
     >
-      <div className="flex items-center justify-between text-xs">
-        <div className="flex items-center gap-1.5 font-medium text-slate-700">
-          <Activity className="w-3.5 h-3.5 text-blue-500" />
-          AI Monitor
+      <div className="flex items-center justify-between gap-2 overflow-hidden">
+        <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs shrink-0">
+          <Activity className="w-3.5 h-3.5 text-blue-500 animate-pulse" />
+          AI Performance
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shrink-0">
           <span
-            className={cn("w-2 h-2 rounded-full animate-pulse", statusColor)}
+            className={cn("w-1 h-1 rounded-full animate-pulse", statusColor)}
           />
-          <span className="text-slate-500">{statusText}</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            {statusText}
+          </span>
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-xs mt-1">
-        <span className="text-slate-500">Speed (RPM)</span>
-        <span className="font-mono font-medium">
+      <div className="flex items-center justify-between mt-0.5 overflow-hidden">
+        <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tight shrink-0">
+          Speed (RPM)
+        </span>
+        <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100 truncate">
           {stats.requestsLastMinute}{" "}
-          <span className="text-slate-400">/ {stats.limitRPM}</span>
+          <span className="text-slate-300 font-medium">/ {stats.limitRPM}</span>
         </span>
       </div>
 
-      <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mt-1">
+      <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
         <div
           className={cn(
-            "h-full transition-all duration-500 rounded-full",
-            statusColor,
+            "h-full transition-all duration-700 rounded-full bg-linear-to-r",
+            statusColor === "bg-green-500"
+              ? "from-emerald-400 to-emerald-600"
+              : statusColor === "bg-yellow-500"
+                ? "from-amber-400 to-amber-600"
+                : "from-rose-400 to-rose-600",
           )}
           style={{ width: `${usagePercent}%` }}
         />
       </div>
 
-      <div className="text-[10px] text-slate-400 text-right mt-0.5">
-        Reset in 60s
+      <div className="flex justify-between items-center mt-0.5 overflow-hidden">
+        <div className="flex items-center gap-1 shrink-0">
+          <Zap className="w-2.5 h-2.5 text-amber-500" />
+          <span className="text-[8px] md:text-[9px] text-slate-400 font-medium truncate uppercase tracking-tighter">
+            Gemini Intelligence
+          </span>
+        </div>
+        <div className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter shrink-0">
+          Sync: 30s
+        </div>
       </div>
     </div>
   );

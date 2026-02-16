@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MoveLeft, Home, Search } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/lib/site-config";
 
 export default function NotFound() {
   const { t } = useLanguage();
@@ -54,7 +55,7 @@ export default function NotFound() {
       <div className="mt-20 opacity-20 pointer-events-none select-none">
         <div className="flex gap-8 items-center text-slate-400">
           <div className="h-px w-24 bg-current" />
-          <span className="font-serif italic text-2xl">Real Estate CRM</span>
+          <span className="font-serif italic text-2xl">{siteConfig.name}</span>
           <div className="h-px w-24 bg-current" />
         </div>
       </div>

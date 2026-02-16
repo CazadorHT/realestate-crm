@@ -8,6 +8,8 @@
 import slugify from "slugify";
 import type { Database } from "@/lib/database.types";
 
+import { siteConfig } from "@/lib/site-config";
+
 type PropertyType = Database["public"]["Enums"]["property_type"];
 type ListingType = Database["public"]["Enums"]["listing_type"];
 
@@ -325,7 +327,7 @@ export function generateMetaTitle(
   if (data.province) parts.push(data.province);
 
   const title = parts.join(" | ");
-  const suffix = language === "th" ? " - OMA Asset" : " - Real Estate Thailand";
+  const suffix = ` - ${siteConfig.name}`;
 
   // Truncate if too long (max 60)
   if (title.length + suffix.length > 60) {

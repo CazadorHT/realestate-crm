@@ -47,6 +47,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function AiConfigPage() {
   const [loading, setLoading] = useState(true);
@@ -109,25 +110,25 @@ export default function AiConfigPage() {
   }
 
   return (
-    <div className="p-8 max-w-screen-2xl mx-auto space-y-10">
+    <div className="p-4 md:p-8 max-w-screen-2xl mx-auto space-y-6 md:space-y-10">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-indigo-600 font-semibold text-sm uppercase tracking-wider">
             <Cpu className="w-4 h-4" />
             <span>AI Infrastructure</span>
           </div>
-          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 tracking-tight">
             AI Model Configuration
           </h1>
-          <p className="text-slate-500 text-lg max-w-2xl">
+          <p className="text-slate-500 text-base md:text-lg max-w-2xl leading-relaxed">
             เลือกโมเดล AI ที่เหมาะสมที่สุดสำหรับแต่ละฟีเจอร์
             เพื่อความคุ้มค่าและประสิทธิภาพสูงสุด
           </p>
         </div>
         <Button
           size="lg"
-          className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full lg:w-auto bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed h-12 md:h-14 font-bold text-base"
           onClick={handleSave}
           disabled={saving || !hasChanged}
         >
@@ -140,7 +141,7 @@ export default function AiConfigPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         {/* Chatbot Config */}
         <ConfigCard
           icon={<Bot className="w-6 h-6 text-blue-600" />}
@@ -190,9 +191,9 @@ export default function AiConfigPage() {
       </div>
 
       {/* Quota & Troubleshooting Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex gap-4">
-          <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm h-fit">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl md:rounded-3xl p-5 md:p-6 flex flex-col sm:flex-row gap-4">
+          <div className="bg-white p-3 rounded-xl md:rounded-2xl border border-slate-100 shadow-sm h-fit w-fit">
             <Info className="w-6 h-6 text-indigo-500" />
           </div>
           <div className="space-y-1">
@@ -208,19 +209,19 @@ export default function AiConfigPage() {
           </div>
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 flex gap-4 shadow-sm shadow-amber-100">
-          <div className="bg-white p-3 rounded-2xl border border-amber-100 shadow-sm h-fit">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl md:rounded-3xl p-5 md:p-6 flex flex-col sm:flex-row gap-4 shadow-sm shadow-amber-100">
+          <div className="bg-white p-3 rounded-xl md:rounded-2xl border border-amber-100 shadow-sm h-fit w-fit">
             <AlertCircle className="w-6 h-6 text-amber-600" />
           </div>
           <div className="space-y-2">
             <h4 className="font-bold text-amber-900">
               วิธีเช็คว่า Model ไหน "เต็ม" 🚩
             </h4>
-            <p className="text-xs text-amber-800 leading-relaxed">
+            <p className="text-[13px] md:text-sm text-amber-800 leading-relaxed">
               หากใช้งานแล้วเจอข้อความ <strong>"[RATE_LIMIT] โควต้าเต็ม"</strong>{" "}
               แสดงว่ารุ่นนั้นถึงขีดจำกัดชั่วคราว:
             </p>
-            <ul className="text-xs text-amber-700 space-y-1 ml-4 list-disc">
+            <ul className="text-[11px] md:text-xs text-amber-700 space-y-1.5 ml-4 list-disc font-medium">
               <li>
                 ใช้ <strong>AI Monitor</strong> เพื่อดูประวัติ Error ย้อนหลัง
               </li>
@@ -251,78 +252,94 @@ function ConfigCard({
   const Icon = selectedInfo.icon || Zap;
 
   return (
-    <Card className="border-slate-100 shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden group">
-      <CardHeader className="pb-4">
-        <div className="flex items-center gap-4 mb-2">
-          <div className="p-3 rounded-2xl bg-white border border-slate-100 shadow-sm group-hover:scale-110 transition-transform duration-300">
+    <Card className="border-slate-100 shadow-xl shadow-slate-200/50 rounded-2xl md:rounded-3xl overflow-hidden group">
+      <CardHeader className="pb-4 p-5 md:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-2">
+          <div className="p-3 rounded-2xl bg-white border border-slate-100 shadow-sm sm:group-hover:scale-110 transition-transform duration-300 shrink-0">
             {icon}
           </div>
           <div>
-            <CardTitle className="text-xl font-bold text-slate-900">
+            <CardTitle className="text-lg md:text-xl font-medium text-slate-900 leading-tight">
               {title}
             </CardTitle>
-            <CardDescription className="text-slate-500 mt-1">
+            <CardDescription className="text-xs md:text-sm text-slate-500 mt-1 line-clamp-2 sm:line-clamp-none">
               {description}
             </CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
-          <div className="space-y-3 flex-1">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-600 uppercase tracking-wider">
-              <span>Current Model</span>
-              <ChevronRight className="w-4 h-4" />
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge
-                variant="outline"
-                className={`px-4 py-1.5 rounded-full text-sm font-bold border-2 ${selectedInfo.color}`}
-              >
-                <Icon className="w-4 h-4 mr-2" />
-                {selectedInfo.label}
-              </Badge>
-              <span className="text-slate-400 text-sm italic">
-                "{selectedInfo.description}"
-              </span>
-            </div>
-          </div>
+      <CardContent className="space-y-6 p-5 md:p-6 pt-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+          {ALLOWED_MODELS.map((model) => {
+            const isSelected = model.id === value;
+            const ModelIcon = model.icon;
+            const isRecommended = model.id.includes("2.0-flash");
 
-          <div className="w-full md:w-80 ">
-            <Select
-              value={value}
-              onValueChange={(val) => onChange(val as AiModelChoice)}
-            >
-              <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-white hover:border-indigo-300 focus:ring-indigo-500 shadow-sm">
-                <SelectValue placeholder="เลือกโมเดล" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-slate-100 shadow-2xl">
-                {(Object.keys(MODEL_INFO) as AiModelChoice[]).map((key) => {
-                  const info = MODEL_INFO[key];
-                  const SelectIcon = info.icon;
-                  return (
-                    <SelectItem
-                      key={key}
-                      value={key}
-                      className="py-3 px-4 focus:bg-indigo-50 cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <SelectIcon className="w-4 h-4 text-slate-400" />
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-900">
-                            {info.label}
-                          </span>
-                          <span className="text-[10px] text-slate-500 leading-tight">
-                            {info.description}
-                          </span>
-                        </div>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
+            return (
+              <button
+                key={model.id}
+                type="button"
+                onClick={() => onChange(model.id as AiModelChoice)}
+                className={cn(
+                  "relative flex flex-col items-start p-4 md:p-5 rounded-2xl border-2 text-left transition-all duration-300 group",
+                  isSelected
+                    ? "border-indigo-600 bg-indigo-500 shadow-md ring-4 ring-indigo-500/10  "
+                    : "border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm",
+                )}
+              >
+                {/* Recommended Badge */}
+                {isRecommended && (
+                  <div className="absolute -top-2.5 -right-1 z-10">
+                    <Badge className="bg-emerald-500 text-white border-none text-[10px] md:text-[11px] font-medium uppercase tracking-tight px-1.5 py-0.5 shadow-sm">
+                      Recommended
+                    </Badge>
+                  </div>
+                )}
+
+                {/* Selected Indicator */}
+                {isSelected && (
+                  <div className="absolute top-3 right-3">
+                    <CheckCircle2 className={cn("w-5 h-5",isSelected ? "text-white" : "text-indigo-600")} />
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 mb-3">
+                  <div
+                    className={cn(
+                      "p-2 rounded-xl shrink-0 transition-transform duration-300 group-hover:scale-110",
+                      model.color.split(" ")[0].replace("text-", "bg-") + "/10",
+                    )}
+                  >
+                    <ModelIcon className={cn("w-5 h-5", model.color)} />
+                  </div>
+                  <span className={cn("font-bold text-slate-900 text-sm md:text-base leading-tight",isSelected ? "text-white" : "text-slate-900")}>
+                    {model.label}
+                  </span>
+                </div>
+
+                <p className={cn("text-[11px] md:text-xs text-slate-500 font-medium leading-relaxed line-clamp-2",isSelected ? "text-white" : "text-slate-500")}>
+                  {model.description}
+                </p>
+
+                {/* Hover/Active states indicator */}
+                {!isSelected && (
+                  <div className="mt-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">
+                      Select Model
+                    </span>
+                    <ChevronRight className="w-3 h-3 text-indigo-600" />
+                  </div>
+                )}
+                {isSelected && (
+                  <div className="mt-4 flex items-center gap-1.5">
+                    <span className="text-[10px] uppercase font-bold text-white tracking-wider">
+                      Active Now
+                    </span>
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

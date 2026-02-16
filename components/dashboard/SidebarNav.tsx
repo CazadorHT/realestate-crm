@@ -128,6 +128,13 @@ export function SidebarNav({ role }: { role: UserRole }) {
       icon: CalendarDays,
       active: pathname?.startsWith("/protected/calendar") ?? false,
     },
+    {
+      title: "ข้อมูลวิเคราะห์",
+      href: "/protected/admin/analytics",
+      icon: BarChart3,
+      active: pathname?.startsWith("/protected/admin/analytics") ?? false,
+      roles: ["ADMIN"],
+    },
   ];
 
   // Documents Group
