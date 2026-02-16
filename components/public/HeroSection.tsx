@@ -92,7 +92,7 @@ export function HeroSection() {
 
               <HeroTitle />
 
-              <h2 className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 leading-relaxed max-w-2xl drop-shadow-md mx-auto md:mx-0">
+              <h2 className="text-sm sm:text-base font-light md:text-lg lg:text-xl text-white/80 leading-relaxed max-w-2xl drop-shadow-md mx-auto md:mx-0">
                 {t("home.hot_deals.description")}
               </h2>
 

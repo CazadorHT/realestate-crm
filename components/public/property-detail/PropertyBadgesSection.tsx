@@ -48,40 +48,50 @@ export function PropertyBadgesSection({
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
   const scrollRef = useRef<HTMLDivElement>(null);
-  const scrollPosRef = useRef(0); // For float-based smooth scrolling
+  const scrollPosRef = useRef(0);
+  const scrollDirectionRef = useRef(1); // 1 for forward, -1 for backward
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [startX, setStartX] = useState(0);
   const [initialScrollLeft, setInitialScrollLeft] = useState(0);
 
-  // Auto-scroll logic with float-based accumulation for sub-pixel smoothness
+  // Ultra-Smooth Auto-scroll logic with sub-pixel precision
   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer || isDragging || isHovered) return;
 
     let animationId: number;
     let lastTime = performance.now();
-    const speed = 0.8; // Normalized pixels per frame (~48px/sec at 60fps)
+    const speed = 0.8; // Base speed (pixels per 16.67ms)
 
     const scroll = (currentTime: number) => {
       if (scrollContainer) {
-        // Calculate delta time for consistent speed across different refresh rates (60Hz vs 120Hz)
         const deltaTime = currentTime - lastTime;
         lastTime = currentTime;
 
-        // Move calculation (deltaTime / 16.67ms per frame @ 60fps)
-        const move = (speed * deltaTime) / 16.67;
-        scrollPosRef.current += move;
-
-        // Loop back logic
         const maxScroll =
           scrollContainer.scrollWidth - scrollContainer.clientWidth;
-        if (scrollPosRef.current >= maxScroll) {
-          scrollPosRef.current = 0;
-        }
 
-        // Sync to DOM
-        scrollContainer.scrollLeft = scrollPosRef.current;
+        // Skip if content doesn't overflow
+        if (maxScroll > 1) {
+          // Precise move calculation (normalized to 60fps)
+          const move = (speed * deltaTime) / 16.67;
+
+          // Accumulate position using the ref (float precision for sub-pixel smoothness)
+          scrollPosRef.current += move * scrollDirectionRef.current;
+
+          // Ping-Pong bounce logic with boundary clamping
+          if (scrollPosRef.current >= maxScroll) {
+            scrollPosRef.current = maxScroll;
+            scrollDirectionRef.current = -1;
+          } else if (scrollPosRef.current <= 0) {
+            scrollPosRef.current = 0;
+            scrollDirectionRef.current = 1;
+          }
+
+          // Apply to DOM (Sync high-precision float to scrollLeft)
+          scrollContainer.scrollLeft = scrollPosRef.current;
+        }
       }
       animationId = requestAnimationFrame(scroll);
     };
