@@ -47,3 +47,36 @@ export type UpdatePropertyStatusResult = {
   success: boolean;
   message?: string;
 };
+
+export interface PropertyTableData {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  property_type: PropertyType;
+  listing_type: ListingType;
+  price: number | null;
+  rental_price: number | null;
+  status: PropertyStatus;
+  leads_count: number;
+  updated_at: string;
+  created_at: string;
+  closed_lead_name: string | null;
+  is_hot?: boolean;
+  view_count?: number;
+  is_new?: boolean;
+  // Optional fields for enhanced table
+  subdistrict?: string | null;
+  district?: string | null;
+  province?: string | null;
+  size_sqm?: number | null;
+  land_size_sqwah?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  agent_name?: string | null;
+  popular_area?: string | null;
+  original_price?: number | null;
+  original_rental_price?: number | null;
+  total_units?: number;
+  sold_units?: number;
+}

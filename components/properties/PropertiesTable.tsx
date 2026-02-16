@@ -29,16 +29,16 @@ import Link from "next/link";
 import { PropertyPrice } from "./PropertyPrice";
 import { PropertiesEmptyState } from "./PropertiesEmptyState";
 import { PropertyStatusSelect } from "./PropertyStatusDropdown";
-import type {
-  PropertyStatus,
-  PropertyType,
-  ListingType,
-} from "@/features/properties/types";
-import { Button } from "@/components/ui/button";
-import { Eye, Edit3, MapPin } from "lucide-react";
-import { DuplicatePropertyButton } from "./DuplicatePropertyButton";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowUpDown, ArrowUp, ArrowDown, Download } from "lucide-react";
+import {
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Download,
+  Eye,
+  Edit3,
+  MapPin,
+} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
@@ -46,39 +46,14 @@ import { bulkDeletePropertiesAction } from "@/features/properties/bulk-actions";
 import { exportPropertiesAction } from "@/features/properties/export-action";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
-export interface PropertyTableData {
-  id: string;
-  title: string;
-  description: string | null;
-  image_url: string | null;
-  property_type: PropertyType;
-  listing_type: ListingType;
-  price: number | null;
-  rental_price: number | null;
-  status: PropertyStatus;
-  leads_count: number;
-  updated_at: string;
-  created_at: string;
-  closed_lead_name: string | null;
-  is_hot?: boolean;
-  view_count?: number;
-  is_new?: boolean;
-  // Optional fields for enhanced table
-  subdistrict?: string | null;
-  district?: string | null;
-  province?: string | null;
-  size_sqm?: number | null;
-  land_size_sqwah?: number | null;
-  bedrooms?: number | null;
-  bathrooms?: number | null;
-  agent_name?: string | null;
-  popular_area?: string | null;
-  original_price?: number | null;
-  original_rental_price?: number | null;
-  total_units?: number;
-  sold_units?: number;
-}
+import { Button } from "@/components/ui/button";
+import { DuplicatePropertyButton } from "./DuplicatePropertyButton";
+import type {
+  PropertyStatus,
+  PropertyType,
+  ListingType,
+  PropertyTableData,
+} from "@/features/properties/types";
 
 interface PropertiesTableProps {
   data: PropertyTableData[];

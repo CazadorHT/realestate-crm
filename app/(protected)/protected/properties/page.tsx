@@ -1,12 +1,20 @@
 import { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
+import {
+  getPropertiesDashboardStatsQuery,
+  getPropertiesTableData,
+} from "@/features/properties/queries";
+import { PropertiesHeader } from "./_components/PropertiesHeader";
+import { PropertiesEmptyState } from "./_components/PropertiesEmptyState";
+import { PropertyFilters } from "@/components/properties/PropertyFilters";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 export const metadata: Metadata = {
   title: "จัดการทรัพย์",
   description: "จัดการ เพิ่ม แก้ไข และติดตามอสังหาริมทรัพย์ทั้งหมดในระบบ",
 };
-import dynamic from "next/dynamic";
-import type { PropertyTableData } from "@/components/properties/PropertiesTable";
+
 const PropertiesTable = dynamic(
   () =>
     import("@/components/properties/PropertiesTable").then(
@@ -19,14 +27,6 @@ const PropertiesTable = dynamic(
   },
 );
 
-import { PropertyFilters } from "@/components/properties/PropertyFilters";
-import { PaginationControls } from "@/components/ui/pagination-controls";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { PlusCircle } from "lucide-react";
-import { getPropertiesDashboardStatsQuery } from "@/features/properties/queries";
-
 const PropertiesDashboard = dynamic(
   () =>
     import("@/components/properties/PropertiesDashboard").then(
@@ -38,11 +38,6 @@ const PropertiesDashboard = dynamic(
     ),
   },
 );
-import type { Database } from "@/lib/database.types";
-
-type PropertyStatus = Database["public"]["Enums"]["property_status"];
-type PropertyType = Database["public"]["Enums"]["property_type"];
-type ListingType = Database["public"]["Enums"]["listing_type"];
 
 export default async function PropertiesPage({
   searchParams,
@@ -67,343 +62,30 @@ export default async function PropertiesPage({
     page?: string;
   }>;
 }) {
-  const supabase = await createClient();
   const params = await searchParams;
-  const {
-    q,
-    status,
-    type,
-    listing,
-    minPrice,
-    maxPrice,
-    bedrooms,
-    bathrooms,
-    province,
-    district,
-    popular_area,
-    sortBy = "created_at",
-    sortOrder = "desc",
-    nearTransit,
-    petFriendly,
-    fullyFurnished,
-    page,
-  } = params;
-
-  // Pagination Config
   const PAGE_SIZE = 10;
-  const currentPage = Number(page) || 1;
-  const from = (currentPage - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
+  const currentPage = Number(params.page) || 1;
 
-  // 1. Build Query
-  let query = supabase
-    .from("properties")
-    .select("*", { count: "exact" }) // Get count for pagination
-    .is("deleted_at", null)
-    .range(from, to);
-
-  // Search
-  if (q) {
-    query = query.or(
-      `title.ilike.%${q}%,description.ilike.%${q}%,address_line1.ilike.%${q}%`,
-    );
-  }
-
-  // Filters
-  if (status) {
-    query = query.eq("status", status as PropertyStatus);
-  }
-  if (type) {
-    query = query.eq("property_type", type as PropertyType);
-  }
-  if (listing) {
-    if (listing === "SALE") {
-      query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
-    } else if (listing === "RENT") {
-      query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
-    } else {
-      query = query.eq("listing_type", listing as ListingType);
-    }
-  }
-  if (bedrooms) {
-    query = query.eq("bedrooms", Number(bedrooms));
-  }
-  if (bathrooms) {
-    query = query.eq("bathrooms", Number(bathrooms));
-  }
-  if (province) {
-    query = query.ilike("province", `%${province}%`);
-  }
-  if (district) {
-    query = query.ilike("district", `%${district}%`);
-  }
-  if (popular_area) {
-    query = query.ilike("popular_area", `%${popular_area}%`);
-  }
-  if (nearTransit === "true") {
-    query = query.eq("near_transit", true);
-  }
-  if (petFriendly === "true") {
-    query = query.eq("is_pet_friendly", true);
-  }
-  if (fullyFurnished === "true") {
-    query = query.eq("is_fully_furnished", true);
-  }
-
-  // Price Range with fallback
-  const priceField = listing === "RENT" ? "rental_price" : "price";
-  const fallbackField =
-    listing === "RENT" ? "original_rental_price" : "original_price";
-
-  if (
-    (minPrice && minPrice.trim() !== "") ||
-    (maxPrice && maxPrice.trim() !== "")
-  ) {
-    const min = minPrice && minPrice.trim() !== "" ? Number(minPrice) : 0;
-    const maxStr = maxPrice && maxPrice.trim() !== "" ? maxPrice : null;
-
-    if (maxStr !== null) {
-      const max = Number(maxStr);
-      // (price >= min AND price <= max) OR (price IS NULL AND original_price >= min AND original_price <= max)
-      query = query.or(
-        `and(${priceField}.gte.${min},${priceField}.lte.${max}),and(${priceField}.is.null,${fallbackField}.gte.${min},${fallbackField}.lte.${max})`,
-      );
-    } else {
-      // (price >= min) OR (price IS NULL AND original_price >= min)
-      query = query.or(
-        `${priceField}.gte.${min},and(${priceField}.is.null,${fallbackField}.gte.${min})`,
-      );
-    }
-  }
-
-  // Sorting
-  const validSortFields = [
-    "created_at",
-    "updated_at",
-    "title",
-    "price",
-    "rental_price",
-    "bedrooms",
-    "status",
-    "property_type",
-  ];
-  const sortField = validSortFields.includes(sortBy) ? sortBy : "created_at";
-  const ascending = sortOrder === "asc";
-
-  query = query.order(sortField, { ascending });
-
-  const { data: properties, error, count } = await query;
-
-  if (error) {
-    console.error("Error fetching properties:", error);
-    return (
-      <div className="p-8 text-center text-red-500">
-        เกิดข้อผิดพลาดในการโหลดข้อมูล
-      </div>
-    );
-  }
+  // 1. Fetch Data via Refactored Query
+  const { tableData, count, filterMetadata } =
+    await getPropertiesTableData(params);
+  const stats = await getPropertiesDashboardStatsQuery();
 
   // Redirect if page is empty and not on first page
-  if (properties.length === 0 && currentPage > 1) {
+  if (tableData.length === 0 && currentPage > 1) {
     redirect("/protected/properties?page=1");
   }
 
-  const propertyIds = properties.map((p) => p.id);
-  const CLOSED_DEAL_STATUSES = ["SIGNED", "CLOSED_WIN"] as const;
-  // 2. Fetch Associations in Parallel
-  const soldOrRentedIds = properties
-    .filter((p) => p.status === "SOLD" || p.status === "RENTED")
-    .map((p) => p.id);
-
-  const [imagesResult, leadsResult, closedLeadsResult] = await Promise.all([
-    // Images: fetch all for these properties to find cover or first available
-    supabase
-      .from("property_images")
-      .select("property_id, image_url, storage_path, is_cover")
-      .in("property_id", propertyIds)
-      .order("is_cover", { ascending: false })
-      .order("sort_order", { ascending: true }),
-
-    // Leads: count
-    supabase.from("leads").select("property_id").in("property_id", propertyIds),
-
-    // Closed lead (ล่าสุด) สำหรับ SOLD/RENTED เท่านั้น
-    soldOrRentedIds.length > 0
-      ? supabase
-          .from("deals")
-          .select(
-            `
-          property_id,
-          deal_type,
-          status,
-          updated_at,
-          lead:leads(full_name)
-        `,
-          )
-          .in("property_id", soldOrRentedIds)
-          .in("status", [...CLOSED_DEAL_STATUSES])
-          .order("updated_at", { ascending: false })
-      : Promise.resolve({
-          data: [] as Array<{
-            property_id: string;
-            lead: { full_name: string | null } | null;
-          }>,
-        }),
-  ]);
-  // 3. Map Data
-  // Build a map of property_id -> best available image URL or Storage Path
-  const bestImageMap = new Map<string, string>();
-  imagesResult.data?.forEach((img) => {
-    // Since we ordered by is_cover DESC and sort_order ASC,
-    // the first image we encounter for a property_id is the best one.
-    if (!bestImageMap.has(img.property_id)) {
-      const bestUrl = img.image_url || img.storage_path;
-      if (bestUrl) {
-        bestImageMap.set(img.property_id, bestUrl);
-      }
-    }
-  });
-
-  // Count leads per property
-  const leadsCountMap = new Map<string, number>();
-
-  leadsResult.data?.forEach((lead) => {
-    if (lead.property_id) {
-      leadsCountMap.set(
-        lead.property_id,
-        (leadsCountMap.get(lead.property_id) || 0) + 1,
-      );
-    }
-  });
-
-  // Map closed lead names
-
-  const closedLeadNameMap = new Map<string, string>();
-
-  closedLeadsResult.data?.forEach((d) => {
-    const pid = d?.property_id;
-    const name = d?.lead?.full_name;
-
-    if (!pid) return;
-    if (!closedLeadNameMap.has(pid) && name) {
-      closedLeadNameMap.set(pid, name);
-    }
-  });
-
-  // Map profile names
-
-  // 4. Transform to Table Data
-  const tableData: PropertyTableData[] = properties.map((p) => {
-    // Logic for Price Display
-    // If listing_type is BOTH, we might prefer showing Price, or handle in Table component.
-    // The Table Component handles display logic based on availability.
-
-    // Check "New" status (Created < 7 days)
-    const isNew =
-      new Date().getTime() - new Date(p.created_at).getTime() <
-      7 * 24 * 60 * 60 * 1000;
-
-    const locationHint =
-      [p.district, p.province].filter(Boolean).join(", ") ||
-      p.address_line1 ||
-      "";
-
-    const { getPublicImageUrl } = require("@/features/properties/image-utils");
-
-    // Fallback logic for image_url:
-    // 1. Check bestImageMap (property_images table: cover or first)
-    // 2. Check p.images (legacy JSONB column)
-    let rawImageUrl = bestImageMap.get(p.id) || null;
-
-    if (!rawImageUrl && p.images) {
-      const legacyImages = p.images as any;
-      if (Array.isArray(legacyImages) && legacyImages.length > 0) {
-        rawImageUrl =
-          typeof legacyImages[0] === "string"
-            ? legacyImages[0]
-            : legacyImages[0]?.url || legacyImages[0]?.image_url;
-      }
-    }
-
-    const imageUrl = rawImageUrl ? getPublicImageUrl(rawImageUrl) : null;
-
-    return {
-      id: p.id,
-      title: p.title,
-      description: locationHint || p.description,
-      image_url: imageUrl,
-      property_type: p.property_type,
-      listing_type: p.listing_type,
-      price: p.price,
-      rental_price: p.rental_price,
-      status: p.status,
-      leads_count: leadsCountMap.get(p.id) || 0,
-      updated_at: p.updated_at,
-      created_at: p.created_at,
-      popular_area: p.popular_area,
-      closed_lead_name: closedLeadNameMap.get(p.id) || null,
-      original_price: p.original_price,
-      original_rental_price: p.original_rental_price,
-      is_new: isNew,
-      view_count: p.view_count || 0,
-      total_units: p.total_units || undefined,
-      sold_units: p.sold_units || undefined,
-    };
-  });
-
-  const stats = await getPropertiesDashboardStatsQuery();
-
-  // Check if truly empty (no properties at all, not just filtered)
-  const isEmptyState = properties.length === 0 && currentPage === 1;
-
-  const { data: filterMetadata } = await supabase
-    .from("properties")
-    .select(
-      "status, property_type, province, popular_area, listing_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, near_transit, is_pet_friendly, is_fully_furnished",
-    )
-    .is("deleted_at", null);
+  const isEmptyState = tableData.length === 0 && currentPage === 1;
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
-      {/* Premium Header Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 p-5 md:p-8 shadow-xl">
-        {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-white/5 rounded-full blur-xl" />
-
-        <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
-          <div className="space-y-1.5 md:space-y-2">
-            <div className="flex items-center gap-2.5 md:gap-3">
-              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
-                <PlusCircle className="h-5 w-5 md:h-6 md:w-6 text-white" />
-              </div>
-              <h1 className="text-xl md:text-3xl font-bold text-white tracking-tight">
-                ทรัพย์ทั้งหมด
-              </h1>
-            </div>
-            <p className="text-blue-100/90 text-xs md:text-base max-w-md">
-              จัดการและติดตามทรัพย์สินของคุณ • มีทั้งหมด{" "}
-              <span className="font-bold text-white">{count || 0}</span> รายการ
-            </p>
-          </div>
-
-          <Button
-            asChild
-            size="lg"
-            className="w-full md:w-auto bg-white text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 font-bold h-11 md:h-12"
-          >
-            <Link href="/protected/properties/new">
-              <PlusCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-              เพิ่มทรัพย์ใหม่
-            </Link>
-          </Button>
-        </div>
-      </div>
+      <PropertiesHeader count={count} />
 
       <PropertiesDashboard stats={stats} />
 
       <div id="table" className="space-y-4 scroll-mt-4">
-        {/* Enhanced Section Title */}
+        {/* Section Title */}
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-indigo-500 rounded-lg blur-sm opacity-50" />
@@ -419,59 +101,15 @@ export default async function PropertiesPage({
           </div>
         </div>
 
-        <PropertyFilters
-          totalCount={count ?? 0}
-          filterMetadata={filterMetadata ?? []}
-        />
+        <PropertyFilters totalCount={count} filterMetadata={filterMetadata} />
 
-        {/* Empty State UI */}
         {isEmptyState ? (
-          <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50 to-white p-8 md:p-12">
-            {/* Decorative Background */}
-            <div className="absolute inset-0 opacity-5">
-              <div className="absolute top-10 left-10 w-20 h-20 border-4 border-slate-400 rounded-xl rotate-12" />
-              <div className="absolute bottom-10 right-10 w-16 h-16 border-4 border-slate-400 rounded-full" />
-              <div className="absolute top-1/2 left-1/3 w-12 h-12 border-4 border-slate-400 rounded-lg -rotate-6" />
-            </div>
-
-            <div className="relative flex flex-col items-center justify-center text-center space-y-5 md:space-y-6">
-              {/* Icon */}
-              <div className="relative">
-                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl scale-150" />
-                <div className="relative p-5 md:p-6 bg-linear-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/30">
-                  <PlusCircle className="h-10 w-10 md:h-12 md:w-12 text-white" />
-                </div>
-              </div>
-
-              {/* Text */}
-              <div className="space-y-2 max-w-md">
-                <h3 className="text-xl md:text-2xl font-bold text-slate-800">
-                  ยังไม่มีทรัพย์ในระบบ
-                </h3>
-                <p className="text-xs md:text-sm text-slate-500 leading-relaxed px-4">
-                  เริ่มต้นสร้างรายการทรัพย์สินแรกของคุณเลย! ระบบจะช่วยจัดการ
-                  ติดตาม และนำเสนอทรัพย์ของคุณอย่างมืออาชีพ
-                </p>
-              </div>
-
-              {/* CTA Button */}
-              <Button
-                asChild
-                size="lg"
-                className="w-full sm:w-auto bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 font-bold"
-              >
-                <Link href="/protected/properties/new">
-                  <PlusCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-                  เพิ่มทรัพย์แรกของคุณ
-                </Link>
-              </Button>
-            </div>
-          </div>
+          <PropertiesEmptyState />
         ) : (
           <>
             <PropertiesTable data={tableData} />
             <PaginationControls
-              totalCount={count ?? 0}
+              totalCount={count}
               pageSize={PAGE_SIZE}
               currentPage={currentPage}
             />
