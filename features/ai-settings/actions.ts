@@ -58,7 +58,6 @@ export async function updateAiModelConfig(
       key,
       value,
       updated_at: new Date().toISOString(),
-      updated_by: userId,
     }));
 
     const { error } = await supabase

@@ -8,7 +8,7 @@ export function QuickActions() {
       <Button
         asChild
         variant="outline"
-        className="h-20 flex flex-col gap-2 hover:border-primary hover:text-primary transition-colors"
+        className="h-20 flex flex-col gap-2 hover:border-primary hover:text-white transition-colors"
       >
         <Link href="/protected/properties/new">
           <PlusCircle className="h-6 w-6" />
@@ -19,7 +19,7 @@ export function QuickActions() {
       <Button
         asChild
         variant="outline"
-        className="h-20 flex flex-col gap-2 hover:border-primary hover:text-primary transition-colors"
+        className="h-20 flex flex-col gap-2 hover:border-primary hover:text-white transition-colors"
       >
         <Link href="/protected/leads/new">
           <UserPlus className="h-6 w-6" />
@@ -30,7 +30,7 @@ export function QuickActions() {
       <Button
         asChild
         variant="outline"
-        className="h-20 flex flex-col gap-2 hover:border-primary hover:text-primary transition-colors"
+        className="h-20 flex flex-col gap-2 hover:border-primary hover:text-white transition-colors"
       >
         <Link href="/protected/calendar">
           <CalendarDays className="h-6 w-6" />

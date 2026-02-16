@@ -122,16 +122,22 @@ export async function getPopularAreasAction(
 /**
  * Add a new popular area to the database
  */
-export async function addPopularAreaAction(name: string) {
+export async function addPopularAreaAction(data: {
+  name: string;
+  name_en?: string;
+  name_cn?: string;
+}) {
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
-  if (!name || name.trim() === "") {
+  if (!data.name || data.name.trim() === "") {
     return { success: false, message: "กรุณาระบุชื่อย่าน" };
   }
 
   const { error } = await supabase.from("popular_areas").insert({
-    name: name.trim(),
+    name: data.name.trim(),
+    name_en: data.name_en?.trim() || null,
+    name_cn: data.name_cn?.trim() || null,
   });
 
   if (error) {

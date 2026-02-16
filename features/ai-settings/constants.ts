@@ -6,9 +6,16 @@ import { Zap, Sparkles, Cpu, Bot } from "lucide-react";
  */
 export const ALLOWED_MODELS = [
   {
+    id: "gemini-flash-latest",
+    label: "Gemini Flash (Stable)",
+    description: "รุ่นที่เสถียรที่สุดและแนะนำให้ใช้เป็นหลักครับ",
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+    icon: Zap,
+  },
+  {
     id: "gemini-2.0-flash",
     label: "Gemini 2.0 Flash",
-    description: "สมดุลที่สุด เร็ว แรง และโควต้าเยอะ (ฟรีและคุ้ม)",
+    description: "สมดุลที่สุด เร็ว แรง และโควต้าเยอะ (หากคีย์ได้รับสิทธิ์)",
     color: "bg-emerald-50 text-emerald-700 border-emerald-200",
     icon: Zap,
   },
@@ -57,9 +64,9 @@ export type AiModelConfig = {
 };
 
 export const DEFAULT_CONFIG: AiModelConfig = {
-  chatbot_model: "gemini-2.0-flash",
-  blog_generator_model: "gemini-2.0-flash",
-  translation_model: "gemini-1.5-flash",
-  description_model: "gemini-2.0-flash",
-  lead_model: "gemini-2.0-flash",
+  chatbot_model: "gemini-flash-latest",
+  blog_generator_model: "gemini-flash-latest",
+  translation_model: "gemini-flash-latest",
+  description_model: "gemini-flash-latest",
+  lead_model: "gemini-flash-latest",
 };

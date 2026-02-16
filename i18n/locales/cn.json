@@ -275,7 +275,15 @@
     "home_title": "搜索别墅、公寓、办公楼 出售/出租 | OMA Asset",
     "home_description": "房地产出租/出售列表。别墅、公寓、办公楼、土地。100% 真实房源，配备智能匹配系统。",
     "search_title": "搜索房产 | 别墅、公寓、办公楼",
-    "search_description": "通过我们的智能过滤系统查找所有类型的出售和出租房地产。"
+    "search_description": "通过我们的智能过滤系统查找所有类型的出售和出租房地产。",
+    "jsonld_description": "在线房地产中心，提供简便搜索和快速房产发布，以及专业服务。",
+    "jsonld_address_locality": "曼谷",
+    "about_title": "关于我们 | OMA Asset",
+    "about_description": "了解我们的专业房地产团队，提供全方位的房地产服务。",
+    "contact_title": "联系我们 | OMA Asset",
+    "contact_description": "联系我们的专业房地产团队，为您提供各类房地产咨询和服务。",
+    "services_title": "我们的服务 | OMA Asset",
+    "services_description": "由专业团队提供的买卖、租赁等全方位房地产服务。"
   },
   "loading": {
     "search_dream_home": "正在为您寻找梦想之所...",

@@ -21,6 +21,7 @@ import { PropertyBadgesSection } from "@/components/public/property-detail/Prope
 import { PropertyDescription } from "@/components/public/property-detail/PropertyDescription";
 import { PropertyAmenities } from "@/components/public/property-detail/PropertyAmenities";
 import { siteConfig } from "@/lib/site-config";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 // Lazy loaded components
 const PropertyMapSection = dynamic(() =>
@@ -70,6 +71,7 @@ export default async function PublicPropertyDetailPage(props: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug: rawSlug } = await props.params;
+  const { language, t } = await getServerTranslations();
 
   // Decode URL-encoded slug (e.g., %E0%B8%9A... → บ้าน...)
   const slug = decodeURIComponent(rawSlug);
@@ -137,29 +139,31 @@ export default async function PublicPropertyDetailPage(props: {
   }
 
   // Normalize images: Resolve public URL from storage_path if image_url is missing/relative
-  const images = (rawData.property_images || []).map((img: any) => {
-    // 1. If already absolute URL, use as is (matching pickCoverImage logic)
-    if (img.image_url && img.image_url.startsWith("http")) {
+  const images = (rawData.property_images || []).map(
+    (img: { image_url?: string | null; storage_path?: string | null }) => {
+      // 1. If already absolute URL, use as is (matching pickCoverImage logic)
+      if (img.image_url && img.image_url.startsWith("http")) {
+        return {
+          ...img,
+          image_url: img.image_url,
+        };
+      }
+
+      // 2. If storage_path exists, resolve via utility
+      if (img.storage_path) {
+        return {
+          ...img,
+          image_url: getPublicImageUrl(img.storage_path),
+        };
+      }
+
+      // 3. Last fallback
       return {
         ...img,
-        image_url: img.image_url,
+        image_url: img.image_url || "/images/hero-realestate.png",
       };
-    }
-
-    // 2. If storage_path exists, resolve via utility
-    if (img.storage_path) {
-      return {
-        ...img,
-        image_url: getPublicImageUrl(img.storage_path),
-      };
-    }
-
-    // 3. Last fallback
-    return {
-      ...img,
-      image_url: img.image_url || "/images/hero-realestate.png",
-    };
-  });
+    },
+  );
 
   // Debug logs to help identify why images might be missing
   // console.log(
@@ -181,8 +185,10 @@ export default async function PublicPropertyDetailPage(props: {
 
   const rawFeatures = data.property_features || [];
   const features = rawFeatures
-    .map((pf) => pf.features)
-    .filter((f): f is NonNullable<typeof f> => f !== null && f !== undefined);
+    .map((pf: { features: any }) => pf.features)
+    .filter(
+      (f: any): f is NonNullable<typeof f> => f !== null && f !== undefined,
+    );
 
   const formatPrice = (val: number | null) =>
     val
@@ -197,9 +203,12 @@ export default async function PublicPropertyDetailPage(props: {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Product", // Consider RealEstateListing if Schema supports it fully, but Product is standard for Google
-    name: data.title,
-    description: data.description,
-    image: images.map((img) => img.image_url),
+    name: getLocaleValue(data, "title", language),
+    description: getLocaleValue(data, "description", language)?.replace(
+      /<[^>]*>?/gm,
+      "",
+    ),
+    image: images.map((img: { image_url: string }) => img.image_url),
     offers: {
       "@type": "Offer",
       priceCurrency: "THB",

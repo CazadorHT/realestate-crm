@@ -377,11 +377,11 @@ export function SidebarNav({ role }: { role: UserRole }) {
               className="rounded-lg object-contain"
             />
             {!isCollapsed && (
-              <div className="overflow-hidden whitespace-nowrap">
+              <div className="min-w-0">
                 <h1 className="text-xl font-medium tracking-tight text-slate-700 dark:text-slate-200 uppercase">
                   {siteConfig.name}
                 </h1>
-                <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-bold">
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-medium">
                   {siteConfig.description}
                 </p>
               </div>

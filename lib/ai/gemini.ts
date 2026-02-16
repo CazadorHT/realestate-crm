@@ -4,14 +4,28 @@ const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 // Default model for backwards compatibility
-const DEFAULT_MODEL = "gemini-2.0-flash";
+const DEFAULT_MODEL = "gemini-flash-latest";
 
 /**
  * Get a specific generative model by name
  */
 export function getModel(modelName: string = DEFAULT_MODEL) {
   if (!genAI) return null;
-  return genAI.getGenerativeModel({ model: modelName });
+
+  // Alias common naming mistakes or currently unstable models for this project
+  let normalizedModelName = modelName;
+  const unstableModels = [
+    "gemini-2-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+  ];
+
+  if (unstableModels.includes(modelName)) {
+    normalizedModelName = "gemini-flash-latest";
+  }
+
+  return genAI.getGenerativeModel({ model: normalizedModelName });
 }
 
 // Keep core model for simple legacy calls

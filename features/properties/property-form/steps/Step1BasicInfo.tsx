@@ -20,6 +20,10 @@ export function Step1BasicInfo({
   isAddingArea,
   newArea,
   setNewArea,
+  newAreaEn,
+  setNewAreaEn,
+  newAreaCn,
+  setNewAreaCn,
   onAddArea,
   isQuickInfoOpen,
   setIsQuickInfoOpen,
@@ -48,6 +52,10 @@ export function Step1BasicInfo({
               isAddingArea={isAddingArea}
               newArea={newArea}
               setNewArea={setNewArea}
+              newAreaEn={newAreaEn}
+              setNewAreaEn={setNewAreaEn}
+              newAreaCn={newAreaCn}
+              setNewAreaCn={setNewAreaCn}
               onAddArea={onAddArea}
             />
           </div>

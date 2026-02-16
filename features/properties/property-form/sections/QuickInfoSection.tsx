@@ -41,6 +41,10 @@ type Props = {
   isAddingArea: boolean;
   newArea: string;
   setNewArea: (v: string) => void;
+  newAreaEn: string;
+  setNewAreaEn: (v: string) => void;
+  newAreaCn: string;
+  setNewAreaCn: (v: string) => void;
   onAddArea: () => void;
 };
 
@@ -50,11 +54,36 @@ export function QuickInfoSection({
   isAddingArea,
   newArea,
   setNewArea,
+  newAreaEn,
+  setNewAreaEn,
+  newAreaCn,
+  setNewAreaCn,
   onAddArea,
 }: Props) {
   const hasTitleError = !!form.formState.errors.title;
   const [showAddArea, setShowAddArea] = React.useState(false);
   const { isTranslating, translateTitle } = useAITranslation(form);
+  const [isTranslatingArea, setIsTranslatingArea] = React.useState(false);
+
+  // AI Translation for New Area
+  const handleTranslateArea = async () => {
+    if (!newArea.trim()) {
+      toast.error("กรุณากรอกชื่อย่านภาษาไทยก่อนกดแปลครับ");
+      return;
+    }
+    setIsTranslatingArea(true);
+    const toastId = toast.loading("กำลังแปลชื่อย่านเป็นภาษาอังกฤษและจีน...");
+    try {
+      const result = await translateTextAction(newArea, "plain");
+      setNewAreaEn(result.en);
+      setNewAreaCn(result.cn);
+      toast.success("แปลชื่อย่านเรียบร้อยแล้ว ✨", { id: toastId });
+    } catch (error: any) {
+      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
+    } finally {
+      setIsTranslatingArea(false);
+    }
+  };
 
   return (
     <div
@@ -126,7 +155,7 @@ export function QuickInfoSection({
                       {...field}
                       value={field.value ?? ""}
                       onChange={(e) => field.onChange(e.target.value)}
-                      className={`h-14 rounded-2xl bg-white font-medium pl-12 pr-6 ${
+                      className={`h-14 rounded-2xl bg-white font-normal text-md pl-12 pr-6 ${
                         fieldState.error
                           ? "border-red-300 focus-visible:ring-red-300!"
                           : "border-slate-200 focus-visible:ring-blue-200!"
@@ -155,7 +184,7 @@ export function QuickInfoSection({
                     <Input
                       {...field}
                       value={field.value ?? ""}
-                      className="h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm"
+                      className="h-14 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md"
                       placeholder="English title..."
                     />
                   </FormControl>
@@ -174,7 +203,7 @@ export function QuickInfoSection({
                     <Input
                       {...field}
                       value={field.value ?? ""}
-                      className="h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm"
+                      className="h-14 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md"
                       placeholder="中文名称..."
                     />
                   </FormControl>
@@ -192,7 +221,7 @@ export function QuickInfoSection({
               <FormItem className="flex flex-col space-y-2 ">
                 <label
                   htmlFor={field.name}
-                  className="font-medium text-sm uppercase tracking-wider text-slate-700"
+                  className="font-medium text-sm uppercase tracking-wider text-slate-700 h-8"
                 >
                   ระบุย่านทำเล
                 </label>
@@ -239,11 +268,11 @@ export function QuickInfoSection({
             )}
           />
         </div>
-        <div className="space-y-6 md:col-span-2 flex flex-col">
+        <div className="space-y-6 md:col-span-4 flex flex-col">
           {/* เพิ่มย่านใหม่ */}
-          <div className="flex-1 flex flex-col justify-end space-y-2">
+          <div className="flex-1 flex flex-col justify-end space-y-4 pt-4 border-t border-slate-100">
             {!showAddArea ? (
-              <div className="h-14 flex items-center">
+              <div className="h-10 flex items-center">
                 <Button
                   type="button"
                   variant="ghost"
@@ -257,9 +286,26 @@ export function QuickInfoSection({
             ) : (
               <>
                 <div className="flex items-center justify-between ">
-                  <label className="font-medium text-sm uppercase tracking-wider text-slate-700">
-                    เพิ่มย่านใหม่
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="font-medium text-sm uppercase tracking-wider text-slate-700">
+                      เพิ่มย่านใหม่ (Multi-language)
+                    </label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleTranslateArea}
+                      disabled={isTranslatingArea}
+                      className="h-7 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 gap-1 transition-all text-[10px]"
+                    >
+                      {isTranslatingArea ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3 w-3 text-amber-500" />
+                      )}
+                      AI ช่วยแปลชื่อย่าน
+                    </Button>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setShowAddArea(false)}
@@ -269,8 +315,8 @@ export function QuickInfoSection({
                   </button>
                 </div>
 
-                <div className="flex gap-3 mt-auto animate-in fade-in slide-in-from-left-4 duration-300">
-                  <div className="relative flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-left-4 duration-300">
+                  <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                       <Flag className="h-5 w-5" />
                     </div>
@@ -278,24 +324,48 @@ export function QuickInfoSection({
                       value={newArea}
                       onChange={(e) => setNewArea(e.target.value)}
                       className="h-14 rounded-2xl bg-white font-medium pl-12 pr-6 w-full"
-                      placeholder="เช่น อโศก / ทองหล่อ"
+                      placeholder="ชื่อย่าน (ไทย)"
                     />
                   </div>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                      <Languages className="h-5 w-5" />
+                    </div>
+                    <Input
+                      value={newAreaEn}
+                      onChange={(e) => setNewAreaEn(e.target.value)}
+                      className="h-14 rounded-2xl bg-white font-medium pl-12 pr-6 w-full text-blue-600"
+                      placeholder="Area (English)"
+                    />
+                  </div>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                      <Languages className="h-5 w-5" />
+                    </div>
+                    <Input
+                      value={newAreaCn}
+                      onChange={(e) => setNewAreaCn(e.target.value)}
+                      className="h-14 rounded-2xl bg-white font-medium pl-12 pr-6 w-full text-indigo-600"
+                      placeholder="区域 (Chinese)"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
                   <Button
                     type="button"
                     onClick={() => {
                       onAddArea();
-                      // Optional: close after add? Keep open for now in case of error/retry
                     }}
                     disabled={isAddingArea}
-                    className="h-14 rounded-2xl font-medium px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 min-w-[120px]"
+                    className="h-14 rounded-2xl font-medium px-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 min-w-[150px]"
                   >
                     {isAddingArea ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
                       <>
                         <Plus className="h-5 w-5 mr-2" />
-                        เพิ่ม
+                        เพิ่มย่านใหม่
                       </>
                     )}
                   </Button>

@@ -87,7 +87,7 @@ export function PropertyFormStepper({
     <div className="bg-white py-4 sm:py-6 rounded-xl sm:rounded-2xl shadow-sm border border-slate-100 mb-6 px-2 sm:px-4 overflow-hidden">
       <div
         ref={scrollContainerRef}
-        className="relative w-full max-w-5xl mx-auto overflow-x-auto no-scrollbar! pb-2 sm:pb-0  scroll-smooth"
+        className="relative w-full max-w-5xl mx-auto overflow-x-auto scrollbar-none py-4 sm:py-6 scroll-smooth"
       >
         <div className="min-w-[500px] sm:min-w-0 relative">
           {/* Background Line */}

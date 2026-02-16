@@ -51,6 +51,9 @@ import { Badge } from "@/components/ui/badge";
 export default function AiConfigPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [initialConfig, setInitialConfig] = useState<AiModelConfig | null>(
+    null,
+  );
   const [config, setConfig] = useState<AiModelConfig>({
     chatbot_model: "gemini-2.0-flash",
     blog_generator_model: "gemini-2.0-flash",
@@ -62,7 +65,16 @@ export default function AiConfigPage() {
   useEffect(() => {
     async function load() {
       const data = await getAiModelConfig();
-      setConfig(data);
+      // Ensure all models in config are actually allowed
+      const validatedConfig = { ...data };
+      Object.keys(validatedConfig).forEach((key) => {
+        const k = key as keyof AiModelConfig;
+        if (!MODEL_INFO[validatedConfig[k]]) {
+          validatedConfig[k] = "gemini-2.0-flash"; // Fallback to safe default
+        }
+      });
+      setConfig(validatedConfig);
+      setInitialConfig(validatedConfig);
       setLoading(false);
     }
     load();
@@ -73,11 +85,15 @@ export default function AiConfigPage() {
     const result = await updateAiModelConfig(config);
     if (result.success) {
       toast.success("บันทึกการตั้งค่า AI สำเร็จ");
+      setInitialConfig(config); // Update initial config to match current
     } else {
       toast.error("บันทึกไม่สำเร็จ: " + result.message);
     }
     setSaving(false);
   };
+
+  const hasChanged =
+    initialConfig && JSON.stringify(config) !== JSON.stringify(initialConfig);
 
   if (loading) {
     return (
@@ -111,9 +127,9 @@ export default function AiConfigPage() {
         </div>
         <Button
           size="lg"
-          className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200"
+          className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || !hasChanged}
         >
           {saving ? (
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
@@ -231,8 +247,8 @@ function ConfigCard({
   value: AiModelChoice;
   onChange: (val: AiModelChoice) => void;
 }) {
-  const selectedInfo = MODEL_INFO[value];
-  const Icon = selectedInfo.icon;
+  const selectedInfo = MODEL_INFO[value] || MODEL_INFO["gemini-2.0-flash"];
+  const Icon = selectedInfo.icon || Zap;
 
   return (
     <Card className="border-slate-100 shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden group">
@@ -272,7 +288,7 @@ function ConfigCard({
             </div>
           </div>
 
-          <div className="w-full md:w-80">
+          <div className="w-full md:w-80 ">
             <Select
               value={value}
               onValueChange={(val) => onChange(val as AiModelChoice)}

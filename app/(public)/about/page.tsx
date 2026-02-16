@@ -1,11 +1,15 @@
 import { Metadata } from "next";
 import AboutPageClient from "./AboutPageClient";
 
-export const metadata: Metadata = {
-  title: "เกี่ยวกับเรา",
-  description:
-    "รู้จักทีมงานอสังหาริมทรัพย์มืออาชีพ พร้อมให้บริการด้านอสังหาริมทรัพย์ครบวงจร",
-};
+import { getServerTranslations } from "@/lib/i18n";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerTranslations();
+  return {
+    title: t("metadata.about_title"),
+    description: t("metadata.about_description"),
+  };
+}
 
 export default function AboutPage() {
   return <AboutPageClient />;

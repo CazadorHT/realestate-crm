@@ -71,7 +71,7 @@ export function ListingTypeSection({ form }: ListingTypeSectionProps) {
                       ? "border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-100 scale-105"
                       : listingTypeError
                         ? "border-red-300 bg-red-50 hover:border-red-400 hover:bg-white hover:shadow-md shadow-md"
-                        : "bg-slate-50 hover:bg-white hover:shadow-md shadow-md"
+                        : "bg-slate-50 hover:bg-white hover:shadow-md shadow-md hover:border-blue-100 hover:ring-2 hover:ring-blue-100 "
                   }`}
                 >
                   <div
@@ -93,7 +93,7 @@ export function ListingTypeSection({ form }: ListingTypeSectionProps) {
                   <div>
                     <div
                       className={`text-base font-medium transition-colors text-center ${
-                        field.value === type ? "text-white" : "text-slate-800"
+                        field.value === type ? "text-white" : "text-slate-800 group-hover:text-blue-500"
                       }`}
                     >
                       {LISTING_TYPE_LABELS[type]}

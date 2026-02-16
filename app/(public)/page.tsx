@@ -72,18 +72,19 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const { t } = await getServerTranslations();
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     name: siteConfig.name,
     image: `${siteConfig.url}/images/logo.png`,
-    description:
-      "ศูนย์รวมประกาศอสังหาริมทรัพย์ออนไลน์ ค้นหาง่าย ฝากขายรวดเร็ว พร้อมบริการดูแลโดยมืออาชีพ",
+    description: t("metadata.jsonld_description"),
     address: {
       "@type": "PostalAddress",
       streetAddress: siteConfig.contact.address.split(",")[0],
-      addressLocality: "Bangkok",
+      addressLocality: t("metadata.jsonld_address_locality"),
       postalCode: "10110",
       addressCountry: "TH",
     },

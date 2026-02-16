@@ -90,6 +90,8 @@ export function PropertyForm({
 
   // Step 1 specific state
   const [newArea, setNewArea] = React.useState("");
+  const [newAreaEn, setNewAreaEn] = React.useState("");
+  const [newAreaCn, setNewAreaCn] = React.useState("");
   const [isAddingArea, setIsAddingArea] = React.useState(false);
   const [isQuickInfoOpen, setIsQuickInfoOpen] = React.useState(false);
 
@@ -173,11 +175,19 @@ export function PropertyForm({
     if (!newArea.trim()) return;
     setIsAddingArea(true);
     try {
-      const res = await addPopularAreaAction(newArea);
+      const res = await addPopularAreaAction({
+        name: newArea,
+        name_en: newAreaEn,
+        name_cn: newAreaCn,
+      });
       if (res.success) {
         toast.success("เพิ่มย่านสำเร็จ");
         await refreshPopularAreas();
         setNewArea("");
+        setNewAreaEn("");
+        setNewAreaCn("");
+        // Optional: close after add if needed
+        // setIsQuickInfoOpen(false);
       } else {
         toast.error(res.message || "เกิดข้อผิดพลาด");
       }
@@ -481,6 +491,10 @@ export function PropertyForm({
               isAddingArea={isAddingArea}
               newArea={newArea}
               setNewArea={setNewArea}
+              newAreaEn={newAreaEn}
+              setNewAreaEn={setNewAreaEn}
+              newAreaCn={newAreaCn}
+              setNewAreaCn={setNewAreaCn}
               onAddArea={handleAddArea}
               isQuickInfoOpen={isQuickInfoOpen}
               setIsQuickInfoOpen={setIsQuickInfoOpen}
@@ -560,7 +574,7 @@ export function PropertyForm({
             <div className="flex flex-col gap-3 py-4">
               <Button
                 variant="outline"
-                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200 hover:bg-slate-50  rounded-xl hover:text-white!"
+                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200  rounded-xl group:hover:text-white group:hover:bg-blue-600"
                 onClick={() => {
                   if (successData?.slug) {
                     window.open(`/properties/${successData.slug}`, "_blank");
@@ -570,10 +584,12 @@ export function PropertyForm({
                   }
                 }}
               >
-                <ExternalLink className="w-5 h-5 text-blue-600 hover:text-white!" />
+                <ExternalLink className="w-5 h-5 " />
                 <div className="flex flex-col items-start">
-                  <span className="hover:text-white!">ดูหน้าเว็บไซต์ (Public Page)</span>
-                  <span className="text-xs text-slate-400 font-normal hover:text-white!">
+                  <span className="">
+                    ดูหน้าเว็บไซต์ (Public Page)
+                  </span>
+                  <span className="text-xs font-normal">
                     เปิดแท็บใหม่เพื่อดูตัวอย่าง
                   </span>
                 </div>
