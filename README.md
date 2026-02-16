@@ -1,109 +1,109 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# 🏡 Real Estate CRM - AI-Powered Management System
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+[![Next.js 16](<https://img.shields.io/badge/Next.js-16%20(Turbopack)-black?style=flat-square&logo=next.js>)](https://nextjs.org/)
+[![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database%20%26%20Auth-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com/)
+[![Gemini AI](https://img.shields.io/badge/Gemini_AI-Google-4285F4?style=flat-square&logo=google-gemini)](https://ai.google.dev/)
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+An industrial-grade, production-ready Real Estate CRM designed for modern agents. Built with a focus on speed, intelligence, and a premium user experience.
 
-## Features
+## ✨ Project Overview
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+This CRM empowers real estate professionals to manage properties, leads, and deals with unprecedented efficiency. By integrating **Google Gemini AI**, the system automates tedious tasks like property description generation and multi-language translation, allowing agents to focus on closing deals.
 
-## Demo
+### Core Value Propositions:
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+- **AI-Enhanced Workflow**: Automatic description generation and translation.
+- **Data-Driven Insights**: Comprehensive dashboard with financial statistics and realized commissions.
+- **Global Ready**: Built-in support for Thai, English, and Chinese audiences.
+- **Premium UX**: Modern, responsive interface built with Tailwind CSS 4 and shadcn/ui.
 
-## Deploy to Vercel
+## 🚀 Key Features
 
-Vercel deployment will guide you through creating a Supabase account and project.
+### 🏢 Property Management
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+- **Smart Listing**: Comprehensive property details, image galleries, and automated status tracking.
+- **AI Content**: Generate professional property descriptions in seconds.
+- **Multi-language Support**: Seamless translation between Thai, English, and Chinese.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+### 📊 Intelligence Dashboard
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+- **Financial Visualization**: Track potential vs. realized commissions.
+- **Performance Metrics**: View stock status (Active, Sold, Rented) and lead engagement.
+- **Quick Actions**: Streamlined shortcuts for adding properties and owners.
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+### 👥 CRM Core
 
-## Clone and run locally
+- **Lead Tracking**: Manage buyer/tenant interests and pipeline stages.
+- **Deal Management**: Track contracts, signatures, and deal closures.
+- **Owner Directory**: Manage property owner contacts and relationships.
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+## 🛠 Tech Specification
 
-2. Create a Next.js app using the Supabase Starter template npx command
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router & Turbopack)
+- **Programming Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Database**: [Supabase](https://supabase.com/) (PostgreSQL)
+- **AI Integration**: [Google Gemini Pro](https://ai.google.dev/)
+- **Styling**: [Tailwind CSS 4.0](https://tailwindcss.com/)
+- **UI Components**: [shadcn/ui](https://ui.shadcn.com/) & [Lucide Icons](https://lucide.dev/)
+- **State Management**: React 19 Hooks & Server Actions
+- **Internationalization**: [next-intl](https://next-intl-docs.vercel.app/) (TH, EN, CN)
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+## 🛠 Local Setup Guide
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+Follow these steps to get the project running locally:
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+### 1. Clone the repository
 
-3. Use `cd` to change into the app's directory
+```bash
+git clone [repository-url]
+cd realestate-crm-1
+```
 
-   ```bash
-   cd with-supabase-app
-   ```
+### 2. Install dependencies
 
-4. Rename `.env.example` to `.env.local` and update the following:
+```bash
+npm install
+```
 
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+### 3. Configure Environment Variables
 
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+Create a `.env.local` file in the root directory and add the following:
 
-5. You can now run the Next.js local development server:
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
-   ```bash
-   npm run dev
-   ```
+# Google Gemini AI
+GOOGLE_GEMINI_API_KEY=your_gemini_api_key
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+# App Configuration
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+### 4. Run the development server
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+```bash
+npm run dev
+```
 
-## Feedback and issues
+The application will be available at [http://localhost:3000](http://localhost:3000).
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+## 📁 Project Structure
 
-## More Supabase examples
+```text
+├── app/               # Next.js App Router (Protected/Public routes)
+├── components/        # Reusable UI components
+├── features/          # Feature-specific logic (Properties, Leads, AI)
+├── hooks/             # Custom React hooks
+├── i18n/              # Internationalization configuration
+├── lib/               # Shared utilities and configurations
+├── public/            # Static assets
+└── supabase/          # Database migrations and types
+```
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+---
+
+_Built with ❤️ for Real Estate Professionals._
