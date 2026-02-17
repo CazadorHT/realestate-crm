@@ -535,8 +535,6 @@
     "phone_label": "Phone Number",
     "email_label": "Email",
     "email_placeholder": "your.email@example.com (optional)",
-    "line_id_label": "Line ID",
-    "line_id_placeholder": "Your Line ID (optional)",
     "more_details_label": "Additional Details",
     "more_details_placeholder": "Tell us more about your needs (optional)...",
     "submit": "Send Message",
@@ -917,5 +915,12 @@
     "schema_rec_desc": "List of properties recommended for you",
     "schema_recent_desc": "List of properties you recently viewed",
     "view_details": "View Details"
+  },
+  "profile": {
+    "line_id_label": "Public Line ID",
+    "line_id_placeholder": "Line ID for customers (e.g., hunter_asset)",
+    "line_user_id_label": "LINE Bot User ID (Internal)",
+    "line_user_id_placeholder": "Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "line_user_id_help": "Used for bot notifications. Type /id in the bot to find this value."
   }
 }
