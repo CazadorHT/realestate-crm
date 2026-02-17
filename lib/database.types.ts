@@ -554,6 +554,33 @@ export type Database = {
           },
         ]
       }
+      line_groups: {
+        Row: {
+          group_id: string
+          group_name: string | null
+          is_active: boolean | null
+          joined_at: string | null
+          picture_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          group_id: string
+          group_name?: string | null
+          is_active?: boolean | null
+          joined_at?: string | null
+          picture_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          group_id?: string
+          group_name?: string | null
+          is_active?: boolean | null
+          joined_at?: string | null
+          picture_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       line_templates: {
         Row: {
           config: Json
@@ -1418,6 +1445,57 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "property_syndication_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rent_notification_rules: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          language: string | null
+          last_sent_at: string | null
+          line_group_id: string
+          notification_day: number
+          property_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          language?: string | null
+          last_sent_at?: string | null
+          line_group_id: string
+          notification_day: number
+          property_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          language?: string | null
+          last_sent_at?: string | null
+          line_group_id?: string
+          notification_day?: number
+          property_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rent_notification_rules_line_group_id_fkey"
+            columns: ["line_group_id"]
+            isOneToOne: false
+            referencedRelation: "line_groups"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "rent_notification_rules_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"

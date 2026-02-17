@@ -8,8 +8,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getContractStatus } from "@/features/contracts/utils";
 
+import { RentalContractWithRelations } from "../types";
+
 interface ContractStatsProps {
-  contracts: any[];
+  contracts: RentalContractWithRelations[];
 }
 
 export function ContractStats({ contracts }: ContractStatsProps) {
@@ -26,10 +28,9 @@ export function ContractStats({ contracts }: ContractStatsProps) {
 
   const totalMonthlyRevenue = contracts
     .filter(
-      (c) =>
-        getContractStatus(c.end_date).status === "active" && c.monthly_rent,
+      (c) => getContractStatus(c.end_date).status === "active" && c.rent_price,
     )
-    .reduce((sum: number, c: any) => sum + (c.monthly_rent || 0), 0);
+    .reduce((sum: number, c) => sum + (c.rent_price || 0), 0);
 
   return (
     <div className="grid gap-4  md:grid-cols-2 lg:grid-cols-5">

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { LINE_MESSAGING_API, lineConfig } from "../../../../lib/line-config";
+import { LINE_MESSAGING_API, lineConfig } from "../../../lib/line-config";
 import { searchPropertiesForBot } from "@/features/properties/queries.public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getLineProfile, saveOmniMessage } from "@/lib/line";
@@ -25,6 +25,9 @@ type LineEvent = {
   left?: {
     members: { userId: string }[];
   };
+  follow?: {
+    isUnblocked: boolean;
+  };
 };
 
 export async function POST(req: NextRequest) {
@@ -48,22 +51,31 @@ export async function POST(req: NextRequest) {
     const events: LineEvent[] = JSON.parse(body).events;
 
     // Log the entire event body for debugging
-    console.log("LINE Webhook Received:", JSON.stringify(events, null, 2));
+    console.log(
+      "LINE Webhook Received (Restored):",
+      JSON.stringify(events, null, 2),
+    );
 
     for (const event of events) {
-      // Handle Group/Room Join Events (Bot joins group)
+      // 1. Handle Group/Room Join Events (Bot joins group)
       if (event.type === "join" || event.type === "memberJoined") {
         console.log("Processing Join Event:", event);
         await handleJoinEvent(event);
       }
 
-      // Handle Group/Room Leave Events (Bot leaves group)
+      // 2. Handle Group/Room Leave Events (Bot leaves group)
       if (event.type === "leave") {
         console.log("Processing Leave Event:", event);
         await handleLeaveEvent(event);
       }
 
-      // Handle Text Messages
+      // 3. Handle Follow Event (Legacy logic integrated)
+      if (event.type === "follow") {
+        console.log("Processing Follow Event (Legacy):", event);
+        await handleFollowEvent(event);
+      }
+
+      // 4. Handle Text Messages
       if (event.type === "message" && event.message?.type === "text") {
         await handleIncomingChannelMessage(event);
       }
@@ -72,7 +84,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "ok" });
   } catch (error) {
     console.error("Webhook error:", error);
-    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
+    // Return 200 even on error to prevent LINE from retrying endlessly if it's a logic error
+    // But logs will show the issue.
+    return NextResponse.json({ error: "Internal Error" }, { status: 200 });
   }
 }
 
@@ -99,7 +113,6 @@ async function handleJoinEvent(event: LineEvent) {
       groupName = data.groupName;
       pictureUrl = data.pictureUrl;
     } else {
-      // Fallback or maybe it's a room not a group (Rooms don't have summary API)
       console.log("Failed to fetch group summary", await res.text());
       groupName = `Group ${groupId.slice(0, 6)}...`;
     }
@@ -145,6 +158,54 @@ async function handleLeaveEvent(event: LineEvent) {
     .eq("group_id", groupId);
 }
 
+// Legacy Logic: Link LINE ID to Admin or First User
+async function handleFollowEvent(event: LineEvent) {
+  const userId = event.source.userId;
+  if (!userId) return;
+
+  const supabase = createAdminClient();
+
+  try {
+    console.log("New follower:", userId);
+
+    // 1. Try to find Admin
+    let { data: admin } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("role", "ADMIN")
+      .limit(1)
+      .single();
+
+    // 2. If no Admin, find first User
+    if (!admin) {
+      const { data: firstUser } = await supabase
+        .from("profiles")
+        .select("id")
+        .limit(1)
+        .single();
+      admin = firstUser;
+    }
+
+    if (admin) {
+      console.log("Found admin/user to link:", admin.id);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ line_id: userId })
+        .eq("id", admin.id);
+
+      if (!error) {
+        console.log(`✅ Updated Line ID ${userId} for User ${admin.id}`);
+      } else {
+        console.error("❌ Error updating Line ID:", error);
+      }
+    } else {
+      console.log("❌ No user profile found to link Line ID.");
+    }
+  } catch (err) {
+    console.error("Error in legacy follow logic:", err);
+  }
+}
+
 async function handleIncomingChannelMessage(event: LineEvent) {
   const userId = event.source.userId;
   const groupId = event.source.groupId || event.source.roomId;
@@ -164,11 +225,27 @@ async function handleIncomingChannelMessage(event: LineEvent) {
     return;
   }
 
-  // If message comes from a group, we might want to ignore normal chat
-  // unless explicitly mentioned or using specific commands to avoid spam.
-  // For now, if it's a group, we ONLY respond to specific commands (handled above)
-  // or if we want to add specific bot logic later.
-  // The original logic was capturing leads from 1-on-1 chats.
+  // === ALLOW MANUAL RENAMING (For Unverified Bots) ===
+  if (text.startsWith("/setname ")) {
+    if (!groupId) {
+      await replyText(event.replyToken, "คำสั่งนี้ใช้ได้เฉพาะในกลุ่มไลน์ครับ");
+      return;
+    }
+    const newName = text.replace("/setname ", "").trim();
+    if (newName) {
+      const supabase = createAdminClient();
+      await (supabase as any)
+        .from("line_groups")
+        .update({ group_name: newName })
+        .eq("group_id", groupId);
+
+      await replyText(
+        event.replyToken,
+        `เปลี่ยนชื่อกลุ่มในระบบเป็น: "${newName}" เรียบร้อยครับ ✅\n(กด Refresh หน้าเว็บเพื่อดูผลลัพธ์)`,
+      );
+    }
+    return;
+  }
 
   if (groupId) {
     // In a group: Do nothing else for now (Silent for normal chat)
@@ -176,7 +253,7 @@ async function handleIncomingChannelMessage(event: LineEvent) {
   }
 
   // === 1-on-1 Logic (Existing Lead Capture) ===
-  // Only proceed if userId exists (it should in 1-on-1)
+  // Only proceed if userId exists
   if (!userId) return;
 
   const supabase = createAdminClient();
@@ -233,8 +310,6 @@ async function handleTextMessage(event: LineEvent) {
   if (!text) return;
 
   // 1. Search Logic
-  // If text starts with specific commands or just general search
-  // For MVP: Treat everything as a search query
   console.log(`Searching for: ${text}`);
 
   const properties = await searchPropertiesForBot(text);
@@ -265,7 +340,7 @@ async function handleTextMessage(event: LineEvent) {
         size: "full",
         aspectRatio: "4:3",
         aspectMode: "cover",
-        gravity: "top", // Requested alignment
+        gravity: "top",
         action: {
           type: "uri",
           uri: `https://oma-asset.com/properties/${prop.id}`, // Should use ENV for base URL
