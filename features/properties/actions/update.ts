@@ -51,24 +51,33 @@ export async function updatePropertyAction(
     const safeValues = parsed.data;
     const { images, agent_ids, feature_ids, ...propertyData } = safeValues;
 
-    // 🧠 Auto-Status Logic: Check Stock
-    if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
-      propertyData.status = "SOLD";
-    } else if (propertyData.status === "SOLD") {
-      propertyData.status = "ACTIVE";
-    }
-
     // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ
     const { data: existing, error: findErr } = await supabase
       .from("properties")
       .select(
-        "id, created_by, meta_keywords, price, rental_price, original_price, original_rental_price, status, title, property_images(image_url, is_cover, sort_order)",
+        "id, created_by, meta_keywords, price, rental_price, original_price, original_rental_price, status, title, listing_type, property_images(image_url, is_cover, sort_order)",
       )
       .eq("id", id)
       .single();
 
     if (findErr || !existing) {
       return { success: false, message: "Property not found" };
+    }
+
+    // 🧠 Auto-Status Logic: Check Stock
+    const listingType = safeValues.listing_type || existing.listing_type;
+    if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
+      if (listingType === "RENT") {
+        propertyData.status = "RENTED";
+      } else {
+        propertyData.status = "SOLD";
+      }
+    } else if (
+      propertyData.status === "SOLD" ||
+      propertyData.status === "RENTED"
+    ) {
+      // If stock remains, force ACTIVE (prevent premature SOLD/RENTED status)
+      propertyData.status = "ACTIVE";
     }
 
     // ✅ Strict Ownership Check: Only Owner or Admin can update
