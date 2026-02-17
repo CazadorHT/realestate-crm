@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import {
   Form,
   FormControl,
@@ -46,6 +47,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   rentNotificationRuleSchema,
   RentNotificationRuleInput,
@@ -72,6 +74,10 @@ export function AddRuleDialog({
   onOpenChange,
 }: AddRuleDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useLanguage();
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [pendingValues, setPendingValues] =
+    useState<RentNotificationRuleInput | null>(null);
   const isEdit = !!existingRule;
   const router = useRouter();
 
@@ -110,11 +116,10 @@ export function AddRuleDialog({
     }
   }, [existingRule, form]);
 
-  const onSubmit = async (values: RentNotificationRuleInput) => {
+  const executeSubmit = async (values: RentNotificationRuleInput) => {
     try {
       let res;
       if (isEdit) {
-        if (!confirm("คุณแน่ใจว่าต้องการบันทึกการเปลี่ยนแปลงนี้?")) return;
         res = await updateRentNotificationRule(existingRule.id, values);
       } else {
         res = await createRentNotificationRule(values);
@@ -123,12 +128,21 @@ export function AddRuleDialog({
       if (res.success) {
         toast.success(isEdit ? "บันทึกการแก้ไขแล้ว" : "สร้างการแจ้งเตือนแล้ว");
         updateOpen(false);
-        router.refresh(); // Ensure list updates
+        router.refresh();
       } else {
         toast.error(res.message || "เกิดข้อผิดพลาด");
       }
     } catch (e: any) {
       toast.error("เกิดข้อผิดพลาด: " + e.message);
+    }
+  };
+
+  const onSubmit = async (values: RentNotificationRuleInput) => {
+    if (isEdit) {
+      setPendingValues(values);
+      setIsConfirming(true);
+    } else {
+      await executeSubmit(values);
     }
   };
 
@@ -193,7 +207,9 @@ export function AddRuleDialog({
                       <Command>
                         <CommandInput placeholder="พิมพ์ชื่อทรัพย์..." />
                         <CommandList>
-                          <CommandEmpty>ไม่พบทรัพย์ และ ไม่สามารถเลือกทรัพย์เดิมซ้ำได้</CommandEmpty>
+                          <CommandEmpty>
+                            ไม่พบทรัพย์ และ ไม่สามารถเลือกทรัพย์เดิมซ้ำได้
+                          </CommandEmpty>
                           <CommandGroup>
                             {properties.map((property: any) => (
                               <CommandItem
@@ -362,6 +378,22 @@ export function AddRuleDialog({
           </form>
         </Form>
       </DialogContent>
+
+      <ConfirmDialog
+        open={isConfirming}
+        onOpenChange={setIsConfirming}
+        title={t("common.confirm")}
+        description={t("common.are_you_sure")}
+        confirmText={t("common.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={async () => {
+          if (pendingValues) {
+            await executeSubmit(pendingValues);
+            setIsConfirming(false);
+            setPendingValues(null);
+          }
+        }}
+      />
     </Dialog>
   );
 }

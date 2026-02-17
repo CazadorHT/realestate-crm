@@ -93,7 +93,10 @@
     "per_month_short": "/mo.",
     "baht_symbol": "฿",
     "rent_price": "Rent Price",
-    "sale_price": "Sale Price"
+    "sale_price": "Sale Price",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "are_you_sure": "Are you sure you want to perform this action?"
   },
   "blog": {
     "title_badge": "Real Estate Articles",

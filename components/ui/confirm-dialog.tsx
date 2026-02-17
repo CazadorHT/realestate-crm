@@ -61,7 +61,7 @@ export function ConfirmDialog({
           <AlertDialogDescription>{finalDescription}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+          <AlertDialogCancel className="text-blue-600" onClick={(e) => e.stopPropagation()}>
             {finalCancelText}
           </AlertDialogCancel>
           <AlertDialogAction

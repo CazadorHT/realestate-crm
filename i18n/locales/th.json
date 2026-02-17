@@ -91,7 +91,10 @@
     "per_month_short": "/ด.",
     "baht_symbol": "฿",
     "rent_price": "ค่าเช่า",
-    "sale_price": "ราคาขาย"
+    "sale_price": "ราคาขาย",
+    "confirm": "ยืนยัน",
+    "cancel": "ยกเลิก",
+    "are_you_sure": "คุณแน่ใจหรือไม่ที่จะทำรายการนี้?"
   },
   "blog": {
     "title_badge": "บทความอสังหาริมทรัพย์",
