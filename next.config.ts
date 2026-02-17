@@ -38,6 +38,9 @@ const nextConfig: NextConfig = {
       "date-fns",
       "lodash",
     ],
+    serverActions: {
+      bodySizeLimit: "4mb",
+    },
   },
 };
 

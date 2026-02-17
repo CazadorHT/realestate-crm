@@ -7,6 +7,7 @@ import {
   type PropertyAnalytics,
   type AreaAnalytics,
 } from "@/features/dashboard/queries";
+import { LISTING_TYPE_LABELS } from "@/features/properties/labels";
 import {
   Card,
   CardContent,
@@ -155,13 +156,17 @@ export default async function AnalyticsPage() {
                       <td className="hidden md:table-cell px-6 py-4">
                         <span
                           className={cn(
-                            "px-2 py-0.5 rounded-full text-[10px] font-medium",
+                            "px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap",
                             prop.listing_type === "SALE"
-                              ? "bg-blue-50 text-blue-600"
-                              : "bg-green-50 text-green-600",
+                              ? "bg-blue-50 text-blue-600 border border-blue-100"
+                              : prop.listing_type === "RENT"
+                                ? "bg-green-50 text-green-600 border border-green-100"
+                                : "bg-amber-50 text-amber-600 border border-amber-100",
                           )}
                         >
-                          {prop.listing_type}
+                          {LISTING_TYPE_LABELS[
+                            prop.listing_type as keyof typeof LISTING_TYPE_LABELS
+                          ] || prop.listing_type}
                         </span>
                       </td>
                       <td className="px-4 md:px-6 py-3 md:py-4 text-right">
