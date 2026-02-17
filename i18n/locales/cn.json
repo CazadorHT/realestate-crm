@@ -87,8 +87,16 @@
     "contact_for_price": "询价",
     "contract": "合同",
     "months_short": "月",
+    "per_month_short": "/月",
+    "baht_symbol": "฿",
     "rent_price": "租金",
-    "sale_price": "售价"
+    "sale_price": "售价",
+    "floating": {
+      "chat_with_us": "与我们聊天",
+      "line_chat": "通过 LINE 聊天",
+      "messenger": "Messenger",
+      "agent_fallback": "{name} (代理)"
+    }
   },
   "blog": {
     "title_badge": "房地产文章",
@@ -472,20 +480,6 @@
       }
     }
   },
-  "recently_viewed": {
-    "title_recent": "您的浏览历史",
-    "title_recommended": "为您推荐",
-    "desc_recent": "您最近查看过的房产历史",
-    "desc_recommended": "专门为您挑选的房地产物业",
-    "property_types": "别墅、公寓、办公楼",
-    "schema_recent_name": "最近浏览的房产",
-    "schema_recent_desc": "别墅、公寓和土地的浏览历史",
-    "schema_rec_name": "推荐房产",
-    "schema_rec_desc": "为您推荐的别墅、公寓和土地集合",
-    "view_details": "查看详情",
-    "no_image": "无图片",
-    "per_month_short": "月"
-  },
   "similar_properties": {
     "title": "相似房源",
     "subtitle": "您可能感兴趣的同类型房产",
@@ -704,7 +698,8 @@
     "inquiry_rent": "咨询租金",
     "inquiry_price": "咨询价格",
     "min_contract": "起租期",
-    "managed_by": "负责人",
+    "managed_by": "管理人员",
+    "professional_agent": "专业代理人",
     "contact_agent": "联系经纪人",
     "viewing_cta": "预约看房（免费）",
     "viewing_msg": "我对这个房产感兴趣，我想预约看房，方便的时间是...",
@@ -713,6 +708,29 @@
     "share_property": "分享房产",
     "book_viewing": "预约看房",
     "inquiry": "在线咨询",
+    "contact_dialog": {
+      "trigger": "感兴趣 / 预约看房",
+      "title": "联系我们",
+      "subtitle_fallback": "查询更多详情",
+      "name_label": "姓名",
+      "name_placeholder": "输入您的姓名",
+      "phone_label": "电话号码",
+      "line_label": "Line ID (可选)",
+      "line_placeholder": "Line ID",
+      "message_label": "附加信息",
+      "message_placeholder": "输入您的信息...",
+      "footer": "我们将尽快与您联系 (24 小时内)",
+      "sending": "发送中...",
+      "submit": "发送信息",
+      "quick_messages": {
+        "viewing": "感兴趣看房",
+        "price": "咨询特别价格",
+        "more_info": "请求更多信息",
+        "booking": "感兴趣预订"
+      },
+      "success": "信息发送成功。我们的工作人员将很快与您联系。",
+      "error": "发送信息失败"
+    },
     "created_at_label": "创建于",
     "nearby_places": "周边亮点",
     "transit": "公共交通",
@@ -781,6 +799,16 @@
       "tax_registered": "可注册公司",
       "high_floor": "高楼层",
       "pool_view": "泳池景观"
+    },
+    "transit_types": {
+      "BTS": "曼谷轻轨 (BTS)",
+      "MRT": "曼谷地铁 (MRT)",
+      "ARL": "机场快线 (ARL)",
+      "SRT": "红线 (SRT)",
+      "SRT2": "橙线 (SRT)",
+      "SRT3": "粉红线 (SRT)",
+      "MRT2": "紫线 (MRT)",
+      "OTHER": "其他"
     }
   },
   "errors": {
@@ -844,5 +872,18 @@
     "selected_count": "选择对比: {count}/4",
     "clear": "清空",
     "compare_btn": "开始对比"
+  },
+  "recently_viewed": {
+    "title_recommended": "推荐",
+    "title_recent": "最近浏览",
+    "property_types": "房产类型",
+    "desc_recommended": "您可能喜欢的房源",
+    "desc_recent": "继续浏览",
+    "per_month_short": "/月",
+    "schema_rec_name": "推荐房源",
+    "schema_recent_name": "最近浏览的房源",
+    "schema_rec_desc": "为您推荐的房源列表",
+    "schema_recent_desc": "您最近浏览的房源列表",
+    "view_details": "查看详情"
   }
 }

@@ -88,6 +88,8 @@
     "contact_for_price": "สอบถามราคา",
     "contract": "สัญญา",
     "months_short": "ด.",
+    "per_month_short": "/ด.",
+    "baht_symbol": "฿",
     "rent_price": "ค่าเช่า",
     "sale_price": "ราคาขาย"
   },
@@ -472,20 +474,6 @@
       }
     }
   },
-  "recently_viewed": {
-    "title_recent": "ที่คุณสนใจล่าสุด",
-    "title_recommended": "แนะนำสำหรับคุณ",
-    "desc_recent": "ประวัติทรัพย์สินอสังหาริมทรัพย์ล่าสุดที่คุณเพิ่งเปิดชม",
-    "desc_recommended": "ทรัพย์สินอสังหาริมทรัพย์ที่คัดสรรมาเพื่อคุณโดยเฉพาะ",
-    "property_types": "บ้าน คอนโด สำนักงานออฟฟิศ",
-    "schema_recent_name": "ทรัพย์สินที่เพิ่งดู",
-    "schema_recent_desc": "ประวัติการดูบ้าน คอนโด ที่ดิน และอสังหาริมทรัพย์ล่าสุด",
-    "schema_rec_name": "ทรัพย์สินแนะนำ",
-    "schema_rec_desc": "คอลเลกชันบ้าน คอนโด ที่ดิน และอสังหาริมทรัพย์ที่แนะนำสำหรับคุณ",
-    "view_details": "ดูรายละเอียด",
-    "no_image": "ไม่มีรูปภาพ",
-    "per_month_short": "ด"
-  },
   "similar_properties": {
     "title": "ทรัพย์สินที่คล้ายกัน",
     "subtitle": "อสังหาริมทรัพย์ประเภทเดียวกันที่คุณอาจสนใจ",
@@ -705,7 +693,8 @@
     "inquiry_price": "สอบถามราคา",
     "min_contract": "อายุสัญญาขั้นต่ำ",
     "managed_by": "ดูแลโดย",
-    "contact_agent": "ติดต่อเจ้าหน้าที่",
+    "professional_agent": "ตัวแทนมืออาชีพ",
+    "contact_agent": "ติดต่อตัวแทน",
     "viewing_cta": "สนใจนัดชม (ไม่มีค่าใช้จ่าย)",
     "viewing_msg": "สนใจนัดชมทรัพย์นี้ครับ สะดวกช่วง...",
     "inquiry_msg": "สอบถามข้อมูลเพิ่มเติมครับ...",
@@ -713,6 +702,29 @@
     "share_property": "แชร์ทรัพย์สิน",
     "book_viewing": "นัดชม",
     "inquiry": "สอบถาม",
+    "contact_dialog": {
+      "trigger": "สนใจทรัพย์นี้ / นัดชม",
+      "title": "ติดต่อสอบถาม",
+      "subtitle_fallback": "สอบถามข้อมูลเพิ่มเติม",
+      "name_label": "ชื่อ",
+      "name_placeholder": "กรอกชื่อของคุณ",
+      "phone_label": "เบอร์โทรศัพท์",
+      "line_label": "Line ID (ถ้ามี)",
+      "line_placeholder": "ไอดีไลน์",
+      "message_label": "ข้อความเพิ่มเติม",
+      "message_placeholder": "พิมพ์ข้อความ...",
+      "footer": "เจ้าหน้าที่จะติดต่อกลับให้เร็วที่สุด (ภายใน 24 ชม.)",
+      "sending": "กำลังส่งข้อมูล...",
+      "submit": "ส่งข้อความ",
+      "quick_messages": {
+        "viewing": "สนใจนัดชมครับ/ค่ะ",
+        "price": "สอบถามราคาพิเศษ",
+        "more_info": "ขอข้อมูลเพิ่มเติม",
+        "booking": "สนใจจอง"
+      },
+      "success": "ส่งข้อมูลเรียบร้อยแล้ว เจ้าหน้าที่จะรีบติดต่อกลับครับ",
+      "error": "ไม่สามารถส่งข้อมูลได้"
+    },
     "created_at_label": "สร้างเมื่อ",
     "nearby_places": "สถานที่สำคัญใกล้เคียง",
     "transit": "รถไฟฟ้า",
@@ -780,6 +792,16 @@
       "tax_registered": "จดทะเบียนบริษัทได้",
       "high_floor": "วิวสวยชั้นสูง",
       "pool_view": "วิวสระว่ายน้ำ"
+    },
+    "transit_types": {
+      "BTS": "BTS",
+      "MRT": "MRT",
+      "ARL": "Airport Rail Link",
+      "SRT": "รถไฟฟ้า (สายสีแดง)",
+      "SRT2": "รถไฟฟ้า (สายสีส้ม)",
+      "SRT3": "รถไฟฟ้า (สายสีชมพู)",
+      "MRT2": "รถไฟฟ้า (สายสีม่วง)",
+      "OTHER": "อื่นๆ"
     }
   },
   "errors": {
@@ -850,5 +872,43 @@
     "error_message": "ขออภัยครับ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่ภายหลัง",
     "online_status": "ออนไลน์",
     "assistant_name": "AI Assistant"
+  },
+  "auth": {
+    "change_password": "เปลี่ยนรหัสผ่าน",
+    "change_password_desc": "กรุณากรอกรหัสผ่านปัจจุบันและรหัสผ่านใหม่",
+    "current_password": "รหัสผ่านปัจจุบัน",
+    "new_password": "รหัสผ่านใหม่",
+    "confirm_new_password": "ยืนยันรหัสผ่านใหม่",
+    "current_password_placeholder": "กรอกรหัสผ่านปัจจุบัน",
+    "new_password_placeholder": "อย่างน้อย 6 ตัวอักษร",
+    "confirm_password_placeholder": "กรอกรหัสผ่านใหม่อีกครั้ง",
+    "save_password": "บันทึกรหัสผ่านใหม่",
+    "saving": "กำลังบันทึก...",
+    "back_to_profile": "กลับไปหน้าโปรไฟล์",
+    "errors": {
+      "current_password_required": "กรุณากรอกรหัสผ่านปัจจุบัน",
+      "new_password_min_length": "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร",
+      "passwords_dont_match": "รหัสผ่านใหม่ไม่ตรงกัน",
+      "new_same_as_old": "รหัสผ่านใหม่ต้องไม่เหมือนกับรหัสผ่านเดิม",
+      "user_not_found": "ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่",
+      "incorrect_current_password": "รหัสผ่านปัจจุบันไม่ถูกต้อง",
+      "generic_error": "เกิดข้อผิดพลาด"
+    },
+    "success": {
+      "password_updated": "เปลี่ยนรหัสผ่านสำเร็จ"
+    }
+  },
+  "recently_viewed": {
+    "title_recommended": "แนะนำ",
+    "title_recent": "เข้าชมล่าสุด",
+    "property_types": "ประเภทอสังหาฯ",
+    "desc_recommended": "ทรัพย์ที่คุณอาจสนใจ",
+    "desc_recent": "กลับมาดูต่อจากที่ค้างไว้",
+    "per_month_short": "/ด.",
+    "schema_rec_name": "อสังหาริมทรัพย์แนะนำ",
+    "schema_recent_name": "อสังหาริมทรัพย์ที่เข้าชมล่าสุด",
+    "schema_rec_desc": "รายการทรัพย์แนะนำสำหรับคุณ",
+    "schema_recent_desc": "รายการทรัพย์ที่คุณเข้าชมล่าสุด",
+    "view_details": "ดูรายละเอียด"
   }
 }

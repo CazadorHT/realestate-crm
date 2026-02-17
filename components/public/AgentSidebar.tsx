@@ -103,7 +103,9 @@ export function AgentSidebar({
               <BadgeCheck className="w-4 h-4 text-blue-500 shrink-0" />
             )}
           </h3>
-          <div className="text-sm text-slate-500">Professional Agent</div>
+          <div className="text-sm text-slate-500">
+            {t("property.professional_agent")}
+          </div>
         </div>
       </div>
 

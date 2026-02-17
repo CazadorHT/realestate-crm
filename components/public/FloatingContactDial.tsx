@@ -7,11 +7,13 @@ import {
   FaTimes,
   FaFacebook,
   FaLine,
-  FaCommentDots,  
+  FaCommentDots,
 } from "react-icons/fa";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function FloatingContactDial() {
+  const { t } = useLanguage();
   const [isVisible, setIsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isPhoneListOpen, setIsPhoneListOpen] = useState(false);
@@ -38,7 +40,9 @@ export function FloatingContactDial() {
           const mappedAgents = data.map((d) => ({
             id: d.id,
             phone: d.phone || "08x-xxx-xxxx",
-            agentName: d.full_name || "Agent",
+            agentName:
+              d.full_name ||
+              t("common.floating.agent_fallback", { name: "Agent" }),
           }));
           setAgents(mappedAgents);
         } else {
@@ -46,8 +50,10 @@ export function FloatingContactDial() {
           setAgents([
             {
               id: "default",
-              phone: "081-234-5678",
-              agentName: "คุณแคซซา (Agent)",
+              phone: "093-550-2143",
+              agentName: t("common.floating.agent_fallback", {
+                name: "V-Link Assets",
+              }),
             },
           ]);
         }
@@ -57,7 +63,7 @@ export function FloatingContactDial() {
     }
 
     fetchContactInfo();
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -187,7 +193,7 @@ export function FloatingContactDial() {
           onClick={() => setIsOpen(false)}
         >
           <span className="bg-white px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Messenger
+            {t("common.floating.messenger")}
           </span>
           <div className="w-12 h-12 bg-[#0084FF] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#0074e0] hover:scale-110 transition-all duration-200">
             <FaFacebook className="w-6 h-6" />
@@ -203,7 +209,7 @@ export function FloatingContactDial() {
           onClick={() => setIsOpen(false)}
         >
           <span className="bg-white px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            แชท LINE
+            {t("common.floating.line_chat")}
           </span>
           <div className="w-12 h-12 bg-[#06C755] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#05b34c] hover:scale-110 transition-all duration-200">
             <FaLine className="w-6 h-6 text-white" />

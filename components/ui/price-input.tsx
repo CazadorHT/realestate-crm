@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 /**
  * Formatted Price Input with commas and "บาท" suffix
@@ -18,6 +19,7 @@ export function PriceInput({
   className?: string;
 }) {
   const [displayValue, setDisplayValue] = useState("");
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (value !== undefined && value !== null && value !== 0) {
@@ -52,7 +54,7 @@ export function PriceInput({
         className="pr-12"
       />
       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
-        บาท
+        {t("common.baht")}
       </span>
     </div>
   );

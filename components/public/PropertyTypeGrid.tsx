@@ -98,7 +98,7 @@ export function PropertyTypeGrid({
 }: {
   isLoading?: boolean;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const propertyTypes = [
     {
       icon: Home,
@@ -116,7 +116,7 @@ export function PropertyTypeGrid({
       href: "/?type=CONDO#latest-properties",
       gradient: "from-blue-600 to-indigo-600",
     },
-     {
+    {
       icon: BriefcaseBusiness,
       title: t("home.property_types.office_building"),
       count: "264",
@@ -148,7 +148,7 @@ export function PropertyTypeGrid({
       href: "/?type=TOWNHOME#latest-properties",
       gradient: "from-orange-500 to-orange-800",
     },
-   
+
     {
       icon: Warehouse,
       title: t("home.property_types.warehouse"),
@@ -207,9 +207,7 @@ export function PropertyTypeGrid({
             <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
               {t("home.property_types.description")}
             </span>{" "}
-            {t("home.property_types.description").includes("ตามประเภท")
-              ? ""
-              : t("common.all")}
+            {language === "th" ? "" : t("common.all")}
           </h2>
           <p
             className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto"
@@ -218,9 +216,7 @@ export function PropertyTypeGrid({
           >
             {t("property_listing.title")}{" "}
             <span className="font-semibold text-blue-600">
-              {t("property_listing.title").includes("ซื้อ · ขาย · เช่า")
-                ? ""
-                : "Buy · Sell · Rent"}
+              {language === "th" ? "" : "Buy · Sell · Rent"}
             </span>{" "}
             {t("common.verified_100")}
           </p>

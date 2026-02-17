@@ -63,6 +63,88 @@ interface PropertyDataForSEO {
 }
 
 /**
+ * Localized labels for SEO generation
+ */
+const SEO_LABELS: Record<string, Record<string, string>> = {
+  // Property Types
+  HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "别墅" },
+  CONDO: { th: "คอนโด", en: "Condo", cn: "公寓" },
+  TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅" },
+  LAND: { th: "ที่ดิน", en: "Land", cn: "土地" },
+  OFFICE_BUILDING: {
+    th: "อาคารสำนักงานออฟฟิศ",
+    en: "Office Building",
+    cn: "办公楼",
+  },
+  COMMERCIAL_BUILDING: {
+    th: "อาคารพาณิชย์",
+    en: "Commercial Building",
+    cn: "商业建筑",
+  },
+  WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库" },
+  OTHER: { th: "อื่นๆ", en: "Others", cn: "其他" },
+
+  // SEO Flags
+  HOT_SALE: { th: "ราคาถูก-ลดราคาพิเศษ", en: "cheap-hot-sale", cn: "特价房源" },
+  NEAR_TRANSIT: { th: "ใกล้รถไฟฟ้า", en: "near-transit", cn: "靠近轻轨" },
+  PET_FRIENDLY: { th: "เลี้ยงสัตว์ได้", en: "pet-friendly", cn: "可养宠物" },
+  CORNER_UNIT: { th: "ห้องมุม", en: "corner-unit", cn: "边间" },
+  RENOVATED: { th: "รีโนเวทใหม่", en: "renovated", cn: "全新装修" },
+  FULLY_FURNISHED: {
+    th: "แต่งครบ-พร้อมอยู่",
+    en: "fully-furnished",
+    cn: "家具齐全",
+  },
+  WITH_TENANT: {
+    th: "พร้อมผู้เช่า-ลงทุนคุ้ม",
+    en: "with-tenant",
+    cn: "带租约",
+  },
+  FOREIGNER_QUOTA: {
+    th: "ต่างชาติซื้อได้",
+    en: "foreigner-quota",
+    cn: "外籍配额",
+  },
+
+  // Prepositions & Labels
+  NEAR_STATION: {
+    th: "ใกล้รถไฟฟ้าสถานี-",
+    en: "near-transit-station-",
+    cn: "靠近轻轨站-",
+  },
+  NEAR: { th: "ใกล้-", en: "near-", cn: "靠近-" },
+  FOR_RENT: { th: "ให้เช่า", en: "For Rent", cn: "出租" },
+  FOR_SALE: { th: "ขาย", en: "For Sale", cn: "出售" },
+
+  // Units
+  BEDS: { th: "นอน", en: "BR", cn: "卧" },
+  BATHS: { th: "น้ำ", en: "BA", cn: "卫" },
+  SQM: { th: "ตรม", en: "sqm", cn: "sqm" },
+
+  // Meta Description phrases
+  BEDROOMS_FULL: { th: "ห้องนอน", en: "Bedrooms", cn: "卧室" },
+  BATHROOMS_FULL: { th: "ห้องน้ำ", en: "Bathrooms", cn: "浴室" },
+  AREA_SIZE: { th: "พื้นที่", en: "Size", cn: "面积" },
+  SQM_FULL: { th: "ตร.ม.", en: "sqm", cn: "平方米" },
+  LOCATION: { th: "ทำเล", en: "Location", cn: "地点" },
+  PRICE: { th: "ราคา", en: "Price", cn: "价格" },
+  RENT: { th: "ค่าเช่า", en: "Rent", cn: "租金" },
+  CURRENCY: { th: "บาท", en: "THB", cn: "泰铢" },
+  PER_MONTH: { th: "/เดือน", en: "/month", cn: "/月" },
+
+  // Meta Keywords
+  KEYWORDS: {
+    SALE_TH: "ขายบ้าน",
+    RENT_TH: "เช่าบ้าน",
+    REAL_ESTATE_TH: "อสังหาริมทรัพย์",
+    SECOND_HAND_TH: "บ้านมือสอง",
+    SALE_EN: "Property for Sale",
+    RENT_EN: "Property for Rent",
+    REAL_ESTATE_EN: "Real Estate Thailand",
+  },
+};
+
+/**
  * Generate URL-friendly slug
  * Preserves Thai characters while removing symbols/emojis
  * Enriched with: Title, Bedrooms, Bathrooms, Area, Type, Location
@@ -71,88 +153,31 @@ export function generatePropertySlug(
   data: PropertyDataForSEO,
   language: string = "th",
 ): string {
-  // Map type to Localized Label
-  const typeMap: Record<string, Record<string, string>> = {
-    HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "别墅" },
-    CONDO: { th: "คอนโด", en: "Condo", cn: "公寓" },
-    TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅" },
-    LAND: { th: "ที่ดิน", en: "Land", cn: "土地" },
-    OFFICE_BUILDING: {
-      th: "อาคารสำนักงานออฟฟิศ",
-      en: "Office Building",
-      cn: "办公楼",
-    },
-    COMMERCIAL_BUILDING: {
-      th: "อาคารพาณิชย์",
-      en: "Commercial Building",
-      cn: "商业建筑",
-    },
-    WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库" },
-  };
+  const lang = (
+    language === "th" || language === "en" || language === "cn"
+      ? language
+      : "th"
+  ) as "th" | "en" | "cn";
+
   const typeLabel = data.property_type
-    ? typeMap[data.property_type]?.[language] ||
-      typeMap[data.property_type]?.["th"]
+    ? SEO_LABELS[data.property_type]?.[lang] ||
+      SEO_LABELS[data.property_type]?.["th"]
     : "";
 
   const seoKeywords = [
-    data.is_hot_sale &&
-      (language === "th"
-        ? "ราคาถูก-ลดราคาพิเศษ"
-        : language === "en"
-          ? "cheap-hot-sale"
-          : "特价房源"),
-    data.near_transit &&
-      (language === "th"
-        ? "ใกล้รถไฟฟ้า"
-        : language === "en"
-          ? "near-transit"
-          : "靠近轻轨"),
-    data.is_pet_friendly &&
-      (language === "th"
-        ? "เลี้ยงสัตว์ได้"
-        : language === "en"
-          ? "pet-friendly"
-          : "可养宠物"),
-    data.is_corner_unit &&
-      (language === "th"
-        ? "ห้องมุม"
-        : language === "en"
-          ? "corner-unit"
-          : "边间"),
-    data.is_renovated &&
-      (language === "th"
-        ? "รีโนเวทใหม่"
-        : language === "en"
-          ? "renovated"
-          : "全新装修"),
-    data.is_fully_furnished &&
-      (language === "th"
-        ? "แต่งครบ-พร้อมอยู่"
-        : language === "en"
-          ? "fully-furnished"
-          : "家具齐全"),
-    data.is_selling_with_tenant &&
-      (language === "th"
-        ? "พร้อมผู้เช่า-ลงทุนคุ้ม"
-        : language === "en"
-          ? "with-tenant"
-          : "带租约"),
-    data.is_foreigner_quota &&
-      (language === "th"
-        ? "ต่างชาติซื้อได้"
-        : language === "en"
-          ? "foreigner-quota"
-          : "外籍配额"),
+    data.is_hot_sale && SEO_LABELS.HOT_SALE[lang],
+    data.near_transit && SEO_LABELS.NEAR_TRANSIT[lang],
+    data.is_pet_friendly && SEO_LABELS.PET_FRIENDLY[lang],
+    data.is_corner_unit && SEO_LABELS.CORNER_UNIT[lang],
+    data.is_renovated && SEO_LABELS.RENOVATED[lang],
+    data.is_fully_furnished && SEO_LABELS.FULLY_FURNISHED[lang],
+    data.is_selling_with_tenant && SEO_LABELS.WITH_TENANT[lang],
+    data.is_foreigner_quota && SEO_LABELS.FOREIGNER_QUOTA[lang],
   ].filter(Boolean);
 
   // Extract Top 2 Nearby Places (Priority: Transit > Others)
   const nearbyKeywords: string[] = [];
-  const nearTransitLabel =
-    language === "th"
-      ? "ใกล้รถไฟฟ้าสถานี-"
-      : language === "en"
-        ? "near-transit-station-"
-        : "靠近轻轨站-";
+  const nearTransitLabel = SEO_LABELS.NEAR_STATION[lang];
 
   // 1. Priority: Main Transit Station from Form (Legacy/Simple)
   if (data.near_transit && data.transit_station_name) {
@@ -240,8 +265,7 @@ export function generatePropertySlug(
       }
     }
 
-    const nearLabel =
-      language === "th" ? "ใกล้-" : language === "en" ? "near-" : "靠近-";
+    const nearLabel = SEO_LABELS.NEAR[lang];
     selectedNearbyPlaces.forEach((place) => {
       // Final localized name for Slug
       let placeNameValue = place.name;
@@ -270,20 +294,9 @@ export function generatePropertySlug(
     ...featureKeywords,
     ...nearbyKeywords,
     ...seoKeywords,
-    data.bedrooms &&
-      (language === "th"
-        ? `${data.bedrooms} นอน`
-        : language === "en"
-          ? `${data.bedrooms}BR`
-          : `${data.bedrooms}卧`),
-    data.bathrooms &&
-      (language === "th"
-        ? `${data.bathrooms} น้ำ`
-        : language === "en"
-          ? `${data.bathrooms}BA`
-          : `${data.bathrooms}卫`),
-    data.size_sqm &&
-      (language === "th" ? `${data.size_sqm} ตรม` : `${data.size_sqm}sqm`),
+    data.bedrooms && `${data.bedrooms}${SEO_LABELS.BEDS[lang]}`,
+    data.bathrooms && `${data.bathrooms}${SEO_LABELS.BATHS[lang]}`,
+    data.size_sqm && `${data.size_sqm}${SEO_LABELS.SQM[lang]}`,
     typeLabel,
     data.popular_area,
     data.subdistrict,
@@ -315,11 +328,15 @@ export function generateMetaTitle(
 
   if (data.listing_type === "RENT") {
     parts.push(
-      language === "th" ? "ให้เช่า" : language === "en" ? "For Rent" : "出租",
+      SEO_LABELS.FOR_RENT[
+        language === "cn" ? "cn" : language === "en" ? "en" : "th"
+      ],
     );
   } else {
     parts.push(
-      language === "th" ? "ขาย" : language === "en" ? "For Sale" : "出售",
+      SEO_LABELS.FOR_SALE[
+        language === "cn" ? "cn" : language === "en" ? "en" : "th"
+      ],
     );
   }
 
@@ -344,55 +361,35 @@ export function generateMetaDescription(
   data: PropertyDataForSEO,
   language: string = "th",
 ): string {
+  const lang = (language === "cn" ? "cn" : language === "en" ? "en" : "th") as
+    | "th"
+    | "en"
+    | "cn";
   const parts = [data.title];
 
   if (data.bedrooms)
-    parts.push(
-      language === "th"
-        ? `${data.bedrooms} ห้องนอน`
-        : language === "en"
-          ? `${data.bedrooms} Bedrooms`
-          : `${data.bedrooms} 卧室`,
-    );
+    parts.push(`${data.bedrooms} ${SEO_LABELS.BEDROOMS_FULL[lang]}`);
   if (data.bathrooms)
-    parts.push(
-      language === "th"
-        ? `${data.bathrooms} ห้องน้ำ`
-        : language === "en"
-          ? `${data.bathrooms} Bathrooms`
-          : `${data.bathrooms} 浴室`,
-    );
+    parts.push(`${data.bathrooms} ${SEO_LABELS.BATHROOMS_FULL[lang]}`);
   if (data.size_sqm)
     parts.push(
-      language === "th"
-        ? `พื้นที่ ${data.size_sqm} ตร.ม.`
-        : `Size ${data.size_sqm} sqm`,
+      `${SEO_LABELS.AREA_SIZE[lang]} ${data.size_sqm} ${SEO_LABELS.SQM_FULL[lang]}`,
     );
   if (data.district && data.province)
     parts.push(
-      language === "th"
-        ? `ทำเล ${data.district} ${data.province}`
-        : `Location ${data.district}, ${data.province}`,
+      `${SEO_LABELS.LOCATION[lang]} ${data.district}, ${data.province}`,
     );
 
   let description = parts.join(" ");
 
   // Add price
   if (data.price) {
-    const label =
-      language === "th" ? " ราคา " : language === "en" ? " Price " : " 价格 ";
-    const unit =
-      language === "th" ? " บาท" : language === "en" ? " THB" : " 泰铢";
+    const label = ` ${SEO_LABELS.PRICE[lang]} `;
+    const unit = ` ${SEO_LABELS.CURRENCY[lang]}`;
     description += `${label}${data.price.toLocaleString()}${unit}`;
   } else if (data.rental_price) {
-    const label =
-      language === "th" ? " ค่าเช่า " : language === "en" ? " Rent " : " 租金 ";
-    const unit =
-      language === "th"
-        ? " บาท/เดือน"
-        : language === "en"
-          ? " THB/month"
-          : " 泰铢/月";
+    const label = ` ${SEO_LABELS.RENT[lang]} `;
+    const unit = ` ${SEO_LABELS.CURRENCY[lang]}${SEO_LABELS.PER_MONTH[lang]}`;
     description += `${label}${data.rental_price.toLocaleString()}${unit}`;
   }
 
@@ -419,21 +416,19 @@ export function generateMetaKeywords(
   if (data.province) keywords.add(data.province);
   if (data.bedrooms)
     keywords.add(
-      language === "th"
-        ? `${data.bedrooms} ห้องนอน`
-        : `${data.bedrooms} Bedrooms`,
+      `${data.bedrooms} ${SEO_LABELS.BEDROOMS_FULL[language === "en" ? "en" : "th"]}`,
     );
 
   // Add common keywords
   if (language === "th") {
-    keywords.add("ขายบ้าน");
-    keywords.add("เช่าบ้าน");
-    keywords.add("อสังหาริมทรัพย์");
-    keywords.add("บ้านมือสอง");
+    keywords.add(SEO_LABELS.KEYWORDS.SALE_TH);
+    keywords.add(SEO_LABELS.KEYWORDS.RENT_TH);
+    keywords.add(SEO_LABELS.KEYWORDS.REAL_ESTATE_TH);
+    keywords.add(SEO_LABELS.KEYWORDS.SECOND_HAND_TH);
   } else {
-    keywords.add("Property for Sale");
-    keywords.add("Property for Rent");
-    keywords.add("Real Estate Thailand");
+    keywords.add(SEO_LABELS.KEYWORDS.SALE_EN);
+    keywords.add(SEO_LABELS.KEYWORDS.RENT_EN);
+    keywords.add(SEO_LABELS.KEYWORDS.REAL_ESTATE_EN);
   }
 
   // Add title words (split by space)

@@ -190,14 +190,9 @@ export default async function PublicPropertyDetailPage(props: {
       (f: any): f is NonNullable<typeof f> => f !== null && f !== undefined,
     );
 
+  const { formatPrice: utilFormatPrice } = await import("@/lib/property-utils");
   const formatPrice = (val: number | null) =>
-    val
-      ? new Intl.NumberFormat("th-TH", {
-          style: "currency",
-          currency: "THB",
-          maximumFractionDigits: 0,
-        }).format(val)
-      : "-";
+    val ? utilFormatPrice(val, language) : "-";
 
   // Schema.org RealEstateListing
   const schemaData = {
@@ -301,7 +296,7 @@ export default async function PublicPropertyDetailPage(props: {
                       100,
                   );
                   parts.push(
-                    `฿${data.price!.toLocaleString()} (-${discountPercent}%)`,
+                    `${t("common.baht_symbol")}${data.price!.toLocaleString()} (-${discountPercent}%)`,
                   );
                 } else if (data.price) {
                   parts.push(formatPrice(data.price));
@@ -321,12 +316,16 @@ export default async function PublicPropertyDetailPage(props: {
                       100,
                   );
                   parts.push(
-                    `฿${data.rental_price!.toLocaleString()}/ด (-${discountPercent}%)`,
+                    `${t("common.baht_symbol")}${data.rental_price!.toLocaleString()}${t("common.per_month_short")} (-${discountPercent}%)`,
                   );
                 } else if (data.rental_price) {
-                  parts.push(`${formatPrice(data.rental_price)}/ด`);
+                  parts.push(
+                    `${formatPrice(data.rental_price)}${t("common.per_month_short")}`,
+                  );
                 } else if (data.original_rental_price) {
-                  parts.push(`${formatPrice(data.original_rental_price)}/ด`);
+                  parts.push(
+                    `${formatPrice(data.original_rental_price)}${t("common.per_month_short")}`,
+                  );
                 }
 
                 return parts.filter(Boolean).join(" | ");
@@ -344,7 +343,7 @@ export default async function PublicPropertyDetailPage(props: {
                       data.original_price!) *
                       100,
                   );
-                  return `฿${data.price!.toLocaleString()} (-${discountPercent}%)`;
+                  return `${t("common.baht_symbol")}${data.price!.toLocaleString()} (-${discountPercent}%)`;
                 } else if (data.price) {
                   return formatPrice(data.price);
                 } else if (data.original_price) {
@@ -364,11 +363,11 @@ export default async function PublicPropertyDetailPage(props: {
                       data.original_rental_price!) *
                       100,
                   );
-                  return `฿${data.rental_price!.toLocaleString()}/ด (-${discountPercent}%)`;
+                  return `${t("common.baht_symbol")}${data.rental_price!.toLocaleString()}${t("common.per_month_short")} (-${discountPercent}%)`;
                 } else if (data.rental_price) {
-                  return `${formatPrice(data.rental_price)}/ด`;
+                  return `${formatPrice(data.rental_price)}${t("common.per_month_short")}`;
                 } else if (data.original_rental_price) {
-                  return `${formatPrice(data.original_rental_price)}/ด`;
+                  return `${formatPrice(data.original_rental_price)}${t("common.per_month_short")}`;
                 }
               }
               return "";

@@ -8,10 +8,7 @@ import {
   Building2,
   TrainFront,
 } from "lucide-react";
-import {
-  TRANSIT_TYPE_LABELS,
-  TRANSIT_TYPE_STYLES,
-} from "@/features/properties/labels";
+import { TRANSIT_TYPE_STYLES } from "@/features/properties/labels";
 import { MdOutlineExplore } from "react-icons/md";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
@@ -66,15 +63,9 @@ export function NearbyPlaces({
   transits = [],
   language: customLanguage,
 }: NearbyPlacesProps) {
-  const { language: globalLanguage, t: globalT } = useLanguage();
+  const { language: globalLanguage, t } = useLanguage();
   const language = customLanguage || globalLanguage;
 
-  // Custom t function
-  const t = (key: string) => {
-    const { dictionaries } = require("@/components/providers/LanguageProvider");
-    const dict = dictionaries[language];
-    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
-  };
   // Group nearby places by category (NOT including transits)
   const grouped = data.reduce(
     (acc, item) => {
@@ -187,10 +178,7 @@ export function NearbyPlaces({
             </div>
             <ul className="space-y-2">
               {transits.map((transit, i) => {
-                const typeLabel =
-                  TRANSIT_TYPE_LABELS[
-                    transit.type as keyof typeof TRANSIT_TYPE_LABELS
-                  ] || transit.type;
+                const typeLabel = t(`property.transit_types.${transit.type}`);
                 const styles =
                   TRANSIT_TYPE_STYLES[
                     transit.type as keyof typeof TRANSIT_TYPE_STYLES

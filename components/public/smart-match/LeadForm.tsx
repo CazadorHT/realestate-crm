@@ -68,13 +68,16 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
             </h4>
             {match.original_price && (
               <span className="text-xs text-slate-400 line-through block leading-none mt-0.5">
-                ฿ {match.original_price.toLocaleString()}
+                {t("common.baht_symbol")}{" "}
+                {match.original_price.toLocaleString()}
               </span>
             )}
             <div className="text-blue-600 font-bold text-sm">
               {match.price > 0 ? (
                 <div className="flex flex-wrap items-baseline gap-1">
-                  <span>฿ {match.price.toLocaleString()}</span>
+                  <span>
+                    {t("common.baht_symbol")} {match.price.toLocaleString()}
+                  </span>
                   {match.is_sqm_price ? (
                     <span className="text-[10px]">/ {t("common.sqm")}</span>
                   ) : (
@@ -86,7 +89,9 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                   )}
                   {match.secondary_price && (
                     <span className="text-[10px] text-slate-400 font-normal ml-0.5">
-                      (฿ {match.secondary_price.toLocaleString()} / ตร.ม.)
+                      ({t("common.baht_symbol")}{" "}
+                      {match.secondary_price.toLocaleString()} /{" "}
+                      {t("common.sqm")})
                     </span>
                   )}
                 </div>

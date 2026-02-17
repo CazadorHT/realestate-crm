@@ -66,11 +66,11 @@
     "no_image": "No matching image",
     "call": "Call",
     "contact": "Contact",
-    "meters_short": "m.",
-    "km_short": "km.",
+    "meters_short": "m",
+    "km_short": "km",
     "sqm_short": "sq.m.",
     "sqwa_short": "sq.wa",
-    "minutes_short": "min.",
+    "minutes_short": "mins",
     "month": "mo.",
     "year": "yr.",
     "or": "or",
@@ -90,6 +90,8 @@
     "contact_for_price": "Contact for price",
     "contract": "Contract",
     "months_short": "mo.",
+    "per_month_short": "/mo.",
+    "baht_symbol": "฿",
     "rent_price": "Rent Price",
     "sale_price": "Sale Price"
   },
@@ -474,20 +476,6 @@
       }
     }
   },
-  "recently_viewed": {
-    "title_recent": "You recently viewed",
-    "title_recommended": "Recommended for you",
-    "desc_recent": "History of properties you recently opened",
-    "desc_recommended": "Real estate properties selected specifically for you",
-    "property_types": "Houses, Condos, Offices",
-    "schema_recent_name": "Recently Viewed Properties",
-    "schema_recent_desc": "Browsing history of houses, condos, and land",
-    "schema_rec_name": "Recommended Properties",
-    "schema_rec_desc": "Collection of houses, condos, and land recommended for you",
-    "view_details": "View Details",
-    "no_image": "No Image",
-    "per_month_short": "mo"
-  },
   "similar_properties": {
     "title": "Similar Properties",
     "subtitle": "Properties of the same type you might be interested in",
@@ -707,6 +695,7 @@
     "inquiry_price": "Inquire for Price",
     "min_contract": "Min. Contract",
     "managed_by": "Managed by",
+    "professional_agent": "Professional Agent",
     "contact_agent": "Contact Agent",
     "viewing_cta": "Interested in viewing (Free)",
     "viewing_msg": "I'm interested in viewing this property. I'm available...",
@@ -715,6 +704,29 @@
     "share_property": "Share Property",
     "book_viewing": "Book Viewing",
     "inquiry": "Inquiry",
+    "contact_dialog": {
+      "trigger": "Interested / Book Viewing",
+      "title": "Contact Us",
+      "subtitle_fallback": "Inquire for more details",
+      "name_label": "Name",
+      "name_placeholder": "Enter your name",
+      "phone_label": "Phone Number",
+      "line_label": "Line ID (Optional)",
+      "line_placeholder": "Line ID",
+      "message_label": "Additional Message",
+      "message_placeholder": "Type your message...",
+      "footer": "We will contact you back as soon as possible (within 24 hours)",
+      "sending": "Sending...",
+      "submit": "Send Message",
+      "quick_messages": {
+        "viewing": "Interested in viewing",
+        "price": "Inquire for special price",
+        "more_info": "Request more information",
+        "booking": "Interested in booking"
+      },
+      "success": "Information sent successfully. Our staff will contact you back shortly.",
+      "error": "Failed to send information"
+    },
     "created_at_label": "Created at",
     "nearby_places": "Nearby Highlights",
     "transit": "Public Transit",
@@ -783,6 +795,16 @@
       "tax_registered": "Tax Registered",
       "high_floor": "High Floor",
       "pool_view": "Pool View"
+    },
+    "transit_types": {
+      "BTS": "BTS",
+      "MRT": "MRT",
+      "ARL": "Airport Rail Link",
+      "SRT": "Red Line (SRT)",
+      "SRT2": "Orange Line (SRT)",
+      "SRT3": "Pink Line (SRT)",
+      "MRT2": "Purple Line (MRT)",
+      "OTHER": "Others"
     }
   },
   "errors": {
@@ -853,5 +875,43 @@
     "error_message": "Sorry, a connection error occurred. Please try again later.",
     "online_status": "Online",
     "assistant_name": "AI Assistant"
+  },
+  "auth": {
+    "change_password": "Change Password",
+    "change_password_desc": "Please enter your current password and a new password.",
+    "current_password": "Current Password",
+    "new_password": "New Password",
+    "confirm_new_password": "Confirm New Password",
+    "current_password_placeholder": "Enter current password",
+    "new_password_placeholder": "At least 6 characters",
+    "confirm_password_placeholder": "Confirm new password",
+    "save_password": "Save New Password",
+    "saving": "Saving...",
+    "back_to_profile": "Back to Profile",
+    "errors": {
+      "current_password_required": "Current password is required",
+      "new_password_min_length": "New password must be at least 6 characters",
+      "passwords_dont_match": "New passwords do not match",
+      "new_same_as_old": "New password must be different from current password",
+      "user_not_found": "User not found. Please log in again.",
+      "incorrect_current_password": "Incorrect current password",
+      "generic_error": "An error occurred"
+    },
+    "success": {
+      "password_updated": "Password updated successfully"
+    }
+  },
+  "recently_viewed": {
+    "title_recommended": "Recommended",
+    "title_recent": "Recently Viewed",
+    "property_types": "Property Types",
+    "desc_recommended": "Properties you might like based on your interest",
+    "desc_recent": "Continue where you left off",
+    "per_month_short": "/mo",
+    "schema_rec_name": "Recommended Properties",
+    "schema_recent_name": "Recently Viewed Properties",
+    "schema_rec_desc": "List of properties recommended for you",
+    "schema_recent_desc": "List of properties you recently viewed",
+    "view_details": "View Details"
   }
 }

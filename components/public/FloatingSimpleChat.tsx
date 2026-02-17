@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 // import Image from "next/image"; // If you have a LINE icon asset
 
 export function FloatingSimpleChat() {
+  const { t } = useLanguage();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export function FloatingSimpleChat() {
 
         {/* Floating Label (Tooltip-like) */}
         <span className="absolute right-full mr-3 bg-white px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-          แชทกับเรา
+          {t("common.floating.chat_with_us")}
           <span className="absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 bg-white rotate-45"></span>
         </span>
       </a>
