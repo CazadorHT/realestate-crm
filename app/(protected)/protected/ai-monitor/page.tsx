@@ -14,6 +14,11 @@ import {
   Zap,
   BarChart3,
   Search,
+  Languages,
+  Users,
+  PenTool,
+  ClipboardList,
+  MapPin,
 } from "lucide-react";
 
 export default async function AiDashboardPage() {
@@ -283,13 +288,37 @@ function FeatureBadge({ feature }: { feature: string }) {
   if (feature === "blog_generator" || feature === "content_refiner") {
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-pink-50 text-pink-700 border border-pink-100">
-        <FileText className="w-3.5 h-3.5" /> Blog AI
+        <FileText className="w-3.5 h-3.5" /> Content AI
+      </span>
+    );
+  }
+  if (
+    feature === "description_generator" ||
+    feature === "property_translator"
+  ) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+        <PenTool className="w-3.5 h-3.5" /> Property AI
+      </span>
+    );
+  }
+  if (feature === "lead_summary") {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+        <ClipboardList className="w-3.5 h-3.5" /> Lead AI
+      </span>
+    );
+  }
+  if (feature === "popular_areas_translator") {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-100">
+        <MapPin className="w-3.5 h-3.5" /> Area AI
       </span>
     );
   }
   return (
-    <span className="text-slate-600 bg-slate-100 px-2 py-0.5 rounded text-xs">
-      {feature}
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200">
+      <Sparkles className="w-3.5 h-3.5" /> {feature}
     </span>
   );
 }
