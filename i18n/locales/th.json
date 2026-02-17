@@ -457,6 +457,7 @@
     "no_results": "ไม่พบรายการที่ค้นหา กรุณาลองปรับตัวกรองใหม่อีกครั้ง",
     "found_total": "พบทรัพย์ทั้งหมด",
     "displaying": "แสดง",
+    "displaying_page": "หน้า {current} จาก {total}",
     "show_more": "ดูเพิ่ม",
     "show_less": "น้อยลง",
     "price_presets": {

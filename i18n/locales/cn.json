@@ -463,6 +463,7 @@
     "no_results": "未找到搜索结果，请尝试其他过滤器。",
     "found_total": "共找到",
     "displaying": "显示",
+    "displaying_page": "第 {current} 页，共 {total} 页",
     "show_more": "查看更多",
     "show_less": "查看较少",
     "price_presets": {

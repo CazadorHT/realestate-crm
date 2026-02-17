@@ -350,9 +350,11 @@ export function PropertyHeader({
                       ]
                     : []),
                   {
-                    label: localizedTitle,
-                    className:
-                      "max-w-[150px] sm:max-w-[250px] md:max-w-[400px] truncate block",
+                    label:
+                      localizedTitle?.length && localizedTitle.length > 40
+                        ? `${localizedTitle.slice(0, 40)}...`
+                        : localizedTitle,
+                    className: "text-slate-600 font-medium pointer-events-none",
                   },
                 ]}
               />

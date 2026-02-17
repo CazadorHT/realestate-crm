@@ -459,6 +459,7 @@
     "no_results": "No results found. Please try different filters.",
     "found_total": "Found total",
     "displaying": "Displaying",
+    "displaying_page": "Page {current} of {total}",
     "show_more": "Show More",
     "show_less": "Show Less",
     "price_presets": {
