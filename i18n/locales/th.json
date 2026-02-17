@@ -533,8 +533,6 @@
     "phone_label": "เบอร์โทรศัพท์",
     "email_label": "อีเมล",
     "email_placeholder": "your.email@example.com (ถ้ามี)",
-    "line_id_label": "Line ID",
-    "line_id_placeholder": "ไอดีไลน์ของคุณ (ถ้ามี)",
     "more_details_label": "รายละเอียดเพิ่มเติม",
     "more_details_placeholder": "บอกรายละเอียดความต้องการของคุณ (ถ้ามี)...",
     "submit": "ส่งข้อความ",
@@ -680,7 +678,7 @@
     "townhome": "🏡 ทาวน์โฮม",
     "land": "🌳 ที่ดิน",
     "commercial": "🏢 อาคารพาณิชย์",
-    "office_building": "🏢 อาคารสำนักงาน",
+    "office_building": "🏢 สำนักงานออฟฟิศ",
     "office": "🏬 สำนักงานออฟฟิศ",
     "villa": "🏝️ วิลล่า",
     "pool_villa": "🌊 พูลวิลล่า",
@@ -914,5 +912,12 @@
     "schema_rec_desc": "รายการทรัพย์แนะนำสำหรับคุณ",
     "schema_recent_desc": "รายการทรัพย์ที่คุณเข้าชมล่าสุด",
     "view_details": "ดูรายละเอียด"
+  },
+  "profile": {
+    "line_id_label": "Line ID (สำหรับลูกค้า)",
+    "line_id_placeholder": "ไอดีไลน์สำหรับให้ลูกค้าแอด (เช่น hunter_asset)",
+    "line_user_id_label": "LINE Bot User ID (สำหรับแจ้งเตือน)",
+    "line_user_id_placeholder": "Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "line_user_id_help": "ใช้สำหรับรับแจ้งเตือนจากบอท พิมพ์ /id ในไลน์บอทเพื่อรับค่านี้"
   }
 }

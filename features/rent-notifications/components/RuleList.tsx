@@ -215,16 +215,16 @@ export function RuleList({ initialRules, groups, properties }: any) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => handleTestSend(rule.id)}>
+                    <DropdownMenuItem className="cursor-pointer" onClick={() => handleTestSend(rule.id)}>
                       <Send className="mr-2 h-4 w-4" />
                       ส่งข้อความทดสอบ
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setEditingRule(rule)}>
+                    <DropdownMenuItem className="cursor-pointer" onClick={() => setEditingRule(rule)}>
                       <Edit className="mr-2 h-4 w-4" /> แก้ไข
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="text-red-600 focus:text-red-600"
+                      className="text-red-600 focus:text-red-600 cursor-pointer"
                       onClick={() => handleDelete(rule.id)}
                     >
                       <Trash2 className="mr-2 h-4 w-4" />

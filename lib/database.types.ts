@@ -755,6 +755,7 @@ export type Database = {
           full_name: string | null
           id: string
           line_id: string | null
+          line_user_id: string | null
           notification_preferences: Json | null
           other_contact: string | null
           phone: string | null
@@ -772,6 +773,7 @@ export type Database = {
           full_name?: string | null
           id: string
           line_id?: string | null
+          line_user_id?: string | null
           notification_preferences?: Json | null
           other_contact?: string | null
           phone?: string | null
@@ -789,6 +791,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           line_id?: string | null
+          line_user_id?: string | null
           notification_preferences?: Json | null
           other_contact?: string | null
           phone?: string | null

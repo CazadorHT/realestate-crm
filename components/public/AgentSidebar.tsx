@@ -123,8 +123,10 @@ export function AgentSidebar({
             <a
               href={
                 agentLine
-                  ? `https://line.me/ti/p/${agentLine}`
-                  : "https://line.me/ti/p/~sabaicaza"
+                  ? agentLine.startsWith("http")
+                    ? agentLine
+                    : `https://line.me/ti/p/~${agentLine}`
+                  : "https://line.me/ti/p/~@811slazm"
               }
               target="_blank"
               rel="noopener noreferrer"

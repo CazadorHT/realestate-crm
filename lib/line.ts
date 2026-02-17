@@ -17,27 +17,27 @@ export async function sendLineNotification(
   if (!userId) {
     try {
       const supabase = createAdminClient();
-      // พยายามหาแอดมินคนแรกที่มี line_id
+      // พยายามหาแอดมินคนแรกที่มี line_user_id หรือ line_id
       const { data } = await supabase
         .from("profiles")
-        .select("line_id")
-        .eq("role", "ADMIN") // ดึงเฉพาะคนที่เป็น ADMIN
-        .not("line_id", "is", null)
+        .select("line_user_id, line_id")
+        .eq("role", "ADMIN")
+        .or("line_user_id.not.is.null,line_id.not.is.null")
         .limit(1)
         .single();
 
-      if (data?.line_id) {
-        userId = data.line_id;
+      if (data?.line_user_id || data?.line_id) {
+        userId = (data.line_user_id || data.line_id) ?? undefined;
       } else {
-        // แผนสำรอง: ถ้าไม่มีแอดมิน ให้ลองหา User คนไหนก็ได้ที่มี line_id (เหมาะสำหรับแอพที่ใช้คนเดียว)
+        // แผนสำรอง: ถ้าไม่มีแอดมิน ให้ลองหา User คนไหนก็ได้
         const { data: anyUser } = await supabase
           .from("profiles")
-          .select("line_id")
-          .not("line_id", "is", null)
+          .select("line_user_id, line_id")
+          .or("line_user_id.not.is.null,line_id.not.is.null")
           .limit(1)
           .single();
-        if (anyUser?.line_id) {
-          userId = anyUser.line_id;
+        if (anyUser?.line_user_id || anyUser?.line_id) {
+          userId = (anyUser.line_user_id || anyUser.line_id) ?? undefined;
         }
       }
     } catch (dbError) {

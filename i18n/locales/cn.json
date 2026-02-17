@@ -539,8 +539,6 @@
     "phone_label": "电话号码",
     "email_label": "电子邮件",
     "email_placeholder": "your.email@example.com（可选）",
-    "line_id_label": "Line ID",
-    "line_id_placeholder": "您的 Line ID（可选）",
     "more_details_label": "更多详情",
     "more_details_placeholder": "告诉我们您的需求（可选）...",
     "submit": "发送留言",
@@ -889,5 +887,12 @@
     "schema_rec_desc": "为您推荐的房源列表",
     "schema_recent_desc": "您最近浏览的房源列表",
     "view_details": "查看详情"
+  },
+  "profile": {
+    "line_id_label": "公开 Line ID",
+    "line_id_placeholder": "供客户添加的 Line ID（例如：hunter_asset）",
+    "line_user_id_label": "LINE Bot 用户 ID（内部）",
+    "line_user_id_placeholder": "Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "line_user_id_help": "用于机器人通知。在机器人中输入 /id 以查找此值。"
   }
 }

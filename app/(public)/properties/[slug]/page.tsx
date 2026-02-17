@@ -435,6 +435,7 @@ export default async function PublicPropertyDetailPage(props: {
               agentName={agent?.full_name}
               agentImage={agent?.avatar_url}
               agentPhone={agent?.phone}
+              agentLine={agent?.line_id}
               isVerified={true}
               propertyId={data.id}
               propertyTitle={data.title}

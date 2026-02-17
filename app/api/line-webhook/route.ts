@@ -216,7 +216,9 @@ async function handleIncomingChannelMessage(event: LineEvent) {
   if (!text) return;
 
   // === SPECIAL COMMANDS ===
-  if (text.trim() === "/id" || text.trim() === "/groupid") {
+  const cleanText = text.toLowerCase().trim();
+  if (cleanText === "/id" || cleanText === "/groupid") {
+    console.log(`Matched ID command: ${cleanText} from source:`, event.source);
     if (groupId) {
       // If in group, also update group info just in case
       await handleJoinEvent(event);
