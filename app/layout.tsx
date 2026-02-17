@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(siteConfig.url),
     title: {
-      default: t("metadata.default_title"),
+      default: t("metadata.default_title", { siteName: siteConfig.name }),
       template: `%s | ${siteConfig.name}`,
     },
     description: t("metadata.default_description"),
@@ -39,13 +39,13 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       locale: "th_TH",
       url: siteConfig.url,
-      title: t("metadata.default_title"),
+      title: t("metadata.default_title", { siteName: siteConfig.name }),
       description: t("metadata.default_description"),
       siteName: siteConfig.name,
     },
     twitter: {
       card: "summary_large_image",
-      title: t("metadata.default_title"),
+      title: t("metadata.default_title", { siteName: siteConfig.name }),
       description: t("metadata.default_description"),
     },
   };

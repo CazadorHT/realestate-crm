@@ -6,6 +6,7 @@ import { DepositLeadInput, LeadState } from "./types";
 import { depositLeadSchema, inquiryLeadSchema } from "./schema";
 import { sendLineNotification } from "@/lib/line";
 import { getTemplateConfig } from "@/features/line/utils";
+import { siteConfig } from "@/lib/site-config";
 import {
   getPublicImageUrl,
   getCoverImageUrl,
@@ -152,7 +153,7 @@ Details: ${data.details || "-"}`,
       action: {
         type: "uri",
         label: "CRM",
-        uri: `https://oma-asset.com/protected/leads/${lead.id}`,
+        uri: `${siteConfig.url}/protected/leads/${lead.id}`,
       },
     });
   }
@@ -481,7 +482,7 @@ export async function submitInquiryAction(
         action: {
           type: "uri",
           label: "View Property",
-          uri: `https://oma-asset.com/properties/${data.propertyId}`,
+          uri: `${siteConfig.url}/properties/${data.propertyId}`,
         },
       });
     }
@@ -811,7 +812,7 @@ export async function submitInquiryAction(
         action: {
           type: "uri",
           label: "Property",
-          uri: `https://oma-asset.com/properties/${data.propertyId}`,
+          uri: `${siteConfig.url}/properties/${data.propertyId}`,
         },
       });
     }
@@ -885,7 +886,7 @@ export async function submitInquiryAction(
         action: {
           type: "uri",
           label: "CRM",
-          uri: `https://oma-asset.com/protected/leads/${lead.id}`,
+          uri: `${siteConfig.url}/protected/leads/${lead.id}`,
         },
       });
     }

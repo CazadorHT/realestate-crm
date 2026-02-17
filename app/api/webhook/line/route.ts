@@ -5,6 +5,8 @@ import { searchPropertiesForBot } from "@/features/properties/queries.public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getLineProfile, saveOmniMessage } from "@/lib/line";
 
+import { siteConfig } from "@/lib/site-config";
+
 type LineEvent = {
   type: string;
   replyToken: string;
@@ -268,7 +270,7 @@ async function handleTextMessage(event: LineEvent) {
         gravity: "top", // Requested alignment
         action: {
           type: "uri",
-          uri: `https://oma-asset.com/properties/${prop.id}`, // Should use ENV for base URL
+          uri: `${siteConfig.url}/properties/${prop.id}`, // Should use ENV for base URL
         },
       },
       body: {
@@ -330,7 +332,7 @@ async function handleTextMessage(event: LineEvent) {
             action: {
               type: "uri",
               label: "ดูรายละเอียด",
-              uri: `https://oma-asset.com/properties/${prop.id}`,
+              uri: `${siteConfig.url}/properties/${prop.id}`,
             },
             color: "#0F172A", // Dark blue/slate
           },

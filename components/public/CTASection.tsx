@@ -6,6 +6,8 @@ import Link from "next/link";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
+import { siteConfig } from "@/lib/site-config";
+
 export function CTASection() {
   const { t } = useLanguage();
 
@@ -15,7 +17,7 @@ export function CTASection() {
     "@type": "SearchAction",
     target: {
       "@type": "EntryPoint",
-      urlTemplate: "https://oma-asset.com/properties?q={search_term}",
+      urlTemplate: `${siteConfig.url}/properties?q={search_term}`,
       actionPlatform: [
         "http://schema.org/DesktopWebPlatform",
         "http://schema.org/MobileWebPlatform",
@@ -116,7 +118,7 @@ export function CTASection() {
           </Link>
 
           <a
-            href="https://line.me/R/ti/p/@oma-asset"
+            href={siteConfig.links.line}
             target="_blank"
             rel="noopener noreferrer"
           >

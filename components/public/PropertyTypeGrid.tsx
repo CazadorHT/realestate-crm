@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 interface PropertyTypeCardProps {
   icon: React.ElementType;
@@ -180,7 +181,7 @@ export function PropertyTypeGrid({
         "@type": "Product",
         name: type.title,
         description: type.description,
-        url: `https://oma-asset.com${type.href}`,
+        url: `${siteConfig.url}${type.href}`,
       },
     })),
   };

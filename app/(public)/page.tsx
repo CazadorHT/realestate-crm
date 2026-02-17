@@ -1,8 +1,8 @@
 // Force rebuild
 import dynamic from "next/dynamic";
 import { Metadata } from "next";
-import { getServerTranslations } from "@/lib/i18n";
 import { siteConfig } from "@/lib/site-config";
+import { getServerTranslations } from "@/lib/i18n";
 
 // Critical components loaded immediately
 import { HeroSection } from "@/components/public/HeroSection";
@@ -67,7 +67,7 @@ const FAQSection = dynamic(() =>
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
   return {
-    title: t("metadata.home_title"),
+    title: t("metadata.home_title", { siteName: siteConfig.name }),
     description: t("metadata.home_description"),
   };
 }

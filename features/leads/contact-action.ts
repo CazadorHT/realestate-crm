@@ -30,6 +30,8 @@ const limiter = rateLimit({
   uniqueTokenPerInterval: 500, // Max 500 users per second
 });
 
+import { siteConfig } from "@/lib/site-config";
+
 export async function submitContactFormAction(
   prevState: ContactFormState,
   formData: FormData,
@@ -201,7 +203,7 @@ export async function submitContactFormAction(
         action: {
           type: "uri",
           label: "CRM",
-          uri: `https://oma-asset.com/protected/leads/${lead.id}`,
+          uri: `${siteConfig.url}/protected/leads/${lead.id}`,
         },
       });
     }

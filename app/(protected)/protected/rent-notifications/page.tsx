@@ -10,7 +10,7 @@ import {
 } from "@/features/rent-notifications/queries.server";
 
 export const metadata = {
-  title: "Rent Notifications | Real Estate CRM",
+  title: "Rent Notifications",
 };
 
 export default async function RentNotificationsPage() {

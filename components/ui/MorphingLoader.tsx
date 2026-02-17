@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 export function MorphingLoader({ className }: { className?: string }) {
   const [index, setIndex] = useState(0);
@@ -63,7 +64,9 @@ export function MorphingLoader({ className }: { className?: string }) {
         <h3 className="text-lg font-semibold text-slate-900 animate-pulse">
           {t("loading.search_dream_home")}
         </h3>
-        <p className="text-slate-400 text-sm">{t("loading.subtitle")}</p>
+        <p className="text-slate-400 text-sm">
+          {t("loading.subtitle", { siteName: siteConfig.name })}
+        </p>
       </div>
     </div>
   );

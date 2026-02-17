@@ -29,6 +29,7 @@ import { depositLeadSchema } from "@/features/public/schema";
 import { DepositLeadInput } from "@/features/public/types";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 export function DepositPropertySection() {
   const { t } = useLanguage();
@@ -42,12 +43,12 @@ export function DepositPropertySection() {
     description: t("deposit.description"),
     provider: {
       "@type": "RealEstateAgent",
-      name: "OMA ASSET",
+      name: siteConfig.name,
     },
     areaServed: "Thailand",
     availableChannel: {
       "@type": "ServiceChannel",
-      serviceUrl: "https://oma-asset.com/#deposit-section",
+      serviceUrl: `${siteConfig.url}/#deposit-section`,
     },
   };
 
@@ -451,7 +452,9 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
               <div className="flex items-center">
-                <span className="text-white">{t("deposit.form.submit_btn")}</span>
+                <span className="text-white">
+                  {t("deposit.form.submit_btn")}
+                </span>
                 <Send className="ml-2 h-4 w-4 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform text-white" />
               </div>
             )}

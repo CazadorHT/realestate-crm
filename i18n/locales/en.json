@@ -280,24 +280,24 @@
     }
   },
   "metadata": {
-    "default_title": "OMA Asset | Find and Sell Properties Easily",
+    "default_title": "{siteName} | Find and Sell Properties Easily",
     "default_description": "Comprehensive list of houses, condos, and offices across Thailand. Easy search, fast closed deals with smart tools for seekers and professionals.",
-    "home_title": "Search House, Condo, Office for Sale/Rent | OMA Asset",
+    "home_title": "Search House, Condo, Office for Sale/Rent | {siteName}",
     "home_description": "Real estate listings for Sale/Rent. Houses, Condos, Offices, Land. 100% Verified properties with Smart Match system.",
     "search_title": "Search Properties | House, Condo, Office",
     "search_description": "Find all types of real estate for sale and rent with our smart filtering system.",
     "jsonld_description": "Online real estate hub for easy search and fast property listings with professional care.",
     "jsonld_address_locality": "Bangkok",
-    "about_title": "About Us | OMA Asset",
+    "about_title": "About Us | {siteName}",
     "about_description": "Meet our professional real estate team. Providing comprehensive real estate services.",
-    "contact_title": "Contact Us | OMA Asset",
+    "contact_title": "Contact Us | {siteName}",
     "contact_description": "Contact our professional real estate team for consultation and all types of property services.",
-    "services_title": "Our Services | OMA Asset",
+    "services_title": "Our Services | {siteName}",
     "services_description": "Full real estate services including Buy, Sell, Rent, and more by professional team."
   },
   "loading": {
     "search_dream_home": "Finding your dream places...",
-    "subtitle": "OMA Asset - Quality Real Estate Network"
+    "subtitle": "{siteName} - Quality Real Estate Network"
   },
   "property_listing": {
     "title": "Houses, Condos, Offices | Buy · Sell · Rent",
