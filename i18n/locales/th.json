@@ -138,7 +138,13 @@
       "Lifestyle": "ไลฟ์สไตล์",
       "Market Trends": "แนวโน้มตลาด",
       "Tips & Tricks": "เคล็ดลับและเทคนิค"
-    }
+    },
+    "action_success_create": "สร้างบทความเรียบร้อยแล้ว",
+    "action_success_update": "อัปเดตบทความเรียบร้อยแล้ว",
+    "action_success_delete": "ลบบทความเรียบร้อยแล้ว",
+    "action_error_create": "ไม่สามารถสร้างบทความได้",
+    "action_error_update": "ไม่สามารถอัปเดตบทความได้",
+    "action_error_delete": "ไม่สามารถลบบทความได้"
   },
   "home": {
     "search_btn": "ค้นหาเลย",

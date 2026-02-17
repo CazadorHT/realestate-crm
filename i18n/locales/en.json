@@ -140,7 +140,13 @@
       "Lifestyle": "Lifestyle",
       "Market Trends": "Market Trends",
       "Tips & Tricks": "Tips & Tricks"
-    }
+    },
+    "action_success_create": "Blog post created successfully",
+    "action_success_update": "Blog post updated successfully",
+    "action_success_delete": "Blog post deleted successfully",
+    "action_error_create": "Failed to create blog post",
+    "action_error_update": "Failed to update blog post",
+    "action_error_delete": "Failed to delete blog post"
   },
   "home": {
     "search_btn": "Search Now",

@@ -137,7 +137,13 @@
       "Lifestyle": "生活方式",
       "Market Trends": "市场趋势",
       "Tips & Tricks": "技巧与提示"
-    }
+    },
+    "action_success_create": "文章创建成功",
+    "action_success_update": "文章更新成功",
+    "action_success_delete": "文章删除成功",
+    "action_error_create": "创建文章失败",
+    "action_error_update": "更新文章失败",
+    "action_error_delete": "删除文章失败"
   },
   "home": {
     "search_btn": "立即搜索",
