@@ -25,24 +25,37 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { AnalyticsFilters } from "./components/AnalyticsFilters";
+import { ResetViewsButton } from "./components/ResetViewsButton";
 
-export default async function AnalyticsPage() {
+export default async function AnalyticsPage(props: {
+  searchParams: Promise<{ range?: string }>;
+}) {
+  const searchParams = await props.searchParams;
   const profile = await getCurrentProfile();
   if (!profile || !isAdmin(profile.role)) {
     return redirect("/protected");
   }
 
-  const { topProperties, topAreas, totalViews } = await getAnalyticsStats();
+  const range = searchParams.range;
+  const days = range && range !== "all" ? parseInt(range) : undefined;
+  const { topProperties, topAreas, totalViews } = await getAnalyticsStats(days);
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl md:text-3xl font-medium tracking-tight text-slate-900">
-          ข้อมูลวิเคราะห์ (Analytics)
-        </h1>
-        <p className="text-sm md:text-base text-slate-500">
-          ภาพรวมการเข้าชมทรัพย์สินและแนวโน้มตลาดย่านต่างๆ
-        </p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl md:text-3xl font-medium tracking-tight text-slate-900">
+            ข้อมูลวิเคราะห์ (Analytics)
+          </h1>
+          <p className="text-sm md:text-base text-slate-500">
+            ภาพรวมการเข้าชมทรัพย์สินและแนวโน้มตลาดย่านต่างๆ
+          </p>
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto self-end">
+          <AnalyticsFilters />
+          <ResetViewsButton />
+        </div>
       </div>
 
       {/* Overview Cards */}
@@ -119,9 +132,9 @@ export default async function AnalyticsPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 flex-1 overflow-hidden">
-            <div className="overflow-x-auto scrollbar-hide">
+            <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
               <table className="w-full text-sm text-left">
-                <thead className="text-[10px] md:text-xs text-slate-500 uppercase bg-slate-50/50">
+                <thead className="text-[10px] md:text-xs text-slate-500 uppercase bg-slate-50/50 sticky top-0 z-10 backdrop-blur-sm">
                   <tr>
                     <th className="px-4 md:px-6 py-3 md:py-4 font-semibold whitespace-nowrap">
                       ทรัพย์สิน
@@ -204,7 +217,7 @@ export default async function AnalyticsPage() {
         </Card>
 
         {/* Popular Areas Section */}
-        <Card className="border-none shadow-sm">
+        <Card className="border-none shadow-sm flex flex-col">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4 md:p-6">
             <CardTitle className="text-lg">
               อันดับย่านที่คนให้ความสนใจ
@@ -214,8 +227,8 @@ export default async function AnalyticsPage() {
               (Leads)
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-4 md:p-6">
-            <div className="space-y-5 md:space-y-6">
+          <CardContent className="p-4 md:p-6 flex-1 overflow-hidden">
+            <div className="max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200 space-y-5 md:space-y-6">
               {topAreas.map((area: AreaAnalytics, idx: number) => (
                 <div key={area.name} className="flex flex-col gap-2">
                   <div className="flex justify-between items-end">
