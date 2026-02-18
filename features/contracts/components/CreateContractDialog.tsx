@@ -10,6 +10,7 @@ import {
   Clock,
   FileText,
   CheckCircle2,
+  MapPin,
 } from "lucide-react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -158,7 +159,7 @@ export function CreateContractDialog() {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="flex flex-col flex-1 min-h-0 overflow-hidden"
+              className="flex flex-col flex-1 min-h-0 md:max-h-[600px] lg:max-h-full overflow-hidden"
             >
               <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-6 min-h-0">
                 {/* Deal Selection Section */}
@@ -225,8 +226,8 @@ export function CreateContractDialog() {
                   />
 
                   {selectedDeal && (
-                    <div className="flex flex-col sm:flex-row gap-4 p-3 sm:p-4 bg-white rounded-2xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 max-w-full overflow-hidden">
-                      <div className="relative w-full sm:w-32 h-40 sm:h-32 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200 shadow-inner">
+                    <div className="flex flex-row gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-2xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 max-w-full overflow-hidden">
+                      <div className="relative w-20 h-20 sm:w-32 sm:h-32 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200 shadow-inner">
                         {selectedDeal.cover_image_url ? (
                           <img
                             src={selectedDeal.cover_image_url}
@@ -240,7 +241,7 @@ export function CreateContractDialog() {
                         )}
                         <div
                           className={cn(
-                            "absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-widest shadow-sm",
+                            "absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium uppercase tracking-widest shadow-sm",
                             selectedDeal.deal_type === "RENT"
                               ? "bg-blue-600 text-white"
                               : "bg-emerald-600 text-white",
@@ -251,14 +252,20 @@ export function CreateContractDialog() {
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5 space-y-2">
                         <div className="space-y-1">
-                          <h4 className="font-extrabold text-slate-900 text-base sm:text-lg leading-tight sm:leading-snug line-clamp-2">
+                          <h4 className="font-medium text-slate-900 text-base sm:text-lg leading-tight sm:leading-snug line-clamp-2">
                             {selectedDeal.property_title}
                           </h4>
-                          <p className="text-xs sm:text-sm text-slate-500 font-semibold truncate flex items-center gap-1.5">
-                            <span className="shrink-0 bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px]">
-                              ลูกค้า
-                            </span>
+                          <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
+                            <MapPin className="w-3 h-3 shrink-0 text-blue-500" />
                             <span className="truncate">
+                              {selectedDeal.location || "ไม่ระบุทำเล"}
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-sm text-slate-500 font-medium truncate flex items-center gap-1.5">
+                            <span className="shrink-0 bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-xs">
+                              ลูกค้า :
+                            </span>
+                            <span className="truncate text-blue-500 font-medium">
                               {selectedDeal.lead_name}
                             </span>
                           </p>
@@ -284,7 +291,7 @@ export function CreateContractDialog() {
                                 <span className="text-[10px] font-medium opacity-70">
                                   เช่า:
                                 </span>
-                                <span className="text-[11px] sm:text-xs font-black">
+                                <span className="text-xs font-medium">
                                   ฿
                                   {(
                                     selectedDeal.rental_price ??
@@ -302,7 +309,7 @@ export function CreateContractDialog() {
                                 selectedDeal.price &&
                                 selectedDeal.original_price >
                                   selectedDeal.price && (
-                                  <span className="text-[9px] text-slate-400 line-through mb-0.5">
+                                  <span className="text-[10px] text-slate-400 line-through mb-0.5">
                                     ฿
                                     {(
                                       selectedDeal.original_price || 0
@@ -313,7 +320,7 @@ export function CreateContractDialog() {
                                 <span className="text-[10px] font-medium opacity-70">
                                   ขาย:
                                 </span>
-                                <span className="text-[11px] sm:text-xs font-black">
+                                <span className="text-xs font-medium">
                                   ฿
                                   {(
                                     selectedDeal.price ??
@@ -330,7 +337,7 @@ export function CreateContractDialog() {
                 </div>
 
                 {selectedDeal && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 animate-in fade-in duration-500">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 animate-in fade-in duration-500">
                     {/* Date 1 */}
                     <FormField
                       control={form.control}
@@ -381,7 +388,7 @@ export function CreateContractDialog() {
                       control={form.control}
                       name="rent_price"
                       render={({ field }) => (
-                        <FormItem className="md:col-span-2 lg:col-span-1">
+                        <FormItem className="sm:col-span-2 lg:col-span-1">
                           <FormLabel className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                             <Wallet className="h-4 w-4 text-emerald-500" />
                             {isSale ? "ราคาขายสุทธิ" : "ราคาค่าเช่าต่อเดือน"}
@@ -545,7 +552,7 @@ export function CreateContractDialog() {
                       control={form.control}
                       name="other_terms"
                       render={({ field }) => (
-                        <FormItem className="md:col-span-2">
+                        <FormItem className="sm:col-span-2">
                           <div className="flex items-center justify-between mb-1.5">
                             <FormLabel className="text-sm font-semibold text-slate-700">
                               {isSale ? "เงื่อนไขการโอน" : "ข้อกำหนดอื่นๆ"}
@@ -589,7 +596,7 @@ export function CreateContractDialog() {
 
                     {/* Total Initial Payment Summary */}
                     {!isSale && (
-                      <div className="md:col-span-2 bg-slate-50 border border-slate-200 rounded-lg p-4 mt-2">
+                      <div className="sm:col-span-2 bg-slate-50 border border-slate-200 rounded-lg p-4 mt-2">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-semibold text-slate-600">
                             เงินประกัน

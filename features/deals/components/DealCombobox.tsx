@@ -156,7 +156,7 @@ export function DealCombobox({
                     )}
                   </div>
                   <div className="flex flex-col items-start min-w-0">
-                    <span className="font-bold text-slate-900 block line-clamp-2 text-wrap leading-tight">
+                    <span className="font-medium text-slate-900 block line-clamp-2 text-wrap leading-tight">
                       {selected.property_title}
                     </span>
                     <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium truncate w-full">
@@ -211,7 +211,7 @@ export function DealCombobox({
       </div>
 
       <PopoverContent
-        className="w-[calc(100vw-1.5rem)] sm:w-[700px]  p-0 bg-white shadow-xl border border-slate-200"
+        className="w-[320px] lg:w-[calc(100vw-1.5rem)] md:w-[700px]  p-0 bg-white shadow-xl border border-slate-200"
         align="start"
       >
         <Command>
@@ -243,8 +243,8 @@ export function DealCombobox({
                       : "opacity-0",
                   )}
                 />
-                <div className="flex items-start gap-3 flex-1 min-w-0 mr-2">
-                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-200 shadow-sm">
+                <div className="flex items-center md:items-start gap-3 flex-1 min-w-0 mr-2">
+                  <div className="hidden md:block h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-200 shadow-sm">
                     {item.cover_image_url ? (
                       <img
                         src={item.cover_image_url}
@@ -263,11 +263,11 @@ export function DealCombobox({
                       {item.property_title}
                     </span>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-500">
-                      <span className="text-xs font-medium truncate max-w-[150px]">
+                      <span className="text-xs font-medium truncate max-w-[120px] sm:max-w-[150px]">
                         ย่าน : {item.location}
                       </span>
-                      <span className="opacity-30">•</span>
-                      <span className="text-xs font-medium truncate max-w-[150px]">
+                      <span className="opacity-30 hidden sm:inline">•</span>
+                      <span className="text-xs font-medium truncate max-w-[120px] sm:max-w-[150px]">
                         ลูกค้า: {item.lead_name}
                       </span>
                     </div>
@@ -284,7 +284,7 @@ export function DealCombobox({
                         ((item.deal_type === "RENT"
                           ? item.rental_price
                           : item.price) ?? 0) && (
-                        <span className="text-[9px] text-slate-400 line-through">
+                        <span className="text-[9px] text-slate-400 line-through hidden sm:inline">
                           ฿
                           {(
                             (item.deal_type === "RENT"
