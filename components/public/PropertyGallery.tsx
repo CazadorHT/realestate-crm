@@ -221,7 +221,7 @@ export function PropertyGallery({
         </div>
 
         {/* Mobile Carousel (Visible on Mobile and Small Tablets Only) */}
-        <div className="lg:hidden relative h-[320px] sm:h-[320px] md:h-[450px] lg:h-[450px] -mx-4  sm:mx-0 rounded-none sm:rounded-2xl overflow-hidden">
+        <div className="lg:hidden relative h-[320px] sm:h-[320px] md:h-[450px] lg:h-[450px] -mx-9 sm:mx-0 rounded-none sm:rounded-2xl overflow-hidden">
           <div className="absolute top-3 right-3 z-20">
             <Badge className="bg-black/60 text-white hover:bg-black/70 border-none backdrop-blur-md text-[10px] px-2 py-1">
               <ImageIcon className="w-3 h-3 mr-1" />
@@ -230,7 +230,7 @@ export function PropertyGallery({
           </div>
 
           <div
-            className="flex overflow-x-auto snap-x snap-mandatory h-full w-full no-scrollbar"
+            className="flex overflow-x-auto snap-x snap-mandatory h-full w-full no-scrollbar  "
             onScroll={(e) => {
               // Optional: Update current index for a dot indicator if we added one
               // const scrollLeft = e.currentTarget.scrollLeft;
@@ -261,10 +261,10 @@ export function PropertyGallery({
                 <ImageWithFallback
                   img={img}
                   alt={`${title} ${idx + 1}`}
-                  containerClassName="relative z-10"
-                  className="object-contain"
+                  containerClassName="relative z-10 "
+                  className="object-contain "
                   priority={idx === 0}
-                  sizes="(max-width: 768px) 100vw, 33vw"
+                  sizes="(max-width: 768px) 100vw, 33vw "
                   onImageError={handleImageError}
                   failedImages={failedImages}
                 />
