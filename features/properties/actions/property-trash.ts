@@ -21,6 +21,7 @@ export async function softDeleteProperty(id: string) {
     }
 
     revalidatePath("/properties"); // สำหรับหน้า Public หรือหน้ารายการทั่วไป
+    revalidatePath("/protected"); // รีเฟรชหน้าแดชบอร์ด
     revalidatePath("/protected/properties"); // เส้นทางที่ถูกต้องสำหรับรายการ protected
     revalidatePath("/protected/properties/trash");
     return { success: true };
@@ -48,6 +49,7 @@ export async function restoreProperty(id: string) {
     }
 
     revalidatePath("/properties");
+    revalidatePath("/protected");
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
     return { success: true };
@@ -72,6 +74,7 @@ export async function permanentDeleteProperty(id: string) {
     }
 
     revalidatePath("/properties");
+    revalidatePath("/protected");
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
     return { success: true };

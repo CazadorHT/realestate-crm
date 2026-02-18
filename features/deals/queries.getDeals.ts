@@ -26,6 +26,9 @@ type RawDealWithJoin = Deal & {
     original_price: number | null;
     rental_price: number | null;
     original_rental_price: number | null;
+    province?: string | null;
+    popular_area?: string | null;
+    deleted_at: string | null;
     property_images: {
       id: string;
       property_id: string;
@@ -63,17 +66,18 @@ export async function getDeals({
     .select(
       `
       *,
-      property:properties ( id, title, price, original_price, rental_price, original_rental_price, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
+      property:properties!inner ( id, title, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
       lead:leads ( id, full_name, phone )
     `,
-      { count: "exact" }
+      { count: "exact" },
     )
+    .is("property.deleted_at", null)
     .order(order, { ascending });
 
   if (trimmed) {
     // search property title or lead name
     query = query.or(
-      `property.title.ilike.%${trimmed}%,lead.full_name.ilike.%${trimmed}%,id.eq.${trimmed}`
+      `property.title.ilike.%${trimmed}%,lead.full_name.ilike.%${trimmed}%,id.eq.${trimmed}`,
     );
   }
 
@@ -121,11 +125,12 @@ export async function getDeals({
           .select(
             `
       *,
-      property:properties ( id, title, price, original_price, rental_price, original_rental_price, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
+      property:properties!inner ( id, title, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
       lead:leads ( id, full_name, phone )
     `,
-            { count: "exact" }
+            { count: "exact" },
           )
+          .is("property.deleted_at", null)
           .order(order, { ascending });
 
         if (propIds.length > 0) q2 = q2.in("property_id", propIds);
@@ -155,6 +160,8 @@ export async function getDeals({
           original_price: d.property.original_price,
           rental_price: d.property.rental_price,
           original_rental_price: d.property.original_rental_price,
+          province: d.property.province,
+          popular_area: d.property.popular_area,
           images: d.property.property_images ?? [],
         }
       : null;
@@ -168,7 +175,7 @@ export async function getDeals({
     ) {
       duration_months = differenceInMonths(
         new Date(d.transaction_end_date),
-        new Date(d.transaction_date)
+        new Date(d.transaction_date),
       );
     }
 

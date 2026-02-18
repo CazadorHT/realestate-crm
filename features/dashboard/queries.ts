@@ -67,6 +67,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     .from("properties")
     .select("price, rental_price, status, updated_at")
     .in("status", ["SOLD", "RENTED"])
+    .is("deleted_at", null)
     .gte("updated_at", startOfMonth);
 
   const totalRevenueCurrent = (revenueCurrent || []).reduce((sum, p) => {
@@ -78,6 +79,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     .from("properties")
     .select("price, rental_price, status, updated_at")
     .in("status", ["SOLD", "RENTED"])
+    .is("deleted_at", null)
     .gte("updated_at", startOfLastMonth)
     .lte("updated_at", endOfLastMonth);
 
@@ -119,6 +121,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const { count: totalSold } = await supabase
     .from("properties")
     .select("*", { count: "exact", head: true })
+    .is("deleted_at", null)
     .eq("status", "SOLD");
 
   const conversionRate =
@@ -182,6 +185,7 @@ export async function getRevenueChartData(): Promise<RevenueChartData[]> {
     .from("properties")
     .select("price, rental_price, status, updated_at")
     .in("status", ["SOLD", "RENTED"])
+    .is("deleted_at", null)
     .gte("updated_at", sixMonthsAgo.toISOString());
 
   // Group by Month
@@ -243,6 +247,7 @@ export async function getFunnelStats(): Promise<FunnelData[]> {
   const { count: propertySoldOrRentedCount } = await supabase
     .from("properties")
     .select("*", { count: "exact", head: true })
+    .is("deleted_at", null)
     .in("status", ["SOLD", "RENTED"]);
 
   // Deduplicate roughly by taking the max or summing specific types
@@ -300,7 +305,8 @@ export async function getPipelineStats(): Promise<PipelineData[]> {
   // Active Properties by Status
   const { data: properties } = await supabase
     .from("properties")
-    .select("status");
+    .select("status")
+    .is("deleted_at", null);
 
   const counts = {
     ACTIVE: 0,
@@ -800,7 +806,8 @@ export async function getAnalyticsStats(days?: number): Promise<{
   // 1. Get Top 10 Properties by Views
   let query = supabase
     .from("properties")
-    .select("id, title, slug, view_count, listing_type, price, rental_price");
+    .select("id, title, slug, view_count, listing_type, price, rental_price")
+    .is("deleted_at", null);
 
   if (days) {
     const startDate = new Date();
@@ -817,6 +824,7 @@ export async function getAnalyticsStats(days?: number): Promise<{
   let areaQuery = supabase
     .from("properties")
     .select("popular_area, view_count")
+    .is("deleted_at", null)
     .not("popular_area", "is", null);
 
   if (days) {

@@ -322,7 +322,19 @@ export async function updateLeadStageAction(
   }
 }
 
-export type PropertyPickItem = { id: string; title: string };
+export type PropertyPickItem = {
+  id: string;
+  title: string;
+  price?: number | null;
+  original_price?: number | null;
+  rental_price?: number | null;
+  original_rental_price?: number | null;
+  listing_type?: string | null;
+  cover_image_url?: string | null;
+  province?: string | null;
+  district?: string | null;
+  popular_area?: string | null;
+};
 export async function searchPropertiesAction(
   q?: string,
 ): Promise<PropertyPickItem[]> {
@@ -333,7 +345,10 @@ export async function searchPropertiesAction(
 
   let sb = ctx.supabase
     .from("properties")
-    .select("id,title")
+    .select(
+      "id, title, price, original_price, rental_price, original_rental_price, listing_type, province, district, popular_area, property_images(image_url, is_cover)",
+    )
+    .is("deleted_at", null)
     .order("updated_at", { ascending: false })
     .limit(10);
 
@@ -342,7 +357,22 @@ export async function searchPropertiesAction(
   const { data, error } = await sb;
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((x) => ({ id: x.id, title: x.title }));
+  return (data ?? []).map((x) => ({
+    id: x.id,
+    title: x.title,
+    price: x.price,
+    original_price: x.original_price,
+    rental_price: x.rental_price,
+    original_rental_price: x.original_rental_price,
+    listing_type: x.listing_type,
+    cover_image_url:
+      x.property_images?.find((img: any) => img.is_cover)?.image_url ||
+      x.property_images?.[0]?.image_url ||
+      null,
+    province: x.province,
+    district: x.district,
+    popular_area: x.popular_area,
+  }));
 }
 
 /**

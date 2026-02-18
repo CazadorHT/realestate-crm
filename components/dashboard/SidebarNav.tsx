@@ -33,6 +33,7 @@ import {
   PanelLeftOpen,
   Cpu,
   Bell,
+  Handshake,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -119,7 +120,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
     {
       title: "ดีล",
       href: "/protected/deals",
-      icon: LayoutDashboard,
+      icon: Handshake,
       active: pathname?.startsWith("/protected/deals") ?? false,
     },
 
@@ -372,7 +373,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "hidden flex-col border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 sm:flex shadow-sm z-60 h-screen sticky top-0 transition-all duration-300 ease-in-out",
+          "hidden flex-col border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 sm:flex shadow-sm z-40 h-screen sticky top-0 transition-all duration-300 ease-in-out",
           isCollapsed ? "w-20" : "w-72",
         )}
       >

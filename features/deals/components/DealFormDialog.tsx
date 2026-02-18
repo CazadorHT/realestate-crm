@@ -297,9 +297,14 @@ export function DealFormDialog({
                       )}
                       {/* Price Info */}
                       <div className="flex flex-col gap-2 min-w-0 flex-1">
-                        <div className="font-semibold text-slate-900 truncate mb-1 line-clamp-1 max-w-[250px]">
+                        <div className="font-semibold text-slate-900 truncate mb-1 line-clamp-1 max-w-[450px]">
                           {p.title}
                         </div>
+                        {p.popular_area && (
+                          <div className="text-xs text-slate-500 mb-2 flex items-center gap-1">
+                            📍 {p.popular_area}
+                          </div>
+                        )}
                         <div className="flex flex-wrap gap-x-6 gap-y-2">
                           {rentalPrice ? (
                             <div>

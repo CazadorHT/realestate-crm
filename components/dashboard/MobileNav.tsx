@@ -30,6 +30,7 @@ import {
   Activity,
   Layout,
   Sparkles,
+  Handshake,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -96,7 +97,7 @@ export function MobileNav({ role }: { role: UserRole }) {
     {
       title: "ดีล",
       href: "/protected/deals",
-      icon: LayoutDashboard,
+      icon: Handshake,
       active: pathname?.startsWith("/protected/deals") ?? false,
     },
     {

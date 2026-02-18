@@ -175,6 +175,7 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
     .select(
       "id,title,property_type,listing_type,status,price,original_price,rental_price,original_rental_price,currency",
     )
+    .is("deleted_at", null)
     .in("id", uniq);
 
   if (propsErr) throw new Error(propsErr.message);

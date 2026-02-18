@@ -15,6 +15,8 @@ export type DealWithProperty = Deal & {
     original_price: number | null;
     rental_price: number | null;
     original_rental_price: number | null;
+    province?: string | null;
+    popular_area?: string | null;
     property_images?: {
       image_url: string;
       is_cover: boolean;
@@ -39,6 +41,8 @@ export type DealPropertyOption = {
   original_price?: number | null;
   rental_price?: number | null;
   original_rental_price?: number | null;
+  province?: string | null;
+  popular_area?: string | null;
   commission_sale_percentage?: number | null;
   commission_rent_months?: number | null;
   cover_image?: string | null;

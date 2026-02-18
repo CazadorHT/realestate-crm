@@ -18,6 +18,7 @@ export async function RecentPropertiesSection() {
       )
     `,
     )
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(5);
 

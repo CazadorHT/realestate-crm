@@ -46,7 +46,7 @@ export default async function LeadDetailPage({
       c
         .from("properties")
         .select(
-          "id, title, price, original_price, rental_price, original_rental_price, commission_sale_percentage, commission_rent_months, property_images(image_url, is_cover)",
+          "id, title, price, original_price, rental_price, original_rental_price, district, popular_area, commission_sale_percentage, commission_rent_months, property_images(image_url, is_cover)",
         )
         .eq("status", "ACTIVE")
         .order("created_at", { ascending: false })
@@ -60,6 +60,7 @@ export default async function LeadDetailPage({
     original_price: p.original_price,
     rental_price: p.rental_price,
     original_rental_price: p.original_rental_price,
+    popular_area: p.popular_area,
     commission_sale_percentage: p.commission_sale_percentage,
     commission_rent_months: p.commission_rent_months,
     cover_image:

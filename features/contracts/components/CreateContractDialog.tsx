@@ -171,6 +171,9 @@ export function CreateContractDialog() {
                         <FormLabel className="text-sm font-bold text-slate-700">
                           ดีลที่เกี่ยวข้อง
                         </FormLabel>
+                        <FormDescription className="text-xs text-slate-400">
+                          * เลือกได้เฉพาะดีลที่ปิดการขาย/เช่าแล้วเท่านั้น
+                        </FormDescription>
                         <FormControl>
                           <DealCombobox
                             value={field.value}
@@ -222,38 +225,46 @@ export function CreateContractDialog() {
                   />
 
                   {selectedDeal && (
-                    <div className="flex flex-col sm:flex-row gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 max-w-full">
-                      <div className="relative w-full sm:w-24 h-48 sm:h-24 shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-200">
+                    <div className="flex flex-col sm:flex-row gap-4 p-3 sm:p-4 bg-white rounded-2xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 max-w-full overflow-hidden">
+                      <div className="relative w-full sm:w-32 h-40 sm:h-32 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200 shadow-inner">
                         {selectedDeal.cover_image_url ? (
                           <img
                             src={selectedDeal.cover_image_url}
                             alt={selectedDeal.property_title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-300">
-                            <Plus className="w-6 h-6" />
+                            <Plus className="w-8 h-8 opacity-40" />
                           </div>
                         )}
                         <div
                           className={cn(
-                            "absolute top-2 left-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider",
+                            "absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-widest shadow-sm",
                             selectedDeal.deal_type === "RENT"
-                              ? "bg-indigo-600 text-white"
+                              ? "bg-blue-600 text-white"
                               : "bg-emerald-600 text-white",
                           )}
                         >
                           {selectedDeal.deal_type === "RENT" ? "เช่า" : "ขาย"}
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0 space-y-1 py-1">
-                        <h4 className="font-bold text-slate-900 text-base leading-tight sm:truncate line-clamp-2">
-                          {selectedDeal.property_title}
-                        </h4>
-                        <p className="text-sm text-slate-600 font-medium truncate">
-                          ลูกค้า: {selectedDeal.lead_name}
-                        </p>
-                        <div className="flex flex-wrap gap-2 mt-2">
+                      <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5 space-y-2">
+                        <div className="space-y-1">
+                          <h4 className="font-extrabold text-slate-900 text-base sm:text-lg leading-tight sm:leading-snug line-clamp-2">
+                            {selectedDeal.property_title}
+                          </h4>
+                          <p className="text-xs sm:text-sm text-slate-500 font-semibold truncate flex items-center gap-1.5">
+                            <span className="shrink-0 bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px]">
+                              ลูกค้า
+                            </span>
+                            <span className="truncate">
+                              {selectedDeal.lead_name}
+                            </span>
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-end gap-2 pt-1 border-t border-slate-100">
                           {/* Display Rental Price with Fallback */}
                           {(selectedDeal.rental_price ||
                             selectedDeal.original_rental_price) && (
@@ -262,19 +273,25 @@ export function CreateContractDialog() {
                                 selectedDeal.rental_price &&
                                 selectedDeal.original_rental_price >
                                   selectedDeal.rental_price && (
-                                  <span className="text-[9px] text-slate-400 line-through ml-1">
+                                  <span className="text-[9px] text-slate-400 line-through mb-0.5">
+                                    ฿
                                     {(
                                       selectedDeal.original_rental_price || 0
                                     ).toLocaleString()}
                                   </span>
                                 )}
-                              <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-100 font-bold">
-                                เช่า:{" "}
-                                {(
-                                  selectedDeal.rental_price ??
-                                  selectedDeal.original_rental_price
-                                ).toLocaleString()}
-                              </span>
+                              <div className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-lg border border-blue-100">
+                                <span className="text-[10px] font-medium opacity-70">
+                                  เช่า:
+                                </span>
+                                <span className="text-[11px] sm:text-xs font-black">
+                                  ฿
+                                  {(
+                                    selectedDeal.rental_price ??
+                                    selectedDeal.original_rental_price
+                                  ).toLocaleString()}
+                                </span>
+                              </div>
                             </div>
                           )}
                           {/* Display Sale Price with Fallback */}
@@ -285,19 +302,25 @@ export function CreateContractDialog() {
                                 selectedDeal.price &&
                                 selectedDeal.original_price >
                                   selectedDeal.price && (
-                                  <span className="text-[9px] text-slate-400 line-through ml-1">
+                                  <span className="text-[9px] text-slate-400 line-through mb-0.5">
+                                    ฿
                                     {(
                                       selectedDeal.original_price || 0
                                     ).toLocaleString()}
                                   </span>
                                 )}
-                              <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-100 font-bold">
-                                ขาย:{" "}
-                                {(
-                                  selectedDeal.price ??
-                                  selectedDeal.original_price
-                                ).toLocaleString()}
-                              </span>
+                              <div className="flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg border border-emerald-100">
+                                <span className="text-[10px] font-medium opacity-70">
+                                  ขาย:
+                                </span>
+                                <span className="text-[11px] sm:text-xs font-black">
+                                  ฿
+                                  {(
+                                    selectedDeal.price ??
+                                    selectedDeal.original_price
+                                  ).toLocaleString()}
+                                </span>
+                              </div>
                             </div>
                           )}
                         </div>

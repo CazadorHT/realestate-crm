@@ -127,8 +127,9 @@ export async function getPropertiesForSelect() {
   const { data, error } = await supabase
     .from("properties")
     .select(
-      `id, title, price, original_price, rental_price, original_rental_price, commission_sale_percentage, commission_rent_months, property_images(image_url, is_cover)`,
+      `id, title, price, original_price, rental_price, original_rental_price, commission_sale_percentage, commission_rent_months, popular_area, province, property_images(image_url, is_cover)`,
     )
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
@@ -162,7 +163,8 @@ export async function getPropertiesDashboardStatsQuery(): Promise<PropertyStats>
     .from("properties")
     .select(
       "id, status, price, rental_price, original_price, original_rental_price, property_type, listing_type, commission_sale_percentage, commission_rent_months",
-    );
+    )
+    .is("deleted_at", null);
 
   if (error || !data) {
     return {

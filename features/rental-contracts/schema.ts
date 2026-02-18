@@ -5,7 +5,7 @@ export type RentalContract =
   Database["public"]["Tables"]["rental_contracts"]["Row"];
 
 export const contractFormSchema = z.object({
-  deal_id: z.string().uuid(),
+  deal_id: z.string("กรุณาเลือกดีล เพื่อสร้างสัญญา").uuid("รหัสดีลไม่ถูกต้อง"),
   start_date: z
     .string()
     .refine((val) => !isNaN(Date.parse(val)), "Invalid Date"),
