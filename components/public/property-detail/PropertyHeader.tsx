@@ -329,14 +329,6 @@ export function PropertyHeader({
                         },
                       ]
                     : []),
-                  ...(displayDistrict // Link to district if available
-                    ? [
-                        {
-                          label: displayDistrict,
-                          href: `/properties?province=${property.province}&district=${property.district}`,
-                        },
-                      ]
-                    : []),
                   ...(property.popular_area
                     ? [
                         {
@@ -359,134 +351,207 @@ export function PropertyHeader({
             </div>
           )}
 
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-            <div className="space-y-3 grow min-w-0 max-w-[950px] ">
-              <div className="flex items-center gap-1.5 md:gap-2 flex-wrap sm:flex-nowrap">
-                <Badge
-                  className={`rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
-                    property.listing_type === "SALE"
-                      ? "bg-emerald-600 text-white"
-                      : "bg-linear-to-r from-sky-500 to-blue-600 text-white"
-                  }`}
-                >
-                  {property.listing_type === "SALE"
-                    ? t("common.for_sale")
-                    : t("common.for_rent")}
-                </Badge>
-
-                {property.property_type && (
+          <div className="flex flex-col  lg:items-start  gap-4 lg:gap-0">
+            {/* Property Type */}
+            <div className="flex lg:flex-row flex-col gap-4 w-full justify-between items-end">
+              <div className="space-y-3 grow min-w-0 max-w-[950px]">
+                <div className="flex items-center gap-1.5 md:gap-2 flex-wrap sm:flex-nowrap">
                   <Badge
-                    variant="outline"
-                    className={cn(
-                      "rounded-full px-3 md:px-4 py-1.5 md:py-2 text-white text-[11px] md:text-sm font-bold border-transparent shadow-sm whitespace-nowrap",
-                      typeColor.bg,
-                      typeColor.text,
-                    )}
+                    className={`rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
+                      property.listing_type === "SALE"
+                        ? "bg-emerald-600 text-white"
+                        : "bg-linear-to-r from-sky-500 to-blue-600 text-white"
+                    }`}
                   >
-                    {t(
-                      `property_types.${property.property_type.toLowerCase()}`,
-                    )}
+                    {property.listing_type === "SALE"
+                      ? t("common.for_sale")
+                      : t("common.for_rent")}
                   </Badge>
-                )}
 
-                {property.is_fully_furnished && (
-                  <Badge
-                    variant="outline"
-                    className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm whitespace-nowrap"
-                  >
-                    ✨ {t("property.specs.fully_furnished")}
-                  </Badge>
-                )}
-
-                {property.is_bare_shell && (
-                  <Badge
-                    variant="outline"
-                    className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
-                  >
-                    🏗️ {t("property.specs.bare_shell")}
-                  </Badge>
-                )}
-              </div>
-
-              <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-tight line-clamp-2">
-                {localizedTitle}
-              </h2>
-
-              <div className="flex items-center text-slate-600 gap-2 font-normal text-sm">
-                <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
-                <span className="line-clamp-1">
-                  {locationParts || t("common.no_location")}
-                </span>
-              </div>
-
-              <KeySellingPoints
-                points={finalKeySellingPoints}
-                listingType={property.listing_type || "SALE"}
-              />
-            </div>
-
-            <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4 md:p-6">
-              <div className="flex flex-col md:items-end gap-2">
-                {(() => {
-                  if (property.listing_type === "SALE_AND_RENT") {
-                    return (
-                      <>
-                        {renderPriceBlock(
-                          property.price,
-                          property.original_price,
-                          t("common.for_sale"),
-                          false,
-                        )}
-                        {renderPriceBlock(
-                          property.rental_price,
-                          property.original_rental_price,
-                          t("common.for_rent"),
-                          true,
-                        )}
-                      </>
-                    );
-                  }
-
-                  if (property.listing_type === "RENT") {
-                    return renderPriceBlock(
-                      property.rental_price,
-                      property.original_rental_price,
-                      t("common.for_rent"),
-                      true,
-                    );
-                  }
-
-                  return renderPriceBlock(
-                    property.price,
-                    property.original_price,
-                    t("common.for_sale"),
-                    false,
-                  );
-                })()}
-
-                {(property.listing_type === "RENT" ||
-                  property.listing_type === "SALE_AND_RENT") &&
-                  property.min_contract_months && (
-                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200">
-                      <CalendarDays className="w-4 h-4 text-blue-500" />
-                      <span className="text-sm text-slate-600">
-                        {t("property.min_contract")}{" "}
-                        <strong className="text-slate-900">
-                          {property.min_contract_months} {t("common.month")}
-                          {property.min_contract_months >= 12 &&
-                            property.min_contract_months % 12 === 0 && (
-                              <span className="text-slate-500 font-normal">
-                                {" "}
-                                {t("common.or")}{" "}
-                                {property.min_contract_months / 12}{" "}
-                                {t("common.year")}
-                              </span>
-                            )}
-                        </strong>
-                      </span>
-                    </div>
+                  {property.property_type && (
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "rounded-full px-3 md:px-4 py-1.5 md:py-2 text-white text-[11px] md:text-sm font-bold border-transparent shadow-sm whitespace-nowrap",
+                        typeColor.bg,
+                        typeColor.text,
+                      )}
+                    >
+                      {t(
+                        `property_types.${property.property_type.toLowerCase()}`,
+                      )}
+                    </Badge>
                   )}
+
+                  {property.is_fully_furnished && (
+                    <Badge
+                      variant="outline"
+                      className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm whitespace-nowrap"
+                    >
+                      ✨ {t("property.specs.fully_furnished")}
+                    </Badge>
+                  )}
+
+                  {property.is_bare_shell && (
+                    <Badge
+                      variant="outline"
+                      className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
+                    >
+                      🏗️ {t("property.specs.bare_shell")}
+                    </Badge>
+                  )}
+                </div>
+
+                <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-tight line-clamp-2">
+                  {localizedTitle}
+                </h2>
+
+                <div className="flex items-center text-slate-600 gap-2 font-normal text-sm">
+                  <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
+                  <span className="line-clamp-1">
+                    {locationParts || t("common.no_location")}
+                  </span>
+                </div>
+                <KeySellingPoints
+                  points={finalKeySellingPoints}
+                  listingType={property.listing_type || "SALE"}
+                />
               </div>
+              {/* Price */}
+              <div className="bg-slate-50/50 border border-slate-200  rounded-xl px-4 py-6 lg:mt-4 items-end  lg:items-end lg:w-auto w-full">
+                <div className="flex flex-col items-end gap-2">
+                  {(() => {
+                    if (property.listing_type === "SALE_AND_RENT") {
+                      return (
+                        <>
+                          {renderPriceBlock(
+                            property.price,
+                            property.original_price,
+                            t("common.for_sale"),
+                            false,
+                          )}
+                          {renderPriceBlock(
+                            property.rental_price,
+                            property.original_rental_price,
+                            t("common.for_rent"),
+                            true,
+                          )}
+                        </>
+                      );
+                    }
+
+                    if (property.listing_type === "RENT") {
+                      return renderPriceBlock(
+                        property.rental_price,
+                        property.original_rental_price,
+                        t("common.for_rent"),
+                        true,
+                      );
+                    }
+
+                    return renderPriceBlock(
+                      property.price,
+                      property.original_price,
+                      t("common.for_sale"),
+                      false,
+                    );
+                  })()}
+
+                  {(property.listing_type === "RENT" ||
+                    property.listing_type === "SALE_AND_RENT") &&
+                    property.min_contract_months && (
+                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200 ">
+                        <CalendarDays className="w-4 h-4 text-blue-500" />
+                        <span className="text-sm text-slate-600">
+                          {t("property.min_contract")}{" "}
+                          <strong className="text-slate-900">
+                            {property.min_contract_months} {t("common.month")}
+                            {property.min_contract_months >= 12 &&
+                              property.min_contract_months % 12 === 0 && (
+                                <span className="text-slate-500 font-normal">
+                                  {" "}
+                                  {t("common.or")}{" "}
+                                  {property.min_contract_months / 12}{" "}
+                                  {t("common.year")}
+                                </span>
+                              )}
+                          </strong>
+                        </span>
+                      </div>
+                    )}
+                </div>
+              </div>
+            </div>
+            {/* Key Selling Points */}
+            <div className="w-full max-w-[950px] ">
+                {/* <KeySellingPoints
+                  points={finalKeySellingPoints}
+                  listingType={property.listing_type || "SALE"}
+                /> */}
+              {/* Price */}
+              {/* <div className="bg-slate-50/50 border border-slate-200  rounded-xl px-4 py-6 mt-4">
+                <div className="flex flex-col items-end gap-2">
+                  {(() => {
+                    if (property.listing_type === "SALE_AND_RENT") {
+                      return (
+                        <>
+                          {renderPriceBlock(
+                            property.price,
+                            property.original_price,
+                            t("common.for_sale"),
+                            false,
+                          )}
+                          {renderPriceBlock(
+                            property.rental_price,
+                            property.original_rental_price,
+                            t("common.for_rent"),
+                            true,
+                          )}
+                        </>
+                      );
+                    }
+
+                    if (property.listing_type === "RENT") {
+                      return renderPriceBlock(
+                        property.rental_price,
+                        property.original_rental_price,
+                        t("common.for_rent"),
+                        true,
+                      );
+                    }
+
+                    return renderPriceBlock(
+                      property.price,
+                      property.original_price,
+                      t("common.for_sale"),
+                      false,
+                    );
+                  })()}
+
+                  {(property.listing_type === "RENT" ||
+                    property.listing_type === "SALE_AND_RENT") &&
+                    property.min_contract_months && (
+                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200 ">
+                        <CalendarDays className="w-4 h-4 text-blue-500" />
+                        <span className="text-sm text-slate-600">
+                          {t("property.min_contract")}{" "}
+                          <strong className="text-slate-900">
+                            {property.min_contract_months} {t("common.month")}
+                            {property.min_contract_months >= 12 &&
+                              property.min_contract_months % 12 === 0 && (
+                                <span className="text-slate-500 font-normal">
+                                  {" "}
+                                  {t("common.or")}{" "}
+                                  {property.min_contract_months / 12}{" "}
+                                  {t("common.year")}
+                                </span>
+                              )}
+                          </strong>
+                        </span>
+                      </div>
+                    )}
+                </div>
+              </div> */}
             </div>
           </div>
         </div>

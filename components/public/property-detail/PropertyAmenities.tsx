@@ -31,7 +31,7 @@ export function PropertyAmenities({
         <LuLayoutGrid className="w-5 h-5 text-blue-600" />{" "}
         {t("property.amenities")}
       </h3>
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-y-4 lg:gap-x-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 lg:gap-y-4 lg:gap-x-8">
         {features.map((item, i) => {
           const Icon = ICON_MAP[item.icon_key] || DEFAULT_ICON;
           const localizedName = getLocaleValue(item, "name", language);

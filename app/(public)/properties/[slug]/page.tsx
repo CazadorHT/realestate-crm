@@ -255,207 +255,209 @@ export default async function PublicPropertyDetailPage(props: {
       {/* 1. Header & Breadcrumb */}
       <PropertyHeader property={data} features={features as any} />
 
-      <div className="max-w-screen-2xl px-4 sm:px-6 lg:px-8 mx-auto mt-4 md:mt-8">
-        {/* 2. Gallery (Mosaic) */}
-        <section className="mb-6 md:mb-10">
-          <PropertyGallery
-            images={images as any[]}
-            title={data.title}
-            isHot={
-              (data.original_price !== null &&
-                data.price !== null &&
-                data.original_price > data.price) ||
-              (data.original_rental_price !== null &&
-                data.rental_price !== null &&
-                data.original_rental_price > data.rental_price)
-            }
-            verified={!!data.verified}
-            petFriendly={!!data.meta_keywords?.includes("Pet Friendly")}
+      <div className="max-w-screen-2xl px-4 sm:px-6 lg:px-8 mx-auto mt-4 lg:mt-8">
+        <div className="max-w-screen-2xl px-4 sm:px-6 lg:px-0 mx-auto">
+          {/* 2. Gallery (Mosaic) */}
+          <section className="mb-6 md:mb-10">
+            <PropertyGallery
+              images={images as any[]}
+              title={data.title}
+              isHot={
+                (data.original_price !== null &&
+                  data.price !== null &&
+                  data.original_price > data.price) ||
+                (data.original_rental_price !== null &&
+                  data.rental_price !== null &&
+                  data.original_rental_price > data.rental_price)
+              }
+              verified={!!data.verified}
+              petFriendly={!!data.meta_keywords?.includes("Pet Friendly")}
+            />
+          </section>
+          <RecentPropertyTracker
+            property={{
+              id: data.id,
+              title: data.title,
+              title_en: data.title_en,
+              title_cn: data.title_cn,
+              image_url: images.find((i: any) => i.is_cover)?.image_url || null,
+              province: data.province,
+              popular_area: data.popular_area,
+              popular_area_en: data.popular_area_en,
+              popular_area_cn: data.popular_area_cn,
+              price_text: (() => {
+                // SALE_AND_RENT - Show both prices
+                if (data.listing_type === "SALE_AND_RENT") {
+                  const parts = [];
+
+                  // Sale price
+                  const hasSaleDiscount =
+                    data.original_price &&
+                    data.price &&
+                    data.original_price > data.price;
+                  if (hasSaleDiscount) {
+                    const discountPercent = Math.round(
+                      ((data.original_price! - data.price!) /
+                        data.original_price!) *
+                        100,
+                    );
+                    parts.push(
+                      `฿${data.price!.toLocaleString()} (-${discountPercent}%)`,
+                    );
+                  } else if (data.price) {
+                    parts.push(formatPrice(data.price));
+                  } else if (data.original_price) {
+                    parts.push(formatPrice(data.original_price));
+                  }
+
+                  // Rental price
+                  const hasRentDiscount =
+                    data.original_rental_price &&
+                    data.rental_price &&
+                    data.original_rental_price > data.rental_price;
+                  if (hasRentDiscount) {
+                    const discountPercent = Math.round(
+                      ((data.original_rental_price! - data.rental_price!) /
+                        data.original_rental_price!) *
+                        100,
+                    );
+                    parts.push(
+                      `฿${data.rental_price!.toLocaleString()}/ด (-${discountPercent}%)`,
+                    );
+                  } else if (data.rental_price) {
+                    parts.push(`${formatPrice(data.rental_price)}/ด`);
+                  } else if (data.original_rental_price) {
+                    parts.push(`${formatPrice(data.original_rental_price)}/ด`);
+                  }
+
+                  return parts.filter(Boolean).join(" | ");
+                }
+
+                // Sale price logic
+                if (data.listing_type === "SALE") {
+                  const hasDiscount =
+                    data.original_price &&
+                    data.price &&
+                    data.original_price > data.price;
+                  if (hasDiscount) {
+                    const discountPercent = Math.round(
+                      ((data.original_price! - data.price!) /
+                        data.original_price!) *
+                        100,
+                    );
+                    return `฿${data.price!.toLocaleString()} (-${discountPercent}%)`;
+                  } else if (data.price) {
+                    return formatPrice(data.price);
+                  } else if (data.original_price) {
+                    return formatPrice(data.original_price);
+                  }
+                }
+
+                // Rent price logic
+                if (data.listing_type === "RENT") {
+                  const hasDiscount =
+                    data.original_rental_price &&
+                    data.rental_price &&
+                    data.original_rental_price > data.rental_price;
+                  if (hasDiscount) {
+                    const discountPercent = Math.round(
+                      ((data.original_rental_price! - data.rental_price!) /
+                        data.original_rental_price!) *
+                        100,
+                    );
+                    return `฿${data.rental_price!.toLocaleString()}/ด (-${discountPercent}%)`;
+                  } else if (data.rental_price) {
+                    return `${formatPrice(data.rental_price)}/ด`;
+                  } else if (data.original_rental_price) {
+                    return `${formatPrice(data.original_rental_price)}/ด`;
+                  }
+                }
+                return "";
+              })(),
+              property_type: data.property_type,
+              listing_type: data.listing_type,
+              slug: data.slug,
+              features: features,
+            }}
           />
-        </section>
-        <RecentPropertyTracker
-          property={{
-            id: data.id,
-            title: data.title,
-            title_en: data.title_en,
-            title_cn: data.title_cn,
-            image_url: images.find((i: any) => i.is_cover)?.image_url || null,
-            province: data.province,
-            popular_area: data.popular_area,
-            popular_area_en: data.popular_area_en,
-            popular_area_cn: data.popular_area_cn,
-            price_text: (() => {
-              // SALE_AND_RENT - Show both prices
-              if (data.listing_type === "SALE_AND_RENT") {
-                const parts = [];
 
-                // Sale price
-                const hasSaleDiscount =
-                  data.original_price &&
-                  data.price &&
-                  data.original_price > data.price;
-                if (hasSaleDiscount) {
-                  const discountPercent = Math.round(
-                    ((data.original_price! - data.price!) /
-                      data.original_price!) *
-                      100,
-                  );
-                  parts.push(
-                    `฿${data.price!.toLocaleString()} (-${discountPercent}%)`,
-                  );
-                } else if (data.price) {
-                  parts.push(formatPrice(data.price));
-                } else if (data.original_price) {
-                  parts.push(formatPrice(data.original_price));
-                }
+          {/* 3. Main Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] xl:grid-cols-[2fr_1fr] gap-6 md:gap-10 lg:gap-16 mb-6 md:mb-10">
+            {/* Left Content */}
+            <div className="space-y-6 md:space-y-10">
+              {/* Specs Grid */}
+              <section>
+                <PropertySpecs
+                  bedrooms={data.bedrooms}
+                  bathrooms={data.bathrooms}
+                  parking={data.parking_slots}
+                  sizeSqm={data.size_sqm}
+                  landSize={data.land_size_sqwah}
+                  floor={data.floor}
+                  type={data.property_type}
+                />
+              </section>
 
-                // Rental price
-                const hasRentDiscount =
-                  data.original_rental_price &&
-                  data.rental_price &&
-                  data.original_rental_price > data.rental_price;
-                if (hasRentDiscount) {
-                  const discountPercent = Math.round(
-                    ((data.original_rental_price! - data.rental_price!) /
-                      data.original_rental_price!) *
-                      100,
-                  );
-                  parts.push(
-                    `฿${data.rental_price!.toLocaleString()}/ด (-${discountPercent}%)`,
-                  );
-                } else if (data.rental_price) {
-                  parts.push(`${formatPrice(data.rental_price)}/ด`);
-                } else if (data.original_rental_price) {
-                  parts.push(`${formatPrice(data.original_rental_price)}/ด`);
-                }
+              <PropertyBadgesSection property={data} />
 
-                return parts.filter(Boolean).join(" | ");
-              }
+              <PropertyDescription property={data} />
 
-              // Sale price logic
-              if (data.listing_type === "SALE") {
-                const hasDiscount =
-                  data.original_price &&
-                  data.price &&
-                  data.original_price > data.price;
-                if (hasDiscount) {
-                  const discountPercent = Math.round(
-                    ((data.original_price! - data.price!) /
-                      data.original_price!) *
-                      100,
-                  );
-                  return `฿${data.price!.toLocaleString()} (-${discountPercent}%)`;
-                } else if (data.price) {
-                  return formatPrice(data.price);
-                } else if (data.original_price) {
-                  return formatPrice(data.original_price);
-                }
-              }
-
-              // Rent price logic
-              if (data.listing_type === "RENT") {
-                const hasDiscount =
-                  data.original_rental_price &&
-                  data.rental_price &&
-                  data.original_rental_price > data.rental_price;
-                if (hasDiscount) {
-                  const discountPercent = Math.round(
-                    ((data.original_rental_price! - data.rental_price!) /
-                      data.original_rental_price!) *
-                      100,
-                  );
-                  return `฿${data.rental_price!.toLocaleString()}/ด (-${discountPercent}%)`;
-                } else if (data.rental_price) {
-                  return `${formatPrice(data.rental_price)}/ด`;
-                } else if (data.original_rental_price) {
-                  return `${formatPrice(data.original_rental_price)}/ด`;
-                }
-              }
-              return "";
-            })(),
-            property_type: data.property_type,
-            listing_type: data.listing_type,
-            slug: data.slug,
-            features: features,
-          }}
-        />
-
-        {/* 3. Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] xl:grid-cols-[2fr_1fr] gap-6 md:gap-10 lg:gap-16 mb-6 md:mb-10">
-          {/* Left Content */}
-          <div className="space-y-6 md:space-y-10">
-            {/* Specs Grid */}
-            <section>
-              <PropertySpecs
-                bedrooms={data.bedrooms}
-                bathrooms={data.bathrooms}
-                parking={data.parking_slots}
-                sizeSqm={data.size_sqm}
-                landSize={data.land_size_sqwah}
-                floor={data.floor}
-                type={data.property_type}
+              <NearbyPlaces
+                location={data.popular_area || undefined}
+                data={(data.nearby_places as any[]) || []}
+                transits={(data.nearby_transits as any[]) || []}
               />
-            </section>
 
-            <PropertyBadgesSection property={data} />
+              <hr className="border-slate-100" />
 
-            <PropertyDescription property={data} />
+              {/* Facilities / Highlights */}
+              <PropertyAmenities features={features} />
 
-            <NearbyPlaces
-              location={data.popular_area || undefined}
-              data={(data.nearby_places as any[]) || []}
-              transits={(data.nearby_transits as any[]) || []}
-            />
+              <hr className="border-slate-100" />
 
-            <hr className="border-slate-100" />
+              {/* Map (Resolved Short Link) */}
+              <PropertyMapSection
+                googleMapsLink={await resolveGoogleMapsLink(
+                  data.google_maps_link,
+                )}
+              />
+            </div>
 
-            {/* Facilities / Highlights */}
-            <PropertyAmenities features={features} />
+            {/* Right Sidebar (Sticky) */}
+            <aside className="relative space-y-6">
+              {/* [NEW] Suitability / Rent vs Buy */}
+              <PropertySuitability
+                listingType={data.listing_type || "SALE"}
+                price={data.price}
+                rentalPrice={data.rental_price}
+                propertyType={data.property_type}
+              />
 
-            <hr className="border-slate-100" />
-
-            {/* Map (Resolved Short Link) */}
-            <PropertyMapSection
-              googleMapsLink={await resolveGoogleMapsLink(
-                data.google_maps_link,
-              )}
-            />
+              <AgentSidebar
+                agentName={agent?.full_name}
+                agentImage={agent?.avatar_url}
+                agentPhone={agent?.phone}
+                isVerified={true}
+                propertyId={data.id}
+                propertyTitle={data.title}
+                shareUrl={shareUrl}
+              />
+            </aside>
           </div>
 
-          {/* Right Sidebar (Sticky) */}
-          <aside className="relative space-y-6">
-            {/* [NEW] Suitability / Rent vs Buy */}
-            <PropertySuitability
-              listingType={data.listing_type || "SALE"}
-              price={data.price}
-              rentalPrice={data.rental_price}
-              propertyType={data.property_type}
-            />
-
-            <AgentSidebar
-              agentName={agent?.full_name}
-              agentImage={agent?.avatar_url}
-              agentPhone={agent?.phone}
-              isVerified={true}
-              propertyId={data.id}
-              propertyTitle={data.title}
-              shareUrl={shareUrl}
-            />
-          </aside>
+          {/* Similar Properties Section */}
+          <SimilarPropertiesSection
+            currentPropertyId={data.id}
+            propertyType={data.property_type}
+            province={data.province || undefined}
+            compareData={{
+              price:
+                data.listing_type === "RENT" ? data.rental_price : data.price,
+              size: data.size_sqm,
+              date: data.created_at,
+            }}
+          />
         </div>
-
-        {/* Similar Properties Section */}
-        <SimilarPropertiesSection
-          currentPropertyId={data.id}
-          propertyType={data.property_type}
-          province={data.province || undefined}
-          compareData={{
-            price:
-              data.listing_type === "RENT" ? data.rental_price : data.price,
-            size: data.size_sqm,
-            date: data.created_at,
-          }}
-        />
       </div>
 
       <MobilePropertyActions

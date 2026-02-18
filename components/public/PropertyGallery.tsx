@@ -36,28 +36,33 @@ const ImageWithFallback = ({
   img,
   alt,
   className,
+  containerClassName,
   priority = false,
   sizes,
   fill = true,
   onImageError,
   failedImages,
+  showFallback = true,
 }: {
   img: PropertyImage;
   alt: string;
   className?: string;
+  containerClassName?: string;
   priority?: boolean;
   sizes?: string;
   fill?: boolean;
   onImageError: (id: string) => void;
   failedImages: Set<string>;
+  showFallback?: boolean;
 }) => {
   // If URL is empty, show fallback immediately
   if (!img.image_url) {
+    if (!showFallback) return null;
     return (
       <div
         className={cn(
           "flex flex-col items-center justify-center bg-slate-100 text-slate-400 absolute inset-0 h-full w-full",
-          className,
+          containerClassName,
         )}
       >
         <ImageIcon className="w-8 h-8 opacity-40 mb-1" />
@@ -69,11 +74,12 @@ const ImageWithFallback = ({
   const hasFailed = failedImages.has(img.id);
 
   if (hasFailed) {
+    if (!showFallback) return null;
     return (
       <div
         className={cn(
           "flex flex-col items-center justify-center bg-slate-100 text-slate-400 absolute inset-0 h-full w-full",
-          className,
+          containerClassName,
         )}
       >
         <ImageIcon className="w-8 h-8 opacity-40 mb-1" />
@@ -83,34 +89,21 @@ const ImageWithFallback = ({
   }
 
   return (
-    <div className={cn("relative h-full w-full overflow-hidden", className)}>
+    <div
+      className={cn(
+        "relative h-full w-full overflow-hidden",
+        containerClassName,
+      )}
+    >
       <Image
         key={img.image_url}
         src={img.image_url}
         alt={alt}
         fill={fill}
-        className={cn("transition-transform duration-500", className)}
+        className={cn("transition-all duration-500", className)}
         priority={priority}
         sizes={sizes}
-        // onLoad={() => {
-        //   console.log(
-        //     JSON.stringify({
-        //       message: `[next-image] Successfully loaded`,
-        //       id: img.id,
-        //       url: img.image_url,
-        //     }),
-        //   );
-        // }}
-        // onError={() => {
-        //   console.error(
-        //     JSON.stringify({
-        //       message: `[next-image] FAILED to load`,
-        //       id: img.id,
-        //       url: img.image_url,
-        //     }),
-        //   );
-        //   onImageError(img.id);
-        // }}
+        onError={() => onImageError(img.id)}
       />
     </div>
   );
@@ -195,7 +188,7 @@ export function PropertyGallery({
       <div className="relative group">
         {/* Floating Hot Badge Overlay */}
         {isHot && (
-          <div className="absolute -top-3 -left-3 md:-top-5 md:-left-5 z-30 pointer-events-none">
+          <div className="absolute -top-3 -left-6 md:-top-5 md:-left-5 z-30 pointer-events-none">
             <div className="relative">
               <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
               <div className="relative bg-linear-to-br from-red-500 to-orange-600 text-white p-1.5 md:p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-1 transition-all duration-300 scale-100 md:scale-110">
@@ -207,7 +200,7 @@ export function PropertyGallery({
 
         {/* Verified Badge - Icon only with hover text */}
         {verified && (
-          <div className="group/verified absolute top-3 left-3 md:top-4 md:left-6 z-40 flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
+          <div className="group/verified absolute top-3 left-0 md:top-4 md:left-6 z-40 flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
             {/* Icon stays visible */}
             <IoShieldCheckmark className="w-4 h-4 md:w-5 md:h-5" />
 
@@ -217,7 +210,7 @@ export function PropertyGallery({
             </span>
           </div>
         )}
-        <div className="absolute bottom-3 left-3 md:bottom-6 md:left-6 z-40 flex gap-2">
+        <div className="absolute bottom-3 left-0 md:bottom-6 md:left-6 z-40 flex gap-2">
           {petFriendly && (
             <Badge className="bg-white backdrop-blur-sm text-orange-600 border border-orange-200 rounded-full px-2 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-bold gap-1 md:gap-1.5 shadow-lg hover:bg-white/90 hover:text-orange-600 hover:border-orange-200">
               <PawPrint className="w-3.5 h-3.5 md:w-5 md:h-5" />
@@ -228,7 +221,7 @@ export function PropertyGallery({
         </div>
 
         {/* Mobile Carousel (Visible on Mobile and Small Tablets Only) */}
-        <div className="lg:hidden relative h-[250px] sm:h-[320px] md:h-[380px] -mx-4 sm:mx-0 rounded-none sm:rounded-2xl overflow-hidden">
+        <div className="lg:hidden relative h-[320px] sm:h-[320px] md:h-[450px] lg:h-[450px] -mx-4  sm:mx-0 rounded-none sm:rounded-2xl overflow-hidden">
           <div className="absolute top-3 right-3 z-20">
             <Badge className="bg-black/60 text-white hover:bg-black/70 border-none backdrop-blur-md text-[10px] px-2 py-1">
               <ImageIcon className="w-3 h-3 mr-1" />
@@ -248,16 +241,28 @@ export function PropertyGallery({
             {sortedImages.map((img, idx) => (
               <div
                 key={img.id}
-                className="shrink-0 w-full h-full snap-center relative bg-slate-200"
+                className="shrink-0 w-full h-full snap-center relative overflow-hidden"
                 onClick={() => {
                   setCurrentIndex(idx);
                   setOpen(true);
                 }}
               >
+                {/* Blurred Background */}
+                <ImageWithFallback
+                  img={img}
+                  alt=""
+                  containerClassName="absolute inset-0"
+                  className="object-cover blur-xl opacity-80 scale-105"
+                  onImageError={handleImageError}
+                  failedImages={failedImages}
+                  showFallback={false}
+                />
+                {/* Main Content Image */}
                 <ImageWithFallback
                   img={img}
                   alt={`${title} ${idx + 1}`}
-                  className="object-cover"
+                  containerClassName="relative z-10"
+                  className="object-contain"
                   priority={idx === 0}
                   sizes="(max-width: 768px) 100vw, 33vw"
                   onImageError={handleImageError}
@@ -269,19 +274,31 @@ export function PropertyGallery({
         </div>
 
         {/* Desktop Grid (Hidden on Mobile and Small Tablets) */}
-        <div className="hidden lg:grid grid-cols-4 gap-1.5 md:gap-2 h-[350px] lg:h-[400px] xl:h-[450px] rounded-2xl lg:rounded-3xl overflow-hidden relative">
+        <div className="hidden lg:grid grid-cols-4 gap-1.5 md:gap-2 h-[350px] lg:h-[450px] xl:h-[550px] rounded-2xl lg:rounded-3xl overflow-hidden relative">
           {/* Main Image (Large Left) */}
           <div
-            className="col-span-2 row-span-2 relative cursor-pointer bg-slate-200 group/main"
+            className="col-span-2 row-span-2 relative cursor-pointer overflow-hidden group/main"
             onClick={() => {
               setCurrentIndex(0);
               setOpen(true);
             }}
           >
+            {/* Blurred Background */}
+            <ImageWithFallback
+              img={mainImage}
+              alt=""
+              containerClassName="absolute inset-0"
+              className="object-cover blur-2xl opacity-40 scale-105 group-hover/main:scale-110 transition-transform duration-700"
+              onImageError={handleImageError}
+              failedImages={failedImages}
+              showFallback={false}
+            />
+            {/* Main Image */}
             <ImageWithFallback
               img={mainImage}
               alt={title}
-              className="object-cover hover:scale-105 transition-transform duration-700"
+              containerClassName="relative z-10"
+              className="object-cover group-hover/main:scale-105 transition-transform duration-700"
               priority
               sizes="50vw"
               onImageError={handleImageError}
@@ -294,16 +311,28 @@ export function PropertyGallery({
             {subImages.map((img, idx) => (
               <div
                 key={img.id}
-                className="relative bg-slate-200 cursor-pointer overflow-hidden group/sub"
+                className="relative cursor-pointer overflow-hidden group/sub"
                 onClick={() => {
                   setCurrentIndex(idx + 1);
                   setOpen(true);
                 }}
               >
+                {/* Blurred Background */}
+                <ImageWithFallback
+                  img={img}
+                  alt=""
+                  containerClassName="absolute inset-0"
+                  className="object-cover blur-lg opacity-40 scale-105 group-hover/sub:scale-110 transition-transform duration-500"
+                  onImageError={handleImageError}
+                  failedImages={failedImages}
+                  showFallback={false}
+                />
+                {/* Main Image */}
                 <ImageWithFallback
                   img={img}
                   alt={`${title} - ${idx + 2}`}
-                  className="object-cover hover:scale-105 transition-transform duration-500"
+                  containerClassName="relative z-10"
+                  className="object-cover group-hover/sub:scale-105 transition-transform duration-500"
                   sizes="25vw"
                   onImageError={handleImageError}
                   failedImages={failedImages}
