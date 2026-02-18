@@ -133,7 +133,7 @@ export function ContactAgentDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className=" bg-white p-0 overflow-hidden border-0 shadow-2xl rounded-2xl gap-0">
+      <DialogContent className="w-[95vw] sm:max-w-[500px] md:max-w-lg bg-white p-0 overflow-hidden border-0 shadow-2xl rounded-2xl gap-0 [&>button]:text-white/70 [&>button]:hover:text-white [&>button]:top-4 [&>button]:right-4">
         {/* Header Section */}
         <div className="bg-linear-to-br from-blue-800 to-indigo-800 p-6 text-white relative overflow-hidden">
           {/* Abstract Background Element */}
@@ -161,7 +161,7 @@ export function ContactAgentDialog({
             <input type="hidden" name="propertyId" value={propertyId} />
 
             {/* Name & Phone Row */}
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label
                   htmlFor="fullName"
@@ -264,7 +264,7 @@ export function ContactAgentDialog({
                     key={msg}
                     type="button"
                     onClick={() => setMessage(msg)}
-                    className="text-sm px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 hover:border-blue-200 transition-colors"
+                    className="text-sm px-3 py-1.5 sm:px-3 sm:py-2 rounded-full bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 hover:border-blue-200 transition-colors active:scale-95"
                   >
                     {msg}
                   </button>
@@ -282,7 +282,7 @@ export function ContactAgentDialog({
                   rows={3}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="pl-10 resize-none bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl transition-all min-h-[80px]"
+                  className="pl-10 resize-none text-sm bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl transition-all min-h-[80px]"
                 />
               </div>
             </div>

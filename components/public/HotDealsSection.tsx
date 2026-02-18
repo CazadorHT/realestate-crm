@@ -206,7 +206,7 @@ export function HotDealsSection() {
                 </div>
 
                 {/* Card Wrapper with Premium Glow Effect */}
-                <div className="rounded-2xl md:rounded-[1.5rem] p-1 md:p-1 bg-linear-to-b from-white/80 to-white/40 shadow-xl shadow-orange-900/5 group-hover:shadow-orange-600/20 transition-all duration-500 ">
+                <div className="rounded-2xl md:rounded-[1.5rem] p-1 md:p-0 lg:p-1 lg:bg-linear-to-b from-white/80 to-white/40 lg:shadow-xl lg:shadow-orange-900/5 group-hover:shadow-orange-600/20 transition-all duration-500 ">
                   <div className="md:group-hover:scale-[1.02] transition-all duration-500 ">
                     <PropertyCard property={property} priority={index === 0} />
                   </div>
