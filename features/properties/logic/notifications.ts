@@ -1,3 +1,4 @@
+import { siteConfig } from "@/lib/site-config";
 import { sendLineNotification } from "@/lib/line";
 import type { PropertyRow } from "../types";
 
@@ -59,7 +60,7 @@ export async function sendStatusUpdateNotification(
             action: {
               type: "uri",
               label: "ดูในระบบ CRM",
-              uri: `https://oma-asset.com/protected/properties/${existing.id}`,
+              uri: `${siteConfig.url}/protected/properties/${existing.id}`,
             },
           },
         ],
@@ -165,8 +166,7 @@ export async function sendPriceDropNotification(
         color: "#E53935",
         action: {
           type: "uri",
-          label: "ดูรายละเอียดทรัพย์",
-          uri: `https://oma-asset.com/protected/properties/${existing.id}`,
+          uri: `${siteConfig.url}/protected/properties/${existing.id}`,
         },
       },
     ],

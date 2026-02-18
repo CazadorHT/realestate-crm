@@ -2,8 +2,10 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function ContactMap() {
+  const { t } = useLanguage();
   return (
     <div className="mt-12">
       <Card className="overflow-hidden">
@@ -11,9 +13,9 @@ export function ContactMap() {
           <div className="bg-slate-100 h-[400px] flex items-center justify-center">
             <div className="text-center text-slate-500">
               <MapPin className="h-12 w-12 mx-auto mb-3 text-slate-400" />
-              <p className="font-medium">แผนที่ Google Maps</p>
+              <p className="font-medium">{t("property_map.title")}</p>
               <p className="text-sm mt-1">
-                เพิ่ม Google Maps embed code ที่นี่
+                {t("property_map.open_google_maps")}
               </p>
             </div>
           </div>

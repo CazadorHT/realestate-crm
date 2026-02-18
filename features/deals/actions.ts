@@ -20,6 +20,7 @@ async function adjustPropertyStock(
   supabase: Awaited<ReturnType<typeof requireAuthContext>>["supabase"],
   propertyId: string,
   adjustment: number, // +1 or -1
+  dealType?: "SALE" | "RENT",
 ) {
   if (!propertyId) return;
 
@@ -42,17 +43,18 @@ async function adjustPropertyStock(
 
   // Safety bounds
   if (newSold < 0) newSold = 0;
-  // We allow sold > total?? Ideally no, but let's just cap logic to status.
-  // Actually, if they over-sell, it might be an issue, but let's allow it but warn or just handle status.
 
   // 3. Determine new status
   let newStatus = prop.status;
   if (newSold >= total) {
-    newStatus = "SOLD";
+    // Determine status based on deal type
+    if (dealType === "RENT") {
+      newStatus = "RENTED";
+    } else {
+      newStatus = "SOLD";
+    }
   } else {
-    // If it was SOLD but now we have stock, revert to ACTIVE
-    // But we should verify if it should be SOLD or RENTED based on deal type?
-    // For simplicity, if stock is available, it's ACTIVE (available for sale/rent).
+    // If stock is available, it's ACTIVE
     newStatus = "ACTIVE";
   }
 
@@ -144,7 +146,12 @@ export async function createDealAction(input: CreateDealInput) {
 
     // Auto-update stock if deal is WON
     if (validated.status === "CLOSED_WIN" && validated.property_id) {
-      await adjustPropertyStock(supabase, validated.property_id, 1);
+      await adjustPropertyStock(
+        supabase,
+        validated.property_id,
+        1,
+        validated.deal_type,
+      );
     }
 
     revalidatePath(`/protected/leads/${validated.lead_id}`);
@@ -252,21 +259,41 @@ export async function updateDealAction(input: UpdateDealInput) {
     if (prevPropertyId !== nextPropertyId) {
       // Revert old property if it was maintained by this deal
       if (prevStatus === "CLOSED_WIN" && prevPropertyId) {
-        await adjustPropertyStock(supabase, prevPropertyId, -1);
+        await adjustPropertyStock(
+          supabase,
+          prevPropertyId,
+          -1,
+          currentDeal.deal_type,
+        );
       }
       // Apply to new property if this deal is winning
       if (nextStatus === "CLOSED_WIN" && nextPropertyId) {
-        await adjustPropertyStock(supabase, nextPropertyId, 1);
+        await adjustPropertyStock(
+          supabase,
+          nextPropertyId,
+          1,
+          validated.deal_type || currentDeal.deal_type,
+        );
       }
     } else {
       // Same Property, just Status Change
       if (nextPropertyId) {
         if (prevStatus !== "CLOSED_WIN" && nextStatus === "CLOSED_WIN") {
           // Won!
-          await adjustPropertyStock(supabase, nextPropertyId, 1);
+          await adjustPropertyStock(
+            supabase,
+            nextPropertyId,
+            1,
+            validated.deal_type || currentDeal.deal_type,
+          );
         } else if (prevStatus === "CLOSED_WIN" && nextStatus !== "CLOSED_WIN") {
           // Lost/Cancelled!
-          await adjustPropertyStock(supabase, nextPropertyId, -1);
+          await adjustPropertyStock(
+            supabase,
+            nextPropertyId,
+            -1,
+            currentDeal.deal_type,
+          );
         }
       }
     }
@@ -287,7 +314,7 @@ export async function deleteDealAction(dealId: string, leadId: string) {
 
     const { data: existingDeal, error: fetchErr } = await supabase
       .from("deals")
-      .select("id, status, property_id")
+      .select("id, status, property_id, deal_type")
       .eq("id", dealId)
       .single();
 
@@ -313,7 +340,13 @@ export async function deleteDealAction(dealId: string, leadId: string) {
 
     // If deleting a WON deal, release the stock
     if (existingDeal.status === "CLOSED_WIN" && existingDeal.property_id) {
-      await adjustPropertyStock(supabase, existingDeal.property_id, -1);
+      // Release stock using the deal_type from the deleted deal
+      await adjustPropertyStock(
+        supabase,
+        existingDeal.property_id,
+        -1,
+        (existingDeal as any).deal_type,
+      );
     }
 
     return { success: true };

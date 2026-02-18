@@ -32,6 +32,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Cpu,
+  Bell,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -134,6 +135,12 @@ export function SidebarNav({ role }: { role: UserRole }) {
       icon: BarChart3,
       active: pathname?.startsWith("/protected/admin/analytics") ?? false,
       roles: ["ADMIN"],
+    },
+    {
+      title: "แจ้งเตือนค่าเช่า",
+      href: "/protected/rent-notifications",
+      icon: Bell,
+      active: pathname?.startsWith("/protected/rent-notifications") ?? false,
     },
   ];
 

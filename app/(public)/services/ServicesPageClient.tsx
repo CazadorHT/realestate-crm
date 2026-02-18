@@ -15,6 +15,7 @@ import {
   Key,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/lib/site-config";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useState, useEffect } from "react";
 import { SectionBackground } from "@/components/public/SectionBackground";
@@ -248,7 +249,7 @@ function ServicesContent() {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-end">
                 <a
-                  href="https://line.me/R/ti/p/@oma-asset"
+                  href={siteConfig.links.line}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto"

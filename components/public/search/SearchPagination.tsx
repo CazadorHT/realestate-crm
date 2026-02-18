@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface SearchPaginationProps {
   currentPage: number;
@@ -13,6 +14,7 @@ export function SearchPagination({
   totalPages,
   setCurrentPage,
 }: SearchPaginationProps) {
+  const { t } = useLanguage();
   if (totalPages <= 1) return null;
 
   return (
@@ -25,7 +27,7 @@ export function SearchPagination({
           disabled={currentPage === 1}
           className="h-10 px-4"
         >
-          ก่อนหน้า
+          {t("common.back")}
         </Button>
 
         {/* Page Numbers */}
@@ -69,13 +71,16 @@ export function SearchPagination({
           disabled={currentPage === totalPages}
           className="h-10 px-4"
         >
-          ถัดไป
+          {t("common.next")}
         </Button>
       </div>
 
       {/* Page Info */}
       <div className="text-sm text-slate-500">
-        หน้า {currentPage} จาก {totalPages}
+        {t("search.displaying_page", {
+          current: currentPage,
+          total: totalPages,
+        })}
       </div>
     </div>
   );

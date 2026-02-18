@@ -5,17 +5,27 @@ import { searchPropertiesForBot } from "@/features/properties/queries.public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getLineProfile, saveOmniMessage } from "@/lib/line";
 
+import { siteConfig } from "@/lib/site-config";
+
 type LineEvent = {
   type: string;
   replyToken: string;
   source: {
-    userId: string;
+    userId?: string;
+    groupId?: string;
+    roomId?: string;
     type: string;
   };
   message?: {
     type: string;
     text: string;
     id: string;
+  };
+  joined?: {
+    members: { userId: string }[];
+  };
+  left?: {
+    members: { userId: string }[];
   };
 };
 
@@ -39,7 +49,23 @@ export async function POST(req: NextRequest) {
 
     const events: LineEvent[] = JSON.parse(body).events;
 
+    // Log the entire event body for debugging
+    console.log("LINE Webhook Received:", JSON.stringify(events, null, 2));
+
     for (const event of events) {
+      // Handle Group/Room Join Events (Bot joins group)
+      if (event.type === "join" || event.type === "memberJoined") {
+        console.log("Processing Join Event:", event);
+        await handleJoinEvent(event);
+      }
+
+      // Handle Group/Room Leave Events (Bot leaves group)
+      if (event.type === "leave") {
+        console.log("Processing Leave Event:", event);
+        await handleLeaveEvent(event);
+      }
+
+      // Handle Text Messages
       if (event.type === "message" && event.message?.type === "text") {
         await handleIncomingChannelMessage(event);
       }
@@ -52,11 +78,108 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// === Event Handlers ===
+
+async function handleJoinEvent(event: LineEvent) {
+  const groupId = event.source.groupId || event.source.roomId;
+  if (!groupId) return;
+
+  // 1. Get Group Summary (Name, Picture) if possible
+  let groupName = "Unknown Group";
+  let pictureUrl = "";
+
+  try {
+    // Note: Only works if bot is in the group and has token
+    const res = await fetch(`${LINE_MESSAGING_API}/group/${groupId}/summary`, {
+      headers: {
+        Authorization: `Bearer ${lineConfig.channelAccessToken}`,
+      },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      groupName = data.groupName;
+      pictureUrl = data.pictureUrl;
+    } else {
+      // Fallback or maybe it's a room not a group (Rooms don't have summary API)
+      console.log("Failed to fetch group summary", await res.text());
+      groupName = `Group ${groupId.slice(0, 6)}...`;
+    }
+  } catch (e) {
+    console.error("Error fetching group summary:", e);
+  }
+
+  // 2. Upsert to DB
+  console.log(`Upserting line_groups: ${groupId}, ${groupName}`);
+  const supabase = createAdminClient();
+  const { error } = await (supabase as any).from("line_groups").upsert({
+    group_id: groupId,
+    group_name: groupName,
+    picture_url: pictureUrl,
+    is_active: true,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("Error upserting line group:", error);
+  } else {
+    console.log("Upsert Success");
+  }
+
+  // 3. Send Welcome Message (Only if it's the bot joining)
+  if (event.type === "join") {
+    await replyText(
+      event.replyToken,
+      `สวัสดีครับ! ผมคือบอทแจ้งเตือนค่าเช่า\nผมได้บันทึกกลุ่ม "${groupName}" เข้าระบบแล้วครับ\nคุณสามารถไปตั้งค่าการแจ้งเตือนในระบบ CRM ได้เลยครับ`,
+    );
+  }
+}
+
+async function handleLeaveEvent(event: LineEvent) {
+  const groupId = event.source.groupId || event.source.roomId;
+  if (!groupId) return;
+
+  const supabase = createAdminClient();
+  // Mark as inactive instead of deleting
+  await (supabase as any)
+    .from("line_groups")
+    .update({ is_active: false })
+    .eq("group_id", groupId);
+}
+
 async function handleIncomingChannelMessage(event: LineEvent) {
   const userId = event.source.userId;
+  const groupId = event.source.groupId || event.source.roomId;
   const text = event.message?.text || "";
 
-  if (!userId || !text) return;
+  if (!text) return;
+
+  // === SPECIAL COMMANDS ===
+  if (text.trim() === "/id" || text.trim() === "/groupid") {
+    if (groupId) {
+      // If in group, also update group info just in case
+      await handleJoinEvent(event);
+      await replyText(event.replyToken, `Group ID ของกลุ่มนี้คือ:\n${groupId}`);
+    } else if (userId) {
+      await replyText(event.replyToken, `User ID ของคุณคือ:\n${userId}`);
+    }
+    return;
+  }
+
+  // If message comes from a group, we might want to ignore normal chat
+  // unless explicitly mentioned or using specific commands to avoid spam.
+  // For now, if it's a group, we ONLY respond to specific commands (handled above)
+  // or if we want to add specific bot logic later.
+  // The original logic was capturing leads from 1-on-1 chats.
+
+  if (groupId) {
+    // In a group: Do nothing else for now (Silent for normal chat)
+    return;
+  }
+
+  // === 1-on-1 Logic (Existing Lead Capture) ===
+  // Only proceed if userId exists (it should in 1-on-1)
+  if (!userId) return;
 
   const supabase = createAdminClient();
 
@@ -147,7 +270,7 @@ async function handleTextMessage(event: LineEvent) {
         gravity: "top", // Requested alignment
         action: {
           type: "uri",
-          uri: `https://oma-asset.com/properties/${prop.id}`, // Should use ENV for base URL
+          uri: `${siteConfig.url}/properties/${prop.id}`, // Should use ENV for base URL
         },
       },
       body: {
@@ -209,7 +332,7 @@ async function handleTextMessage(event: LineEvent) {
             action: {
               type: "uri",
               label: "ดูรายละเอียด",
-              uri: `https://oma-asset.com/properties/${prop.id}`,
+              uri: `${siteConfig.url}/properties/${prop.id}`,
             },
             color: "#0F172A", // Dark blue/slate
           },

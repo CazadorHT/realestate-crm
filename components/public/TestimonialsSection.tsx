@@ -3,6 +3,7 @@
 import { Star, Quote, CheckCircle2, Award } from "lucide-react";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 export function TestimonialsSection() {
   const { t } = useLanguage();
@@ -44,7 +45,7 @@ export function TestimonialsSection() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "OMA ASSET",
+    name: siteConfig.name,
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: "5.0",

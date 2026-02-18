@@ -32,6 +32,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import type { AgentMultiSelectProps } from "../types";
+import { siteConfig } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 
 /**
@@ -197,10 +198,6 @@ export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
                             >
                               <Phone className="w-3 h-3" /> {agent.phone}
                             </span>
-                            {/* <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                                <span className="flex items-center gap-1 hover:text-slate-700">
-                                   <Mail className="w-3 h-3" /> info@oma.co.th
-                                </span> */}
                           </div>
                         )}
                       </div>

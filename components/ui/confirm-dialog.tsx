@@ -12,6 +12,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ReactNode } from "react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface ConfirmDialogProps {
   children?: ReactNode;
@@ -38,17 +39,30 @@ export function ConfirmDialog({
   variant = "default",
   trigger,
 }: ConfirmDialogProps) {
+  const { t } = useLanguage();
+
+  const finalTitle =
+    title === "ยืนยันการทำรายการ" ? t("common.confirm") : title;
+  const finalDescription =
+    description ===
+    "คุณแน่ใจหรือไม่ที่จะทำรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้"
+      ? t("common.are_you_sure")
+      : description;
+  const finalConfirmText =
+    confirmText === "ยืนยัน" ? t("common.confirm") : confirmText;
+  const finalCancelText =
+    cancelText === "ยกเลิก" ? t("common.cancel") : cancelText;
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          <AlertDialogTitle>{finalTitle}</AlertDialogTitle>
+          <AlertDialogDescription>{finalDescription}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
-            {cancelText}
+          <AlertDialogCancel className="text-blue-600" onClick={(e) => e.stopPropagation()}>
+            {finalCancelText}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
@@ -61,7 +75,7 @@ export function ConfirmDialog({
                 : ""
             }
           >
-            {confirmText}
+            {finalConfirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

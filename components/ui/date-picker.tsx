@@ -13,6 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export interface DatePickerProps {
   value?: string; // ISO string (YYYY-MM-DD)
@@ -24,9 +25,12 @@ export interface DatePickerProps {
 export function DatePicker({
   value,
   onChange,
-  placeholder = "วว/ดด/ปปปป",
+  placeholder,
   className,
 }: DatePickerProps) {
+  const { t } = useLanguage();
+  const defaultPlaceholder = "dd/mm/yyyy";
+  const finalPlaceholder = placeholder || defaultPlaceholder;
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
 
@@ -83,7 +87,7 @@ export function DatePicker({
   return (
     <div className={cn("relative flex w-full items-center", className)}>
       <Input
-        placeholder={placeholder}
+        placeholder={finalPlaceholder}
         value={inputValue}
         onChange={handleInputChange}
         className="pr-10"
@@ -96,7 +100,9 @@ export function DatePicker({
             className="absolute right-0 hover:bg-transparent"
           >
             <CalendarIcon className="h-4 w-4 text-slate-400" />
-            <span className="sr-only">เปิดปฏิทิน</span>
+            <span className="sr-only">
+              {t("common.open_calendar") || "Open calendar"}
+            </span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="end">
@@ -116,7 +122,7 @@ export function DatePicker({
                 setOpen(false);
               }}
             >
-              Clear
+              {t("common.clear") || "Clear"}
             </Button>
             <Button
               variant="ghost"
@@ -128,7 +134,7 @@ export function DatePicker({
                 setOpen(false);
               }}
             >
-              Today
+              {t("common.today") || "Today"}
             </Button>
           </div>
         </PopoverContent>

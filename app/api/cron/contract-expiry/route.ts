@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendLineNotification } from "@/lib/line";
 
+import { siteConfig } from "@/lib/site-config";
+
 export async function GET(request: Request) {
   try {
     const supabase = createAdminClient();
@@ -213,8 +215,8 @@ export async function GET(request: Request) {
                     type: "uri",
                     label: "ดูสัญญา/ต่อสัญญา",
                     uri: propertyId
-                      ? `https://oma-asset.com/protected/properties/${propertyId}?tab=contracts`
-                      : `https://oma-asset.com/protected/dashboard`,
+                      ? `${siteConfig.url}/protected/properties/${propertyId}?tab=contracts`
+                      : `${siteConfig.url}/protected/dashboard`,
                   },
                 },
               ],
@@ -233,8 +235,8 @@ export async function GET(request: Request) {
             action: {
               type: "uri",
               uri: propertyId
-                ? `https://oma-asset.com/protected/properties/${propertyId}`
-                : `https://oma-asset.com/protected/dashboard`,
+                ? `${siteConfig.url}/protected/properties/${propertyId}`
+                : `${siteConfig.url}/protected/dashboard`,
             },
           };
         }

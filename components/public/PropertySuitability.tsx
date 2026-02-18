@@ -103,7 +103,8 @@ export function PropertySuitability({
               {t("property.suitability.investment_title")}
             </p>
             <p className="text-xs text-slate-500">
-              {t("property.suitability.yield_prefix")}฿
+              {t("property.suitability.yield_prefix")}
+              {t("common.baht_symbol")}
               {rentalPrice?.toLocaleString()}
               {t("property.suitability.yield_middle")}
               <span className="font-bold text-amber-600">

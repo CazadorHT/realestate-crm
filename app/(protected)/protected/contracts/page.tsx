@@ -19,7 +19,13 @@ export default async function RentalContractsPage() {
       *,
       deal:deals(
         id,
-        property:properties(title)
+        property:properties(title),
+        lead:leads(
+          id,
+          full_name,
+          phone,
+          email
+        )
       )
     `,
     )

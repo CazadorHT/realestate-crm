@@ -790,7 +790,7 @@ export type AreaAnalytics = {
   leads_count: number;
 };
 
-export async function getAnalyticsStats(): Promise<{
+export async function getAnalyticsStats(days?: number): Promise<{
   topProperties: PropertyAnalytics[];
   topAreas: AreaAnalytics[];
   totalViews: number;
@@ -798,18 +798,34 @@ export async function getAnalyticsStats(): Promise<{
   const supabase = await createClient();
 
   // 1. Get Top 10 Properties by Views
-  const { data: topProps } = await supabase
+  let query = supabase
     .from("properties")
-    .select("id, title, slug, view_count, listing_type, price, rental_price")
+    .select("id, title, slug, view_count, listing_type, price, rental_price");
+
+  if (days) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    query = query.gte("created_at", startDate.toISOString());
+  }
+
+  const { data: topProps } = await query
     .order("view_count", { ascending: false })
     .limit(10);
 
   // 2. Get Top Areas by Views
   // Since view_count is per property, we sum them by popular_area
-  const { data: areasData } = await supabase
+  let areaQuery = supabase
     .from("properties")
     .select("popular_area, view_count")
     .not("popular_area", "is", null);
+
+  if (days) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    areaQuery = areaQuery.gte("created_at", startDate.toISOString());
+  }
+
+  const { data: areasData } = await areaQuery;
 
   const areaMap = new Map<string, { views: number; leads: number }>();
   areasData?.forEach((p) => {

@@ -4,9 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { BlogPostInput } from "./types";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getServerTranslations } from "@/lib/i18n";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+import { generateBlogPost, refineBlogContent } from "./services/ai-service";
+import { uploadBlogImage } from "./services/storage-service";
 
 export type ActionResponse = {
   success: boolean;
@@ -14,17 +15,20 @@ export type ActionResponse = {
   data?: any;
 };
 
+/**
+ * Creates a new blog post.
+ */
 export async function createBlogPostAction(
   input: BlogPostInput,
 ): Promise<ActionResponse> {
   const supabase = await createClient();
   const user = await getCurrentProfile();
+  const { t } = await getServerTranslations();
 
   if (!user || !["ADMIN", "AGENT", "MANAGER"].includes(user.role)) {
     return { success: false, message: "Unauthorized" };
   }
 
-  // Handle tags: string -> array
   const tagsArray = input.tags
     ? input.tags
         .split(",")
@@ -32,7 +36,7 @@ export async function createBlogPostAction(
         .filter(Boolean)
     : [];
 
-  const { data, error } = await supabase.from("blog_posts").insert({
+  const { error } = await supabase.from("blog_posts").insert({
     title: input.title,
     title_en: input.title_en || null,
     title_cn: input.title_cn || null,
@@ -48,9 +52,7 @@ export async function createBlogPostAction(
     is_published: input.is_published,
     published_at:
       input.published_at ||
-      (input.is_published && !input.published_at
-        ? new Date().toISOString()
-        : null),
+      (input.is_published ? new Date().toISOString() : null),
     tags: tagsArray,
     author: {
       name: user.full_name || "Admin",
@@ -63,20 +65,30 @@ export async function createBlogPostAction(
 
   if (error) {
     console.error("Create blog error:", error);
-    return { success: false, message: "ไม่สามารถสร้างบทความได้" };
+    return {
+      success: false,
+      message: t("blog.action_error_create") || "Failed to create post",
+    };
   }
 
   revalidatePath("/protected/blogs");
   revalidatePath("/blog");
-  return { success: true, message: "สร้างบทความเรียบร้อยแล้ว" };
+  return {
+    success: true,
+    message: t("blog.action_success_create") || "Post created successfully",
+  };
 }
 
+/**
+ * Updates an existing blog post.
+ */
 export async function updateBlogPostAction(
   id: string,
   input: BlogPostInput,
 ): Promise<ActionResponse> {
   const supabase = await createClient();
   const user = await getCurrentProfile();
+  const { t } = await getServerTranslations();
 
   if (!user || !["ADMIN", "AGENT", "MANAGER"].includes(user.role)) {
     return { success: false, message: "Unauthorized" };
@@ -107,9 +119,7 @@ export async function updateBlogPostAction(
       is_published: input.is_published,
       published_at:
         input.published_at ||
-        (input.is_published && !input.published_at
-          ? new Date().toISOString()
-          : input.published_at),
+        (input.is_published ? new Date().toISOString() : input.published_at),
       tags: tagsArray,
       structured_data: input.structured_data
         ? JSON.parse(input.structured_data)
@@ -120,20 +130,30 @@ export async function updateBlogPostAction(
 
   if (error) {
     console.error("Update blog error:", error);
-    return { success: false, message: "ไม่สามารถอัปเดตบทความได้" };
+    return {
+      success: false,
+      message: t("blog.action_error_update") || "Failed to update post",
+    };
   }
 
   revalidatePath("/protected/blogs");
   revalidatePath("/blog");
   revalidatePath(`/blog/${input.slug}`);
-  return { success: true, message: "อัปเดตบทความเรียบร้อยแล้ว" };
+  return {
+    success: true,
+    message: t("blog.action_success_update") || "Post updated successfully",
+  };
 }
 
+/**
+ * Deletes a blog post.
+ */
 export async function deleteBlogPostAction(
   id: string,
 ): Promise<ActionResponse> {
   const supabase = await createClient();
   const user = await getCurrentProfile();
+  const { t } = await getServerTranslations();
 
   if (!user || !["ADMIN", "AGENT", "MANAGER"].includes(user.role)) {
     return { success: false, message: "Unauthorized" };
@@ -143,80 +163,41 @@ export async function deleteBlogPostAction(
 
   if (error) {
     console.error("Delete blog error:", error);
-    return { success: false, message: "ไม่สามารถลบบทความได้" };
+    return {
+      success: false,
+      message: t("blog.action_error_delete") || "Failed to delete post",
+    };
   }
 
   revalidatePath("/protected/blogs");
-  return { success: true, message: "ลบบทความเรียบร้อยแล้ว" };
+  return {
+    success: true,
+    message: t("blog.action_success_delete") || "Post deleted successfully",
+  };
 }
 
-// Image Actions
-
+/**
+ * Entry point for uploading blog images.
+ */
 export async function uploadBlogImageAction(
   formData: FormData,
 ): Promise<ActionResponse> {
-  const supabase = await createClient();
   const user = await getCurrentProfile();
-
   if (!user || !["ADMIN", "AGENT", "MANAGER"].includes(user.role)) {
     return { success: false, message: "Unauthorized" };
   }
 
   const file = formData.get("file") as File | null;
-  if (!file) {
-    return { success: false, message: "No file provided" };
-  }
+  if (!file) return { success: false, message: "No file provided" };
 
-  // Basic validation
-  if (file.size > 5 * 1024 * 1024) {
-    return { success: false, message: "File too large (max 5MB)" };
-  }
-
-  const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-  if (!validTypes.includes(file.type)) {
-    return { success: false, message: "Invalid file type" };
-  }
-
-  // Upload to "properties" bucket under "blog" folder
-  // Path: properties/blog/{year}/{month}/{random}-{filename}
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const randomId = Math.random().toString(36).substring(2, 10);
-  const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "");
-  const path = `blog/${year}/${month}/${randomId}-${safeName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("property-images") // Reusing existing bucket
-    .upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-    });
-
-  if (uploadError) {
-    console.error("Upload blog image error:", uploadError);
-    return { success: false, message: "Failed to upload image" };
-  }
-
-  // Get Public URL
-  const { data: publicUrlData } = supabase.storage
-    .from("property-images")
-    .getPublicUrl(path);
-
-  return {
-    success: true,
-    message: "Image uploaded successfully",
-    data: { publicUrl: publicUrlData.publicUrl },
-  };
+  const result = await uploadBlogImage(file, file.name, file.type);
+  return result;
 }
 
-// Category Actions
-
-export async function getCategoriesAction(): Promise<{
-  success: boolean;
-  categories?: any[];
-  error?: string;
-}> {
+/**
+ * Fetches all blog categories.
+ */
+export async function getCategoriesAction() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("blog_categories")
@@ -231,11 +212,14 @@ export async function getCategoriesAction(): Promise<{
   return { success: true, categories: data };
 }
 
+/**
+ * Creates a new blog category.
+ */
 export async function createCategoryAction(
   name: string,
   name_en?: string,
   name_cn?: string,
-): Promise<{ success: boolean; category?: any; error?: string }> {
+) {
   const supabase = await createClient();
   const user = await getCurrentProfile();
 
@@ -243,7 +227,6 @@ export async function createCategoryAction(
     return { success: false, error: "Unauthorized" };
   }
 
-  // Simple slug generation
   const slug = name
     .toLowerCase()
     .replace(/[^\w\s-]/g, "")
@@ -263,9 +246,10 @@ export async function createCategoryAction(
   return { success: true, category: data };
 }
 
-export async function deleteCategoryAction(
-  id: string,
-): Promise<{ success: boolean; error?: string }> {
+/**
+ * Deletes a blog category.
+ */
+export async function deleteCategoryAction(id: string) {
   const supabase = await createClient();
   const user = await getCurrentProfile();
 
@@ -286,6 +270,9 @@ export async function deleteCategoryAction(
   return { success: true };
 }
 
+/**
+ * AI: Generates a blog post.
+ */
 export async function generateBlogPostAction(
   keyword: string,
   targetAudience: string,
@@ -293,373 +280,33 @@ export async function generateBlogPostAction(
   length: string = "Medium",
   includeImage: boolean = false,
 ) {
-  let modelName: string | undefined;
-  let logAiUsage: any;
+  const user = await getCurrentProfile();
+  if (!user) throw new Error("Unauthorized");
 
-  try {
-    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
-    const aiConfig = await getAiModelConfig();
-    modelName = aiConfig.blog_generator_model;
-
-    const { generateText } = await import("@/lib/ai/gemini");
-    const monitorActions = await import("@/features/ai-monitor/actions");
-    logAiUsage = monitorActions.logAiUsage;
-
-    let lengthInstruction = "";
-    let minWords = "";
-
-    switch (length) {
-      case "Short":
-        lengthInstruction =
-          "เขียนแบบกระชับ (Concise) เน้นเนื้อหาสำคัญ ไม่เยิ่นเย้อ แต่ยังคงครบถ้วนตามโครงสร้าง SEO";
-        minWords = "ประมาณ 800 - 1,000";
-        break;
-      case "Long":
-        lengthInstruction =
-          "เขียนแบบเจาะลึกพิเศษ (In-depth Comprehensive Guide) ลงรายละเอียดทุกหัวข้อ มีตัวอย่างประกอบเยอะๆ";
-        minWords = "มากกว่า 2,500";
-        break;
-      case "Medium":
-      default:
-        lengthInstruction =
-          "เขียนแบบมาตรฐาน (Standard SEO Article) มีความ สมดุลระว่างความกระชับและรายละเอียด";
-        minWords = "ประมาณ 1,500 - 2,000";
-        break;
-    }
-
-    const prompt = `
-      คุณเป็นนักเขียนบทความ SEO มืออาชีพและผู้เชี่ยวชาญด้านอสังหาริมทรัพย์
-      หน้าที่ของคุณคือเขียนบทความคุณภาพสูง (High-Quality Content) ที่มีความยาว ${minWords} คำ (ภาษาไทย)
-      สไตล์การเขียน: ${lengthInstruction}
-      โดยเน้นการให้ข้อมูลที่เป็นประโยชน์ต่อผู้อ่านและติดอันดับต้นๆ บน Google
-
-      รายละเอียดหัวข้อ:
-      - Focus Keyword: ${keyword}
-      - Target Audience: ${targetAudience}
-      - Tone of Voice: ${tone}
-
-      โครงสร้างบทความที่ต้องมี (Mandatory):
-      1. Title: หัวข้อที่ดึงดูดและมี Focus Keyword
-      2. Slug: URL เป็นภาษาอังกฤษที่สั้นและกระชับ
-      3. Excerpt/Meta Description: สรุปบทความประมาณ 150-160 ตัวอักษร
-      4. Content: เนื้อความฉบับเต็มที่มีหัวข้อ (H1-H6) อย่างน้อย 15-17 หัวข้อ
-         - ต้องกระจาย Focus Keyword อย่างเป็นธรรมชาติ
-         - เพิ่มตารางเปรียบเทียบ (HTML Table) อย่างน้อย 1 ตาราง
-         - เพิ่ม Checklist หรือ Bullet points เพื่อให้อ่านง่าย
-         - ใส่ "Infographic Ideas" (อธิบายเป็นข้อความว่าควรวาดรูปอะไรประกอบ)
-         - เชื่อมโยงแหล่งอ้างอิงภายนอก (External Links) ไปยังเว็บไซต์ที่น่าเชื่อถือ (เช่น Forbes, HubSpot, เว็บข่าวอสังหาฯ)
-      5. FAQ Section: คำถามที่พบบ่อย 5-6 ข้อ (ต้องเขียนในรูปแบบ HTML <h3>Question</h3><p>Answer</p> ลงในส่วน content นี้ด้วย ห้ามใส่แค่ใน JSON)
-      6. Conclusion: สรุปจบที่ทรงพลัง
-      7. CTA (Call to Action): ออกแบบปุ่มหรือข้อความเชิญชวน 2-3 แบบ (เขียนในรูปแบบ HTML ให้สวยงาม)
-         - **สำคัญ:** หากมีหลายปุ่ม ให้ครอบด้วย \`<div class="flex flex-wrap gap-4 mt-8 mb-4">\` เพื่อให้ปุ่มมีระยะห่างที่สวยงาม ไม่ติดกัน
-         - กรณีเป็นปุ่ม "ติดต่อเรา" หรือ "ขอคำปรึกษา" ให้ใช้ Link: <a href="#" class="contact-agent-trigger inline-block ..." >
-         - กรณีเป็นปุ่ม "ดาวน์โหลด" หรือ "ดูรายละเอียด" ให้ใช้ Link: <a href="#" target="_blank" ...> (เพื่อให้นำไปใส่ลิ้งค์จริงทีหลัง)
-         - ให้ใช้ Class ของ Tailwind CSS ในการตกแต่งปุ่มให้ดูพรีเมียม สวยงาม:
-           * ปุ่มหลัก: 'contact-agent-trigger inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white transition-all duration-200 rounded-full hover:-translate-y-1 shadow-lg hover:shadow-xl'
-           * ปุ่มรอง: 'contact-agent-trigger cta-secondary inline-flex items-center justify-center px-8 py-4 text-base font-bold text-indigo-600 transition-all duration-200 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 hover:shadow-md'
-           * ไม่ต้องใส่ bg-gradient ใน class เพราะมี CSS global override ให้แล้วเพื่อความสวยงามที่แน่นอน
-
-      คำสั่งพิเศษสำหรับรูปภาพ (สำคัญมาก):
-      - ให้แทรก Placeholder สำหรับรูปภาพจำนวน 3-4 จุดกระจายทั่วบทความ
-      - รูปแบบ: [IMAGE: description_in_english_only] 
-      - ห้ามใช้ภาษาไทยใน Placeholder ของรูปภาพเด็ดขาด
-      - ตัวอย่าง: [IMAGE: modern luxury bedroom with city view at night, cozy atmosphere, 8k]
-
-      รูปแบบผลลัพธ์:
-      กรุณาส่งกลับเป็น JSON Object เท่านั้น ตามโครงสร้างนี้:
-      {
-        "title": "...",
-        "slug": "...",
-        "excerpt": "...",
-        "content": "เนื้อหาบทความแบบ HTML...",
-        "cover_image_prompt": "English description for cover image...",
-        "tags": "tag1, tag2, tag3",
-        "faqs": [
-          { "question": "...", "answer": "..." },
-          { "question": "...", "answer": "..." }
-        ],
-        "structured_data": {
-           "jsonLd": { ... }
-        }
-      }
-
-      สำคัญ:
-      - เขียนเนื้อหาให้ได้ตามเป้าหมาย ${minWords} คำ
-      - ใช้ภาษาไทยที่ถูกต้องและสละสลวยตาม Tone ที่กำหนด
-      - เนื้อหาต้องดูเป็นมืออาชีพและพรีเมียม
-    `;
-
-    const response = await generateText(prompt, modelName);
-    const jsonStr = response.replace(/```json|```/g, "").trim();
-    const blogData = JSON.parse(jsonStr);
-
-    if (blogData.faqs && blogData.faqs.length > 0) {
-      const firstFaqQuestion = blogData.faqs[0].question;
-      if (!blogData.content.includes(firstFaqQuestion)) {
-        let faqHtml = `<h2>คำถามที่พบบ่อย (FAQ)</h2><div class="faq-section space-y-4 my-8">`;
-        blogData.faqs.forEach((item: any) => {
-          faqHtml += `<div class="faq-item">
-              <h3 class="text-xl font-semibold mb-2">${item.question}</h3>
-              <p class="text-slate-600 mb-4">${item.answer}</p>
-            </div>`;
-        });
-        faqHtml += `</div>`;
-        blogData.content += faqHtml;
-      }
-    }
-
-    if (includeImage) {
-      try {
-        let imagePrompt =
-          blogData.cover_image_prompt || `real estate, ${keyword}, modern, 8k`;
-        const coverImageUrl = await generateAndUploadImage(
-          `Real estate photography, ${imagePrompt}, cinematic lighting, high resolution, 8k, photorealistic`,
-        );
-        if (coverImageUrl) blogData.cover_image = coverImageUrl;
-      } catch (imgError) {
-        console.error("Cover image error:", imgError);
-      }
-
-      try {
-        const content = blogData.content || "";
-        const imageRegex = /\[IMAGE:\s*([^\]]+)\]/g;
-        const matches = Array.from(content.matchAll(imageRegex));
-        if (matches.length > 0) {
-          const imagePromises = matches.map(async (match: any) => {
-            const placeholder = match[0];
-            const prompt = match[1];
-            const imageUrl = await generateAndUploadImage(
-              `Real estate photography, ${prompt}, high quality, 8k, photorealistic`,
-            );
-            if (imageUrl) {
-              const imgHtml = `<figure class="my-8"><img src="${imageUrl}" alt="${prompt}" class="rounded-xl shadow-lg w-full object-cover max-h-[500px]" /><figcaption class="text-center text-sm text-slate-500 mt-2 italic">${prompt}</figcaption></figure>`;
-              return { placeholder, replacement: imgHtml };
-            }
-            return { placeholder, replacement: "" };
-          });
-          const replacements = await Promise.all(imagePromises);
-          let newContent = content;
-          replacements.forEach(({ placeholder, replacement }) => {
-            newContent = newContent.replace(placeholder, replacement);
-          });
-          blogData.content = newContent;
-        }
-      } catch (embedError) {
-        console.error("Embedded images error:", embedError);
-      }
-    }
-
-    await logAiUsage({
-      model: modelName,
-      feature: "blog_generator",
-      status: "success",
-    });
-    return blogData;
-  } catch (error: any) {
-    console.error("AI Blog Generation Error:", error);
-    if (logAiUsage) {
-      await logAiUsage({
-        model: modelName || "unknown",
-        feature: "blog_generator",
-        status: "error",
-        errorMessage: error.message,
-      });
-    }
-    throw new Error(error.message || "ไม่สามารถสร้างบทความด้วย AI ได้ในขณะนี้");
-  }
+  return await generateBlogPost(
+    keyword,
+    targetAudience,
+    tone,
+    length,
+    includeImage,
+  );
 }
 
-async function generateAndUploadImage(prompt: string): Promise<string | null> {
-  const maxRetries = 3;
-  let attempt = 0;
-
-  while (attempt < maxRetries) {
-    try {
-      const supabase = await createClient();
-      const encodedPrompt = encodeURIComponent(prompt);
-      // Use a different seed for each attempt to avoid caching issues
-      const seed = Math.floor(Math.random() * 1000000);
-      const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1280&height=720&nologo=true&seed=${seed}`;
-
-      console.log(
-        `Generating image (attempt ${attempt + 1}/${maxRetries}):`,
-        url,
-      );
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(
-          `Pollinations API attempt ${attempt + 1} failed: ${response.status} ${errorText}`,
-        );
-        attempt++;
-        if (attempt >= maxRetries)
-          throw new Error(
-            `Pollinations API failed after ${maxRetries} attempts`,
-          );
-        // Wait 1 second before retrying
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        continue;
-      }
-
-      const arrayBuffer = await response.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      // Upload to Supabase
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const randomId = Math.random().toString(36).substring(2, 10);
-      const safeName = `ai-generated-${randomId}.png`;
-      const path = `blog/${year}/${month}/${safeName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("property-images")
-        .upload(path, buffer, {
-          contentType: "image/png",
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) {
-        console.error("Upload AI image error:", uploadError);
-        return null;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("property-images")
-        .getPublicUrl(path);
-
-      return publicUrlData.publicUrl;
-    } catch (error) {
-      console.error(
-        `generateAndUploadImage error (attempt ${attempt + 1}):`,
-        error,
-      );
-      attempt++;
-      if (attempt >= maxRetries) return null;
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-    }
-  }
-  return null;
-}
-
+/**
+ * AI: Refines blog content.
+ */
 export async function refineBlogPostAction(
   content: string,
   instruction: string,
   type: string,
-): Promise<{ success: boolean; refinedContent?: string; error?: string }> {
-  let modelName: string | undefined;
-  let logAiUsage: any;
+) {
+  const user = await getCurrentProfile();
+  if (!user) return { success: false, error: "Unauthorized" };
 
   try {
-    const user = await getCurrentProfile();
-    if (!user) return { success: false, error: "Unauthorized" };
-
-    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
-    const aiConfig = await getAiModelConfig();
-    modelName = aiConfig.blog_generator_model;
-
-    const { getModel } = await import("@/lib/ai/gemini");
-    const model = getModel(modelName);
-
-    if (!model) {
-      throw new Error("AI Model not configured");
-    }
-
-    const monitorActions = await import("@/features/ai-monitor/actions");
-    logAiUsage = monitorActions.logAiUsage;
-
-    let systemPrompt = "You are a professional content editor. ";
-
-    switch (type) {
-      case "grammar":
-        systemPrompt +=
-          "Fix grammar, spelling errors, and improve sentence structure while keeping the original meaning. Return ONLY the corrected HTML.";
-        break;
-      case "professional":
-        systemPrompt +=
-          "Rewrite the content to sound more professional, authoritative, and trustworthy. Use formal but accessible language. Return ONLY the refined HTML.";
-        break;
-      case "expand":
-        systemPrompt +=
-          "Expand on the ideas in the content. Add more details, examples, and depth. Make it more comprehensive. Return ONLY the expanded HTML.";
-        break;
-      case "summarize":
-        systemPrompt +=
-          "Summarize the content concisely while retaining key points. Return ONLY the summary as HTML.";
-        break;
-      case "custom":
-        systemPrompt += `Follow this specific instruction: "${instruction}". Return ONLY the result as HTML.`;
-        break;
-      default:
-        systemPrompt +=
-          "Improve the content quality. Return ONLY the refined HTML.";
-    }
-
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `Original Content (HTML):\n${content}\n\nTask: ${systemPrompt}\n\nIMPORTANT: Return ONLY the HTML content. Do not include markdown code blocks like \`\`\`html.`,
-            },
-          ],
-        },
-      ],
-    });
-
-    const response = result.response;
-    let refinedContent = response.text();
-
-    // Clean up markdown code blocks if present
-    refinedContent = refinedContent
-      .replace(/```html/g, "")
-      .replace(/```/g, "")
-      .trim();
-
-    await logAiUsage({
-      model: modelName,
-      feature: "content_refiner",
-      status: "success",
-    });
-
+    const refinedContent = await refineBlogContent(content, instruction, type);
     return { success: true, refinedContent };
   } catch (error: any) {
-    console.error("Refine Content Error:", error);
-
-    if (logAiUsage) {
-      await logAiUsage({
-        model: modelName || "unknown",
-        feature: "content_refiner",
-        status: "error",
-        errorMessage: error.message,
-      });
-    }
-
-    if (
-      error.status === 429 ||
-      (error.message && error.message.includes("429"))
-    ) {
-      return {
-        success: false,
-        error:
-          "⚠️ ใช้งานเกินขีดจำกัด (Quota Exceeded) กรุณารอประมาณ 1 นาทีแล้วลองใหม่ครับ",
-      };
-    }
-
-    if (
-      error.status === 404 ||
-      (error.message && error.message.includes("404"))
-    ) {
-      return {
-        success: false,
-        error:
-          "⚠️ ไม่พบ AI Model ที่ระบุ (โปรดติดต่อ Admin เพื่ออัปเดตเวอร์ชัน)",
-      };
-    }
-
     return { success: false, error: error.message || "AI processing failed" };
   }
 }

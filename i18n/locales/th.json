@@ -88,8 +88,13 @@
     "contact_for_price": "สอบถามราคา",
     "contract": "สัญญา",
     "months_short": "ด.",
+    "per_month_short": "/ด.",
+    "baht_symbol": "฿",
     "rent_price": "ค่าเช่า",
-    "sale_price": "ราคาขาย"
+    "sale_price": "ราคาขาย",
+    "confirm": "ยืนยัน",
+    "cancel": "ยกเลิก",
+    "are_you_sure": "คุณแน่ใจหรือไม่ที่จะทำรายการนี้?"
   },
   "blog": {
     "title_badge": "บทความอสังหาริมทรัพย์",
@@ -138,7 +143,13 @@
       "Lifestyle": "ไลฟ์สไตล์",
       "Market Trends": "แนวโน้มตลาด",
       "Tips & Tricks": "เคล็ดลับและเทคนิค"
-    }
+    },
+    "action_success_create": "สร้างบทความเรียบร้อยแล้ว",
+    "action_success_update": "อัปเดตบทความเรียบร้อยแล้ว",
+    "action_success_delete": "ลบบทความเรียบร้อยแล้ว",
+    "action_error_create": "ไม่สามารถสร้างบทความได้",
+    "action_error_update": "ไม่สามารถอัปเดตบทความได้",
+    "action_error_delete": "ไม่สามารถลบบทความได้"
   },
   "home": {
     "search_btn": "ค้นหาเลย",
@@ -270,24 +281,24 @@
     }
   },
   "metadata": {
-    "default_title": "OMA Asset | ค้นหาและฝากขายอสังหาฯ ง่ายๆ ในที่เดียว",
+    "default_title": "{siteName} | ค้นหาและฝากขายอสังหาฯ ง่ายๆ ในที่เดียว",
     "default_description": "รวม บ้าน คอนโด ออฟฟิศ ทั่วไทย ค้นหาง่าย ปิดการขายไว พร้อมเครื่องมืออัจฉริยะสำหรับคนหาบ้านและนายหน้ามืออาชีพ",
-    "home_title": "ค้นหาบ้าน คอนโด ออฟฟิศ ขาย/เช่า | OMA Asset",
+    "home_title": "ค้นหาบ้าน คอนโด ออฟฟิศ ขาย/เช่า | {siteName}",
     "home_description": "แหล่งรวมประกาศขาย/เช่า บ้าน คอนโด ออฟฟิศ ที่ดิน สำนักงาน อสังหาริมทรัพย์คุณภาพ ตรวจสอบแล้ว 100% พร้อมระบบ Smart Match ช่วยค้นหาบ้านในฝันของคุณ",
     "search_title": "ค้นหาอสังหาริมทรัพย์ | บ้าน คอนโด สำนักงานออฟฟิศ",
     "search_description": "ค้นหาบ้าน คอนโด สำนักงานออฟฟิศ ที่ดิน อสังหาริมทรัพย์ทุกประเภทสำหรับขายและเช่า พร้อมระบบกรองอัจฉริยะ",
     "jsonld_description": "ศูนย์รวมประกาศอสังหาริมทรัพย์ออนไลน์ ค้นหาง่าย ฝากขายรวดเร็ว พร้อมบริการดูแลโดยมืออาชีพ",
     "jsonld_address_locality": "กรุงเทพฯ",
-    "about_title": "เกี่ยวกับเรา | OMA Asset",
+    "about_title": "เกี่ยวกับเรา | {siteName}",
     "about_description": "รู้จักทีมงานอสังหาริมทรัพย์มืออาชีพ พร้อมให้บริการด้านอสังหาริมทรัพย์ครบวงจร",
-    "contact_title": "ติดต่อเรา | OMA Asset",
+    "contact_title": "ติดต่อเรา | {siteName}",
     "contact_description": "ติดต่อทีมงานอสังหาริมทรัพย์มืออาชีพ พร้อมให้คำปรึกษาและบริการด้านอสังหาริมทรัพย์ทุกประเภท",
-    "services_title": "บริการของเรา | OMA Asset",
+    "services_title": "บริการของเรา | {siteName}",
     "services_description": "บริการด้านอสังหาริมทรัพย์ครบวงจร ทั้งซื้อ ขาย เช่า และบริการอื่นๆ โดยทีมงานมืออาชีพ"
   },
   "loading": {
     "search_dream_home": "กำลังค้นหาบ้านในฝัน...",
-    "subtitle": "OMA Asset - แหล่งรวมอสังหาฯ คุณภาพ"
+    "subtitle": "{siteName} - แหล่งรวมอสังหาฯ คุณภาพ"
   },
   "property_listing": {
     "title": "บ้าน คอนโด สำนักงานออฟฟิศ ซื้อ · ขาย · เช่า",
@@ -449,6 +460,7 @@
     "no_results": "ไม่พบรายการที่ค้นหา กรุณาลองปรับตัวกรองใหม่อีกครั้ง",
     "found_total": "พบทรัพย์ทั้งหมด",
     "displaying": "แสดง",
+    "displaying_page": "หน้า {current} จาก {total}",
     "show_more": "ดูเพิ่ม",
     "show_less": "น้อยลง",
     "price_presets": {
@@ -465,20 +477,6 @@
         "range_4": "> 15 ล้าน"
       }
     }
-  },
-  "recently_viewed": {
-    "title_recent": "ที่คุณสนใจล่าสุด",
-    "title_recommended": "แนะนำสำหรับคุณ",
-    "desc_recent": "ประวัติทรัพย์สินอสังหาริมทรัพย์ล่าสุดที่คุณเพิ่งเปิดชม",
-    "desc_recommended": "ทรัพย์สินอสังหาริมทรัพย์ที่คัดสรรมาเพื่อคุณโดยเฉพาะ",
-    "property_types": "บ้าน คอนโด สำนักงานออฟฟิศ",
-    "schema_recent_name": "ทรัพย์สินที่เพิ่งดู",
-    "schema_recent_desc": "ประวัติการดูบ้าน คอนโด ที่ดิน และอสังหาริมทรัพย์ล่าสุด",
-    "schema_rec_name": "ทรัพย์สินแนะนำ",
-    "schema_rec_desc": "คอลเลกชันบ้าน คอนโด ที่ดิน และอสังหาริมทรัพย์ที่แนะนำสำหรับคุณ",
-    "view_details": "ดูรายละเอียด",
-    "no_image": "ไม่มีรูปภาพ",
-    "per_month_short": "ด"
   },
   "similar_properties": {
     "title": "ทรัพย์สินที่คล้ายกัน",
@@ -535,8 +533,6 @@
     "phone_label": "เบอร์โทรศัพท์",
     "email_label": "อีเมล",
     "email_placeholder": "your.email@example.com (ถ้ามี)",
-    "line_id_label": "Line ID",
-    "line_id_placeholder": "ไอดีไลน์ของคุณ (ถ้ามี)",
     "more_details_label": "รายละเอียดเพิ่มเติม",
     "more_details_placeholder": "บอกรายละเอียดความต้องการของคุณ (ถ้ามี)...",
     "submit": "ส่งข้อความ",
@@ -682,7 +678,7 @@
     "townhome": "🏡 ทาวน์โฮม",
     "land": "🌳 ที่ดิน",
     "commercial": "🏢 อาคารพาณิชย์",
-    "office_building": "🏢 อาคารสำนักงาน",
+    "office_building": "🏢 สำนักงานออฟฟิศ",
     "office": "🏬 สำนักงานออฟฟิศ",
     "villa": "🏝️ วิลล่า",
     "pool_villa": "🌊 พูลวิลล่า",
@@ -699,7 +695,8 @@
     "inquiry_price": "สอบถามราคา",
     "min_contract": "อายุสัญญาขั้นต่ำ",
     "managed_by": "ดูแลโดย",
-    "contact_agent": "ติดต่อเจ้าหน้าที่",
+    "professional_agent": "ตัวแทนมืออาชีพ",
+    "contact_agent": "ติดต่อตัวแทน",
     "viewing_cta": "สนใจนัดชม (ไม่มีค่าใช้จ่าย)",
     "viewing_msg": "สนใจนัดชมทรัพย์นี้ครับ สะดวกช่วง...",
     "inquiry_msg": "สอบถามข้อมูลเพิ่มเติมครับ...",
@@ -707,6 +704,29 @@
     "share_property": "แชร์ทรัพย์สิน",
     "book_viewing": "นัดชม",
     "inquiry": "สอบถาม",
+    "contact_dialog": {
+      "trigger": "สนใจทรัพย์นี้ / นัดชม",
+      "title": "ติดต่อสอบถาม",
+      "subtitle_fallback": "สอบถามข้อมูลเพิ่มเติม",
+      "name_label": "ชื่อ",
+      "name_placeholder": "กรอกชื่อของคุณ",
+      "phone_label": "เบอร์โทรศัพท์",
+      "line_label": "Line ID (ถ้ามี)",
+      "line_placeholder": "ไอดีไลน์",
+      "message_label": "ข้อความเพิ่มเติม",
+      "message_placeholder": "พิมพ์ข้อความ...",
+      "footer": "เจ้าหน้าที่จะติดต่อกลับให้เร็วที่สุด (ภายใน 24 ชม.)",
+      "sending": "กำลังส่งข้อมูล...",
+      "submit": "ส่งข้อความ",
+      "quick_messages": {
+        "viewing": "สนใจนัดชมครับ/ค่ะ",
+        "price": "สอบถามราคาพิเศษ",
+        "more_info": "ขอข้อมูลเพิ่มเติม",
+        "booking": "สนใจจอง"
+      },
+      "success": "ส่งข้อมูลเรียบร้อยแล้ว เจ้าหน้าที่จะรีบติดต่อกลับครับ",
+      "error": "ไม่สามารถส่งข้อมูลได้"
+    },
     "created_at_label": "สร้างเมื่อ",
     "nearby_places": "สถานที่สำคัญใกล้เคียง",
     "transit": "รถไฟฟ้า",
@@ -774,6 +794,16 @@
       "tax_registered": "จดทะเบียนบริษัทได้",
       "high_floor": "วิวสวยชั้นสูง",
       "pool_view": "วิวสระว่ายน้ำ"
+    },
+    "transit_types": {
+      "BTS": "BTS",
+      "MRT": "MRT",
+      "ARL": "Airport Rail Link",
+      "SRT": "รถไฟฟ้า (สายสีแดง)",
+      "SRT2": "รถไฟฟ้า (สายสีส้ม)",
+      "SRT3": "รถไฟฟ้า (สายสีชมพู)",
+      "MRT2": "รถไฟฟ้า (สายสีม่วง)",
+      "OTHER": "อื่นๆ"
     }
   },
   "errors": {
@@ -844,5 +874,50 @@
     "error_message": "ขออภัยครับ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่ภายหลัง",
     "online_status": "ออนไลน์",
     "assistant_name": "AI Assistant"
+  },
+  "auth": {
+    "change_password": "เปลี่ยนรหัสผ่าน",
+    "change_password_desc": "กรุณากรอกรหัสผ่านปัจจุบันและรหัสผ่านใหม่",
+    "current_password": "รหัสผ่านปัจจุบัน",
+    "new_password": "รหัสผ่านใหม่",
+    "confirm_new_password": "ยืนยันรหัสผ่านใหม่",
+    "current_password_placeholder": "กรอกรหัสผ่านปัจจุบัน",
+    "new_password_placeholder": "อย่างน้อย 6 ตัวอักษร",
+    "confirm_password_placeholder": "กรอกรหัสผ่านใหม่อีกครั้ง",
+    "save_password": "บันทึกรหัสผ่านใหม่",
+    "saving": "กำลังบันทึก...",
+    "back_to_profile": "กลับไปหน้าโปรไฟล์",
+    "errors": {
+      "current_password_required": "กรุณากรอกรหัสผ่านปัจจุบัน",
+      "new_password_min_length": "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร",
+      "passwords_dont_match": "รหัสผ่านใหม่ไม่ตรงกัน",
+      "new_same_as_old": "รหัสผ่านใหม่ต้องไม่เหมือนกับรหัสผ่านเดิม",
+      "user_not_found": "ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่",
+      "incorrect_current_password": "รหัสผ่านปัจจุบันไม่ถูกต้อง",
+      "generic_error": "เกิดข้อผิดพลาด"
+    },
+    "success": {
+      "password_updated": "เปลี่ยนรหัสผ่านสำเร็จ"
+    }
+  },
+  "recently_viewed": {
+    "title_recommended": "แนะนำ",
+    "title_recent": "เข้าชมล่าสุด",
+    "property_types": "ประเภทอสังหาฯ",
+    "desc_recommended": "ทรัพย์ที่คุณอาจสนใจ",
+    "desc_recent": "กลับมาดูต่อจากที่ค้างไว้",
+    "per_month_short": "/ด.",
+    "schema_rec_name": "อสังหาริมทรัพย์แนะนำ",
+    "schema_recent_name": "อสังหาริมทรัพย์ที่เข้าชมล่าสุด",
+    "schema_rec_desc": "รายการทรัพย์แนะนำสำหรับคุณ",
+    "schema_recent_desc": "รายการทรัพย์ที่คุณเข้าชมล่าสุด",
+    "view_details": "ดูรายละเอียด"
+  },
+  "profile": {
+    "line_id_label": "Line ID (สำหรับลูกค้า)",
+    "line_id_placeholder": "ไอดีไลน์สำหรับให้ลูกค้าแอด (เช่น hunter_asset)",
+    "line_user_id_label": "LINE Bot User ID (สำหรับแจ้งเตือน)",
+    "line_user_id_placeholder": "Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "line_user_id_help": "ใช้สำหรับรับแจ้งเตือนจากบอท พิมพ์ /id ในไลน์บอทเพื่อรับค่านี้"
   }
 }

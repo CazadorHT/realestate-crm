@@ -66,11 +66,11 @@
     "no_image": "No matching image",
     "call": "Call",
     "contact": "Contact",
-    "meters_short": "m.",
-    "km_short": "km.",
+    "meters_short": "m",
+    "km_short": "km",
     "sqm_short": "sq.m.",
     "sqwa_short": "sq.wa",
-    "minutes_short": "min.",
+    "minutes_short": "mins",
     "month": "mo.",
     "year": "yr.",
     "or": "or",
@@ -90,8 +90,13 @@
     "contact_for_price": "Contact for price",
     "contract": "Contract",
     "months_short": "mo.",
+    "per_month_short": "/mo.",
+    "baht_symbol": "฿",
     "rent_price": "Rent Price",
-    "sale_price": "Sale Price"
+    "sale_price": "Sale Price",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "are_you_sure": "Are you sure you want to perform this action?"
   },
   "blog": {
     "title_badge": "Real Estate Articles",
@@ -140,7 +145,13 @@
       "Lifestyle": "Lifestyle",
       "Market Trends": "Market Trends",
       "Tips & Tricks": "Tips & Tricks"
-    }
+    },
+    "action_success_create": "Blog post created successfully",
+    "action_success_update": "Blog post updated successfully",
+    "action_success_delete": "Blog post deleted successfully",
+    "action_error_create": "Failed to create blog post",
+    "action_error_update": "Failed to update blog post",
+    "action_error_delete": "Failed to delete blog post"
   },
   "home": {
     "search_btn": "Search Now",
@@ -272,24 +283,24 @@
     }
   },
   "metadata": {
-    "default_title": "OMA Asset | Find and Sell Properties Easily",
+    "default_title": "{siteName} | Find and Sell Properties Easily",
     "default_description": "Comprehensive list of houses, condos, and offices across Thailand. Easy search, fast closed deals with smart tools for seekers and professionals.",
-    "home_title": "Search House, Condo, Office for Sale/Rent | OMA Asset",
+    "home_title": "Search House, Condo, Office for Sale/Rent | {siteName}",
     "home_description": "Real estate listings for Sale/Rent. Houses, Condos, Offices, Land. 100% Verified properties with Smart Match system.",
     "search_title": "Search Properties | House, Condo, Office",
     "search_description": "Find all types of real estate for sale and rent with our smart filtering system.",
     "jsonld_description": "Online real estate hub for easy search and fast property listings with professional care.",
     "jsonld_address_locality": "Bangkok",
-    "about_title": "About Us | OMA Asset",
+    "about_title": "About Us | {siteName}",
     "about_description": "Meet our professional real estate team. Providing comprehensive real estate services.",
-    "contact_title": "Contact Us | OMA Asset",
+    "contact_title": "Contact Us | {siteName}",
     "contact_description": "Contact our professional real estate team for consultation and all types of property services.",
-    "services_title": "Our Services | OMA Asset",
+    "services_title": "Our Services | {siteName}",
     "services_description": "Full real estate services including Buy, Sell, Rent, and more by professional team."
   },
   "loading": {
     "search_dream_home": "Finding your dream places...",
-    "subtitle": "OMA Asset - Quality Real Estate Network"
+    "subtitle": "{siteName} - Quality Real Estate Network"
   },
   "property_listing": {
     "title": "Houses, Condos, Offices | Buy · Sell · Rent",
@@ -451,6 +462,7 @@
     "no_results": "No results found. Please try different filters.",
     "found_total": "Found total",
     "displaying": "Displaying",
+    "displaying_page": "Page {current} of {total}",
     "show_more": "Show More",
     "show_less": "Show Less",
     "price_presets": {
@@ -467,20 +479,6 @@
         "range_4": "> 15M"
       }
     }
-  },
-  "recently_viewed": {
-    "title_recent": "You recently viewed",
-    "title_recommended": "Recommended for you",
-    "desc_recent": "History of properties you recently opened",
-    "desc_recommended": "Real estate properties selected specifically for you",
-    "property_types": "Houses, Condos, Offices",
-    "schema_recent_name": "Recently Viewed Properties",
-    "schema_recent_desc": "Browsing history of houses, condos, and land",
-    "schema_rec_name": "Recommended Properties",
-    "schema_rec_desc": "Collection of houses, condos, and land recommended for you",
-    "view_details": "View Details",
-    "no_image": "No Image",
-    "per_month_short": "mo"
   },
   "similar_properties": {
     "title": "Similar Properties",
@@ -537,8 +535,6 @@
     "phone_label": "Phone Number",
     "email_label": "Email",
     "email_placeholder": "your.email@example.com (optional)",
-    "line_id_label": "Line ID",
-    "line_id_placeholder": "Your Line ID (optional)",
     "more_details_label": "Additional Details",
     "more_details_placeholder": "Tell us more about your needs (optional)...",
     "submit": "Send Message",
@@ -701,6 +697,7 @@
     "inquiry_price": "Inquire for Price",
     "min_contract": "Min. Contract",
     "managed_by": "Managed by",
+    "professional_agent": "Professional Agent",
     "contact_agent": "Contact Agent",
     "viewing_cta": "Interested in viewing (Free)",
     "viewing_msg": "I'm interested in viewing this property. I'm available...",
@@ -709,6 +706,29 @@
     "share_property": "Share Property",
     "book_viewing": "Book Viewing",
     "inquiry": "Inquiry",
+    "contact_dialog": {
+      "trigger": "Interested / Book Viewing",
+      "title": "Contact Us",
+      "subtitle_fallback": "Inquire for more details",
+      "name_label": "Name",
+      "name_placeholder": "Enter your name",
+      "phone_label": "Phone Number",
+      "line_label": "Line ID (Optional)",
+      "line_placeholder": "Line ID",
+      "message_label": "Additional Message",
+      "message_placeholder": "Type your message...",
+      "footer": "We will contact you back as soon as possible (within 24 hours)",
+      "sending": "Sending...",
+      "submit": "Send Message",
+      "quick_messages": {
+        "viewing": "Interested in viewing",
+        "price": "Inquire for special price",
+        "more_info": "Request more information",
+        "booking": "Interested in booking"
+      },
+      "success": "Information sent successfully. Our staff will contact you back shortly.",
+      "error": "Failed to send information"
+    },
     "created_at_label": "Created at",
     "nearby_places": "Nearby Highlights",
     "transit": "Public Transit",
@@ -777,6 +797,16 @@
       "tax_registered": "Tax Registered",
       "high_floor": "High Floor",
       "pool_view": "Pool View"
+    },
+    "transit_types": {
+      "BTS": "BTS",
+      "MRT": "MRT",
+      "ARL": "Airport Rail Link",
+      "SRT": "Red Line (SRT)",
+      "SRT2": "Orange Line (SRT)",
+      "SRT3": "Pink Line (SRT)",
+      "MRT2": "Purple Line (MRT)",
+      "OTHER": "Others"
     }
   },
   "errors": {
@@ -847,5 +877,50 @@
     "error_message": "Sorry, a connection error occurred. Please try again later.",
     "online_status": "Online",
     "assistant_name": "AI Assistant"
+  },
+  "auth": {
+    "change_password": "Change Password",
+    "change_password_desc": "Please enter your current password and a new password.",
+    "current_password": "Current Password",
+    "new_password": "New Password",
+    "confirm_new_password": "Confirm New Password",
+    "current_password_placeholder": "Enter current password",
+    "new_password_placeholder": "At least 6 characters",
+    "confirm_password_placeholder": "Confirm new password",
+    "save_password": "Save New Password",
+    "saving": "Saving...",
+    "back_to_profile": "Back to Profile",
+    "errors": {
+      "current_password_required": "Current password is required",
+      "new_password_min_length": "New password must be at least 6 characters",
+      "passwords_dont_match": "New passwords do not match",
+      "new_same_as_old": "New password must be different from current password",
+      "user_not_found": "User not found. Please log in again.",
+      "incorrect_current_password": "Incorrect current password",
+      "generic_error": "An error occurred"
+    },
+    "success": {
+      "password_updated": "Password updated successfully"
+    }
+  },
+  "recently_viewed": {
+    "title_recommended": "Recommended",
+    "title_recent": "Recently Viewed",
+    "property_types": "Property Types",
+    "desc_recommended": "Properties you might like based on your interest",
+    "desc_recent": "Continue where you left off",
+    "per_month_short": "/mo",
+    "schema_rec_name": "Recommended Properties",
+    "schema_recent_name": "Recently Viewed Properties",
+    "schema_rec_desc": "List of properties recommended for you",
+    "schema_recent_desc": "List of properties you recently viewed",
+    "view_details": "View Details"
+  },
+  "profile": {
+    "line_id_label": "Public Line ID",
+    "line_id_placeholder": "Line ID for customers (e.g., hunter_asset)",
+    "line_user_id_label": "LINE Bot User ID (Internal)",
+    "line_user_id_placeholder": "Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "line_user_id_help": "Used for bot notifications. Type /id in the bot to find this value."
   }
 }

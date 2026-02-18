@@ -3,6 +3,7 @@
  * TODO: Remove this file when real data is available in the database
  */
 
+import { siteConfig } from "@/lib/site-config";
 import { ServiceRow } from "@/features/services/actions";
 
 export const MOCK_SERVICES: ServiceRow[] = [
@@ -58,7 +59,7 @@ export const MOCK_SERVICES: ServiceRow[] = [
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80",
     ],
     price_range: "เริ่มต้น 1,500 บาท/ตร.ม.",
-    contact_link: "https://line.me/ti/p/@omaasset",
+    contact_link: siteConfig.links.line,
     sort_order: 1,
     is_active: true,
     created_at: new Date().toISOString(),
@@ -116,7 +117,7 @@ export const MOCK_SERVICES: ServiceRow[] = [
       "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=600&q=80",
     ],
     price_range: "เริ่มต้น 2,500 บาท",
-    contact_link: "https://line.me/ti/p/@omaasset",
+    contact_link: siteConfig.links.line,
     sort_order: 2,
     is_active: true,
     created_at: new Date().toISOString(),
@@ -173,7 +174,7 @@ export const MOCK_SERVICES: ServiceRow[] = [
       "https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=600&q=80",
     ],
     price_range: "เริ่มต้น 3,000 บาท",
-    contact_link: "https://line.me/ti/p/@omaasset",
+    contact_link: siteConfig.links.line,
     sort_order: 3,
     is_active: true,
     created_at: new Date().toISOString(),
@@ -227,7 +228,7 @@ export const MOCK_SERVICES: ServiceRow[] = [
       "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&q=80",
     gallery_images: [],
     price_range: "เริ่มต้น 400 บาท/เครื่อง",
-    contact_link: "https://line.me/ti/p/@omaasset",
+    contact_link: siteConfig.links.line,
     sort_order: 4,
     is_active: false, // Hidden for demo
     created_at: new Date().toISOString(),

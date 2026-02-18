@@ -24,6 +24,7 @@ import {
 } from "react-icons/fa";
 import { MdRealEstateAgent } from "react-icons/md";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface ContactAgentDialogProps {
   propertyId?: string;
@@ -34,15 +35,9 @@ interface ContactAgentDialogProps {
   defaultMessage?: string;
 }
 
-const QUICK_MESSAGES = [
-  "สนใจนัดชมครับ/ค่ะ",
-  "สอบถามราคาพิเศษ",
-  "ขอข้อมูลเพิ่มเติม",
-  "สนใจจอง",
-];
-
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const { t } = useLanguage();
 
   return (
     <Button
@@ -53,12 +48,12 @@ function SubmitButton() {
       {pending ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          กำลังส่งข้อมูล...
+          {t("property.contact_dialog.sending")}
         </>
       ) : (
         <>
           <FaPaperPlane className="mr-2 h-4 w-4" />
-          ส่งข้อความ
+          {t("property.contact_dialog.submit")}
         </>
       )}
     </Button>
@@ -73,10 +68,18 @@ export function ContactAgentDialog({
   onOpenChange,
   defaultMessage = "",
 }: ContactAgentDialogProps) {
+  const { t } = useLanguage();
   const [internalOpen, setInternalOpen] = useState(false);
   const [state, setState] = useState<LeadState>({});
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState(defaultMessage);
+
+  const QUICK_MESSAGES = [
+    t("property.contact_dialog.quick_messages.viewing"),
+    t("property.contact_dialog.quick_messages.price"),
+    t("property.contact_dialog.quick_messages.more_info"),
+    t("property.contact_dialog.quick_messages.booking"),
+  ];
 
   // Support both controlled and uncontrolled modes
   const isControlled = controlledOpen !== undefined;
@@ -102,20 +105,20 @@ export function ContactAgentDialog({
     if (propertyId === "preview-id") {
       // Mock success for Step 6 Preview
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success("ส่งข้อมูลสำเร็จ (Preview Mode)");
+      toast.success(`${t("property.contact_dialog.success")} (Preview Mode)`);
       setOpen(false);
       return;
     }
 
     const result = await submitInquiryAction({}, formData);
     if (result.success) {
-      toast.success("ส่งข้อมูลเรียบร้อยแล้ว เจ้าหน้าที่จะรีบติดต่อกลับครับ");
+      toast.success(t("property.contact_dialog.success"));
       setOpen(false);
       setState({}); // Reset state
       setPhone(""); // Reset phone
       setMessage(""); // Reset message
     } else {
-      toast.error(result.error || "ไม่สามารถส่งข้อมูลได้");
+      toast.error(result.error || t("property.contact_dialog.error"));
       setState(result);
     }
   }
@@ -126,7 +129,7 @@ export function ContactAgentDialog({
         {trigger || (
           <Button className="w-full h-12 rounded-xl text-base font-semibold bg-slate-900 text-white hover:bg-slate-800 shadow-lg transition-all hover:-translate-y-0.5">
             <FaCommentDots className="w-5 h-5 mr-2" />
-            สนใจทรัพย์นี้ / นัดชม
+            {t("property.contact_dialog.trigger")}
           </Button>
         )}
       </DialogTrigger>
@@ -143,10 +146,11 @@ export function ContactAgentDialog({
             </div>
             <div>
               <DialogTitle className="text-xl font-bold">
-                ติดต่อสอบถาม
+                {t("property.contact_dialog.title")}
               </DialogTitle>
               <p className="text-blue-100 text-sm line-clamp-1 opacity-90">
-                {propertyTitle || "สอบถามข้อมูลเพิ่มเติม"}
+                {propertyTitle ||
+                  t("property.contact_dialog.subtitle_fallback")}
               </p>
             </div>
           </div>
@@ -163,7 +167,8 @@ export function ContactAgentDialog({
                   htmlFor="fullName"
                   className="text-slate-600 font-medium text-xs uppercase tracking-wider pl-1"
                 >
-                  ชื่อ <span className="text-red-500">*</span>
+                  {t("property.contact_dialog.name_label")}{" "}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative group">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
@@ -172,7 +177,7 @@ export function ContactAgentDialog({
                   <Input
                     id="fullName"
                     name="fullName"
-                    placeholder="กรอกชื่อของคุณ"
+                    placeholder={t("property.contact_dialog.name_placeholder")}
                     className={`pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl transition-all ${
                       state.errors?.fullName ? "border-red-500 bg-red-50" : ""
                     }`}
@@ -191,7 +196,8 @@ export function ContactAgentDialog({
                   htmlFor="phone"
                   className="text-slate-600 font-medium text-xs uppercase tracking-wider pl-1"
                 >
-                  เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                  {t("property.contact_dialog.phone_label")}{" "}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative group">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
@@ -228,7 +234,7 @@ export function ContactAgentDialog({
                 htmlFor="lineId"
                 className="text-slate-600 font-medium text-xs uppercase tracking-wider pl-1"
               >
-                Line ID (ถ้ามี)
+                {t("property.contact_dialog.line_label")}
               </Label>
               <div className="relative group">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00B900] transition-colors">
@@ -237,7 +243,7 @@ export function ContactAgentDialog({
                 <Input
                   id="lineId"
                   name="lineId"
-                  placeholder="ไอดีไลน์"
+                  placeholder={t("property.contact_dialog.line_placeholder")}
                   className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white focus:border-[#00B900] rounded-xl transition-all"
                 />
               </div>
@@ -248,7 +254,7 @@ export function ContactAgentDialog({
                 htmlFor="message"
                 className="text-slate-600 font-medium text-xs uppercase tracking-wider pl-1"
               >
-                ข้อความเพิ่มเติม
+                {t("property.contact_dialog.message_label")}
               </Label>
 
               {/* Quick Chips */}
@@ -272,7 +278,7 @@ export function ContactAgentDialog({
                 <Textarea
                   id="message"
                   name="message"
-                  placeholder="พิมพ์ข้อความ..."
+                  placeholder={t("property.contact_dialog.message_placeholder")}
                   rows={3}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -284,7 +290,7 @@ export function ContactAgentDialog({
             <div className="pt-2">
               <SubmitButton />
               <p className="text-[10px] text-slate-400 text-center mt-3">
-                เจ้าหน้าที่จะติดต่อกลับให้เร็วที่สุด (ภายใน 24 ชม.)
+                {t("property.contact_dialog.footer")}
               </p>
             </div>
           </form>

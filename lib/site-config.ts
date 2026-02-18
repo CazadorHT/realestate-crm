@@ -31,6 +31,7 @@ export const siteConfig = {
     instagram: "https://instagram.com/vlinkasset",
     line: "https://line.me/ti/p/@vlinkasset",
     tiktok: "https://tiktok.com/@vlinkasset",
+    
   },
   contact: {
     email: "vlink.asset@gmail.com",

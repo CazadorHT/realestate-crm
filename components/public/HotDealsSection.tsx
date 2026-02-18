@@ -11,7 +11,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 type ApiProperty = PropertyCardProps;
 
 export function HotDealsSection() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [properties, setProperties] = useState<ApiProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEmpty, setIsEmpty] = useState(false);
@@ -130,14 +130,14 @@ export function HotDealsSection() {
                   </span>
                 ))}
               <span className="text-transparent bg-clip-text bg-linear-to-r from-red-400 via-orange-400 to-amber-400 drop-shadow-sm mt-1 block">
-                {t("home.hot_deals.description").includes("ลดราคาพิเศษ")
+                {language === "th"
                   ? t("home.hot_deals.description")
                       .split(" ")
                       .filter(
                         (w) => w.includes("ลดราคา") || w.includes("ขาย-เช่า"),
                       )
                       .join(" ")
-                  : ""}
+                  : t("home.hot_deals.description")}
               </span>
             </h2>
 

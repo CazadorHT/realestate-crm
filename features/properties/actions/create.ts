@@ -42,9 +42,16 @@ export async function createPropertyAction(
 
     // 🧠 Auto-Status Logic: Check Stock
     if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
-      propertyData.status = "SOLD";
-    } else if (propertyData.status === "SOLD") {
-      // If stock remains, force ACTIVE (prevent premature SOLD status)
+      if (propertyData.listing_type === "RENT") {
+        propertyData.status = "RENTED";
+      } else {
+        propertyData.status = "SOLD";
+      }
+    } else if (
+      propertyData.status === "SOLD" ||
+      propertyData.status === "RENTED"
+    ) {
+      // If stock remains, force ACTIVE (prevent premature SOLD/RENTED status)
       propertyData.status = "ACTIVE";
     }
 

@@ -17,6 +17,7 @@ import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 type FilterType =
   | "ALL"
@@ -286,7 +287,7 @@ function PropertyListingContent() {
             priceCurrency: "THB",
           },
         },
-        url: `https://oma-asset.com/properties/${property.slug || property.id}`,
+        url: `${siteConfig.url}/properties/${property.slug || property.id}`,
       },
     })),
   };

@@ -2,8 +2,8 @@
 
 import { Clock } from "lucide-react";
 import { format } from "date-fns";
-import { th, enUS } from "date-fns/locale";
-import { PRICE_FORMATTER, getOfficePrice } from "@/lib/property-utils";
+import { th, enUS, zhCN } from "date-fns/locale";
+import { formatPrice, getOfficePrice } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
@@ -15,7 +15,7 @@ export function PropertyCardFooter({
   variant?: "default" | "minimal";
 }) {
   const { t, language } = useLanguage();
-  const dateLocale = language === "th" ? th : enUS;
+  const dateLocale = language === "th" ? th : language === "cn" ? zhCN : enUS;
 
   if (variant === "minimal") {
     return (
@@ -29,8 +29,9 @@ export function PropertyCardFooter({
             </span>
             <div className="text-base sm:text-lg font-extrabold text-[#1B263B]">
               {property.price || property.original_price
-                ? PRICE_FORMATTER.format(
+                ? formatPrice(
                     property.price || property.original_price!,
+                    language,
                   )
                 : t("common.contact_for_price")}
             </div>
@@ -44,11 +45,12 @@ export function PropertyCardFooter({
             <div className="text-base sm:text-lg font-extrabold text-[#1B263B]">
               {property.rental_price || property.original_rental_price ? (
                 <>
-                  {PRICE_FORMATTER.format(
+                  {formatPrice(
                     property.rental_price || property.original_rental_price!,
+                    language,
                   )}
                   <span className="text-[10px] text-slate-400 font-medium ml-0.5">
-                    /{t("common.per_month")}
+                    {t("common.per_month_short")}
                   </span>
                 </>
               ) : (
@@ -102,7 +104,7 @@ export function PropertyCardFooter({
                   {/* Discount Label */}
                   <div className="order-2 flex items-center gap-1">
                     <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
-                      {PRICE_FORMATTER.format(property.original_price)}
+                      {formatPrice(property.original_price, language)}
                     </span>
                     <span className="text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-100 px-1 rounded-sm">
                       -
@@ -116,14 +118,15 @@ export function PropertyCardFooter({
                   </div>
                   {/* Current Price */}
                   <div className="order-1 text-base sm:text-lg md:text-xl font-bold text-rose-600">
-                    {PRICE_FORMATTER.format(property.price)}
+                    {formatPrice(property.price, language)}
                   </div>
                 </div>
               ) : (
                 <div className="text-base sm:text-lg md:text-xl font-bold text-slate-900">
                   {property.price || property.original_price
-                    ? PRICE_FORMATTER.format(
+                    ? formatPrice(
                         property.price || property.original_price!,
+                        language,
                       )
                     : t("common.contact_for_price")}
                 </div>
@@ -142,7 +145,7 @@ export function PropertyCardFooter({
                   {/* Discount Label */}
                   <div className="order-2 flex items-center gap-1">
                     <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
-                      {PRICE_FORMATTER.format(property.original_rental_price)}
+                      {formatPrice(property.original_rental_price, language)}
                     </span>
                     <span className="text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-100 px-1 rounded-sm">
                       -
@@ -157,22 +160,23 @@ export function PropertyCardFooter({
                   </div>
                   {/* Current Price */}
                   <div className="order-1 text-base md:text-xl font-bold text-rose-600">
-                    {PRICE_FORMATTER.format(property.rental_price)}
+                    {formatPrice(property.rental_price, language)}
                     <span className="text-[10px] md:text-xs text-slate-500 font-normal ml-0.5">
-                      /{t("common.per_month")}
+                      {t("common.per_month_short")}
                     </span>
                   </div>
                 </div>
               ) : (
                 <div className="text-base md:text-xl font-bold text-slate-900">
                   {property.rental_price || property.original_rental_price
-                    ? PRICE_FORMATTER.format(
+                    ? formatPrice(
                         property.rental_price ||
                           property.original_rental_price!,
+                        language,
                       )
                     : t("common.contact_for_price")}
                   <span className="text-[10px] md:text-xs text-slate-400 font-normal ml-0.5">
-                    /{t("common.per_month")}
+                    {t("common.per_month_short")}
                   </span>
                 </div>
               )}
@@ -202,10 +206,11 @@ export function PropertyCardFooter({
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-400 font-bold line-through decoration-slate-400/70">
-                      {PRICE_FORMATTER.format(
+                      {formatPrice(
                         property.listing_type === "SALE"
                           ? property.original_price!
                           : property.original_rental_price!,
+                        language,
                       )}
                     </span>
                     <span className="text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
@@ -227,21 +232,21 @@ export function PropertyCardFooter({
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-base md:text-xl font-bold text-rose-600">
-                      {getDisplayPrice(property, t)}
+                      {getDisplayPrice(property, t, language)}
                     </span>
                     {property.listing_type === "RENT" && (
                       <span className="text-[10px] md:text-xs text-slate-500 font-normal">
-                        /{t("common.per_month")}
+                        {t("common.per_month_short")}
                       </span>
                     )}
                   </div>
                 </div>
               ) : (
                 <>
-                  {getDisplayPrice(property, t)}
+                  {getDisplayPrice(property, t, language)}
                   {property.listing_type === "RENT" && (
                     <span className="text-[10px] md:text-xs text-slate-500 font-normal">
-                      /{t("common.per_month")}
+                      {t("common.per_month_short")}
                     </span>
                   )}
                 </>
@@ -285,6 +290,7 @@ export function PropertyCardFooter({
 function getDisplayPrice(
   property: PropertyCardProps,
   t: (key: string) => string,
+  language: string,
 ) {
   // Office price override
   const officePrice = getOfficePrice(property as any);
@@ -327,6 +333,6 @@ function getDisplayPrice(
   }
 
   if (!value) return t("common.contact_for_price");
-  const formatted = PRICE_FORMATTER.format(value);
+  const formatted = formatPrice(value, language);
   return isRent ? `${formatted}` : formatted;
 }

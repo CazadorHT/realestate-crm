@@ -108,13 +108,25 @@ export function getListingBadge(listingType: string | null): {
 }
 
 /**
- * Format price with currency
+ * Get dynamic price formatter
  */
-export const PRICE_FORMATTER = new Intl.NumberFormat("th-TH", {
-  style: "currency",
-  currency: "THB",
-  maximumFractionDigits: 0,
-});
+export function getPriceFormatter(language: string = "th") {
+  return new Intl.NumberFormat(
+    language === "th" ? "th-TH" : language === "cn" ? "zh-CN" : "en-US",
+    {
+      style: "currency",
+      currency: "THB",
+      maximumFractionDigits: 0,
+    },
+  );
+}
+
+/**
+ * Format price with currency based on language
+ */
+export function formatPrice(value: number, language: string = "th"): string {
+  return getPriceFormatter(language).format(value);
+}
 
 /**
  * Get safe text with fallback
@@ -150,7 +162,6 @@ export function getPriceDisplayConfig(property: {
     discountPercent: hasDiscount
       ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
       : 0,
-    priceLabel: isRent ? "/เดือน" : "",
   };
 }
 

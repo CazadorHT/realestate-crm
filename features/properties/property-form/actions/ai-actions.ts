@@ -147,6 +147,13 @@ export async function translatePlaceNamesAction(texts: string[]) {
       .replace(/```$/, "");
     const json = JSON.parse(cleaned);
 
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    await logAiUsage({
+      model: "gemini-flash-latest",
+      feature: "property_translator",
+      status: "success",
+    });
+
     // Map back to guarantee order and length matching input texts
     let jsonIdx = 0;
     return texts.map((t) => {
@@ -157,8 +164,15 @@ export async function translatePlaceNamesAction(texts: string[]) {
         name_cn: item?.cn || "",
       };
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("AI Batch Translation Error:", error);
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    await logAiUsage({
+      model: "gemini-flash-latest",
+      feature: "property_translator",
+      status: "error",
+      errorMessage: error.message,
+    });
     return texts.map(() => ({ name_en: "", name_cn: "" }));
   }
 }

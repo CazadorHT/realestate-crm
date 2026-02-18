@@ -19,7 +19,12 @@ import {
   clearRecentProperties,
   RecentProperty,
 } from "@/lib/recent-properties";
-import { getTypeColor, getTypeLabel, getSafeText } from "@/lib/property-utils";
+import {
+  getTypeColor,
+  getTypeLabel,
+  getSafeText,
+  formatPrice as utilFormatPrice,
+} from "@/lib/property-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { FavoriteButton } from "@/components/public/FavoriteButton";
@@ -32,13 +37,10 @@ import "aos/dist/aos.css";
 import { SectionBackground } from "./SectionBackground";
 import { siteConfig } from "@/lib/site-config";
 
-function formatPrice(price: number, t: any) {
-  return `${t("common.baht") || "฿"}${price.toLocaleString()}`;
-}
-
 function convertToRecentProperty(
   prop: RecommendedProperty,
   t: any,
+  language: string,
 ): RecentProperty {
   // Calculate price_text based on listing type and discount
   let price_text = "";
@@ -52,9 +54,11 @@ function convertToRecentProperty(
         const discountPercent = Math.round(
           ((prop.original_price! - prop.price) / prop.original_price!) * 100,
         );
-        parts.push(`${formatPrice(prop.price, t)} (-${discountPercent}%)`);
+        parts.push(
+          `${utilFormatPrice(prop.price, language)} (-${discountPercent}%)`,
+        );
       } else {
-        parts.push(formatPrice(prop.price, t));
+        parts.push(utilFormatPrice(prop.price, language));
       }
     }
     if (prop.rental_price) {
@@ -68,11 +72,15 @@ function convertToRecentProperty(
             100,
         );
         parts.push(
-          `${formatPrice(prop.rental_price, t)}/${t("recently_viewed.per_month_short")} (-${discountPercent}%)`,
+          `${utilFormatPrice(prop.rental_price, language)}/${t(
+            "recently_viewed.per_month_short",
+          )} (-${discountPercent}%)`,
         );
       } else {
         parts.push(
-          `${formatPrice(prop.rental_price, t)}/${t("recently_viewed.per_month_short")}`,
+          `${utilFormatPrice(prop.rental_price, language)}/${t(
+            "recently_viewed.per_month_short",
+          )}`,
         );
       }
     }
@@ -84,9 +92,12 @@ function convertToRecentProperty(
       const discountPercent = Math.round(
         ((prop.original_price! - prop.price!) / prop.original_price!) * 100,
       );
-      price_text = `${formatPrice(prop.price!, t)} (-${discountPercent}%)`;
+      price_text = `${utilFormatPrice(
+        prop.price!,
+        language,
+      )} (-${discountPercent}%)`;
     } else if (prop.price) {
-      price_text = formatPrice(prop.price, t);
+      price_text = utilFormatPrice(prop.price, language);
     }
   } else if (prop.listing_type === "RENT") {
     const hasDiscount =
@@ -99,12 +110,14 @@ function convertToRecentProperty(
           prop.original_rental_price!) *
           100,
       );
-      price_text = `${formatPrice(
+      price_text = `${utilFormatPrice(
         prop.rental_price!,
-        t,
+        language,
       )}/${t("recently_viewed.per_month_short")} (-${discountPercent}%)`;
     } else if (prop.rental_price) {
-      price_text = `${formatPrice(prop.rental_price, t)}/${t("recently_viewed.per_month_short")}`;
+      price_text = `${utilFormatPrice(prop.rental_price, language)}/${t(
+        "recently_viewed.per_month_short",
+      )}`;
     }
   }
 
@@ -132,7 +145,7 @@ function convertToRecentProperty(
 }
 
 // Helper to get consistent display price similar to PropertyCard
-function getCardPrice(item: RecentProperty, t: any) {
+function getCardPrice(item: RecentProperty, t: any, language: string) {
   // Backward compatibility: If new price fields are missing (old history), use price_text
   const hasNewFields =
     item.price !== undefined ||
@@ -171,19 +184,23 @@ function getCardPrice(item: RecentProperty, t: any) {
 
   if (item.listing_type === "SALE_AND_RENT") {
     const parts = [];
-    if (saleP) parts.push(formatPrice(saleP, t));
+    if (saleP) parts.push(utilFormatPrice(saleP, language));
     if (rentP)
       parts.push(
-        `${formatPrice(rentP, t)}/${t("recently_viewed.per_month_short")}`,
+        `${utilFormatPrice(rentP, language)}/${t(
+          "recently_viewed.per_month_short",
+        )}`,
       );
     return (
       parts.join(" | ") || item.price_text || t("common.contact_for_price")
     );
   }
 
-  if (isSale && saleP) return formatPrice(saleP, t);
+  if (isSale && saleP) return utilFormatPrice(saleP, language);
   if (isRent && rentP)
-    return `${formatPrice(rentP, t)}/${t("recently_viewed.per_month_short")}`;
+    return `${utilFormatPrice(rentP, language)}/${t(
+      "recently_viewed.per_month_short",
+    )}`;
 
   return item.price_text || t("common.contact_for_price");
 }
@@ -216,14 +233,18 @@ export function RecentlyViewedClient({
         // Show recommended properties
         if (recommendedProperties.length > 0) {
           setItems(
-            recommendedProperties.map((p) => convertToRecentProperty(p, t)),
+            recommendedProperties.map((p) =>
+              convertToRecentProperty(p, t, language),
+            ),
           );
           setShowingRecommended(true);
         } else {
           // Provide fallback fetch on mount if needed
           getRecommendedProperties(10).then((recs) => {
             if (recs.length > 0) {
-              setItems(recs.map((p) => convertToRecentProperty(p, t)));
+              setItems(
+                recs.map((p) => convertToRecentProperty(p, t, language)),
+              );
               setShowingRecommended(true);
             }
           });
@@ -244,7 +265,11 @@ export function RecentlyViewedClient({
         setItems([]);
 
         if (recommendedProperties.length > 0) {
-          setItems(recommendedProperties.map(convertToRecentProperty));
+          setItems(
+            recommendedProperties.map((p) =>
+              convertToRecentProperty(p, t, language),
+            ),
+          );
           setShowingRecommended(true);
         } else {
           // Show skeletons while fetching
@@ -252,7 +277,9 @@ export function RecentlyViewedClient({
           try {
             const freshRecs = await getRecommendedProperties(10);
             if (freshRecs.length > 0) {
-              setItems(freshRecs.map((p) => convertToRecentProperty(p, t)));
+              setItems(
+                freshRecs.map((p) => convertToRecentProperty(p, t, language)),
+              );
               setShowingRecommended(true);
             }
           } catch (error) {
@@ -281,13 +308,19 @@ export function RecentlyViewedClient({
 
     // 3. Load Recommendations
     if (recommendedProperties.length > 0) {
-      setItems(recommendedProperties.map((p) => convertToRecentProperty(p, t)));
+      setItems(
+        recommendedProperties.map((p) =>
+          convertToRecentProperty(p, t, language),
+        ),
+      );
     } else {
       setInitializing(true);
       try {
         const freshRecs = await getRecommendedProperties(10);
         if (freshRecs.length > 0) {
-          setItems(freshRecs.map((p) => convertToRecentProperty(p, t)));
+          setItems(
+            freshRecs.map((p) => convertToRecentProperty(p, t, language)),
+          );
         }
       } catch (error) {
         console.error("Failed to fetch recommendations on clear", error);
@@ -589,7 +622,7 @@ export function RecentlyViewedClient({
                       item.price &&
                       item.original_price > item.price && (
                         <span className="text-[10px] text-white/80 line-through decoration-white/50">
-                          {formatPrice(item.original_price, t)}
+                          {utilFormatPrice(item.original_price, language)}
                         </span>
                       )}
                     {item.listing_type === "RENT" &&
@@ -597,7 +630,10 @@ export function RecentlyViewedClient({
                       item.rental_price &&
                       item.original_rental_price > item.rental_price && (
                         <span className="text-[10px] text-white/80 line-through decoration-white/50">
-                          {formatPrice(item.original_rental_price, t)}
+                          {utilFormatPrice(
+                            item.original_rental_price,
+                            language,
+                          )}
                         </span>
                       )}
                     {item.listing_type === "SALE_AND_RENT" && (
@@ -606,21 +642,24 @@ export function RecentlyViewedClient({
                           item.price &&
                           item.original_price > item.price && (
                             <span className="text-[9px] text-white/80 line-through decoration-white/50">
-                              {formatPrice(item.original_price, t)}
+                              {utilFormatPrice(item.original_price, language)}
                             </span>
                           )}
                         {item.original_rental_price &&
                           item.rental_price &&
                           item.original_rental_price > item.rental_price && (
                             <span className="text-[9px] text-white/80 line-through decoration-white/50">
-                              {formatPrice(item.original_rental_price, t)}
+                              {utilFormatPrice(
+                                item.original_rental_price,
+                                language,
+                              )}
                             </span>
                           )}
                       </div>
                     )}
                     {/* Current Price / Calculated Price */}
                     <div className="font-bold whitespace-nowrap">
-                      {getCardPrice(item, t)}
+                      {getCardPrice(item, t, language)}
                     </div>
                   </div>
 

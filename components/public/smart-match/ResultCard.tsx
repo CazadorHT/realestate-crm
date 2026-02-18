@@ -91,13 +91,16 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
               <div>
                 {match.original_price && (
                   <div className="text-xs text-slate-400 line-through leading-none mb-0.5">
-                    ฿ {match.original_price.toLocaleString()}
+                    {t("common.baht_symbol")}{" "}
+                    {match.original_price.toLocaleString()}
                   </div>
                 )}
                 <div className="text-sm font-bold text-blue-600">
                   {match.price > 0 ? (
                     <div className="flex flex-wrap items-baseline gap-1">
-                      <span>฿ {match.price.toLocaleString()}</span>
+                      <span>
+                        {t("common.baht_symbol")} {match.price.toLocaleString()}
+                      </span>
                       {match.is_sqm_price ? (
                         <span className="text-[10px] font-medium">
                           / {t("common.sqm")}
@@ -112,7 +115,8 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
 
                       {match.secondary_price && (
                         <span className="text-[10px] text-slate-400 font-normal ml-1">
-                          (฿ {match.secondary_price.toLocaleString()} /{" "}
+                          ({t("common.baht_symbol")}{" "}
+                          {match.secondary_price.toLocaleString()} /{" "}
                           {t("common.sqm")})
                         </span>
                       )}

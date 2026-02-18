@@ -17,7 +17,10 @@ export async function logAiUsage(input: AiLogInput) {
   const user = await getCurrentProfile();
 
   try {
-    await adminClient.from("ai_usage_logs").insert({
+    console.log(
+      `[AI_LOG] Logging feature: ${input.feature}, model: ${input.model}`,
+    );
+    const { data, error } = await adminClient.from("ai_usage_logs").insert({
       model: input.model,
       feature: input.feature,
       status: input.status,
@@ -25,12 +28,18 @@ export async function logAiUsage(input: AiLogInput) {
       user_id: user?.id || null, // Allow anonymous logging
     });
 
+    if (error) {
+      console.error("[AI_LOG] Insert Error:", error);
+    } else {
+      console.log("[AI_LOG] Successfully inserted log record");
+    }
+
     // Lazy Cleanup: 10% chance to prune logs older than 30 days
     if (Math.random() < 0.1) {
       pruneAiLogs(30).catch(console.error);
     }
   } catch (error) {
-    console.error("Failed to log AI usage:", error);
+    console.error("[AI_LOG] Failed to log AI usage (Exception):", error);
   }
 }
 
@@ -186,14 +195,13 @@ export async function getAiDashboardStats(): Promise<AiDashboardStats> {
   const total = data.length;
   const successCount = data.filter((d) => d.status === "success").length;
   const chatbotCount = data.filter((d) => d.feature === "chatbot").length;
-  const blogCount = data.filter(
-    (d) => d.feature === "blog_generator" || d.feature === "content_refiner",
-  ).length;
+  // All other features count as "Content/Tools" in the current UI logic
+  const contentUsage = total - chatbotCount;
 
   return {
     totalRequests: total,
     successRate: Math.round((successCount / total) * 100),
     chatbotUsage: chatbotCount,
-    blogUsage: blogCount,
+    blogUsage: contentUsage,
   };
 }

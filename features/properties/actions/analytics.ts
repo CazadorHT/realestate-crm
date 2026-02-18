@@ -38,3 +38,26 @@ export async function incrementPropertyView(propertyId: string) {
     return { success: false };
   }
 }
+
+/**
+ * Resets view count for ALL properties to 0.
+ * Restricted to admins via RLS or by being a server action.
+ * Using Admin client to ensure it can override existing values.
+ */
+export async function resetAllPropertyViews() {
+  const supabase = createAdminClient();
+
+  try {
+    const { error } = await supabase
+      .from("properties")
+      .update({ view_count: 0 })
+      .neq("view_count", 0); // Only update those with views > 0 for efficiency
+
+    if (error) throw error;
+
+    return { success: true, message: "All property views have been reset." };
+  } catch (error) {
+    console.error("Error resetting property views:", error);
+    return { success: false, message: "Failed to reset views" };
+  }
+}

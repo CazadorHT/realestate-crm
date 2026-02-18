@@ -11,6 +11,14 @@ import { Loader2 } from "lucide-react";
 import { updateProfileAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Form,
   FormControl,
@@ -24,6 +32,7 @@ const profileSchema = z.object({
   full_name: z.string().min(1, "กรุณากรอกชื่อ-นามสกุล"),
   phone: z.string().optional(),
   line_id: z.string().optional(),
+  line_user_id: z.string().optional(),
   facebook_url: z.string().optional(),
   whatsapp_id: z.string().optional(),
   wechat_id: z.string().optional(),
@@ -35,6 +44,7 @@ interface ProfileInfoFormProps {
   fullName: string | null;
   phone: string | null;
   line_id: string | null;
+  line_user_id: string | null;
   facebook_url: string | null;
   whatsapp_id: string | null;
   wechat_id: string | null;
@@ -46,6 +56,7 @@ export function ProfileInfoForm({
   fullName,
   phone,
   line_id,
+  line_user_id,
   facebook_url,
   whatsapp_id,
   wechat_id,
@@ -53,6 +64,7 @@ export function ProfileInfoForm({
   role,
 }: ProfileInfoFormProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<ProfileFormValues>({
@@ -62,6 +74,7 @@ export function ProfileInfoForm({
       full_name: fullName || "",
       phone: phone || "",
       line_id: line_id || "",
+      line_user_id: line_user_id || "",
       facebook_url: facebook_url || "",
       whatsapp_id: whatsapp_id || "",
       wechat_id: wechat_id || "",
@@ -77,6 +90,8 @@ export function ProfileInfoForm({
         formData.append("phone", values.phone);
       }
       if (values.line_id) formData.append("line_id", values.line_id);
+      if (values.line_user_id)
+        formData.append("line_user_id", values.line_user_id);
       if (values.facebook_url)
         formData.append("facebook_url", values.facebook_url);
       if (values.whatsapp_id)
@@ -136,9 +151,43 @@ export function ProfileInfoForm({
             name="line_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Line ID</FormLabel>
+                <div className="flex items-center gap-2">
+                  <FormLabel>{t("profile.line_id_label")}</FormLabel>
+                </div>
                 <FormControl>
-                  <Input placeholder="@yourlineid" {...field} />
+                  <Input
+                    placeholder={t("profile.line_id_placeholder")}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="line_user_id"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center gap-2">
+                  <FormLabel>{t("profile.line_user_id_label")}</FormLabel>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-4 h-4 text-slate-400 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>{t("profile.line_user_id_help")}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <FormControl>
+                  <Input
+                    placeholder={t("profile.line_user_id_placeholder")}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -31,9 +31,22 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PaginationControls } from "@/components/ui/pagination-controls";
-import { Pencil, Trash2, Loader2, MapPin, Check, Search } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  Loader2,
+  MapPin,
+  Check,
+  Search,
+  Languages,
+  Sparkles,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
+  bulkTranslatePopularAreasAction,
   createPopularAreaAction,
   deletePopularAreaAction,
   updatePopularAreaAction,
@@ -49,6 +62,7 @@ type PopularArea = {
   name_en?: string | null;
   name_cn?: string | null;
   created_at: string;
+  property_count?: number;
 };
 
 export function PopularAreasTable({
@@ -76,10 +90,54 @@ export function PopularAreasTable({
 
   const filteredData = useMemo(() => {
     if (!searchQuery.trim()) return data;
-    return data.filter((item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase().trim()),
+    const query = searchQuery.toLowerCase().trim();
+    return data.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query) ||
+        item.name_en?.toLowerCase().includes(query) ||
+        item.name_cn?.toLowerCase().includes(query),
     );
   }, [data, searchQuery]);
+
+  // Sorting
+  const [sortKey, setSortKey] = useState<keyof PopularArea>("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const sortedData = useMemo(() => {
+    return [...filteredData].sort((a, b) => {
+      const aValue = a[sortKey] ?? "";
+      const bValue = b[sortKey] ?? "";
+
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+      }
+
+      const aStr = String(aValue).toLowerCase();
+      const bStr = String(bValue).toLowerCase();
+
+      return sortOrder === "asc"
+        ? aStr.localeCompare(bStr, "th")
+        : bStr.localeCompare(aStr, "th");
+    });
+  }, [filteredData, sortKey, sortOrder]);
+
+  const toggleSort = (key: keyof PopularArea) => {
+    if (sortKey === key) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortOrder("asc");
+    }
+  };
+
+  const SortIcon = ({ column }: { column: keyof PopularArea }) => {
+    if (sortKey !== column) return <ArrowUpDown className="ml-2 h-3 w-3" />;
+    return sortOrder === "asc" ? (
+      <ArrowUp className="ml-2 h-3 w-3 text-indigo-600" />
+    ) : (
+      <ArrowDown className="ml-2 h-3 w-3 text-indigo-600" />
+    );
+  };
 
   // Pagination
   const searchParams = useSearchParams();
@@ -102,7 +160,7 @@ export function PopularAreasTable({
 
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
-  const displayData = filteredData.slice(start, end);
+  const displayData = sortedData.slice(start, end);
 
   // Bulk selection
   const allIds = useMemo(
@@ -146,6 +204,28 @@ export function PopularAreasTable({
       setItemNameCn("");
     }
     setIsDialogOpen(true);
+  };
+
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const handleBulkTranslate = async () => {
+    setIsTranslating(true);
+    toast.promise(bulkTranslatePopularAreasAction(), {
+      loading: "กำลังใช้ AI แปลข้อมูลทั้งหมด...",
+      success: (res) => {
+        setIsTranslating(false);
+        if (res.success) {
+          // Re-fetch or reload
+          window.location.reload();
+          return res.message || "แปลภาษาสำเร็จ";
+        }
+        throw new Error(res.message);
+      },
+      error: (err) => {
+        setIsTranslating(false);
+        return err.message || "เกิดข้อผิดพลาดในการแปล";
+      },
+    });
   };
 
   const handleSave = async () => {
@@ -214,14 +294,30 @@ export function PopularAreasTable({
             </p>
           </div>
         </div>
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="ค้นหาทำเล..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all rounded-xl"
-          />
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            className="h-11 px-5 border-indigo-100 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 cursor-pointer hover:text-indigo-700 rounded-xl transition-all shadow-sm flex items-center gap-2 group"
+            onClick={handleBulkTranslate}
+            disabled={isTranslating || data.length === 0}
+          >
+            {isTranslating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Languages className="h-4 w-4 group-hover:scale-110 transition-transform" />
+            )}
+            แปลภาษาทั้งหมด
+          </Button>
+
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="ค้นหาทำเล..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all rounded-xl"
+            />
+          </div>
         </div>
       </div>
 
@@ -245,14 +341,37 @@ export function PopularAreasTable({
               <TableHead className="w-[80px] font-bold text-slate-900 px-6">
                 ลำดับ
               </TableHead>
-              <TableHead className="font-bold text-slate-900 px-6">
-                ชื่อภาษาไทย (THA)
+              <TableHead
+                className="font-bold text-slate-900 px-6 cursor-pointer hover:bg-slate-100 transition-colors"
+                onClick={() => toggleSort("name")}
+              >
+                <div className="flex items-center">
+                  ชื่อภาษาไทย (THA) <SortIcon column="name" />
+                </div>
               </TableHead>
-              <TableHead className="font-bold text-slate-900 px-6">
-                ชื่อภาษาอังกฤษ (ENG)
+              <TableHead
+                className="font-bold text-slate-900 px-6 cursor-pointer hover:bg-slate-100 transition-colors"
+                onClick={() => toggleSort("name_en")}
+              >
+                <div className="flex items-center">
+                  ชื่อภาษาอังกฤษ (ENG) <SortIcon column="name_en" />
+                </div>
               </TableHead>
-              <TableHead className="font-bold text-slate-900 px-6">
-                ชื่อภาษาจีน (CHN)
+              <TableHead
+                className="font-bold text-slate-900 px-6 cursor-pointer hover:bg-slate-100 transition-colors"
+                onClick={() => toggleSort("name_cn")}
+              >
+                <div className="flex items-center">
+                  ชื่อภาษาจีน (CHN) <SortIcon column="name_cn" />
+                </div>
+              </TableHead>
+              <TableHead
+                className="font-bold text-slate-900 px-6 text-center cursor-pointer hover:bg-slate-100 transition-colors"
+                onClick={() => toggleSort("property_count")}
+              >
+                <div className="flex items-center justify-center">
+                  จำนวนทรัพย์ <SortIcon column="property_count" />
+                </div>
               </TableHead>
               <TableHead className="text-right font-bold text-slate-900 px-6">
                 จัดการ
@@ -263,7 +382,7 @@ export function PopularAreasTable({
             {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="text-center py-20 text-slate-400 bg-white"
                 >
                   <div className="flex flex-col items-center gap-3">
@@ -317,6 +436,18 @@ export function PopularAreasTable({
                   </TableCell>
                   <TableCell className="text-slate-600 px-6 font-medium">
                     {item.name_cn || <span className="text-slate-300">-</span>}
+                  </TableCell>
+                  <TableCell className="px-6 text-center">
+                    <span
+                      className={cn(
+                        "inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-inset",
+                        (item.property_count || 0) > 0
+                          ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20"
+                          : "bg-slate-50 text-slate-500 ring-slate-400/20",
+                      )}
+                    >
+                      {item.property_count || 0}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right px-6">
                     <div className="flex justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
@@ -385,6 +516,11 @@ export function PopularAreasTable({
                       <h4 className="font-bold text-slate-900 leading-tight truncate">
                         {item.name}
                       </h4>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-[10px] items-center gap-0.5 inline-flex font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                          {item.property_count || 0} ทรัพย์
+                        </span>
+                      </div>
                     </div>
                   </div>
 

@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Eye, EyeOff, KeyRound, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function UpdatePasswordForm({
   className,
@@ -32,6 +33,7 @@ export function UpdatePasswordForm({
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useLanguage();
 
   // Get the current user's email
   useEffect(() => {
@@ -52,27 +54,27 @@ export function UpdatePasswordForm({
 
     // Validation
     if (!currentPassword) {
-      setError("กรุณากรอกรหัสผ่านปัจจุบัน");
+      setError(t("auth.errors.current_password_required"));
       return;
     }
 
     if (password.length < 6) {
-      setError("รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร");
+      setError(t("auth.errors.new_password_min_length"));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("รหัสผ่านใหม่ไม่ตรงกัน");
+      setError(t("auth.errors.passwords_dont_match"));
       return;
     }
 
     if (currentPassword === password) {
-      setError("รหัสผ่านใหม่ต้องไม่เหมือนกับรหัสผ่านเดิม");
+      setError(t("auth.errors.new_same_as_old"));
       return;
     }
 
     if (!userEmail) {
-      setError("ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่");
+      setError(t("auth.errors.user_not_found"));
       return;
     }
 
@@ -86,7 +88,7 @@ export function UpdatePasswordForm({
       });
 
       if (signInError) {
-        setError("รหัสผ่านปัจจุบันไม่ถูกต้อง");
+        setError(t("auth.errors.incorrect_current_password"));
         setIsLoading(false);
         return;
       }
@@ -98,10 +100,11 @@ export function UpdatePasswordForm({
 
       if (updateError) throw updateError;
 
-      toast.success("เปลี่ยนรหัสผ่านสำเร็จ");
+      toast.success(t("auth.success.password_updated"));
       router.push("/protected/profile");
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "เกิดข้อผิดพลาด";
+      const message =
+        error instanceof Error ? error.message : t("auth.errors.generic_error");
       setError(message);
       toast.error(message);
     } finally {
@@ -116,22 +119,24 @@ export function UpdatePasswordForm({
           <div className="mx-auto mb-4 p-3 rounded-full bg-primary/10">
             <KeyRound className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">เปลี่ยนรหัสผ่าน</CardTitle>
-          <CardDescription>
-            กรุณากรอกรหัสผ่านปัจจุบันและรหัสผ่านใหม่
-          </CardDescription>
+          <CardTitle className="text-2xl">
+            {t("auth.change_password")}
+          </CardTitle>
+          <CardDescription>{t("auth.change_password_desc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleUpdatePassword}>
             <div className="flex flex-col gap-4">
               {/* Current Password */}
               <div className="grid gap-2">
-                <Label htmlFor="currentPassword">รหัสผ่านปัจจุบัน</Label>
+                <Label htmlFor="currentPassword">
+                  {t("auth.current_password")}
+                </Label>
                 <div className="relative">
                   <Input
                     id="currentPassword"
                     type={showCurrentPassword ? "text" : "password"}
-                    placeholder="กรอกรหัสผ่านปัจจุบัน"
+                    placeholder={t("auth.current_password_placeholder")}
                     required
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
@@ -157,19 +162,19 @@ export function UpdatePasswordForm({
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    รหัสผ่านใหม่
+                    {t("auth.new_password")}
                   </span>
                 </div>
               </div>
 
               {/* New Password */}
               <div className="grid gap-2">
-                <Label htmlFor="password">รหัสผ่านใหม่</Label>
+                <Label htmlFor="password">{t("auth.new_password")}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showNewPassword ? "text" : "password"}
-                    placeholder="อย่างน้อย 6 ตัวอักษร"
+                    placeholder={t("auth.new_password_placeholder")}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -191,11 +196,13 @@ export function UpdatePasswordForm({
 
               {/* Confirm New Password */}
               <div className="grid gap-2">
-                <Label htmlFor="confirmPassword">ยืนยันรหัสผ่านใหม่</Label>
+                <Label htmlFor="confirmPassword">
+                  {t("auth.confirm_new_password")}
+                </Label>
                 <Input
                   id="confirmPassword"
                   type={showNewPassword ? "text" : "password"}
-                  placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
+                  placeholder={t("auth.confirm_password_placeholder")}
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -212,10 +219,10 @@ export function UpdatePasswordForm({
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    กำลังบันทึก...
+                    {t("auth.saving")}
                   </>
                 ) : (
-                  "บันทึกรหัสผ่านใหม่"
+                  t("auth.save_password")
                 )}
               </Button>
 
@@ -224,7 +231,7 @@ export function UpdatePasswordForm({
                 className="text-sm text-center text-muted-foreground hover:text-foreground flex items-center justify-center gap-1"
               >
                 <ArrowLeft className="h-4 w-4" />
-                กลับไปหน้าโปรไฟล์
+                {t("auth.back_to_profile")}
               </Link>
             </div>
           </form>

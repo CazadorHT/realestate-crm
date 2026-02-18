@@ -190,14 +190,9 @@ export default async function PublicPropertyDetailPage(props: {
       (f: any): f is NonNullable<typeof f> => f !== null && f !== undefined,
     );
 
+  const { formatPrice: utilFormatPrice } = await import("@/lib/property-utils");
   const formatPrice = (val: number | null) =>
-    val
-      ? new Intl.NumberFormat("th-TH", {
-          style: "currency",
-          currency: "THB",
-          maximumFractionDigits: 0,
-        }).format(val)
-      : "-";
+    val ? utilFormatPrice(val, language) : "-";
 
   // Schema.org RealEstateListing
   const schemaData = {
@@ -437,6 +432,7 @@ export default async function PublicPropertyDetailPage(props: {
                 agentName={agent?.full_name}
                 agentImage={agent?.avatar_url}
                 agentPhone={agent?.phone}
+                agentLine={agent?.line_id}
                 isVerified={true}
                 propertyId={data.id}
                 propertyTitle={data.title}

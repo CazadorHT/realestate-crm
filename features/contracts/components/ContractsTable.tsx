@@ -28,25 +28,7 @@ import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteRentalContractsAction } from "@/features/contracts/bulk-actions";
 import { toast } from "sonner";
-
-interface RentalContractWithRelations {
-  id: string;
-  contract_number: string;
-  tenant_name: string;
-  tenant_phone: string | null;
-  tenant_email: string | null;
-  start_date: string;
-  end_date: string;
-  duration_months: number | null;
-  monthly_rent: number | null;
-  deposit_amount: number | null;
-  deal_id: string;
-  deal: {
-    id: string;
-    property: { title: string } | null;
-  } | null;
-  created_at?: string;
-}
+import { RentalContractWithRelations } from "../types";
 
 function getContractStatus(endDate: string) {
   const now = new Date();
@@ -141,6 +123,16 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                 const statusInfo = getContractStatus(contract.end_date);
                 const propertyTitle =
                   contract.deal?.property?.title || "ไม่ระบุทรัพย์สิน";
+                const tenantName =
+                  contract.deal?.lead?.full_name ||
+                  contract.tenant_name ||
+                  "ไม่ระบุ";
+                const tenantContact =
+                  contract.deal?.lead?.phone ||
+                  contract.deal?.lead?.email ||
+                  contract.tenant_phone ||
+                  contract.tenant_email ||
+                  "-";
 
                 return (
                   <TableRow
@@ -190,9 +182,9 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium">{contract.tenant_name}</div>
+                      <div className="font-medium">{tenantName}</div>
                       <div className="text-xs text-slate-500">
-                        {contract.tenant_phone || contract.tenant_email || "-"}
+                        {tenantContact}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -209,13 +201,13 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                       )}
                     </TableCell>
                     <TableCell>
-                      {contract.monthly_rent ? (
+                      {contract.rent_price ? (
                         <div className="font-medium text-slate-900">
                           {new Intl.NumberFormat("th-TH", {
                             style: "currency",
                             currency: "THB",
                             maximumFractionDigits: 0,
-                          }).format(contract.monthly_rent)}
+                          }).format(contract.rent_price)}
                         </div>
                       ) : (
                         <span className="text-slate-400">-</span>
@@ -308,6 +300,10 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
             const propertyTitle =
               contract.deal?.property?.title || "ไม่ระบุทรัพย์สิน";
             const isSel = isSelected(contract.id);
+            const tenantName =
+              contract.deal?.lead?.full_name ||
+              contract.tenant_name ||
+              "ไม่ระบุ";
 
             return (
               <div
@@ -372,7 +368,7 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                         ผู้เช่า
                       </p>
                       <p className="text-xs font-bold text-slate-700 truncate">
-                        {contract.tenant_name}
+                        {tenantName}
                       </p>
                     </div>
                     <div className="space-y-1">
@@ -380,9 +376,9 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                         ค่าเช่า/เดือน
                       </p>
                       <p className="text-xs font-black text-blue-600">
-                        {contract.monthly_rent
+                        {contract.rent_price
                           ? new Intl.NumberFormat("th-TH").format(
-                              contract.monthly_rent,
+                              contract.rent_price,
                             )
                           : "-"}{" "}
                         ฿

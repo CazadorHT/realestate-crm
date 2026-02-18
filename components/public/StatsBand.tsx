@@ -2,6 +2,7 @@
 
 import { Building2, Users2, Trophy, Headset } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 export function StatsBand() {
   const { t } = useLanguage();
@@ -36,7 +37,7 @@ export function StatsBand() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    name: "OMA ASSET",
+    name: siteConfig.name,
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: "4.9",

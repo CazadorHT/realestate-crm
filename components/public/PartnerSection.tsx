@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 type Partner = {
   id: string;
@@ -46,7 +47,7 @@ export function PartnerSection() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "OMA ASSET",
+    name: siteConfig.name,
     description: t("home.partners.description"),
     hasCredential: {
       "@type": "EducationalOccupationalCredential",
