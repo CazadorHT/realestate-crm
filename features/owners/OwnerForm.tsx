@@ -146,9 +146,9 @@ export function OwnerForm(props: Props) {
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-6 pb-24">
         {/* Main Info Card */}
-        <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 space-y-4">
+        <div className="bg-slate-50/50 p-4 sm:p-5 rounded-2xl border border-slate-100 space-y-4">
           <div className="flex items-center gap-2 text-slate-800 font-semibold border-b border-slate-200/60 pb-2 mb-2">
             <User className="h-4 w-4 text-blue-600" />
             ข้อมูลทั่วไป
@@ -177,13 +177,13 @@ export function OwnerForm(props: Props) {
         </div>
 
         {/* Contact Info Card */}
-        <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 space-y-4">
+        <div className="bg-slate-50/50 p-4 sm:p-5 rounded-2xl border border-slate-100 space-y-4">
           <div className="flex items-center gap-2 text-slate-800 font-semibold border-b border-slate-200/60 pb-2 mb-2">
             <Phone className="h-4 w-4 text-emerald-600" />
             ข้อมูลการติดต่อ
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
             {/* Phone */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">
@@ -257,7 +257,7 @@ export function OwnerForm(props: Props) {
       </div>
 
       {/* Action Buttons (Sticky Bottom) */}
-      <div className="sticky bottom-0 z-40 -mx-6 -mb-6 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 flex items-center justify-end gap-3 rounded-b-xl">
+      <div className="sticky bottom-0 z-40 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 flex items-center justify-end gap-3 rounded-b-xl">
         <Button
           type="button"
           variant="ghost"

@@ -26,7 +26,7 @@ export function CreateOwnerDialog() {
           เพิ่มเจ้าของ
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[85vh] sm:max-h-[90vh] overflow-y-auto max-w-[95vw] sm:max-w-xl lg:max-w-3xl">
         <DialogHeader>
           <DialogTitle>เพิ่มเจ้าของทรัพย์ใหม่</DialogTitle>
         </DialogHeader>
