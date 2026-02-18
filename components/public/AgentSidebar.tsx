@@ -16,6 +16,8 @@ import { FaLine } from "react-icons/fa";
 import { useState } from "react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
+import { getLocaleValue } from "@/lib/utils/locale-utils";
+
 interface AgentSidebarProps {
   agentName?: string | null;
   agentImage?: string | null;
@@ -24,6 +26,11 @@ interface AgentSidebarProps {
   isVerified?: boolean;
   propertyId?: string;
   propertyTitle?: string;
+  property?: {
+    title: string;
+    title_en?: string | null;
+    title_cn?: string | null;
+  };
   shareUrl: string;
 }
 
@@ -35,11 +42,16 @@ export function AgentSidebar({
   isVerified = true,
   propertyId,
   propertyTitle,
+  property,
   shareUrl,
 }: AgentSidebarProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [showPhone, setShowPhone] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+
+  const shareTitle = property
+    ? getLocaleValue(property, "title", language)
+    : propertyTitle || "";
 
   // Handle phone button click
   const handlePhoneClick = () => {
@@ -123,7 +135,7 @@ export function AgentSidebar({
                 className="w-12 h-12 rounded-full bg-slate-100 hover:bg-slate-200 border-none"
               />
             )}
-            <ShareButtons url={shareUrl} title={propertyTitle || ""} />
+            <ShareButtons url={shareUrl} title={shareTitle} />
           </div>
         </div>
       </div>
@@ -168,6 +180,7 @@ export function AgentSidebar({
               <ContactAgentDialog
                 propertyId={propertyId}
                 propertyTitle={propertyTitle}
+                property={property}
                 defaultMessage={t("property.viewing_msg")}
                 trigger={
                   <Button
@@ -185,6 +198,7 @@ export function AgentSidebar({
               <ContactAgentDialog
                 propertyId={propertyId}
                 propertyTitle={propertyTitle}
+                property={property}
                 defaultMessage={t("property.inquiry_msg")}
                 open={contactDialogOpen}
                 onOpenChange={setContactDialogOpen}
@@ -220,14 +234,10 @@ export function AgentSidebar({
             )}
 
             <div className="hidden lg:block flex-1">
-              <ShareButtons url={shareUrl} title={propertyTitle || ""} />
+              <ShareButtons url={shareUrl} title={shareTitle} />
             </div>
             <div className="lg:hidden flex-1 flex justify-end">
-              <ShareButtons
-                url={shareUrl}
-                title={propertyTitle || ""}
-                variant="icon"
-              />
+              <ShareButtons url={shareUrl} title={shareTitle} variant="icon" />
             </div>
           </div>
         </div>

@@ -436,6 +436,11 @@ export default async function PublicPropertyDetailPage(props: {
                 isVerified={true}
                 propertyId={data.id}
                 propertyTitle={data.title}
+                property={{
+                  title: data.title,
+                  title_en: data.title_en,
+                  title_cn: data.title_cn,
+                }}
                 shareUrl={shareUrl}
               />
             </aside>
@@ -463,6 +468,11 @@ export default async function PublicPropertyDetailPage(props: {
         agentLine={agent?.line_id}
         propertyId={data.id}
         propertyTitle={data.title}
+        property={{
+          title: data.title,
+          title_en: data.title_en,
+          title_cn: data.title_cn,
+        }}
       />
     </main>
   );

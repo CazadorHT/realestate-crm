@@ -13,6 +13,11 @@ interface MobilePropertyActionsProps {
   agentLine?: string | null;
   propertyId?: string;
   propertyTitle?: string;
+  property?: {
+    title: string;
+    title_en?: string | null;
+    title_cn?: string | null;
+  };
 }
 
 export function MobilePropertyActions({
@@ -22,6 +27,7 @@ export function MobilePropertyActions({
   agentLine,
   propertyId,
   propertyTitle,
+  property,
 }: MobilePropertyActionsProps) {
   const { t } = useLanguage();
   return (
@@ -80,6 +86,7 @@ export function MobilePropertyActions({
           <ContactAgentDialog
             propertyId={propertyId}
             propertyTitle={propertyTitle}
+            property={property}
             trigger={
               <Button className="flex-1 h-11 bg-slate-900 hover:bg-slate-800 text-white font-semibold shadow-md px-2 min-w-0">
                 <MessageCircle className="w-4 h-4 mr-1.5 shrink-0" />

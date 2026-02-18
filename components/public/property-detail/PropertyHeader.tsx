@@ -357,7 +357,7 @@ export function PropertyHeader({
             {/* Property Type */}
             <div className="flex lg:flex-row flex-col gap-4 w-full justify-between items-end">
               <div className="space-y-3 grow min-w-0 max-w-[950px]">
-                <div className="flex items-center gap-1.5 md:gap-2 flex-wrap sm:flex-nowrap">
+                <div className="flex items-center gap-1 md:gap-2 flex-wrap sm:flex-nowrap">
                   <Badge
                     className={`rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
                       property.listing_type === "SALE"
@@ -420,7 +420,7 @@ export function PropertyHeader({
                 />
               </div>
               {/* Price */}
-              <div className="bg-slate-50/50 border border-slate-200  rounded-xl px-4 py-6 lg:mt-4 items-end  lg:items-end lg:w-auto w-full">
+              <div className="bg-slate-50/50 border border-slate-200  rounded-xl px-4 py-6 lg:mt-4 items-end  lg:items-end lg:w-[350px] w-full">
                 <div className="flex flex-col items-end gap-2">
                   {(() => {
                     if (property.listing_type === "SALE_AND_RENT") {

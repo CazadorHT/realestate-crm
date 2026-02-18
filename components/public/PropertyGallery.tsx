@@ -384,8 +384,9 @@ export function PropertyGallery({
               rounded-none!
               p-0 border-none bg-black/85
               flex flex-col items-center justify-center
-              z-100"
+              z-150"
           showCloseButton={false}
+          overlayClassName="z-150"
         >
           <VisuallyHidden>
             <DialogTitle>

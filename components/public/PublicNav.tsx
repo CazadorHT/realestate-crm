@@ -247,7 +247,11 @@ export function PublicNav() {
                 {/* CTA Buttons */}
                 <div className="flex items-center gap-2 ml-2">
                   <Link href="/properties">
-                    <Button variant="outline" size="lg" className="hover:bg-blue-600!">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="hover:bg-blue-600!"
+                    >
                       <Search className="h-4 w-4 mr-1" />
                       {t("home.search_btn")}
                     </Button>
@@ -338,7 +342,7 @@ export function PublicNav() {
 
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="p-2 text-slate-600 hover:text-blue-600 transition-colors"
+                  className="p-2 text-slate-600 hover:text-blue-600 transition-colors "
                   aria-label="Toggle menu"
                 >
                   {mobileMenuOpen ? (
@@ -351,55 +355,69 @@ export function PublicNav() {
             </div>
           </div>
 
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="xl:hidden border-t border-slate-200 bg-white">
-              <div className="px-4 py-4 space-y-3">
-                {navigationLinks.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    onClick={(e) => handleNavClick(e, link.href as string)}
-                    className="block px-4 py-3 text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium "
-                  >
-                    {link.name}
-                  </a>
-                ))}
+          {/* Mobile Menu Backdrop */}
+          <div
+            className={`xl:hidden fixed inset-0 top-16 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
+              mobileMenuOpen
+                ? "opacity-100 pointer-events-auto"
+                : "opacity-0 pointer-events-none"
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          />
 
-                <div className="pt-4 border-t border-slate-200 flex flex-col gap-3">
-                  <div className="flex gap-3">
-                    <Link
-                      href="/properties"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex-1"
+          {/* Mobile Menu */}
+          <div
+            className={`xl:hidden relative z-10 border-t border-slate-200 shadow-lg bg-white overflow-hidden transition-all rounded-b-xl   duration-300 ease-in-out ${
+              mobileMenuOpen
+                ? "max-h-[500px] opacity-100 "
+                : "max-h-0 opacity-0 border-t-transparent"
+            }`}
+          >
+            <div className="px-4 py-4 space-y-3">
+              {navigationLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  onClick={(e) => handleNavClick(e, link.href as string)}
+                  className="block px-4 py-3 text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium "
+                >
+                  {link.name}
+                </a>
+              ))}
+
+              <div className="pt-4 border-t border-slate-200 flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <Link
+                    href="/properties"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1"
+                  >
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-base"
                     >
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className="w-full cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-base"
-                      >
-                        <Search className="h-5 w-5 mr-2" />
-                        {t("home.search_btn")}
-                      </Button>
-                    </Link>
-                    <a
-                      href="#deposit-section"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex-1"
+                      <Search className="h-5 w-5 mr-2" />
+                      {t("home.search_btn")}
+                    </Button>
+                  </Link>
+                  <a
+                    href="#deposit-section"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1"
+                  >
+                    <Button
+                      size="lg"
+                      className="w-full cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base outline-none ring-0 border-0 text-white"
                     >
-                      <Button
-                        size="lg"
-                        className="w-full cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base outline-none ring-0 border-0 text-white"
-                      >
-                        <Key className="h-5 w-5 mr-2" />
-                        {t("nav.deposit")}
-                      </Button>
-                    </a>
-                  </div>
+                      <Key className="h-5 w-5 mr-2" />
+                      {t("nav.deposit")}
+                    </Button>
+                  </a>
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </nav>
       </div>
     </>
