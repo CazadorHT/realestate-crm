@@ -374,7 +374,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
           "hidden flex-col border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 sm:flex shadow-sm z-40 h-screen sticky top-0 transition-all duration-300 ease-in-out",
-          isCollapsed ? "w-20" : "w-72",
+          isCollapsed ? "w-24" : "w-72",
         )}
       >
         <div
@@ -406,10 +406,10 @@ export function SidebarNav({ role }: { role: UserRole }) {
           <button
             onClick={toggleCollapse}
             className={cn(
-              "absolute -right-3.5 top-10 h-7 w-7 rounded-full border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-md hover:shadow-lg hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 transition-all duration-300 z-70 hover:scale-110 active:scale-95 group/toggle",
+              "absolute -right-3.5 top-16 h-7 w-7 rounded-full border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-md hover:shadow-lg hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 transition-all duration-300 z-50 hover:scale-110 active:scale-95 group/toggle",
               isHovered
                 ? "opacity-100 translate-x-0"
-                : "opacity-50 -translate-x-1",
+                : "opacity-70 -translate-x-1",
             )}
             title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
@@ -482,7 +482,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
 
             if (isCollapsed) {
               return (
-                <div key={group.id} className="space-y-1">
+                <div key={group.id} className="space-y-1 mb-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
@@ -504,7 +504,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
                   </Tooltip>
 
                   {isOpen && (
-                    <div className="space-y-1">
+                    <div className="space-y-1 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-1 mx-1 border border-slate-100 dark:border-slate-700/50 shadow-inner">
                       {group.items.map((item) => (
                         <Tooltip key={item.href}>
                           <TooltipTrigger asChild>

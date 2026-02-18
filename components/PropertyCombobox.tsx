@@ -42,7 +42,7 @@ const renderPriceBlock = (
     <div className="flex items-center gap-1 justify-end">
       <span className="text-[10px] text-slate-400 font-medium">{label}:</span>
       {original_price && price && original_price > price && (
-        <span className="text-[9px] text-slate-400 line-through">
+        <span className="text-[9px] text-slate-400 line-through hidden sm:inline">
           ฿{original_price.toLocaleString()}
         </span>
       )}
@@ -115,7 +115,7 @@ export function PropertyCombobox({
           <div className="flex items-center gap-3 truncate overflow-hidden flex-1">
             {selected ? (
               <>
-                <div className="h-10 w-10 shrink-0 overflow-hidden  rounded-md bg-slate-100 border border-slate-200 shadow-inner">
+                <div className="hidden md:block h-10 w-10 shrink-0 overflow-hidden  rounded-md bg-slate-100 border border-slate-200 shadow-inner">
                   {selected.cover_image_url ? (
                     <img
                       src={selected.cover_image_url}
@@ -133,7 +133,8 @@ export function PropertyCombobox({
                     {selected.title}
                   </span>
                   <div className="flex items-center gap-2 text-xs mt-1 text-slate-500 font-medium truncate w-full">
-                    <span>ย่าน : 
+                    <span>
+                      ย่าน :
                       {selected.popular_area ||
                         selected.district ||
                         "ไม่ระบุย่าน"}

@@ -283,40 +283,41 @@ export function DealFormDialog({
                 const rentalPrice = p.rental_price || p.original_rental_price;
                 const salePrice = p.price || p.original_price;
                 return (
-                  <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4 text-sm">
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3 sm:p-4 text-sm">
+                    <div className="flex flex-row gap-3 sm:gap-4 items-start sm:items-center">
                       {/* Cover Image */}
                       {p.cover_image && (
-                        <div className="w-full sm:w-24 sm:h-24 shrink-0">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0">
                           <img
                             src={p.cover_image}
                             alt={p.title}
-                            className="w-full h-40 sm:w-24 sm:h-24 rounded-lg object-cover border border-slate-200 shadow-sm"
+                            className="w-full h-full rounded-lg object-cover border border-slate-200 shadow-sm"
                           />
                         </div>
                       )}
                       {/* Price Info */}
-                      <div className="flex flex-col gap-2 min-w-0 flex-1">
-                        <div className="font-semibold text-slate-900 truncate mb-1 line-clamp-1 max-w-[450px]">
+                      <div className="flex flex-col gap-1 min-w-0 flex-1">
+                        <div className="font-semibold text-slate-900 truncate mb-0.5 line-clamp-1 max-w-[450px]">
                           {p.title}
                         </div>
                         {p.popular_area && (
-                          <div className="text-xs text-slate-500 mb-2 flex items-center gap-1">
+                          <div className="text-xs text-slate-500 mb-1 flex items-center gap-1">
                             📍 {p.popular_area}
                           </div>
                         )}
-                        <div className="flex flex-wrap gap-x-6 gap-y-2">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1">
                           {rentalPrice ? (
                             <div>
-                              <span className="text-slate-500">ค่าเช่า:</span>{" "}
+                              <span className="text-slate-500 text-xs">
+                                เช่า:
+                              </span>{" "}
                               <span className="font-bold text-blue-700">
                                 {new Intl.NumberFormat("th-TH").format(
                                   rentalPrice,
                                 )}{" "}
-                                ฿/ด.
                               </span>
                               {p.commission_rent_months && (
-                                <span className="text-[10px] text-slate-400 ml-1 block sm:inline">
+                                <span className="text-[10px] text-slate-400 ml-1 hidden sm:inline">
                                   (คอม {p.commission_rent_months} ด.)
                                 </span>
                               )}
@@ -324,15 +325,16 @@ export function DealFormDialog({
                           ) : null}
                           {salePrice ? (
                             <div>
-                              <span className="text-slate-500">ราคาขาย:</span>{" "}
+                              <span className="text-slate-500 text-xs">
+                                ขาย:
+                              </span>{" "}
                               <span className="font-bold text-green-700">
                                 {new Intl.NumberFormat("th-TH").format(
                                   salePrice,
                                 )}{" "}
-                                ฿
                               </span>
                               {p.commission_sale_percentage && (
-                                <span className="text-[10px] text-slate-400 ml-1 block sm:inline">
+                                <span className="text-[10px] text-slate-400 ml-1 hidden sm:inline">
                                   (คอม {p.commission_sale_percentage}%)
                                 </span>
                               )}
@@ -361,7 +363,7 @@ export function DealFormDialog({
             )}
 
             {/* Deal Type, Status & Commission */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Deal Type as Toggle Buttons */}
               <FormField
                 control={form.control}
