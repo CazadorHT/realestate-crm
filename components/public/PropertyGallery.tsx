@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -136,11 +137,15 @@ export function PropertyGallery({
   const subImages = sortedImages.slice(1, 5); // Take next 4 for grid
   const remainingCount = Math.max(0, sortedImages.length - 5);
 
+  const [direction, setDirection] = useState(0);
+
   const handleNext = useCallback(() => {
+    setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % sortedImages.length);
   }, [sortedImages.length]);
 
   const handlePrev = useCallback(() => {
+    setDirection(-1);
     setCurrentIndex(
       (prev) => (prev - 1 + sortedImages.length) % sortedImages.length,
     );
@@ -414,19 +419,62 @@ export function PropertyGallery({
             <X className="h-6 w-6" />
           </button>
 
-          <div className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 mb-20 mt-12">
-            <div className="relative w-full h-full flex items-center justify-center">
-              <ImageWithFallback
-                img={sortedImages[currentIndex]}
-                alt={title}
-                className="object-contain"
-                priority
-                sizes="100vw"
-                fill={true}
-                onImageError={handleImageError}
-                failedImages={failedImages}
-              />
-            </div>
+          <div className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 mb-20 mt-12 overflow-hidden">
+            <AnimatePresence initial={false} custom={direction}>
+              <motion.div
+                key={currentIndex}
+                custom={direction}
+                variants={{
+                  enter: (direction: number) => ({
+                    x: direction > 0 ? "100%" : "-100%",
+                    opacity: 0,
+                  }),
+                  center: {
+                    zIndex: 1,
+                    x: 0,
+                    opacity: 1,
+                  },
+                  exit: (direction: number) => ({
+                    zIndex: 0,
+                    x: direction < 0 ? "100%" : "-100%",
+                    opacity: 0,
+                  }),
+                }}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  x: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.2 },
+                }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={1}
+                onDragEnd={(e, { offset, velocity }) => {
+                  const swipe =
+                    Math.abs(offset.x) > 50 || Math.abs(velocity.x) > 500;
+                  if (swipe) {
+                    if (offset.x > 0) {
+                      handlePrev();
+                    } else {
+                      handleNext();
+                    }
+                  }
+                }}
+                className="absolute inset-0 flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16"
+              >
+                <ImageWithFallback
+                  img={sortedImages[currentIndex]}
+                  alt={title}
+                  className="object-contain pointer-events-none"
+                  priority
+                  sizes="100vw"
+                  fill={true}
+                  onImageError={handleImageError}
+                  failedImages={failedImages}
+                />
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Navigation */}
