@@ -636,23 +636,33 @@ export function buildPropertyCarousel(
 
         const ensureHttps = (url: string) => {
           if (!url) return "https://placehold.co/600x400?text=No+URL";
-          // Normalize whitespace and ensure absolute
           let cleanUrl = url.trim();
           if (cleanUrl.startsWith("http://")) {
             cleanUrl = cleanUrl.replace("http://", "https://");
           } else if (cleanUrl.startsWith("//")) {
             cleanUrl = "https:" + cleanUrl;
           }
+          // LINE Limit: 1000 chars for URIs
+          if (cleanUrl.length > 1000) {
+            return "https://placehold.co/600x400?text=URL+Too+Long";
+          }
           return cleanUrl;
         };
 
         const slug = prop.slug || prop.id;
-        // CRITICAL: Encode the slug to handle Thai/Emojis/Spaces in URLs
         const encodedSlug = encodeURIComponent(slug);
+        const baseUrl = siteConfig.url.endsWith("/")
+          ? siteConfig.url.slice(0, -1)
+          : siteConfig.url;
+
+        let propertyUrl = ensureHttps(`${baseUrl}/properties/${encodedSlug}`);
+
+        // Fallback: If URL with slug is too long (> 1000), use ID which is shorter
+        if (propertyUrl.length > 950 && prop.slug) {
+          propertyUrl = ensureHttps(`${baseUrl}/properties/${prop.id}`);
+        }
+
         const imageUrl = ensureHttps(getPublicImageUrl(rawImageUrl));
-        const propertyUrl = ensureHttps(
-          `${siteConfig.url}/properties/${encodedSlug}`,
-        );
 
         // Localized title
         let title = prop.title || "—";
