@@ -93,7 +93,7 @@ async function pushText(userId: string, text: string) {
       },
       body: JSON.stringify({
         to: userId,
-        messages: [{ type: "text", text: `[DEBUG] ${text}` }],
+        messages: [{ type: "text", text: text }],
       }),
     });
   } catch (e) {
@@ -402,7 +402,7 @@ async function handlePostbackEvent(
       // If reply failed, try push
       await pushText(
         userId,
-        `ส่ง Carousel ไม่สำเร็จ: ${res.error || "Unknown Error"}. พบ ${properties.length} ทรัพย์ใน ${area}`,
+        `ขออภัยค่ะ ไม่สามารถแสดงผลรูปภาพได้ในขณะนี้ (${res.error || "Unknown Error"})\n\nทำเล: ${area}`,
       );
       // And send a text one
       await pushText(
@@ -747,14 +747,14 @@ async function handleTextMessage(
   const res = await replyMessage(replyToken, [
     {
       type: "text",
-      text: `🔎 ${headerTexts[lang]}\n(Search Fallback: text="${text}")`,
+      text: `🔎 ${headerTexts[lang]}`,
     },
     flex,
   ]);
   if (!res.success) {
     await pushText(
       event.source.userId || "",
-      `ส่งผลการค้นหาข้อความไม่สำเร็จ: ${res.error || "Unknown"}. สำหรับ: ${text}`,
+      `ขออภัยค่ะ ไม่สามารถแสดงผลรูปภาพได้ในขณะนี้ (${res.error || "Unknown"})\n\nคำค้นหา: ${text}`,
     );
   }
 }
