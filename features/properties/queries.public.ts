@@ -93,3 +93,127 @@ export async function searchPropertiesForBot(query: string, limit = 5) {
     return p;
   });
 }
+
+// ============================
+// LINE Bot: Interactive Search Queries
+// (ใช้ adminClient เพราะเรียกจาก API route)
+// ============================
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { PropertyType } from "./types";
+
+const BOT_SELECT_FIELDS = `
+  id,
+  slug,
+  title,
+  price,
+  rental_price,
+  listing_type,
+  property_images (
+    image_url,
+    is_cover,
+    sort_order
+  ),
+  bedrooms,
+  bathrooms,
+  size_sqm,
+  popular_area
+`;
+
+function sortPropertyImages<
+  T extends { property_images?: { sort_order?: number | null }[] | null },
+>(data: T[]): T[] {
+  return data.map((p) => {
+    if (p.property_images && Array.isArray(p.property_images)) {
+      p.property_images.sort(
+        (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+      );
+    }
+    return p;
+  });
+}
+
+/**
+ * ดึง popular_area ที่มีทรัพย์ ACTIVE ของ property_type นั้น
+ * คืน array ของ area เรียงตามจำนวนทรัพย์ (มากไปน้อย)
+ */
+export async function getDistinctAreasForType(
+  propertyType: string,
+): Promise<string[]> {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("properties")
+    .select("popular_area")
+    .eq("status", "ACTIVE")
+    .eq("property_type", propertyType as PropertyType)
+    .not("popular_area", "is", null)
+    .not("popular_area", "eq", "");
+
+  if (error) {
+    console.error("getDistinctAreasForType error:", error);
+    return [];
+  }
+
+  // Count occurrences and sort by most popular
+  const areaCount: Record<string, number> = {};
+  for (const row of data || []) {
+    const area = row.popular_area?.trim();
+    if (area) {
+      areaCount[area] = (areaCount[area] || 0) + 1;
+    }
+  }
+
+  return Object.entries(areaCount)
+    .sort((a, b) => b[1] - a[1])
+    .map(([area]) => area);
+}
+
+/**
+ * ค้นหาทรัพย์ตาม property_type + popular_area
+ */
+export async function searchByTypeAndArea(
+  propertyType: string,
+  area: string,
+  limit = 10,
+) {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("properties")
+    .select(BOT_SELECT_FIELDS)
+    .eq("status", "ACTIVE")
+    .eq("property_type", propertyType as PropertyType)
+    .ilike("popular_area", `%${area}%`)
+    .order("is_hot", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("searchByTypeAndArea error:", error);
+    return [];
+  }
+
+  return sortPropertyImages(data || []);
+}
+
+/**
+ * ดึงทรัพย์ Hot Deals (is_hot = true)
+ */
+export async function getHotProperties(limit = 10) {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("properties")
+    .select(BOT_SELECT_FIELDS)
+    .eq("status", "ACTIVE")
+    .eq("is_hot", true)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("getHotProperties error:", error);
+    return [];
+  }
+
+  return sortPropertyImages(data || []);
+}

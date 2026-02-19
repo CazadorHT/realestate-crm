@@ -1,12 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { LINE_MESSAGING_API, lineConfig } from "../../../lib/line-config";
-import { searchPropertiesForBot } from "@/features/properties/queries.public";
+import {
+  searchPropertiesForBot,
+  getDistinctAreasForType,
+  searchByTypeAndArea,
+  getHotProperties,
+} from "@/features/properties/queries.public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getLineProfile, saveOmniMessage } from "@/lib/line";
-
 import { siteConfig } from "@/lib/site-config";
+import {
+  buildWelcomeFlex,
+  buildPropertyTypeQuickReply,
+  buildAreaQuickReply,
+  buildPropertyCarousel,
+  buildContactInfoMessage,
+  buildDepositMessage,
+  buildNoResultsMessage,
+  buildLanguageSelection,
+  type BotLang,
+} from "@/lib/line-flex-builders";
 
+// ============================
+// Language Preference Storage
+// (In-memory cache with TTL — resets on server restart)
+// ============================
+const userLangMap = new Map<string, { lang: BotLang; ts: number }>();
+const LANG_TTL = 1000 * 60 * 60 * 24 * 30; // 30 days
+
+function getUserLang(userId: string): BotLang {
+  const entry = userLangMap.get(userId);
+  if (entry && Date.now() - entry.ts < LANG_TTL) return entry.lang;
+  return "th"; // default
+}
+
+function setUserLang(userId: string, lang: BotLang): void {
+  userLangMap.set(userId, { lang, ts: Date.now() });
+}
+
+// ============================
+// Types
+// ============================
 type LineEvent = {
   type: string;
   replyToken: string;
@@ -32,6 +67,9 @@ type LineEvent = {
   };
 };
 
+// ============================
+// Main Webhook Handler
+// ============================
 export async function POST(req: NextRequest) {
   try {
     const body = await req.text();
@@ -52,32 +90,21 @@ export async function POST(req: NextRequest) {
 
     const events: LineEvent[] = JSON.parse(body).events;
 
-    // Log the entire event body for debugging
-    console.log(
-      "LINE Webhook Received (Restored):",
-      JSON.stringify(events, null, 2),
-    );
+    console.log("LINE Webhook Received:", JSON.stringify(events, null, 2));
 
     for (const event of events) {
-      // 1. Handle Group/Room Join Events (Bot joins group)
       if (event.type === "join" || event.type === "memberJoined") {
-        console.log("Processing Join Event:", event);
         await handleJoinEvent(event);
       }
 
-      // 2. Handle Group/Room Leave Events (Bot leaves group)
       if (event.type === "leave") {
-        console.log("Processing Leave Event:", event);
         await handleLeaveEvent(event);
       }
 
-      // 3. Handle Follow Event (Legacy logic integrated)
       if (event.type === "follow") {
-        console.log("Processing Follow Event (Legacy):", event);
         await handleFollowEvent(event);
       }
 
-      // 4. Handle Text Messages
       if (event.type === "message" && event.message?.type === "text") {
         await handleIncomingChannelMessage(event);
       }
@@ -86,24 +113,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "ok" });
   } catch (error) {
     console.error("Webhook error:", error);
-    // Return 200 even on error to prevent LINE from retrying endlessly if it's a logic error
-    // But logs will show the issue.
     return NextResponse.json({ error: "Internal Error" }, { status: 200 });
   }
 }
 
-// === Event Handlers ===
+// ============================
+// Event Handlers
+// ============================
 
 async function handleJoinEvent(event: LineEvent) {
   const groupId = event.source.groupId || event.source.roomId;
   if (!groupId) return;
 
-  // 1. Get Group Summary (Name, Picture) if possible
   let groupName = "Unknown Group";
   let pictureUrl = "";
 
   try {
-    // Note: Only works if bot is in the group and has token
     const res = await fetch(`${LINE_MESSAGING_API}/group/${groupId}/summary`, {
       headers: {
         Authorization: `Bearer ${lineConfig.channelAccessToken}`,
@@ -115,15 +140,12 @@ async function handleJoinEvent(event: LineEvent) {
       groupName = data.groupName;
       pictureUrl = data.pictureUrl;
     } else {
-      console.log("Failed to fetch group summary", await res.text());
       groupName = `Group ${groupId.slice(0, 6)}...`;
     }
   } catch (e) {
     console.error("Error fetching group summary:", e);
   }
 
-  // 2. Upsert to DB
-  console.log(`Upserting line_groups: ${groupId}, ${groupName}`);
   const supabase = createAdminClient();
   const { error } = await (supabase as any).from("line_groups").upsert({
     group_id: groupId,
@@ -135,11 +157,8 @@ async function handleJoinEvent(event: LineEvent) {
 
   if (error) {
     console.error("Error upserting line group:", error);
-  } else {
-    console.log("Upsert Success");
   }
 
-  // 3. Send Welcome Message (Only if it's the bot joining)
   if (event.type === "join") {
     await replyText(
       event.replyToken,
@@ -153,24 +172,20 @@ async function handleLeaveEvent(event: LineEvent) {
   if (!groupId) return;
 
   const supabase = createAdminClient();
-  // Mark as inactive instead of deleting
   await (supabase as any)
     .from("line_groups")
     .update({ is_active: false })
     .eq("group_id", groupId);
 }
 
-// Legacy Logic: Link LINE ID to Admin or First User
 async function handleFollowEvent(event: LineEvent) {
   const userId = event.source.userId;
   if (!userId) return;
 
   const supabase = createAdminClient();
 
+  // Legacy: Link LINE ID to Admin or First User
   try {
-    console.log("New follower:", userId);
-
-    // 1. Try to find Admin
     let { data: admin } = await supabase
       .from("profiles")
       .select("id")
@@ -178,7 +193,6 @@ async function handleFollowEvent(event: LineEvent) {
       .limit(1)
       .single();
 
-    // 2. If no Admin, find first User
     if (!admin) {
       const { data: firstUser } = await supabase
         .from("profiles")
@@ -189,22 +203,21 @@ async function handleFollowEvent(event: LineEvent) {
     }
 
     if (admin) {
-      console.log("Found admin/user to link:", admin.id);
-      const { error } = await supabase
+      await supabase
         .from("profiles")
         .update({ line_id: userId })
         .eq("id", admin.id);
-
-      if (!error) {
-        console.log(`✅ Updated Line ID ${userId} for User ${admin.id}`);
-      } else {
-        console.error("❌ Error updating Line ID:", error);
-      }
-    } else {
-      console.log("❌ No user profile found to link Line ID.");
     }
   } catch (err) {
     console.error("Error in legacy follow logic:", err);
+  }
+
+  // Send Language Selection first, then Welcome will follow after language is chosen
+  try {
+    const langMsg = buildLanguageSelection();
+    await replyMessage(event.replyToken, [langMsg]);
+  } catch (err) {
+    console.error("Error sending language selection:", err);
   }
 }
 
@@ -218,9 +231,7 @@ async function handleIncomingChannelMessage(event: LineEvent) {
   // === SPECIAL COMMANDS ===
   const cleanText = text.toLowerCase().trim();
   if (cleanText === "/id" || cleanText === "/groupid") {
-    console.log(`Matched ID command: ${cleanText} from source:`, event.source);
     if (groupId) {
-      // If in group, also update group info just in case
       await handleJoinEvent(event);
       await replyText(event.replyToken, `Group ID ของกลุ่มนี้คือ:\n${groupId}`);
     } else if (userId) {
@@ -229,7 +240,6 @@ async function handleIncomingChannelMessage(event: LineEvent) {
     return;
   }
 
-  // === ALLOW MANUAL RENAMING (For Unverified Bots) ===
   if (text.startsWith("/setname ")) {
     if (!groupId) {
       await replyText(event.replyToken, "คำสั่งนี้ใช้ได้เฉพาะในกลุ่มไลน์ครับ");
@@ -252,17 +262,14 @@ async function handleIncomingChannelMessage(event: LineEvent) {
   }
 
   if (groupId) {
-    // In a group: Do nothing else for now (Silent for normal chat)
-    return;
+    return; // Silent for group chat
   }
 
-  // === 1-on-1 Logic (Existing Lead Capture) ===
-  // Only proceed if userId exists
   if (!userId) return;
 
   const supabase = createAdminClient();
 
-  // 1. Find or Create Lead
+  // Find or Create Lead
   let { data: lead } = await supabase
     .from("leads")
     .select("id")
@@ -270,7 +277,6 @@ async function handleIncomingChannelMessage(event: LineEvent) {
     .single();
 
   if (!lead) {
-    // Fetch profile from LINE
     const profile = await getLineProfile(userId);
     const { data: newLead, error: createError } = await supabase
       .from("leads")
@@ -291,7 +297,7 @@ async function handleIncomingChannelMessage(event: LineEvent) {
     lead = newLead;
   }
 
-  // 2. Log Message to Omni-channel
+  // Log Message
   if (lead) {
     await saveOmniMessage({
       lead_id: lead.id,
@@ -303,133 +309,219 @@ async function handleIncomingChannelMessage(event: LineEvent) {
     });
   }
 
-  // 3. Fallback to existing search logic (AI Search)
-  await handleTextMessage(event);
+  // Interactive Commands
+  const trimmedText = text.trim();
+  await handleInteractiveCommand(event, trimmedText, userId);
 }
 
-async function handleTextMessage(event: LineEvent) {
+// ============================
+// Interactive Command Handler
+// ============================
+async function handleInteractiveCommand(
+  event: LineEvent,
+  text: string,
+  userId: string,
+) {
+  const { replyToken } = event;
+  const lang = getUserLang(userId);
+
+  // --- เปลี่ยนภาษา ---
+  if (
+    text === "เปลี่ยนภาษา" ||
+    text === "🌐 เปลี่ยนภาษา" ||
+    text.toLowerCase() === "language" ||
+    text.toLowerCase() === "lang"
+  ) {
+    const msg = buildLanguageSelection();
+    await replyMessage(replyToken, [msg]);
+    return;
+  }
+
+  // --- ภาษา:xx → Set language + send welcome ---
+  if (text.startsWith("ภาษา:")) {
+    const selectedLang = text.replace("ภาษา:", "").trim() as BotLang;
+    if (["th", "en", "cn"].includes(selectedLang)) {
+      setUserLang(userId, selectedLang);
+
+      // Confirm + show welcome in new language
+      const confirmTexts: Record<BotLang, string> = {
+        th: "เปลี่ยนเป็นภาษาไทยแล้วค่ะ 🇹🇭",
+        en: "Language changed to English 🇬🇧",
+        cn: "已切换为中文 🇨🇳",
+      };
+
+      const { messages } = buildWelcomeFlex(selectedLang);
+      await replyMessage(replyToken, [
+        { type: "text", text: confirmTexts[selectedLang] },
+        ...messages,
+      ]);
+    }
+    return;
+  }
+
+  // --- ค้นหาทรัพย์ ---
+  if (
+    text === "ค้นหาทรัพย์" ||
+    text === "🏠 ค้นหาทรัพย์" ||
+    text === "ค้นหา" ||
+    text.toLowerCase() === "search"
+  ) {
+    const msg = buildPropertyTypeQuickReply(lang);
+    await replyMessage(replyToken, [msg]);
+    return;
+  }
+
+  // --- ประเภท:TYPE → เลือกทำเล ---
+  if (text.startsWith("ประเภท:")) {
+    const propertyType = text.replace("ประเภท:", "").trim();
+    const areas = await getDistinctAreasForType(propertyType);
+
+    if (areas.length === 0) {
+      const msg = buildNoResultsMessage("ประเภทนี้", lang);
+      await replyMessage(replyToken, [msg]);
+      return;
+    }
+
+    const msg = buildAreaQuickReply(propertyType, areas, lang);
+    await replyMessage(replyToken, [msg]);
+    return;
+  }
+
+  // --- ทำเล:TYPE:AREA → แสดง Carousel ---
+  if (text.startsWith("ทำเล:")) {
+    const parts = text.replace("ทำเล:", "").split(":");
+    const propertyType = parts[0]?.trim();
+    const area = parts[1]?.trim();
+
+    if (!propertyType || !area) {
+      await replyText(replyToken, "กรุณาเลือกทำเลจากเมนูอีกครั้งค่ะ");
+      return;
+    }
+
+    const properties = await searchByTypeAndArea(propertyType, area);
+
+    if (properties.length === 0) {
+      const msg = buildNoResultsMessage(` ${area}`, lang);
+      await replyMessage(replyToken, [msg]);
+      return;
+    }
+
+    const headerTexts: Record<BotLang, string> = {
+      th: `พบ ${properties.length} ทรัพย์ใน ${area}`,
+      en: `Found ${properties.length} properties in ${area}`,
+      cn: `在${area}找到${properties.length}个房产`,
+    };
+
+    const flex = buildPropertyCarousel(properties, headerTexts[lang], lang);
+    await replyMessage(replyToken, [flex]);
+    return;
+  }
+
+  // --- Hot Deals ---
+  if (
+    text === "Hot Deals" ||
+    text === "🔥 Hot Deals" ||
+    text.toLowerCase().includes("hot deal")
+  ) {
+    const properties = await getHotProperties();
+
+    if (properties.length === 0) {
+      const msg = buildNoResultsMessage(" Hot Deals", lang);
+      await replyMessage(replyToken, [msg]);
+      return;
+    }
+
+    const headerTexts: Record<BotLang, string> = {
+      th: `🔥 Hot Deals ${properties.length} รายการ`,
+      en: `🔥 ${properties.length} Hot Deals`,
+      cn: `🔥 ${properties.length} 个热门优惠`,
+    };
+
+    const flex = buildPropertyCarousel(properties, headerTexts[lang], lang);
+    await replyMessage(replyToken, [flex]);
+    return;
+  }
+
+  // --- ติดต่อเจ้าหน้าที่ ---
+  if (
+    text === "ติดต่อเจ้าหน้าที่" ||
+    text === "📞 ติดต่อเจ้าหน้าที่" ||
+    text === "ติดต่อ" ||
+    text.toLowerCase() === "contact"
+  ) {
+    const msg = buildContactInfoMessage(lang);
+    await replyMessage(replyToken, [msg]);
+    return;
+  }
+
+  // --- ฝากขาย/เช่า ---
+  if (
+    text === "ฝากขาย/เช่า" ||
+    text === "📝 ฝากขาย/เช่า" ||
+    text === "ฝากขาย" ||
+    text === "ฝากเช่า" ||
+    text === "ฝากทรัพย์" ||
+    text.toLowerCase() === "deposit" ||
+    text.toLowerCase() === "list"
+  ) {
+    const msg = buildDepositMessage(lang);
+    await replyMessage(replyToken, [msg]);
+    return;
+  }
+
+  // --- เมนู / Menu ---
+  if (
+    text === "เมนู" ||
+    text.toLowerCase() === "menu" ||
+    text === "สวัสดี" ||
+    text.toLowerCase() === "hello" ||
+    text.toLowerCase() === "hi" ||
+    text === "你好"
+  ) {
+    const { messages } = buildWelcomeFlex(lang);
+    await replyMessage(replyToken, messages);
+    return;
+  }
+
+  // --- Fallback: AI Search ---
+  await handleTextMessage(event, lang);
+}
+
+// ============================
+// Legacy Text Search (Fallback)
+// ============================
+async function handleTextMessage(event: LineEvent, lang: BotLang = "th") {
   const { replyToken, message } = event;
   const text = message?.text?.trim() || "";
 
   if (!text) return;
 
-  // 1. Search Logic
   console.log(`Searching for: ${text}`);
-
   const properties = await searchPropertiesForBot(text);
 
   if (properties.length === 0) {
-    await replyText(
-      replyToken,
-      `ขออภัยครับ ไม่พบทรัพย์ที่ตรงกับ "${text}" ลองระบุทำเล หรือประเภททรัพย์ เช่น "คอนโด บางนา" ดูนะครับ`,
-    );
+    const failTexts: Record<BotLang, string> = {
+      th: `ขออภัยค่ะ ไม่พบทรัพย์ที่ตรงกับ "${text}"\n\nลองพิมพ์ชื่อทำเล หรือประเภททรัพย์ เช่น "คอนโด บางนา"\nหรือพิมพ์ "เมนู" เพื่อดูตัวเลือกทั้งหมดค่ะ 😊`,
+      en: `Sorry, no properties found matching "${text}"\n\nTry typing a location or type, e.g. "Condo Bangna"\nOr type "menu" to see all options 😊`,
+      cn: `很抱歉，没有找到匹配"${text}"的房产\n\n请尝试输入地点或类型\n或输入"menu"查看所有选项 😊`,
+    };
+    await replyText(replyToken, failTexts[lang]);
     return;
   }
 
-  // 2. Build Flex Message Carousel
-  const bubbles = properties.map((prop) => {
-    const imageUrl =
-      prop.property_images?.[0]?.image_url ||
-      "https://placehold.co/600x400?text=No+Image";
-    const priceText =
-      prop.listing_type === "RENT"
-        ? `฿${prop.rental_price?.toLocaleString()}/เดือน`
-        : `฿${prop.price?.toLocaleString()}`;
-
-    return {
-      type: "bubble",
-      hero: {
-        type: "image",
-        url: imageUrl,
-        size: "full",
-        aspectRatio: "4:3",
-        aspectMode: "cover",
-        gravity: "top",
-        action: {
-          type: "uri",
-          uri: `${siteConfig.url}/properties/${prop.id}`, // Should use ENV for base URL
-        },
-      },
-      body: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          {
-            type: "text",
-            text: prop.title,
-            weight: "bold",
-            size: "md",
-            wrap: true,
-          },
-          {
-            type: "box",
-            layout: "baseline",
-            margin: "md",
-            contents: [
-              {
-                type: "text",
-                text: priceText,
-                weight: "bold",
-                size: "lg",
-                color: "#E53935", // Red accent
-              },
-            ],
-          },
-          {
-            type: "box",
-            layout: "vertical",
-            margin: "md",
-            spacing: "sm",
-            contents: [
-              {
-                type: "text",
-                text: `📍 ${prop.popular_area || "ทำเลเยี่ยม"}`,
-                size: "xs",
-                color: "#666666",
-              },
-              {
-                type: "text",
-                text: `🛏️ ${prop.bedrooms || "-"} นอน 🚿 ${prop.bathrooms || "-"} น้ำ`,
-                size: "xs",
-                color: "#666666",
-              },
-            ],
-          },
-        ],
-      },
-      footer: {
-        type: "box",
-        layout: "vertical",
-        spacing: "sm",
-        contents: [
-          {
-            type: "button",
-            style: "primary",
-            height: "sm",
-            action: {
-              type: "uri",
-              label: "ดูรายละเอียด",
-              uri: `${siteConfig.url}/properties/${prop.id}`,
-            },
-            color: "#0F172A", // Dark blue/slate
-          },
-        ],
-      },
-    };
-  });
-
-  const flexMessage = {
-    type: "flex",
-    altText: `พบ ${properties.length} ทรัพย์ที่เกี่ยวข้อง`,
-    contents: {
-      type: "carousel",
-      contents: bubbles,
-    },
+  const headerTexts: Record<BotLang, string> = {
+    th: `พบ ${properties.length} ทรัพย์ที่เกี่ยวข้อง`,
+    en: `Found ${properties.length} matching properties`,
+    cn: `找到 ${properties.length} 个相关房产`,
   };
 
-  await replyMessage(replyToken, [flexMessage]);
+  const flex = buildPropertyCarousel(properties, headerTexts[lang], lang);
+  await replyMessage(replyToken, [flex]);
 }
 
+// ============================
+// Reply Helpers
+// ============================
 async function replyText(replyToken: string, text: string) {
   await replyMessage(replyToken, [{ type: "text", text }]);
 }
@@ -442,10 +534,7 @@ async function replyMessage(replyToken: string, messages: any[]) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${lineConfig.channelAccessToken}`,
       },
-      body: JSON.stringify({
-        replyToken,
-        messages,
-      }),
+      body: JSON.stringify({ replyToken, messages }),
     });
 
     if (!res.ok) {
