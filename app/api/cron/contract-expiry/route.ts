@@ -5,6 +5,15 @@ import { sendLineNotification } from "@/lib/line";
 import { siteConfig } from "@/lib/site-config";
 
 export async function GET(request: Request) {
+  // 1. Verify Secret
+  const { searchParams } = new URL(request.url);
+  const secret = searchParams.get("secret");
+  const expectedSecret = process.env.CRON_SECRET;
+
+  if (expectedSecret && secret !== expectedSecret) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const supabase = createAdminClient();
 

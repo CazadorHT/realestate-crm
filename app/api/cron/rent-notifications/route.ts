@@ -6,12 +6,13 @@ import { sendLineNotification } from "@/lib/line";
 // e.g. /api/cron/rent-notifications?secret=YOUR_CRON_SECRET
 
 export async function GET(req: NextRequest) {
-  // 1. Verify Secret (Optional for MVP, but good practice)
+  // 1. Verify Secret
   const secret = req.nextUrl.searchParams.get("secret");
-  // const expectedSecret = process.env.CRON_SECRET;
-  // if (secret !== expectedSecret) {
-  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  // }
+  const expectedSecret = process.env.CRON_SECRET;
+
+  if (expectedSecret && secret !== expectedSecret) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
     const supabase = createAdminClient();
