@@ -47,10 +47,10 @@ export async function getPublicPropertyWithImagesBySlug(slug: string) {
 export async function searchPropertiesForBot(query: string, limit = 5) {
   const supabase = await createClient();
   const keywords = query.trim().split(/\s+/).filter(Boolean);
-
   if (keywords.length === 0) return [];
 
-  const term = keywords[0]; // Take main keyword for MVP
+  const term = keywords[0];
+  if (term.length < 2 && !["🏠", "📍", "🏙️"].includes(term)) return [];
   // Using OR filter for title, popular_area, description
   const { data, error } = await supabase
     .from("properties")
@@ -234,17 +234,28 @@ export async function searchByTypeAndArea(
 
   const results = sortPropertyImages(data || []);
   console.log(
-    `[BOT] searchByTypeAndArea found: ${results.length} results for type=${propertyType}, area=${area}`,
+    `[BOT] searchByTypeAndArea params: type="${propertyType}", area="${area}"`,
   );
-  if (results.length > 0) {
+  console.log(`[BOT] searchByTypeAndArea results found: ${results.length}`);
+
+  if (results.length === 0) {
+    // DIAGNOSTIC: Check if any active properties exist in this area regardless of type
+    const { count, error: countErr } = await supabase
+      .from("properties")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "ACTIVE")
+      .ilike("popular_area", `%${area}%`);
+
     console.log(
-      `[BOT] Example property found: ${results[0].title} (ID: ${results[0].id})`,
+      `[BOT] DIAGNOSTIC: Total active properties in "${area}" (any type): ${count ?? 0}`,
     );
+    if (countErr) console.error("[BOT] DIAGNOSTIC error:", countErr);
   } else {
     console.log(
-      `[BOT] No properties found for type=${propertyType}, area=${area}`,
+      `[BOT] Example result: ${results[0].title} (ID: ${results[0].id})`,
     );
   }
+
   return results;
 }
 

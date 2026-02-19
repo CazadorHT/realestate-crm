@@ -75,6 +75,27 @@ type LineEvent = {
 };
 
 // ============================
+// Push Helper (for debug)
+// ============================
+async function pushText(userId: string, text: string) {
+  try {
+    await fetch(`${LINE_MESSAGING_API}/push`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${lineConfig.channelAccessToken}`,
+      },
+      body: JSON.stringify({
+        to: userId,
+        messages: [{ type: "text", text: `[DEBUG] ${text}` }],
+      }),
+    });
+  } catch (e) {
+    console.error("Push failed:", e);
+  }
+}
+
+// ============================
 // Main Webhook Handler
 // ============================
 export async function POST(req: NextRequest) {
@@ -333,7 +354,13 @@ async function handlePostbackEvent(
     const properties = await searchByTypeAndArea(type, area);
     if (properties.length === 0) {
       const msg = buildNoResultsMessage(area, lang);
-      await replyMessage(event.replyToken, [msg]);
+      await replyMessage(event.replyToken, [
+        {
+          type: "text",
+          text: `Debug: เผื่อเป็นประโยชน์ -> ค้นหาประเภท="${type}" ในทำเล="${area}" แล้วไม่พบข้อมูลค่ะ`,
+        },
+        msg,
+      ]);
       return;
     }
 
@@ -351,31 +378,29 @@ async function handlePostbackEvent(
     );
 
     if (!flex.contents.contents || flex.contents.contents.length === 0) {
-      console.error(
-        `[BOT] Flex carousel is empty! All bubbles failed construction for area: ${area}`,
-      );
       await replyText(
         event.replyToken,
-        `พบ ${properties.length} ทรัพย์ แต่ไม่สามารถแสดงผลได้ในขณะนี้ (Flex Build Error)`,
+        `พบ ${properties.length} ทรัพย์ แต่ไม่สามารถสร้าง Carousel ได้`,
       );
       return;
     }
 
-    const textList = properties
-      .slice(0, 5)
-      .map((p) => `- ${p.title}`)
-      .join("\n");
-    const debugInfo = `(Type: ${type}, Area: ${area}, Count: ${properties.length})`;
-
-    console.log(`[BOT] Replying with debug text + carousel Flex`);
-    const res = await replyMessage(event.replyToken, [
-      {
-        type: "text",
-        text: `${headerTexts[lang]}\n${debugInfo}\n\n${textList}`,
-      },
-      flex,
-    ]);
-    console.log(`[BOT] Reply sent success: ${res}`);
+    const res = await replyMessage(event.replyToken, [flex]);
+    if (!res) {
+      // If reply failed, try push
+      await pushText(
+        userId,
+        `ส่ง Carousel ไม่สำเร็จ (อาจเพราะขนาดข้อความเกินขีดจำกัด) พบ ${properties.length} ทรัพย์ใน ${area}`,
+      );
+      // And send a text one
+      await pushText(
+        userId,
+        properties
+          .slice(0, 5)
+          .map((p) => `- ${p.title}`)
+          .join("\n"),
+      );
+    }
     return;
   }
 }
@@ -420,6 +445,38 @@ async function handleIncomingChannelMessage(
         `เปลี่ยนชื่อกลุ่มในระบบเป็น: "${newName}" เรียบร้อยครับ ✅\n(กด Refresh หน้าเว็บเพื่อดูผลลัพธ์)`,
       );
     }
+    return;
+  }
+
+  if (text.startsWith("/check ")) {
+    const checkArea = text.replace("/check ", "").trim();
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("properties")
+      .select("id, title, property_type, status")
+      .eq("status", "ACTIVE")
+      .ilike("popular_area", `%${checkArea}%`);
+
+    if (error) {
+      await replyText(event.replyToken, `DB Error: ${error.message}`);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      await replyText(
+        event.replyToken,
+        `ไม่พบทรัพย์ในทำเล "${checkArea}" เลยค่ะ`,
+      );
+      return;
+    }
+
+    const list = data
+      .map((p) => `[${p.property_type}] ${p.title} (ID: ${p.id})`)
+      .join("\n");
+    await replyText(
+      event.replyToken,
+      `พบ ${data.length} ทรัพย์ใน "${checkArea}":\n\n${list.slice(0, 1000)}`,
+    );
     return;
   }
 
@@ -633,7 +690,7 @@ async function handleInteractiveCommand(
   }
 
   // --- Fallback: AI Search ---
-  await handleTextMessage(event, lang, areaTranslations);
+  await handleTextMessage(event, text, lang, areaTranslations);
 }
 
 // ============================
@@ -641,12 +698,11 @@ async function handleInteractiveCommand(
 // ============================
 async function handleTextMessage(
   event: LineEvent,
+  text: string,
   lang: BotLang = "th",
   areaTranslations?: AreaTranslations,
 ) {
-  const { replyToken, message } = event;
-  const text = message?.text?.trim() || "";
-
+  const { replyToken } = event;
   if (!text) return;
 
   console.log(`Searching for: ${text}`);
@@ -663,9 +719,9 @@ async function handleTextMessage(
   }
 
   const headerTexts: Record<BotLang, string> = {
-    th: `พบ ${properties.length} ทรัพย์ที่เกี่ยวข้อง`,
-    en: `Found ${properties.length} matching properties`,
-    cn: `找到 ${properties.length} 个相关房产`,
+    th: `พบ ${properties.length} ทรัพย์ที่ตรงกับ "${text}"`,
+    en: `Found ${properties.length} matching "${text}"`,
+    cn: `找到 ${properties.length} 个关于 "${text}" 的房产`,
   };
 
   const flex = buildPropertyCarousel(
@@ -674,7 +730,21 @@ async function handleTextMessage(
     lang,
     areaTranslations,
   );
-  await replyMessage(replyToken, [flex]);
+
+  console.log(`[BOT] Replying to text search "${text}" with carousel`);
+  const res = await replyMessage(replyToken, [
+    {
+      type: "text",
+      text: `🔎 ${headerTexts[lang]}\n(Search Fallback: text="${text}")`,
+    },
+    flex,
+  ]);
+  if (!res) {
+    await pushText(
+      event.source.userId || "",
+      `ส่งผลการค้นหาข้อความไม่สำเร็จ สำหรับ: ${text}`,
+    );
+  }
 }
 
 // ============================
