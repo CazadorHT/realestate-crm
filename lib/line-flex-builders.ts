@@ -3,6 +3,7 @@ import {
   PROPERTY_TYPE_LABELS,
   type PropertyType,
 } from "@/features/properties/labels";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 // ============================
 // Types
@@ -624,241 +625,256 @@ export function buildPropertyCarousel(
   lang: BotLang = "th",
   areaTranslations?: AreaTranslations,
 ): FlexMessage {
-  const bubbles: FlexBubble[] = properties.map((prop) => {
-    const coverImage = prop.property_images?.find((img) => img.is_cover);
-    const imageUrl =
-      coverImage?.image_url ||
-      prop.property_images?.[0]?.image_url ||
-      "https://placehold.co/600x400?text=No+Image";
+  const bubbles: FlexBubble[] = properties
+    .map((prop) => {
+      try {
+        const coverImage = prop.property_images?.find((img) => img.is_cover);
+        const rawImageUrl =
+          coverImage?.image_url ||
+          prop.property_images?.[0]?.image_url ||
+          "https://placehold.co/600x400?text=No+Image";
 
-    const slug = prop.slug || prop.id;
-    const propertyUrl = `${siteConfig.url}/properties/${slug}`;
+        const imageUrl = getPublicImageUrl(rawImageUrl);
 
-    // Localized title
-    let title = prop.title || "—";
-    if (lang === "en" && prop.title_en) title = prop.title_en;
-    if (lang === "cn" && prop.title_cn) title = prop.title_cn;
+        const slug = prop.slug || prop.id;
+        const propertyUrl = `${siteConfig.url}/properties/${slug}`;
 
-    // Price display logic (New enhanced version based on Inquiry action)
-    const priceContents = [];
-    const hasRent =
-      (prop.rental_price || 0) > 0 || (prop.original_rental_price || 0) > 0;
-    const hasSale = (prop.price || 0) > 0 || (prop.original_price || 0) > 0;
+        // Localized title
+        let title = prop.title || "—";
+        if (lang === "en" && prop.title_en) title = prop.title_en;
+        if (lang === "cn" && prop.title_cn) title = prop.title_cn;
 
-    const createPriceNode = (
-      current: number | null,
-      original: number | null,
-      unit: string,
-    ) => {
-      const pNodes = [];
-      const mainPrice = current || original;
-      if (!mainPrice) return [];
+        // Price display logic (New enhanced version based on Inquiry action)
+        const priceContents = [];
+        const hasRent =
+          (prop.rental_price || 0) > 0 || (prop.original_rental_price || 0) > 0;
+        const hasSale = (prop.price || 0) > 0 || (prop.original_price || 0) > 0;
 
-      if (original && current && original > current) {
-        const discount = Math.round(((original - current) / original) * 100);
-        pNodes.push({
-          type: "box",
-          layout: "horizontal",
-          contents: [
-            {
+        const createPriceNode = (
+          current: number | null,
+          original: number | null,
+          unit: string,
+        ) => {
+          const pNodes = [];
+          const mainPrice = current || original;
+          if (!mainPrice) return [];
+
+          if (original && current && original > current) {
+            const discount = Math.round(
+              ((original - current) / original) * 100,
+            );
+            pNodes.push({
               type: "box",
-              layout: "vertical",
+              layout: "horizontal",
               contents: [
                 {
-                  type: "text",
-                  text: `฿${original.toLocaleString()}`,
-                  size: "xs",
-                  color: "#888888",
-                  decoration: "line-through",
+                  type: "box",
+                  layout: "vertical",
+                  contents: [
+                    {
+                      type: "text",
+                      text: `฿${original.toLocaleString()}`,
+                      size: "xs",
+                      color: "#888888",
+                      decoration: "line-through",
+                    },
+                    {
+                      type: "text",
+                      text: `฿${current.toLocaleString()}${unit}`,
+                      weight: "bold",
+                      size: "md",
+                      color: "#E53935",
+                    },
+                  ],
                 },
                 {
-                  type: "text",
-                  text: `฿${current.toLocaleString()}${unit}`,
-                  weight: "bold",
-                  size: "md",
-                  color: "#E53935",
+                  type: "box",
+                  layout: "vertical",
+                  contents: [
+                    {
+                      type: "text",
+                      text: `-${discount}%`,
+                      size: "xxs",
+                      color: "#E53935",
+                      weight: "bold",
+                      align: "center",
+                      gravity: "center",
+                    },
+                  ],
+                  backgroundColor: "#FFEBEE",
+                  paddingAll: "2px",
+                  cornerRadius: "sm",
+                  margin: "sm",
+                  flex: 0,
                 },
               ],
-            },
-            {
-              type: "box",
-              layout: "vertical",
-              contents: [
-                {
-                  type: "text",
-                  text: `-${discount}%`,
-                  size: "xxs",
-                  color: "#E53935",
-                  weight: "bold",
-                  align: "center",
-                  gravity: "center",
-                },
-              ],
-              backgroundColor: "#FFEBEE",
-              paddingAll: "2px",
-              cornerRadius: "sm",
-              margin: "sm",
-              flex: 0,
-            },
-          ],
-          alignItems: "center",
-        });
-      } else {
-        pNodes.push({
-          type: "text",
-          text: `฿${mainPrice.toLocaleString()}${unit}`,
-          weight: "bold",
-          size: "md",
-          color: "#E53935",
-        });
-      }
-      return pNodes;
-    };
+              alignItems: "center",
+            });
+          } else {
+            pNodes.push({
+              type: "text",
+              text: `฿${mainPrice.toLocaleString()}${unit}`,
+              weight: "bold",
+              size: "md",
+              color: "#E53935",
+            });
+          }
+          return pNodes;
+        };
 
-    if (hasRent) {
-      priceContents.push(
-        ...createPriceNode(
-          prop.rental_price ?? null,
-          prop.original_rental_price ?? null,
-          t("per_month", lang),
-        ),
-      );
-    }
-    if (hasSale) {
-      if (hasRent) priceContents.push({ type: "separator", margin: "xs" });
-      priceContents.push(
-        ...createPriceNode(prop.price ?? null, prop.original_price ?? null, ""),
-      );
-    }
-    if (priceContents.length === 0) {
-      priceContents.push({
-        type: "text",
-        text: t("price_ask", lang),
-        weight: "bold",
-        size: "md",
-        color: "#E53935",
-      });
-    }
-
-    return {
-      type: "bubble",
-      hero: {
-        type: "image",
-        url: imageUrl,
-        size: "full",
-        aspectRatio: "4:3",
-        aspectMode: "cover",
-        action: { type: "uri", uri: propertyUrl },
-      },
-      body: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          {
+        if (hasRent) {
+          priceContents.push(
+            ...createPriceNode(
+              prop.rental_price ?? null,
+              prop.original_rental_price ?? null,
+              t("per_month", lang),
+            ),
+          );
+        }
+        if (hasSale) {
+          if (hasRent) priceContents.push({ type: "separator", margin: "xs" });
+          priceContents.push(
+            ...createPriceNode(
+              prop.price ?? null,
+              prop.original_price ?? null,
+              "",
+            ),
+          );
+        }
+        if (priceContents.length === 0) {
+          priceContents.push({
             type: "text",
-            text: title,
+            text: t("price_ask", lang),
             weight: "bold",
-            size: "sm",
-            wrap: true,
-            maxLines: 2,
-            color: "#333333",
+            size: "md",
+            color: "#E53935",
+          });
+        }
+
+        return {
+          type: "bubble",
+          hero: {
+            type: "image",
+            url: imageUrl,
+            size: "full",
+            aspectRatio: "4:3",
+            aspectMode: "cover",
+            action: { type: "uri", uri: propertyUrl },
           },
-          // Price Section
-          {
+          body: {
             type: "box",
             layout: "vertical",
-            margin: "sm",
-            spacing: "xs",
-            contents: priceContents,
-          },
-          // Area
-          ...(prop.popular_area
-            ? [
-                {
-                  type: "text",
-                  text: `📍 ${localizeArea(prop.popular_area, lang, areaTranslations)}`,
-                  size: "xxs",
-                  color: "#888888",
-                  margin: "xs",
-                },
-              ]
-            : []),
-          // Specs Row (Enhanced)
-          {
-            type: "box",
-            layout: "horizontal",
-            margin: "md",
             contents: [
               {
                 type: "text",
-                text: `🛏️ ${prop.bedrooms || "-"}`,
-                size: "xxs",
-                color: "#666666",
-                flex: 1,
+                text: title,
+                weight: "bold",
+                size: "sm",
+                wrap: true,
+                maxLines: 2,
+                color: "#333333",
               },
-              { type: "separator", color: "#E0E0E0" },
+              // Price Section
               {
-                type: "text",
-                text: `🚿 ${prop.bathrooms || "-"}`,
-                size: "xxs",
-                color: "#666666",
-                flex: 1,
-                align: "center",
+                type: "box",
+                layout: "vertical",
+                margin: "sm",
+                spacing: "xs",
+                contents: priceContents,
               },
-              { type: "separator", color: "#E0E0E0" },
+              // Area
+              ...(prop.popular_area
+                ? [
+                    {
+                      type: "text",
+                      text: `📍 ${localizeArea(prop.popular_area, lang, areaTranslations)}`,
+                      size: "xxs",
+                      color: "#888888",
+                      margin: "xs",
+                    },
+                  ]
+                : []),
+              // Specs Row (Simplified - matching user's working example)
               {
-                type: "text",
-                text: `📏 ${prop.size_sqm || "-"} sqm`,
-                size: "xxs",
-                color: "#666666",
-                flex: 2,
-                align: "center",
+                type: "box",
+                layout: "horizontal",
+                margin: "md",
+                contents: [
+                  {
+                    type: "text",
+                    text: `🛏️ ${prop.bedrooms || "-"}`,
+                    size: "xxs",
+                    color: "#666666",
+                    flex: 1,
+                  },
+                  {
+                    type: "text",
+                    text: `🚿 ${prop.bathrooms || "-"}`,
+                    size: "xxs",
+                    color: "#666666",
+                    flex: 1,
+                    align: "center",
+                  },
+                  {
+                    type: "text",
+                    text: `📏 ${prop.size_sqm || "-"} sqm`,
+                    size: "xxs",
+                    color: "#666666",
+                    flex: 2,
+                    align: "center",
+                  },
+                ],
               },
             ],
+            paddingAll: "md",
           },
-        ],
-        paddingAll: "md",
-      },
-      footer: {
-        type: "box",
-        layout: "horizontal",
-        spacing: "sm",
-        contents: [
-          {
-            type: "button",
-            style: "primary",
-            height: "sm",
-            action: {
-              type: "uri",
-              label: t("btn_detail", lang),
-              uri: propertyUrl,
-            },
-            color: "#1E3A5F",
-            flex: 1,
+          footer: {
+            type: "box",
+            layout: "horizontal",
+            spacing: "sm",
+            contents: [
+              {
+                type: "button",
+                style: "primary",
+                height: "sm",
+                action: {
+                  type: "uri",
+                  label: t("btn_detail", lang),
+                  uri: propertyUrl,
+                },
+                color: "#1E3A5F",
+                flex: 1,
+              },
+              {
+                type: "button",
+                style: "secondary",
+                height: "sm",
+                action: {
+                  type: "uri",
+                  label: t("btn_contact_short", lang),
+                  uri: `${propertyUrl}#contact`,
+                },
+                flex: 1,
+              },
+            ],
+            paddingAll: "md",
           },
-          {
-            type: "button",
-            style: "secondary",
-            height: "sm",
-            action: {
-              type: "uri",
-              label: t("btn_contact_short", lang),
-              uri: `${propertyUrl}#contact`,
-            },
-            flex: 1,
-          },
-        ],
-        paddingAll: "md",
-      },
-    };
-  });
+        };
+      } catch (err) {
+        console.error(`[BOT] Error building bubble for property:`, err);
+        return null;
+      }
+    })
+    .filter(Boolean) as FlexBubble[];
+
+  const validBubbles = bubbles.slice(0, 10);
 
   return {
     type: "flex",
     altText: headerText || t("found_n", lang, { n: String(properties.length) }),
     contents: {
       type: "carousel",
-      contents: bubbles,
+      contents: validBubbles,
     },
   };
 }
