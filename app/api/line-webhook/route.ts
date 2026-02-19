@@ -759,21 +759,22 @@ async function replyMessage(
   messages: any[],
 ): Promise<boolean> {
   try {
+    const body = JSON.stringify({ replyToken, messages });
     const res = await fetch(`${LINE_MESSAGING_API}/reply`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${lineConfig.channelAccessToken}`,
       },
-      body: JSON.stringify({ replyToken, messages }),
+      body,
     });
 
     if (!res.ok) {
       const errorText = await res.text();
-      console.error("LINE API Error:", errorText);
-
-      // If we are in the middle of a reply, we can't really "reply" about the error with the same token
-      // But we can return false to let the caller know.
+      console.error("LINE API Error Log:");
+      console.error("Status:", res.status);
+      console.error("Response:", errorText);
+      console.error("Payload sent:", body);
       return false;
     }
     return true;

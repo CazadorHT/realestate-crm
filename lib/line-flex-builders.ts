@@ -334,7 +334,7 @@ export function buildLanguageSelection(): any {
             ],
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "lg",
       },
     },
   };
@@ -375,7 +375,7 @@ export function buildWelcomeFlex(lang: BotLang = "th"): {
         },
       ],
       backgroundColor: "#1E3A5F",
-      paddingAll: "20px",
+      paddingAll: "lg",
     },
     body: {
       type: "box",
@@ -455,7 +455,7 @@ export function buildWelcomeFlex(lang: BotLang = "th"): {
           ],
         },
       ],
-      paddingAll: "20px",
+      paddingAll: "lg",
     },
     footer: {
       type: "box",
@@ -473,7 +473,7 @@ export function buildWelcomeFlex(lang: BotLang = "th"): {
           height: "sm",
         },
       ],
-      paddingAll: "12px",
+      paddingAll: "md",
     },
   };
 
@@ -717,7 +717,7 @@ export function buildPropertyCarousel(
                     },
                   ],
                   backgroundColor: "#FFEBEE",
-                  paddingAll: "2px",
+                  paddingAll: "xs",
                   cornerRadius: "sm",
                   margin: "sm",
                   flex: 0,
@@ -972,7 +972,7 @@ export function buildContactInfoMessage(lang: BotLang = "th"): any {
             ],
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "lg",
       },
       footer: {
         type: "box",
@@ -990,7 +990,7 @@ export function buildContactInfoMessage(lang: BotLang = "th"): any {
             height: "sm",
           },
         ],
-        paddingAll: "12px",
+        paddingAll: "md",
       },
     },
   };
@@ -1078,7 +1078,7 @@ export function buildDepositMessage(lang: BotLang = "th"): any {
             ],
           },
         ],
-        paddingAll: "20px",
+        paddingAll: "lg",
       },
       footer: {
         type: "box",
@@ -1107,7 +1107,7 @@ export function buildDepositMessage(lang: BotLang = "th"): any {
             height: "sm",
           },
         ],
-        paddingAll: "12px",
+        paddingAll: "md",
       },
     },
   };
