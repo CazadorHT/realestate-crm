@@ -125,55 +125,49 @@ export async function POST(req: NextRequest) {
     const events: any[] = JSON.parse(body).events;
     console.log(`[BOT] Received ${events.length} events`);
 
-    // --- Fast Response Logic ---
-    // We return 200 OK immediately to LINE to prevent retries (timeout < 1s)
-    // and process the events in the "background" (async).
-    (async () => {
-      const areaTranslations = await prepareAreaTranslations();
+    const areaTranslations = await prepareAreaTranslations();
 
-      for (const event of events) {
-        const eventId = (event as any).webhookEventId;
+    for (const event of events) {
+      const eventId = (event as any).webhookEventId;
 
-        // 1. Deduplication Check
-        if (eventId) {
-          if (eventCache.has(eventId)) {
-            console.log(`[BOT] Duplicate event skipped: ${eventId}`);
-            continue;
-          }
-          eventCache.add(eventId);
-          // Keep cache size manageable
-          if (eventCache.size > CACHE_LIMIT) {
-            const first = eventCache.values().next().value;
-            if (first) eventCache.delete(first);
-          }
+      // 1. Deduplication Check
+      if (eventId) {
+        if (eventCache.has(eventId)) {
+          console.log(`[BOT] Duplicate event skipped: ${eventId}`);
+          continue;
         }
-
-        try {
-          if (event.type === "join" || event.type === "memberJoined") {
-            await handleJoinEvent(event);
-          }
-
-          if (event.type === "leave") {
-            await handleLeaveEvent(event);
-          }
-
-          if (event.type === "follow") {
-            await handleFollowEvent(event);
-          }
-
-          if (event.type === "message" && event.message?.type === "text") {
-            await handleIncomingChannelMessage(event, areaTranslations);
-          }
-
-          if (event.type === "postback") {
-            await handlePostbackEvent(event, areaTranslations);
-          }
-        } catch (err: any) {
-          console.error("Event error:", err);
-          // notification logic follows...
+        eventCache.add(eventId);
+        // Keep cache size manageable
+        if (eventCache.size > CACHE_LIMIT) {
+          const first = eventCache.values().next().value;
+          if (first) eventCache.delete(first);
         }
       }
-    })().catch((e) => console.error("Background processing error:", e));
+
+      try {
+        if (event.type === "join" || event.type === "memberJoined") {
+          await handleJoinEvent(event);
+        }
+
+        if (event.type === "leave") {
+          await handleLeaveEvent(event);
+        }
+
+        if (event.type === "follow") {
+          await handleFollowEvent(event);
+        }
+
+        if (event.type === "message" && event.message?.type === "text") {
+          await handleIncomingChannelMessage(event, areaTranslations);
+        }
+
+        if (event.type === "postback") {
+          await handlePostbackEvent(event, areaTranslations);
+        }
+      } catch (err: any) {
+        console.error("Event error:", err);
+      }
+    }
 
     return NextResponse.json({ status: "ok" });
   } catch (error: any) {
