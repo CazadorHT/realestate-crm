@@ -636,14 +636,23 @@ export function buildPropertyCarousel(
 
         const ensureHttps = (url: string) => {
           if (!url) return "https://placehold.co/600x400?text=No+URL";
-          return url.startsWith("http://")
-            ? url.replace("http://", "https://")
-            : url;
+          // Normalize whitespace and ensure absolute
+          let cleanUrl = url.trim();
+          if (cleanUrl.startsWith("http://")) {
+            cleanUrl = cleanUrl.replace("http://", "https://");
+          } else if (cleanUrl.startsWith("//")) {
+            cleanUrl = "https:" + cleanUrl;
+          }
+          return cleanUrl;
         };
 
         const slug = prop.slug || prop.id;
+        // CRITICAL: Encode the slug to handle Thai/Emojis/Spaces in URLs
+        const encodedSlug = encodeURIComponent(slug);
         const imageUrl = ensureHttps(getPublicImageUrl(rawImageUrl));
-        const propertyUrl = ensureHttps(`${siteConfig.url}/properties/${slug}`);
+        const propertyUrl = ensureHttps(
+          `${siteConfig.url}/properties/${encodedSlug}`,
+        );
 
         // Localized title
         let title = prop.title || "—";

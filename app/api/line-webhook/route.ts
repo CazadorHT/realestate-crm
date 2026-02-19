@@ -348,8 +348,8 @@ async function handlePostbackEvent(
   }
 
   if (action === "select_area") {
-    const type = params.get("type") || "";
-    const area = params.get("area") || "";
+    const type = (params.get("type") || "").trim();
+    const area = (params.get("area") || "").trim();
 
     const properties = await searchByTypeAndArea(type, area);
     if (properties.length === 0) {
