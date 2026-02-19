@@ -58,6 +58,8 @@ export async function searchPropertiesForBot(query: string, limit = 5) {
       `
       id,
       title,
+      title_en,
+      title_cn,
       price,
       rental_price,
       listing_type,
@@ -105,8 +107,12 @@ const BOT_SELECT_FIELDS = `
   id,
   slug,
   title,
+  title_en,
+  title_cn,
   price,
   rental_price,
+  original_price,
+  original_rental_price,
   listing_type,
   property_images (
     image_url,
@@ -249,4 +255,17 @@ export async function getHotProperties(limit = 10) {
   }
 
   return sortPropertyImages(data || []);
+}
+
+export async function getPopularAreaTranslations() {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("popular_areas")
+    .select("name, name_en, name_cn");
+
+  if (error) {
+    console.error("getPopularAreaTranslations error:", error);
+    return [];
+  }
+  return data || [];
 }

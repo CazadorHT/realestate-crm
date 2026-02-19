@@ -24,6 +24,8 @@ interface PropertyForFlex {
   title_cn?: string | null;
   price?: number | null;
   rental_price?: number | null;
+  original_price?: number | null;
+  original_rental_price?: number | null;
   listing_type?: string | null;
   popular_area?: string | null;
   bedrooms?: number | null;
@@ -218,6 +220,25 @@ const PROPERTY_TYPE_LABELS_I18N: Record<string, Record<BotLang, string>> = {
   OTHER: { th: "อื่นๆ", en: "Other", cn: "其他" },
 };
 
+// Area labels (Global Cache for Bot translations)
+export type AreaTranslations = Record<
+  string,
+  { en: string | null; cn: string | null }
+>;
+
+function localizeArea(
+  areaName: string,
+  lang: BotLang,
+  translations?: AreaTranslations,
+): string {
+  if (translations && translations[areaName]) {
+    const trans = translations[areaName];
+    if (lang === "en" && trans.en) return trans.en;
+    if (lang === "cn" && trans.cn) return trans.cn;
+  }
+  return areaName;
+}
+
 // ============================
 // Quick Reply Buttons
 // ============================
@@ -277,7 +298,12 @@ export function buildLanguageSelection(): any {
             contents: [
               {
                 type: "button",
-                action: { type: "message", label: "🇹🇭 ไทย", text: "ภาษา:th" },
+                action: {
+                  type: "postback",
+                  label: "🇹🇭 ไทย",
+                  data: "action=lang&value=th",
+                  displayText: "ภาษาไทย 🇹🇭",
+                },
                 style: "primary",
                 color: "#1E3A5F",
                 height: "sm",
@@ -285,16 +311,22 @@ export function buildLanguageSelection(): any {
               {
                 type: "button",
                 action: {
-                  type: "message",
+                  type: "postback",
                   label: "🇬🇧 English",
-                  text: "ภาษา:en",
+                  data: "action=lang&value=en",
+                  displayText: "English 🇬🇧",
                 },
                 style: "secondary",
                 height: "sm",
               },
               {
                 type: "button",
-                action: { type: "message", label: "🇨🇳 中文", text: "ภาษา:cn" },
+                action: {
+                  type: "postback",
+                  label: "🇨🇳 中文",
+                  data: "action=lang&value=cn",
+                  displayText: "中文 🇨🇳",
+                },
                 style: "secondary",
                 height: "sm",
               },
@@ -449,33 +481,37 @@ export function buildWelcomeFlex(lang: BotLang = "th"): {
       {
         type: "action",
         action: {
-          type: "message",
+          type: "postback",
           label: t("qr_search", lang).slice(0, 20),
-          text: "ค้นหาทรัพย์",
+          data: "action=search",
+          displayText: t("qr_search", lang),
         },
       },
       {
         type: "action",
         action: {
-          type: "message",
+          type: "postback",
           label: t("qr_deposit", lang).slice(0, 20),
-          text: "ฝากขาย/เช่า",
+          data: "action=deposit",
+          displayText: t("qr_deposit", lang),
         },
       },
       {
         type: "action",
         action: {
-          type: "message",
+          type: "postback",
           label: t("qr_contact", lang).slice(0, 20),
-          text: "ติดต่อเจ้าหน้าที่",
+          data: "action=contact",
+          displayText: t("qr_contact", lang),
         },
       },
       {
         type: "action",
         action: {
-          type: "message",
+          type: "postback",
           label: t("qr_lang", lang).slice(0, 20),
-          text: "เปลี่ยนภาษา",
+          data: "action=change_lang",
+          displayText: t("qr_lang", lang),
         },
       },
     ],
@@ -524,9 +560,10 @@ export function buildPropertyTypeQuickReply(
     return {
       type: "action",
       action: {
-        type: "message",
+        type: "postback",
         label: `${PROPERTY_TYPE_EMOJI[type] || "📦"} ${label}`.slice(0, 20),
-        text: `ประเภท:${type}`,
+        data: `action=select_type&type=${type}`,
+        displayText: `${PROPERTY_TYPE_EMOJI[type] || "📦"} ${label}`,
       },
     };
   });
@@ -545,6 +582,7 @@ export function buildAreaQuickReply(
   propertyType: string,
   areas: string[],
   lang: BotLang = "th",
+  areaTranslations?: AreaTranslations,
 ): any {
   const typeLabel =
     PROPERTY_TYPE_LABELS_I18N[propertyType]?.[lang] ||
@@ -553,14 +591,18 @@ export function buildAreaQuickReply(
 
   const limitedAreas = areas.slice(0, 13);
 
-  const items: QuickReplyItem[] = limitedAreas.map((area) => ({
-    type: "action",
-    action: {
-      type: "message",
-      label: `📍 ${area}`.slice(0, 20),
-      text: `ทำเล:${propertyType}:${area}`,
-    },
-  }));
+  const items: QuickReplyItem[] = limitedAreas.map((area) => {
+    const localizedLabel = localizeArea(area, lang, areaTranslations);
+    return {
+      type: "action",
+      action: {
+        type: "postback",
+        label: `📍 ${localizedLabel}`.slice(0, 20),
+        data: `action=select_area&type=${propertyType}&area=${area}`,
+        displayText: `📍 ${localizedLabel}`,
+      },
+    };
+  });
 
   return {
     type: "text",
@@ -576,6 +618,7 @@ export function buildPropertyCarousel(
   properties: PropertyForFlex[],
   headerText?: string,
   lang: BotLang = "th",
+  areaTranslations?: AreaTranslations,
 ): FlexMessage {
   const bubbles: FlexBubble[] = properties.map((prop) => {
     const coverImage = prop.property_images?.find((img) => img.is_cover);
@@ -592,27 +635,106 @@ export function buildPropertyCarousel(
     if (lang === "en" && prop.title_en) title = prop.title_en;
     if (lang === "cn" && prop.title_cn) title = prop.title_cn;
 
-    // Price display
-    let priceText = t("price_ask", lang);
-    if (prop.listing_type === "RENT" && prop.rental_price) {
-      priceText = `฿${prop.rental_price.toLocaleString()}${t("per_month", lang)}`;
-    } else if (prop.listing_type === "SALE" && prop.price) {
-      priceText = `฿${prop.price.toLocaleString()}`;
-    } else if (prop.listing_type === "SALE_AND_RENT") {
-      const parts: string[] = [];
-      if (prop.price) parts.push(`฿${prop.price.toLocaleString()}`);
-      if (prop.rental_price)
-        parts.push(
-          `฿${prop.rental_price.toLocaleString()}${t("per_month", lang)}`,
-        );
-      if (parts.length > 0) priceText = parts.join(" | ");
-    }
+    // Price display logic (New enhanced version based on Inquiry action)
+    const priceContents = [];
+    const hasRent =
+      (prop.rental_price || 0) > 0 || (prop.original_rental_price || 0) > 0;
+    const hasSale = (prop.price || 0) > 0 || (prop.original_price || 0) > 0;
 
-    // Detail chips
-    const details: string[] = [];
-    if (prop.bedrooms) details.push(`🛏️ ${prop.bedrooms} ${t("bed", lang)}`);
-    if (prop.bathrooms) details.push(`🚿 ${prop.bathrooms} ${t("bath", lang)}`);
-    if (prop.size_sqm) details.push(`📐 ${prop.size_sqm} sqm`);
+    const createPriceNode = (
+      current: number | null,
+      original: number | null,
+      unit: string,
+    ) => {
+      const pNodes = [];
+      const mainPrice = current || original;
+      if (!mainPrice) return [];
+
+      if (original && current && original > current) {
+        const discount = Math.round(((original - current) / original) * 100);
+        pNodes.push({
+          type: "box",
+          layout: "horizontal",
+          contents: [
+            {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "text",
+                  text: `฿${original.toLocaleString()}`,
+                  size: "xs",
+                  color: "#888888",
+                  decoration: "line-through",
+                },
+                {
+                  type: "text",
+                  text: `฿${current.toLocaleString()}${unit}`,
+                  weight: "bold",
+                  size: "md",
+                  color: "#E53935",
+                },
+              ],
+            },
+            {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "text",
+                  text: `-${discount}%`,
+                  size: "xxs",
+                  color: "#E53935",
+                  weight: "bold",
+                  align: "center",
+                  gravity: "center",
+                },
+              ],
+              backgroundColor: "#FFEBEE",
+              paddingAll: "2px",
+              cornerRadius: "sm",
+              margin: "sm",
+              flex: 0,
+            },
+          ],
+          alignItems: "center",
+        });
+      } else {
+        pNodes.push({
+          type: "text",
+          text: `฿${mainPrice.toLocaleString()}${unit}`,
+          weight: "bold",
+          size: "md",
+          color: "#E53935",
+        });
+      }
+      return pNodes;
+    };
+
+    if (hasRent) {
+      priceContents.push(
+        ...createPriceNode(
+          prop.rental_price ?? null,
+          prop.original_rental_price ?? null,
+          t("per_month", lang),
+        ),
+      );
+    }
+    if (hasSale) {
+      if (hasRent) priceContents.push({ type: "separator", margin: "xs" });
+      priceContents.push(
+        ...createPriceNode(prop.price ?? null, prop.original_price ?? null, ""),
+      );
+    }
+    if (priceContents.length === 0) {
+      priceContents.push({
+        type: "text",
+        text: t("price_ask", lang),
+        weight: "bold",
+        size: "md",
+        color: "#E53935",
+      });
+    }
 
     return {
       type: "bubble",
@@ -632,42 +754,66 @@ export function buildPropertyCarousel(
             type: "text",
             text: title,
             weight: "bold",
-            size: "md",
+            size: "sm",
             wrap: true,
             maxLines: 2,
+            color: "#333333",
           },
+          // Price Section
           {
-            type: "text",
-            text: priceText,
-            weight: "bold",
-            size: "lg",
-            color: "#E53935",
+            type: "box",
+            layout: "vertical",
             margin: "sm",
+            spacing: "xs",
+            contents: priceContents,
           },
+          // Area
           ...(prop.popular_area
             ? [
                 {
                   type: "text",
-                  text: `📍 ${prop.popular_area}`,
-                  size: "xs",
+                  text: `📍 ${localizeArea(prop.popular_area, lang, areaTranslations)}`,
+                  size: "xxs",
                   color: "#888888",
-                  margin: "sm",
+                  margin: "xs",
                 },
               ]
             : []),
-          ...(details.length > 0
-            ? [
-                {
-                  type: "text",
-                  text: details.join("  "),
-                  size: "xs",
-                  color: "#888888",
-                  margin: "sm",
-                },
-              ]
-            : []),
+          // Specs Row (Enhanced)
+          {
+            type: "box",
+            layout: "horizontal",
+            margin: "md",
+            contents: [
+              {
+                type: "text",
+                text: `🛏️ ${prop.bedrooms || "-"}`,
+                size: "xxs",
+                color: "#666666",
+                flex: 1,
+              },
+              { type: "separator", color: "#E0E0E0" },
+              {
+                type: "text",
+                text: `🚿 ${prop.bathrooms || "-"}`,
+                size: "xxs",
+                color: "#666666",
+                flex: 1,
+                align: "center",
+              },
+              { type: "separator", color: "#E0E0E0" },
+              {
+                type: "text",
+                text: `📏 ${prop.size_sqm || "-"} sqm`,
+                size: "xxs",
+                color: "#666666",
+                flex: 2,
+                align: "center",
+              },
+            ],
+          },
         ],
-        paddingAll: "16px",
+        paddingAll: "12px",
       },
       footer: {
         type: "box",

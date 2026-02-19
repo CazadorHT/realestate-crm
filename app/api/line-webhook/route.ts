@@ -7,6 +7,7 @@ import {
   searchByTypeAndArea,
   getHotProperties,
   getActivePropertyTypes,
+  getPopularAreaTranslations,
 } from "@/features/properties/queries.public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getLineProfile, saveOmniMessage } from "@/lib/line";
@@ -21,6 +22,7 @@ import {
   buildNoResultsMessage,
   buildLanguageSelection,
   type BotLang,
+  type AreaTranslations,
 } from "@/lib/line-flex-builders";
 
 // ============================
@@ -66,6 +68,10 @@ type LineEvent = {
   follow?: {
     isUnblocked: boolean;
   };
+  postback?: {
+    data: string;
+    params?: Record<string, string>;
+  };
 };
 
 // ============================
@@ -93,6 +99,8 @@ export async function POST(req: NextRequest) {
 
     console.log("LINE Webhook Received:", JSON.stringify(events, null, 2));
 
+    const areaTranslations = await prepareAreaTranslations();
+
     for (const event of events) {
       if (event.type === "join" || event.type === "memberJoined") {
         await handleJoinEvent(event);
@@ -107,7 +115,11 @@ export async function POST(req: NextRequest) {
       }
 
       if (event.type === "message" && event.message?.type === "text") {
-        await handleIncomingChannelMessage(event);
+        await handleIncomingChannelMessage(event, areaTranslations);
+      }
+
+      if (event.type === "postback") {
+        await handlePostbackEvent(event, areaTranslations);
       }
     }
 
@@ -216,7 +228,123 @@ async function handleFollowEvent(event: LineEvent) {
   }
 }
 
-async function handleIncomingChannelMessage(event: LineEvent) {
+async function prepareAreaTranslations(): Promise<AreaTranslations> {
+  const list = await getPopularAreaTranslations();
+  const map: AreaTranslations = {};
+  for (const item of list) {
+    if (item.name) {
+      map[item.name] = { en: item.name_en, cn: item.name_cn };
+    }
+  }
+  return map;
+}
+
+async function handlePostbackEvent(
+  event: LineEvent,
+  areaTranslations: AreaTranslations,
+) {
+  const userId = event.source.userId;
+  if (!userId) return;
+
+  const data = event.postback?.data || "";
+  const params = new URLSearchParams(data);
+  const action = params.get("action");
+
+  console.log(`[BOT] Postback action: ${action}, data: ${data}`);
+
+  // 1. Language Change
+  if (action === "lang") {
+    const selectedLang = params.get("value") as BotLang;
+    if (["th", "en", "cn"].includes(selectedLang)) {
+      setUserLang(userId, selectedLang);
+      const confirmTexts: Record<BotLang, string> = {
+        th: "เปลี่ยนเป็นภาษาไทยแล้วค่ะ 🇹🇭",
+        en: "Language changed to English 🇬🇧",
+        cn: "已切换为中文 🇨🇳",
+      };
+      const { messages } = buildWelcomeFlex(selectedLang);
+      await replyMessage(event.replyToken, [
+        { type: "text", text: confirmTexts[selectedLang] },
+        ...messages,
+      ]);
+    }
+    return;
+  }
+
+  // 2. Commands mapping
+  const lang = getUserLang(userId);
+
+  if (action === "search") {
+    const activeTypes = await getActivePropertyTypes();
+    const msg = buildPropertyTypeQuickReply(lang, activeTypes);
+    await replyMessage(event.replyToken, [msg]);
+    return;
+  }
+
+  if (action === "change_lang") {
+    const msg = buildLanguageSelection();
+    await replyMessage(event.replyToken, [msg]);
+    return;
+  }
+
+  if (action === "contact") {
+    const msg = buildContactInfoMessage(lang);
+    await replyMessage(event.replyToken, [msg]);
+    return;
+  }
+
+  if (action === "deposit") {
+    const msg = buildDepositMessage(lang);
+    await replyMessage(event.replyToken, [msg]);
+    return;
+  }
+
+  // 3. Selection Flow
+  if (action === "select_type") {
+    const type = params.get("type") || "";
+    const areas = await getDistinctAreasForType(type);
+    if (areas.length === 0) {
+      const msg = buildNoResultsMessage(type, lang);
+      await replyMessage(event.replyToken, [msg]);
+      return;
+    }
+    const msg = buildAreaQuickReply(type, areas, lang, areaTranslations);
+    await replyMessage(event.replyToken, [msg]);
+    return;
+  }
+
+  if (action === "select_area") {
+    const type = params.get("type") || "";
+    const area = params.get("area") || "";
+
+    const properties = await searchByTypeAndArea(type, area);
+    if (properties.length === 0) {
+      const msg = buildNoResultsMessage(area, lang);
+      await replyMessage(event.replyToken, [msg]);
+      return;
+    }
+
+    const headerTexts: Record<BotLang, string> = {
+      th: `พบ ${properties.length} ทรัพย์ใน ${area}`,
+      en: `Found ${properties.length} properties in ${area}`,
+      cn: `在${area}找到${properties.length}个房产`,
+    };
+
+    const flex = buildPropertyCarousel(
+      properties,
+      headerTexts[lang],
+      lang,
+      areaTranslations,
+    );
+    await replyMessage(event.replyToken, [flex]);
+    return;
+  }
+}
+
+async function handleIncomingChannelMessage(
+  event: LineEvent,
+  areaTranslations: AreaTranslations,
+) {
   const userId = event.source.userId;
   const groupId = event.source.groupId || event.source.roomId;
   const text = event.message?.text || "";
@@ -306,7 +434,7 @@ async function handleIncomingChannelMessage(event: LineEvent) {
 
   // Interactive Commands
   const trimmedText = text.trim();
-  await handleInteractiveCommand(event, trimmedText, userId);
+  await handleInteractiveCommand(event, trimmedText, userId, areaTranslations);
 }
 
 // ============================
@@ -316,6 +444,7 @@ async function handleInteractiveCommand(
   event: LineEvent,
   text: string,
   userId: string,
+  areaTranslations?: AreaTranslations,
 ) {
   const { replyToken } = event;
   const lang = getUserLang(userId);
@@ -378,7 +507,12 @@ async function handleInteractiveCommand(
       return;
     }
 
-    const msg = buildAreaQuickReply(propertyType, areas, lang);
+    const msg = buildAreaQuickReply(
+      propertyType,
+      areas,
+      lang,
+      areaTranslations,
+    );
     await replyMessage(replyToken, [msg]);
     return;
   }
@@ -408,7 +542,12 @@ async function handleInteractiveCommand(
       cn: `在${area}找到${properties.length}个房产`,
     };
 
-    const flex = buildPropertyCarousel(properties, headerTexts[lang], lang);
+    const flex = buildPropertyCarousel(
+      properties,
+      headerTexts[lang],
+      lang,
+      areaTranslations,
+    );
     await replyMessage(replyToken, [flex]);
     return;
   }
@@ -455,13 +594,17 @@ async function handleInteractiveCommand(
   }
 
   // --- Fallback: AI Search ---
-  await handleTextMessage(event, lang);
+  await handleTextMessage(event, lang, areaTranslations);
 }
 
 // ============================
 // Legacy Text Search (Fallback)
 // ============================
-async function handleTextMessage(event: LineEvent, lang: BotLang = "th") {
+async function handleTextMessage(
+  event: LineEvent,
+  lang: BotLang = "th",
+  areaTranslations?: AreaTranslations,
+) {
   const { replyToken, message } = event;
   const text = message?.text?.trim() || "";
 
@@ -486,7 +629,12 @@ async function handleTextMessage(event: LineEvent, lang: BotLang = "th") {
     cn: `找到 ${properties.length} 个相关房产`,
   };
 
-  const flex = buildPropertyCarousel(properties, headerTexts[lang], lang);
+  const flex = buildPropertyCarousel(
+    properties,
+    headerTexts[lang],
+    lang,
+    areaTranslations,
+  );
   await replyMessage(replyToken, [flex]);
 }
 
