@@ -386,11 +386,11 @@ async function handlePostbackEvent(
     }
 
     const res = await replyMessage(event.replyToken, [flex]);
-    if (!res) {
+    if (!res.success) {
       // If reply failed, try push
       await pushText(
         userId,
-        `ส่ง Carousel ไม่สำเร็จ (อาจเพราะขนาดข้อความเกินขีดจำกัด) พบ ${properties.length} ทรัพย์ใน ${area}`,
+        `ส่ง Carousel ไม่สำเร็จ: ${res.error || "Unknown Error"}. พบ ${properties.length} ทรัพย์ใน ${area}`,
       );
       // And send a text one
       await pushText(
@@ -739,10 +739,10 @@ async function handleTextMessage(
     },
     flex,
   ]);
-  if (!res) {
+  if (!res.success) {
     await pushText(
       event.source.userId || "",
-      `ส่งผลการค้นหาข้อความไม่สำเร็จ สำหรับ: ${text}`,
+      `ส่งผลการค้นหาข้อความไม่สำเร็จ: ${res.error || "Unknown"}. สำหรับ: ${text}`,
     );
   }
 }
@@ -757,7 +757,7 @@ async function replyText(replyToken: string, text: string) {
 async function replyMessage(
   replyToken: string,
   messages: any[],
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: string }> {
   try {
     const body = JSON.stringify({ replyToken, messages });
     const res = await fetch(`${LINE_MESSAGING_API}/reply`, {
@@ -775,11 +775,16 @@ async function replyMessage(
       console.error("Status:", res.status);
       console.error("Response:", errorText);
       console.error("Payload sent:", body);
-      return false;
+
+      // --- CRITICAL DEBUG ---
+      // We don't have the userId here easily, but we can try to push to the user if we can find it
+      // For now, most callers of replyMessage are in handle methods where userId is available.
+      // Better: The caller should handle the push if replyMessage returns false.
+      return { success: false, error: errorText };
     }
-    return true;
+    return { success: true };
   } catch (error: any) {
     console.error("Reply functionality failed:", error);
-    return false;
+    return { success: false, error: error.message };
   }
 }
