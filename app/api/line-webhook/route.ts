@@ -336,8 +336,25 @@ async function handlePostbackEvent(
       lang,
       areaTranslations,
     );
-    console.log(`[BOT] Replying with carousel Flex`);
-    const res = await replyMessage(event.replyToken, [flex]);
+
+    if (!flex.contents.contents || flex.contents.contents.length === 0) {
+      console.error(
+        `[BOT] Flex carousel is empty! All bubbles failed construction for area: ${area}`,
+      );
+      await replyText(
+        event.replyToken,
+        `พบ ${properties.length} ทรัพย์ แต่ไม่สามารถแสดงผลได้ในขณะนี้ (Flex Build Error)`,
+      );
+      return;
+    }
+
+    console.log(
+      `[BOT] Replying with text + carousel Flex (${flex.contents.contents.length} bubbles)`,
+    );
+    const res = await replyMessage(event.replyToken, [
+      { type: "text", text: headerTexts[lang] },
+      flex,
+    ]);
     console.log(`[BOT] Reply sent success: ${res}`);
     return;
   }

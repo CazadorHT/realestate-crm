@@ -228,12 +228,24 @@ export async function searchByTypeAndArea(
     .limit(limit);
 
   if (error) {
-    console.error("searchByTypeAndArea error:", JSON.stringify(error));
+    console.error(`[BOT] searchByTypeAndArea error:`, JSON.stringify(error));
     return [];
   }
 
-  console.log(`[BOT] searchByTypeAndArea found: ${data?.length ?? 0} results`);
-  return sortPropertyImages(data || []);
+  const results = sortPropertyImages(data || []);
+  console.log(
+    `[BOT] searchByTypeAndArea found: ${results.length} results for type=${propertyType}, area=${area}`,
+  );
+  if (results.length > 0) {
+    console.log(
+      `[BOT] Example property found: ${results[0].title} (ID: ${results[0].id})`,
+    );
+  } else {
+    console.log(
+      `[BOT] No properties found for type=${propertyType}, area=${area}`,
+    );
+  }
+  return results;
 }
 
 /**
