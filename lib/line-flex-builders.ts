@@ -634,10 +634,16 @@ export function buildPropertyCarousel(
           prop.property_images?.[0]?.image_url ||
           "https://placehold.co/600x400?text=No+Image";
 
-        const imageUrl = getPublicImageUrl(rawImageUrl);
+        const ensureHttps = (url: string) => {
+          if (!url) return "https://placehold.co/600x400?text=No+URL";
+          return url.startsWith("http://")
+            ? url.replace("http://", "https://")
+            : url;
+        };
 
         const slug = prop.slug || prop.id;
-        const propertyUrl = `${siteConfig.url}/properties/${slug}`;
+        const imageUrl = ensureHttps(getPublicImageUrl(rawImageUrl));
+        const propertyUrl = ensureHttps(`${siteConfig.url}/properties/${slug}`);
 
         // Localized title
         let title = prop.title || "—";

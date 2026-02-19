@@ -102,31 +102,44 @@ export async function POST(req: NextRequest) {
     const areaTranslations = await prepareAreaTranslations();
 
     for (const event of events) {
-      if (event.type === "join" || event.type === "memberJoined") {
-        await handleJoinEvent(event);
-      }
+      try {
+        if (event.type === "join" || event.type === "memberJoined") {
+          await handleJoinEvent(event);
+        }
 
-      if (event.type === "leave") {
-        await handleLeaveEvent(event);
-      }
+        if (event.type === "leave") {
+          await handleLeaveEvent(event);
+        }
 
-      if (event.type === "follow") {
-        await handleFollowEvent(event);
-      }
+        if (event.type === "follow") {
+          await handleFollowEvent(event);
+        }
 
-      if (event.type === "message" && event.message?.type === "text") {
-        await handleIncomingChannelMessage(event, areaTranslations);
-      }
+        if (event.type === "message" && event.message?.type === "text") {
+          await handleIncomingChannelMessage(event, areaTranslations);
+        }
 
-      if (event.type === "postback") {
-        await handlePostbackEvent(event, areaTranslations);
+        if (event.type === "postback") {
+          await handlePostbackEvent(event, areaTranslations);
+        }
+      } catch (err: any) {
+        console.error("Event error:", err);
+        // Try to notify the user about the internal error
+        try {
+          await replyText(
+            event.replyToken,
+            `⚠️ เกิดข้อผิดพลาดภายใน: ${err.message || "Unknown error"}`,
+          );
+        } catch (e) {
+          // Ignore if token expired
+        }
       }
     }
 
     return NextResponse.json({ status: "ok" });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Webhook error:", error);
-    return NextResponse.json({ error: "Internal Error" }, { status: 200 });
+    return NextResponse.json({ error: error.message }, { status: 200 });
   }
 }
 
@@ -348,11 +361,18 @@ async function handlePostbackEvent(
       return;
     }
 
-    console.log(
-      `[BOT] Replying with text + carousel Flex (${flex.contents.contents.length} bubbles)`,
-    );
+    const textList = properties
+      .slice(0, 5)
+      .map((p) => `- ${p.title}`)
+      .join("\n");
+    const debugInfo = `(Type: ${type}, Area: ${area}, Count: ${properties.length})`;
+
+    console.log(`[BOT] Replying with debug text + carousel Flex`);
     const res = await replyMessage(event.replyToken, [
-      { type: "text", text: headerTexts[lang] },
+      {
+        type: "text",
+        text: `${headerTexts[lang]}\n${debugInfo}\n\n${textList}`,
+      },
       flex,
     ]);
     console.log(`[BOT] Reply sent success: ${res}`);
@@ -681,10 +701,13 @@ async function replyMessage(
     if (!res.ok) {
       const errorText = await res.text();
       console.error("LINE API Error:", errorText);
+
+      // If we are in the middle of a reply, we can't really "reply" about the error with the same token
+      // But we can return false to let the caller know.
       return false;
     }
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Reply functionality failed:", error);
     return false;
   }
