@@ -116,7 +116,8 @@ const BOT_SELECT_FIELDS = `
   bedrooms,
   bathrooms,
   size_sqm,
-  popular_area
+  popular_area,
+  property_type
 `;
 
 function sortPropertyImages<
@@ -130,6 +131,37 @@ function sortPropertyImages<
     }
     return p;
   });
+}
+
+/**
+ * ดึง property_type ที่มีทรัพย์ ACTIVE จริงๆ (ไม่ hardcode)
+ * คืน array เรียงตามจำนวนทรัพย์ (มากไปน้อย)
+ */
+export async function getActivePropertyTypes(): Promise<string[]> {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("properties")
+    .select("property_type")
+    .eq("status", "ACTIVE");
+
+  if (error) {
+    console.error("getActivePropertyTypes error:", error);
+    return [];
+  }
+
+  // Count occurrences and sort by most popular
+  const typeCount: Record<string, number> = {};
+  for (const row of data || []) {
+    const pt = row.property_type;
+    if (pt) {
+      typeCount[pt] = (typeCount[pt] || 0) + 1;
+    }
+  }
+
+  return Object.entries(typeCount)
+    .sort((a, b) => b[1] - a[1])
+    .map(([type]) => type);
 }
 
 /**
@@ -178,26 +210,28 @@ export async function searchByTypeAndArea(
 ) {
   const supabase = createAdminClient();
 
+  console.log(`[BOT] searchByTypeAndArea: type=${propertyType}, area=${area}`);
+
   const { data, error } = await supabase
     .from("properties")
     .select(BOT_SELECT_FIELDS)
     .eq("status", "ACTIVE")
     .eq("property_type", propertyType as PropertyType)
     .ilike("popular_area", `%${area}%`)
-    .order("is_hot", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
-    console.error("searchByTypeAndArea error:", error);
+    console.error("searchByTypeAndArea error:", JSON.stringify(error));
     return [];
   }
 
+  console.log(`[BOT] searchByTypeAndArea found: ${data?.length ?? 0} results`);
   return sortPropertyImages(data || []);
 }
 
 /**
- * ดึงทรัพย์ Hot Deals (is_hot = true)
+ * ดึงทรัพย์ล่าสุด (Hot Deals = ทรัพย์ใหม่ล่าสุด)
  */
 export async function getHotProperties(limit = 10) {
   const supabase = createAdminClient();
@@ -206,12 +240,11 @@ export async function getHotProperties(limit = 10) {
     .from("properties")
     .select(BOT_SELECT_FIELDS)
     .eq("status", "ACTIVE")
-    .eq("is_hot", true)
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
-    console.error("getHotProperties error:", error);
+    console.error("getHotProperties error:", JSON.stringify(error));
     return [];
   }
 

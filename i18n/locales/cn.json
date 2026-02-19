@@ -9,7 +9,8 @@
     "login": "登录",
     "dashboard": "仪表盘",
     "deposit": "委托出租/出售",
-    "favorites": "我的收藏"
+    "favorites": "我的收藏",
+    "privacy_policy": "隐私政策"
   },
   "breadcrumb": {
     "home": "首页",
@@ -539,6 +540,8 @@
     "phone_label": "电话号码",
     "email_label": "电子邮件",
     "email_placeholder": "your.email@example.com（可选）",
+    "line_id_label": "Line ID",
+    "line_id_placeholder": "您的 Line ID（可选）",
     "more_details_label": "更多详情",
     "more_details_placeholder": "告诉我们您的需求（可选）...",
     "submit": "发送留言",

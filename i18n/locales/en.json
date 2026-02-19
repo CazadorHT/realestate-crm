@@ -535,6 +535,8 @@
     "phone_label": "Phone Number",
     "email_label": "Email",
     "email_placeholder": "your.email@example.com (optional)",
+    "line_id_label": "Line ID",
+    "line_id_placeholder": "Your Line ID (optional)",
     "more_details_label": "Additional Details",
     "more_details_placeholder": "Tell us more about your needs (optional)...",
     "submit": "Send Message",

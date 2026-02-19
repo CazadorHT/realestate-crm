@@ -56,11 +56,6 @@ const T: Record<string, Record<BotLang, string>> = {
     en: "Search by property type",
     cn: "按类型搜索",
   },
-  menu_hotdeals: {
-    th: "ดู Hot Deals ทรัพย์มาแรง",
-    en: "View Hot Deals",
-    cn: "查看热门优惠",
-  },
   menu_deposit: {
     th: "ฝากขาย / ฝากเช่าทรัพย์",
     en: "List your property",
@@ -80,11 +75,6 @@ const T: Record<string, Record<BotLang, string>> = {
     th: "🏠 ค้นหาทรัพย์",
     en: "🏠 Search",
     cn: "🏠 搜索房产",
-  },
-  qr_hotdeals: {
-    th: "🔥 Hot Deals",
-    en: "🔥 Hot Deals",
-    cn: "🔥 热门优惠",
   },
   qr_deposit: {
     th: "📝 ฝากขาย/เช่า",
@@ -125,11 +115,6 @@ const T: Record<string, Record<BotLang, string>> = {
     th: "พบ {n} ทรัพย์ใน {area}",
     en: "Found {n} properties in {area}",
     cn: "在{area}找到{n}个房产",
-  },
-  hotdeals_header: {
-    th: "🔥 Hot Deals {n} รายการ",
-    en: "🔥 {n} Hot Deals",
-    cn: "🔥 {n} 个热门优惠",
   },
   btn_detail: {
     th: "ดูรายละเอียด",
@@ -223,13 +208,13 @@ function t(
 const PROPERTY_TYPE_LABELS_I18N: Record<string, Record<BotLang, string>> = {
   HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "独栋别墅" },
   CONDO: { th: "คอนโด", en: "Condo", cn: "公寓" },
+  OFFICE_BUILDING: { th: "สำนักงานออฟฟิศ", en: "Office", cn: "办公楼" },
+  POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅" },
+  VILLA: { th: "วิลล่า", en: "Villa", cn: "别墅" },
   TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅" },
   LAND: { th: "ที่ดิน", en: "Land", cn: "土地" },
-  OFFICE_BUILDING: { th: "อาคารสำนักงาน", en: "Office", cn: "办公楼" },
   WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库" },
   COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial", cn: "商业楼" },
-  VILLA: { th: "วิลล่า", en: "Villa", cn: "别墅" },
-  POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅" },
   OTHER: { th: "อื่นๆ", en: "Other", cn: "其他" },
 };
 
@@ -406,22 +391,6 @@ export function buildWelcomeFlex(lang: BotLang = "th"): {
               type: "box",
               layout: "horizontal",
               contents: [
-                { type: "text", text: "🔥", size: "lg", flex: 0 },
-                {
-                  type: "text",
-                  text: t("menu_hotdeals", lang),
-                  size: "sm",
-                  color: "#333333",
-                  flex: 5,
-                  gravity: "center",
-                },
-              ],
-              spacing: "md",
-            },
-            {
-              type: "box",
-              layout: "horizontal",
-              contents: [
                 { type: "text", text: "📝", size: "lg", flex: 0 },
                 {
                   type: "text",
@@ -489,14 +458,6 @@ export function buildWelcomeFlex(lang: BotLang = "th"): {
         type: "action",
         action: {
           type: "message",
-          label: t("qr_hotdeals", lang).slice(0, 20),
-          text: "Hot Deals",
-        },
-      },
-      {
-        type: "action",
-        action: {
-          type: "message",
           label: t("qr_deposit", lang).slice(0, 20),
           text: "ฝากขาย/เช่า",
         },
@@ -535,22 +496,31 @@ export function buildWelcomeFlex(lang: BotLang = "th"): {
 // ============================
 // Property Type Quick Reply
 // ============================
-export function buildPropertyTypeQuickReply(lang: BotLang = "th"): any {
-  const typesToShow: PropertyType[] = [
-    "CONDO",
-    "HOUSE",
-    "TOWNHOME",
-    "VILLA",
-    "POOL_VILLA",
-    "OFFICE_BUILDING",
-    "LAND",
-    "WAREHOUSE",
-    "COMMERCIAL_BUILDING",
-  ];
+export function buildPropertyTypeQuickReply(
+  lang: BotLang = "th",
+  activeTypes?: string[],
+): any {
+  // Use DB-sourced activeTypes if provided, otherwise show common types
+  const typesToShow: string[] =
+    activeTypes && activeTypes.length > 0
+      ? activeTypes.slice(0, 13) // LINE Quick Reply max 13
+      : [
+          "CONDO",
+          "HOUSE",
+          "TOWNHOME",
+          "VILLA",
+          "POOL_VILLA",
+          "OFFICE_BUILDING",
+          "LAND",
+          "WAREHOUSE",
+          "COMMERCIAL_BUILDING",
+        ];
 
   const items: QuickReplyItem[] = typesToShow.map((type) => {
     const label =
-      PROPERTY_TYPE_LABELS_I18N[type]?.[lang] || PROPERTY_TYPE_LABELS[type];
+      PROPERTY_TYPE_LABELS_I18N[type]?.[lang] ||
+      PROPERTY_TYPE_LABELS[type as PropertyType] ||
+      type;
     return {
       type: "action",
       action: {
@@ -980,14 +950,6 @@ export function buildNoResultsMessage(
             type: "message",
             label: t("qr_search", lang).slice(0, 20),
             text: "ค้นหาทรัพย์",
-          },
-        },
-        {
-          type: "action",
-          action: {
-            type: "message",
-            label: t("qr_hotdeals", lang).slice(0, 20),
-            text: "Hot Deals",
           },
         },
       ],

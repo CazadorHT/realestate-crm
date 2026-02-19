@@ -9,7 +9,8 @@
     "login": "เข้าสู่ระบบ",
     "dashboard": "แดชบอร์ด",
     "deposit": "ฝากทรัพย์",
-    "favorites": "รายการโปรด"
+    "favorites": "รายการโปรด",
+    "privacy_policy": "นโยบายความเป็นส่วนตัว"
   },
   "breadcrumb": {
     "home": "หน้าแรก",
@@ -533,6 +534,8 @@
     "phone_label": "เบอร์โทรศัพท์",
     "email_label": "อีเมล",
     "email_placeholder": "your.email@example.com (ถ้ามี)",
+    "line_id_label": "Line ID",
+    "line_id_placeholder": "ไอดีไลน์ของคุณ (ถ้ามี)",
     "more_details_label": "รายละเอียดเพิ่มเติม",
     "more_details_placeholder": "บอกรายละเอียดความต้องการของคุณ (ถ้ามี)...",
     "submit": "ส่งข้อความ",

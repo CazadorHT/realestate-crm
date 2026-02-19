@@ -6,6 +6,7 @@ import {
   getDistinctAreasForType,
   searchByTypeAndArea,
   getHotProperties,
+  getActivePropertyTypes,
 } from "@/features/properties/queries.public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getLineProfile, saveOmniMessage } from "@/lib/line";
@@ -184,35 +185,29 @@ async function handleFollowEvent(event: LineEvent) {
 
   const supabase = createAdminClient();
 
-  // Legacy: Link LINE ID to Admin or First User
+  // Create or update Lead on follow (Don't touch ADMIN profiles)
   try {
-    let { data: admin } = await supabase
-      .from("profiles")
+    const profile = await getLineProfile(userId);
+    const { data: lead } = await supabase
+      .from("leads")
       .select("id")
-      .eq("role", "ADMIN")
-      .limit(1)
+      .eq("line_id", userId)
       .single();
 
-    if (!admin) {
-      const { data: firstUser } = await supabase
-        .from("profiles")
-        .select("id")
-        .limit(1)
-        .single();
-      admin = firstUser;
-    }
-
-    if (admin) {
-      await supabase
-        .from("profiles")
-        .update({ line_id: userId })
-        .eq("id", admin.id);
+    if (!lead) {
+      await supabase.from("leads").insert({
+        full_name: profile?.displayName || "LINE Contact",
+        line_id: userId,
+        source: "LINE",
+        stage: "NEW",
+        note: "Captured from follow event.",
+      });
     }
   } catch (err) {
-    console.error("Error in legacy follow logic:", err);
+    console.error("Error in follow logic:", err);
   }
 
-  // Send Language Selection first, then Welcome will follow after language is chosen
+  // Send Language Selection first
   try {
     const langMsg = buildLanguageSelection();
     await replyMessage(event.replyToken, [langMsg]);
@@ -366,7 +361,8 @@ async function handleInteractiveCommand(
     text === "ค้นหา" ||
     text.toLowerCase() === "search"
   ) {
-    const msg = buildPropertyTypeQuickReply(lang);
+    const activeTypes = await getActivePropertyTypes();
+    const msg = buildPropertyTypeQuickReply(lang, activeTypes);
     await replyMessage(replyToken, [msg]);
     return;
   }
@@ -410,31 +406,6 @@ async function handleInteractiveCommand(
       th: `พบ ${properties.length} ทรัพย์ใน ${area}`,
       en: `Found ${properties.length} properties in ${area}`,
       cn: `在${area}找到${properties.length}个房产`,
-    };
-
-    const flex = buildPropertyCarousel(properties, headerTexts[lang], lang);
-    await replyMessage(replyToken, [flex]);
-    return;
-  }
-
-  // --- Hot Deals ---
-  if (
-    text === "Hot Deals" ||
-    text === "🔥 Hot Deals" ||
-    text.toLowerCase().includes("hot deal")
-  ) {
-    const properties = await getHotProperties();
-
-    if (properties.length === 0) {
-      const msg = buildNoResultsMessage(" Hot Deals", lang);
-      await replyMessage(replyToken, [msg]);
-      return;
-    }
-
-    const headerTexts: Record<BotLang, string> = {
-      th: `🔥 Hot Deals ${properties.length} รายการ`,
-      en: `🔥 ${properties.length} Hot Deals`,
-      cn: `🔥 ${properties.length} 个热门优惠`,
     };
 
     const flex = buildPropertyCarousel(properties, headerTexts[lang], lang);

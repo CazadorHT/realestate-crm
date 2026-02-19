@@ -259,7 +259,7 @@ export function ContactAgentDialog({
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder={t("property.contact_dialog.name_placeholder")}
-          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-left border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} ${
+          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 text-left border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} ${
             state.errors?.fullName ? "border-red-500 bg-red-50" : ""
           }`}
           required
@@ -303,7 +303,7 @@ export function ContactAgentDialog({
           value={phone}
           onChange={handlePhoneChange}
           maxLength={12}
-          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} ${
+          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} ${
             state.errors?.phone ? "border-red-500 bg-red-50" : ""
           }`}
           required
@@ -337,7 +337,7 @@ export function ContactAgentDialog({
           value={lineId}
           onChange={(e) => setLineId(e.target.value)}
           placeholder={t("property.contact_dialog.line_placeholder")}
-          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} border-slate-200 focus:border-[#00B900] focus:ring-2 focus:ring-[#00B900]/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"}`}
+          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 border-slate-200 focus:border-[#00B900] focus:ring-2 focus:ring-[#00B900]/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"}`}
         />
       </div>
     </div>
@@ -384,7 +384,7 @@ export function ContactAgentDialog({
         rows={isMobile ? 4 : 3}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        className={`resize-none bg-slate-50 ${isMobile ? "" : "bg-white"} border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "min-h-[120px] p-4 text-base" : "min-h-[80px] p-3 text-sm"}`}
+        className={`resize-none bg-slate-50 ${isMobile ? "" : "bg-white"} text-slate-600 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "min-h-[120px] p-4 text-base" : "min-h-[80px] p-3 text-sm"}`}
       />
     </div>
   );
