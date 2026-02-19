@@ -75,17 +75,17 @@ const T: Record<string, Record<BotLang, string>> = {
   },
   qr_search: {
     th: "🏠 ค้นหาทรัพย์",
-    en: "🏠 Search",
+    en: "🏠 Search Property",
     cn: "🏠 搜索房产",
   },
   qr_deposit: {
     th: "📝 ฝากขาย/เช่า",
-    en: "📝 List Property",
+    en: "📝 Deposit Property",
     cn: "📝 委托房产",
   },
   qr_contact: {
     th: "📞 ติดต่อเจ้าหน้าที่",
-    en: "📞 Contact",
+    en: "📞 Contact Us",
     cn: "📞 联系我们",
   },
   qr_lang: {
@@ -562,7 +562,7 @@ export function buildPropertyTypeQuickReply(
       action: {
         type: "postback",
         label: `${PROPERTY_TYPE_EMOJI[type] || "📦"} ${label}`.slice(0, 20),
-        data: `action=select_type&type=${type}`,
+        data: new URLSearchParams({ action: "select_type", type }).toString(),
         displayText: `${PROPERTY_TYPE_EMOJI[type] || "📦"} ${label}`,
       },
     };
@@ -598,7 +598,11 @@ export function buildAreaQuickReply(
       action: {
         type: "postback",
         label: `📍 ${localizedLabel}`.slice(0, 20),
-        data: `action=select_area&type=${propertyType}&area=${area}`,
+        data: new URLSearchParams({
+          action: "select_area",
+          type: propertyType,
+          area: area,
+        }).toString(),
         displayText: `📍 ${localizedLabel}`,
       },
     };
@@ -813,7 +817,7 @@ export function buildPropertyCarousel(
             ],
           },
         ],
-        paddingAll: "12px",
+        paddingAll: "md",
       },
       footer: {
         type: "box",
@@ -844,7 +848,7 @@ export function buildPropertyCarousel(
             flex: 1,
           },
         ],
-        paddingAll: "12px",
+        paddingAll: "md",
       },
     };
   });

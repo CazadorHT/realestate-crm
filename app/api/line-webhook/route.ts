@@ -336,7 +336,9 @@ async function handlePostbackEvent(
       lang,
       areaTranslations,
     );
-    await replyMessage(event.replyToken, [flex]);
+    console.log(`[BOT] Replying with carousel Flex`);
+    const res = await replyMessage(event.replyToken, [flex]);
+    console.log(`[BOT] Reply sent success: ${res}`);
     return;
   }
 }
@@ -645,7 +647,10 @@ async function replyText(replyToken: string, text: string) {
   await replyMessage(replyToken, [{ type: "text", text }]);
 }
 
-async function replyMessage(replyToken: string, messages: any[]) {
+async function replyMessage(
+  replyToken: string,
+  messages: any[],
+): Promise<boolean> {
   try {
     const res = await fetch(`${LINE_MESSAGING_API}/reply`, {
       method: "POST",
@@ -659,8 +664,11 @@ async function replyMessage(replyToken: string, messages: any[]) {
     if (!res.ok) {
       const errorText = await res.text();
       console.error("LINE API Error:", errorText);
+      return false;
     }
+    return true;
   } catch (error) {
     console.error("Reply functionality failed:", error);
+    return false;
   }
 }
