@@ -70,16 +70,8 @@ CREATE TYPE lead_type AS ENUM ('INDIVIDUAL', 'COMPANY', 'JURISTIC_PERSON');
 -- Types of Property Listings
 CREATE TYPE listing_type AS ENUM ('SALE', 'RENT', 'SALE_AND_RENT');
 
--- Statuses for Property Listings
-CREATE TYPE property_status AS ENUM (
-  'DRAFT',
-  'ACTIVE',
-  'ARCHIVED',
-  'UNDER_OFFER',
-  'RESERVED',
-  'SOLD',
-  'RENTED'
-);
+-- สถานะของทรัพย์สิน
+CREATE TYPE public.property_status AS ENUM ('DRAFT', 'ACTIVE', 'ARCHIVED', 'UNDER_OFFER', 'RESERVED', 'SOLD', 'RENTED');
 
 -- Categories of Properties
 CREATE TYPE property_type AS ENUM (
@@ -101,9 +93,7 @@ CREATE TYPE user_role AS ENUM ('ADMIN', 'USER', 'AGENT');
 
 ---
 
-## 2. Core Tables
-
-Execute the following script to create the tables. Note that some tables have self-referencing or interdependent foreign keys.
+## 2. โครงสร้างตารางสำคัญ (Core Tables)
 
 ### Profiles & Users
 
@@ -125,6 +115,61 @@ CREATE TABLE public.profiles (
   updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 ```
+
+### ระบบจัดการทรัพย์สิน (Properties)
+
+- รองรับการเก็บข้อมูล 3 ภาษา (TH, EN, CN) ผ่าน Column แยก หรือ JSONB
+- มีการเก็บ `slug` สำหรับ SEO Friendly URLs
+
+### ระบบ Omni-channel Inbox (`omni_messages`)
+
+```sql
+CREATE TABLE public.omni_messages (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    lead_id uuid REFERENCES public.leads(id),
+    source public.lead_source NOT NULL,
+    content text,
+    direction text, -- 'INCOMING' or 'OUTGOING'
+    external_message_id text,
+    payload jsonb,
+    is_read boolean DEFAULT false,
+    created_at timestamptz DEFAULT now()
+);
+```
+
+### ระบบบันทึกประวัติการทำงาน (`audit_logs`)
+
+```sql
+CREATE TABLE public.audit_logs (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id uuid REFERENCES auth.users(id),
+    action text NOT NULL, -- 'CREATE', 'UPDATE', 'DELETE'
+    entity text NOT NULL, -- 'properties', 'leads', etc.
+    entity_id uuid,
+    metadata jsonb,
+    created_at timestamptz DEFAULT now()
+);
+```
+
+---
+
+## 3. นโยบายรักษาความปลอดภัย (RLS Policies)
+
+- **Admin Role:** เข้าถึงและจัดการได้ทุกตาราง
+- **Agent Role:**
+  - `SELECT` ทรัพย์สินที่ Active ได้ทั้งหมด
+  - `INSERT/UPDATE` เฉพาะ Lead และ Deal ที่ตนเองได้รับมอบหมาย (`assigned_to`)
+- **Public:**
+  - `SELECT` เฉพาะทรัพย์สินที่เป็นสถานะ 'ACTIVE' ผ่าน API
+  - `INSERT` ข้อมูล Lead ใหม่ผ่าน Contact Form หรือ Chatbot เท่านั้น
+
+---
+
+## 4. การจัดการสื่อ (Storage Buckets)
+
+1.  **`properties`**: (Public) สำหรับเก็บรูปภาพบ้าน/คอนโด
+2.  **`documents`**: (Private) สำหรับเก็บไฟล์สัญญา (Encrypted at rest)
+3.  **`avatars`**: (Public) รูปโปรไฟล์ของ Agent และ Admin
 
 ### Properties & Inventory
 

@@ -6,19 +6,20 @@
 
 ## 1. การตรวจสอบความปลอดภัย (Security Audit)
 
-ระบบได้รับการออกแบบตามมาตรฐาน **OWASP Top Ten**:
+ระบบได้รับการออกแบบตามมาตรฐาน **OWASP Top Ten** และรองรับ **PDPA**:
 
-- **Access Control:** ใช้ RLS ในระดับฐานข้อมูล และเช็ก Ownership ใน Server Actions
-- **Validation:** ใช้ Zod Schema ตรวจสอบข้อมูลก่อนบันทึกลง DB ทุกครั้ง
-- **Authentication:** ใช้ระบบ Auth ของ Supabase พร้อมการสแกนความปลอดภัยไฟล์อัปโหลด
+- **Row Level Security (RLS):** ข้อมูลลูกค้าและเจ้าของทรัพย์ถูกล็อคตามสิทธิ์ (Staff Only) และข้อมูลส่วนตัวถูกจำกัดการเข้าถึง
+- **Server-side Validation:** ใช้ Zod Schema กลั่นกรองข้อมูลก่อนลงฐานข้อมูล 100%
+- **Audit Logs:** ระบบบันทึกทุกการ Log-in, การแก้ไขข้อมูลทรัพย์สิน, และการเข้าดูข้อมูล Lead สำคัญ เพื่อป้องกันการทุจริตภายใน
+- **Data Encryption:** ข้อมูลสำคัญที่ระบุตัวตนได้จะมีการจัดการตามมาตรฐานความปลอดภัยที่เหมาะสม
 
 ---
 
 ## 2. การดูแลระบบ (System Monitoring)
 
-- **Audit Logs:** ตรวจสอบประวัติการทำงานของพนักงานได้ที่หน้า Admin Console
-- **AI Monitoring:** ตรวจสอบปริมาณการใช้งาน Token ของ Gemini เพื่อควบคุมต้นทุน
-- **Storage Cleanup:** แนะนำให้ลบไฟล์ภาพที่ไม่ได้ใช้งาน (Orphaned images) ประจำเดือน
+- **Audit Logs Dashboard:** ผู้ดูแลระบบ (Admin) สามารถตรวจสอบประวัติการย้อนหลังได้โดยละเอียด
+- **AI Usage Tracking:** มอนิเตอร์การใช้ Token ของ Gemini เพื่อบริหารความคุ้มค่าและควบคุมงบประมาณรายเดือน
+- **Supabase Logs:** ตรวจสอบ Health และ Latency ของฐานข้อมูลผ่าน Supabase Dashboard
 
 ---
 
@@ -26,16 +27,16 @@
 
 ### ปัญหาพบบ่อย
 
-1.  **Server ค้าง / Lock:** ปิด Node.js และลบโฟลเดอร์ `.next` แล้วรันใหม่
-2.  **ข้อมูลไม่แสดงผลในทันที:** ตรวจสอบสถานะการแคช หรือลองกด Hard Reload (Ctrl+F5)
-3.  **API Error:** ตรวจสอบค่าในไฟล์ `.env.local` ว่ายังถูกต้องและไม่หมดอายุ
+1.  **LINE Chat ไม่เด้งในระบบ:** ตรวจสอบการตั้งค่า Webhook ใน LINE Developers Console ว่าได้เปิดใช้งาน (Enabled) และทดสอบ URL สำเร็จหรือไม่
+2.  **AI เจนข้อมูลไม่ได้:** ตรวจสอบ API Key และ Quota ของ Google Cloud Project
+3.  **รูปไม่อัพโหลด:** เช็คขนาดไฟล์ (จำกัด 5MB ต่อรูป) และสถานะสิทธิ์ใน Storage Bucket 'properties'
 
 ---
 
 ## 4. แผนการบำรุงรักษา
 
-- Update Packages (npm update) อย่างสม่ำเสมอ
-- ตรวจสอบ RLS Policies ทุกครั้งที่มีการเพิ่ม Table ใหม่
-- สำรองข้อมูลฐานข้อมูล (Database Backup) ผ่าน Supabase Console
+- **Dependency Updates:** รัน `npm update` ประจำไตรมาสเพื่ออัปเดตแพตช์ความปลอดภัย
+- **RLS Review:** ตรวจสอบนโยบายความเข้าถึงทุกครั้งที่มีการเพิ่มโมดูลใหม่
+- **Database Backups:** Supabase ทำความสำรองข้อมูลให้อัตโนมัติ ควรเช็คสถานะ Backup เสมอ
 
 ---

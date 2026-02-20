@@ -8,16 +8,16 @@
 
 ### 🏗️ โครงสร้างราคาแบ่งตามโมดูล
 
-| โมดูล (Module)                                         | มูลค่าประเมิน (THB) |
-| :----------------------------------------------------- | :------------------ |
-| **1. Public Listing Portal** (Search, Filter, UI/UX)   | 650,000 - 850,000   |
-| **2. Professional CRM Backend** (Lead, Pipeline, Docs) | 550,000 - 750,000   |
-| **3. AI & Smart Match System** (Content Gen, Matching) | 300,000 - 450,000   |
-| **4. LINE Ecosystem Integration** (Bot, Notifications) | 150,000 - 250,000   |
-| **5. Core Architecture & i18n** (SEO, Multilingual)    | 200,000 - 300,000   |
+| โมดูล (Module)                                            | มูลค่าประเมิน (THB) |
+| :-------------------------------------------------------- | :------------------ |
+| **1. Public Listing Portal** (Search, Filter, SEO, UI/UX) | 750,000 - 950,000   |
+| **2. Professional CRM Backend** (Lead, Pipeline, Audit)   | 650,000 - 850,000   |
+| **3. AI-First System** (Chatbot, Multi-lang Translation)  | 450,000 - 650,000   |
+| **4. Omni-channel integration** (LINE, Business Inbox)    | 350,000 - 550,000   |
+| **5. Core Architecture & i18n** (React 19, Next.js 16)    | 250,000 - 400,000   |
 
-**รวมมูลค่าโครงการโดยประมาณ:** **1,850,000 – 2,600,000 บาท**
-_(สามารถอัปเกรดเป็นหลักล้านได้ด้วยฟีเจอร์ Omni-channel ในเฟสถัดไป)_
+**รวมมูลค่าโครงการโดยประมาณ:** **2,450,000 – 3,400,000 บาท**
+_(มูลค่าเพิ่มขึ้นจากระบบ AI อัจฉริยะ และการเชื่อมต่อแบบ Omni-channel ที่ใช้งานได้จริง)_
 
 ---
 
@@ -35,8 +35,9 @@ _(สามารถอัปเกรดเป็นหลักล้านไ
 
 การเก็บค่าเช่ารายเดือนเพื่อรายได้ที่มั่นคง (Recurring Revenue):
 
-- **Lite:** 990 - 1,990 บาท/เดือน (ฟีเจอร์พรีเมียมบางส่วน)
-- **Pro:** 2,990 - 4,990 บาท/เดือน (ครบทุกฟีเจอร์ + AI)
+- **Starter:** 1,990 - 2,990 บาท/เดือน (จำกัดจำนวนทรัพย์และ Agent)
+- **Professional:** 4,990 - 7,900 บาท/เดือน (ครบทุกฟีเจอร์ + AI Chatbot)
+- **Enterprise:** 15,000+ บาท/เดือน (Custom Domain, Audit Logs, Multi-branch)
 
 ---
 
@@ -44,12 +45,13 @@ _(สามารถอัปเกรดเป็นหลักล้านไ
 
 ### ✨ จุดเด่นที่ทำให้เราเหนือกว่า (USPs)
 
-- **AI-First:** ลดภาระงานด้วย AI Content Generator และ Smart Match
-- **Modern Tech:** Next.js 16 + Tailwind 4 (เร็วและสวยที่สุดในตลาด)
-- **LINE-Native:** แจ้งเตือนและตาม Lead ได้ทันทีผ่าน LINE
-- **Roadmap Omni-channel:** เตรียมพร้อมเชื่อมต่อ FB, IG เพื่อรวมทุกแชทไว้ที่เดียว
-
-- **3 Languages:** พร้อมรับลูกค้า ไทย, อังกฤษ, จีน
+- **AI-First & Smart Interaction:**
+  - **AI Chatbot:** ค้นหาทรัพย์สินและตอบโต้แบบธรรมชาติ (Context-Aware)
+  - **AI Multi-language:** แปลข้อมูลทรัพย์สินอัตโนมัติ 3 ภาษา (ไทย, อังกฤษ, จีน)
+  - **AI Content Gen:** สร้างคำบรรยายทรัพย์สินให้น่าสนใจในคลิกเดียว
+- **Ultra Modern Tech:** Next.js 16 + Tailwind 4 + React 19 (เร็วและทันสมัยที่สุด)
+- **Omni-channel Native:** เชื่อมต่อ LINE เต็มรูปแบบ (Push & Reply) และรองรับการขยายไป FB/IG
+- **Enterprise Grade:** ระบบ Audit Logs บันทึกทุกความเคลื่อนไหว และสถาปัตยกรรมที่รองรับการขยายตัวระดับสูง
 
 ---
 
@@ -64,24 +66,19 @@ _(สามารถอัปเกรดเป็นหลักล้านไ
 
 ## 5. แผนการพัฒนาในอนาคต (Future Roadmap)
 
-- **Omni-channel (High-Value Future):** รวมทุกแชท ทุกช่องทาง (FB, IG, LINE, WhatsApp , WeChat) มาจบที่หน้าจอเดียว
-  - **Centralized Inbox:** ดึงแชทจาก FB, IG, LINE, WhatsApp, WeChat เข้าหน้า Dashboard ของระบบทันที
-  - **Direct Reply:** พิมพ์ตอบกลับจากในระบบ CRM ได้เลย ไม่ต้องสลับแอป
-  - **Lead Auto-Capture:** สร้างข้อมูลผู้มุ่งหวังพร้อมที่มา (Source) ให้อัตโนมัติเมื่อมีการทักแชท
-  - **Business Impact:** ลดเวลาตอบ (Response Time), ป้องกันแชทตกหล่น, และเห็นประวัติลูกค้าแบบ Unified Journey
+### ✅ ความสำเร็จในปัจจุบัน (Current Milestones - V1)
 
-- **Listing Syndication (One-Click Posting):** ลงขายที่เดียว ข้อมูลกระจายไปทุกที่อัตโนมัติ
-  - **Multi-Platform Export:** ส่งข้อมูลทรัพย์ไปยัง DDProperty, LivingInsider, DotProperty และ FB Marketplace
-  - **Auto-Sync:** เมื่อมีการอัปเดตราคาหรือสถานะทรัพย์ (เช่น ขายแล้ว) ระบบจะ Sync ไปทุกเว็บทันที
-  - **Value:** ลดงาน Admin ลง 80% และเพิ่ม Reach ในการหาลูกค้ามหาศาล
+- **Omni-channel Foundation:** ใช้งานระบบ Centralized Inbox สำหรับ LINE และระบบ Direct Reply ได้สมบูรณ์
+- **AI Ecosystem:** ระบบ Chatbot ค้นหาทรัพย์สิน และระบบแปลภาษาอัตโนมัติ (TH/EN/CN)
+- **Enterprise Security (Implemented):** ระบบ Audit Logs ติดตามการเข้าใช้งานและจัดการข้อมูล
 
-- **Enterprise Security & PDPA Compliance:**
-  - **Consent Management:** ระบบขอความยินยอมจากลูกค้าในการเก็บข้อมูลตามกฎหมาย
-  - **Audit Logs:** บันทึกประวัติการเข้าถึงข้อมูลลูกค้า ป้องกันการขโมยฐานข้อมูล Lead
-  - **Encrypted Database:** จัดเก็บข้อมูลสำคัญลูกค้าด้วยการเข้ารหัสระดับสูง
+### 🚀 แผนพัฒนาเฟสถัดไป (Next Phases)
 
-- **Business Tools:** ระบบชำระเงินออนไลน์, Virtual Tour 360, e-Signature
-- **Mobile Native:** พัฒนาแอปพลิเคชันมือถือ (React Native)
-- **AI Insights:** ระบบวิเคราะห์แนวโน้มราคาตลาดและ Lead Scoring
+- **Listing Syndication (One-Click Posting):** ลงขายที่เดียว ข้อมูลกระจายไปทุกที่อัตโนมัติ (DDProperty, LivingInsider, FB Marketplace)
+- **Advanced Business Tools:**
+  - ระบบ Virtual Tour 360 และ e-Signature
+  - ระบบวิเคราะห์ Lead Scoring ด้วย AI
+- **Mobile Native:** พัฒนาแอปพลิเคชันมือถือ (React Native/Expo) เพื่อความคล่องตัวของ Agent
+- **Market Insights:** ระบบวิเคราะห์ราคาตลาดเปรียบเทียบ (CMA) แบบ Real-time
 
 ---
