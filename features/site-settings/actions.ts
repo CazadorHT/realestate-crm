@@ -2,23 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-
-export type SiteSettingKey =
-  | "smart_match_wizard_enabled"
-  | "chatbot_enabled"
-  | "floating_contact_enabled";
-
-export interface SiteSettings {
-  smart_match_wizard_enabled: boolean;
-  chatbot_enabled: boolean;
-  floating_contact_enabled: boolean;
-}
-
-const DEFAULT_SETTINGS: SiteSettings = {
-  smart_match_wizard_enabled: true,
-  chatbot_enabled: true,
-  floating_contact_enabled: true,
-};
+import { SiteSettings, SiteSettingKey, DEFAULT_SETTINGS } from "./types";
+import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
+import { logAudit } from "@/lib/audit";
+import { AuthContext } from "@/lib/authz";
 
 /**
  * Get all site settings
@@ -40,8 +27,14 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     for (const row of data || []) {
       const key = row.key as SiteSettingKey;
       if (key in settings) {
-        // Value is stored as JSONB, parse boolean
-        settings[key] = row.value === true || row.value === "true";
+        const defaultValue = DEFAULT_SETTINGS[key];
+        if (typeof defaultValue === "boolean") {
+          const val =
+            row.value === true || row.value === "true" || row.value === 1;
+          Object.assign(settings, { [key]: val });
+        } else if (typeof defaultValue === "string") {
+          Object.assign(settings, { [key]: String(row.value) });
+        }
       }
     }
 
@@ -55,7 +48,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 /**
  * Get a specific site setting
  */
-export async function getSiteSetting(key: SiteSettingKey): Promise<boolean> {
+export async function getSiteSetting<T extends SiteSettingKey>(
+  key: T,
+): Promise<SiteSettings[T]> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -68,7 +63,14 @@ export async function getSiteSetting(key: SiteSettingKey): Promise<boolean> {
       return DEFAULT_SETTINGS[key];
     }
 
-    return data.value === true || data.value === "true";
+    const defaultValue = DEFAULT_SETTINGS[key];
+    if (typeof defaultValue === "boolean") {
+      return (data.value === true ||
+        data.value === "true" ||
+        data.value === 1) as SiteSettings[T];
+    }
+
+    return String(data.value) as SiteSettings[T];
   } catch (error) {
     console.error(`Error getting setting ${key}:`, error);
     return DEFAULT_SETTINGS[key];
@@ -80,20 +82,16 @@ export async function getSiteSetting(key: SiteSettingKey): Promise<boolean> {
  */
 export async function updateSiteSetting(
   key: SiteSettingKey,
-  value: boolean,
+  value: string | boolean | number,
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const supabase = await createClient();
-
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData?.user?.id;
 
     const { error } = await supabase.from("site_settings").upsert(
       {
         key,
         value,
         updated_at: new Date().toISOString(),
-        updated_by: userId,
       },
       { onConflict: "key" },
     );
@@ -105,6 +103,20 @@ export async function updateSiteSetting(
 
     revalidatePath("/");
     revalidatePath("/protected/settings");
+
+    // Logging
+    const currentProfile = await getCurrentProfile();
+    if (currentProfile) {
+      await logAudit(
+        { supabase, user: { id: currentProfile.id } } as AuthContext,
+        {
+          action: "site_settings.update",
+          entity: "site_settings",
+          entityId: key,
+          metadata: { value },
+        },
+      );
+    }
 
     return { success: true };
   } catch (error) {
@@ -122,14 +134,10 @@ export async function updateSiteSettings(
   try {
     const supabase = await createClient();
 
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData?.user?.id;
-
     const updates = Object.entries(settings).map(([key, value]) => ({
       key,
       value,
       updated_at: new Date().toISOString(),
-      updated_by: userId,
     }));
 
     const { error } = await supabase
@@ -144,9 +152,81 @@ export async function updateSiteSettings(
     revalidatePath("/");
     revalidatePath("/protected/settings");
 
+    // Logging
+    const currentProfile = await getCurrentProfile();
+    if (currentProfile) {
+      await logAudit(
+        { supabase, user: { id: currentProfile.id } } as AuthContext,
+        {
+          action: "site_settings.update",
+          entity: "site_settings",
+          metadata: { settings },
+        },
+      );
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error in updateSiteSettings:", error);
     return { success: false, message: "Unknown error" };
+  }
+}
+
+/**
+ * Upload a site asset (logo, favicon, hero image)
+ */
+export async function uploadSiteAssetAction(
+  formData: FormData,
+  type: "logo" | "favicon" | "hero",
+): Promise<{ success: boolean; message: string; publicUrl?: string }> {
+  try {
+    const user = await getCurrentProfile();
+    if (!user || !["ADMIN", "MANAGER"].includes(user.role)) {
+      return { success: false, message: "Unauthorized" };
+    }
+
+    const file = formData.get("file") as File | null;
+    if (!file) return { success: false, message: "No file provided" };
+
+    const supabase = await createClient();
+
+    // Validation
+    const maxSize = type === "favicon" ? 1 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return {
+        success: false,
+        message: `ไฟล์ใหญ่เกินไป (สูงสุด ${maxSize / (1024 * 1024)}MB)`,
+      };
+    }
+
+    const randomId = Math.random().toString(36).substring(2, 10);
+    const extension = file.name.split(".").pop();
+    const fileName = `${type}_${randomId}.${extension}`;
+    const path = `site-assets/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("property-images")
+      .upload(path, file, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error(`Upload ${type} error:`, uploadError);
+      return { success: false, message: "อัปโหลดล้มเหลว" };
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("property-images")
+      .getPublicUrl(path);
+
+    return {
+      success: true,
+      message: "อัปโหลดสำเร็จ",
+      publicUrl: publicUrlData.publicUrl,
+    };
+  } catch (error) {
+    console.error("Error in uploadSiteAssetAction:", error);
+    return { success: false, message: "เกิดข้อผิดพลาดในการอัปโหลด" };
   }
 }

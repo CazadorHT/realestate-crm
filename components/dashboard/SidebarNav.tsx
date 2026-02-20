@@ -38,6 +38,7 @@ import {
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/site-config";
+import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
 import { useState, useEffect } from "react";
 import {
   Tooltip,
@@ -52,7 +53,10 @@ export function SidebarNav({ role }: { role: UserRole }) {
   const [openGroups, setOpenGroups] = useState<string[]>(["crm", "public"]);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-
+  const settings = useSiteSettings();
+  const siteName = settings.brand_site_name || siteConfig.name;
+  const siteLogo = settings.brand_logo_url || siteConfig.logo;
+  const siteDescription = siteConfig.description; // We didn't add this to settings yet, but could.
   // Initialize collapse state from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
@@ -385,8 +389,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
         >
           <div className="flex items-center gap-3">
             <Image
-              src={siteConfig.logo}
-              alt={`${siteConfig.name} Logo`}
+              src={siteLogo}
+              alt={`${siteName} Logo`}
               width={70}
               height={70}
               className="rounded-lg object-contain"
@@ -394,10 +398,10 @@ export function SidebarNav({ role }: { role: UserRole }) {
             {!isCollapsed && (
               <div className="min-w-0">
                 <h1 className="text-xl font-medium tracking-tight text-slate-700 dark:text-slate-200 uppercase">
-                  {siteConfig.name}
+                  {siteName}
                 </h1>
                 <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-medium">
-                  {siteConfig.description}
+                  {siteDescription}
                 </p>
               </div>
             )}

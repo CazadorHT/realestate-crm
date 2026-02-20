@@ -9,6 +9,7 @@ import { readFavoriteIds } from "@/lib/favorite-store";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +27,9 @@ export function PublicNav() {
 
   // Hook for translation
   const { language, setLanguage, t } = useLanguage();
+  const settings = useSiteSettings();
+  const siteName = settings.brand_site_name || siteConfig.name;
+  const siteLogo = settings.brand_logo_url || siteConfig.logo;
 
   useEffect(() => {
     // Initial load
@@ -137,8 +141,8 @@ export function PublicNav() {
                   className="hover:scale-105 transition-transform block"
                 >
                   <Image
-                    src={siteConfig.logo}
-                    alt={`${siteConfig.name} Logo`}
+                    src={siteLogo}
+                    alt={`${siteName} Logo`}
                     width={220}
                     height={70}
                     className="h-16 w-auto"
@@ -154,10 +158,10 @@ export function PublicNav() {
                     key={link.href}
                     href={link.href}
                     onClick={(e) => handleNavClick(e, link.href as string)}
-                    className="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm relative group"
+                    className="text-slate-600 hover:text-[hsl(var(--brand-primary))] transition-colors font-medium text-sm relative group"
                   >
                     {link.name}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-linear-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] group-hover:w-full transition-all duration-300"></span>
                   </a>
                 ))}
 
@@ -226,18 +230,18 @@ export function PublicNav() {
                     className={`flex items-center gap-2 transition-colors ${
                       favoriteCount > 0
                         ? "text-red-500"
-                        : "text-slate-600 hover:text-pink-600"
+                        : "text-slate-600 hover:text-red-400"
                     }`}
                   >
                     <Heart
                       className={`h-5 w-5 transition-all ${
                         favoriteCount > 0
                           ? "fill-red-500"
-                          : "group-hover:fill-pink-600"
+                          : "group-hover:fill-red-400"
                       }`}
                     />
                     {favoriteCount > 0 && (
-                      <span className="absolute -top-2 -right-2 h-5 w-5 bg-linear-to-br from-pink-500 to-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                      <span className="absolute -top-2 -right-2 h-5 w-5 bg-[linear-gradient(to_br,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
                         {favoriteCount > 99 ? "99+" : favoriteCount}
                       </span>
                     )}
@@ -250,9 +254,9 @@ export function PublicNav() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="hover:bg-blue-600!"
+                      className="hover:bg-[hsl(var(--brand-primary)/0.1)]! hover:text-[hsl(var(--brand-primary))]! border-slate-200"
                     >
-                      <Search className="h-4 w-4 mr-1" />
+                      <Search className="h-4 w-4 mr-1 text-[hsl(var(--brand-primary))]" />
                       {t("home.search_btn")}
                     </Button>
                   </Link>
@@ -262,7 +266,7 @@ export function PublicNav() {
                   >
                     <Button
                       size="lg"
-                      className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md font-medium outline-none ring-0 border-0 text-white"
+                      className="cursor-pointer bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] hover:brightness-110 shadow-md font-medium outline-none ring-0 border-0 text-white"
                     >
                       <Key className="h-4 w-4 mr-1" />
                       {t("nav.deposit")}
@@ -342,7 +346,7 @@ export function PublicNav() {
 
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="p-2 text-slate-600 hover:text-blue-600 transition-colors "
+                  className="p-2 text-slate-600 hover:text-[hsl(var(--brand-primary))] transition-colors "
                   aria-label="Toggle menu"
                 >
                   {mobileMenuOpen ? (
@@ -379,7 +383,7 @@ export function PublicNav() {
                   key={link.name}
                   href={link.href}
                   onClick={(e) => handleNavClick(e, link.href as string)}
-                  className="block px-4 py-3 text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium "
+                  className="block px-4 py-3 text-slate-700 hover:bg-[hsl(var(--brand-primary)/0.05)] hover:text-[hsl(var(--brand-primary))] rounded-xl transition-colors font-medium "
                 >
                   {link.name}
                 </a>
@@ -395,7 +399,7 @@ export function PublicNav() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="w-full cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-base"
+                      className="w-full cursor-pointer border-[hsl(var(--brand-primary))] text-[hsl(var(--brand-primary))] hover:bg-[hsl(var(--brand-primary)/0.05)] py-6 text-base"
                     >
                       <Search className="h-5 w-5 mr-2" />
                       {t("home.search_btn")}
@@ -408,7 +412,7 @@ export function PublicNav() {
                   >
                     <Button
                       size="lg"
-                      className="w-full cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base outline-none ring-0 border-0 text-white"
+                      className="w-full cursor-pointer bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] hover:brightness-110 py-6 text-base outline-none ring-0 border-0 text-white"
                     >
                       <Key className="h-5 w-5 mr-2" />
                       {t("nav.deposit")}

@@ -33,6 +33,10 @@
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
 
+    /* Brand Gradients */
+    --brand-gradient-from: 217 91% 60%;
+    --brand-gradient-to: 271 91% 65%;
+
     /* Legacy compatibility (keeping for old bg-bg, bg-surface calls) */
     --color-bg: 248 250 252;
     --color-surface: 255 255 255;

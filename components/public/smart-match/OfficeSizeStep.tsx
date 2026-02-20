@@ -60,7 +60,7 @@ export function OfficeSizeStep({
             className={`px-3 py-5 rounded-xl border-2 transition-all h-full cursor-pointer flex flex-col items-center text-center relative ${
               isDisabled
                 ? "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed opacity-60"
-                : "border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-700 hover:text-blue-600"
+                : "border-slate-200 hover:border-[hsl(var(--brand-primary))] hover:bg-[hsl(var(--brand-primary)/0.05)] text-slate-700 hover:text-[hsl(var(--brand-primary))]"
             } ${isLoading ? "opacity-60" : ""}`}
           >
             {!isDisabled && hasChecked && (
@@ -74,7 +74,7 @@ export function OfficeSizeStep({
             </span>
             {displayDesc && (
               <p
-                className={`text-[11px] leading-tight mt-1 font-medium line-clamp-2 wrap-break-word ${isDisabled ? "text-slate-300" : "text-blue-500"}`}
+                className={`text-[11px] leading-tight mt-1 font-medium line-clamp-2 wrap-break-word ${isDisabled ? "text-slate-300" : "text-[hsl(var(--brand-primary))]"}`}
               >
                 {displayDesc}
               </p>
@@ -126,7 +126,7 @@ export function OfficeSizeStep({
           className={`px-3 py-5 rounded-xl border-2 transition-all h-full cursor-pointer flex flex-col items-center text-center relative ${
             isDisabled
               ? "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed opacity-60"
-              : "border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-700 hover:text-blue-600"
+              : "border-slate-200 hover:border-[hsl(var(--brand-primary))] hover:bg-[hsl(var(--brand-primary)/0.05)] text-slate-700 hover:text-[hsl(var(--brand-primary))]"
           } ${isLoading ? "opacity-60" : ""}`}
         >
           {!isDisabled && hasChecked && (
@@ -139,7 +139,7 @@ export function OfficeSizeStep({
             ({opt.key}) {opt.size}
           </span>
           <p
-            className={`text-[11px] leading-tight mt-1 font-medium line-clamp-2 wrap-break-word ${isDisabled ? "text-slate-300" : "text-blue-500"}`}
+            className={`text-[11px] leading-tight mt-1 font-medium line-clamp-2 wrap-break-word ${isDisabled ? "text-slate-300" : "text-[hsl(var(--brand-primary))]"}`}
           >
             {opt.desc}
           </p>

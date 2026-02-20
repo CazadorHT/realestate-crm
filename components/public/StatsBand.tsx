@@ -50,7 +50,7 @@ export function StatsBand() {
   };
 
   return (
-    <section className="relative py-8 md:py-10 px-4 md:px-6 lg:px-8 overflow-hidden bg-linear-to-r from-blue-500 to-purple-500">
+    <section className="relative py-8 md:py-10 px-4 md:px-6 lg:px-8 overflow-hidden bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))]">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
@@ -62,7 +62,7 @@ export function StatsBand() {
       <div className="absolute inset-0 bg-[#0F172A] -z-20" />
 
       {/* เพิ่ม Mesh Gradient จางๆ ให้ดูแพง */}
-      <div className="absolute inset-0 bg-linear-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20 -z-10 blur-3xl opacity-50" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)/0.2),hsl(var(--brand-gradient-to)/0.2),hsl(var(--brand-gradient-from)/0.2))] -z-10 blur-3xl opacity-50" />
 
       {/* ลายตารางทางสถาปัตยกรรม */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-size-[40px_40px] -z-10" />
@@ -85,7 +85,7 @@ export function StatsBand() {
                 <div className="absolute inset-0 bg-linear-to-br from-white/10 to-white/5 z-0" />
 
                 {/* Hover Gradient (Fade In) */}
-                <div className="absolute inset-0 bg-linear-to-br from-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+                <div className="absolute inset-0 bg-[linear-gradient(to_br,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
 
                 {/* Icon */}
                 <div className="relative z-10 text-blue-200 group-hover:text-white transition-colors duration-500 [&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5 lg:[&>svg]:w-6 lg:[&>svg]:h-6">

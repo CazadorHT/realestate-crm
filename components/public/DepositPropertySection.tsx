@@ -73,9 +73,9 @@ export function DepositPropertySection() {
             className="space-y-4 md:space-y-6 text-center lg:text-left"
             data-aos="fade-right"
           >
-            <div className="inline-flex items-center rounded-full border border-blue-200 bg-linear-to-r from-blue-200 to-purple-200 px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold backdrop-blur-sm mx-auto lg:mx-0 shadow-sm">
-              <Key className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4 text-blue-600" />
-              <span className="text-blue-500 font-semibold">
+            <div className="inline-flex items-center rounded-full border border-[hsl(var(--brand-primary)/0.2)] bg-linear-to-r from-[hsl(var(--brand-primary)/0.1)] to-[hsl(var(--brand-secondary)/0.1)] px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold backdrop-blur-sm mx-auto lg:mx-0 shadow-sm">
+              <Key className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4 text-[hsl(var(--brand-primary))]" />
+              <span className="text-[hsl(var(--brand-primary))] font-semibold">
                 {t("deposit.title")}
               </span>
             </div>
@@ -88,7 +88,7 @@ export function DepositPropertySection() {
                     key={i}
                     className={
                       i >= 2
-                        ? "text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600"
+                        ? "text-transparent bg-clip-text bg-linear-to-r from-[hsl(var(--brand-gradient-from))] to-[hsl(var(--brand-gradient-to))]"
                         : "text-slate-900"
                     }
                   >
@@ -111,7 +111,7 @@ export function DepositPropertySection() {
                   key={item.step}
                   className="flex items-center gap-2 md:gap-3 justify-center lg:justify-start group"
                 >
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm md:text-base font-bold shadow-md group-hover:scale-110 transition-transform">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-linear-to-br from-[hsl(var(--brand-gradient-from))] to-[hsl(var(--brand-gradient-to))] flex items-center justify-center text-white text-sm md:text-base font-bold shadow-md group-hover:scale-110 transition-transform">
                     {item.step}
                   </div>
                   <span className="text-sm md:text-base text-slate-700 font-medium">
@@ -144,7 +144,7 @@ export function DepositPropertySection() {
             data-aos="fade-left"
           >
             {/* Card gradient decoration */}
-            <div className="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-linear-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50 -z-10"></div>
+            <div className="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-linear-to-br from-[hsl(var(--brand-primary)/0.05)] to-[hsl(var(--brand-secondary)/0.05)] rounded-full blur-3xl opacity-50 -z-10"></div>
 
             <div className="mb-4 md:mb-6 relative z-10">
               <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-1.5 md:mb-2">
@@ -167,7 +167,7 @@ export function DepositPropertySection() {
                 <Button
                   variant="outline"
                   onClick={() => setIsSuccess(false)}
-                  className="mt-4 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                  className="mt-4 border-[hsl(var(--brand-primary)/0.2)] hover:bg-[hsl(var(--brand-primary)/0.05)] hover:text-[hsl(var(--brand-primary))]"
                 >
                   {t("deposit.success.more_info_btn")}
                 </Button>
@@ -229,10 +229,11 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
       value: "CONDO",
       label: t("home.property_types.condo"),
       icon: Building2,
-      activeColor: "border-blue-500 bg-blue-50 ring-blue-500/20",
-      iconColor: "bg-blue-500",
-      textColor: "text-blue-700",
-      checkColor: "bg-blue-500",
+      activeColor:
+        "border-[hsl(var(--brand-primary))] bg-[hsl(var(--brand-primary)/0.05)] ring-[hsl(var(--brand-primary)/0.2)]",
+      iconColor: "bg-[hsl(var(--brand-primary))]",
+      textColor: "text-[hsl(var(--brand-primary))]",
+      checkColor: "bg-[hsl(var(--brand-primary))]",
     },
     {
       value: "HOUSE",
@@ -247,10 +248,11 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
       value: "TOWNHOME",
       label: t("home.property_types.townhome"),
       icon: Layout,
-      activeColor: "border-indigo-500 bg-indigo-50 ring-indigo-500/20",
-      iconColor: "bg-indigo-500",
-      textColor: "text-indigo-700",
-      checkColor: "bg-indigo-500",
+      activeColor:
+        "border-[hsl(var(--brand-secondary)/0.5)] bg-[hsl(var(--brand-secondary)/0.05)] ring-[hsl(var(--brand-secondary)/0.2)]",
+      iconColor: "bg-[hsl(var(--brand-secondary)/0.8)]",
+      textColor: "text-[hsl(var(--brand-secondary))]",
+      checkColor: "bg-[hsl(var(--brand-secondary)/0.8)]",
     },
     {
       value: "LAND",
@@ -296,7 +298,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
               <FormControl>
                 <Input
                   placeholder={t("deposit.form.name_placeholder")}
-                  className="h-12 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
+                  className="h-12 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-[hsl(var(--brand-primary))] focus:ring-4 focus:ring-[hsl(var(--brand-primary)/0.1)] transition-all rounded-xl shadow-sm"
                   {...field}
                 />
               </FormControl>
@@ -319,7 +321,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
                   <Input
                     placeholder="08xxxxxxxx"
                     maxLength={10}
-                    className="h-12 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
+                    className="h-12 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-[hsl(var(--brand-primary))] focus:ring-4 focus:ring-[hsl(var(--brand-primary)/0.1)] transition-all rounded-xl shadow-sm"
                     {...field}
                     onChange={(e) => {
                       const value = e.target.value
@@ -344,7 +346,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
                 <FormControl>
                   <Input
                     placeholder={t("deposit.form.line_placeholder")}
-                    className="h-12 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
+                    className="h-12 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-[hsl(var(--brand-primary))] focus:ring-4 focus:ring-[hsl(var(--brand-primary)/0.1)] transition-all rounded-xl shadow-sm"
                     {...field}
                   />
                 </FormControl>
@@ -432,7 +434,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
                         ? t("deposit.form.details_placeholder_office")
                         : t("deposit.form.details_placeholder")
                     }
-                    className="min-h-[100px] resize-none border-slate-200  bg-white! focus:bg-white! focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
+                    className="min-h-[100px] resize-none border-slate-200  bg-white! focus:bg-white! focus:border-[hsl(var(--brand-primary))] focus:ring-4 focus:ring-[hsl(var(--brand-primary)/0.1)] transition-all rounded-xl shadow-sm"
                     {...field}
                   />
                 </FormControl>
@@ -445,7 +447,7 @@ function DepositForm({ onSuccess }: { onSuccess: () => void }) {
         <div className="pt-2">
           <Button
             type="submit"
-            className="w-full bg-linear-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 py-6 text-base font-bold rounded-xl shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)] hover:shadow-[0_15px_25px_-10px_rgba(37,99,235,0.5)] active:scale-[0.98] transition-all group"
+            className="w-full bg-linear-to-r from-[hsl(var(--brand-gradient-from))] to-[hsl(var(--brand-gradient-to))] hover:brightness-110 py-6 text-base font-bold rounded-xl shadow-[0_10px_20px_-10px_hsla(var(--brand-primary),0.4)] hover:shadow-[0_15px_25px_-10px_hsla(var(--brand-primary),0.5)] active:scale-[0.98] transition-all group"
             disabled={isLoading}
           >
             {isLoading ? (

@@ -25,15 +25,11 @@ import {
 import {
   getSiteSettings,
   updateSiteSettings,
-  SiteSettings,
 } from "@/features/site-settings/actions";
+import { SiteSettings, DEFAULT_SETTINGS } from "@/features/site-settings/types";
 
 export function SiteSettingsPanel() {
-  const [settings, setSettings] = useState<SiteSettings>({
-    smart_match_wizard_enabled: true,
-    chatbot_enabled: true,
-    floating_contact_enabled: true,
-  });
+  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [hasChanges, setHasChanges] = useState(false);

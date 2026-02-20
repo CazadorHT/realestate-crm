@@ -40,11 +40,11 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-start">
-              <h3 className="font-bold text-slate-900 truncate pr-2 hover:text-blue-600 transition-colors">
+              <h3 className="font-bold text-slate-900 truncate pr-2 hover:text-[hsl(var(--brand-primary))] transition-colors">
                 {match.title}
               </h3>
               <div className="relative group/score">
-                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded cursor-help transition-all hover:bg-blue-100 whitespace-nowrap">
+                <span className="text-xs font-bold text-[hsl(var(--brand-primary))] bg-[hsl(var(--brand-primary)/0.05)] px-2 py-1 rounded cursor-help transition-all hover:bg-[hsl(var(--brand-primary)/0.1)] whitespace-nowrap">
                   {t("smart_match.match_score_label")}
                   {" " + match.match_score + "%"}
                 </span>
@@ -68,7 +68,7 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
                             <span className="text-slate-600">
                               {t(`smart_match.breakdown.${item.label}`)}
                             </span>
-                            <span className="font-bold text-blue-600">
+                            <span className="font-bold text-[hsl(var(--brand-primary))]">
                               {item.points > 0
                                 ? `+${item.points}`
                                 : item.points}
@@ -78,7 +78,7 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
                       )}
                       <div className="pt-1 mt-1 border-t border-slate-50 flex justify-between items-center font-bold text-xs text-slate-900 uppercase">
                         <span>{t("smart_match.score_total")}</span>
-                        <span className="text-blue-600">
+                        <span className="text-[hsl(var(--brand-primary))]">
                           {match.match_score} %
                         </span>
                       </div>
@@ -95,7 +95,7 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
                     {match.original_price.toLocaleString()}
                   </div>
                 )}
-                <div className="text-sm font-bold text-blue-600">
+                <div className="text-sm font-bold text-[hsl(var(--brand-primary))]">
                   {match.price > 0 ? (
                     <div className="flex flex-wrap items-baseline gap-1">
                       <span>
@@ -156,7 +156,7 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
                 {match.commute_time} {t("smart_match.mins_to_work")}
               </div>
               {match.near_transit && match.transit_station_name && (
-                <div className="flex items-center gap-1 text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                <div className="flex items-center gap-1 text-[10px] text-[hsl(var(--brand-primary))] font-bold bg-[hsl(var(--brand-primary)/0.05)] px-1.5 py-0.5 rounded border border-[hsl(var(--brand-primary)/0.1)]">
                   <TrendingUp className="h-3 w-3" />
                   {match.transit_type || "BTS"} {match.transit_station_name}
                   {match.transit_distance_meters

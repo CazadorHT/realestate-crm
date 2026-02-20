@@ -111,7 +111,7 @@ export function SmartMatchWizard() {
   if (configLoading) {
     return (
       <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-5 md:p-8 border border-slate-100 h-[450px] flex flex-col items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
+        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--brand-primary))] mb-4" />
         <p className="text-sm text-slate-500">{t("smart_match.loading")}</p>
       </div>
     );

@@ -77,7 +77,7 @@ export function ResultsContainer({
 
       <button
         onClick={onReset}
-        className="w-full mt-auto text-sm text-slate-500 hover:text-blue-600 transition-colors shrink-0 pt-4"
+        className="w-full mt-auto text-sm text-slate-500 hover:text-[hsl(var(--brand-primary))] transition-colors shrink-0 pt-4"
       >
         {t("smart_match.search_again")}
       </button>

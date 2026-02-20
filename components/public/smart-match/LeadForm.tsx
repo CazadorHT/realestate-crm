@@ -47,7 +47,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
     <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 h-full flex flex-col">
       <button
         onClick={onBack}
-        className="text-slate-500 mb-4 flex items-center text-sm gap-1 hover:text-blue-600 w-fit"
+        className="text-slate-500 mb-4 flex items-center text-sm gap-1 hover:text-[hsl(var(--brand-primary))] w-fit"
       >
         <ChevronLeft className="h-4 w-4" /> {t("common.back")}
       </button>
@@ -72,7 +72,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                 {match.original_price.toLocaleString()}
               </span>
             )}
-            <div className="text-blue-600 font-bold text-sm">
+            <div className="text-[hsl(var(--brand-primary))] font-bold text-sm">
               {match.price > 0 ? (
                 <div className="flex flex-wrap items-baseline gap-1">
                   <span>
@@ -160,7 +160,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
 
           <Button
             type="submit"
-            className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 h-12 text-lg font-bold shadow-lg shadow-blue-200 cursor-pointer"
+            className="w-full rounded-xl bg-[hsl(var(--brand-primary))] hover:brightness-110 h-12 text-lg font-bold shadow-lg shadow-[hsl(var(--brand-primary)/0.2)] cursor-pointer"
             disabled={loading}
           >
             {loading ? (

@@ -35,7 +35,7 @@ export function QuizQuestion({
                 className={`px-3 py-6 rounded-xl border-2 transition-all text-sm font-medium h-full cursor-pointer relative ${
                   isDisabled
                     ? "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed"
-                    : "border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-700 hover:text-blue-600"
+                    : "border-slate-200 hover:border-[hsl(var(--brand-primary))] hover:bg-[hsl(var(--brand-primary)/0.05)] text-slate-700 hover:text-[hsl(var(--brand-primary))]"
                 } ${isLoading ? "opacity-60" : ""}`}
               >
                 {!isDisabled && availableOptions && (

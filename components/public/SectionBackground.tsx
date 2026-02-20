@@ -33,14 +33,14 @@ export function SectionBackground({
     intensity === "high"
       ? "opacity-80"
       : intensity === "medium"
-      ? "opacity-50"
-      : "opacity-30";
+        ? "opacity-50"
+        : "opacity-30";
 
   return (
     <div
       className={cn(
         "absolute inset-0 pointer-events-none overflow-hidden select-none -z-10",
-        className
+        className,
       )}
       aria-hidden="true"
     >
@@ -54,7 +54,7 @@ export function SectionBackground({
 
 function DotPattern() {
   return (
-    <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-70" />
+    <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] opacity-70" />
   );
 }
 
@@ -62,13 +62,13 @@ function BlobPattern({ opacityClass }: { opacityClass: string }) {
   return (
     <div className={cn("absolute inset-0", opacityClass)}>
       {/* Top Left Blob */}
-      <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-blue-400/40 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
+      <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-[hsl(var(--brand-primary)/0.3)] rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
 
       {/* Top Right Blob */}
-      <div className="absolute top-[10%] -right-[10%] w-[40%] h-[50%] bg-purple-400/40 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
+      <div className="absolute top-[10%] -right-[10%] w-[40%] h-[50%] bg-[hsl(var(--brand-secondary)/0.3)] rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
 
       {/* Bottom Blob */}
-      <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[50%] bg-pink-400/40 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
+      <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[50%] bg-[hsl(var(--brand-primary)/0.2)] rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
     </div>
   );
 }
@@ -111,8 +111,8 @@ function GridPattern({ opacityClass }: { opacityClass: string }) {
   return (
     <div
       className={cn(
-        "absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]",
-        opacityClass
+        "absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]",
+        opacityClass,
       )}
     />
   );

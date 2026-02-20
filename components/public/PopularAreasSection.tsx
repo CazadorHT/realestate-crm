@@ -117,12 +117,24 @@ export function PopularAreasSection() {
             suppressHydrationWarning
           >
             {/* Animated Badge with Glow */}
-            <div className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-blue-500/30 to-purple-500/30  px-4 py-2 text-sm font-bold border border-blue-200/50 shadow-sm hover:shadow-md hover:shadow-blue-500/20 transition-all! duration-300! group cursor-default">
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold border shadow-sm hover:shadow-md transition-all! duration-300! group cursor-default"
+              style={{
+                background: `linear-gradient(to right, hsl(var(--brand-gradient-from) / 0.1), hsl(var(--brand-gradient-to) / 0.1))`,
+                borderColor: `hsl(var(--brand-primary-color) / 0.2)`,
+              }}
+            >
               <div className="relative">
-                <MapPin className="h-4 w-4 relative z-10 text-blue-600" />
-                <div className="absolute inset-0 bg-blue-500 blur-md opacity-30 group-hover:opacity-50 transition-opacity!" />
+                <MapPin
+                  className="h-4 w-4 relative z-10"
+                  style={{ color: `hsl(var(--brand-primary-color))` }}
+                />
+                <div
+                  className="absolute inset-0 blur-md opacity-30 group-hover:opacity-50 transition-opacity!"
+                  style={{ backgroundColor: `hsl(var(--brand-primary-color))` }}
+                />
               </div>
-              <span className="tracking-wide text-blue-600">
+              <span style={{ color: `hsl(var(--brand-primary-color))` }}>
                 {t("home.popular_areas.title")}
               </span>
             </div>
@@ -135,7 +147,11 @@ export function PopularAreasSection() {
                   i % 2 === 1 ? (
                     <span
                       key={i}
-                      className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-blue-500 to-purple-600"
+                      className="text-transparent bg-clip-text"
+                      style={{
+                        background: `linear-gradient(to right, hsl(var(--brand-gradient-from)), hsl(var(--brand-gradient-to)))`,
+                        WebkitBackgroundClip: "text",
+                      }}
                     >
                       {part}
                     </span>
@@ -156,11 +172,11 @@ export function PopularAreasSection() {
               onClick={() => router.push("/?type=ALL#latest-properties")}
               data-aos="fade-left"
               suppressHydrationWarning
-              className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all! duration-300! hover:scale-105 flex items-center justify-center"
+              style={{
+                background: `linear-gradient(to right, hsl(var(--brand-gradient-from)), hsl(var(--brand-gradient-to)))`,
+              }}
+              className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl text-white font-semibold shadow-lg hover:shadow-xl transition-all! duration-300! hover:scale-105 flex items-center justify-center border-0 cursor-pointer"
             >
-              {/* Animated gradient overlay */}
-              <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity! duration-500!" />
-
               {/* Shine effect */}
               <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform! duration-700! bg-linear-to-r from-transparent via-white/20 to-transparent" />
 

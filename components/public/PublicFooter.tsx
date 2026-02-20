@@ -8,19 +8,23 @@ import { useState, useTransition, Suspense } from "react";
 import { subscribeToLineAction } from "@/features/leads/public-actions";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { useSiteSettings } from "@/components/providers/SiteSettingsProvider";
 
 export function PublicFooter() {
   const { t } = useLanguage();
+  const settings = useSiteSettings();
+  const siteName = settings.brand_site_name || siteConfig.name;
+  const siteLogo = settings.brand_logo_url || siteConfig.logoDark;
   const currentYear = new Date().getFullYear();
   const companyMeta = {
-    name_th: siteConfig.name,
+    name_th: siteName,
   };
 
   // Schema.org Organization for SEO
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    name: siteConfig.name,
+    name: siteName,
     description: t("footer.company_desc"),
     url: siteConfig.url,
     telephone: siteConfig.contact.phone,
@@ -98,8 +102,18 @@ export function PublicFooter() {
       <footer className="bg-[#0B1120] text-slate-300 relative overflow-hidden font-sans">
         {/* Background Effects */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-          <div className="absolute top-0 -left-[10%] w-[50%] h-[500px] bg-blue-900/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 -right-[10%] w-[50%] h-[500px] bg-purple-900/10 rounded-full blur-[120px]" />
+          <div
+            className="absolute top-0 -left-[10%] w-[50%] h-[500px] rounded-full blur-[120px] opacity-20"
+            style={{
+              background: `hsl(var(--brand-gradient-from))`,
+            }}
+          />
+          <div
+            className="absolute bottom-0 -right-[10%] w-[50%] h-[500px] rounded-full blur-[120px] opacity-20"
+            style={{
+              background: `hsl(var(--brand-gradient-to))`,
+            }}
+          />
         </div>
 
         {/* Schema.org Structured Data */}
@@ -119,8 +133,8 @@ export function PublicFooter() {
                   className="block w-48 transition-opacity hover:opacity-90"
                 >
                   <Image
-                    src={siteConfig.logoDark}
-                    alt={`${siteConfig.name} Logo`}
+                    src={siteLogo}
+                    alt={`${siteName} Logo`}
                     width={180}
                     height={60}
                     className="w-auto h-26"
