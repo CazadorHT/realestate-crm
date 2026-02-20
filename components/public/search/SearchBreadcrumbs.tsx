@@ -29,7 +29,7 @@ export function SearchBreadcrumbs({
         >
           <Link
             href="/"
-            className="hover:text-blue-600 transition-colors flex items-center gap-1 shrink-0"
+            className="hover:text-[hsl(var(--brand-primary))] transition-colors flex items-center gap-1 shrink-0"
             itemProp="itemListElement"
             itemScope
             itemType="https://schema.org/ListItem"
@@ -45,7 +45,7 @@ export function SearchBreadcrumbs({
           {/* Responsive chevron size */}
           <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 shrink-0" />
           <span
-            className="text-blue-600 font-medium truncate"
+            className="text-[hsl(var(--brand-primary))] font-medium truncate"
             itemProp="itemListElement"
             itemScope
             itemType="https://schema.org/ListItem"

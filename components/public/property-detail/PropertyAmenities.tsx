@@ -27,8 +27,8 @@ export function PropertyAmenities({
 
   return (
     <section>
-      <h3 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-bold text-blue-900! mb-6 flex items-center gap-2">
-        <LuLayoutGrid className="w-5 h-5 text-blue-600" />{" "}
+      <h3 className="text-lg md:text-xl border-l-4 border-[hsl(var(--brand-primary))] bg-[linear-gradient(to_right,hsl(var(--brand-primary)/0.1),transparent)] px-4 py-3 rounded-r-xl font-semibold text-[hsl(var(--brand-primary))] mb-6 flex items-center gap-2">
+        <LuLayoutGrid className="w-5 h-5 text-[hsl(var(--brand-primary))]" />{" "}
         {t("property.amenities")}
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 lg:gap-y-4 lg:gap-x-8">
@@ -37,12 +37,12 @@ export function PropertyAmenities({
           const localizedName = getLocaleValue(item, "name", language);
           return (
             <div
-            key={i}
-            className="flex items-center gap-2 lg:gap-3 text-sm lg:text-base text-slate-600"
-          >
-            <div className="p-1.5 lg:p-2 rounded-full bg-blue-50 text-blue-600">
-              <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-            </div>
+              key={i}
+              className="flex items-center gap-2 lg:gap-3 text-sm lg:text-base text-slate-600"
+            >
+              <div className="p-1.5 lg:p-2 rounded-full bg-[hsl(var(--brand-primary)/0.08)] text-[hsl(var(--brand-primary))]">
+                <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+              </div>
               <span className="truncate">{localizedName}</span>
             </div>
           );

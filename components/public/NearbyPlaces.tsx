@@ -112,8 +112,8 @@ export function NearbyPlaces({
 
   return (
     <div className="mt-10">
-      <h3 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-bold text-blue-900! mb-6 flex items-center gap-2">
-        <MdOutlineExplore className="w-5 h-5 text-blue-600" />{" "}
+      <h3 className="text-lg md:text-xl border-l-4 border-[hsl(var(--brand-primary))] bg-[linear-gradient(to_right,hsl(var(--brand-primary)/0.08),white)] px-4 py-3 rounded-r-xl font-semibold text-[hsl(var(--brand-primary))] mb-6 flex items-center gap-2">
+        <MdOutlineExplore className="w-5 h-5 text-[hsl(var(--brand-primary))]" />{" "}
         {t("property.nearby_places")}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -130,8 +130,8 @@ export function NearbyPlaces({
               className="bg-slate-50 border border-slate-100 rounded-xl p-4"
             >
               <div className="flex items-center gap-2 mb-3">
-                <Icon className="w-5 h-5 text-blue-500" />
-                <h4 className="font-semibold text-slate-700 text-sm">
+                <Icon className="w-5 h-5 text-[hsl(var(--brand-primary))]" />
+                <h4 className="font-semibold text-(--brand-primary-800) text-sm">
                   {label}
                 </h4>
               </div>
@@ -141,7 +141,7 @@ export function NearbyPlaces({
                     key={i}
                     className="flex justify-between items-start text-sm gap-2"
                   >
-                    <span className="text-slate-600 mr-auto wrap-break-word leading-tight">
+                    <span className="text-(--brand-primary-800) mr-auto wrap-break-word leading-tight">
                       {(language === "en"
                         ? item.name_en
                         : language === "cn"
@@ -169,9 +169,9 @@ export function NearbyPlaces({
 
         {/* Transit - Single card called "รถไฟฟ้า" */}
         {transits.length > 0 && (
-          <div className="bg-blue-50 border border-slate-100 rounded-xl p-4">
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
-              <TrainFront className="w-5 h-5 text-blue-500" />
+              <TrainFront className="w-5 h-5 text-[hsl(var(--brand-primary))]" />
               <h4 className="font-semibold text-sm text-slate-700">
                 {t("property.transit")}
               </h4>

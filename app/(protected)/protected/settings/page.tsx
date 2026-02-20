@@ -1,7 +1,8 @@
 import { Metadata } from "next";
 import { SiteSettingsPanel } from "@/components/settings/SiteSettingsPanel";
 import { BrandSettingsPanel } from "@/components/settings/BrandSettingsPanel";
-import { Settings, Palette, Globe } from "lucide-react";
+import { BrandStylePanel } from "@/components/settings/BrandStylePanel";
+import { Settings, Palette, Globe, Layout } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const metadata: Metadata = {
@@ -43,6 +44,13 @@ export default function SettingsPage() {
             <Palette className="h-4 w-4 mr-2" />
             อัตลักษณ์แบรนด์ (Brand CI)
           </TabsTrigger>
+          <TabsTrigger
+            value="style"
+            className="rounded-lg py-2.5 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-violet-600 transition-all text-slate-600 font-medium"
+          >
+            <Layout className="h-4 w-4 mr-2" />
+            สไตล์และรูปแบบ (Style)
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent
@@ -57,6 +65,10 @@ export default function SettingsPage() {
           className="mt-0 focus-visible:outline-none"
         >
           <BrandSettingsPanel />
+        </TabsContent>
+
+        <TabsContent value="style" className="mt-0 focus-visible:outline-none">
+          <BrandStylePanel />
         </TabsContent>
       </Tabs>
     </div>

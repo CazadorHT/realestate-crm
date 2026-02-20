@@ -50,7 +50,7 @@ export function MortgageCalculatorSection() {
   };
 
   return (
-    <section className="py-12 md:py-16 px-4 md:px-6 lg:px-8 bg-linear-to-br from-blue-50 to-blue-100 relative overflow-hidden z-0">
+    <section className="py-12 md:py-16 px-4 md:px-6 lg:px-8 bg-[linear-gradient(to_bottom_right,hsl(var(--brand-gradient-from)/0.08),hsl(var(--brand-gradient-to)/0.08))] relative overflow-hidden z-0">
       <SectionBackground pattern="icons" intensity="low" />
       {/* Schema.org Structured Data */}
       <script
@@ -62,7 +62,7 @@ export function MortgageCalculatorSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
           {/* Left: SEO-Optimized Text Content */}
           <div className="lg:col-span-5 space-y-4" data-aos="fade-right">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/10 text-blue-700 text-sm font-bold border border-blue-200/50">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--brand-primary)/0.1)] text-[hsl(var(--brand-primary))] text-sm font-bold border border-[hsl(var(--brand-primary)/0.2)]">
               <Calculator className="w-4 h-4" /> {t("home.mortgage.title")}
             </div>
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
@@ -73,7 +73,7 @@ export function MortgageCalculatorSection() {
                     key={i}
                     className={
                       i === 1
-                        ? "text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600"
+                        ? "text-transparent bg-clip-text bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))]"
                         : i === 2
                           ? "text-3xl md:text-4xl text-slate-600 block mt-2"
                           : ""
@@ -100,7 +100,7 @@ export function MortgageCalculatorSection() {
                   <label className="text-sm font-medium text-slate-600">
                     {t("home.mortgage.property_price")}
                   </label>
-                  <div className="text-xl font-bold text-blue-600">
+                  <div className="text-xl font-bold text-[hsl(var(--brand-primary))]">
                     {propertyPrice.toLocaleString()} {t("common.baht")}
                   </div>
                   <Slider
@@ -137,7 +137,7 @@ export function MortgageCalculatorSection() {
                     type="number"
                     value={interestRate}
                     onChange={(e) => setInterestRate(Number(e.target.value))}
-                    className="w-full bg-slate-50 border text-slate-900 border-slate-200 rounded-lg px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-slate-50 border text-slate-900 border-slate-200 rounded-lg px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-primary))]"
                   />
                 </div>
                 <div className="space-y-2">
@@ -159,9 +159,9 @@ export function MortgageCalculatorSection() {
               </div>
 
               {/* Result Section Inside Card */}
-              <div className="bg-linear-to-tr from-blue-600 to-blue-500 rounded-2xl p-4 md:p-6 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="bg-[linear-gradient(to_top_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] rounded-2xl p-4 md:p-6 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <p className="text-blue-100 text-xs uppercase font-semibold">
+                  <p className="text-white/70 text-xs uppercase font-semibold">
                     {t("home.mortgage.monthly_payment")}
                   </p>
                   <div className="text-2xl md:text-3xl font-bold">

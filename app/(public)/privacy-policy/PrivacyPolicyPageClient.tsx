@@ -15,7 +15,7 @@ export default function PrivacyPolicyPageClient() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header Background */}
-      <div className="bg-linear-to-r from-slate-900 to-slate-800 text-white pb-24 pt-12 md:pt-16">
+      <div className="bg-linear-to-r from-(--brand-primary-900) to-(--brand-primary-800) text-white pb-24 pt-12 md:pt-16">
         <div className="container mx-auto px-4 md:px-6">
           <AppBreadcrumbs
             variant="on-dark"
@@ -26,7 +26,7 @@ export default function PrivacyPolicyPageClient() {
             className="text-slate-400 my-6 "
           />
           <div className="max-w-4xl mx-auto text-center space-y-4">
-            <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-blue-500/10 text-blue-400 mb-2">
+            <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-(--brand-primary-500)/10 text-(--brand-primary-400) mb-2">
               <Shield className="w-8 h-8" />
             </div>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
@@ -54,7 +54,7 @@ export default function PrivacyPolicyPageClient() {
           <div className="p-6 md:p-10 prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-800 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 prose-strong:text-slate-700">
             <section className="mb-10 last:mb-0">
               <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-(--brand-primary-600) text-sm group-hover:bg-(--brand-primary-600) group-hover:text-white transition-colors">
                   1
                 </span>
                 {t("privacy.section1_title")}
@@ -64,7 +64,7 @@ export default function PrivacyPolicyPageClient() {
 
             <section className="mb-10 last:mb-0">
               <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-(--brand-primary-600) text-sm group-hover:bg-(--brand-primary-600) group-hover:text-white transition-colors">
                   2
                 </span>
                 {t("privacy.section2_title")}
@@ -95,15 +95,15 @@ export default function PrivacyPolicyPageClient() {
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors"
+                    className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-(--brand-primary-200) transition-colors"
                   >
                     <div className="flex items-start gap-3">
-                      <item.icon className="w-5 h-5 text-blue-500 mt-0.5" />
+                      <item.icon className="w-5 h-5 text-(--brand-primary-500) mt-0.5" />
                       <div>
-                        <h4 className="font-semibold text-slate-800 text-sm">
+                        <h4 className="font-semibold text-(--brand-primary-800) text-sm">
                           {item.title}
                         </h4>
-                        <p className="text-slate-500 text-sm">{item.desc}</p>
+                        <p className="text-(--brand-primary-500) text-sm">{item.desc}</p>
                       </div>
                     </div>
                   </div>
@@ -113,7 +113,7 @@ export default function PrivacyPolicyPageClient() {
 
             <section className="mb-10 last:mb-0">
               <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-(--brand-primary-50) text-(--brand-primary-600) text-sm group-hover:bg-(--brand-primary-600) group-hover:text-white transition-colors">
                   3
                 </span>
                 {t("privacy.section3_title")}
@@ -128,7 +128,7 @@ export default function PrivacyPolicyPageClient() {
 
             <section className="mb-10 last:mb-0">
               <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-(--brand-primary-50) text-(--brand-primary-600) text-sm group-hover:bg-(--brand-primary-600) group-hover:text-white transition-colors">
                   4
                 </span>
                 {t("privacy.section4_title")}
@@ -138,13 +138,13 @@ export default function PrivacyPolicyPageClient() {
 
             <section className="mb-10 last:mb-0">
               <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-(--brand-primary-50) text-(--brand-primary-600) text-sm group-hover:bg-(--brand-primary-600) group-hover:text-white transition-colors">
                   5
                 </span>
                 {t("privacy.section5_title")}
               </h2>
               <p>{t("privacy.section5_p1")}</p>
-              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 not-prose space-y-2">
+              <div className="bg-(--brand-primary-50)/50 border border-(--brand-primary-100) rounded-xl p-5 not-prose space-y-2">
                 {[
                   t("privacy.right1"),
                   t("privacy.right2"),
@@ -153,9 +153,9 @@ export default function PrivacyPolicyPageClient() {
                 ].map((right, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 text-slate-700 text-sm"
+                    className="flex items-center gap-2 text-(--brand-primary-700) text-sm"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-(--brand-primary-500)" />
                     {right}
                   </div>
                 ))}
@@ -164,24 +164,24 @@ export default function PrivacyPolicyPageClient() {
 
             <section className="mb-10 last:mb-0">
               <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-(--brand-primary-50) text-(--brand-primary-600) text-sm group-hover:bg-(--brand-primary-600) group-hover:text-white transition-colors">
                   6
                 </span>
                 {t("privacy.section6_title")}
               </h2>
               <p>{t("privacy.section6_p1")}</p>
-              <div className="mt-4 p-5 bg-slate-50 rounded-xl border border-slate-200 not-prose flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+              <div className="mt-4 p-5 bg-(--brand-primary-50)/50 border border-(--brand-primary-100) rounded-xl not-prose flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
                 <div>
-                  <h4 className="font-semibold text-slate-900">
+                  <h4 className="font-semibold text-(--brand-primary-800)">
                     {t("privacy.customer_service")}
                   </h4>
-                  <p className="text-slate-500 text-sm">
+                  <p className="text-(--brand-primary-600) text-sm">
                     {t("privacy.customer_service_desc")}
                   </p>
                 </div>
                 <a
                   href="/contact"
-                  className="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 hover:text-blue-600 transition-colors shadow-sm"
+                  className="inline-flex items-center justify-center px-4 py-2 bg-white border border-(--brand-primary-300) rounded-lg text-(--brand-primary-700) font-medium hover:bg-(--brand-primary-50) hover:text-(--brand-primary-600) transition-colors shadow-sm"
                 >
                   {t("privacy.contact_button")}
                 </a>

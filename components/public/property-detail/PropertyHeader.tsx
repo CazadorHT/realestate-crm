@@ -227,7 +227,7 @@ export function PropertyHeader({
           {label && (
             <span className="text-sm text-slate-500 font-medium">{label}</span>
           )}
-          <span className="text-xl md:text-2xl font-bold text-blue-600">
+          <span className="text-xl md:text-2xl font-bold text-[hsl(var(--brand-primary))]">
             {isRent ? t("property.inquiry_rent") : t("property.inquiry_price")}
           </span>
         </div>
@@ -362,7 +362,7 @@ export function PropertyHeader({
                     className={`rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
                       property.listing_type === "SALE"
                         ? "bg-emerald-600 text-white"
-                        : "bg-linear-to-r from-sky-500 to-blue-600 text-white"
+                        : "bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] text-white"
                     }`}
                   >
                     {property.listing_type === "SALE"
@@ -409,7 +409,7 @@ export function PropertyHeader({
                 </h2>
 
                 <div className="flex items-center text-slate-600 gap-2 font-normal text-sm">
-                  <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
+                  <MapPin className="w-4 h-4 text-[hsl(var(--brand-primary))] shrink-0" />
                   <span className="line-clamp-1">
                     {locationParts || t("common.no_location")}
                   </span>
@@ -463,7 +463,7 @@ export function PropertyHeader({
                     property.listing_type === "SALE_AND_RENT") &&
                     property.min_contract_months && (
                       <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200 ">
-                        <CalendarDays className="w-4 h-4 text-blue-500" />
+                        <CalendarDays className="w-4 h-4 text-[hsl(var(--brand-primary))]" />
                         <span className="text-sm text-slate-600">
                           {t("property.min_contract")}{" "}
                           <strong className="text-slate-900">
@@ -486,7 +486,7 @@ export function PropertyHeader({
             </div>
             {/* Key Selling Points */}
             <div className="w-full max-w-[950px] ">
-                {/* <KeySellingPoints
+              {/* <KeySellingPoints
                   points={finalKeySellingPoints}
                   listingType={property.listing_type || "SALE"}
                 /> */}

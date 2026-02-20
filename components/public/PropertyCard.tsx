@@ -156,7 +156,8 @@ export function PropertyCard({
     ) {
       comparisonBadges.push({
         label: t("common.larger_area"),
-        color: "bg-blue-100 text-blue-700",
+        color:
+          "bg-[hsl(var(--brand-primary)/0.15)] text-[hsl(var(--brand-primary))]",
       });
     }
 
@@ -167,7 +168,7 @@ export function PropertyCard({
     ) {
       comparisonBadges.push({
         label: t("common.newer"),
-        color: "bg-purple-100 text-purple-700",
+        color: "bg-white text-[hsl(var(--brand-primary))]",
       });
     }
   }
@@ -202,7 +203,7 @@ export function PropertyCard({
             onClick={handleCompareClick}
             className={`mt-3 flex items-center gap-1.5 text-xs font-medium transition-all duration-200 ${
               isInCompare
-                ? "text-blue-600"
+                ? "text-[hsl(var(--brand-primary))]"
                 : "text-slate-400 hover:text-slate-600"
             }`}
           >

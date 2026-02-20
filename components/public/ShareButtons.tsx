@@ -128,7 +128,7 @@ export function ShareButtons({
       </a>
       <button
         onClick={copyToClipboard}
-        className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-xl transition-colors font-medium text-sm"
+        className="flex items-center justify-center gap-2 px-4 py-3 bg-(--brand-primary-800) hover:bg-(--brand-primary-900) text-white rounded-xl transition-all font-medium text-sm shadow-md"
       >
         <LinkIcon className="w-5 h-5" />
         {copied ? t("common.link_copied") : t("common.copy_link")}

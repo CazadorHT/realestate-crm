@@ -22,7 +22,7 @@ export function CompareActionRow({ properties }: CompareActionRowProps) {
       {properties.map((p) => (
         <div key={p.id} className="p-3 md:p-6">
           <Button
-            className="w-full rounded-lg md:rounded-xl bg-slate-900 hover:bg-slate-800 transition-all hover:scale-105 text-xs md:text-sm py-2 md:py-3"
+            className="w-full rounded-lg md:rounded-xl bg-[hsl(var(--brand-primary))] hover:brightness-110 transition-all hover:scale-105 text-xs md:text-sm py-2 md:py-3"
             asChild
           >
             <Link href={`/properties/${p.id}`}>

@@ -21,7 +21,7 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
         {/* Categories */}
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="h-5 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
+            <div className="h-5 w-1 bg-[linear-gradient(to_bottom,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] rounded-full"></div>
             <h3 className="text-lg font-bold text-slate-900">
               {t("blog.categories_title")}
             </h3>
@@ -58,8 +58,8 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
                     key={cat}
                     className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 border flex items-center justify-between group ${
                       isActive
-                        ? "bg-blue-50 text-blue-700 border-blue-200 font-semibold"
-                        : "bg-slate-50 text-slate-700 hover:bg-linear-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 font-medium border-transparent hover:border-blue-200"
+                        ? "bg-[hsl(var(--brand-primary)/0.08)] text-[hsl(var(--brand-primary))] border-[hsl(var(--brand-primary)/0.2)] font-semibold"
+                        : "bg-slate-50 text-slate-700 hover:bg-[linear-gradient(to_right,hsl(var(--brand-primary)/0.05),hsl(var(--brand-secondary)/0.05))] hover:text-[hsl(var(--brand-primary))] font-medium border-transparent hover:border-[hsl(var(--brand-primary)/0.2)]"
                     }`}
                   >
                     <span>
@@ -70,8 +70,8 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
                         isActive
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-slate-200 group-hover:bg-blue-100 group-hover:text-blue-700"
+                          ? "bg-[hsl(var(--brand-primary)/0.15)] text-[hsl(var(--brand-primary))]"
+                          : "bg-slate-200 group-hover:bg-[hsl(var(--brand-primary)/0.15)] group-hover:text-[hsl(var(--brand-primary))]"
                       }`}
                     >
                       {count}
@@ -84,9 +84,9 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
         </div>
 
         {/* Tags Cloud */}
-        <div className="bg-linear-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100 shadow-sm">
+        <div className="bg-[linear-gradient(to_bottom_right,hsl(var(--brand-primary)/0.05),hsl(var(--brand-secondary)/0.05))] rounded-2xl p-6 border border-[hsl(var(--brand-primary)/0.1)] shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="h-5 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
+            <div className="h-5 w-1 bg-[linear-gradient(to_bottom,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] rounded-full"></div>
             <h3 className="text-lg font-bold text-slate-900">
               {t("blog.tags_title")}
             </h3>
@@ -133,8 +133,8 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
                     href={isActive ? "/blog" : `/blog?tag=${tag}`}
                     className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-all duration-300 hover:shadow-md hover:scale-105 ${
                       isActive
-                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                        : "bg-white text-slate-700 border-slate-200 hover:bg-linear-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white hover:border-transparent"
+                        ? "bg-[hsl(var(--brand-primary))] text-white border-[hsl(var(--brand-primary))] shadow-md"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] hover:text-white hover:border-transparent"
                     }`}
                   >
                     #{tag}
@@ -157,11 +157,11 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
             <input
               type="email"
               placeholder={t("blog.newsletter_placeholder")}
-              className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-primary))]"
               disabled
             />
             <button
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium text-sm whitespace-nowrap transition-colors"
+              className="px-4 py-2 bg-[hsl(var(--brand-primary))] hover:brightness-110 rounded-lg font-medium text-sm whitespace-nowrap transition-colors"
               disabled
             >
               {t("blog.newsletter_btn")}

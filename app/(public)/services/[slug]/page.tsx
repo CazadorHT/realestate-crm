@@ -78,7 +78,7 @@ async function ServiceDetail({ params }: PageProps) {
           <div className="lg:col-span-2 space-y-8">
             {/* Description Card */}
             <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
-              <div className="prose prose-lg max-w-none prose-slate prose-headings:font-bold prose-a:text-blue-600">
+              <div className="prose prose-lg max-w-none prose-slate prose-headings:font-bold prose-a:text-[hsl(var(--brand-primary))]">
                 <div
                   dangerouslySetInnerHTML={{
                     __html: service.content || service.description || "",
@@ -91,7 +91,7 @@ async function ServiceDetail({ params }: PageProps) {
             {gallery.length > 0 && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                  <span className="w-1 h-8 bg-blue-600 rounded-full" />
+                  <span className="w-1 h-8 bg-[hsl(var(--brand-primary))] rounded-full" />
                   Gallery
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -138,7 +138,7 @@ async function ServiceDetail({ params }: PageProps) {
                 </a>
               ) : (
                 <Link href="/contact" className="block w-full">
-                  <Button className="w-full h-12 text-lg bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20">
+                  <Button className="w-full h-12 text-lg bg-[hsl(var(--brand-primary))] hover:brightness-110 text-white shadow-lg shadow-[hsl(var(--brand-primary)/0.2)]">
                     <Phone className="mr-2 h-5 w-5" />
                     Contact Us
                   </Button>

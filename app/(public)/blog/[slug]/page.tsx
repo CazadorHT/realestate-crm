@@ -190,7 +190,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       {relatedPosts.length > 3 && (
         <div className="container px-4 md:px-6 mt-20 max-w-6xl mx-auto">
           <div className="flex items-center gap-2 mb-8">
-            <div className="h-6 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
+            <div className="h-6 w-1 bg-[linear-gradient(to_bottom,hsl(var(--brand-primary)),hsl(var(--brand-secondary)))] rounded-full"></div>
             <h2 className="text-2xl font-bold">
               {t("blog.more_articles_in")} {post.category}
             </h2>

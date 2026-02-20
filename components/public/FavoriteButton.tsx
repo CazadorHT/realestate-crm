@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toggleFavoriteId, isFavorite } from "@/lib/favorite-store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface FavoriteButtonProps {
   propertyId: string;
@@ -18,6 +19,7 @@ export function FavoriteButton({
   className,
   showText = false,
 }: FavoriteButtonProps) {
+  const { t } = useLanguage();
   const [favorited, setFavorited] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -44,9 +46,9 @@ export function FavoriteButton({
     toggleFavoriteId(propertyId);
 
     if (!favorited) {
-      toast.success("บันทึกรายการโปรดแล้ว");
+      toast.success(t("favorites.add_success"));
     } else {
-      toast.info("ลบออกจากรายการโปรดแล้ว");
+      toast.info(t("favorites.remove_success"));
     }
   };
 
@@ -55,14 +57,14 @@ export function FavoriteButton({
       variant="outline"
       size={showText ? "default" : "icon"}
       className={cn(
-        "rounded-full transition-all duration-300 border-slate-200! hover:border-red-200! hover:bg-red-50! bg-white!",
+        "rounded-full transition-all duration-300 border-slate-200! hover:border-[hsl(var(--brand-primary)/0.3)]! hover:bg-[hsl(var(--brand-primary)/0.05)]! bg-white!",
         favorited
           ? "text-red-500! border-red-200! bg-red-50!"
-          : "text-slate-400! bg-slate-200!",
+          : "text-slate-400! bg-slate-50!",
         className,
       )}
       onClick={handleToggle}
-      title={favorited ? "ลบจากรายการโปรด" : "บันทึกรายการโปรด"}
+      title={favorited ? t("favorites.title_remove") : t("favorites.title_add")}
     >
       <Heart
         className={cn(
@@ -78,7 +80,7 @@ export function FavoriteButton({
             favorited ? "text-red-600! font-medium" : "text-slate-600!",
           )}
         >
-          {favorited ? "บันทึกแล้ว" : "บันทึก"}
+          {favorited ? t("favorites.saved_label") : t("favorites.save_label")}
         </span>
       )}
     </Button>

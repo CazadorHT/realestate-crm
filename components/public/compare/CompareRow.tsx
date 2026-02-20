@@ -90,7 +90,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
               {formatMoney(p.original_price, locale)}
             </span>
           )}
-          <span className="text-blue-600 font-bold text-sm md:text-base">
+          <span className="text-[hsl(var(--brand-primary))] font-bold text-sm md:text-base">
             {formatMoney(salePrice, locale)}
           </span>
         </div>
@@ -159,7 +159,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
               renderPriceCell(p)
             ) : row.key === "verified" ? (
               p.verified ? (
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold border border-blue-100">
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[hsl(var(--brand-primary)/0.08)] text-[hsl(var(--brand-primary))] text-xs font-semibold border border-[hsl(var(--brand-primary)/0.15)]">
                   <ShieldCheck className="h-3 w-3" />{" "}
                   {t("compare_page.values.verified")}
                 </div>
@@ -190,7 +190,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                   href={p.google_maps_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-semibold hover:underline"
+                  className="inline-flex items-center gap-1 text-[hsl(var(--brand-primary))] hover:brightness-110 font-semibold hover:underline"
                 >
                   <MapPin className="h-3 w-3" />{" "}
                   {t("compare_page.values.open_map")}
@@ -321,7 +321,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                   p.transit_station_name_en ||
                   p.transit_station_name_cn) ? (
                   <div className="flex flex-col items-start gap-1">
-                    <span className="inline-flex px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[10px] md:text-xs font-bold border border-indigo-100 uppercase">
+                    <span className="inline-flex px-2 py-0.5 rounded bg-[hsl(var(--brand-secondary)/0.08)] text-[hsl(var(--brand-secondary))] text-[10px] md:text-xs font-bold border border-[hsl(var(--brand-secondary)/0.15)] uppercase">
                       {p.transit_type}{" "}
                       {getLocalizedField<string>(
                         p,

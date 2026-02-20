@@ -79,15 +79,15 @@ export function BlogSection() {
         {/* SEO-Optimized Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 md:mb-8 gap-3">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-linear-to-r from-blue-50 to-purple-50 border border-blue-100 mb-2">
-              <BookOpen className="w-3.5 h-3.5 text-blue-600" />
-              <span className="text-xs font-bold text-blue-700">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)/0.08),hsl(var(--brand-gradient-to)/0.08))] border border-[hsl(var(--brand-gradient-from)/0.2)] mb-2">
+              <BookOpen className="w-3.5 h-3.5 text-[hsl(var(--brand-gradient-from))]" />
+              <span className="text-xs font-bold text-[hsl(var(--brand-primary))]">
                 {t("blog.title_badge")}
               </span>
             </div>
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
               {t("blog.title_main")}
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
+              <span className="text-transparent bg-clip-text bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))]">
                 {" "}
                 {t("blog.title_highlight")}
               </span>
@@ -111,7 +111,7 @@ export function BlogSection() {
           </div>
           <Link
             href="/blog"
-            className="group self-end  inline-flex items-center  gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 font-medium transition-all duration-300 shadow-sm hover:shadow-md"
+            className="group self-end  inline-flex items-center  gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 hover:bg-[hsl(var(--brand-primary))] hover:text-white hover:border-[hsl(var(--brand-primary))] font-medium transition-all duration-300 shadow-sm hover:shadow-md"
           >
             {t("blog.view_all")}
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -186,7 +186,7 @@ export function BlogSection() {
 
                     <Link
                       href={`/blog/${post.slug}`}
-                      className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-slate-200 hover:border-blue-200 flex flex-col h-full"
+                      className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-slate-200 hover:border-[hsl(var(--brand-gradient-from)/0.3)] flex flex-col h-full"
                       itemProp="url"
                     >
                       {/* Image */}
@@ -212,7 +212,7 @@ export function BlogSection() {
                           </Badge>
                         )}
                         {/* Gradient overlay on hover */}
-                        <div className="absolute inset-0 bg-linear-to-t from-blue-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--brand-gradient-from)/0.5),transparent)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       </div>
 
                       {/* Content */}
@@ -239,7 +239,7 @@ export function BlogSection() {
                         </div>
 
                         <h3
-                          className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300"
+                          className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] transition-all duration-300"
                           itemProp="name"
                         >
                           {title}
@@ -276,7 +276,7 @@ export function BlogSection() {
                               {(post.author as any)?.name || "Admin"}
                             </span>
                           </div>
-                          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[hsl(var(--brand-primary))] group-hover:translate-x-1 transition-all" />
                         </div>
                       </div>
                     </Link>

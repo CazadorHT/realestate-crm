@@ -30,12 +30,12 @@ export function CTASection() {
     {
       icon: Users,
       label: t("home.cta.stats.users"),
-      color: "text-blue-600",
+      color: "text-[hsl(var(--brand-primary))]",
     },
     {
       icon: Award,
       label: t("home.cta.stats.satisfaction"),
-      color: "text-purple-600",
+      color: "text-[hsl(var(--brand-secondary))]",
     },
     {
       icon: TrendingUp,
@@ -110,7 +110,8 @@ export function CTASection() {
           <Link href="/properties">
             <Button
               size="lg"
-              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] hover:brightness-110 shadow-xl hover:shadow-2xl transition-all hover:scale-105 w-full sm:w-auto text-white border-0"
+              variant="default"
+              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] hover:brightness-110 shadow-xl hover:shadow-2xl transition-all hover:scale-105 w-full sm:w-auto text-white border border-transparent"
             >
               <Search className="h-4 w-4 md:h-5 md:w-5 mr-2" />
               {t("common.start_search")}
@@ -125,7 +126,7 @@ export function CTASection() {
             <Button
               size="lg"
               variant="outline"
-              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 border-2 border-slate-300 hover:border-green-600 hover:bg-green-50 hover:text-green-700 transition-all w-full sm:w-auto"
+              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6   hover:border-green-600 hover:bg-green-50 hover:text-green-700 transition-all w-full sm:w-auto"
             >
               <MessageCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
               {t("common.contact_line")}

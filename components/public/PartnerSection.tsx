@@ -68,7 +68,7 @@ export function PartnerSection() {
         {/* SEO-Optimized Header Section */}
         <div className="text-center mb-8 md:mb-10 lg:mb-12" data-aos="fade-up">
           <h2 className="text-2xl md:text-4xl font-bold text-slate-900 mb-3">
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600 mr-2">
+            <span className="text-transparent bg-clip-text bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] mr-2">
               {t("home.partners.title").split(" ")[0]}
             </span>
             {t("home.partners.title").split(" ").slice(1).join(" ")}

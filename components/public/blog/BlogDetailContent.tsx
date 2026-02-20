@@ -88,7 +88,7 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
     <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-10 shadow-xl border border-slate-200">
       {/* Excerpt */}
       {excerpt && (
-        <p className="text-lg md:text-2xl font-medium text-slate-600 mb-6 md:mb-8 leading-relaxed border-l-4 border-blue-600 pl-4 md:pl-6 py-2 bg-linear-to-r from-blue-50/50 to-transparent">
+        <p className="text-lg md:text-2xl font-medium text-slate-600 mb-6 md:mb-8 leading-relaxed border-l-4 border-[hsl(var(--brand-primary))] pl-4 md:pl-6 py-2 bg-[linear-gradient(to_right,hsl(var(--brand-primary)/0.08),transparent)]">
           {excerpt}
         </p>
       )}
@@ -96,7 +96,7 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
       {/* Main Content Render */}
       <div
         ref={contentRef}
-        className="prose prose-base md:prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline text-slate-600"
+        className="prose prose-base md:prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-a:text-[hsl(var(--brand-primary))] prose-a:no-underline hover:prose-a:underline text-slate-600"
         dangerouslySetInnerHTML={{
           __html: sanitizedContent,
         }}
@@ -110,7 +110,7 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
             <Badge
               key={tag}
               variant="outline"
-              className="text-xs sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-colors cursor-pointer"
+              className="text-xs sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 hover:bg-[hsl(var(--brand-primary)/0.08)] hover:text-[hsl(var(--brand-primary))] hover:border-[hsl(var(--brand-primary)/0.2)] transition-colors cursor-pointer"
             >
               #{tag}
             </Badge>
@@ -120,7 +120,7 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
 
       {/* Author Bio */}
       <div className="mt-10 md:mt-12 pt-8 border-t">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 p-5 sm:p-6 bg-linear-to-br from-slate-50 to-blue-50/30 rounded-2xl border border-slate-200">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 p-5 sm:p-6 bg-[linear-gradient(to_bottom_right,hsl(var(--brand-primary)/0.02),hsl(var(--brand-primary)/0.08))] rounded-2xl border border-slate-200">
           <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md shrink-0">
             {author.avatar ? (
               <Image
@@ -130,7 +130,7 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
                 className="object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+              <div className="w-full h-full bg-[linear-gradient(to_bottom_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] flex items-center justify-center">
                 <User className="w-8 h-8 text-white" />
               </div>
             )}
@@ -139,7 +139,9 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
             <h3 className="text-lg font-bold text-slate-900 mb-1">
               {t("blog.about_author")}
             </h3>
-            <p className="text-blue-600 font-medium mb-2">{author.name}</p>
+            <p className="text-[hsl(var(--brand-primary))] font-medium mb-2">
+              {author.name}
+            </p>
             <p className="text-sm text-slate-600 leading-relaxed">
               {author.bio || t("blog.author_bio_fallback")}
             </p>

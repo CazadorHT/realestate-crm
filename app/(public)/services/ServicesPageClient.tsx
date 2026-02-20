@@ -38,16 +38,16 @@ function ServicesContent() {
       title: t("services.buy.title"),
       desc: t("services.buy.desc"),
       icon: Home,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
+      color: "text-[hsl(var(--brand-primary))]",
+      bgColor: "bg-[var(--brand-primary-50)]",
     },
     {
       id: "sell",
       title: t("services.sell.title"),
       desc: t("services.sell.desc"),
       icon: TrendingUp,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
+      color: "text-[hsl(var(--brand-primary))]",
+      bgColor: "bg-[var(--brand-primary-50)]",
     },
     {
       id: "rent",
@@ -62,8 +62,8 @@ function ServicesContent() {
       title: t("services.consulting.title"),
       desc: t("services.consulting.desc"),
       icon: Building2,
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50",
+      color: "text-[hsl(var(--brand-primary))]",
+      bgColor: "bg-[var(--brand-primary-50)]",
     },
   ];
 
@@ -85,8 +85,8 @@ function ServicesContent() {
       {/* Hero Section */}
       <section className="relative pt-32 pb-24 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-900 border-b border-white/5">
         {/* Background blobs for premium feel */}
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[800px] h-[800px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[800px] h-[800px] bg-[hsl(var(--brand-primary)/0.2)] rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[600px] h-[600px] bg-[hsl(var(--brand-secondary)/0.1)] rounded-full blur-[100px] pointer-events-none" />
 
         <div className="container relative z-10 mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 text-white/90 text-sm mb-8 border border-white/10 backdrop-blur-md animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
@@ -99,7 +99,7 @@ function ServicesContent() {
             <span className="block">
               {t("services.hero_title").split(" ")[0]}
             </span>
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-purple-300 to-indigo-400">
+            <span className="text-transparent bg-clip-text bg-[linear-gradient(to_right,hsl(var(--brand-primary)),hsl(var(--brand-secondary)),hsl(var(--brand-primary)))]">
               {t("services.hero_title").split(" ").slice(1).join(" ")}
             </span>
           </h1>
@@ -110,7 +110,7 @@ function ServicesContent() {
           <div className="flex flex-wrap justify-center gap-4 animate-in fade-in-0 zoom-in-95 duration-1000 delay-300">
             <Button
               size="lg"
-              className="rounded-2xl h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-900/20 border-none transition-all hover:scale-105"
+              className="rounded-2xl h-14 px-8 bg-[hsl(var(--brand-primary))] hover:brightness-110 text-white shadow-xl shadow-[hsl(var(--brand-primary)/0.2)] border-none transition-all hover:scale-105"
             >
               {t("common.start_search")}
             </Button>
@@ -133,7 +133,7 @@ function ServicesContent() {
             {CORE_SERVICES.map((service, idx) => (
               <div
                 key={service.id}
-                className="group p-8 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-100 transition-all duration-500 animate-in fade-in-0 slide-in-from-bottom-12"
+                className="group p-8 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:border-[hsl(var(--brand-primary)/0.2)] transition-all duration-500 animate-in fade-in-0 slide-in-from-bottom-12"
                 style={{ animationDelay: `${idx * 150}ms` }}
               >
                 <div
@@ -141,13 +141,13 @@ function ServicesContent() {
                 >
                   <service.icon className={`h-7 w-7 ${service.color}`} />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-4 tracking-tight group-hover:text-blue-600 transition-colors">
+                <h3 className="text-xl font-bold text-slate-900 mb-4 tracking-tight group-hover:text-[hsl(var(--brand-primary))] transition-colors">
                   {service.title}
                 </h3>
                 <p className="text-slate-600 text-sm leading-relaxed mb-6 font-light">
                   {service.desc}
                 </p>
-                <div className="h-1 w-8 bg-slate-100 group-hover:w-16 group-hover:bg-blue-500 transition-all duration-500 rounded-full" />
+                <div className="h-1 w-8 bg-slate-100 group-hover:w-16 group-hover:bg-[hsl(var(--brand-primary))] transition-all duration-500 rounded-full" />
               </div>
             ))}
           </div>
@@ -194,7 +194,7 @@ function ServicesContent() {
                         {service.title}
                       </h4>
                       {service.price_range && (
-                        <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 backdrop-blur-sm text-yellow-300 border border-white/10 text-xs font-semibold">
+                        <span className="inline-block px-3 py-1 rounded-full bg-[hsl(var(--brand-primary)/0.2)] backdrop-blur-sm text-yellow-300 border border-white/10 text-xs font-semibold">
                           {service.price_range}
                         </span>
                       )}
@@ -207,11 +207,11 @@ function ServicesContent() {
                         "Learn more about our premium service offerings tailored for your success."}
                     </p>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center text-blue-600 font-bold group-hover:gap-2 transition-all">
+                      <div className="flex items-center text-[hsl(var(--brand-primary))] font-bold group-hover:gap-2 transition-all">
                         {t("services.view_details")}
                         <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
                       </div>
-                      <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+                      <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center group-hover:bg-[hsl(var(--brand-primary))] transition-colors">
                         <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-white" />
                       </div>
                     </div>
@@ -229,13 +229,13 @@ function ServicesContent() {
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto bg-slate-900 rounded-[3rem] p-8 md:p-16 lg:p-20 relative overflow-hidden border border-white/5">
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
-              <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600 rounded-full blur-[100px]" />
-              <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-600 rounded-full blur-[80px]" />
+              <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[hsl(var(--brand-primary))] rounded-full blur-[100px]" />
+              <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[hsl(var(--brand-secondary))] rounded-full blur-[80px]" />
             </div>
 
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center text-center lg:text-left">
               <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold border border-blue-500/20">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[hsl(var(--brand-primary)/0.1)] text-[hsl(var(--brand-primary))] text-xs font-bold border border-[hsl(var(--brand-primary)/0.2)]">
                   <ShieldCheck className="h-3.5 w-3.5" />
                   <span>CERTIFIED PROFESSIONALS</span>
                 </div>
@@ -286,7 +286,7 @@ export default function ServicesPageClient() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-white flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(var(--brand-primary))]" />
         </div>
       }
     >

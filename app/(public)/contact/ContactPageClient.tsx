@@ -16,9 +16,9 @@ export default function ContactPageClient() {
   return (
     <main className="min-h-screen bg-slate-50 relative overflow-hidden">
       {/* Background Decorations */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-linear-to-b from-blue-50 to-slate-50 -z-10" />
-      <div className="absolute top-20 right-0 w-96 h-96 bg-blue-100/40 rounded-full blur-3xl -z-10 translate-x-1/2" />
-      <div className="absolute top-40 left-0 w-72 h-72 bg-purple-100/40 rounded-full blur-3xl -z-10 -translate-x-1/2" />
+      <div className="absolute top-0 left-0 w-full h-96 bg-linear-to-b from-(--brand-primary-50) to-slate-50 -z-10" />
+      <div className="absolute top-20 right-0 w-96 h-96 bg-[hsl(var(--brand-primary)/0.05)] rounded-full blur-3xl -z-10 translate-x-1/2" />
+      <div className="absolute top-40 left-0 w-72 h-72 bg-[hsl(var(--brand-secondary)/0.05)] rounded-full blur-3xl -z-10 -translate-x-1/2" />
 
       <ContactHero />
 
@@ -30,10 +30,10 @@ export default function ContactPageClient() {
           {/* Contact Form */}
           <div className="lg:col-span-2">
             <Card className="shadow-xl border-slate-100/60 bg-white/80 backdrop-blur-sm overflow-hidden">
-              <div className="h-2 bg-linear-to-r from-blue-500 to-purple-500" />
+              <div className="h-2 bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))]" />
               <CardContent className="p-8 sm:p-10">
                 <div className="mb-8 flex items-start gap-4">
-                  <div className="shrink-0 w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+                  <div className="shrink-0 w-12 h-12 bg-[hsl(var(--brand-primary)/0.1)] rounded-2xl flex items-center justify-center text-[hsl(var(--brand-primary))]">
                     <Mail className="w-6 h-6" />
                   </div>
                   <div>

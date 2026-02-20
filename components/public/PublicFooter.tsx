@@ -15,6 +15,7 @@ export function PublicFooter() {
   const settings = useSiteSettings();
   const siteName = settings.brand_site_name || siteConfig.name;
   const siteLogo = settings.brand_logo_url || siteConfig.logoDark;
+  const siteLogodark = siteConfig.logoDark || settings.brand_logo_url;
   const currentYear = new Date().getFullYear();
   const companyMeta = {
     name_th: siteName,
@@ -133,7 +134,7 @@ export function PublicFooter() {
                   className="block w-48 transition-opacity hover:opacity-90"
                 >
                   <Image
-                    src={siteLogo}
+                    src={siteLogodark}
                     alt={`${siteName} Logo`}
                     width={180}
                     height={60}
@@ -149,16 +150,16 @@ export function PublicFooter() {
               {/* Contact Info List */}
               <div className="space-y-4 pt-2">
                 <div className="flex items-center gap-3 group cursor-pointer transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-blue-600/20 transition-colors">
-                    <Phone className="w-4 h-4 text-blue-400" />
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-[hsl(var(--brand-primary)/0.2)] transition-colors">
+                    <Phone className="w-4 h-4 text-[hsl(var(--brand-primary))]" />
                   </div>
                   <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
                     {siteConfig.contact.phone}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 group cursor-pointer transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-blue-600/20 transition-colors">
-                    <Mail className="w-4 h-4 text-blue-400" />
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-[hsl(var(--brand-primary)/0.2)] transition-colors">
+                    <Mail className="w-4 h-4 text-[hsl(var(--brand-primary))]" />
                   </div>
                   <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
                     {siteConfig.contact.email}
@@ -170,8 +171,8 @@ export function PublicFooter() {
                   rel="noopener noreferrer"
                   className="flex items-start gap-3 group cursor-pointer transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center mt-1 group-hover:bg-blue-600/20 transition-colors">
-                    <MapPin className="w-4 h-4 text-blue-400" />
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center mt-1 group-hover:bg-[hsl(var(--brand-primary)/0.2)] transition-colors">
+                    <MapPin className="w-4 h-4 text-[hsl(var(--brand-primary))]" />
                   </div>
                   <span className="text-sm text-slate-300 leading-snug group-hover:text-white transition-colors pt-2">
                     {siteConfig.contact.address}
@@ -190,7 +191,7 @@ export function PublicFooter() {
                   <li key={service.name}>
                     <Link
                       href={service.href}
-                      className="text-slate-400 hover:text-blue-400 text-sm transition-all duration-200 hover:translate-x-1 flex items-center gap-2"
+                      className="text-slate-400 hover:text-[hsl(var(--brand-primary))] text-sm transition-all duration-200 hover:translate-x-1 flex items-center gap-2"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-700"></span>
                       {service.name}
@@ -210,7 +211,7 @@ export function PublicFooter() {
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className="text-slate-400 hover:text-blue-400 text-sm transition-all duration-200 hover:translate-x-1 flex items-center gap-2"
+                      className="text-slate-400 hover:text-[hsl(var(--brand-primary))] text-sm transition-all duration-200 hover:translate-x-1 flex items-center gap-2"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-700"></span>
                       {item.name}
@@ -261,13 +262,13 @@ export function PublicFooter() {
             <div className="flex gap-6 text-sm font-medium text-slate-400">
               <Link
                 href="/privacy-policy"
-                className="hover:text-blue-400 transition-colors"
+                className="hover:text-[hsl(var(--brand-primary))] transition-colors"
               >
                 {t("footer.privacy_policy")}
               </Link>
               <Link
                 href="/terms"
-                className="hover:text-blue-400 transition-colors"
+                className="hover:text-[hsl(var(--brand-primary))] transition-colors"
               >
                 {t("footer.terms_of_use")}
               </Link>

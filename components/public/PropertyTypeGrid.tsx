@@ -55,7 +55,7 @@ export function PropertyTypeCard({
   const { t } = useLanguage();
   return (
     <Link href={href}>
-      <div className="group relative bg-white rounded-2xl py-6 px-4 shadow-lg border border-slate-100 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
+      <div className="group relative bg-white rounded-2xl py-6 px-4 shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
         {/* Gradient Background on Hover */}
         <div
           className={`absolute inset-0 bg-linear-to-br ${gradient} opacity-0 group-hover:opacity-5 transition-opacity`}
@@ -84,7 +84,7 @@ export function PropertyTypeCard({
 
           {/* CTA */}
           <div className="text-center">
-            <span className="text-sm text-blue-600 font-medium group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+            <span className="text-sm text-[hsl(var(--brand-primary))] font-medium group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
               {t("common.start_search")} →
             </span>
           </div>
@@ -190,8 +190,8 @@ export function PropertyTypeGrid({
     <section className="pt-20 pb-10 px-4 sm:px-6 lg:px-8 bg-slate-50 relative overflow-hidden">
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-[100px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[hsl(var(--brand-gradient-from)/0.08)] rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[hsl(var(--brand-gradient-to)/0.08)] rounded-full blur-[100px]" />
       </div>
 
       {/* Schema.org Structured Data */}
@@ -205,7 +205,7 @@ export function PropertyTypeGrid({
         <div className="text-center mb-10" data-aos="fade-up">
           <h2 className="text-2xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
             {t("nav.properties")}{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
+            <span className="text-transparent bg-clip-text bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))]">
               {t("home.property_types.description")}
             </span>{" "}
             {language === "th" ? "" : t("common.all")}
@@ -216,7 +216,7 @@ export function PropertyTypeGrid({
             data-aos-delay="100"
           >
             {t("property_listing.title")}{" "}
-            <span className="font-semibold text-blue-600">
+            <span className="font-semibold text-[hsl(var(--brand-primary))]">
               {language === "th" ? "" : "Buy · Sell · Rent"}
             </span>{" "}
             {t("common.verified_100")}
@@ -224,7 +224,7 @@ export function PropertyTypeGrid({
         </div>
 
         {/* PropertyTypeCard wrapper - Mobile: horizontal scroll, Desktop: grid */}
-        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4 md:gap-6 overflow-x-auto pb-6  snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4 md:gap-6 overflow-x-auto pt-4 pb-10 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {isLoading
             ? Array.from({ length: 8 }).map((_, idx) => (
                 <div
@@ -239,7 +239,7 @@ export function PropertyTypeGrid({
                   key={idx}
                   data-aos="fade-up"
                   data-aos-delay={idx * 50}
-                  className="shrink-0 w-[160px] md:w-auto snap-center"
+                  className="shrink-0 w-[160px] md:w-auto snap-center "
                 >
                   <PropertyTypeCard {...type} />
                 </div>

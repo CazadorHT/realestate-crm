@@ -101,7 +101,7 @@ export function AgentSidebar({
             </Avatar>
             {isVerified && (
               <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
-                <ShieldCheck className="w-5 h-5 md:w-6 md:h-6 lg:w-5 lg:h-5 text-blue-500 fill-blue-50" />
+                <ShieldCheck className="w-5 h-5 md:w-6 md:h-6 lg:w-5 lg:h-5 text-[hsl(var(--brand-primary))] fill-[hsl(var(--brand-primary)/0.1)]" />
               </div>
             )}
           </div>
@@ -113,7 +113,7 @@ export function AgentSidebar({
             <h3 className="font-bold text-slate-900 text-lg md:text-xl lg:text-lg flex items-center gap-1.5 truncate">
               {agentName || "Admin Team"}
               {isVerified && (
-                <BadgeCheck className="w-4 h-4 md:w-5 md:h-5 lg:w-4 lg:h-4 text-blue-500 shrink-0" />
+                <BadgeCheck className="w-4 h-4 md:w-5 md:h-5 lg:w-4 lg:h-4 text-[hsl(var(--brand-primary))] shrink-0" />
               )}
             </h3>
             <div className="text-sm text-slate-500">
@@ -185,7 +185,7 @@ export function AgentSidebar({
                 trigger={
                   <Button
                     variant="outline"
-                    className="w-full rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 h-12 text-sm font-semibold px-2"
+                    className="w-full rounded-xl border-[hsl(var(--brand-primary)/0.2)] text-[hsl(var(--brand-primary))] hover:bg-[hsl(var(--brand-primary)/0.05)] hover:text-(--brand-primary-700) h-12 text-sm font-semibold px-2"
                     type="button"
                   >
                     <CalendarSearch className="w-3.5 h-3.5 mr-1.5 shrink-0" />

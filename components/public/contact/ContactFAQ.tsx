@@ -63,7 +63,7 @@ export function ContactFAQ() {
                   <Icon className={`w-6 h-6 ${faq.color}`} />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg text-slate-900 mb-2 group-hover:text-primary transition-colors">
+                  <h3 className="font-semibold text-lg text-slate-900 mb-2 group-hover:text-[hsl(var(--brand-primary))] transition-colors">
                     {faq.question}
                   </h3>
                   <p className="text-slate-600 leading-relaxed text-sm">

@@ -145,7 +145,8 @@ export function PropertyBadgesSection({
       condition: property.is_fully_furnished,
       label: t("property.badges.fully_furnished"),
       icon: PackageCheck,
-      color: "bg-blue-100 text-blue-800",
+      color:
+        "bg-[hsl(var(--brand-primary)/0.1)] text-[hsl(var(--brand-primary))]",
     },
     {
       condition: property.has_private_pool,
@@ -169,7 +170,8 @@ export function PropertyBadgesSection({
       condition: property.near_transit,
       label: t("property.badges.near_transit"),
       icon: TrainFront,
-      color: "bg-blue-50 text-blue-600",
+      color:
+        "bg-[hsl(var(--brand-primary)/0.05)] text-[hsl(var(--brand-primary))]",
     },
     {
       condition: property.has_river_view,
@@ -305,7 +307,7 @@ export function PropertyBadgesSection({
               className={`rounded-full px-5 py-2 font-bold whitespace-nowrap shadow-sm ${
                 property.listing_type === "SALE"
                   ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-[hsl(var(--brand-primary))] hover:brightness-110 text-white"
               }`}
             >
               {property.listing_type === "SALE"

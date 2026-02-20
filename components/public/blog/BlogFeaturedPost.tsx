@@ -34,7 +34,7 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
   return (
     <div className="mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
       <div className="flex items-center gap-2 mb-4">
-        <div className="h-6 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
+        <div className="h-6 w-1 bg-[linear-gradient(to_bottom,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] rounded-full"></div>
         <h2 className="text-xl font-bold text-white">
           {t("blog.featured_title")}
         </h2>
@@ -65,16 +65,16 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
               <BookOpen className="w-16 h-16 opacity-20" />
             </div>
           )}
-          <div className="absolute top-4 left-4 bg-linear-to-r from-blue-600 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+          <div className="absolute top-4 left-4 bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
             {t("blog.featured_label")}
           </div>
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-linear-to-t from-blue-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--brand-primary)/0.3),transparent)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         </Link>
         <div className="p-8 lg:p-10 flex flex-col justify-center">
           <div className="flex items-center gap-3 mb-4">
             {post.category && (
-              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wide border border-blue-100">
+              <span className="text-xs font-bold text-[hsl(var(--brand-primary))] bg-[hsl(var(--brand-primary)/0.08)] px-3 py-1 rounded-full uppercase tracking-wide border border-[hsl(var(--brand-primary)/0.15)]">
                 {t(`blog.categories.${post.category}`) !==
                 `blog.categories.${post.category}`
                   ? t(`blog.categories.${post.category}`)
@@ -84,7 +84,7 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
           </div>
           <Link href={`/blog/${post.slug}`} className="block">
             <h3
-              className="text-xl lg:text-2xl font-bold text-slate-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all leading-tight"
+              className="text-xl lg:text-2xl font-bold text-slate-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] transition-all leading-tight"
               itemProp="name"
             >
               {title}

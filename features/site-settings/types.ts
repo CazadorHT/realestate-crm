@@ -12,7 +12,17 @@ export type SiteSettingKey =
   | "brand_hero_image_url"
   | "brand_active_profile"
   | "brand_gradient_from"
-  | "brand_gradient_to";
+  | "brand_gradient_to"
+  // Phase 1: Typography
+  | "brand_heading_font"
+  | "brand_body_font"
+  // Phase 1: Border Radius
+  | "brand_border_radius"
+  // Phase 1: Button Geometry
+  | "brand_button_style"
+  | "brand_solid_radius"
+  | "brand_outline_radius"
+  | "brand_ghost_radius";
 
 export interface SiteSettings {
   smart_match_wizard_enabled: boolean;
@@ -27,6 +37,16 @@ export interface SiteSettings {
   brand_active_profile: "profile1" | "profile2" | "profile3" | "custom";
   brand_gradient_from: string;
   brand_gradient_to: string;
+  // Phase 1: Typography
+  brand_heading_font: string;
+  brand_body_font: string;
+  // Phase 1: Border Radius
+  brand_border_radius: string;
+  // Phase 1: Button Geometry
+  brand_button_style: string;
+  brand_solid_radius: string;
+  brand_outline_radius: string;
+  brand_ghost_radius: string;
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -42,4 +62,14 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   brand_active_profile: "profile1",
   brand_gradient_from: "226 75% 48%", // Indigo-600
   brand_gradient_to: "280 60% 50%", // Purple-600
+  // Phase 1: Typography
+  brand_heading_font: "Prompt",
+  brand_body_font: "Noto Sans Thai",
+  // Phase 1: Border Radius
+  brand_border_radius: "md",
+  // Phase 1: Button Geometry
+  brand_button_style: "solid",
+  brand_solid_radius: "rounded",
+  brand_outline_radius: "rounded",
+  brand_ghost_radius: "rounded",
 };

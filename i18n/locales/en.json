@@ -849,7 +849,13 @@
     "clear_success": "All favorites have been cleared",
     "empty_title": "No Favorites Yet",
     "empty_desc": "Start saving properties you are interested in by clicking the heart icon.<br />Save them for comparison or view later.",
-    "go_search": "Go to Properties Search"
+    "go_search": "Go to Properties Search",
+    "add_success": "Saved to favorites",
+    "remove_success": "Removed from favorites",
+    "save_label": "Save",
+    "saved_label": "Saved",
+    "title_add": "Save to favorites",
+    "title_remove": "Remove from favorites"
   },
   "compare_page": {
     "title": "Compare Properties",

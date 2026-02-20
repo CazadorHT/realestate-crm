@@ -74,8 +74,8 @@ export function PropertyDescription({
 
   return (
     <section ref={sectionRef} className="scroll-mt-24">
-      <h2 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-bold text-blue-900 mb-6 flex items-center gap-2">
-        <BsStars className="w-5 h-5 text-blue-600" />
+      <h2 className="text-lg md:text-xl border-l-4 border-[hsl(var(--brand-primary))] bg-[linear-gradient(to_right,hsl(var(--brand-primary)/0.1),transparent)] px-4 py-3 rounded-r-xl font-bold text-[hsl(var(--brand-primary))] mb-6 flex items-center gap-2">
+        <BsStars className="w-5 h-5 text-[hsl(var(--brand-primary))]" />
         {t("property.details")}
       </h2>
 
@@ -99,7 +99,7 @@ export function PropertyDescription({
         <div className="flex justify-center mt-4 mb-2">
           <button
             onClick={handleToggle}
-            className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition-colors py-2 px-4 rounded-full bg-blue-50 hover:bg-blue-100 shadow-sm border border-blue-100 cursor-pointer"
+            className="flex items-center gap-2 text-[hsl(var(--brand-primary))] font-semibold hover:brightness-110 transition-colors py-2 px-4 rounded-full bg-[hsl(var(--brand-primary)/0.05)] hover:bg-[hsl(var(--brand-primary)/0.1)] shadow-sm border border-[hsl(var(--brand-primary)/0.2)] cursor-pointer"
           >
             {isExpanded ? (
               <>

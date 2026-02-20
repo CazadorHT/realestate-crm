@@ -109,9 +109,9 @@ export function HowItWorksSection() {
           className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"
           data-aos="fade-up"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-blue-50 to-purple-50 border border-blue-100">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-bold text-blue-700">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)/0.08),hsl(var(--brand-gradient-to)/0.08))] border border-[hsl(var(--brand-gradient-from)/0.2)]">
+            <Sparkles className="w-4 h-4 text-[hsl(var(--brand-gradient-from))]" />
+            <span className="text-sm font-bold text-[hsl(var(--brand-primary))]">
               {t("home.how_it_works.title")}
             </span>
           </div>
@@ -127,7 +127,7 @@ export function HowItWorksSection() {
                   {highlighted && (
                     <>
                       <br />
-                      <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
+                      <span className="text-transparent bg-clip-text bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)),hsl(var(--brand-gradient-from)))]">
                         {highlighted}
                       </span>
                     </>
@@ -147,8 +147,8 @@ export function HowItWorksSection() {
           {/* Connector Lines (Desktop only) */}
           <div className="hidden md:block absolute top-20 left-0 right-0 h-1">
             <div className="absolute left-[16.66%] right-[16.66%] h-full flex">
-              <div className="flex-1 bg-linear-to-r from-blue-200 to-purple-200 mx-8" />
-              <div className="flex-1 bg-linear-to-r from-purple-200 to-green-200 mx-8" />
+              <div className="flex-1 bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)/0.3),hsl(var(--brand-gradient-to)/0.3))] mx-8" />
+              <div className="flex-1 bg-[linear-gradient(to_right,hsl(var(--brand-gradient-to)/0.3),hsl(130,50%,70%,0.3))] mx-8" />
             </div>
           </div>
 
@@ -182,7 +182,7 @@ export function HowItWorksSection() {
                     </div>
 
                     {/* Content */}
-                    <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] transition-all duration-300">
                       {item.title}
                     </h3>
                     <p className="text-sm md:text-base text-slate-600 leading-relaxed mb-3 md:mb-4">
@@ -220,7 +220,7 @@ export function HowItWorksSection() {
           <p className="text-sm md:text-base text-slate-600 mb-3 md:mb-4">
             {t("home.how_it_works.ready_q")}
           </p>
-          <button className="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-linear-to-r from-blue-600 to-purple-600 text-white text-sm md:text-base font-bold rounded-xl md:rounded-2xl hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105">
+          <button className="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] text-white text-sm md:text-base font-bold rounded-xl md:rounded-2xl hover:shadow-2xl hover:shadow-[hsl(var(--brand-gradient-from)/0.5)] transition-all duration-300 hover:scale-105">
             {t("common.start_search")}
             <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
           </button>

@@ -854,7 +854,13 @@
     "clear_success": "收藏夹已清空",
     "empty_title": "暂无收藏",
     "empty_desc": "点击心形图标保存您感兴趣的房产。<br />以便稍后比较或查看。",
-    "go_search": "前往房源搜索"
+    "go_search": "前往房源搜索",
+    "add_success": "已保存到收藏夹",
+    "remove_success": "已从收藏夹中移除",
+    "save_label": "收藏",
+    "saved_label": "已收藏",
+    "title_add": "添加到收藏夹",
+    "title_remove": "从收藏夹中移除"
   },
   "compare_page": {
     "title": "房产对比",

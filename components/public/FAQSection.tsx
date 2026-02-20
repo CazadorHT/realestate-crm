@@ -73,8 +73,8 @@ export function FAQSection() {
     >
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[hsl(var(--brand-gradient-from)/0.2)] rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[hsl(var(--brand-gradient-to)/0.2)] rounded-full blur-[100px]" />
       </div>
 
       <script
@@ -87,7 +87,7 @@ export function FAQSection() {
         data-aos-delay="100"
       >
         <div className="text-left mb-8 md:mb-12 lg:mb-16 w-full">
-          <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-blue-400 text-xs md:text-sm font-medium mb-4 md:mb-6 backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-[hsl(var(--brand-gradient-from))] text-xs md:text-sm font-medium mb-4 md:mb-6 backdrop-blur-sm">
             <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span>{t("home.faq.title")}</span>
           </div>
@@ -99,7 +99,7 @@ export function FAQSection() {
                   key={i}
                   className={
                     i >= 1
-                      ? "text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400"
+                      ? "text-transparent bg-clip-text bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))]"
                       : ""
                   }
                 >
@@ -157,8 +157,8 @@ export function FAQSection() {
                           "[&[data-state=open]>div]:rounded-bl-none [&[data-state=open]>div]:bg-white/10", // Adjust shape/color when open
                         )}
                       >
-                        <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 rounded-xl md:rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 max-w-2xl text-left group-data-[state=open]:ring-1 group-data-[state=open]:ring-blue-500/50">
-                          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20 mt-0.5">
+                        <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 rounded-xl md:rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 max-w-2xl text-left group-data-[state=open]:ring-1 group-data-[state=open]:ring-[hsl(var(--brand-gradient-from)/0.5)]">
+                          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[linear-gradient(to_bottom_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] flex items-center justify-center shrink-0 shadow-lg shadow-[hsl(var(--brand-gradient-from)/0.2)] mt-0.5">
                             <CircleHelp className="w-4 h-4 md:w-5 md:h-5 text-white" />
                           </div>
                           <div className="flex-1">
@@ -173,14 +173,14 @@ export function FAQSection() {
                     {/* Answer Bubble (Right) */}
                     <AccordionContent className="pb-3 md:pb-4 pt-1 md:pt-2">
                       <div className="flex justify-end pl-8 md:pl-12 lg:pl-24">
-                        <div className="flex items-start gap-3 md:gap-4 p-4 md:p-6 rounded-xl md:rounded-2xl rounded-tr-sm bg-linear-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/10 max-w-2xl backdrop-blur-md">
+                        <div className="flex items-start gap-3 md:gap-4 p-4 md:p-6 rounded-xl md:rounded-2xl rounded-tr-sm bg-[linear-gradient(to_bottom_right,hsl(var(--brand-gradient-from)/0.1),hsl(var(--brand-gradient-to)/0.1))] border border-[hsl(var(--brand-gradient-from)/0.1)] max-w-2xl backdrop-blur-md">
                           <div className="flex-1 text-right">
                             <p className="text-slate-300 leading-relaxed text-sm md:text-base">
                               {answer}
                             </p>
                           </div>
                           <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 mt-0.5">
-                            <MessageCircle className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
+                            <MessageCircle className="w-4 h-4 md:w-5 md:h-5 text-[hsl(var(--brand-gradient-from))]" />
                           </div>
                         </div>
                       </div>

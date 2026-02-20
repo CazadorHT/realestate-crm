@@ -53,7 +53,7 @@ function SubmitButton({ compact }: { compact?: boolean }) {
     <Button
       type="submit"
       disabled={pending}
-      className={`w-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-xl hover:shadow-blue-500/40 hover:-translate-y-0.5 active:scale-[0.98] font-bold ${
+      className={`w-full bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] hover:brightness-110 text-white shadow-lg shadow-[hsl(var(--brand-primary)/0.3)] transition-all hover:shadow-xl hover:shadow-[hsl(var(--brand-primary)/0.4)] hover:-translate-y-0.5 active:scale-[0.98] font-bold ${
         compact ? "h-12 rounded-xl text-base" : "h-14 rounded-2xl text-lg"
       }`}
     >
@@ -85,7 +85,7 @@ function StepIcon({
 
   if (isCompleted) {
     return (
-      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-md shadow-blue-300/50 transition-all duration-500">
+      <div className="w-8 h-8 rounded-full bg-[hsl(var(--brand-primary))] flex items-center justify-center shadow-md shadow-[hsl(var(--brand-primary)/0.3)] transition-all duration-500">
         <Check className="w-4 h-4 text-white" strokeWidth={3} />
       </div>
     );
@@ -93,7 +93,7 @@ function StepIcon({
 
   if (isActive) {
     return (
-      <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-400/40 ring-4 ring-blue-100 transition-all duration-500">
+      <div className="w-8 h-8 rounded-full bg-[linear-gradient(to_bottom_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] flex items-center justify-center shadow-lg shadow-[hsl(var(--brand-primary)/0.4)] ring-4 ring-[hsl(var(--brand-primary)/0.1)] transition-all duration-500">
         <span className="text-sm font-bold text-white">{stepNum}</span>
       </div>
     );
@@ -241,7 +241,9 @@ export function ContactAgentDialog({
             : "text-slate-600 font-medium text-sm flex items-center gap-1.5"
         }
       >
-        {!isMobile && <FaUser className="w-3 h-3 text-blue-500" />}
+        {!isMobile && (
+          <FaUser className="w-3 h-3 text-[hsl(var(--brand-primary))]" />
+        )}
         {t("property.contact_dialog.name_label")}
         <span className="text-red-500 text-xs ml-0.5">*</span>
       </Label>
@@ -249,7 +251,7 @@ export function ContactAgentDialog({
         className={`relative group ${isMobile ? "w-full max-w-sm mx-auto" : "w-full"}`}
       >
         {isMobile && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-blue-600 transition-colors">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[hsl(var(--brand-primary)/0.5)] group-focus-within:text-[hsl(var(--brand-primary))] transition-colors">
             <FaUser className="w-4 h-4" />
           </div>
         )}
@@ -259,7 +261,7 @@ export function ContactAgentDialog({
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder={t("property.contact_dialog.name_placeholder")}
-          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 text-left border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} ${
+          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 text-left border-slate-200 focus:border-[hsl(var(--brand-primary))] focus:ring-2 focus:ring-[hsl(var(--brand-primary)/0.15)] rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} ${
             state.errors?.fullName ? "border-red-500 bg-red-50" : ""
           }`}
           required
@@ -285,13 +287,15 @@ export function ContactAgentDialog({
             : "text-slate-600 font-medium text-sm flex items-center gap-1.5"
         }
       >
-        {!isMobile && <FaPhoneAlt className="w-3 h-3 text-blue-500" />}
+        {!isMobile && (
+          <FaPhoneAlt className="w-3 h-3 text-[hsl(var(--brand-primary))]" />
+        )}
         {t("property.contact_dialog.phone_label")}
         <span className="text-red-500 text-xs ml-0.5">*</span>
       </Label>
       <div className="relative group w-full">
         {isMobile && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-blue-600 transition-colors">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[hsl(var(--brand-primary)/0.5)] group-focus-within:text-[hsl(var(--brand-primary))] transition-colors">
             <FaPhoneAlt className="w-4 h-4" />
           </div>
         )}
@@ -303,7 +307,7 @@ export function ContactAgentDialog({
           value={phone}
           onChange={handlePhoneChange}
           maxLength={12}
-          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} ${
+          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 border-slate-200 focus:border-[hsl(var(--brand-primary))] focus:ring-2 focus:ring-[hsl(var(--brand-primary)/0.15)] rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} ${
             state.errors?.phone ? "border-red-500 bg-red-50" : ""
           }`}
           required
@@ -353,7 +357,9 @@ export function ContactAgentDialog({
             : "text-slate-600 font-medium text-sm flex items-center gap-1.5"
         }
       >
-        {!isMobile && <FaCommentDots className="w-3 h-3 text-blue-500" />}
+        {!isMobile && (
+          <FaCommentDots className="w-3 h-3 text-[hsl(var(--brand-primary))]" />
+        )}
         {t("property.contact_dialog.message_label")}
       </Label>
 
@@ -368,8 +374,8 @@ export function ContactAgentDialog({
             onClick={() => setMessage(msg)}
             className={`text-sm ${isMobile ? "px-4 py-2.5 rounded-xl" : "px-3 py-1.5 rounded-lg"} border transition-all active:scale-95 font-medium ${
               message === msg
-                ? "bg-blue-50 text-blue-700 border-blue-300 shadow-sm shadow-blue-100"
-                : "bg-white text-slate-500 border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+                ? "bg-[hsl(var(--brand-primary)/0.08)] text-[hsl(var(--brand-primary))] border-[hsl(var(--brand-primary)/0.3)] shadow-sm shadow-[hsl(var(--brand-primary)/0.1)]"
+                : "bg-white text-slate-500 border-slate-200 hover:bg-[hsl(var(--brand-primary)/0.05)] hover:text-[hsl(var(--brand-primary))] hover:border-[hsl(var(--brand-primary)/0.2)]"
             }`}
           >
             {msg}
@@ -384,7 +390,7 @@ export function ContactAgentDialog({
         rows={isMobile ? 4 : 3}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        className={`resize-none bg-slate-50 ${isMobile ? "" : "bg-white"} text-slate-600 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "min-h-[120px] p-4 text-base" : "min-h-[80px] p-3 text-sm"}`}
+        className={`resize-none bg-slate-50 ${isMobile ? "" : "bg-white"} text-slate-600 border-slate-200 focus:border-[hsl(var(--brand-primary))] focus:ring-2 focus:ring-[hsl(var(--brand-primary)/0.15)] rounded-xl transition-all ${isMobile ? "min-h-[120px] p-4 text-base" : "min-h-[80px] p-3 text-sm"}`}
       />
     </div>
   );
@@ -434,11 +440,11 @@ export function ContactAgentDialog({
         ════════════════════════════════════════════════════ */}
         <div className="hidden sm:flex sm:flex-row h-full">
           {/* ── Left Panel: Branding & Trust ── */}
-          <div className="w-[280px] shrink-0 bg-linear-to-b from-blue-800 via-blue-700 to-indigo-800 text-white p-7 flex flex-col justify-between relative overflow-hidden sm:rounded-l-2xl">
+          <div className="w-[280px] shrink-0 bg-[linear-gradient(to_bottom,hsl(var(--brand-primary)),hsl(var(--brand-gradient-to)))] text-white p-7 flex flex-col justify-between relative overflow-hidden sm:rounded-l-2xl">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-24 -mt-24 blur-2xl" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400/10 rounded-full -ml-16 -mb-16 blur-2xl" />
-            <div className="absolute top-1/2 left-1/2 w-20 h-20 bg-blue-400/10 rounded-full blur-xl" />
+            <div className="absolute top-1/2 left-1/2 w-20 h-20 bg-[hsl(var(--brand-primary)/0.1)] rounded-full blur-xl" />
 
             <div className="relative z-10 space-y-6">
               {/* Logo / Icon */}
@@ -451,7 +457,7 @@ export function ContactAgentDialog({
                 <DialogTitle className="text-xl font-bold tracking-tight leading-tight">
                   {t("property.contact_dialog.title")}
                 </DialogTitle>
-                <p className="text-blue-200/80 text-sm mt-2 line-clamp-2 leading-relaxed">
+                <p className="text-white/80 text-sm mt-2 line-clamp-2 leading-relaxed">
                   {displayTitle ||
                     t("property.contact_dialog.subtitle_fallback")}
                 </p>
@@ -464,39 +470,39 @@ export function ContactAgentDialog({
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <FaClock className="w-3.5 h-3.5 text-blue-200" />
+                    <FaClock className="w-3.5 h-3.5 text-white/90" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-white/95">
                       {t("property.contact_dialog.trust_response")}
                     </p>
-                    <p className="text-xs text-blue-200/70 leading-snug">
+                    <p className="text-xs text-white/60 leading-snug">
                       {t("property.contact_dialog.trust_response_desc")}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <FaShieldAlt className="w-3.5 h-3.5 text-blue-200" />
+                    <FaShieldAlt className="w-3.5 h-3.5 text-white/90" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-white/95">
                       {t("property.contact_dialog.trust_safe")}
                     </p>
-                    <p className="text-xs text-blue-200/70 leading-snug">
+                    <p className="text-xs text-white/60 leading-snug">
                       {t("property.contact_dialog.trust_safe_desc")}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <FaHeadset className="w-3.5 h-3.5 text-blue-200" />
+                    <FaHeadset className="w-3.5 h-3.5 text-white/90" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-white/95">
                       {t("property.contact_dialog.trust_free")}
                     </p>
-                    <p className="text-xs text-blue-200/70 leading-snug">
+                    <p className="text-xs text-white/60 leading-snug">
                       {t("property.contact_dialog.trust_free_desc")}
                     </p>
                   </div>
@@ -507,7 +513,7 @@ export function ContactAgentDialog({
             {/* Bottom decorative */}
             <div className="relative z-10 mt-6">
               <div className="h-px bg-white/10 mb-4" />
-              <p className="text-[11px] text-blue-200/50 text-center">
+              <p className="text-[11px] text-white/40 text-center">
                 {t("property.contact_dialog.footer")}
               </p>
             </div>
@@ -562,7 +568,7 @@ export function ContactAgentDialog({
             <div className="flex items-center justify-between relative">
               <div className="absolute top-4 left-[16%] right-[16%] h-[2px] bg-slate-100 z-0" />
               <div
-                className="absolute top-4 left-[16%] h-[2px] bg-blue-500 z-0 transition-all duration-500 ease-out"
+                className="absolute top-4 left-[16%] h-[2px] bg-[hsl(var(--brand-primary))] z-0 transition-all duration-500 ease-out"
                 style={{
                   width: step === 1 ? "0%" : step === 2 ? "34%" : "68%",
                 }}
@@ -574,9 +580,9 @@ export function ContactAgentDialog({
                   <span
                     className={`text-[10px] mt-1.5 font-medium transition-colors duration-300 ${
                       step === s
-                        ? "text-blue-600"
+                        ? "text-[hsl(var(--brand-primary))]"
                         : step > s
-                          ? "text-blue-500"
+                          ? "text-[hsl(var(--brand-primary))]"
                           : "text-slate-400"
                     }`}
                   >
@@ -665,7 +671,7 @@ export function ContactAgentDialog({
                   <Button
                     type="button"
                     onClick={handleNext}
-                    className="h-13 rounded-2xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-base shadow-lg shadow-blue-500/25 active:scale-[0.97] transition-all"
+                    className="h-13 rounded-2xl bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] hover:brightness-110 text-white font-semibold text-base shadow-lg shadow-[hsl(var(--brand-primary)/0.25)] active:scale-[0.97] transition-all"
                   >
                     {t("property.contact_dialog.next")}
                     <ChevronRight className="w-4 h-4 ml-1.5" />

@@ -53,7 +53,7 @@ export function SearchPagination({
                     onClick={() => setCurrentPage(page)}
                     className={`h-10 w-10 p-0 ${
                       currentPage === page
-                        ? "bg-blue-600 hover:bg-blue-700"
+                        ? "bg-[hsl(var(--brand-primary))] hover:brightness-110"
                         : ""
                     }`}
                   >

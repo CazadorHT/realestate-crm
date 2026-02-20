@@ -44,7 +44,7 @@ export function KeySellingPoints({
             {point.icon ? (
               <DynamicIcon
                 name={point.icon}
-                className="w-4 h-4 text-blue-500 shrink-0"
+                className="w-4 h-4 text-(--brand-primary-600) shrink-0"
               />
             ) : (
               <Check className="w-4 h-4 text-emerald-500 shrink-0" />

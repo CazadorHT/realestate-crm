@@ -14,7 +14,9 @@
     --popover-foreground: 222 47% 11%;
 
     /* Branding */
-    --primary: 226 75% 48%; /* #1F4ED8 */
+    --primary: 226 75% 80%; /* #1F4ED8 */
+    --brand-primary: 226 75% 90%;
+    --brand-secondary: 210 40% 96.1%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -36,6 +38,12 @@
     /* Brand Gradients */
     --brand-gradient-from: 217 91% 60%;
     --brand-gradient-to: 271 91% 65%;
+
+    /* Brand Typography */
+    --font-heading: "Prompt", sans-serif;
+    --font-body: "Noto Sans Thai", sans-serif;
+
+    --btn-radius: 0.5rem;
 
     /* Legacy compatibility (keeping for old bg-bg, bg-surface calls) */
     --color-bg: 248 250 252;

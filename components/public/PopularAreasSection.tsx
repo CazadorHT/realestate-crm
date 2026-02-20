@@ -121,20 +121,20 @@ export function PopularAreasSection() {
               className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold border shadow-sm hover:shadow-md transition-all! duration-300! group cursor-default"
               style={{
                 background: `linear-gradient(to right, hsl(var(--brand-gradient-from) / 0.1), hsl(var(--brand-gradient-to) / 0.1))`,
-                borderColor: `hsl(var(--brand-primary-color) / 0.2)`,
+                borderColor: `hsl(var(--brand-primary) / 0.2)`,
               }}
             >
               <div className="relative">
                 <MapPin
                   className="h-4 w-4 relative z-10"
-                  style={{ color: `hsl(var(--brand-primary-color))` }}
+                  style={{ color: `hsl(var(--brand-primary))` }}
                 />
                 <div
                   className="absolute inset-0 blur-md opacity-30 group-hover:opacity-50 transition-opacity!"
-                  style={{ backgroundColor: `hsl(var(--brand-primary-color))` }}
+                  style={{ backgroundColor: `hsl(var(--brand-primary))` }}
                 />
               </div>
-              <span style={{ color: `hsl(var(--brand-primary-color))` }}>
+              <span style={{ color: `hsl(var(--brand-primary))` }}>
                 {t("home.popular_areas.title")}
               </span>
             </div>

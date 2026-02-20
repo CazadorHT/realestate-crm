@@ -22,7 +22,7 @@ export function FavoritesEmptyState() {
       <Link href="/properties">
         <Button
           size="lg"
-          className="rounded-xl bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all hover:scale-105"
+          className="rounded-xl bg-linear-to-r from-(--brand-primary-600) to-(--brand-primary-600) hover:from-(--brand-primary-700) hover:to-(--brand-primary-700) shadow-lg hover:shadow-xl transition-all hover:scale-105"
         >
           <Home className="h-5 w-5 mr-2" />
           <span>{t("favorites.go_search")}</span>

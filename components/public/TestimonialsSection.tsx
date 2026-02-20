@@ -164,7 +164,7 @@ export function TestimonialsSection() {
 
                 {/* Property Info */}
                 <div className="mb-3">
-                  <span className="inline-block px-3 py-1 text-xs font-bold bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+                  <span className="inline-block px-3 py-1 text-xs font-bold bg-[hsl(var(--brand-primary)/0.08)] text-[hsl(var(--brand-primary))] rounded-full border border-[hsl(var(--brand-primary)/0.2)]">
                     {t_item.property}
                   </span>
                 </div>

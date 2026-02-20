@@ -471,13 +471,15 @@ export function RecentlyViewedClient({
           <div className="flex items-start sm:items-center gap-2 md:gap-3">
             <div
               className={`p-2 md:p-2.5 rounded-xl md:rounded-2xl ${
-                showingRecommended ? "bg-amber-50" : "bg-blue-50"
+                showingRecommended
+                  ? "bg-amber-50"
+                  : "bg-[hsl(var(--brand-primary)/0.08)]"
               }`}
             >
               {showingRecommended ? (
                 <Lightbulb className="h-4 w-4 md:h-5 md:w-5 text-amber-600" />
               ) : (
-                <History className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+                <History className="h-4 w-4 md:h-5 md:w-5 text-[hsl(var(--brand-primary))]" />
               )}
             </div>
             <div>
@@ -492,7 +494,7 @@ export function RecentlyViewedClient({
                   </>
                 ) : (
                   <>
-                    <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
+                    <span className="text-transparent bg-clip-text bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))]">
                       {t("recently_viewed.property_types")}
                     </span>
                     <br className="hidden md:block" />
@@ -524,7 +526,7 @@ export function RecentlyViewedClient({
           <button
             onClick={scrollPrev}
             disabled={!canScrollLeft}
-            className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all! duration-300! flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
+            className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-[hsl(var(--brand-primary))] hover:text-white hover:border-[hsl(var(--brand-primary))] transition-all! duration-300! flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
             aria-label="Previous"
           >
             <ChevronLeft className="h-4 w-4 md:h-5 md:w-5 text-slate-700 group-hover:text-white" />
@@ -532,7 +534,7 @@ export function RecentlyViewedClient({
           <button
             onClick={scrollNext}
             disabled={!canScrollRight}
-            className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all! duration-300! flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
+            className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-[hsl(var(--brand-primary))] hover:text-white hover:border-[hsl(var(--brand-primary))] transition-all! duration-300! flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
             aria-label="Next"
           >
             <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-slate-700 group-hover:text-white" />
@@ -560,7 +562,7 @@ export function RecentlyViewedClient({
                     ? `/properties/${item.slug}`
                     : `/properties/${item.id}`
                 }
-                className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] bg-white rounded-[1.5rem] md:rounded-4xl border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-blue-500/10 transition-all! duration-500! snap-start shrink-0 group relative isolate hover:-translate-y-1"
+                className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] bg-white rounded-[1.5rem] md:rounded-4xl border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-[hsl(var(--brand-primary)/0.15)] transition-all! duration-500! snap-start shrink-0 group relative isolate hover:-translate-y-1"
                 {...(!disableAos && { "data-aos": "fade-left" })}
                 onClick={(e) => {
                   if (isDragging) e.preventDefault();
@@ -613,7 +615,7 @@ export function RecentlyViewedClient({
                         item.original_rental_price > item.rental_price) ||
                       item.price_text?.includes("(-")
                         ? "bg-red-500! border-red-600 text-white"
-                        : "bg-white/90 border-white/40 text-blue-700"
+                        : "bg-white/90 border-white/40 text-[hsl(var(--brand-primary))]"
                     }`}
                   >
                     {/* Original Price (Line Through) */}
@@ -674,7 +676,7 @@ export function RecentlyViewedClient({
 
                 {/* Content Section */}
                 <div className="p-4 md:p-5">
-                  <h3 className="font-bold text-slate-900 truncate mb-2 group-hover:text-blue-600 transition-colors">
+                  <h3 className="font-bold text-slate-900 truncate mb-2 group-hover:text-[hsl(var(--brand-primary))] transition-colors">
                     {item.title}
                   </h3>
 
@@ -703,7 +705,7 @@ export function RecentlyViewedClient({
                             ? "bg-green-600 text-white"
                             : item.listing_type === "RENT"
                               ? "bg-orange-600 text-white"
-                              : "bg-blue-600 text-white"
+                              : "bg-[hsl(var(--brand-primary))] text-white"
                         }`}
                       >
                         {item.listing_type === "SALE"
@@ -730,7 +732,7 @@ export function RecentlyViewedClient({
                   )}
 
                   <div className="flex items-center text-xs text-slate-500 mb-4 bg-slate-50 p-2 rounded-lg">
-                    <MapPin className="h-3 w-3 mr-1.5 text-blue-500" />
+                    <MapPin className="h-3 w-3 mr-1.5 text-[hsl(var(--brand-primary))]" />
                     <span className="truncate">
                       {[
                         getLocaleValue(item, "popular_area", language),
@@ -741,10 +743,10 @@ export function RecentlyViewedClient({
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-blue-600/50 uppercase tracking-widest">
+                    <span className="text-[10px] font-bold text-[hsl(var(--brand-primary)/0.5)] uppercase tracking-widest">
                       {t("recently_viewed.view_details")}
                     </span>
-                    <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
+                    <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-[hsl(var(--brand-primary))] group-hover:text-white transition-all">
                       <ArrowRight className="h-4 w-4 text-slate-600 group-hover:text-white" />
                     </div>
                   </div>

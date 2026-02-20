@@ -26,7 +26,7 @@ export function BlogDetailSidebar({
         {/* Share Buttons */}
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
           <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <Share2 className="w-5 h-5 text-blue-600" />
+            <Share2 className="w-5 h-5 text-[hsl(var(--brand-primary))]" />
             {t("blog.share_title")}
           </h3>
           <ShareButtons
@@ -41,7 +41,7 @@ export function BlogDetailSidebar({
 
         {/* Related Posts in Sidebar */}
         {relatedPosts.length > 0 && (
-          <div className="bg-linear-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100 shadow-sm">
+          <div className="bg-[linear-gradient(to_bottom_right,hsl(var(--brand-primary)/0.05),hsl(var(--brand-secondary)/0.05))] rounded-2xl p-6 border border-[hsl(var(--brand-primary)/0.1)] shadow-sm">
             <h3 className="text-lg font-bold text-slate-900 mb-4">
               {t("blog.related_articles")}
             </h3>
@@ -58,8 +58,8 @@ export function BlogDetailSidebar({
                     href={`/blog/${relatedPost.slug}`}
                     className="block group"
                   >
-                    <div className="bg-white rounded-xl p-4 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all">
-                      <h4 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2 text-sm">
+                    <div className="bg-white rounded-xl p-4 border border-slate-200 hover:border-[hsl(var(--brand-primary)/0.3)] hover:shadow-md transition-all">
+                      <h4 className="font-semibold text-slate-900 group-hover:text-[hsl(var(--brand-primary))] transition-colors line-clamp-2 mb-2 text-sm">
                         {localizedTitle}
                       </h4>
                     </div>
@@ -79,7 +79,7 @@ export function BlogDetailSidebar({
             {t("blog.need_help_desc")}
           </p>
           <Link href="/contact">
-            <button className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-medium transition-colors">
+            <button className="w-full px-4 py-3 bg-[hsl(var(--brand-primary))] hover:brightness-110 rounded-xl font-medium transition-colors">
               {t("blog.contact_us_btn")}
             </button>
           </Link>

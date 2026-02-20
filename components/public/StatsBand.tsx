@@ -80,7 +80,7 @@ export function StatsBand() {
               data-aos-delay={index * 100}
             >
               {/* Icon Container with Glassmorphism */}
-              <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-xl md:rounded-2xl relative overflow-hidden backdrop-blur-md border border-white/10 flex items-center justify-center transition-all duration-500 shadow-xl shadow-blue-900/20 group-hover:scale-110">
+              <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-xl md:rounded-2xl relative overflow-hidden backdrop-blur-md border border-white/10 flex items-center justify-center transition-all duration-500 shadow-xl shadow-[hsl(var(--brand-primary)/0.2)] group-hover:scale-110">
                 {/* Base Gradient */}
                 <div className="absolute inset-0 bg-linear-to-br from-white/10 to-white/5 z-0" />
 
@@ -88,20 +88,20 @@ export function StatsBand() {
                 <div className="absolute inset-0 bg-[linear-gradient(to_br,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
 
                 {/* Icon */}
-                <div className="relative z-10 text-blue-200 group-hover:text-white transition-colors duration-500 [&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5 lg:[&>svg]:w-6 lg:[&>svg]:h-6">
+                <div className="relative z-10 text-white/70 group-hover:text-white transition-colors duration-500 [&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5 lg:[&>svg]:w-6 lg:[&>svg]:h-6">
                   {stat.icon}
                 </div>
               </div>
 
-              <div className="space-y-0.5 md:space-y-1">
+              <div className="space-y-0.5 md:space-y-1 ">
                 <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-normal">
                   {stat.value}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-blue-100 font-medium text-xs sm:text-sm md:text-base leading-tight">
+                  <span className="text-white font-medium text-xs sm:text-sm md:text-base leading-tight">
                     {stat.label}
                   </span>
-                  <span className="text-white/30 text-[8px] sm:text-[10px] uppercase tracking-[0.15em] md:tracking-[0.2em] font-semibold">
+                  <span className="text-white/80 text-[8px] sm:text-[10px] uppercase tracking-[0.15em] md:tracking-[0.2em] font-semibold">
                     {stat.subLabel}
                   </span>
                 </div>

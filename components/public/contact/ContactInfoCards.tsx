@@ -25,8 +25,7 @@ export function ContactInfoCards() {
       subtitle: t("contact.info_email_sub"),
       href: `mailto:${siteConfig.contact.email}`,
       color: "bg-purple-100 text-purple-600",
-      borderColor: "group-hover:border-purple-200",
-    },
+      borderColor: "group-hover:border-purple-200",},
     {
       icon: MessageCircle,
       title: t("contact.info_line"),
@@ -56,10 +55,10 @@ export function ContactInfoCards() {
                 >
                   <info.icon className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-primary transition-colors">
+                <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-[hsl(var(--brand-primary))] transition-colors">
                   {info.title}
                 </h3>
-                <p className="text-primary font-medium text-lg mb-2">
+                <p className="text-[hsl(var(--brand-primary))] font-medium text-lg mb-2">
                   {info.value}
                 </p>
                 <p className="text-sm text-slate-500 font-light tracking-wide">

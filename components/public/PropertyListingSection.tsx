@@ -312,7 +312,7 @@ function PropertyListingContent() {
             suppressHydrationWarning
           >
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
+              <span className="text-transparent bg-clip-text  bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))]">
                 {t("property_listing.title")}
               </span>
               <br />
@@ -324,11 +324,11 @@ function PropertyListingContent() {
               {!isLoading && !error && (
                 <div className="text-sm text-slate-600">
                   {t("property_listing.category_label")}{" "}
-                  <span className="font-semibold text-blue-600">
+                  <span className="font-semibold text-[hsl(var(--brand-primary))]">
                     {FILTER_LABELS[filter]}
                   </span>{" "}
                   • {t("property_listing.found_prefix")}{" "}
-                  <span className="font-semibold text-blue-600">
+                  <span className="font-semibold text-[hsl(var(--brand-primary))]">
                     {resultCount.toLocaleString("th-TH")}
                   </span>{" "}
                   {t("property_listing.found_suffix")}
@@ -421,8 +421,8 @@ function PropertyListingContent() {
                         aria-selected={active}
                         className={`shrink-0 snap-start px-4 py-2 rounded-full border text-sm font-semibold transition-all pointer-events-auto ${
                           active
-                            ? "bg-slate-900 text-white border-slate-900 shadow-md"
-                            : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600"
+                            ? "bg-[hsl(var(--brand-primary))] text-white border-[hsl(var(--brand-primary))] shadow-md"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-[hsl(var(--brand-primary))] hover:text-[hsl(var(--brand-primary))]"
                         }`}
                       >
                         {FILTER_LABELS[type]}

@@ -206,8 +206,8 @@ export function SearchFilterBar({
                             }}
                             className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
                               province === "ALL"
-                                ? "bg-blue-600 text-white border-blue-600"
-                                : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                                ? "bg-[hsl(var(--brand-primary))] text-white border-[hsl(var(--brand-primary))]"
+                                : "bg-white text-slate-600 border-slate-200 hover:border-[hsl(var(--brand-primary)/0.3)]"
                             }`}
                           >
                             {t("search.all_provinces")}
@@ -228,8 +228,8 @@ export function SearchFilterBar({
                                 }}
                                 className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
                                   province === p
-                                    ? "bg-blue-600 text-white border-blue-600"
-                                    : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                                    ? "bg-[hsl(var(--brand-primary))] text-white border-[hsl(var(--brand-primary))]"
+                                    : "bg-white text-slate-600 border-slate-200 hover:border-[hsl(var(--brand-primary)/0.3)]"
                                 }`}
                               >
                                 {getProvinceName(p, language)}
@@ -262,8 +262,8 @@ export function SearchFilterBar({
                             onClick={() => setArea("ALL")}
                             className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
                               area === "ALL"
-                                ? "bg-blue-600 text-white border-blue-600"
-                                : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                                ? "bg-[hsl(var(--brand-primary))] text-white border-[hsl(var(--brand-primary))]"
+                                : "bg-white text-slate-600 border-slate-200 hover:border-[hsl(var(--brand-primary)/0.3)]"
                             }`}
                           >
                             {t("search.all_locations")}
@@ -281,8 +281,8 @@ export function SearchFilterBar({
                                 onClick={() => setArea(a.name)}
                                 className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
                                   area === a.name
-                                    ? "bg-blue-600 text-white border-blue-600"
-                                    : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                                    ? "bg-[hsl(var(--brand-primary))] text-white border-[hsl(var(--brand-primary))]"
+                                    : "bg-white text-slate-600 border-slate-200 hover:border-[hsl(var(--brand-primary)/0.3)]"
                                 }`}
                               >
                                 {getLocaleValue(
@@ -320,13 +320,13 @@ export function SearchFilterBar({
                   <div
                     className={`flex items-center justify-center gap-2 px-2 py-3 rounded-xl border-2 transition-all cursor-pointer ${
                       nearTrain
-                        ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20"
-                        : "bg-white border-slate-200 text-slate-600 hover:border-blue-200"
+                        ? "bg-[hsl(var(--brand-primary))] border-[hsl(var(--brand-primary))] text-white shadow-md shadow-[hsl(var(--brand-primary)/0.2)]"
+                        : "bg-white border-slate-200 text-slate-600 hover:border-[hsl(var(--brand-primary)/0.2)]"
                     }`}
                     onClick={() => setNearTrain(!nearTrain)}
                   >
                     <FaTrainSubway
-                      className={`h-4 w-4 ${nearTrain ? "text-white" : "text-blue-500"}`}
+                      className={`h-4 w-4 ${nearTrain ? "text-white" : "text-[hsl(var(--brand-primary))]"}`}
                     />
                     <span className="text-[11px] font-semibold">
                       {t("search.near_train")}
@@ -369,7 +369,7 @@ export function SearchFilterBar({
                   </label>
                   <Sheet>
                     <SheetTrigger asChild>
-                      <button className="w-full flex items-center justify-between px-4 h-12 bg-white rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:border-blue-300 transition-all shadow-sm">
+                      <button className="w-full flex items-center justify-between px-4 h-12 bg-white rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:border-[hsl(var(--brand-primary)/0.3)] transition-all shadow-sm">
                         <span className="flex items-center gap-2">
                           {type === "ALL" ? (
                             t("common.all")
@@ -408,9 +408,9 @@ export function SearchFilterBar({
                                 onClick={() => setType(pt.value)}
                                 className={`w-full flex items-center justify-between px-4 py-4 rounded-2xl text-sm font-medium border transition-all ${
                                   isActive
-                                    ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
+                                    ? "bg-[hsl(var(--brand-primary)/0.08)] border-[hsl(var(--brand-primary)/0.2)] text-[hsl(var(--brand-primary))] shadow-sm"
                                     : hasItems
-                                      ? "bg-white border-slate-100 text-slate-600 hover:border-blue-200 hover:bg-slate-50"
+                                      ? "bg-white border-slate-100 text-slate-600 hover:border-[hsl(var(--brand-primary)/0.2)] hover:bg-slate-50"
                                       : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed opacity-60"
                                 }`}
                               >
@@ -418,7 +418,7 @@ export function SearchFilterBar({
                                   <span
                                     className={`h-2 w-2 rounded-full transition-all ${
                                       isActive
-                                        ? "bg-blue-600"
+                                        ? "bg-[hsl(var(--brand-primary))]"
                                         : hasItems
                                           ? "bg-emerald-500"
                                           : "bg-slate-200"
@@ -457,7 +457,7 @@ export function SearchFilterBar({
                         onClick={() => setListingType(opt.val)}
                         className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
                           listingType === opt.val
-                            ? "bg-slate-900 text-white shadow-md"
+                            ? "bg-[hsl(var(--brand-primary))] text-white shadow-md"
                             : "text-slate-500 hover:text-slate-900"
                         }`}
                       >
@@ -501,8 +501,8 @@ export function SearchFilterBar({
                           }}
                           className={`px-3 py-2.5 rounded-xl text-sm font-medium border transition-all ${
                             minPrice === preset.min && maxPrice === preset.max
-                              ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                              : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                              ? "bg-[hsl(var(--brand-primary))] text-white border-[hsl(var(--brand-primary))] shadow-sm"
+                              : "bg-white text-slate-600 border-slate-200 hover:border-[hsl(var(--brand-primary)/0.3)]"
                           }`}
                         >
                           {t(`search.price_presets.rent.${preset.key}`)}
@@ -546,8 +546,8 @@ export function SearchFilterBar({
                           }}
                           className={`px-3 py-2.5 rounded-xl text-sm font-medium border transition-all ${
                             minPrice === preset.min && maxPrice === preset.max
-                              ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                              : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+                              ? "bg-[hsl(var(--brand-primary))] text-white border-[hsl(var(--brand-primary))] shadow-sm"
+                              : "bg-white text-slate-600 border-slate-200 hover:border-[hsl(var(--brand-primary)/0.3)]"
                           }`}
                         >
                           {t(`search.price_presets.sale.${preset.key}`)}
@@ -569,7 +569,7 @@ export function SearchFilterBar({
                         onClick={() => setBedrooms(bed)}
                         className={`h-10 min-w-12 px-3 rounded-xl border transition-all font-medium text-sm shrink-0 ${
                           bedrooms === bed
-                            ? "bg-indigo-600 text-white border-indigo-600 shadow-md"
+                            ? "bg-[hsl(var(--brand-primary))] text-white border-[hsl(var(--brand-primary))] shadow-md"
                             : "bg-white text-slate-700 border-slate-200"
                         }`}
                       >
@@ -582,7 +582,7 @@ export function SearchFilterBar({
 
               <SheetFooter className="p-6 border-t border-slate-100 bg-white pb-8">
                 <SheetClose asChild>
-                  <Button className="w-full h-12 text-lg rounded-xl bg-linear-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-200/50">
+                  <Button className="w-full h-12 text-lg rounded-xl bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] shadow-lg shadow-[hsl(var(--brand-primary)/0.2)]">
                     {t("search.view_results")} ({filteredLength}{" "}
                     {t("search.items")})
                   </Button>
@@ -673,7 +673,7 @@ export function SearchFilterBar({
                   onClick={() => setListingType("ALL")}
                   className={`rounded-lg border-2 transition-colors duration-200 font-medium text-xs ${
                     listingType === "ALL"
-                      ? "bg-slate-600 border-slate-600 text-white shadow-md"
+                      ? "bg-[hsl(var(--brand-primary))] border-[hsl(var(--brand-primary))] text-white shadow-md"
                       : "bg-white border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-slate-700"
                   }`}
                 >
@@ -703,8 +703,8 @@ export function SearchFilterBar({
                   onClick={() => setListingType("SALE_AND_RENT")}
                   className={`rounded-lg border-2 transition-colors duration-200 font-medium text-xs ${
                     listingType === "SALE_AND_RENT"
-                      ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                      : "bg-white border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-slate-700"
+                      ? "bg-[hsl(var(--brand-primary))] border-[hsl(var(--brand-primary))] text-white shadow-md"
+                      : "bg-white border-slate-200 hover:border-[hsl(var(--brand-primary)/0.5)] hover:bg-[hsl(var(--brand-primary)/0.05)] text-slate-700"
                   }`}
                 >
                   {t("search.rent_buy")}
@@ -741,7 +741,7 @@ export function SearchFilterBar({
                 className={`flex items-center justify-between gap-2 px-4 h-12 rounded-xl border-2 transition-all font-medium text-sm ${
                   showAreaSection
                     ? "bg-slate-100 border-slate-200 text-slate-900"
-                    : "bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-700"
+                    : "bg-white border-slate-200 hover:border-[hsl(var(--brand-primary)/0.3)] hover:bg-[hsl(var(--brand-primary)/0.05)] text-slate-700"
                 }`}
               >
                 {t("search.popular_locations")}
@@ -762,8 +762,8 @@ export function SearchFilterBar({
                   onClick={() => setBedrooms(bed)}
                   className={`h-9 px-3 rounded-lg transition-all font-medium text-sm ${
                     bedrooms === bed
-                      ? "bg-indigo-600 text-white shadow-md"
-                      : "bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-700"
+                      ? "bg-[hsl(var(--brand-primary))] text-white shadow-md"
+                      : "bg-white text-slate-700 hover:bg-[hsl(var(--brand-primary)/0.05)] hover:text-[hsl(var(--brand-primary))]"
                   }`}
                 >
                   {bed === "ALL" ? t("common.all") : bed}
@@ -774,14 +774,14 @@ export function SearchFilterBar({
             <div
               className={`flex items-center justify-center gap-2 px-4 h-12 rounded-xl border-2 transition-all cursor-pointer shadow-sm ${
                 nearTrain
-                  ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/30"
-                  : "bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-700"
+                  ? "bg-[hsl(var(--brand-primary))] border-[hsl(var(--brand-primary))] text-white shadow-md shadow-[hsl(var(--brand-primary)/0.3)]"
+                  : "bg-white border-slate-200 hover:border-[hsl(var(--brand-primary)/0.3)] hover:bg-[hsl(var(--brand-primary)/0.05)] text-slate-700"
               }`}
               onClick={() => setNearTrain(!nearTrain)}
             >
               <FaTrainSubway
                 className={`h-4 w-4 ${
-                  nearTrain ? "text-white" : "text-blue-600"
+                  nearTrain ? "text-white" : "text-[hsl(var(--brand-primary))]"
                 }`}
               />
               <span className="text-sm font-medium select-none">
@@ -868,8 +868,8 @@ export function SearchFilterBar({
                     onClick={() => setArea("ALL")}
                     className={`text-md transition-colors ${
                       area === "ALL"
-                        ? "font-semibold text-blue-600"
-                        : "text-slate-500 hover:text-blue-600"
+                        ? "font-semibold text-[hsl(var(--brand-primary))]"
+                        : "text-slate-500 hover:text-[hsl(var(--brand-primary))]"
                     }`}
                   >
                     {t("search.all_locations")}
@@ -880,10 +880,10 @@ export function SearchFilterBar({
                       <button
                         key={a.name}
                         onClick={() => setArea(a.name)}
-                        className={`text-md transition-colors flex items-center gap-2  px-3 py-1  hover:bg-sky-50 rounded-lg ${
+                        className={`text-md transition-colors flex items-center gap-2  px-3 py-1  hover:bg-[hsl(var(--brand-primary)/0.05)] rounded-lg ${
                           area === a.name
-                            ? "font-semibold text-blue-600"
-                            : "text-slate-500 hover:text-blue-600"
+                            ? "font-semibold text-[hsl(var(--brand-primary))]"
+                            : "text-slate-500 hover:text-[hsl(var(--brand-primary))]"
                         }`}
                       >
                         {getLocaleValue(

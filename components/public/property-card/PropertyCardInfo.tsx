@@ -35,7 +35,7 @@ export function PropertyCardInfo({
           {typeLabel}
         </span>
         <div className="flex items-center gap-1 text-stone-500">
-          <MapPin className="h-3 w-3 text-blue-500" />
+          <MapPin className="h-3 w-3 text-[hsl(var(--brand-primary))]" />
           <span className="text-xs">
             {getSafeText(
               areaProvince,
@@ -44,7 +44,7 @@ export function PropertyCardInfo({
           </span>
         </div>
       </div>
-      <h3 className="text-sm sm:text-base md:text-lg font-semibold tracking-wide text-slate-800 line-clamp-2 group-hover:text-blue-800 transition-all duration-300 ease-in-out">
+      <h3 className="text-sm sm:text-base md:text-lg font-semibold tracking-wide text-slate-800 line-clamp-2 group-hover:text-[hsl(var(--brand-primary))] transition-all duration-300 ease-in-out">
         {localizedTitle}
       </h3>
     </div>

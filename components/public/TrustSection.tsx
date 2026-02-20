@@ -72,9 +72,9 @@ export function TrustSection() {
           className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"
           data-aos="fade-up"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100">
-            <Award className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-bold text-blue-700">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--brand-primary)/0.08)] border border-[hsl(var(--brand-primary)/0.2)]">
+            <Award className="w-4 h-4 text-[hsl(var(--brand-primary))]" />
+            <span className="text-sm font-bold text-[hsl(var(--brand-primary))]">
               {t("trust.title_badge")}
             </span>
           </div>
@@ -130,7 +130,7 @@ export function TrustSection() {
               </div>
 
               {/* Decorative Corner */}
-              <div className="absolute top-0 right-0 w-20 h-20 bg-linear-to-br from-blue-500/5 to-purple-500/5 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute top-0 right-0 w-20 h-20 bg-[linear-gradient(to_bottom_right,hsl(var(--brand-gradient-from)/0.05),hsl(var(--brand-gradient-to)/0.05))] rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </div>
           ))}
         </div>

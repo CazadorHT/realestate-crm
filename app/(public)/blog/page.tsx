@@ -106,7 +106,7 @@ export default async function BlogListingPage({
             {/* Main Content */}
             <div className="lg:col-span-8">
               <div className="flex items-center gap-2 mb-6">
-                <div className="h-6 w-1 bg-linear-to-b from-slate-700 to-slate-900 rounded-full"></div>
+                <div className="h-6 w-1 bg-[linear-gradient(to_bottom,hsl(var(--brand-primary)),hsl(var(--brand-secondary)))] rounded-full"></div>
                 <h2 className="text-xl font-bold text-slate-900">
                   {categoryFilter
                     ? `${t("blog.category_label")}: ${categoryFilter}`
@@ -117,7 +117,7 @@ export default async function BlogListingPage({
                 {(categoryFilter || tagFilter) && (
                   <a
                     href="/blog"
-                    className="text-sm text-blue-600 hover:underline"
+                    className="text-sm text-[hsl(var(--brand-primary))] hover:underline"
                   >
                     {t("blog.view_all")}
                   </a>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
 import { FaFacebook, FaLine, FaInstagram, FaTiktok } from "react-icons/fa";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 const socialLinks = [
   {
@@ -51,8 +52,8 @@ export function ContactSidebar() {
       <Card className="border-slate-100 bg-white shadow-lg shadow-slate-100/50">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-50">
-            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-              <Clock className="h-5 w-5 text-blue-600" />
+            <div className="w-10 h-10 rounded-full bg-[hsl(var(--brand-primary)/0.08)] flex items-center justify-center">
+              <Clock className="h-5 w-5 text-[hsl(var(--brand-primary))]" />
             </div>
             <h3 className="font-bold text-slate-800 text-lg">
               {t("contact.sidebar_hours")}
@@ -99,8 +100,8 @@ export function ContactSidebar() {
         </CardContent>
       </Card>
 
-      {/* Quick Contact CTA (Official Line Style) */}
-      <Card className="bg-[#06C755] text-white border-none shadow-xl shadow-green-500/20 overflow-hidden relative group">
+      {/* Quick Contact CTA (Brand Gradient Style) */}
+      <Card className="bg-[linear-gradient(to_bottom_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] text-white border-none shadow-xl shadow-[hsl(var(--brand-primary)/0.2)] overflow-hidden relative group">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-500" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/5 rounded-full translate-y-1/2 -translate-x-1/2 group-hover:scale-110 transition-transform duration-500" />
 
@@ -117,12 +118,12 @@ export function ContactSidebar() {
             {t("contact.sidebar_quick_desc2")}
           </p>
           <a
-            href="https://line.me/R/ti/p/@your-line-id"
+            href={siteConfig.links.line}
             target="_blank"
             rel="noopener noreferrer"
             className="block"
           >
-            <Button className="w-full bg-white text-[#06C755] hover:bg-white/90 font-bold h-12 rounded-xl shadow-lg border-2 border-transparent hover:border-white/50 transition-all">
+            <Button className="w-full bg-white text-[hsl(var(--brand-primary))] hover:bg-white/90 font-bold h-12 rounded-xl shadow-lg border-2 border-transparent hover:border-white/50 transition-all">
               <FaLine className="mr-2 h-5 w-5" />
               {t("contact.sidebar_line_button")}
             </Button>

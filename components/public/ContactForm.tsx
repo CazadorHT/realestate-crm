@@ -102,8 +102,8 @@ export function ContactForm() {
                 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 border
                 ${
                   selectedSubject === option.value
-                    ? "bg-blue-600 text-white border-blue-600 shadow-md scale-[1.02]"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:bg-blue-50/50"
+                    ? "bg-[hsl(var(--brand-primary))] text-white border-[hsl(var(--brand-primary))] shadow-md scale-[1.02]"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-[hsl(var(--brand-primary)/0.4)] hover:bg-[hsl(var(--brand-primary)/0.05)]"
                 }
               `}
             >
@@ -212,7 +212,7 @@ export function ContactForm() {
         type="submit"
         disabled={isPending}
         aria-label={t("contact.submit")}
-        className="w-full h-12 text-base font-semibold shadow-lg shadow-blue-500/20 bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all active:scale-[0.98]"
+        className="w-full h-12 text-base font-semibold shadow-lg shadow-[hsl(var(--brand-primary)/0.2)] bg-[linear-gradient(to_right,hsl(var(--brand-primary)),hsl(var(--brand-primary)/0.9))] hover:brightness-110 transition-all active:scale-[0.98]"
       >
         {isPending ? (
           <>
@@ -231,7 +231,7 @@ export function ContactForm() {
         {t("contact.privacy_prefix")}
         <a
           href="/privacy-policy"
-          className="text-blue-600 hover:underline hover:text-blue-700 ml-1"
+          className="text-[hsl(var(--brand-primary))] hover:underline hover:brightness-110 ml-1"
         >
           {t("nav.privacy_policy")}
         </a>

@@ -59,8 +59,9 @@ export function PropertyMapSection({
 
   return (
     <section>
-      <h3 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-bold text-blue-900 mb-6 flex items-center gap-2">
-        <LuMap className="w-5 h-5 text-blue-600" /> {t("property_map.title")}
+      <h3 className="text-lg md:text-xl border-l-4 border-[hsl(var(--brand-primary))] bg-[linear-gradient(to_right,hsl(var(--brand-primary)/0.1),transparent)] px-4 py-3 rounded-r-xl font-semibold text-[hsl(var(--brand-primary))] mb-6 flex items-center gap-2">
+        <LuMap className="w-5 h-5 text-[hsl(var(--brand-primary))]" />{" "}
+        {t("property_map.title")}
       </h3>
 
       <div className="space-y-4">
@@ -93,7 +94,7 @@ export function PropertyMapSection({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-6 py-2.5 rounded-full text-sm font-semibold transition-all border border-slate-200 shadow-sm hover:shadow-md cursor-pointer group"
             >
-              <MapPin className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
+              <MapPin className="w-4 h-4 text-[hsl(var(--brand-primary))] group-hover:scale-110 transition-transform" />
               {t("property_map.open_google_maps")}
             </a>
           </div>

@@ -254,24 +254,24 @@ export function PublicNav() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="hover:bg-[hsl(var(--brand-primary)/0.1)]! hover:text-[hsl(var(--brand-primary))]! border-slate-200"
+                      className="hover:bg-[hsl(var(--brand-primary))]! hover:text-white! border-[hsl(var(--brand-primary))] hover:scale-105 transition-all duration-300"
                     >
-                      <Search className="h-4 w-4 mr-1 text-[hsl(var(--brand-primary))]" />
+                      <Search className="h-4 w-4 mr-1 text-current" />
                       {t("home.search_btn")}
                     </Button>
                   </Link>
-                  <a
+                  <Link
                     href="#deposit-section"
                     onClick={(e) => handleNavClick(e, "#deposit-section")}
                   >
                     <Button
                       size="lg"
-                      className="cursor-pointer bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] hover:brightness-110 shadow-md font-medium outline-none ring-0 border-0 text-white"
+                      className="cursor-pointer bg-[linear-gradient(to_right,hsl(var(--brand-gradient-from)),hsl(var(--brand-gradient-to)))] hover:brightness-105 shadow-md font-medium outline-none ring-0 border-0 text-white hover:scale-105 transition-all duration-300"
                     >
                       <Key className="h-4 w-4 mr-1" />
                       {t("nav.deposit")}
                     </Button>
-                  </a>
+                  </Link>
                 </div>
               </div>
 
@@ -399,13 +399,13 @@ export function PublicNav() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="w-full cursor-pointer border-[hsl(var(--brand-primary))] text-[hsl(var(--brand-primary))] hover:bg-[hsl(var(--brand-primary)/0.05)] py-6 text-base"
+                      className="w-full cursor-pointer border-[hsl(var(--brand-primary))] text-[hsl(var(--brand-primary))] hover:bg-[hsl(var(--brand-primary))] hover:text-white py-6 text-base"
                     >
                       <Search className="h-5 w-5 mr-2" />
                       {t("home.search_btn")}
                     </Button>
                   </Link>
-                  <a
+                  <Link
                     href="#deposit-section"
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex-1"
@@ -417,7 +417,7 @@ export function PublicNav() {
                       <Key className="h-5 w-5 mr-2" />
                       {t("nav.deposit")}
                     </Button>
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

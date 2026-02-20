@@ -205,7 +205,7 @@ export function PropertyGallery({
 
         {/* Verified Badge - Icon only with hover text */}
         {verified && (
-          <div className="group/verified absolute top-3 left-0 md:top-4 md:left-6 z-40 flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
+          <div className="group/verified absolute top-3 left-0 md:top-4 md:left-6 z-40 flex items-center bg-[hsl(var(--brand-primary)/0.9)] backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
             {/* Icon stays visible */}
             <IoShieldCheckmark className="w-4 h-4 md:w-5 md:h-5" />
 
