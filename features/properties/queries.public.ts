@@ -45,7 +45,7 @@ export async function getPublicPropertyWithImagesBySlug(slug: string) {
 }
 
 export async function searchPropertiesForBot(query: string, limit = 5) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const keywords = query.trim().split(/\s+/).filter(Boolean);
   if (keywords.length === 0) return [];
 

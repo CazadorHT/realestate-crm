@@ -240,7 +240,7 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
           bathrooms: propertyQuery.bathrooms,
           minSize: propertyQuery.minSize,
           maxSize: propertyQuery.maxSize,
-          limit: 15,
+          limit: 10,
         });
 
         // 3. Send functionResponse back to Model

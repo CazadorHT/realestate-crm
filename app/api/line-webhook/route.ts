@@ -12,6 +12,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getLineProfile, saveOmniMessage } from "@/lib/line";
 import { siteConfig } from "@/lib/site-config";
+import { chatWithAI } from "@/features/chatbot/actions";
 import {
   buildWelcomeFlex,
   buildPropertyTypeQuickReply,
@@ -366,13 +367,7 @@ async function handlePostbackEvent(
     const properties = await searchByTypeAndArea(type, area);
     if (properties.length === 0) {
       const msg = buildNoResultsMessage(area, lang);
-      await replyMessage(event.replyToken, [
-        {
-          type: "text",
-          text: `Debug: เผื่อเป็นประโยชน์ -> ค้นหาประเภท="${type}" ในทำเล="${area}" แล้วไม่พบข้อมูลค่ะ`,
-        },
-        msg,
-      ]);
+      await replyMessage(event.replyToken, [msg]);
       return;
     }
 
@@ -490,10 +485,6 @@ async function handleIncomingChannelMessage(
       `พบ ${data.length} ทรัพย์ใน "${checkArea}":\n\n${list.slice(0, 1000)}`,
     );
     return;
-  }
-
-  if (groupId) {
-    return; // Silent for group chat
   }
 
   if (!userId) return;
@@ -702,7 +693,7 @@ async function handleInteractiveCommand(
   }
 
   // --- Fallback: AI Search ---
-  await handleTextMessage(event, text, lang, areaTranslations);
+  await handleAIResponse(event, text, lang, areaTranslations);
 }
 
 // ============================
@@ -755,6 +746,70 @@ async function handleTextMessage(
     await pushText(
       event.source.userId || "",
       `ขออภัยค่ะ ไม่สามารถแสดงผลรูปภาพได้ในขณะนี้ (${res.error || "Unknown"})\n\nคำค้นหา: ${text}`,
+    );
+  }
+}
+
+// ============================
+// AI Response Handler
+// ============================
+async function handleAIResponse(
+  event: LineEvent,
+  text: string,
+  lang: BotLang = "th",
+  areaTranslations?: AreaTranslations,
+) {
+  const { replyToken } = event;
+  if (!text) return;
+
+  try {
+    console.log(`[BOT] AI Search for: ${text} (Lang: ${lang})`);
+
+    // 1. Get AI Response
+    // history is empty for now to keep it simple and stateless (stateless webhooks)
+    const aiResult = await chatWithAI([], text);
+
+    if (!aiResult) {
+      await replyText(replyToken, "ขออภัยค่ะ ระบบ AI ไม่ตอบสนองในขณะนี้");
+      return;
+    }
+
+    const messages: any[] = [];
+
+    // 2. Add AI Text Response
+    if (aiResult.text) {
+      messages.push({ type: "text", text: aiResult.text });
+    }
+
+    // 3. Add Property Carousel if AI found matching properties
+    if (aiResult.properties && aiResult.properties.length > 0) {
+      const headerTexts: Record<BotLang, string> = {
+        th: `พบ ${aiResult.properties.length} ทรัพย์ที่น่าสนใจสำหรับคุณ`,
+        en: `Found ${aiResult.properties.length} matching properties for you`,
+        cn: `为您找到 ${aiResult.properties.length} 个匹配的房产`,
+      };
+
+      const flex = buildPropertyCarousel(
+        aiResult.properties as any,
+        headerTexts[lang],
+        lang,
+        areaTranslations,
+      );
+      messages.push(flex);
+    }
+
+    if (messages.length > 0) {
+      // Send up to 5 messages (LINE limit)
+      await replyMessage(replyToken, messages.slice(0, 5));
+    } else {
+      await replyText(replyToken, "ขออภัยค่ะ ไม่พบข้อมูลที่ต้องการ");
+    }
+  } catch (error: any) {
+    console.error("[BOT] AI Response Error:", error);
+    await replyText(
+      replyToken,
+      "ขออภัยค่ะ เกิดข้อผิดพลาดในการประมวลผล AI: " +
+        (error.message || "Unknown Error"),
     );
   }
 }

@@ -126,7 +126,7 @@ export function ContactForm() {
               required
               placeholder={t("contact.name_placeholder")}
               aria-label={t("contact.name_label")}
-              className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+              className="h-11 pl-10 bg-slate-50 text-slate-600 border-slate-200 focus:bg-white transition-colors"
             />
           </div>
         </div>
@@ -144,7 +144,7 @@ export function ContactForm() {
               required
               placeholder="0XX-XXX-XXXX"
               aria-label={t("contact.phone_label")}
-              className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+              className="h-11 pl-10 bg-slate-50 text-slate-600 border-slate-200 focus:bg-white transition-colors"
             />
           </div>
         </div>
@@ -163,7 +163,7 @@ export function ContactForm() {
               type="email"
               placeholder={t("contact.email_placeholder")}
               aria-label={t("contact.email_label")}
-              className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+              className="h-11 pl-10 bg-slate-50 text-slate-600 border-slate-200 focus:bg-white transition-colors"
             />
           </div>
         </div>
@@ -179,7 +179,7 @@ export function ContactForm() {
               name="lineId"
               placeholder={t("contact.line_id_placeholder")}
               aria-label={t("contact.line_id_label")}
-              className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+              className="h-11 pl-10 bg-slate-50 text-slate-600 border-slate-200 focus:bg-white transition-colors"
             />
           </div>
         </div>
@@ -197,7 +197,7 @@ export function ContactForm() {
             placeholder={t("contact.more_details_placeholder")}
             rows={4}
             aria-label={t("contact.more_details_label")}
-            className="resize-none pl-10 bg-slate-50! border-slate-200 focus:bg-white transition-colors"
+            className="resize-none pl-10 bg-slate-50! text-slate-600 border-slate-200 focus:bg-white transition-colors"
           />
         </div>
       </div>
