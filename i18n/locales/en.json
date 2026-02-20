@@ -96,6 +96,8 @@
     "sale_price": "Sale Price",
     "confirm": "Confirm",
     "cancel": "Cancel",
+    "close": "Close",
+    "step": "Step",
     "are_you_sure": "Are you sure you want to perform this action?",
     "cookie_consent": {
       "title": "We use cookies",
@@ -328,11 +330,14 @@
       "name_label": "Full Name / Nickname",
       "name_placeholder": "e.g., John (Owner)",
       "phone_label": "Phone Number",
+      "phone_placeholder": "08x-xxx-xxxx",
       "line_label": "Line ID (Optional)",
       "line_placeholder": "Your ID",
       "type_label": "Property Type",
       "details_label": "Location / Project / Details",
       "details_placeholder": "e.g., Want to sell Rhythm Ratchada, 1 Bedroom, near BTS...",
+      "details_more_label": "Additional Details",
+      "details_more_placeholder": "Provide more details you want to tell our team",
       "details_placeholder_office": "e.g., Want to rent office at G Tower, 20th floor, 200 sqm, near MRT...",
       "submit_btn": "Submit Property Info",
       "required_note": "Fill all info. Staff will contact back shortly."
@@ -834,6 +839,14 @@
       "SRT3": "Pink Line (SRT)",
       "MRT2": "Purple Line (MRT)",
       "OTHER": "Others"
+    },
+    "favorite": {
+      "added": "Added to favorites",
+      "removed": "Removed from favorites",
+      "save": "Save to favorites",
+      "remove": "Remove from favorites",
+      "saved": "Saved",
+      "save_btn": "Save"
     }
   },
   "errors": {

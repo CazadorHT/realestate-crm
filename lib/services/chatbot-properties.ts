@@ -265,11 +265,13 @@ export async function searchPropertiesForChatbot(
     if (synonyms[type]) {
       const orSyns = synonyms[type].map((s) => {
         const st = `%${s}%`;
-        return `property_type.ilike.${st},title.ilike.${st},description.ilike.${st}`;
+        return `title.ilike.${st},description.ilike.${st}`;
       });
-      query = query.or(`property_type.ilike.${searchTerm},${orSyns.join(",")}`);
+      // For enum column property_type, use .eq instead of .ilike
+      query = query.or(`property_type.eq.${type},${orSyns.join(",")}`);
     } else {
-      query = query.ilike("property_type", searchTerm);
+      // Fallback to .eq for enum column
+      query = query.eq("property_type", type as any);
     }
   }
 

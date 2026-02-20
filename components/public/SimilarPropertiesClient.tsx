@@ -43,7 +43,7 @@ export function SimilarPropertiesClient({
     <section className="py-8 md:py-12 border-t border-slate-100">
       <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6 md:mb-8">
         <div>
-          <h2 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+          <h2 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-semibold text-slate-900 mb-6 flex items-center gap-2">
             <MdMapsHomeWork className="w-5 h-5 text-blue-600" />{" "}
             {t("similar_properties.title")}
           </h2>

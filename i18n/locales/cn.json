@@ -94,6 +94,8 @@
     "sale_price": "售价",
     "confirm": "确认",
     "cancel": "取消",
+    "close": "关闭",
+    "step": "步骤",
     "are_you_sure": "您确定要执行此操作吗？",
     "cookie_consent": {
       "title": "我们使用 Cookie",
@@ -333,11 +335,14 @@
       "name_label": "姓名/昵称",
       "name_placeholder": "例如：张先生 (业主)",
       "phone_label": "联系电话",
+      "phone_placeholder": "08x-xxx-xxxx",
       "line_label": "Line ID (选填)",
       "line_placeholder": "您的 ID",
       "type_label": "物业类型",
       "details_label": "地点 / 项目名称 / 详细说明",
       "details_placeholder": "例如：想要出售 Rhythm Ratchada 公寓，1 房，靠近 BTS...",
+      "details_more_label": "更多详情",
+      "details_more_placeholder": "提供您想告诉我们的团队的更多详细信息",
       "details_placeholder_office": "例如：想要出租 G Tower 办公楼，20 层，200 平方米，靠近 MRT...",
       "submit_btn": "提交委托信息",
       "required_note": "请填好信息，我们将尽快与您联系。"
@@ -833,12 +838,15 @@
     "transit_types": {
       "BTS": "曼谷轻轨 (BTS)",
       "MRT": "曼谷地铁 (MRT)",
-      "ARL": "机场快线 (ARL)",
-      "SRT": "红线 (SRT)",
-      "SRT2": "橙线 (SRT)",
-      "SRT3": "粉红线 (SRT)",
-      "MRT2": "紫线 (MRT)",
       "OTHER": "其他"
+    },
+    "favorite": {
+      "added": "已加入收藏",
+      "removed": "已移除收藏",
+      "save": "加入收藏",
+      "remove": "移除收藏",
+      "saved": "已收藏",
+      "save_btn": "收藏"
     }
   },
   "errors": {

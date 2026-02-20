@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toggleFavoriteId, isFavorite } from "@/lib/favorite-store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface FavoriteButtonProps {
   propertyId: string;
@@ -20,6 +21,7 @@ export function FavoriteButton({
 }: FavoriteButtonProps) {
   const [favorited, setFavorited] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Initial check
@@ -44,9 +46,9 @@ export function FavoriteButton({
     toggleFavoriteId(propertyId);
 
     if (!favorited) {
-      toast.success("บันทึกรายการโปรดแล้ว");
+      toast.success(t("property.favorite.added"));
     } else {
-      toast.info("ลบออกจากรายการโปรดแล้ว");
+      toast.info(t("property.favorite.removed"));
     }
   };
 
@@ -62,7 +64,9 @@ export function FavoriteButton({
         className,
       )}
       onClick={handleToggle}
-      title={favorited ? "ลบจากรายการโปรด" : "บันทึกรายการโปรด"}
+      title={
+        favorited ? t("property.favorite.remove") : t("property.favorite.save")
+      }
     >
       <Heart
         className={cn(
@@ -78,7 +82,9 @@ export function FavoriteButton({
             favorited ? "text-red-600! font-medium" : "text-slate-600!",
           )}
         >
-          {favorited ? "บันทึกแล้ว" : "บันทึก"}
+          {favorited
+            ? t("property.favorite.saved")
+            : t("property.favorite.save_btn")}
         </span>
       )}
     </Button>

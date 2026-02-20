@@ -227,7 +227,7 @@ export function PropertyHeader({
           {label && (
             <span className="text-sm text-slate-500 font-medium">{label}</span>
           )}
-          <span className="text-xl md:text-2xl font-bold text-blue-600">
+          <span className="text-xl md:text-2xl font-semibold text-blue-600">
             {isRent ? t("property.inquiry_rent") : t("property.inquiry_price")}
           </span>
         </div>
@@ -278,7 +278,7 @@ export function PropertyHeader({
           {label && (
             <span className="text-sm text-slate-500 font-medium">{label}</span>
           )}
-          <span className="text-xl md:text-2xl font-bold text-slate-900">
+          <span className="text-xl md:text-2xl font-semibold text-slate-900">
             {formatPrice(displayPrice)}
             {isRent && (
               <span className="text-sm font-normal text-slate-500">

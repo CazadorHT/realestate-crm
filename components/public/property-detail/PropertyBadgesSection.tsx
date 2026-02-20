@@ -24,8 +24,16 @@ import {
   Star,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import type { Database } from "@/lib/database.types";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { cn } from "@/lib/utils";
 
 type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 
@@ -52,7 +60,9 @@ export function PropertyBadgesSection({
   const scrollDirectionRef = useRef(1); // 1 for forward, -1 for backward
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [startX, setStartX] = useState(0);
+  const [dragThresholdMet, setDragThresholdMet] = useState(false);
   const [initialScrollLeft, setInitialScrollLeft] = useState(0);
 
   // Ultra-Smooth Auto-scroll logic with sub-pixel precision
@@ -243,11 +253,15 @@ export function PropertyBadgesSection({
       if (!scrollRef.current) return;
       const x = e.pageX;
       const walk = (x - startX) * 2.0;
+      if (Math.abs(x - startX) > 5) setDragThresholdMet(true);
       scrollRef.current.scrollLeft = initialScrollLeft - walk;
       scrollPosRef.current = scrollRef.current.scrollLeft;
     };
 
     const handleWindowMouseUp = () => {
+      if (!dragThresholdMet && isDragging) {
+        setIsDialogOpen(true);
+      }
       setIsDragging(false);
     };
 
@@ -263,6 +277,7 @@ export function PropertyBadgesSection({
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!scrollRef.current) return;
     setIsDragging(true);
+    setDragThresholdMet(false);
     setStartX(e.touches[0].pageX);
     setInitialScrollLeft(scrollRef.current.scrollLeft);
   };
@@ -270,14 +285,23 @@ export function PropertyBadgesSection({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!scrollRef.current) return;
     const x = e.touches[0].pageX;
+    if (Math.abs(x - startX) > 5) setDragThresholdMet(true);
     const walk = (x - startX) * 2.0;
     scrollRef.current.scrollLeft = initialScrollLeft - walk;
     scrollPosRef.current = scrollRef.current.scrollLeft;
   };
 
+  const handleTouchEnd = () => {
+    if (!dragThresholdMet && isDragging) {
+      setIsDialogOpen(true);
+    }
+    setIsDragging(false);
+  };
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!scrollRef.current) return;
     setIsDragging(true);
+    setDragThresholdMet(false);
     setStartX(e.pageX);
     setInitialScrollLeft(scrollRef.current.scrollLeft);
   };
@@ -297,61 +321,88 @@ export function PropertyBadgesSection({
           scrollbar-width: none;
         }
       `}</style>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-        <div className="flex items-center gap-3 flex-1 max-w-3xl overflow-hidden group/container">
-          {/* Sale/Rent: Static */}
-          <div className="shrink-0 z-20 bg-white">
-            <Badge
-              className={`rounded-full px-5 py-2 font-bold whitespace-nowrap shadow-sm ${
-                property.listing_type === "SALE"
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-3 flex-1 max-w-3xl overflow-hidden group/container relative">
+            {/* Sale/Rent: Static */}
+            <div className="shrink-0 z-20 bg-white">
+              <Badge
+                className={`rounded-full px-5 py-2 font-semibold whitespace-nowrap shadow-sm ${
+                  property.listing_type === "SALE"
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
+              >
+                {property.listing_type === "SALE"
+                  ? t("common.for_sale")
+                  : t("common.for_rent")}
+              </Badge>
+            </div>
+
+            {/* Others: Draggable & Ticker area */}
+            <div
+              ref={scrollRef}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onMouseLeave={handleMouseLeave}
+              onMouseEnter={() => setIsHovered(true)}
+              onScroll={handleScroll}
+              className={`flex-1 overflow-x-auto no-scrollbar pb-1 flex items-center gap-2 touch-pan-y ${
+                isDragging ? "cursor-grabbing" : "cursor-grab"
               }`}
             >
-              {property.listing_type === "SALE"
-                ? t("common.for_sale")
-                : t("common.for_rent")}
-            </Badge>
+              {filteredBadges.map((item, idx) => (
+                <Badge
+                  key={idx}
+                  className={`rounded-full px-4 py-2 font-medium border-none whitespace-nowrap gap-1.5 shadow-xs transition-colors shrink-0 pointer-events-none ${item.color}`}
+                >
+                  <item.icon className="w-3.5 h-3.5" />
+                  {item.label}
+                </Badge>
+              ))}
+              {/* End spacing for loop feel */}
+              <div className="shrink-0 w-32 h-4" />
+            </div>
+
+            {/* Right side fade overlay */}
+            <div className="absolute right-0 top-0 bottom-0 w-16 bg-linear-to-l from-white to-transparent pointer-events-none z-10 hidden md:block" />
           </div>
 
-          {/* Others: Draggable & Ticker area */}
-          <div
-            ref={scrollRef}
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={() => setIsDragging(false)}
-            onMouseLeave={handleMouseLeave}
-            onMouseEnter={() => setIsHovered(true)}
-            onScroll={handleScroll}
-            className={`flex-1 overflow-x-auto no-scrollbar pb-1 flex items-center gap-2 touch-pan-y ${
-              isDragging ? "cursor-grabbing" : "cursor-grab"
-            }`}
-          >
+          <div className="flex items-center gap-2 text-[11px] md:text-xs font-medium text-slate-400 shrink-0 self-end md:self-center">
+            <Clock className="w-3.5 h-3.5" />
+            <span>
+              {t("property.created_at_label")} {formatDate(property.created_at)}
+            </span>
+          </div>
+        </div>
+
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("property.amenities")}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-3 py-4 ">
             {filteredBadges.map((item, idx) => (
-              <Badge
+              <div
                 key={idx}
-                className={`rounded-full px-4 py-2 font-medium border-none whitespace-nowrap gap-1.5 shadow-xs transition-colors shrink-0 pointer-events-none ${item.color}`}
+                className={cn(
+                  "flex items-center gap-2 p-3 rounded-xl border border-slate-100 bg-slate-50/50 transition-all hover:bg-white hover:shadow-sm",
+                  item.color,
+                )}
               >
-                <item.icon className="w-3.5 h-3.5" />
-                {item.label}
-              </Badge>
+                <div className="p-2 rounded-lg bg-white shadow-xs">
+                  <item.icon className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-medium leading-tight">
+                  {item.label}
+                </span>
+              </div>
             ))}
-            {/* End spacing for loop feel */}
-            <div className="shrink-0 w-32 h-4" />
           </div>
-
-          {/* Right side fade overlay */}
-          <div className="absolute right-0 top-0 bottom-0 w-16 bg-linear-to-l from-white to-transparent pointer-events-none z-10 hidden md:block" />
-        </div>
-
-        <div className="flex items-center gap-2 text-[11px] md:text-xs font-medium text-slate-400 shrink-0 self-end md:self-center">
-          <Clock className="w-3.5 h-3.5" />
-          <span>
-            {t("property.created_at_label")} {formatDate(property.created_at)}
-          </span>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

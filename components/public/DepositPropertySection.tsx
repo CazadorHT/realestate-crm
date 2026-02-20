@@ -1,39 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Home, Key, Send, CheckCircle } from "lucide-react";
-import { toast } from "sonner";
-
+import { Home, Key, CheckCircle, User, Phone, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { createDepositLeadAction } from "@/features/public/actions";
-import { depositLeadSchema } from "@/features/public/schema";
-import { DepositLeadInput } from "@/features/public/types";
-import { SectionBackground } from "./SectionBackground";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { DepositWizard } from "./deposit/DepositWizard";
 
 export function DepositPropertySection() {
   const { t } = useLanguage();
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   // Schema.org Service for SEO
   const schemaData = {
@@ -55,7 +34,7 @@ export function DepositPropertySection() {
   return (
     <section
       id="deposit-section"
-      className="py-12 md:py-16 lg:py-24 px-4 md:px-6 lg:px-8 bg-white relative overflow-hidden z-0"
+      className="py-16 md:py-20 lg:py-28 px-4 md:px-6 lg:px-8 relative overflow-hidden z-0"
     >
       {/* Schema.org Structured Data */}
       <script
@@ -63,404 +42,200 @@ export function DepositPropertySection() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
-      {/* Background Decor */}
-      <SectionBackground pattern="blobs" intensity="medium" />
+      {/* Gradient Background */}
+      <div className="absolute inset-0 bg-linear-to-br from-slate-50 via-blue-50/40 to-indigo-50/30" />
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-200/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-200/20 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/4" />
 
-      <div className="max-w-7xl mx-auto relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 lg:gap-12 items-center">
-          {/* Left Content */}
-          <div
-            className="space-y-4 md:space-y-6 text-center lg:text-left"
-            data-aos="fade-right"
-          >
-            <div className="inline-flex items-center rounded-full border border-blue-200 bg-linear-to-r from-blue-200 to-purple-200 px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold backdrop-blur-sm mx-auto lg:mx-0 shadow-sm">
-              <Key className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4 text-blue-600" />
-              <span className="text-blue-500 font-semibold">
-                {t("deposit.title")}
-              </span>
-            </div>
-
-            <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold tracking-tight leading-tight">
-              {t("deposit.subtitle")
-                .split(" ")
-                .map((word, i) => (
-                  <span
-                    key={i}
-                    className={
-                      i >= 2
-                        ? "text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600"
-                        : "text-slate-900"
-                    }
-                  >
-                    {word} {i === 1 && <br />}
-                  </span>
-                ))}
-            </h2>
-
-            <p className="text-base md:text-lg lg:text-xl text-slate-600 leading-relaxed">
-              {t("deposit.description")}
-            </p>
-
-            <div className="pt-3 md:pt-4 space-y-3 md:space-y-4">
-              {[
-                { step: 1, text: t("deposit.step1") },
-                { step: 2, text: t("deposit.step2") },
-                { step: 3, text: t("deposit.step3") },
-              ].map((item) => (
-                <div
-                  key={item.step}
-                  className="flex items-center gap-2 md:gap-3 justify-center lg:justify-start group"
-                >
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm md:text-base font-bold shadow-md group-hover:scale-110 transition-transform">
-                    {item.step}
-                  </div>
-                  <span className="text-sm md:text-base text-slate-700 font-medium">
-                    {item.text.replace(/^\d\.\s*/, "")}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Trust Badges */}
-            <div className="flex flex-wrap gap-2 md:gap-4 justify-center lg:justify-start pt-3 md:pt-4">
-              <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-slate-50 rounded-lg md:rounded-xl border border-slate-200">
-                <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
-                <span className="text-xs md:text-sm font-medium text-slate-700">
-                  {t("common.no_cost")}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-slate-50 rounded-lg md:rounded-xl border border-slate-200">
-                <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
-                <span className="text-xs md:text-sm font-medium text-slate-700">
-                  {t("common.professional_team")}
-                </span>
-              </div>
-            </div>
+      <div className="max-w-5xl mx-auto relative z-10">
+        {/* Header */}
+        <div
+          className="text-center space-y-5 md:space-y-6 mb-12 md:mb-16"
+          data-aos="fade-up"
+        >
+          <div className="inline-flex items-center rounded-full border border-blue-200/60 bg-white/80 backdrop-blur-sm px-4 py-2 text-sm font-semibold shadow-sm">
+            <Key className="mr-2 h-4 w-4 text-blue-600" />
+            <span className="text-blue-600 font-semibold">
+              {t("deposit.title")}
+            </span>
           </div>
 
-          {/* Right Form Card */}
-          <div
-            className="bg-white rounded-xl md:rounded-2xl p-5 md:p-6 lg:p-8 shadow-xl md:shadow-2xl border border-slate-200 relative overflow-hidden"
-            data-aos="fade-left"
-          >
-            {/* Card gradient decoration */}
-            <div className="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-linear-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50 -z-10"></div>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight text-slate-900">
+            {t("deposit.subtitle")
+              .split(" ")
+              .map((word: string, i: number) => (
+                <span
+                  key={i}
+                  className={
+                    i >= 2
+                      ? "text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-600"
+                      : ""
+                  }
+                >
+                  {word}{" "}
+                </span>
+              ))}
+          </h2>
 
-            <div className="mb-4 md:mb-6 relative z-10">
-              <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-1.5 md:mb-2">
+          <p className="text-lg md:text-xl text-slate-500 leading-relaxed max-w-2xl mx-auto">
+            {t("deposit.description")}
+          </p>
+        </div>
+
+        {/* Steps Row */}
+        <div
+          className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-8 mb-8 md:mb-16"
+          data-aos="fade-up"
+          data-aos-delay="100"
+        >
+          {[
+            { step: 1, text: t("deposit.step1"), icon: User, color: "blue" },
+            { step: 2, text: t("deposit.step2"), icon: Phone, color: "indigo" },
+            {
+              step: 3,
+              text: t("deposit.step3"),
+              icon: CheckCircle,
+              color: "emerald",
+            },
+          ].map((item) => (
+            <div
+              key={item.step}
+              className="relative bg-white rounded-2xl p-6 md:p-8 border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+            >
+              <div className="flex items-start gap-4">
+                <div
+                  className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110",
+                    item.color === "blue" && "bg-blue-100 text-blue-600",
+                    item.color === "indigo" && "bg-indigo-100 text-indigo-600",
+                    item.color === "emerald" &&
+                      "bg-emerald-100 text-emerald-600",
+                  )}
+                >
+                  <item.icon className="w-6 h-6" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
+                    {t("common.step")} {item.step}
+                  </div>
+                  <p className="text-base font-semibold text-slate-800 leading-snug">
+                    {item.text.replace(/^\d\.\s*/, "")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA Card */}
+        <div
+          className="relative max-w-xl mx-auto"
+          data-aos="fade-up"
+          data-aos-delay="200"
+        >
+          <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-indigo-600 rounded-3xl blur-xl opacity-20 scale-[1.02]" />
+          <div className="relative bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-slate-100 text-center space-y-5">
+            <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg shadow-blue-200">
+              <Home className="w-8 h-8" />
+            </div>
+
+            <div>
+              <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-1.5">
                 {t("deposit.form.submit_btn")}
               </h3>
-              <p className="text-slate-500 text-xs md:text-sm">
+              <p className="text-slate-500 text-sm md:text-base">
                 {t("deposit.form.required_note")}
               </p>
             </div>
 
-            {isSuccess ? (
-              <div className="text-center py-12 space-y-4 animate-in fade-in zoom-in">
-                <div className="w-16 h-16 bg-linear-to-br from-green-100 to-green-200 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <Home className="h-8 w-8" />
-                </div>
-                <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-green-600 to-emerald-600">
-                  {t("deposit.success.title")}
-                </h3>
-                <p className="text-slate-600">{t("deposit.success.message")}</p>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsSuccess(false)}
-                  className="mt-4 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                >
-                  {t("deposit.success.more_info_btn")}
-                </Button>
+            {/* Trust Badges */}
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-full text-xs font-semibold text-emerald-700">
+                <CheckCircle className="w-3.5 h-3.5" />
+                {t("common.no_cost")}
               </div>
-            ) : (
-              <DepositForm onSuccess={() => setIsSuccess(true)} />
-            )}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 rounded-full text-xs font-semibold text-blue-700">
+                <CheckCircle className="w-3.5 h-3.5" />
+                {t("common.professional_team")}
+              </div>
+            </div>
+
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  size="lg"
+                  className="w-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-7 text-lg font-bold rounded-2xl shadow-lg shadow-blue-200/50 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all group"
+                >
+                  {t("deposit.form.submit_btn")}
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent
+                overlayClassName="z-150"
+                className="fixed z-150 w-full gap-0 p-0 border-0 duration-500 ease-in-out transition-all
+                data-[state=open]:animate-in data-[state=closed]:animate-out
+                data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
+
+                // Mobile: Bottom Sheet
+                bg-white
+                bottom-0 top-auto left-0 right-0 translate-x-0 translate-y-0
+                rounded-t-[28px] rounded-b-none
+                h-auto max-h-[90dvh] max-w-none
+                data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
+                data-[state=closed]:scale-95 data-[state=open]:scale-100 
+                shadow-2xl
+
+                // Desktop/Tablet: Centered Dialog
+                sm:bottom-auto sm:top-[40%] lg:top-[50%] sm:left-[50%]
+                sm:translate-x-[-50%] sm:translate-y-[-50%]
+                sm:h-auto sm:max-h-[80vh] lg:max-h-[90vh]
+                sm:rounded-2xl sm:shadow-2xl
+                sm:max-w-[680px] lg:max-w-[800px]
+                sm:data-[state=closed]:slide-out-to-bottom-4 sm:data-[state=open]:slide-in-from-bottom-4
+                sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:zoom-out-95
+                sm:data-[state=closed]:scale-95 sm:data-[state=open]:scale-100
+
+                // Close Button
+                [&>button]:top-4 [&>button]:right-4 [&>button]:z-20
+                [&>button]:text-slate-400 [&>button]:hover:text-slate-600
+                sm:[&>button]:text-white/60 sm:[&>button]:hover:text-white
+              "
+              >
+                {isSuccess ? (
+                  <div className="text-center py-20 px-6 space-y-8 animate-in fade-in zoom-in duration-500">
+                    <div className="w-24 h-24 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                      <CheckCircle className="h-12 w-12" />
+                    </div>
+                    <div className="space-y-3">
+                      <h3 className="text-3xl font-bold text-slate-900">
+                        {t("deposit.success.title")}
+                      </h3>
+                      <p className="text-slate-500 text-lg max-w-sm mx-auto">
+                        {t("deposit.success.message")}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsSuccess(false);
+                        setIsOpen(false);
+                      }}
+                      className="mt-6 border-slate-200 hover:bg-slate-50 rounded-2xl px-12 py-7 text-base font-bold transition-all hover:scale-105 active:scale-95 shadow-sm"
+                    >
+                      {t("common.close")}
+                    </Button>
+                  </div>
+                ) : (
+                  <DepositWizard
+                    onSuccess={() => setIsSuccess(true)}
+                    onCancel={() => setIsOpen(false)}
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>
     </section>
-  );
-}
-
-import {
-  Building2,
-  Home as HomeIcon,
-  Trees,
-  Briefcase,
-  Factory,
-  Layout,
-  Check,
-} from "lucide-react";
-
-function DepositForm({ onSuccess }: { onSuccess: () => void }) {
-  const { t } = useLanguage();
-  const [isLoading, setIsLoading] = useState(false);
-  const form = useForm<DepositLeadInput>({
-    resolver: zodResolver(depositLeadSchema),
-    defaultValues: {
-      fullName: "",
-      phone: "",
-      lineId: "",
-      details: "",
-      propertyType: undefined,
-    },
-  });
-
-  async function onSubmit(values: DepositLeadInput) {
-    setIsLoading(true);
-    try {
-      const res = await createDepositLeadAction(values);
-      if (res.success) {
-        toast.success(t("deposit.success.message"));
-        form.reset();
-        onSuccess();
-      } else {
-        toast.error(res.message || "Error occurred");
-      }
-    } catch {
-      toast.error("Connection error");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  const propertyOptions = [
-    {
-      value: "CONDO",
-      label: t("home.property_types.condo"),
-      icon: Building2,
-      activeColor: "border-blue-500 bg-blue-50 ring-blue-500/20",
-      iconColor: "bg-blue-500",
-      textColor: "text-blue-700",
-      checkColor: "bg-blue-500",
-    },
-    {
-      value: "HOUSE",
-      label: t("home.property_types.house"),
-      icon: HomeIcon,
-      activeColor: "border-emerald-500 bg-emerald-50 ring-emerald-500/20",
-      iconColor: "bg-emerald-500",
-      textColor: "text-emerald-700",
-      checkColor: "bg-emerald-500",
-    },
-    {
-      value: "TOWNHOME",
-      label: t("home.property_types.townhome"),
-      icon: Layout,
-      activeColor: "border-indigo-500 bg-indigo-50 ring-indigo-500/20",
-      iconColor: "bg-indigo-500",
-      textColor: "text-indigo-700",
-      checkColor: "bg-indigo-500",
-    },
-    {
-      value: "LAND",
-      label: t("home.property_types.land"),
-      icon: Trees,
-      activeColor: "border-amber-500 bg-amber-50 ring-amber-500/20",
-      iconColor: "bg-amber-500",
-      textColor: "text-amber-700",
-      checkColor: "bg-amber-500",
-    },
-    {
-      value: "COMMERCIAL",
-      label: t("home.property_types.office"),
-      icon: Briefcase,
-      activeColor: "border-violet-500 bg-violet-50 ring-violet-500/20",
-      iconColor: "bg-violet-500",
-      textColor: "text-violet-700",
-      checkColor: "bg-violet-500",
-    },
-    {
-      value: "FACTORY",
-      label: t("home.property_types.warehouse"),
-      icon: Factory,
-      activeColor: "border-slate-500 bg-slate-50 ring-slate-500/20",
-      iconColor: "bg-slate-500",
-      textColor: "text-slate-700",
-      checkColor: "bg-slate-500",
-    },
-  ];
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="fullName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-slate-800 font-bold mb-1.5 flex items-center gap-1.5">
-                {t("deposit.form.name_label")}
-                <span className="text-rose-500 font-bold">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder={t("deposit.form.name_placeholder")}
-                  className="h-12 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage className="font-medium" />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-slate-800 font-bold mb-1.5 flex items-center gap-1.5">
-                  {t("deposit.form.phone_label")}
-                  <span className="text-rose-500 font-bold">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="08xxxxxxxx"
-                    maxLength={10}
-                    className="h-12 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
-                    {...field}
-                    onChange={(e) => {
-                      const value = e.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 10);
-                      field.onChange(value);
-                    }}
-                  />
-                </FormControl>
-                <FormMessage className="font-medium" />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="lineId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-slate-800 font-bold mb-1.5">
-                  {t("deposit.form.line_label")}
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={t("deposit.form.line_placeholder")}
-                    className="h-12 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage className="font-medium" />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="propertyType"
-          render={({ field }) => (
-            <FormItem className="space-y-3">
-              <label className="text-slate-800 font-bold flex items-center gap-1.5">
-                {t("deposit.form.type_label")}
-                <span className="text-rose-500 font-bold">*</span>
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {propertyOptions.map((option) => {
-                  const isSelected = field.value === option.value;
-                  const Icon = option.icon;
-
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => field.onChange(option.value)}
-                      className={`
-                        relative flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-300 group
-                        ${
-                          isSelected
-                            ? `border-transparent ${option.activeColor} shadow-md ring-2`
-                            : "border-slate-100 bg-slate-50/30 hover:border-slate-300 hover:bg-white text-slate-500 hover:text-slate-700"
-                        }
-                      `}
-                    >
-                      <div
-                        className={`
-                        mb-2 p-2 rounded-lg transition-colors
-                        ${
-                          isSelected
-                            ? `${option.iconColor} text-white`
-                            : "bg-white text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-600"
-                        }
-                      `}
-                      >
-                        <Icon size={20} strokeWidth={isSelected ? 3 : 2} />
-                      </div>
-                      <span
-                        className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-center ${isSelected ? option.textColor : ""}`}
-                      >
-                        {option.label}
-                      </span>
-                      {isSelected && (
-                        <div
-                          className={`absolute top-1.5 right-1.5 ${option.checkColor} rounded-full p-0.5 shadow-sm overflow-hidden`}
-                        >
-                          <Check className="text-white w-2 h-2 stroke-[4px]" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              <FormMessage className="font-medium " />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="details"
-          render={({ field }) => {
-            const currentType = form.watch("propertyType");
-            return (
-              <FormItem>
-                <FormLabel className="text-slate-800 font-bold mb-1.5">
-                  {t("deposit.form.details_label")}
-                </FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder={
-                      currentType === "COMMERCIAL"
-                        ? t("deposit.form.details_placeholder_office")
-                        : t("deposit.form.details_placeholder")
-                    }
-                    className="min-h-[100px] resize-none border-slate-200  bg-white! focus:bg-white! focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl shadow-sm"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage className="font-medium" />
-              </FormItem>
-            );
-          }}
-        />
-
-        <div className="pt-2">
-          <Button
-            type="submit"
-            className="w-full bg-linear-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 py-6 text-base font-bold rounded-xl shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)] hover:shadow-[0_15px_25px_-10px_rgba(37,99,235,0.5)] active:scale-[0.98] transition-all group"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            ) : (
-              <div className="flex items-center">
-                <span className="text-white">
-                  {t("deposit.form.submit_btn")}
-                </span>
-                <Send className="ml-2 h-4 w-4 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform text-white" />
-              </div>
-            )}
-          </Button>
-        </div>
-      </form>
-    </Form>
   );
 }

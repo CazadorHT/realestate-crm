@@ -71,14 +71,14 @@ export function PropertyTypeCard({
           </div>
 
           {/* Title */}
-          <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-2 min-h-[48px] flex items-center justify-center">
+          <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-2 line-clamp-2 leading-snug text-center h-12">
             {title}
           </h3>
           {/* <p className="text-xs font-medium text-blue-600 mb-3 uppercase tracking-wider">
             {count} {t("property_listing.found_suffix")}
           </p> */}
           {/* Description */}
-          <p className="text-xs md:text-sm text-slate-500 mb-4 min-h-[56px] leading-relaxed">
+          <p className="text-xs md:text-sm text-slate-500 mb-4 leading-relaxed line-clamp-2 text-center h-11">
             {description}
           </p>
 
@@ -224,7 +224,7 @@ export function PropertyTypeGrid({
         </div>
 
         {/* PropertyTypeCard wrapper - Mobile: horizontal scroll, Desktop: grid */}
-        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4 md:gap-6 overflow-x-auto pb-6  snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-2 md:gap-4 overflow-x-auto pb-6  snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {isLoading
             ? Array.from({ length: 8 }).map((_, idx) => (
                 <div

@@ -21,6 +21,7 @@ interface Message {
     rental_price: number | null;
     original_price: number | null;
     original_rental_price: number | null;
+    listing_type?: string | null;
     slug: string;
   }>;
 }
@@ -80,6 +81,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
     try {
       // Call Server Action
       const response = await chatWithAI(historyRef.current, userText);
+      console.log("Chatbot response:", response);
 
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -97,6 +99,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
         { role: "model", parts: [{ text: response.text }] },
       );
     } catch (error) {
+      console.error("Chatbot Error in UI:", error);
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "bot",
@@ -114,11 +117,11 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
   return (
     <div
       className={cn(
-        "fixed z-50 flex flex-col overflow-hidden transition-all duration-300 animate-in slide-in-from-bottom-5 fade-in bg-white shadow-2xl",
+        "fixed z-200 flex flex-col overflow-hidden transition-all duration-300 animate-in slide-in-from-bottom-5 fade-in bg-white shadow-2xl",
         // Mobile styles: Floating widget
-        "fixed bottom-20 right-4 left-4 h-[600px] max-h-[70vh] rounded-2xl border border-slate-200 shadow-2xl w-auto",
+        "bottom-20 right-4 left-4 h-[600px] max-h-[70vh] rounded-2xl border border-slate-200 shadow-2xl w-auto",
         // Desktop styles: Fixed size widget
-        "md:w-[380px] md:h-[600px] md:max-h-[80vh] md:rounded-2xl md:bottom-24 md:right-4 md:inset-auto md:border md:border-slate-200",
+        "md:bottom-24 md:right-4 md:left-auto md:top-auto md:w-[380px] md:h-[600px] md:max-h-[80vh] md:rounded-2xl md:border md:border-slate-200",
         isOpen
           ? "opacity-100 translate-y-0 pointer-events-auto"
           : "opacity-0 translate-y-10 pointer-events-none",
@@ -233,11 +236,16 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                               </span>
                             )}
                           <div className="text-blue-600 font-bold text-sm">
-                            {prop.price
-                              ? `฿${prop.price.toLocaleString()}`
-                              : prop.rental_price
-                                ? `฿${prop.rental_price.toLocaleString()}/ด.`
-                                : "ราคาโทรสอบถาม"}
+                            {prop.listing_type === "RENT"
+                              ? prop.rental_price || prop.original_rental_price
+                                ? `฿${(prop.rental_price || prop.original_rental_price!).toLocaleString()}/ด.`
+                                : "ราคาโทรสอบถาม"
+                              : prop.price || prop.original_price
+                                ? `฿${(prop.price || prop.original_price!).toLocaleString()}`
+                                : prop.rental_price ||
+                                    prop.original_rental_price
+                                  ? `฿${(prop.rental_price || prop.original_rental_price!).toLocaleString()}/ด.`
+                                  : "ราคาโทรสอบถาม"}
                           </div>
                         </div>
                       </div>

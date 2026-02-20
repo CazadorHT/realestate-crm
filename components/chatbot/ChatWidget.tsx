@@ -14,7 +14,7 @@ export function ChatWidget() {
     <>
       <div
         className={cn(
-          "fixed bottom-28 md:bottom-26 right-4 md:right-6 z-50 flex items-center gap-4 transition-all duration-300",
+          "fixed bottom-28 md:bottom-24 right-4 md:right-6 z-200 flex items-center gap-4 transition-all duration-300",
           isOpen ? "translate-y-0" : "translate-y-0",
         )}
       >
