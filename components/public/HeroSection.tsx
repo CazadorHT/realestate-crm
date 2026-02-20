@@ -62,7 +62,7 @@ export function HeroSection() {
         quality={90}
       />
       {/* Gradient Overlay สำหรับความคมของ text */}
-      <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/70" />
+      <div className="absolute inset-0 bg-linear-to-b from-black/20 via-black/50 to-black/50" />
 
       {/* Optional Vignette Effect */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />

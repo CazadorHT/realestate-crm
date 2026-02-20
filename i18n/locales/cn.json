@@ -95,6 +95,13 @@
     "confirm": "确认",
     "cancel": "取消",
     "are_you_sure": "您确定要执行此操作吗？",
+    "cookie_consent": {
+      "title": "我们使用 Cookie",
+      "description": "本网站使用 Cookie 以提升您的使用体验并分析网站流量。您可以在我们的",
+      "privacy_policy": "隐私政策",
+      "decline": "拒绝",
+      "accept": "接受全部"
+    },
     "floating": {
       "chat_with_us": "与我们聊天",
       "line_chat": "通过 LINE 聊天",

@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Cookie } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false);
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     // Check if user has already made a choice
@@ -40,17 +42,15 @@ export function CookieConsent() {
           <div className="space-y-1">
             <h3 className="text-base font-semibold text-slate-900 flex items-center gap-2">
               <Cookie className="h-5 w-5 md:hidden text-blue-600" />
-              เราใช้คุกกี้ (Cookies)
+              {t("common.cookie_consent.title")}
             </h3>
             <p className="text-sm text-slate-600 leading-relaxed max-w-3xl">
-              เว็บไซต์นี้ใช้คุกกี้เพื่อวัตถุประสงค์ในการปรับปรุงประสบการณ์ของผู้ใช้ให้ดียิ่งขึ้น
-              และเพื่อวิเคราะห์การเข้าใช้งานเว็บไซต์
-              คุณสามารถศึกษารายละเอียดเพิ่มเติมได้ที่{" "}
+              {t("common.cookie_consent.description")}{" "}
               <Link
                 href="/privacy-policy"
                 className="text-blue-600 hover:underline font-medium"
               >
-                นโยบายความเป็นส่วนตัว
+                {t("common.cookie_consent.privacy_policy")}
               </Link>
             </p>
           </div>
@@ -62,13 +62,13 @@ export function CookieConsent() {
             onClick={handleDecline}
             className="flex-1 md:flex-none border-slate-300 hover:bg-slate-50 text-slate-600"
           >
-            ปฏิเสธ
+            {t("common.cookie_consent.decline")}
           </Button>
           <Button
             onClick={handleAccept}
             className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all"
           >
-            ยอมรับทั้งหมด
+            {t("common.cookie_consent.accept")}
           </Button>
         </div>
       </div>

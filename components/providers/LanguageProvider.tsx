@@ -54,6 +54,13 @@ export function LanguageProvider({
       cookieLang !== language
     ) {
       setLanguageState(cookieLang);
+    } else if (!cookieLang) {
+      // Auto-detect browser language if no setting exists
+      const browserLang = navigator.language.split("-")[0];
+      const supportedLangs: Language[] = ["th", "en", "cn"];
+      if (supportedLangs.includes(browserLang as Language)) {
+        setLanguage(browserLang as Language);
+      }
     }
   }, [language]);
 
