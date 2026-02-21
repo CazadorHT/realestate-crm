@@ -42,6 +42,40 @@ export async function uploadPropertyImageAction(formData: FormData) {
       throw new Error(validation.error || "Invalid image file");
     }
 
+    // --- Server-side Optimization with Sharp ---
+    let processedBuffer: Buffer;
+    let fileName: string;
+    let finalFileType = "image/webp";
+
+    try {
+      const { default: sharp } = await import("sharp");
+      const arrayBuffer = await file.arrayBuffer();
+      const inputBuffer = Buffer.from(arrayBuffer);
+
+      // Resize and convert to WebP
+      processedBuffer = await sharp(inputBuffer)
+        .resize({
+          width: 1920,
+          withoutEnlargement: true,
+          fit: "inside",
+        })
+        .webp({ quality: 80 })
+        .toBuffer();
+
+      fileName = `${randomUUID()}.webp`;
+    } catch (sharpError) {
+      console.error(
+        "Sharp optimization failed, falling back to original:",
+        sharpError,
+      );
+      // Fallback to original if sharp fails
+      const arrayBuffer = await file.arrayBuffer();
+      processedBuffer = Buffer.from(arrayBuffer);
+      const ext = MIME_TO_EXT[file.type] ?? "jpg";
+      fileName = `${randomUUID()}.${ext}`;
+      finalFileType = file.type;
+    }
+
     // 3) Simple per-user rate limit based on property_image_uploads
     const cutoffIso = new Date(
       Date.now() - UPLOAD_RATE_WINDOW_MS,
@@ -57,13 +91,15 @@ export async function uploadPropertyImageAction(formData: FormData) {
       throw new Error("Too many uploads. Please wait a moment and try again.");
     }
 
-    const ext = MIME_TO_EXT[file.type] ?? "jpg";
-    const fileName = `${randomUUID()}.${ext}`;
     const path = `properties/${user.id}/${sessionId}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from(PROPERTY_IMAGES_BUCKET)
-      .upload(path, file, { cacheControl: "3600", upsert: false });
+      .upload(path, processedBuffer, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: finalFileType,
+      });
 
     if (uploadError) throw uploadError;
 

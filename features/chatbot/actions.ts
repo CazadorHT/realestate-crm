@@ -175,11 +175,16 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
         const isServerBusy = err.status === 503 || err.message?.includes("503");
 
         if ((isRateLimit || isServerBusy) && retryCount < maxRetries) {
+          // Add jitter to avoid synchronized retries
+          const jitter = Math.random() * 1000;
+          const totalDelay = delay + jitter;
+
           console.warn(
-            `Gemini Error ${err.status}. Retrying in ${delay}ms... (Attempt ${retryCount + 1}/${maxRetries})`,
+            `Gemini Error ${err.status}. Retrying in ${Math.round(totalDelay)}ms... (Attempt ${retryCount + 1}/${maxRetries})`,
           );
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          delay *= 2; // Exponential backoff: 1s -> 2s -> 4s -> 8s
+
+          await new Promise((resolve) => setTimeout(resolve, totalDelay));
+          delay *= 2; // Exponential backoff
           retryCount++;
         } else {
           if (isRateLimit) {
