@@ -291,7 +291,7 @@ export function renderMessageField(
       control={form.control}
       name="details"
       render={({ field }) => (
-        <FormItem className={isMobile ? "space-y-3 mb-2" : "space-y-2"}>
+        <FormItem className={isMobile ? "space-y-3" : "space-y-2"}>
           <FormLabel
             className={cn(
               "text-slate-800 font-semibold",
@@ -306,7 +306,7 @@ export function renderMessageField(
               className={cn(
                 "border-slate-100 rounded-xl transition-all",
                 isMobile
-                  ? "min-h-[120px] p-4 text-base bg-slate-50"
+                  ? "min-h-[80px] p-4 text-base bg-slate-50"
                   : "min-h-[80px] p-3 text-sm bg-white",
               )}
               {...field}
