@@ -35,87 +35,113 @@ export function DepositMobileView({
 }) {
   const { t } = useLanguage();
 
-  const STEP_LABELS = [
-    t("property.contact_dialog.step1_label") || "ข้อมูลผู้ติดต่อ",
-    t("property.contact_dialog.step2_label") || "ช่องทางติดต่อ",
-    t("property.contact_dialog.step3_label") || "ข้อมูลอสังหาฯ",
+  const STEPS = [
+    {
+      id: 1,
+      label: t("property.contact_dialog.step1_label") || "ข้อมูลผู้ติดต่อ",
+    },
+    {
+      id: 2,
+      label: t("property.contact_dialog.step2_label") || "ช่องทางติดต่อ",
+    },
+    {
+      id: 3,
+      label: t("property.contact_dialog.step3_label") || "ข้อมูลอสังหาฯ",
+    },
   ];
 
   return (
     <div className="sm:hidden flex flex-col bg-white rounded-t-[28px]">
       {/* ── Mobile Header ── */}
-      <div className="flex flex-col items-center pt-2 pb-4">
+      <div className="bg-white rounded-t-[28px] flex flex-col items-center relative">
         {/* Pull Handle */}
-        <div className="w-10 h-1 bg-slate-200/80 rounded-full mb-5" />
+        <div className="w-10 h-1 bg-slate-200/80 rounded-full mt-3 mb-4" />
 
-        <div className="px-6 text-center mb-6">
-          <h2 className="text-xl font-bold text-slate-800 tracking-tight">
-            {t("deposit.form.submit_btn") || "ส่งข้อมูลฝากทรัพย์สิน"}
+        {/* Title */}
+        <div className="px-6 text-center mb-5">
+          <h2 className="text-xl font-bold text-slate-800 tracking-tight leading-tight">
+            {t("deposit.dialog.title")}
           </h2>
-          <p className="text-xs text-slate-400 mt-1 font-medium">
-            ⚡️ {t("deposit.subtitle") || "ฝากทรัพย์สินกับเรา"}
+          <p className="text-xs text-slate-400 line-clamp-1 mt-1 font-normal">
+            ⚡ {t("deposit.dialog.subtitle")}
           </p>
         </div>
 
         {/* Step Indicator */}
-        <div className="w-full px-6">
-          <div className="flex items-center justify-between relative max-w-xs mx-auto">
-            <div className="absolute top-4 left-[10%] right-[10%] h-[2px] bg-slate-100 z-0" />
+        <div className="w-full px-6 pb-4">
+          <div className="flex items-center justify-between relative">
+            {/* Background Line */}
+            <div className="absolute top-4 left-[16%] right-[16%] h-[2px] bg-slate-100 z-0" />
+
+            {/* Progress Line */}
             <div
-              className="absolute top-4 left-[10%] h-[2px] bg-blue-500 z-0 transition-all duration-500 ease-out"
+              className="absolute top-4 left-[16%] h-[2px] bg-blue-500 z-0 transition-all duration-500 ease-out"
               style={{
                 width:
-                  currentStep === 1 ? "0%" : currentStep === 2 ? "40%" : "80%",
+                  currentStep === 1 ? "0%" : currentStep === 2 ? "34%" : "68%",
               }}
             />
 
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex flex-col items-center z-10 flex-1">
-                <StepIcon stepNum={s} currentStep={currentStep} />
+            {STEPS.map((step) => (
+              <div
+                key={step.id}
+                className="flex flex-col items-center z-10 flex-1"
+              >
+                <StepIcon stepNum={step.id} currentStep={currentStep} />
                 <span
-                  className={`text-[10px] mt-2 font-bold transition-all ${
-                    currentStep === s
-                      ? "text-blue-600 scale-105"
-                      : "text-slate-400 font-medium"
+                  className={`text-[10px] mt-1.5 font-medium transition-colors duration-300 ${
+                    currentStep === step.id
+                      ? "text-blue-600"
+                      : currentStep > step.id
+                        ? "text-blue-500"
+                        : "text-slate-400"
                   }`}
                 >
-                  {STEP_LABELS[s - 1]}
+                  {step.label}
                 </span>
               </div>
             ))}
           </div>
         </div>
+
+        <div className="w-full h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
       </div>
 
-      <div className="w-full h-px bg-slate-100/60" />
-
-      {/* ── Content Area ── */}
-      <div className="px-6">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
-          <div className="space-y-6 pt-6 pb-4">
-            {currentStep === 1 && (
-              <div className="animate-in fade-in slide-in-from-right-8 duration-500">
-                {renderNameField(form, true)}
-              </div>
-            )}
-
-            {currentStep === 2 && (
-              <div className="animate-in fade-in slide-in-from-right-8 duration-500 space-y-5">
-                {renderPhoneField(form, true)}
-                {renderLineField(form, true)}
-              </div>
-            )}
-
-            {currentStep === 3 && (
-              <div className="animate-in fade-in slide-in-from-right-8 duration-500 space-y-6 ">
-                {renderPropertyTypeField(form, true)}
-                {renderMessageField(form, true)}
-              </div>
-            )}
+      {/* ── Mobile Form Content Area (Scrollable container matches ContactAgentDialog) ── */}
+      <div className="sm:hidden p-6 flex flex-col overflow-y-auto">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-5 flex-1 flex flex-col relative"
+        >
+          {/* Step 1: Contact Info */}
+          <div
+            className={`transition-all duration-500 ease-in-out ${currentStep === 1 ? "block animate-in fade-in slide-in-from-right-8" : "hidden"}`}
+          >
+            {renderNameField(form, true)}
           </div>
 
-          {/* ── Mobile Footer ── */}
-          <div className="pt-3 pb-[calc(env(safe-area-inset-bottom,24px)+20px)] bg-white border-t border-slate-100/80 -mx-6 px-6">
+          {/* Step 2: More Contact Info */}
+          <div
+            className={`transition-all duration-500 ease-in-out ${currentStep === 2 ? "block animate-in fade-in slide-in-from-right-8" : "hidden"}`}
+          >
+            <div className="grid grid-cols-1 gap-5">
+              {renderPhoneField(form, true)}
+              {renderLineField(form, true)}
+            </div>
+          </div>
+
+          {/* Step 3: Message */}
+          <div
+            className={`transition-all duration-500 ease-in-out ${currentStep === 3 ? "block animate-in fade-in slide-in-from-right-8" : "hidden"}`}
+          >
+            <div className="space-y-6">
+              {renderPropertyTypeField(form, true)}
+              {renderMessageField(form, true)}
+            </div>
+          </div>
+
+          {/* ── Mobile Footer (Sticky at bottom within the scrollable area) ── */}
+          <div className="mt-auto sticky bottom-0 -mx-6 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,24px)+20px)] bg-white/95 backdrop-blur-md z-10 border-t border-slate-100/80">
             <p className="text-[10px] text-slate-400 text-center mb-3 font-medium tracking-wide">
               {t("property.contact_dialog.step_of", {
                 current: currentStep,
@@ -123,12 +149,12 @@ export function DepositMobileView({
               })}
             </p>
 
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => (currentStep === 1 ? onCancel() : prevStep())}
-                className="flex-1 h-13 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-500 hover:bg-slate-100 hover:text-slate-700 font-semibold text-base transition-all active:scale-[0.97]"
+                className="h-13 rounded-2xl bg-slate-50 border border-slate-200/80 text-slate-500 hover:bg-slate-100 hover:text-slate-700 font-semibold text-base transition-all active:scale-[0.97]"
               >
                 {currentStep === 1 ? (
                   <>
@@ -147,15 +173,13 @@ export function DepositMobileView({
                 <Button
                   type="button"
                   onClick={nextStep}
-                  className="flex-[1.5] h-13 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-base shadow-lg shadow-blue-500/25 active:scale-[0.97] transition-all"
+                  className="h-13 rounded-2xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-base shadow-lg shadow-blue-500/25 active:scale-[0.97] transition-all"
                 >
                   {t("common.next") || "ถัดไป"}
                   <ChevronRight className="w-4 h-4 ml-1.5" />
                 </Button>
               ) : (
-                <div className="flex-[1.5]">
-                  <SubmitButton isLoading={isLoading} />
-                </div>
+                <SubmitButton isLoading={isLoading} />
               )}
             </div>
           </div>
