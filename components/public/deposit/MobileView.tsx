@@ -51,13 +51,11 @@ export function DepositMobileView({
   ];
 
   return (
-    <div className="sm:hidden flex flex-col bg-white rounded-t-[28px]">
+    <div className="sm:hidden flex flex-col bg-white rounded-t-[28px] h-full max-h-[85dvh]">
       {/* ── Mobile Header ── */}
-      <div className="bg-white rounded-t-[28px] flex flex-col items-center relative">
-        {/* Pull Handle */}
+      <div className="shrink-0 bg-white rounded-t-[28px] flex flex-col items-center relative">
         <div className="w-10 h-1 bg-slate-200/80 rounded-full mt-3 mb-4" />
 
-        {/* Title */}
         <div className="px-6 text-center mb-5">
           <h2 className="text-xl font-bold text-slate-800 tracking-tight leading-tight">
             {t("deposit.dialog.title")}
@@ -107,41 +105,53 @@ export function DepositMobileView({
         <div className="w-full h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
       </div>
 
-      {/* ── Mobile Form Content Area (Scrollable container matches ContactAgentDialog) ── */}
-      <div className="sm:hidden p-6 flex flex-col overflow-y-auto">
+      {/* ── Mobile Form Content Area ── */}
+      <div className="flex-1 overflow-y-auto p-6 min-h-0">
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-5 flex-1 flex flex-col relative"
+          className="space-y-5 flex flex-col h-full"
         >
-          {/* Step 1: Contact Info */}
-          <div
-            className={`transition-all duration-500 ease-in-out ${currentStep === 1 ? "block animate-in fade-in slide-in-from-right-8" : "hidden"}`}
-          >
-            {renderNameField(form, true)}
-          </div>
-
-          {/* Step 2: More Contact Info */}
-          <div
-            className={`transition-all duration-500 ease-in-out ${currentStep === 2 ? "block animate-in fade-in slide-in-from-right-8" : "hidden"}`}
-          >
-            <div className="grid grid-cols-1 gap-5">
-              {renderPhoneField(form, true)}
-              {renderLineField(form, true)}
+          <div className="flex-1 space-y-5">
+            <div
+              className={
+                currentStep === 1
+                  ? "block animate-in fade-in slide-in-from-right-8"
+                  : "hidden"
+              }
+            >
+              {renderNameField(form, true)}
             </div>
-          </div>
-
-          {/* Step 3: Message */}
-          <div
-            className={`transition-all duration-500 ease-in-out ${currentStep === 3 ? "block animate-in fade-in slide-in-from-right-8" : "hidden"}`}
-          >
-            <div className="space-y-6">
-              {renderPropertyTypeField(form, true)}
-              {renderMessageField(form, true)}
+            <div
+              className={
+                currentStep === 2
+                  ? "block animate-in fade-in slide-in-from-right-8"
+                  : "hidden"
+              }
+            >
+              <div className="grid grid-cols-1 gap-5">
+                {renderPhoneField(form, true)}
+                {renderLineField(form, true)}
+              </div>
             </div>
+            <div
+              className={
+                currentStep === 3
+                  ? "block animate-in fade-in slide-in-from-right-8"
+                  : "hidden"
+              }
+            >
+              <div className="space-y-6">
+                {renderPropertyTypeField(form, true)}
+                {renderMessageField(form, true)}
+              </div>
+            </div>
+
+            {/* Space at bottom for scrolling */}
+            <div className="h-10" />
           </div>
 
-          {/* ── Mobile Footer (Sticky at bottom within the scrollable area) ── */}
-          <div className="mt-auto sticky bottom-0 -mx-6 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,24px)+20px)] bg-white/95 backdrop-blur-md z-10 border-t border-slate-100/80">
+          {/* ── Mobile Footer ── */}
+          <div className="mt-auto shrink-0 sticky bottom-0 -mx-6 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,24px)+20px)] bg-white/95 backdrop-blur-md z-10 border-t border-slate-100/80">
             <p className="text-[10px] text-slate-400 text-center mb-3 font-medium tracking-wide">
               {t("property.contact_dialog.step_of", {
                 current: currentStep,

@@ -46,11 +46,10 @@ export function DepositDesktopView({
           {/* Title */}
           <div className="space-y-3">
             <DialogTitle className="text-2xl font-bold tracking-tight leading-tight">
-              {t("deposit.form.submit_btn") || "ฝากทรัพย์สิน"}
+              {t("deposit.dialog.title")}
             </DialogTitle>
             <p className="text-blue-100/70 text-sm leading-relaxed">
-              {t("deposit.description") ||
-                "ฝากทรัพย์สินของคุณกับทีมงานมืออาชีพ รวดเร็ว มั่นใจ และไม่มีค่าใช้จ่าย"}
+              {t("deposit.dialog.subtitle")}
             </p>
           </div>
 

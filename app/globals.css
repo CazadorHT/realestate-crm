@@ -357,3 +357,8 @@
     @apply text-slate-900! opacity-100!;
   }
 }
+
+/* Hide chatbot when any dialog is open */
+body:has([role="dialog"][data-state="open"]) .chatbot-container {
+  display: none !important;
+}

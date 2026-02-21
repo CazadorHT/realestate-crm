@@ -117,7 +117,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
   return (
     <div
       className={cn(
-        "fixed z-200 flex flex-col overflow-hidden transition-all duration-300 animate-in slide-in-from-bottom-5 fade-in bg-white shadow-2xl",
+        "fixed z-200 flex flex-col overflow-hidden transition-all duration-300 animate-in slide-in-from-bottom-5 fade-in bg-white shadow-2xl chatbot-container",
         // Mobile styles: Floating widget
         "bottom-20 right-4 left-4 h-[600px] max-h-[70vh] rounded-2xl border border-slate-200 shadow-2xl w-auto",
         // Desktop styles: Fixed size widget

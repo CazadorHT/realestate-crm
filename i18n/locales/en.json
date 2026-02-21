@@ -322,6 +322,10 @@
   "deposit": {
     "title": "Deposit Property Service",
     "subtitle": "Sell or Rent your House, Condo, Office",
+    "dialog": {
+      "title": "Submit Property Details",
+      "subtitle": "Sell or Rent House, Condo, Office"
+    },
     "description": "Free! No upfront costs. We have the customer base and marketing team to get results fast.",
     "step1": "1. Fill basic property info",
     "step2": "2. Staff contacts back to verify",
