@@ -37,6 +37,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
+import { useState } from "react";
+import { TransferLeadsDialog } from "@/features/leads/components/TransferLeadsDialog";
 
 export function LeadsTable({ leads }: { leads: LeadRow[] }) {
   const allIds = useMemo(() => leads.map((l) => l.id), [leads]);
@@ -50,6 +52,8 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
     selectedCount,
     selectedIds,
   } = useTableSelection(allIds);
+
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
 
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
@@ -69,7 +73,17 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
         onClear={clearSelection}
         onDelete={handleBulkDelete}
         onExport={() => exportLeadsAction(Array.from(selectedIds))}
+        onTransfer={() => setIsTransferDialogOpen(true)}
         entityName="ลีด"
+      />
+
+      <TransferLeadsDialog
+        isOpen={isTransferDialogOpen}
+        onClose={() => setIsTransferDialogOpen(false)}
+        selectedIds={Array.from(selectedIds)}
+        onSuccess={() => {
+          clearSelection();
+        }}
       />
 
       <div className="rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm">

@@ -6,18 +6,27 @@ import { revalidatePath } from "next/cache";
 export type SiteSettingKey =
   | "smart_match_wizard_enabled"
   | "chatbot_enabled"
-  | "floating_contact_enabled";
+  | "floating_contact_enabled"
+  | "isolation_properties_enabled"
+  | "isolation_leads_enabled"
+  | "isolation_deals_enabled";
 
 export interface SiteSettings {
   smart_match_wizard_enabled: boolean;
   chatbot_enabled: boolean;
   floating_contact_enabled: boolean;
+  isolation_properties_enabled: boolean;
+  isolation_leads_enabled: boolean;
+  isolation_deals_enabled: boolean;
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
   smart_match_wizard_enabled: true,
   chatbot_enabled: true,
   floating_contact_enabled: true,
+  isolation_properties_enabled: false,
+  isolation_leads_enabled: false,
+  isolation_deals_enabled: false,
 };
 
 /**
@@ -41,6 +50,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       const key = row.key as SiteSettingKey;
       if (key in settings) {
         // Value is stored as JSONB, parse boolean
+        // Handle cases where it might be a string "true" or a boolean true
         settings[key] = row.value === true || row.value === "true";
       }
     }

@@ -21,13 +21,33 @@
   },
   {
     "schemaname": "public",
-    "tablename": "audit_logs",
-    "policyname": "audit_logs_insert_own",
+    "tablename": "ai_usage_logs",
+    "policyname": "Allow authenticated users to insert logs",
     "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
+    "roles": "{public}",
     "cmd": "INSERT",
     "qual": null,
-    "with_check": "(auth.uid() = user_id)"
+    "with_check": "(auth.role() = 'authenticated'::text)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "ai_usage_logs",
+    "policyname": "Allow admins to view all logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'ADMIN'::user_role))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "ai_usage_logs",
+    "policyname": "Allow users to view their own logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
   },
   {
     "schemaname": "public",
@@ -41,12 +61,52 @@
   },
   {
     "schemaname": "public",
-    "tablename": "deals",
-    "policyname": "deals_delete_auth",
+    "tablename": "audit_logs",
+    "policyname": "audit_logs_insert_own",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "DELETE",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "blog_categories",
+    "policyname": "Authenticated users can manage categories",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "blog_categories",
+    "policyname": "Public categories are viewable by everyone",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
     "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "blog_posts",
+    "policyname": "Authenticated users can manage posts",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "blog_posts",
+    "policyname": "Public can view published posts",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(is_published = true)",
     "with_check": null
   },
   {
@@ -72,6 +132,26 @@
   {
     "schemaname": "public",
     "tablename": "deals",
+    "policyname": "Deals Enterprise Access",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(is_admin() OR (is_staff() AND ((NOT get_isolation_setting('isolation_deals_enabled'::text)) OR (created_by = auth.uid()) OR is_manager_of(created_by))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "deals",
+    "policyname": "deals_delete_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "DELETE",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "deals",
     "policyname": "deals_update_auth",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
@@ -82,10 +162,20 @@
   {
     "schemaname": "public",
     "tablename": "documents",
-    "policyname": "documents_delete_auth",
+    "policyname": "documents_update_auth",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "DELETE",
+    "cmd": "UPDATE",
+    "qual": "true",
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "documents",
+    "policyname": "documents_select_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
     "qual": "true",
     "with_check": null
   },
@@ -102,20 +192,40 @@
   {
     "schemaname": "public",
     "tablename": "documents",
-    "policyname": "documents_select_auth",
+    "policyname": "documents_delete_auth",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
+    "cmd": "DELETE",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "faqs",
+    "policyname": "Enable read access for all users",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
     "cmd": "SELECT",
     "qual": "true",
     "with_check": null
   },
   {
     "schemaname": "public",
-    "tablename": "documents",
-    "policyname": "documents_update_auth",
+    "tablename": "faqs",
+    "policyname": "Public FAQs are viewable by everyone",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "faqs",
+    "policyname": "Enable all access for authenticated users",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "UPDATE",
+    "cmd": "ALL",
     "qual": "true",
     "with_check": "true"
   },
@@ -132,6 +242,16 @@
   {
     "schemaname": "public",
     "tablename": "lead_activities",
+    "policyname": "lead_activities_select_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "lead_activities",
     "policyname": "lead_activities_insert_auth",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
@@ -141,12 +261,12 @@
   },
   {
     "schemaname": "public",
-    "tablename": "lead_activities",
-    "policyname": "lead_activities_select_auth",
+    "tablename": "leads",
+    "policyname": "Leads Enterprise Access",
     "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "SELECT",
-    "qual": "true",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(is_admin() OR (is_staff() AND ((NOT get_isolation_setting('isolation_leads_enabled'::text)) OR (created_by = auth.uid()) OR (assigned_to = auth.uid()) OR is_manager_of(created_by) OR is_manager_of(assigned_to))))",
     "with_check": null
   },
   {
@@ -158,16 +278,6 @@
     "cmd": "DELETE",
     "qual": "is_staff()",
     "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "leads",
-    "policyname": "Staff can insert leads",
-    "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "INSERT",
-    "qual": null,
-    "with_check": "is_staff()"
   },
   {
     "schemaname": "public",
@@ -191,6 +301,56 @@
   },
   {
     "schemaname": "public",
+    "tablename": "leads",
+    "policyname": "Staff can insert leads",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "is_staff()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "line_groups",
+    "policyname": "Enable read access for authenticated users",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "line_groups",
+    "policyname": "Enable all access for service_role",
+    "permissive": "PERMISSIVE",
+    "roles": "{service_role}",
+    "cmd": "ALL",
+    "qual": "true",
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "omni_messages",
+    "policyname": "Staff can view all omni messages",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role = 'ADMIN'::user_role) OR (profiles.role = 'AGENT'::user_role)))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "omni_messages",
+    "policyname": "System can insert omni messages",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
     "tablename": "owners",
     "policyname": "Staff can manage owners",
     "permissive": "PERMISSIVE",
@@ -198,6 +358,36 @@
     "cmd": "ALL",
     "qual": "is_staff()",
     "with_check": "is_staff()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "partners",
+    "policyname": "Enable all access for authenticated users",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "true",
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "partners",
+    "policyname": "Public Partners are viewable by everyone",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "partners",
+    "policyname": "Enable read access for all users",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
   },
   {
     "schemaname": "public",
@@ -221,32 +411,12 @@
   },
   {
     "schemaname": "public",
-    "tablename": "profiles",
-    "policyname": "Authenticated users can view all profiles",
+    "tablename": "popular_areas",
+    "policyname": "Staff can manage popular areas",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "SELECT",
-    "qual": "true",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "profiles",
-    "policyname": "profiles_admin_delete_agents",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "DELETE",
-    "qual": "((COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text) AND (role = 'AGENT'::user_role))",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "profiles",
-    "policyname": "profiles_admin_select_all",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "SELECT",
-    "qual": "(COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text)",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'AGENT'::user_role])))))",
     "with_check": null
   },
   {
@@ -281,10 +451,60 @@
   },
   {
     "schemaname": "public",
-    "tablename": "properties",
-    "policyname": "Public can read ACTIVE properties",
+    "tablename": "profiles",
+    "policyname": "profiles_admin_select_all",
     "permissive": "PERMISSIVE",
-    "roles": "{anon}",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_admin_delete_agents",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "((COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text) AND (role = 'AGENT'::user_role))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "Users can update own profile",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = id)",
+    "with_check": "(auth.uid() = id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "Authenticated users can view all profiles",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "properties",
+    "policyname": "Properties Enterprise Access",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(is_admin() OR (is_staff() AND ((NOT get_isolation_setting('isolation_properties_enabled'::text)) OR (created_by = auth.uid()) OR is_manager_of(created_by))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "properties",
+    "policyname": "Public view active properties",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
     "cmd": "SELECT",
     "qual": "(status = 'ACTIVE'::property_status)",
     "with_check": null
@@ -301,12 +521,12 @@
   },
   {
     "schemaname": "public",
-    "tablename": "property_agents",
-    "policyname": "Allow delete for authenticated users",
+    "tablename": "properties",
+    "policyname": "Public can read ACTIVE properties",
     "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "DELETE",
-    "qual": "true",
+    "roles": "{anon}",
+    "cmd": "SELECT",
+    "qual": "(status = 'ACTIVE'::property_status)",
     "with_check": null
   },
   {
@@ -326,6 +546,16 @@
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
     "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "property_agents",
+    "policyname": "Allow delete for authenticated users",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "DELETE",
     "qual": "true",
     "with_check": null
   },
@@ -352,6 +582,16 @@
   {
     "schemaname": "public",
     "tablename": "property_images",
+    "policyname": "Staff can manage property images",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "is_staff()",
+    "with_check": "is_staff()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "property_images",
     "policyname": "Public can read images for ACTIVE properties",
     "permissive": "PERMISSIVE",
     "roles": "{anon}",
@@ -361,13 +601,43 @@
   },
   {
     "schemaname": "public",
-    "tablename": "property_images",
-    "policyname": "Staff can manage property images",
+    "tablename": "property_syndication",
+    "policyname": "Enable all for authenticated users",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "rent_notification_rules",
+    "policyname": "Enable all access for authenticated users",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
     "cmd": "ALL",
-    "qual": "is_staff()",
-    "with_check": "is_staff()"
+    "qual": "true",
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "rental_contracts",
+    "policyname": "rental_contracts_update_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "true",
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "rental_contracts",
+    "policyname": "rental_contracts_select_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
   },
   {
     "schemaname": "public",
@@ -392,7 +662,27 @@
   {
     "schemaname": "public",
     "tablename": "rental_contracts",
-    "policyname": "rental_contracts_select_auth",
+    "policyname": "Contracts Enterprise Access",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(is_admin() OR (is_staff() AND ((NOT get_isolation_setting('isolation_deals_enabled'::text)) OR (created_by = auth.uid()) OR is_manager_of(created_by))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "site_settings",
+    "policyname": "Allow authenticated to update site_settings",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "true",
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "site_settings",
+    "policyname": "Allow authenticated to read site_settings",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
     "cmd": "SELECT",
@@ -401,13 +691,83 @@
   },
   {
     "schemaname": "public",
-    "tablename": "rental_contracts",
-    "policyname": "rental_contracts_update_auth",
+    "tablename": "smart_match_budget_ranges",
+    "policyname": "Allow public read for budget ranges",
     "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "UPDATE",
+    "roles": "{public}",
+    "cmd": "SELECT",
     "qual": "true",
-    "with_check": "true"
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "smart_match_budget_ranges",
+    "policyname": "Allow authenticated users to manage budget ranges",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "smart_match_office_sizes",
+    "policyname": "Allow authenticated users to manage office sizes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "smart_match_office_sizes",
+    "policyname": "Allow public read for office sizes",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "smart_match_property_types",
+    "policyname": "Allow authenticated users to manage property types",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "smart_match_property_types",
+    "policyname": "Allow public read for property types",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "smart_match_settings",
+    "policyname": "Allow authenticated users to manage settings",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "smart_match_settings",
+    "policyname": "Allow public read for settings",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
   },
   {
     "schemaname": "storage",
@@ -422,22 +782,32 @@
   {
     "schemaname": "storage",
     "tablename": "objects",
-    "policyname": "Allow authenticated users to update documents",
+    "policyname": "Public Access",
     "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "UPDATE",
-    "qual": "(bucket_id = 'documents'::text)",
-    "with_check": "(bucket_id = 'documents'::text)"
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(bucket_id = 'blog-images'::text)",
+    "with_check": null
   },
   {
     "schemaname": "storage",
     "tablename": "objects",
-    "policyname": "Allow authenticated users to upload documents",
+    "policyname": "Authenticated Users Upload",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
     "cmd": "INSERT",
     "qual": null,
-    "with_check": "(bucket_id = 'documents'::text)"
+    "with_check": "(bucket_id = 'blog-images'::text)"
+  },
+  {
+    "schemaname": "storage",
+    "tablename": "objects",
+    "policyname": "Staff can manage property images storage",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((bucket_id = 'property-images'::text) AND is_staff())",
+    "with_check": "((bucket_id = 'property-images'::text) AND is_staff())"
   },
   {
     "schemaname": "storage",
@@ -447,6 +817,16 @@
     "roles": "{authenticated}",
     "cmd": "SELECT",
     "qual": "(bucket_id = 'documents'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "storage",
+    "tablename": "objects",
+    "policyname": "Authenticated Users Manage",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "(bucket_id = 'blog-images'::text)",
     "with_check": null
   },
   {
@@ -462,11 +842,21 @@
   {
     "schemaname": "storage",
     "tablename": "objects",
-    "policyname": "Staff can manage property images storage",
+    "policyname": "Allow authenticated users to upload documents",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "ALL",
-    "qual": "((bucket_id = 'property-images'::text) AND is_staff())",
-    "with_check": "((bucket_id = 'property-images'::text) AND is_staff())"
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(bucket_id = 'documents'::text)"
+  },
+  {
+    "schemaname": "storage",
+    "tablename": "objects",
+    "policyname": "Allow authenticated users to update documents",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(bucket_id = 'documents'::text)",
+    "with_check": "(bucket_id = 'documents'::text)"
   }
 ]

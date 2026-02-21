@@ -24,6 +24,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { UserRoleBadge } from "./UserRoleBadge";
 import { UserRoleSelect } from "./UserRoleSelect";
+import { UserTeamSelect } from "./UserTeamSelect";
 import { UserDeleteDialog } from "./UserDeleteDialog";
 import { type UserRole } from "@/lib/auth-shared";
 import { formatDate } from "@/lib/utils";
@@ -34,14 +35,16 @@ interface Profile {
   phone: string | null;
   role: UserRole;
   created_at: string;
+  team_id: string | null;
 }
 
 interface UsersTableProps {
   users: Profile[];
   currentUserId: string;
+  teams: { id: string; name: string }[];
 }
 
-export function UsersTable({ users, currentUserId }: UsersTableProps) {
+export function UsersTable({ users, currentUserId, teams }: UsersTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
 
@@ -98,6 +101,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
             <SelectContent className="rounded-xl border-slate-200">
               <SelectItem value="ALL">ทุกบทบาท</SelectItem>
               <SelectItem value="ADMIN">ผู้ดูแลระบบ (Admin)</SelectItem>
+              <SelectItem value="MANAGER">หัวหน้าทีม (Manager)</SelectItem>
               <SelectItem value="AGENT">เอเจนท์ (Agent)</SelectItem>
               <SelectItem value="USER">ผู้ใช้งาน (User)</SelectItem>
             </SelectContent>
@@ -120,6 +124,9 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                   </TableHead>
                   <TableHead className="py-4 px-6 font-bold text-slate-900">
                     บทบาท
+                  </TableHead>
+                  <TableHead className="py-4 px-6 font-bold text-slate-900">
+                    ทีม
                   </TableHead>
                   <TableHead className="py-4 px-6 font-bold text-slate-900">
                     วันที่สร้าง
@@ -193,6 +200,14 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                         </TableCell>
                         <TableCell className="px-6">
                           <UserRoleBadge role={user.role} />
+                        </TableCell>
+                        <TableCell className="px-6">
+                          <UserTeamSelect
+                            userId={user.id}
+                            currentTeamId={user.team_id}
+                            teams={teams}
+                            className="w-40 h-9 rounded-lg"
+                          />
                         </TableCell>
                         <TableCell className="px-6 text-slate-400 text-[11px] font-medium">
                           {formatDate(user.created_at)}
@@ -285,7 +300,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                       </div>
                     </div>
                   </div>
-                    <UserRoleBadge role={user.role} />
+                  <UserRoleBadge role={user.role} />
 
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
                     <div className="space-y-1">
@@ -304,6 +319,18 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                         {formatDate(user.created_at)}
                       </p>
                     </div>
+                  </div>
+
+                  <div className="space-y-1 pt-4 border-t border-slate-50">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      การสังกัดทีม
+                    </span>
+                    <UserTeamSelect
+                      userId={user.id}
+                      currentTeamId={user.team_id}
+                      teams={teams}
+                      className="w-full h-11 rounded-xl mt-1"
+                    />
                   </div>
 
                   <div className="space-y-3 pt-4 border-t border-slate-50 mt-2">

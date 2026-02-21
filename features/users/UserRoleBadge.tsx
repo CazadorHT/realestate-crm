@@ -16,6 +16,15 @@ export function UserRoleBadge({ role }: UserRoleBadgeProps) {
     );
   }
 
+  if (role === "MANAGER") {
+    return (
+      <Badge variant="default" className="bg-indigo-500 hover:bg-indigo-600">
+        <Shield className="mr-1 h-3 w-3" />
+        MANAGER
+      </Badge>
+    );
+  }
+
   if (role === "AGENT") {
     return (
       <Badge

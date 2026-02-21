@@ -26,6 +26,7 @@ interface BulkActionToolbarProps {
     filename?: string;
     message?: string;
   }>;
+  onTransfer?: () => void;
   entityName?: string; // เช่น "ทรัพย์", "ลีด", "ดีล"
   className?: string;
   confirmMessage?: React.ReactNode;
@@ -37,6 +38,7 @@ export function BulkActionToolbar({
   onClear,
   onDelete,
   onExport,
+  onTransfer,
   entityName = "รายการ",
   className,
   confirmMessage,
@@ -103,7 +105,7 @@ export function BulkActionToolbar({
       <div
         className={cn(
           "flex items-center justify-between gap-4 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg animate-in slide-in-from-top-2 duration-200",
-          className
+          className,
         )}
       >
         <div className="flex items-center gap-2">
@@ -127,6 +129,21 @@ export function BulkActionToolbar({
                 <Download className="h-3.5 w-3.5 mr-1" />
               )}
               Export Excel
+            </Button>
+          )}
+          {onTransfer && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onTransfer}
+              className="h-8 text-xs bg-white hover:bg-blue-50 border-blue-200 text-blue-700"
+            >
+              <Loader2
+                className="h-3.5 w-3.5 mr-1 hidden"
+                id="transfer-loader"
+              />
+              <Download className="h-3.5 w-3.5 mr-1 rotate-180" />
+              โอนย้าย {entityName}
             </Button>
           )}
           <Button

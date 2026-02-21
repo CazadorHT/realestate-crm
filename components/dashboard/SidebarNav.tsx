@@ -49,7 +49,11 @@ import { isFeatureEnabled } from "@/lib/features";
 
 export function SidebarNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
-  const [openGroups, setOpenGroups] = useState<string[]>(["crm", "public"]);
+  const [openGroups, setOpenGroups] = useState<string[]>([
+    "crm",
+    "public",
+    "settings",
+  ]);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -225,7 +229,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
       href: "/protected/settings",
       icon: Settings,
       active: pathname === "/protected/settings",
-      roles: ["ADMIN", "AGENT"],
+      roles: ["ADMIN", "AGENT", "MANAGER"],
     },
     {
       title: "SmartMatch Config",
@@ -253,6 +257,13 @@ export function SidebarNav({ role }: { role: UserRole }) {
       href: "/protected/line-manager",
       icon: MessageSquare,
       active: pathname?.startsWith("/protected/line-manager") ?? false,
+      roles: ["ADMIN"],
+    },
+    {
+      title: "จัดการทีม",
+      href: "/protected/settings/teams",
+      icon: Users,
+      active: pathname?.startsWith("/protected/settings/teams") ?? false,
       roles: ["ADMIN"],
     },
   ];

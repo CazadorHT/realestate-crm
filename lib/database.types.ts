@@ -760,6 +760,7 @@ export type Database = {
           other_contact: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          team_id: string | null
           updated_at: string
           wechat_id: string | null
           whatsapp_id: string | null
@@ -778,6 +779,7 @@ export type Database = {
           other_contact?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          team_id?: string | null
           updated_at?: string
           wechat_id?: string | null
           whatsapp_id?: string | null
@@ -796,11 +798,20 @@ export type Database = {
           other_contact?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          team_id?: string | null
           updated_at?: string
           wechat_id?: string | null
           whatsapp_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       properties: {
         Row: {
@@ -1793,16 +1804,47 @@ export type Database = {
         }
         Relationships: []
       }
+      teams: {
+        Row: {
+          created_at: string | null
+          id: string
+          manager_id: string | null
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          manager_id?: string | null
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          manager_id?: string | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_isolation_setting: { Args: { feature_key: string }; Returns: boolean }
       increment_property_view: {
         Args: { property_id: string }
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
+      is_manager_of: { Args: { agent_id: string }; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
     }
     Enums: {
@@ -1860,7 +1902,7 @@ export type Database = {
         | "COMMERCIAL_BUILDING"
         | "VILLA"
         | "POOL_VILLA"
-      user_role: "ADMIN" | "USER" | "AGENT"
+      user_role: "ADMIN" | "USER" | "AGENT" | "MANAGER"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2048,7 +2090,7 @@ export const Constants = {
         "VILLA",
         "POOL_VILLA",
       ],
-      user_role: ["ADMIN", "USER", "AGENT"],
+      user_role: ["ADMIN", "USER", "AGENT", "MANAGER"],
     },
   },
 } as const

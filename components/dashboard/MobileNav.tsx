@@ -47,7 +47,11 @@ import { siteConfig } from "@/lib/site-config";
 export function MobileNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [openGroups, setOpenGroups] = useState<string[]>(["crm", "public"]);
+  const [openGroups, setOpenGroups] = useState<string[]>([
+    "crm",
+    "public",
+    "settings",
+  ]);
 
   const toggleGroup = (groupId: string) => {
     setOpenGroups((prev) =>
@@ -75,7 +79,6 @@ export function MobileNav({ role }: { role: UserRole }) {
 
   // Same configuration as SidebarNav
   const crmItems: NavItem[] = [
-    
     {
       title: "ทรัพย์สิน",
       href: "/protected/properties",
@@ -191,7 +194,7 @@ export function MobileNav({ role }: { role: UserRole }) {
       href: "/protected/settings",
       icon: Settings,
       active: pathname === "/protected/settings",
-      roles: ["ADMIN", "AGENT"],
+      roles: ["ADMIN", "AGENT", "MANAGER"],
     },
     {
       title: "SmartMatch Config",
@@ -219,6 +222,13 @@ export function MobileNav({ role }: { role: UserRole }) {
       href: "/protected/line-manager",
       icon: MessageSquare,
       active: pathname?.startsWith("/protected/line-manager") ?? false,
+      roles: ["ADMIN"],
+    },
+    {
+      title: "จัดการทีม",
+      href: "/protected/settings/teams",
+      icon: Users,
+      active: pathname?.startsWith("/protected/settings/teams") ?? false,
       roles: ["ADMIN"],
     },
   ];
@@ -290,7 +300,6 @@ export function MobileNav({ role }: { role: UserRole }) {
         <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
         <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 sticky top-0 z-20">
           <div className="flex items-center gap-3">
-            
             <div className="flex flex-col">
               <h1 className="text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-100 uppercase leading-none">
                 {siteConfig.name}

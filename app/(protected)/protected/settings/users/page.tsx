@@ -30,8 +30,11 @@ export default async function UsersManagementPage() {
   // ดึงข้อมูลผู้ใช้ทั้งหมด
   const { data: users, error: usersError } = await supabase
     .from("profiles")
-    .select("id, full_name, phone, role, created_at")
+    .select("id, full_name, phone, role, created_at, team_id")
     .order("created_at", { ascending: false });
+
+  // ดึงข้อมูลทีมทั้งหมด
+  const { data: teams } = await supabase.from("teams").select("id, name");
 
   if (usersError) {
     console.error("Error fetching users:", usersError);
@@ -70,7 +73,11 @@ export default async function UsersManagementPage() {
             รายชื่อสมาชิกทีมทั้งหมด
           </h2>
         </div>
-        <UsersTable users={users || []} currentUserId={user.id} />
+        <UsersTable
+          users={users || []}
+          currentUserId={user.id}
+          teams={teams || []}
+        />
       </div>
     </div>
   );

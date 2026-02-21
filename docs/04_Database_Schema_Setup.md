@@ -88,7 +88,7 @@ CREATE TYPE property_type AS ENUM (
 );
 
 -- User Roles
-CREATE TYPE user_role AS ENUM ('ADMIN', 'USER', 'AGENT');
+CREATE TYPE user_role AS ENUM ('ADMIN', 'USER', 'AGENT', 'MANAGER');
 ```
 
 ---
@@ -97,7 +97,7 @@ CREATE TYPE user_role AS ENUM ('ADMIN', 'USER', 'AGENT');
 
 ### Profiles & Users
 
-```sql
+````sql
 CREATE TABLE public.profiles (
   id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   full_name text,
@@ -110,11 +110,25 @@ CREATE TABLE public.profiles (
   other_contact text,
   facebook_url text,
   role user_role NOT NULL DEFAULT 'USER',
+  team_id uuid REFERENCES public.teams(id) ON DELETE SET NULL,
   notification_preferences jsonb DEFAULT '{"email": true, "line": true}'::jsonb,
   created_at timestamp with time zone DEFAULT now() NOT NULL,
   updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
-```
+
+### ระบบจัดการทีม (Teams)
+
+```sql
+CREATE TABLE public.teams (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name text NOT NULL UNIQUE,
+  manager_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+````
+
+````
 
 ### ระบบจัดการทรัพย์สิน (Properties)
 
@@ -135,7 +149,7 @@ CREATE TABLE public.omni_messages (
     is_read boolean DEFAULT false,
     created_at timestamptz DEFAULT now()
 );
-```
+````
 
 ### ระบบบันทึกประวัติการทำงาน (`audit_logs`)
 

@@ -21,6 +21,10 @@ import {
   Loader2,
   Save,
   RefreshCw,
+  ShieldCheck,
+  Users,
+  Home,
+  Briefcase,
 } from "lucide-react";
 import {
   getSiteSettings,
@@ -33,6 +37,9 @@ export function SiteSettingsPanel() {
     smart_match_wizard_enabled: true,
     chatbot_enabled: true,
     floating_contact_enabled: true,
+    isolation_properties_enabled: false,
+    isolation_leads_enabled: false,
+    isolation_deals_enabled: false,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
@@ -198,8 +205,8 @@ export function SiteSettingsPanel() {
 
         <Separator />
 
-        {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3">
+        {/* Combined Save Button for everything */}
+        <div className="flex items-center justify-end gap-3 pt-4">
           {hasChanges && (
             <Button
               variant="outline"
@@ -220,10 +227,108 @@ export function SiteSettingsPanel() {
             ) : (
               <Save className="h-4 w-4 mr-2" />
             )}
-            บันทึกการตั้งค่า
+            บันทึกการตั้งค่าทั้งหมด
           </Button>
         </div>
       </CardContent>
+
+      <div className="mt-8">
+        <Card className="border-slate-200">
+          <CardHeader className="bg-linear-to-r from-slate-50 to-indigo-50 border-b">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-100 rounded-xl">
+                <ShieldCheck className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">
+                  จัดการการเข้าถึงข้อมูล (Data Isolation)
+                </CardTitle>
+                <CardDescription>
+                  ตั้งค่าการแยกส่วนข้อมูลเพื่อให้ Agent เห็นเฉพาะข้อมูลของตนเอง
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6 space-y-6">
+            {/* Property Isolation */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-200 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-blue-100 rounded-xl">
+                  <Home className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <Label
+                    htmlFor="isolation_properties"
+                    className="text-base font-medium text-slate-900 cursor-pointer"
+                  >
+                    แยกฐานข้อมูลทรัพย์สิน (Properties)
+                  </Label>
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    Agent จะเห็นและจัดการได้แค่ทรัพย์สินที่ตนเองสร้าง
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="isolation_properties"
+                checked={settings.isolation_properties_enabled}
+                onCheckedChange={() =>
+                  handleToggle("isolation_properties_enabled")
+                }
+              />
+            </div>
+
+            {/* Lead Isolation */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-200 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-emerald-100 rounded-xl">
+                  <Users className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div>
+                  <Label
+                    htmlFor="isolation_leads"
+                    className="text-base font-medium text-slate-900 cursor-pointer"
+                  >
+                    แยกฐานข้อมูลลูกค้า (Leads)
+                  </Label>
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    Agent จะเห็นเฉพาะลูกค้าที่ตนเองหามา หรือได้รับมอบหมาย
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="isolation_leads"
+                checked={settings.isolation_leads_enabled}
+                onCheckedChange={() => handleToggle("isolation_leads_enabled")}
+              />
+            </div>
+
+            {/* Deal Isolation */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-200 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-amber-100 rounded-xl">
+                  <Briefcase className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <Label
+                    htmlFor="isolation_deals"
+                    className="text-base font-medium text-slate-900 cursor-pointer"
+                  >
+                    แยกฐานข้อมูลการขาย (Deals/Contracts)
+                  </Label>
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    Agent จะเห็นเฉพาะดีลที่ตนเองเป็นเจ้าของเคสเท่านั้น
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="isolation_deals"
+                checked={settings.isolation_deals_enabled}
+                onCheckedChange={() => handleToggle("isolation_deals_enabled")}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </Card>
   );
 }
