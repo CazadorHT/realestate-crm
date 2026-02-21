@@ -53,7 +53,7 @@ export function DepositMobileView({
   return (
     <>
       {/* ── Mobile Header ── */}
-      <div className="sm:hidden shrink-0 bg-white rounded-t-[28px] flex flex-col items-center relative">
+      <div className="sm:hidden bg-white rounded-t-[28px] flex flex-col items-center relative">
         {/* Pull Handle */}
         <div className="w-10 h-1 bg-slate-200/80 rounded-full mt-3 mb-4" />
 
@@ -105,12 +105,12 @@ export function DepositMobileView({
       </div>
 
       {/* ── Mobile Form Content Area ── */}
-      <div className="sm:hidden flex-1 overflow-y-auto p-6 min-h-0">
+      <div className="sm:hidden p-6 flex flex-col overflow-y-auto">
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className="space-y-5 flex-1 flex flex-col relative"
         >
-          <div className="flex-1 space-y-5">
+          <div className="space-y-5">
             <div
               className={
                 currentStep === 1
