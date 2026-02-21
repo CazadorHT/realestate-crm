@@ -35,11 +35,11 @@ export function renderNameField(
       control={form.control}
       name="fullName"
       render={({ field }) => (
-        <FormItem className={isMobile ? "space-y-2" : "space-y-2"}>
+        <FormItem className={isMobile ? "space-y-3" : "space-y-2"}>
           <FormLabel
             className={cn(
               "text-slate-700 font-semibold flex items-center gap-2",
-              isMobile ? "text-sm" : "text-sm",
+              isMobile ? "text-base" : "text-sm",
             )}
           >
             {!isMobile && <FaUser className="w-3 h-3 text-blue-500" />}
@@ -48,7 +48,7 @@ export function renderNameField(
           </FormLabel>
           <FormControl>
             <div className="relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-blue-600 transition-colors">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 group-focus-within:text-blue-600 transition-colors">
                 <FaUser className="w-4 h-4" />
               </div>
               <Input
@@ -56,7 +56,7 @@ export function renderNameField(
                 className={cn(
                   "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all",
                   isMobile
-                    ? "h-12 pl-11 bg-slate-50 text-sm"
+                    ? "h-14 pl-11 bg-slate-50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
                 {...field}
@@ -80,7 +80,7 @@ export function renderPhoneField(
       control={form.control}
       name="phone"
       render={({ field }) => (
-        <FormItem className={isMobile ? "space-y-2" : "space-y-2"}>
+        <FormItem className={isMobile ? "space-y-3" : "space-y-2"}>
           <FormLabel
             className={cn(
               "text-slate-700 font-semibold flex items-center gap-2",
@@ -93,7 +93,7 @@ export function renderPhoneField(
           </FormLabel>
           <FormControl>
             <div className="relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-blue-600 transition-colors">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 group-focus-within:text-blue-600 transition-colors">
                 <FaPhoneAlt className="w-4 h-4" />
               </div>
               <Input
@@ -106,7 +106,7 @@ export function renderPhoneField(
                 className={cn(
                   "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all",
                   isMobile
-                    ? "h-12 pl-11 bg-slate-50 text-sm"
+                    ? "h-14 pl-11 bg-slate-50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
                 {...field}
@@ -134,11 +134,11 @@ export function renderLineField(
       control={form.control}
       name="lineId"
       render={({ field }) => (
-        <FormItem className={isMobile ? "space-y-2" : "space-y-2"}>
+        <FormItem className={isMobile ? "space-y-3" : "space-y-2"}>
           <FormLabel
             className={cn(
               "text-slate-700 font-semibold flex items-center gap-2",
-              isMobile ? "text-sm" : "text-sm",
+              isMobile ? "text-base" : "text-sm",
             )}
           >
             {!isMobile && <FaLine className="w-3.5 h-3.5 text-[#00B900]" />}
@@ -154,7 +154,7 @@ export function renderLineField(
                 className={cn(
                   "border-slate-200 focus:border-[#00B900] focus:ring-2 focus:ring-[#00B900]/15 rounded-xl transition-all",
                   isMobile
-                    ? "h-12 pl-11 bg-slate-50 text-sm"
+                    ? "h-14 pl-11 bg-slate-50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
                 {...field}
@@ -291,11 +291,11 @@ export function renderMessageField(
       control={form.control}
       name="details"
       render={({ field }) => (
-        <FormItem className={isMobile ? "space-y-2 mb-2" : "space-y-2"}>
+        <FormItem className={isMobile ? "space-y-3 mb-2" : "space-y-2"}>
           <FormLabel
             className={cn(
               "text-slate-800 font-semibold",
-              isMobile ? "text-sm" : "text-sm",
+              isMobile ? "text-base" : "text-sm",
             )}
           >
             {t("deposit.form.details_more_label")}
@@ -306,7 +306,7 @@ export function renderMessageField(
               className={cn(
                 "border-slate-100 rounded-xl transition-all",
                 isMobile
-                  ? "min-h-[80px] p-4 text-sm bg-slate-50 "
+                  ? "min-h-[120px] p-4 text-base bg-slate-50"
                   : "min-h-[80px] p-3 text-sm bg-white",
               )}
               {...field}
