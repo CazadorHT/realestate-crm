@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { siteConfig } from "@/lib/site-config";
 
 export function FloatingContactDial() {
   const { t } = useLanguage();
@@ -52,7 +53,7 @@ export function FloatingContactDial() {
               id: "default",
               phone: "093-550-2143",
               agentName: t("common.floating.agent_fallback", {
-                name: "V-Link Assets",
+                name: siteConfig.name,
               }),
             },
           ]);

@@ -355,7 +355,7 @@ export function buildWelcomeFlex(lang: BotLang = "th"): {
           contents: [
             {
               type: "text",
-              text: "V-LINK ASSET",
+              text: siteConfig.name,
               color: "#FFFFFF",
               size: "xl",
               weight: "bold",
