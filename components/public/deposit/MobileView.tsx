@@ -145,7 +145,6 @@ export function DepositMobileView({
               </div>
             </div>
 
-            <div className="h-10" />
           </div>
 
           {/* ── Mobile Footer ── */}
