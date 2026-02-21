@@ -179,10 +179,10 @@ export function DepositPropertySection() {
                 // Mobile: Bottom Sheet
                 bg-white
                 bottom-0 top-auto left-0 right-0 translate-x-0 translate-y-0
-                rounded-t-[28px] rounded-b-none h-fit max-h-[95dvh] max-w-none
-  data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
-  shadow-xl
-                focus-within:bottom-0
+                rounded-t-[28px] rounded-b-none
+                h-auto max-h-[85dvh] max-w-none
+                data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
+                shadow-xl
 
                 // Desktop/Tablet: Centered Dialog
                 sm:bottom-auto sm:top-[40%] lg:top-[50%] sm:left-[50%]

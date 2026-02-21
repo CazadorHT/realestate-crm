@@ -51,11 +51,13 @@ export function DepositMobileView({
   ];
 
   return (
-    <div className="sm:hidden flex flex-col bg-white rounded-t-[28px] h-full max-h-[85dvh]">
+    <>
       {/* ── Mobile Header ── */}
-      <div className="shrink-0 bg-white rounded-t-[28px] flex flex-col items-center relative">
+      <div className="sm:hidden shrink-0 bg-white rounded-t-[28px] flex flex-col items-center relative">
+        {/* Pull Handle */}
         <div className="w-10 h-1 bg-slate-200/80 rounded-full mt-3 mb-4" />
 
+        {/* Title */}
         <div className="px-6 text-center mb-5">
           <h2 className="text-xl font-bold text-slate-800 tracking-tight leading-tight">
             {t("deposit.dialog.title")}
@@ -68,10 +70,7 @@ export function DepositMobileView({
         {/* Step Indicator */}
         <div className="w-full px-6 pb-4">
           <div className="flex items-center justify-between relative">
-            {/* Background Line */}
             <div className="absolute top-4 left-[16%] right-[16%] h-[2px] bg-slate-100 z-0" />
-
-            {/* Progress Line */}
             <div
               className="absolute top-4 left-[16%] h-[2px] bg-blue-500 z-0 transition-all duration-500 ease-out"
               style={{
@@ -106,10 +105,10 @@ export function DepositMobileView({
       </div>
 
       {/* ── Mobile Form Content Area ── */}
-      <div className="flex-1 overflow-y-auto p-6 min-h-0">
+      <div className="sm:hidden flex-1 overflow-y-auto p-6 min-h-0">
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-5 flex flex-col h-full"
+          className="space-y-5 flex-1 flex flex-col relative"
         >
           <div className="flex-1 space-y-5">
             <div
@@ -146,7 +145,6 @@ export function DepositMobileView({
               </div>
             </div>
 
-            {/* Space at bottom for scrolling */}
             <div className="h-10" />
           </div>
 
@@ -195,6 +193,6 @@ export function DepositMobileView({
           </div>
         </form>
       </div>
-    </div>
+    </>
   );
 }

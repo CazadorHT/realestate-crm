@@ -77,7 +77,7 @@ export function DepositWizard({
         MobileView: visible only on xs/sm (sm:hidden)
         DesktopView: visible only on md+ (hidden sm:flex)
       */}
-      <div>
+      <>
         <DepositMobileView
           form={form}
           currentStep={currentStep}
@@ -94,7 +94,7 @@ export function DepositWizard({
           isLoading={isLoading}
           onSubmit={onSubmit}
         />
-      </div>
+      </>
     </Form>
   );
 }
