@@ -77,7 +77,7 @@ export function DepositWizard({
         MobileView: visible only on xs/sm (sm:hidden)
         DesktopView: visible only on md+ (hidden sm:flex)
       */}
-      <div className="h-full">
+      <div>
         <DepositMobileView
           form={form}
           currentStep={currentStep}

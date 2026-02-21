@@ -632,7 +632,7 @@ export function ContactAgentDialog({
             </div>
 
             {/* Mobile Footer */}
-            <div className="mt-auto sticky bottom-0 -mx-6 px-6 pt-3 pb-[env(safe-area-inset-bottom,16px)] bg-white/95 backdrop-blur-md z-10 border-t border-slate-100/80">
+            <div className="mt-auto sticky bottom-0 -mx-6 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,24px)+20px)] bg-white/95 backdrop-blur-md z-10 border-t border-slate-100/80">
               <p className="text-[10px] text-slate-400 text-center mb-3 font-medium tracking-wide">
                 {t("property.contact_dialog.step_of")
                   .replace("{current}", String(step))

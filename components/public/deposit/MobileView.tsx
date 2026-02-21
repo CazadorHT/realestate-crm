@@ -42,7 +42,7 @@ export function DepositMobileView({
   ];
 
   return (
-    <div className="sm:hidden flex flex-col h-full bg-white rounded-t-[28px]">
+    <div className="sm:hidden flex flex-col max-h-[85dvh] bg-white rounded-t-[28px]">
       {/* ── Mobile Header ── */}
       <div className="flex flex-col items-center pt-2 pb-4">
         {/* Pull Handle */}
@@ -89,74 +89,80 @@ export function DepositMobileView({
 
       <div className="w-full h-px bg-slate-100/60" />
 
-      {/* ── Scrollable Content ── */}
-      <div className="flex-1 overflow-y-auto px-6 pt-6 pb-4  min-h-[320px]">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {currentStep === 1 && (
-            <div className="animate-in fade-in slide-in-from-right-8 duration-500">
-              {renderNameField(form, true)}
-            </div>
-          )}
-
-          {currentStep === 2 && (
-            <div className="animate-in fade-in slide-in-from-right-8 duration-500 space-y-5">
-              {renderPhoneField(form, true)}
-              {renderLineField(form, true)}
-            </div>
-          )}
-
-          {currentStep === 3 && (
-            <div className="animate-in fade-in slide-in-from-right-8 duration-500 space-y-6 ">
-              {renderPropertyTypeField(form, true)}
-              {renderMessageField(form, true)}
-            </div>
-          )}
-        </form>
-      </div>
-
-      {/* ── Mobile Footer ── */}
-      <div className="sticky bottom-0 px-6 pt-3 pb-[env(safe-area-inset-bottom,16px)] bg-white/95 backdrop-blur-md border-t border-slate-100/80 z-20">
-        <p className="text-[10px] text-slate-400 text-center mb-3 font-medium tracking-wide">
-          {t("property.contact_dialog.step_of", {
-            current: currentStep,
-            total: totalSteps,
-          })}
-        </p>
-
-        <div className="flex gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => (currentStep === 1 ? onCancel() : prevStep())}
-            className="flex-1 h-13 rounded-2xl bg-slate-50 border border-slate-200/80 text-slate-500 hover:bg-slate-100 hover:text-slate-700 font-semibold text-base transition-all active:scale-[0.97]"
-          >
-            {currentStep === 1 ? (
-              <>
-                <X className="w-4 h-4 mr-2" /> {t("common.cancel") || "ยกเลิก"}
-              </>
-            ) : (
-              <>
-                <ChevronLeft className="w-4 h-4 mr-1" />{" "}
-                {t("common.back") || "ย้อนกลับ"}
-              </>
+      {/* ── Scrollable Content Area ── */}
+      <div className="flex-1 overflow-y-auto px-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-col min-h-full"
+        >
+          <div className="space-y-6 pt-6 flex-1">
+            {currentStep === 1 && (
+              <div className="animate-in fade-in slide-in-from-right-8 duration-500">
+                {renderNameField(form, true)}
+              </div>
             )}
-          </Button>
 
-          {currentStep < totalSteps ? (
-            <Button
-              type="button"
-              onClick={nextStep}
-              className="flex-[1.5] h-13 rounded-2xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-base shadow-lg shadow-blue-500/25 active:scale-[0.97] transition-all"
-            >
-              {t("common.next") || "ถัดไป"}
-              <ChevronRight className="w-4 h-4 ml-1.5" />
-            </Button>
-          ) : (
-            <div className="flex-[1.5]">
-              <SubmitButton isLoading={isLoading} />
+            {currentStep === 2 && (
+              <div className="animate-in fade-in slide-in-from-right-8 duration-500 space-y-5">
+                {renderPhoneField(form, true)}
+                {renderLineField(form, true)}
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <div className="animate-in fade-in slide-in-from-right-8 duration-500 space-y-6 ">
+                {renderPropertyTypeField(form, true)}
+                {renderMessageField(form, true)}
+              </div>
+            )}
+          </div>
+
+          {/* ── Mobile Footer (Sticky at the bottom of the scrollable area) ── */}
+          <div className="mt-auto sticky bottom-0 pt-3 pb-[calc(env(safe-area-inset-bottom,24px)+28px)] bg-white/95 backdrop-blur-md border-t border-slate-100/80 z-20 -mx-6 px-6">
+            <p className="text-[10px] text-slate-400 text-center mb-3 font-medium tracking-wide">
+              {t("property.contact_dialog.step_of", {
+                current: currentStep,
+                total: totalSteps,
+              })}
+            </p>
+
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => (currentStep === 1 ? onCancel() : prevStep())}
+                className="flex-1 h-13 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-500 hover:bg-slate-100 hover:text-slate-700 font-semibold text-base transition-all active:scale-[0.97]"
+              >
+                {currentStep === 1 ? (
+                  <>
+                    <X className="w-4 h-4 mr-2" />{" "}
+                    {t("common.cancel") || "ยกเลิก"}
+                  </>
+                ) : (
+                  <>
+                    <ChevronLeft className="w-4 h-4 mr-1" />{" "}
+                    {t("common.back") || "ย้อนกลับ"}
+                  </>
+                )}
+              </Button>
+
+              {currentStep < totalSteps ? (
+                <Button
+                  type="button"
+                  onClick={nextStep}
+                  className="flex-[1.5] h-13 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-base shadow-lg shadow-blue-500/25 active:scale-[0.97] transition-all"
+                >
+                  {t("common.next") || "ถัดไป"}
+                  <ChevronRight className="w-4 h-4 ml-1.5" />
+                </Button>
+              ) : (
+                <div className="flex-[1.5]">
+                  <SubmitButton isLoading={isLoading} />
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );

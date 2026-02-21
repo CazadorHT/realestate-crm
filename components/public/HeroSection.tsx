@@ -8,6 +8,7 @@ import {
   Shield,
   Clock,
   ArrowRight,
+  CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -15,10 +16,14 @@ import { ScrollDownButton } from "@/components/public/ScrollDownButton";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import Image from "next/image";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { DepositWizard } from "@/components/public/deposit/DepositWizard";
 
 export function HeroSection() {
   const { t } = useLanguage();
   const [showSmartMatch, setShowSmartMatch] = useState(true);
+  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const [isDepositSuccess, setIsDepositSuccess] = useState(false);
 
   useEffect(() => {
     // Fetch setting on client side
@@ -109,14 +114,76 @@ export function HeroSection() {
                   </Button>
                 </Link>
 
-                <Button
-                  onClick={handleScrollToDeposit}
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto md:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl bg-white/90 hover:bg-white border-slate-200 text-slate-700 hover:text-blue-600 shadow-sm transition-all animate-in fade-in-0 duration-300 slide-in-from-bottom-4"
+                <Dialog
+                  open={isDepositOpen}
+                  onOpenChange={(open) => {
+                    setIsDepositOpen(open);
+                    if (!open) setIsDepositSuccess(false);
+                  }}
                 >
-                  {t("home.hero.cta_deposit")}
-                </Button>
+                  <DialogTrigger asChild>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full sm:w-auto md:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl bg-white/90 hover:bg-white border-slate-200 text-slate-700 hover:text-blue-600 shadow-sm transition-all animate-in fade-in-0 duration-300 slide-in-from-bottom-4"
+                    >
+                      {t("home.hero.cta_deposit")}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent
+                    overlayClassName="z-150"
+                    className="fixed z-150 w-full gap-0 p-0 border-0 duration-300
+                    data-[state=open]:animate-in data-[state=closed]:animate-out
+                    data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
+                    bg-white
+                    bottom-0 top-auto left-0 right-0 translate-x-0 translate-y-0
+                    rounded-t-[28px] rounded-b-none
+                    h-auto max-h-[85dvh] max-w-none
+                    data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
+                    shadow-xl
+                    sm:bottom-auto sm:top-[40%] lg:top-[50%] sm:left-[50%]
+                    sm:translate-x-[-50%] sm:translate-y-[-50%]
+                    sm:h-auto sm:max-h-[80vh] lg:max-h-[90vh]
+                    sm:rounded-2xl sm:shadow-2xl
+                    sm:max-w-[680px] lg:max-w-[800px]
+                    sm:data-[state=closed]:slide-out-to-bottom-4 sm:data-[state=open]:slide-in-from-bottom-4
+                    sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:zoom-out-95
+                    [&>button]:top-4 [&>button]:right-4 [&>button]:z-20
+                    [&>button]:text-slate-400 [&>button]:hover:text-slate-600
+                    sm:[&>button]:text-white/60 sm:[&>button]:hover:text-white"
+                  >
+                    {isDepositSuccess ? (
+                      <div className="text-center py-20 px-6 space-y-8 animate-in fade-in zoom-in duration-500">
+                        <div className="w-24 h-24 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                          <CheckCircle className="h-12 w-12" />
+                        </div>
+                        <div className="space-y-3">
+                          <h3 className="text-3xl font-bold text-slate-900">
+                            {t("deposit.success.title")}
+                          </h3>
+                          <p className="text-slate-500 text-lg max-w-sm mx-auto">
+                            {t("deposit.success.message")}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setIsDepositSuccess(false);
+                            setIsDepositOpen(false);
+                          }}
+                          className="mt-6 border-slate-200 hover:bg-slate-50 rounded-2xl px-12 py-7 text-base font-bold transition-all hover:scale-105 active:scale-95 shadow-sm"
+                        >
+                          {t("common.close")}
+                        </Button>
+                      </div>
+                    ) : (
+                      <DepositWizard
+                        onSuccess={() => setIsDepositSuccess(true)}
+                        onCancel={() => setIsDepositOpen(false)}
+                      />
+                    )}
+                  </DialogContent>
+                </Dialog>
               </div>
 
               <div
