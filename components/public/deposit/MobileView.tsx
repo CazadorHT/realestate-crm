@@ -42,7 +42,7 @@ export function DepositMobileView({
   ];
 
   return (
-    <div className="sm:hidden flex flex-col max-h-[85dvh] bg-white rounded-t-[28px]">
+    <div className="sm:hidden flex flex-col bg-white rounded-t-[28px]">
       {/* ── Mobile Header ── */}
       <div className="flex flex-col items-center pt-2 pb-4">
         {/* Pull Handle */}
@@ -89,13 +89,10 @@ export function DepositMobileView({
 
       <div className="w-full h-px bg-slate-100/60" />
 
-      {/* ── Scrollable Content Area ── */}
-      <div className="flex-1 overflow-y-auto px-6">
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col min-h-full"
-        >
-          <div className="space-y-6 pt-6 flex-1">
+      {/* ── Content Area ── */}
+      <div className="px-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+          <div className="space-y-6 pt-6 pb-4">
             {currentStep === 1 && (
               <div className="animate-in fade-in slide-in-from-right-8 duration-500">
                 {renderNameField(form, true)}
@@ -117,8 +114,8 @@ export function DepositMobileView({
             )}
           </div>
 
-          {/* ── Mobile Footer (Sticky at the bottom of the scrollable area) ── */}
-          <div className="mt-auto sticky bottom-0 pt-3 pb-[calc(env(safe-area-inset-bottom,24px)+28px)] bg-white/95 backdrop-blur-md border-t border-slate-100/80 z-20 -mx-6 px-6">
+          {/* ── Mobile Footer ── */}
+          <div className="pt-3 pb-[calc(env(safe-area-inset-bottom,24px)+20px)] bg-white border-t border-slate-100/80 -mx-6 px-6">
             <p className="text-[10px] text-slate-400 text-center mb-3 font-medium tracking-wide">
               {t("property.contact_dialog.step_of", {
                 current: currentStep,
