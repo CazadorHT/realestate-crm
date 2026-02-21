@@ -53,7 +53,10 @@ const formSchema = z.object({
   slug: z
     .string()
     .min(1, "Slug is required")
-    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase, numbers, and hyphens only"),
+    .regex(
+      /^[\u0E00-\u0E7Fa-z0-9-]+$/,
+      "Slug must contain only alphanumeric characters and hyphens",
+    ),
   description: z.string().optional(),
   description_en: z.string().optional(),
   description_cn: z.string().optional(),
@@ -111,14 +114,18 @@ export function ServiceForm({
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/[^\u0E00-\u0E7Fa-z0-9\s_-]/g, "")
+      .replace(/[\s/_]+/g, "-")
+      .replace(/-+/g, "-")
       .replace(/^-+|-+$/g, "");
   };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    form.setValue("title", e.target.value);
-    if (isNew && !form.getValues("slug")) {
-      form.setValue("slug", generateSlug(e.target.value));
+    const title = e.target.value;
+    form.setValue("title", title);
+    // Auto-slug if it's a new service OR if the slug is currently empty
+    if (isNew || !form.getValues("slug")) {
+      form.setValue("slug", generateSlug(title), { shouldValidate: true });
     }
   };
 
@@ -144,12 +151,20 @@ export function ServiceForm({
   async function onSubmit(values: ServiceFormValues) {
     setSaving(true);
     try {
+      const finalValues = {
+        ...values,
+        price_range: values.price_range?.trim() || "สอบถามราคา",
+      };
+
       if (isNew) {
-        const res = await createService(values);
+        const res = await createService(finalValues);
         if (!res.success) throw new Error(res.message);
         toast.success("Service created successfully");
       } else {
-        const res = await updateService({ id: initialData.id, ...values });
+        const res = await updateService({
+          id: initialData.id,
+          ...finalValues,
+        });
         if (!res.success) throw new Error(res.message);
         toast.success("Service updated successfully");
       }

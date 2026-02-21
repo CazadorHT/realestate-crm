@@ -15,6 +15,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { DepositWizard } from "./deposit/DepositWizard";
+import { CheckCircle } from "lucide-react";
 
 export function PublicNav() {
   const pathname = usePathname();
@@ -23,6 +26,8 @@ export function PublicNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const [isDepositSuccess, setIsDepositSuccess] = useState(false);
 
   // Hook for translation
   const { language, setLanguage, t } = useLanguage();
@@ -256,18 +261,77 @@ export function PublicNav() {
                       {t("home.search_btn")}
                     </Button>
                   </Link>
-                  <a
-                    href="#deposit-section"
-                    onClick={(e) => handleNavClick(e, "#deposit-section")}
+
+                  <Dialog
+                    open={isDepositOpen}
+                    onOpenChange={(open) => {
+                      setIsDepositOpen(open);
+                      if (!open) setIsDepositSuccess(false);
+                    }}
                   >
-                    <Button
-                      size="lg"
-                      className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md font-medium outline-none ring-0 border-0 text-white"
+                    <DialogTrigger asChild>
+                      <Button
+                        size="lg"
+                        className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md font-medium outline-none ring-0 border-0 text-white"
+                      >
+                        <Key className="h-4 w-4 mr-1" />
+                        {t("nav.deposit")}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent
+                      overlayClassName="z-150"
+                      className="fixed z-150 w-full gap-0 p-0 border-0 duration-300
+                      data-[state=open]:animate-in data-[state=closed]:animate-out
+                      data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
+                      bg-white
+                      bottom-0 top-auto left-0 right-0 translate-x-0 translate-y-0
+                      rounded-t-[28px] rounded-b-none
+                      h-auto max-h-[85dvh] max-w-none
+                      data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
+                      shadow-xl
+                      sm:bottom-auto sm:top-[40%] lg:top-[50%] sm:left-[50%]
+                      sm:translate-x-[-50%] sm:translate-y-[-50%]
+                      sm:h-auto sm:max-h-[80vh] lg:max-h-[90vh]
+                      sm:rounded-2xl sm:shadow-2xl
+                      sm:max-w-[680px] lg:max-w-[800px]
+                      sm:data-[state=closed]:slide-out-to-bottom-4 sm:data-[state=open]:slide-in-from-bottom-4
+                      sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:zoom-out-95
+                      [&>button]:top-4 [&>button]:right-4 [&>button]:z-20
+                      [&>button]:text-slate-400 [&>button]:hover:text-slate-600
+                      sm:[&>button]:text-white/60 sm:[&>button]:hover:text-white"
                     >
-                      <Key className="h-4 w-4 mr-1" />
-                      {t("nav.deposit")}
-                    </Button>
-                  </a>
+                      {isDepositSuccess ? (
+                        <div className="text-center py-20 px-6 space-y-8 animate-in fade-in zoom-in duration-500">
+                          <div className="w-24 h-24 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                            <CheckCircle className="h-12 w-12" />
+                          </div>
+                          <div className="space-y-3">
+                            <h3 className="text-3xl font-bold text-slate-900">
+                              {t("deposit.success.title")}
+                            </h3>
+                            <p className="text-slate-500 text-lg max-w-sm mx-auto">
+                              {t("deposit.success.message")}
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setIsDepositSuccess(false);
+                              setIsDepositOpen(false);
+                            }}
+                            className="mt-6 border-slate-200 hover:bg-slate-50 rounded-2xl px-12 py-7 text-base font-bold transition-all hover:scale-105 active:scale-95 shadow-sm"
+                          >
+                            {t("common.close")}
+                          </Button>
+                        </div>
+                      ) : (
+                        <DepositWizard
+                          onSuccess={() => setIsDepositSuccess(true)}
+                          onCancel={() => setIsDepositOpen(false)}
+                        />
+                      )}
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
 
@@ -401,19 +465,17 @@ export function PublicNav() {
                       {t("home.search_btn")}
                     </Button>
                   </Link>
-                  <a
-                    href="#deposit-section"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1"
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setIsDepositOpen(true);
+                    }}
+                    className="flex-1 cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base outline-none ring-0 border-0 text-white"
                   >
-                    <Button
-                      size="lg"
-                      className="w-full cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base outline-none ring-0 border-0 text-white"
-                    >
-                      <Key className="h-5 w-5 mr-2" />
-                      {t("nav.deposit")}
-                    </Button>
-                  </a>
+                    <Key className="h-5 w-5 mr-2" />
+                    {t("nav.deposit")}
+                  </Button>
                 </div>
               </div>
             </div>

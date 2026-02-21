@@ -110,14 +110,14 @@ function ServicesContent() {
           <div className="flex flex-wrap justify-center gap-4 animate-in fade-in-0 zoom-in-95 duration-1000 delay-300">
             <Button
               size="lg"
-              className="rounded-2xl h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-900/20 border-none transition-all hover:scale-105"
+              className="rounded-lg h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-900/20 border-none transition-all hover:scale-105"
             >
               {t("common.start_search")}
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="rounded-2xl h-14 px-8 border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
+              className="rounded-lg h-14 px-8 border-white/20 hover:text-white hover:bg-white/10 backdrop-blur-sm"
             >
               {t("contact.title")}
             </Button>

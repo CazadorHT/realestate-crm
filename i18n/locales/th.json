@@ -606,6 +606,18 @@
     "view_details": "ดูรายละเอียด",
     "coming_soon": "เตรียมพบกับบริการใหม่เร็วๆ นี้..."
   },
+  "services_detail": {
+    "back_to_services": "กลับสู่หน้าบริการ",
+    "gallery": "คลังรูปภาพ",
+    "interested": "สนใจบริการนี้?",
+    "interested_desc": "ติดต่อทีมงานเพื่อจองบริการหรือสอบถามข้อมูลเพิ่มเติม",
+    "contact_line": "ติดต่อผ่าน LINE",
+    "other_channels": "ช่องทางอื่นๆ",
+    "why_choose": "ทำไมต้องเลือกเรา?",
+    "verified_trusted": "พันธมิตรที่ผ่านการตรวจสอบและน่าเชื่อถือ",
+    "quality_guaranteed": "รับประกันคุณภาพการบริการ",
+    "premium_standards": "มาตรฐานการบริการระดับพรีเมียม"
+  },
   "leads": {
     "requirements_title": "ความต้องการ",
     "requirements_desc": "สเปคทรัพย์ที่มองหา",

@@ -115,20 +115,20 @@ export function DepositMobileView({
       </div>
 
       {/* ── Mobile Footer ── */}
-      <div className="sticky bottom-0 px-6 pt-3 pb-[env(safe-area-inset-bottom,20px)] bg-white/95 backdrop-blur-md border-t border-slate-200">
-        <p className="text-[10px] text-slate-400 text-center mb-4 font-bold tracking-widest uppercase">
+      <div className="sticky bottom-0 px-6 pt-3 pb-[env(safe-area-inset-bottom,16px)] bg-white/95 backdrop-blur-md border-t border-slate-100/80 z-20">
+        <p className="text-[10px] text-slate-400 text-center mb-3 font-medium tracking-wide">
           {t("property.contact_dialog.step_of", {
             current: currentStep,
             total: totalSteps,
           })}
         </p>
 
-        <div className="flex gap-3 mb-12">
+        <div className="flex gap-3">
           <Button
             type="button"
             variant="ghost"
             onClick={() => (currentStep === 1 ? onCancel() : prevStep())}
-            className="flex-1 h-13 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 font-bold active:scale-95 transition-all"
+            className="flex-1 h-13 rounded-2xl bg-slate-50 border border-slate-200/80 text-slate-500 hover:bg-slate-100 hover:text-slate-700 font-semibold text-base transition-all active:scale-[0.97]"
           >
             {currentStep === 1 ? (
               <>
@@ -146,7 +146,7 @@ export function DepositMobileView({
             <Button
               type="button"
               onClick={nextStep}
-              className="flex-[1.5] h-13 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
+              className="flex-[1.5] h-13 rounded-2xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-base shadow-lg shadow-blue-500/25 active:scale-[0.97] transition-all"
             >
               {t("common.next") || "ถัดไป"}
               <ChevronRight className="w-4 h-4 ml-1.5" />

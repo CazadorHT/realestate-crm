@@ -11,6 +11,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Metadata } from "next";
+import { siteConfig } from "@/lib/site-config";
+import { getServerTranslations } from "@/lib/i18n";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { ServiceGalleryClient } from "./ServiceGalleryClient";
 
 export const revalidate = 60;
 
@@ -30,11 +34,21 @@ interface PageProps {
 
 async function ServiceDetail({ params }: PageProps) {
   const { slug } = await params;
+  const { language, t } = await getServerTranslations();
   const service = await getServiceBySlug(slug);
 
   if (!service) {
     notFound();
   }
+
+  // Localized values
+  const title = getLocaleValue(service, "title", language);
+  const description = getLocaleValue(service, "description", language);
+  const content = getLocaleValue(service, "content", language);
+  const isContactForPrice = service.price_range === "สอบถามราคา";
+  const displayPrice = isContactForPrice
+    ? t("common.contact_for_price")
+    : service.price_range;
 
   // Gallery splitting
   const gallery = service.gallery_images || [];
@@ -59,14 +73,15 @@ async function ServiceDetail({ params }: PageProps) {
             href="/services"
             className="absolute top-8 left-4 md:left-8 text-white/80 hover:text-white flex items-center gap-2 transition-colors py-2 px-4 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/10"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to Services
+            <ArrowLeft className="h-4 w-4" />{" "}
+            {t("services_detail.back_to_services")}
           </Link>
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg max-w-4xl leading-tight">
-            {service.title}
+            {title}
           </h1>
-          {service.price_range && (
+          {displayPrice && (
             <div className="mt-4 px-6 py-2 rounded-full bg-yellow-400/90 text-yellow-950 font-bold text-lg shadow-lg backdrop-blur-sm">
-              {service.price_range}
+              {displayPrice}
             </div>
           )}
         </div>
@@ -81,66 +96,50 @@ async function ServiceDetail({ params }: PageProps) {
               <div className="prose prose-lg max-w-none prose-slate prose-headings:font-bold prose-a:text-blue-600">
                 <div
                   dangerouslySetInnerHTML={{
-                    __html: service.content || service.description || "",
+                    __html: content || description || "",
                   }}
                 />
               </div>
             </div>
 
-            {/* Gallery Grid */}
-            {gallery.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                  <span className="w-1 h-8 bg-blue-600 rounded-full" />
-                  Gallery
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {gallery.map((img, idx) => (
-                    <div
-                      key={idx}
-                      className="aspect-square rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-zoom-in group"
-                    >
-                      <img
-                        src={img}
-                        alt={`${service.title} gallery ${idx + 1}`}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Gallery Section */}
+            <ServiceGalleryClient
+              images={gallery}
+              title={title}
+              galleryLabel={t("services_detail.gallery")}
+            />
           </div>
 
           {/* Sidebar CTA */}
           <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 h-fit sticky top-24 space-y-6">
             <div>
               <h3 className="text-xl font-bold text-slate-800 mb-2">
-                Interested?
+                {t("services_detail.interested")}
               </h3>
               <p className="text-slate-500">
-                Contact us to book this service or get more information.
+                {t("services_detail.interested_desc")}
               </p>
             </div>
 
             <div className="space-y-3">
-              {service.contact_link ? (
-                <a
-                  href={service.contact_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full"
-                >
-                  <Button className="w-full h-12 text-lg bg-[#06C755] hover:bg-[#05b34c] text-white shadow-lg shadow-green-500/20">
-                    <Phone className="mr-2 h-5 w-5" />
-                    Contact via Line
-                  </Button>
-                </a>
-              ) : (
+              <a
+                href={service.contact_link || siteConfig.links.line}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full"
+              >
+                <Button className="w-full h-12 text-lg bg-[#06C755] hover:bg-[#05b34c] text-white shadow-lg shadow-green-500/20 font-bold">
+                  <Phone className="mr-2 h-5 w-5" />
+                  {t("services_detail.contact_line")}
+                </Button>
+              </a>
+              {!service.contact_link && (
                 <Link href="/contact" className="block w-full">
-                  <Button className="w-full h-12 text-lg bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20">
-                    <Phone className="mr-2 h-5 w-5" />
-                    Contact Us
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 text-lg border-slate-200 text-slate-600 hover:bg-slate-50"
+                  >
+                    {t("services_detail.other_channels")}
                   </Button>
                 </Link>
               )}
@@ -148,20 +147,26 @@ async function ServiceDetail({ params }: PageProps) {
 
             <div className="pt-6 border-t border-slate-100">
               <h4 className="font-semibold text-slate-900 mb-4">
-                Why choose this service?
+                {t("services_detail.why_choose")}
               </h4>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3 text-slate-600">
                   <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
-                  <span className="text-sm">Verified & Trusted Partner</span>
+                  <span className="text-sm">
+                    {t("services_detail.verified_trusted")}
+                  </span>
                 </li>
                 <li className="flex items-start gap-3 text-slate-600">
                   <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
-                  <span className="text-sm">Quality Guaranteed</span>
+                  <span className="text-sm">
+                    {t("services_detail.quality_guaranteed")}
+                  </span>
                 </li>
                 <li className="flex items-start gap-3 text-slate-600">
                   <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
-                  <span className="text-sm">Premium Service Standards</span>
+                  <span className="text-sm">
+                    {t("services_detail.premium_standards")}
+                  </span>
                 </li>
               </ul>
             </div>
@@ -176,12 +181,16 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const { language } = await getServerTranslations();
   const service = await getServiceBySlug(slug);
   if (!service) return { title: "Service Not Found" };
 
+  const title = getLocaleValue(service, "title", language);
+  const description = getLocaleValue(service, "description", language);
+
   return {
-    title: `${service.title} | Premium Services`,
-    description: service.description || `Explore our ${service.title} service.`,
+    title: `${title} | Premium Services`,
+    description: description || `Explore our ${title} service.`,
     openGraph: {
       images: service.cover_image ? [service.cover_image] : [],
     },

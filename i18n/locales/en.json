@@ -607,6 +607,18 @@
     "view_details": "View Details",
     "coming_soon": "New services coming soon..."
   },
+  "services_detail": {
+    "back_to_services": "Back to Services",
+    "gallery": "Gallery",
+    "interested": "Interested?",
+    "interested_desc": "Contact us to book this service or get more information.",
+    "contact_line": "Contact via LINE",
+    "other_channels": "Other Channels",
+    "why_choose": "Why choose this service?",
+    "verified_trusted": "Verified & Trusted Partner",
+    "quality_guaranteed": "Quality Guaranteed",
+    "premium_standards": "Premium Service Standards"
+  },
   "leads": {
     "requirements_title": "Requirements",
     "requirements_desc": "Property specs you're looking for",

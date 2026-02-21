@@ -172,7 +172,7 @@ export function DepositPropertySection() {
               </DialogTrigger>
               <DialogContent
                 overlayClassName="z-150"
-                className="fixed z-150 w-full gap-0 p-0 border-0 duration-500 ease-in-out transition-all
+                className="fixed z-150 w-full gap-0 p-0 border-0 duration-300
                 data-[state=open]:animate-in data-[state=closed]:animate-out
                 data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
 
@@ -180,10 +180,9 @@ export function DepositPropertySection() {
                 bg-white
                 bottom-0 top-auto left-0 right-0 translate-x-0 translate-y-0
                 rounded-t-[28px] rounded-b-none
-                h-auto max-h-[90dvh] max-w-none
+                h-auto max-h-[85dvh] max-w-none
                 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
-                data-[state=closed]:scale-95 data-[state=open]:scale-100 
-                shadow-2xl
+                shadow-xl
 
                 // Desktop/Tablet: Centered Dialog
                 sm:bottom-auto sm:top-[40%] lg:top-[50%] sm:left-[50%]

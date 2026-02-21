@@ -612,6 +612,18 @@
     "view_details": "查看详情",
     "coming_soon": "新服务即将推出..."
   },
+  "services_detail": {
+    "back_to_services": "返回服务列表",
+    "gallery": "图库",
+    "interested": "感兴趣吗？",
+    "interested_desc": "联系我们预订此服务或了解更多信息。",
+    "contact_line": "通过 LINE 联系",
+    "other_channels": "其他渠道",
+    "why_choose": "为什么要选择这项服务？",
+    "verified_trusted": "经过验证且值得信赖的合作伙伴",
+    "quality_guaranteed": "品质保证",
+    "premium_standards": "优质服务标准"
+  },
   "leads": {
     "requirements_title": "需求",
     "requirements_desc": "您正在寻找的房产规格",
