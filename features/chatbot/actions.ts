@@ -169,15 +169,14 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
       try {
         result = await chat.sendMessage(newMessage);
         break; // Success
-      } catch (error: any) {
-        const isRateLimit =
-          error.status === 429 || error.message?.includes("429");
-        const isServerBusy =
-          error.status === 503 || error.message?.includes("503");
+      } catch (error: unknown) {
+        const err = error as { status?: number; message?: string };
+        const isRateLimit = err.status === 429 || err.message?.includes("429");
+        const isServerBusy = err.status === 503 || err.message?.includes("503");
 
         if ((isRateLimit || isServerBusy) && retryCount < maxRetries) {
           console.warn(
-            `Gemini Error ${error.status}. Retrying in ${delay}ms... (Attempt ${retryCount + 1}/${maxRetries})`,
+            `Gemini Error ${err.status}. Retrying in ${delay}ms... (Attempt ${retryCount + 1}/${maxRetries})`,
           );
           await new Promise((resolve) => setTimeout(resolve, delay));
           delay *= 2; // Exponential backoff: 1s -> 2s -> 4s -> 8s
@@ -292,7 +291,11 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
             rental_price: p.rental_price,
             original_price: p.original_price,
             original_rental_price: p.original_rental_price,
-            listing_type: p.listing_type,
+            listing_type: p.listing_type as
+              | "SALE"
+              | "RENT"
+              | "SALE_AND_RENT"
+              | null,
             slug: p.slug,
           })),
         };
@@ -314,8 +317,9 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
       text: finalText,
       searchCriteria: propertyQuery, // To trigger UI updates if needed
     };
-  } catch (error: any) {
-    console.error("Chatbot Error:", error);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Chatbot Error:", err);
 
     // Log Error (Safe import)
     try {
@@ -324,14 +328,14 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
         model: "gemini-2.5-flash",
         feature: "chatbot",
         status: "error",
-        errorMessage: error.message,
+        errorMessage: err.message,
       });
     } catch (logErr) {
       console.error("Failed to log error:", logErr);
     }
 
     return {
-      text: "ขออภัยครับ เกิดข้อผิดพลาดในการประมวลผล (" + error.message + ")",
+      text: "ขออภัยครับ เกิดข้อผิดพลาดในการประมวลผล (" + err.message + ")",
       toolCalls: null,
     };
   }

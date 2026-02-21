@@ -5,17 +5,13 @@ import {
 } from "@/features/properties/labels";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 
-// ============================
-// Types
-// ============================
-export type BotLang = "th" | "en" | "cn";
-
-type FlexBubble = Record<string, any>;
-type FlexMessage = { type: "flex"; altText: string; contents: any };
-type QuickReplyItem = {
-  type: "action";
-  action: { type: string; label: string; text?: string; uri?: string };
-};
+import {
+  type BotLang,
+  type FlexBubble,
+  type FlexMessage,
+  type QuickReplyItem,
+  type QuickReply,
+} from "@/types/line";
 
 interface PropertyForFlex {
   id: string;
@@ -259,7 +255,7 @@ const PROPERTY_TYPE_EMOJI: Record<string, string> = {
 // ============================
 // Language Selection
 // ============================
-export function buildLanguageSelection(): any {
+export function buildLanguageSelection(): FlexMessage {
   return {
     type: "flex",
     altText: "กรุณาเลือกภาษา / Please select language",
@@ -344,7 +340,7 @@ export function buildLanguageSelection(): any {
 // Welcome Greeting Flex
 // ============================
 export function buildWelcomeFlex(lang: BotLang = "th"): {
-  messages: any[];
+  messages: FlexMessage[];
 } {
   const bubble: FlexBubble = {
     type: "bubble",
@@ -477,39 +473,39 @@ export function buildWelcomeFlex(lang: BotLang = "th"): {
     },
   };
 
-  const quickReply = {
+  const quickReply: QuickReply = {
     items: [
       {
-        type: "action",
+        type: "action" as const,
         action: {
-          type: "postback",
+          type: "postback" as const,
           label: t("qr_search", lang).slice(0, 20),
           data: "action=search",
           displayText: t("qr_search", lang),
         },
       },
       {
-        type: "action",
+        type: "action" as const,
         action: {
-          type: "postback",
+          type: "postback" as const,
           label: t("qr_deposit", lang).slice(0, 20),
           data: "action=deposit",
           displayText: t("qr_deposit", lang),
         },
       },
       {
-        type: "action",
+        type: "action" as const,
         action: {
-          type: "postback",
+          type: "postback" as const,
           label: t("qr_contact", lang).slice(0, 20),
           data: "action=contact",
           displayText: t("qr_contact", lang),
         },
       },
       {
-        type: "action",
+        type: "action" as const,
         action: {
-          type: "postback",
+          type: "postback" as const,
           label: t("qr_lang", lang).slice(0, 20),
           data: "action=change_lang",
           displayText: t("qr_lang", lang),
@@ -536,7 +532,7 @@ export function buildWelcomeFlex(lang: BotLang = "th"): {
 export function buildPropertyTypeQuickReply(
   lang: BotLang = "th",
   activeTypes?: string[],
-): any {
+): { type: "text"; text: string; quickReply: QuickReply } {
   // Use DB-sourced activeTypes if provided, otherwise show common types
   const typesToShow: string[] =
     activeTypes && activeTypes.length > 0
@@ -559,9 +555,9 @@ export function buildPropertyTypeQuickReply(
       PROPERTY_TYPE_LABELS[type as PropertyType] ||
       type;
     return {
-      type: "action",
+      type: "action" as const,
       action: {
-        type: "postback",
+        type: "postback" as const,
         label: `${PROPERTY_TYPE_EMOJI[type] || "📦"} ${label}`.slice(0, 20),
         data: new URLSearchParams({ action: "select_type", type }).toString(),
         displayText: `${PROPERTY_TYPE_EMOJI[type] || "📦"} ${label}`,
@@ -584,7 +580,7 @@ export function buildAreaQuickReply(
   areas: string[],
   lang: BotLang = "th",
   areaTranslations?: AreaTranslations,
-): any {
+): { type: "text"; text: string; quickReply: QuickReply } {
   const typeLabel =
     PROPERTY_TYPE_LABELS_I18N[propertyType]?.[lang] ||
     PROPERTY_TYPE_LABELS[propertyType as PropertyType] ||
@@ -595,9 +591,9 @@ export function buildAreaQuickReply(
   const items: QuickReplyItem[] = limitedAreas.map((area) => {
     const localizedLabel = localizeArea(area, lang, areaTranslations);
     return {
-      type: "action",
+      type: "action" as const,
       action: {
-        type: "postback",
+        type: "postback" as const,
         label: `📍 ${localizedLabel}`.slice(0, 20),
         data: new URLSearchParams({
           action: "select_area",
@@ -612,6 +608,47 @@ export function buildAreaQuickReply(
   return {
     type: "text",
     text: `${typeLabel} — ${t("select_area", lang)}`,
+    quickReply: { items },
+  };
+}
+
+// ============================
+// Search Result Text
+// ============================
+export function buildSearchResultText(
+  n: number,
+  propertyType: string,
+  area?: string,
+  lang: BotLang = "th",
+  areaTranslations?: AreaTranslations,
+): { type: "text"; text: string; quickReply: QuickReply } {
+  const typeLabel =
+    PROPERTY_TYPE_LABELS_I18N[propertyType]?.[lang] ||
+    PROPERTY_TYPE_LABELS[propertyType as PropertyType] ||
+    propertyType;
+
+  let text = t("found_n", lang, { n: String(n) });
+  if (area) {
+    const localizedArea = localizeArea(area, lang, areaTranslations);
+    text += ` ${t("in_area", lang, { area: localizedArea })}`;
+  }
+  text += ` ${t("for_type", lang, { type: typeLabel })}`;
+
+  const items: QuickReplyItem[] = [
+    {
+      type: "action" as const,
+      action: {
+        type: "postback" as const,
+        label: t("qr_search_again", lang).slice(0, 20),
+        data: "action=search",
+        displayText: t("qr_search_again", lang),
+      },
+    },
+  ];
+
+  return {
+    type: "text",
+    text: text,
     quickReply: { items },
   };
 }
@@ -907,7 +944,7 @@ export function buildPropertyCarousel(
 // ============================
 // Contact Info Message
 // ============================
-export function buildContactInfoMessage(lang: BotLang = "th"): any {
+export function buildContactInfoMessage(lang: BotLang = "th"): FlexMessage {
   return {
     type: "flex",
     altText: t("contact_title", lang),
@@ -1009,7 +1046,7 @@ export function buildContactInfoMessage(lang: BotLang = "th"): any {
 // ============================
 // Deposit / List Property Message
 // ============================
-export function buildDepositMessage(lang: BotLang = "th"): any {
+export function buildDepositFlex(lang: BotLang = "th"): FlexMessage {
   return {
     type: "flex",
     altText: t("deposit_title", lang),
@@ -1129,16 +1166,16 @@ export function buildDepositMessage(lang: BotLang = "th"): any {
 export function buildNoResultsMessage(
   context: string,
   lang: BotLang = "th",
-): any {
+): { type: "text"; text: string; quickReply: QuickReply } {
   return {
     type: "text",
     text: t("no_results", lang, { context }),
     quickReply: {
       items: [
         {
-          type: "action",
+          type: "action" as const,
           action: {
-            type: "message",
+            type: "message" as const,
             label: t("qr_search", lang).slice(0, 20),
             text: "ค้นหาทรัพย์",
           },

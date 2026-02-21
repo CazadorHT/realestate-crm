@@ -19,12 +19,18 @@ import {
   buildAreaQuickReply,
   buildPropertyCarousel,
   buildContactInfoMessage,
-  buildDepositMessage,
+  buildDepositFlex,
   buildNoResultsMessage,
   buildLanguageSelection,
-  type BotLang,
+  buildSearchResultText,
   type AreaTranslations,
 } from "@/lib/line-flex-builders";
+import {
+  type FlexMessage,
+  type QuickReply,
+  type BotLang,
+  type FlexCarousel,
+} from "@/types/line";
 
 // ============================
 // Language Preference Storage
@@ -123,7 +129,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    const events: any[] = JSON.parse(body).events;
+    const events: LineEvent[] = JSON.parse(body).events;
     console.log(`[BOT] Received ${events.length} events`);
 
     const areaTranslations = await prepareAreaTranslations();
@@ -165,7 +171,7 @@ export async function POST(req: NextRequest) {
         if (event.type === "postback") {
           await handlePostbackEvent(event, areaTranslations);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Event error:", err);
       }
     }
@@ -207,7 +213,7 @@ async function handleJoinEvent(event: LineEvent) {
   }
 
   const supabase = createAdminClient();
-  const { error } = await (supabase as any).from("line_groups").upsert({
+  const { error } = await supabase.from("line_groups").upsert({
     group_id: groupId,
     group_name: groupName,
     picture_url: pictureUrl,
@@ -232,7 +238,7 @@ async function handleLeaveEvent(event: LineEvent) {
   if (!groupId) return;
 
   const supabase = createAdminClient();
-  await (supabase as any)
+  await supabase
     .from("line_groups")
     .update({ is_active: false })
     .eq("group_id", groupId);
@@ -341,7 +347,7 @@ async function handlePostbackEvent(
   }
 
   if (action === "deposit") {
-    const msg = buildDepositMessage(lang);
+    const msg = buildDepositFlex(lang);
     await replyMessage(event.replyToken, [msg]);
     return;
   }
@@ -384,7 +390,8 @@ async function handlePostbackEvent(
       areaTranslations,
     );
 
-    if (!flex.contents.contents || flex.contents.contents.length === 0) {
+    const carousel = flex.contents as FlexCarousel;
+    if (!carousel.contents || carousel.contents.length === 0) {
       await replyText(
         event.replyToken,
         `พบ ${properties.length} ทรัพย์ แต่ไม่สามารถสร้าง Carousel ได้`,
@@ -442,7 +449,7 @@ async function handleIncomingChannelMessage(
     const newName = text.replace("/setname ", "").trim();
     if (newName) {
       const supabase = createAdminClient();
-      await (supabase as any)
+      await supabase
         .from("line_groups")
         .update({ group_name: newName })
         .eq("group_id", groupId);
@@ -673,7 +680,7 @@ async function handleInteractiveCommand(
     text.toLowerCase() === "deposit" ||
     text.toLowerCase() === "list"
   ) {
-    const msg = buildDepositMessage(lang);
+    const msg = buildDepositFlex(lang);
     await replyMessage(replyToken, [msg]);
     return;
   }
@@ -774,7 +781,7 @@ async function handleAIResponse(
       return;
     }
 
-    const messages: any[] = [];
+    const messages: (FlexMessage | { type: "text"; text: string })[] = [];
 
     // 2. Add AI Text Response
     if (aiResult.text) {
@@ -795,7 +802,7 @@ async function handleAIResponse(
         lang,
         areaTranslations,
       );
-      messages.push(flex);
+      messages.push(flex as FlexMessage);
     }
 
     if (messages.length > 0) {

@@ -39,7 +39,7 @@ import { siteConfig } from "@/lib/site-config";
 
 function convertToRecentProperty(
   prop: RecommendedProperty,
-  t: any,
+  t: (key: any, params?: any) => string,
   language: string,
 ): RecentProperty {
   // Calculate price_text based on listing type and discount
