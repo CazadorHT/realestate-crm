@@ -46,6 +46,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
       facebook_psid: null,
       whatsapp_id: null,
       wechat_id: null,
+      team_id: null,
       other_contact: null,
       notification_preferences: null,
       created_at: new Date().toISOString(),
