@@ -15,6 +15,7 @@ export const LEAD_SOURCE_LABELS = {
   WEBSITE: "มาจากช่องทางเว็บไซต์",
   REFERRAL: "ถูกแนะนำมา",
   OTHER: "อื่น ๆ",
+  WHATSAPP: "มาจากช่องทางวอตส์แอปป์",
 } satisfies Record<LeadSource, string>;
 
 export const LEAD_STAGE_LABELS = {
@@ -53,6 +54,7 @@ export const LEAD_SOURCE_ORDER = [
   "WEBSITE",
   "REFERRAL",
   "OTHER",
+  "WHATSAPP",
 ] as const satisfies readonly [LeadSource, ...LeadSource[]];
 
 export const LEAD_ACTIVITY_TYPE_ORDER = [

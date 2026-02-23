@@ -56,6 +56,23 @@ export async function POST(req: NextRequest) {
         }
       }
     }
+    // WhatsApp subscription
+    else if (body.object === "whatsapp_business_account") {
+      for (const entry of body.entry) {
+        if (entry.changes) {
+          for (const change of entry.changes) {
+            if (change.field === "messages" && change.value.messages) {
+              for (const message of change.value.messages) {
+                await handleWhatsAppWebhook(
+                  message,
+                  change.value.contacts?.[0],
+                );
+              }
+            }
+          }
+        }
+      }
+    }
 
     return NextResponse.json({ status: "ok" });
   } catch (err) {
@@ -114,6 +131,55 @@ async function handleMetaMessage(event: any, source: "FACEBOOK" | "INSTAGRAM") {
       external_message_id: event.message.mid,
       content: text,
       payload: event,
+      direction: "INCOMING",
+    });
+  }
+}
+
+async function handleWhatsAppWebhook(message: any, contact: any) {
+  if (message.type !== "text") return; // Support text only for now
+
+  const from = message.from; // Phone number
+  const text = message.text.body;
+  const name = contact?.profile?.name || `WA: ${from}`;
+
+  const supabase = createAdminClient();
+
+  // 1. Find or Create Lead by Phone
+  let { data: lead } = await supabase
+    .from("leads")
+    .select("id")
+    .eq("phone", from)
+    .single();
+
+  if (!lead) {
+    const { data: newLead, error: createError } = await supabase
+      .from("leads")
+      .insert({
+        full_name: name,
+        phone: from,
+        source: "WHATSAPP",
+        stage: "NEW",
+        note: "Auto-captured from WhatsApp Webhook",
+      })
+      .select("id")
+      .single();
+
+    if (createError) {
+      console.error("Error creating WA auto-lead:", createError);
+      return;
+    }
+    lead = newLead as { id: string };
+  }
+
+  // 2. Log Message
+  if (lead) {
+    await saveOmniMessage({
+      lead_id: lead.id,
+      source: "WHATSAPP",
+      external_message_id: message.id,
+      content: text,
+      payload: message,
       direction: "INCOMING",
     });
   }

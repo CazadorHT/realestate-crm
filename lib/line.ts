@@ -109,6 +109,7 @@ export async function saveOmniMessage(data: {
     | "LINE"
     | "FACEBOOK"
     | "INSTAGRAM"
+    | "WHATSAPP"
     | "WEBSITE"
     | "PORTAL"
     | "REFERRAL"

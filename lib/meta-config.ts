@@ -4,4 +4,6 @@ export const metaConfig = {
   verifyToken: process.env.META_VERIFY_TOKEN || "",
   pageAccessToken: process.env.META_PAGE_ACCESS_TOKEN || "",
   graphApiUrl: "https://graph.facebook.com/v19.0",
+  whatsappPhoneNumberId: process.env.META_WHATSAPP_PHONE_NUMBER_ID || "",
+  whatsappAccessToken: process.env.META_WHATSAPP_ACCESS_TOKEN || "",
 };

@@ -3,7 +3,14 @@
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
-import { MessageSquare, Facebook, Globe, User, Instagram } from "lucide-react";
+import {
+  MessageSquare,
+  Facebook,
+  Globe,
+  User,
+  Instagram,
+  MessageCircle,
+} from "lucide-react";
 
 export function ConversationList({
   conversations,
@@ -29,9 +36,11 @@ export function ConversationList({
                 ? Facebook
                 : conv.source === "INSTAGRAM"
                   ? Instagram
-                  : conv.source === "WEBSITE"
-                    ? Globe
-                    : User;
+                  : conv.source === "WHATSAPP"
+                    ? MessageCircle
+                    : conv.source === "WEBSITE"
+                      ? Globe
+                      : User;
 
           return (
             <button
@@ -56,7 +65,9 @@ export function ConversationList({
                           ? "text-blue-500"
                           : conv.source === "INSTAGRAM"
                             ? "text-pink-500"
-                            : "text-slate-400",
+                            : conv.source === "WHATSAPP"
+                              ? "text-emerald-500"
+                              : "text-slate-400",
                     )}
                   />
                 </div>
