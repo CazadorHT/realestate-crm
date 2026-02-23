@@ -78,3 +78,41 @@ export async function sendDirectReplyAction(leadId: string, content: string) {
     return { success: false, error: err.message };
   }
 }
+
+export async function replyToCommentAction(messageId: string, content: string) {
+  const supabase = createAdminClient();
+
+  try {
+    // 1. Get original comment details
+    const { data: msg, error: msgError } = await supabase
+      .from("omni_messages")
+      .select("external_message_id, lead_id, source")
+      .eq("id", messageId)
+      .single();
+
+    if (msgError || !msg || !msg.external_message_id || !msg.lead_id) {
+      throw new Error("Original comment not found or missing required data");
+    }
+
+    // 2. Reply via Meta API
+    const { replyToMetaComment } = await import("@/lib/meta");
+    const res = await replyToMetaComment(msg.external_message_id, content);
+
+    if (!res.success) throw new Error(res.error);
+
+    // 3. Save to omni_messages
+    await saveOmniMessage({
+      lead_id: msg.lead_id,
+      source: msg.source as any,
+      content,
+      direction: "OUTGOING",
+      payload: { comment_reply: true, parent_id: msg.external_message_id },
+    });
+
+    revalidatePath("/protected/inbox");
+    return { success: true };
+  } catch (err: any) {
+    console.error("Comment reply failed:", err);
+    return { success: false, error: err.message };
+  }
+}

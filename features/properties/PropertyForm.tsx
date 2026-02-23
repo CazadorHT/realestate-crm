@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, List } from "lucide-react";
+import { ExternalLink, List, Facebook, Instagram, Loader2 } from "lucide-react";
 import { FormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
 import type { PropertyRow } from "@/features/properties/types";
@@ -25,6 +25,7 @@ import {
   addPopularAreaAction,
   type CreatePropertyResult,
   getPopularAreasAction,
+  postPropertyToMetaAction,
 } from "./actions";
 import { Form } from "@/components/ui/form";
 import {
@@ -586,9 +587,7 @@ export function PropertyForm({
               >
                 <ExternalLink className="w-5 h-5 " />
                 <div className="flex flex-col items-start">
-                  <span className="">
-                    ดูหน้าเว็บไซต์ (Public Page)
-                  </span>
+                  <span className="">ดูหน้าเว็บไซต์ (Public Page)</span>
                   <span className="text-xs font-normal">
                     เปิดแท็บใหม่เพื่อดูตัวอย่าง
                   </span>
@@ -607,6 +606,63 @@ export function PropertyForm({
                   </span>
                 </div>
               </Button>
+
+              <div className="pt-2 border-t border-slate-100 mt-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-3 h-14 text-base font-medium text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50 rounded-xl"
+                  onClick={async () => {
+                    if (!successData?.id) return;
+                    const toastId = toast.loading(
+                      "กำลังโพสต์ไปยัง Facebook...",
+                    );
+                    const res = await postPropertyToMetaAction(successData.id);
+                    if (res.success) {
+                      toast.success("โพสต์สำเร็จ!", { id: toastId });
+                    } else {
+                      toast.error(res.message, { id: toastId });
+                    }
+                  }}
+                >
+                  <Facebook className="w-5 h-5" />
+                  <div className="flex flex-col items-start">
+                    <span>โพสต์ลง Facebook ทันที</span>
+                    <span className="text-xs text-slate-500 font-normal">
+                      แชร์ไปยังเพจที่เชื่อมต่อไว้
+                    </span>
+                  </div>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-3 h-14 text-base font-medium text-pink-600 border-pink-100 bg-pink-50/50 hover:bg-pink-50 rounded-xl mt-2"
+                  onClick={async () => {
+                    if (!successData?.id) return;
+                    const toastId = toast.loading(
+                      "กำลังโพสต์ไปยัง Instagram...",
+                    );
+                    const res = await postPropertyToMetaAction(
+                      successData.id,
+                      "INSTAGRAM",
+                    );
+                    if (res.success) {
+                      toast.success("โพสต์ลง Instagram สำเร็จ!", {
+                        id: toastId,
+                      });
+                    } else {
+                      toast.error(res.message, { id: toastId });
+                    }
+                  }}
+                >
+                  <Instagram className="w-5 h-5" />
+                  <div className="flex flex-col items-start">
+                    <span>โพสต์ลง Instagram ทันที</span>
+                    <span className="text-xs text-slate-500 font-normal">
+                      แชร์ไปยังบัญชี IG ที่เชื่อมต่อไว้
+                    </span>
+                  </div>
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

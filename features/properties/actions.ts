@@ -26,4 +26,5 @@ export {
   getPopularAreasAction,
   addPopularAreaAction,
 } from "./actions/fetch";
+export { postPropertyToMetaAction } from "./actions/social";
 export { incrementPropertyView } from "./actions/view";

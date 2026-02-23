@@ -31,6 +31,8 @@ import { PropertyAmenities } from "@/components/public/property-detail/PropertyA
 import { PropertyMapSection } from "@/components/public/property-detail/PropertyMapSection";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BsStars } from "react-icons/bs";
+import { FacebookPostButton } from "@/features/properties/components/FacebookPostButton";
+import { InstagramPostButton } from "@/features/properties/components/InstagramPostButton";
 
 export default async function PropertyDetailsPage({
   params,
@@ -228,6 +230,19 @@ export default async function PropertyDetailsPage({
               ดูหน้าเว็บ
             </Link>
           </Button>
+
+          <FacebookPostButton
+            propertyId={property.id}
+            variant="outline"
+            className="flex-1 lg:flex-none rounded-full bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+          />
+
+          <InstagramPostButton
+            propertyId={property.id}
+            variant="outline"
+            className="flex-1 lg:flex-none rounded-full bg-pink-50 text-pink-600 border-pink-100 hover:bg-pink-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+          />
+
           <Button
             variant="outline"
             size="sm"

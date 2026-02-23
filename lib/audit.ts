@@ -38,6 +38,7 @@ export type AuditAction =
   | "popular_area.bulk_delete"
   | "lead.pdpa_update"
   | "property.syndication.update"
+  | "property.social_post"
   | "document.bulk_delete"
   | "team.create"
   | "team.update"

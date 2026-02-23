@@ -119,11 +119,27 @@ export function TeamsTable({
           <TableBody>
             {teams.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="py-20 text-center text-slate-400"
-                >
-                  ไม่พบข้อมูลทีมในระบบ
+                <TableCell colSpan={5} className="py-24 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-4">
+                    <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center">
+                      <Users className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-lg font-bold text-slate-900">
+                        ยังไม่มีข้อมูลทีมในระบบ
+                      </p>
+                      <p className="text-slate-500 text-sm max-w-sm mx-auto">
+                        เริ่มสร้างทีมแรกของคุณเพื่อจัดการสิทธิ์และแบ่งสายงานให้กับพนักงานของคุณ
+                      </p>
+                    </div>
+                    <Button
+                      onClick={openCreateDialog}
+                      className="bg-indigo-600 hover:bg-indigo-700 rounded-xl px-8"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      สร้างทีมแรกของคุณ
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (

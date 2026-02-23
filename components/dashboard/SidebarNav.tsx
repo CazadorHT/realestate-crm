@@ -209,62 +209,12 @@ export function SidebarNav({ role }: { role: UserRole }) {
       icon: UserCircle,
       active: pathname === "/protected/profile",
     },
-
     {
-      title: "AI Monitor",
-      href: "/protected/ai-monitor",
-      icon: Activity,
-      active: pathname?.startsWith("/protected/ai-monitor") ?? false,
-      roles: ["ADMIN", "AGENT"],
-    },
-    {
-      title: "ตั้งค่า AI Model",
-      href: "/protected/admin/ai-config",
-      icon: Cpu,
-      active: pathname?.startsWith("/protected/admin/ai-config") ?? false,
-      roles: ["ADMIN"],
-    },
-    {
-      title: "ตั้งค่าเว็บไซต์",
+      title: "ตั้งค่าระบบ",
       href: "/protected/settings",
       icon: Settings,
       active: pathname === "/protected/settings",
       roles: ["ADMIN", "AGENT", "MANAGER"],
-    },
-    {
-      title: "SmartMatch Config",
-      href: "/protected/settings/smart-match",
-      icon: Sparkles,
-      active: pathname?.startsWith("/protected/settings/smart-match") ?? false,
-      roles: ["ADMIN"],
-    },
-    {
-      title: "จัดการผู้ใช้",
-      href: "/protected/settings/users",
-      icon: Shield,
-      active: pathname?.startsWith("/protected/settings/users") ?? false,
-      roles: ["ADMIN"],
-    },
-    {
-      title: "Audit Logs",
-      href: "/protected/admin/audit-logs",
-      icon: History,
-      active: pathname?.startsWith("/protected/admin/audit-logs") ?? false,
-      roles: ["ADMIN"],
-    },
-    {
-      title: "Line Manager",
-      href: "/protected/line-manager",
-      icon: MessageSquare,
-      active: pathname?.startsWith("/protected/line-manager") ?? false,
-      roles: ["ADMIN"],
-    },
-    {
-      title: "จัดการทีม",
-      href: "/protected/settings/teams",
-      icon: Users,
-      active: pathname?.startsWith("/protected/settings/teams") ?? false,
-      roles: ["ADMIN"],
     },
   ];
 
