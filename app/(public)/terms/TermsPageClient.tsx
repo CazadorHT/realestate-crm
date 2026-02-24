@@ -113,6 +113,62 @@ export default function TermsPageClient() {
               <p>{t("terms.section4_p1")}</p>
             </section>
 
+            <section className="mb-10 last:mb-0">
+              <h2 className="text-2xl mb-4">{t("terms.section5_title")}</h2>
+              <p>{t("terms.section5_p1")}</p>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="text-2xl mb-4">{t("terms.section6_title")}</h2>
+              <p>{t("terms.section6_p1")}</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>
+                  <a
+                    href="https://www.facebook.com/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Meta Terms
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://www.tiktok.com/legal/terms-of-service"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    TikTok Terms
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://terms.line.me"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    LINE Terms
+                  </a>
+                </li>
+              </ul>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="text-2xl mb-4">{t("terms.section7_title")}</h2>
+              <p>{t("terms.section7_p1")}</p>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="text-2xl mb-4">{t("terms.section8_title")}</h2>
+              <p>{t("terms.section8_p1")}</p>
+            </section>
+
+            <div className="pt-6 border-t border-slate-100 italic text-slate-400 text-sm">
+              {t("terms.pdpa_note")}
+            </div>
+
             <div className="mt-12 p-8 bg-slate-50 rounded-2xl border border-slate-100 text-center not-prose">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-sm mb-4 text-slate-400">
                 <HelpCircle className="w-6 h-6" />

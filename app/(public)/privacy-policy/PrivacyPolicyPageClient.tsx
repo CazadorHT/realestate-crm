@@ -187,6 +187,76 @@ export default function PrivacyPolicyPageClient() {
                 </a>
               </div>
             </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  7
+                </span>
+                {t("privacy.section7_title")}
+              </h2>
+              <p>{t("privacy.section7_p1")}</p>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  8
+                </span>
+                {t("privacy.section8_title")}
+              </h2>
+              <p>{t("privacy.section8_p1")}</p>
+              <ul>
+                <li>{t("privacy.section8_l1")}</li>
+                <li>{t("privacy.section8_l2")}</li>
+                <li>{t("privacy.section8_l3")}</li>
+              </ul>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  9
+                </span>
+                {t("privacy.section9_title")}
+              </h2>
+              <p>{t("privacy.section9_p1")}</p>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  10
+                </span>
+                {t("privacy.section10_title")}
+              </h2>
+              <p>{t("privacy.section10_p1")}</p>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  11
+                </span>
+                {t("privacy.section11_title")}
+              </h2>
+              <p>{t("privacy.section11_p1")}</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>{t("privacy.section11_l1")}</li>
+                <li>{t("privacy.section11_l2")}</li>
+                <li>{t("privacy.section11_l3")}</li>
+              </ul>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  12
+                </span>
+                {t("privacy.section12_title")}
+              </h2>
+              <p>{t("privacy.section12_p1")}</p>
+            </section>
           </div>
         </div>
       </div>
