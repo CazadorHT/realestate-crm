@@ -1,12 +1,13 @@
 import { metaConfig } from "./meta-config";
+import { MetaPlatform, MetaUserProfile, MetaApiResponse } from "@/types/meta";
 
 /**
  * Fetch Meta user profile (Messenger or Instagram)
  */
 export async function getMetaUserProfile(
   psid: string,
-  platform: "FACEBOOK" | "INSTAGRAM",
-) {
+  platform: MetaPlatform,
+): Promise<MetaUserProfile | null> {
   const token = metaConfig.pageAccessToken;
   if (!token) return null;
 
@@ -28,8 +29,8 @@ export async function getMetaUserProfile(
 export async function sendMetaMessage(
   psid: string,
   content: string,
-  platform: "FACEBOOK" | "INSTAGRAM",
-) {
+  platform: MetaPlatform,
+): Promise<MetaApiResponse> {
   const token = metaConfig.pageAccessToken;
   if (!token) return { success: false, error: "Missing token" };
 
@@ -47,15 +48,17 @@ export async function sendMetaMessage(
 
     if (!response.ok) {
       const errData = await response.json();
+      const detailedError = `Meta API Error (${response.status}): ${errData.error?.message || "Unknown error"}`;
+      console.error(`[meta.ts] sendMetaMessage failure:`, detailedError);
       return {
         success: false,
-        error: errData.error?.message || "Unknown error",
+        error: detailedError,
       };
     }
     return { success: true };
   } catch (err: any) {
     console.error(`Error sending Meta message for ${platform}:`, err);
-    return { success: false, error: err.message };
+    return { success: false, error: err.message || "Connection error" };
   }
 }
 
@@ -66,8 +69,8 @@ export async function sendMetaMedia(
   psid: string,
   url: string,
   type: "image" | "video" | "file" = "image",
-  platform: "FACEBOOK" | "INSTAGRAM",
-) {
+  platform: MetaPlatform,
+): Promise<MetaApiResponse> {
   const token = metaConfig.pageAccessToken;
   if (!token) return { success: false, error: "Missing token" };
 
@@ -116,8 +119,8 @@ export async function sendMetaCarousel(
     default_action?: { type: string; url: string };
     buttons?: any[];
   }>,
-  platform: "FACEBOOK" | "INSTAGRAM",
-) {
+  platform: MetaPlatform,
+): Promise<MetaApiResponse> {
   const token = metaConfig.pageAccessToken;
   if (!token) return { success: false, error: "Missing token" };
 
@@ -169,7 +172,7 @@ export async function sendMetaCarousel(
 /**
  * Automatically discover the WhatsApp Phone Number ID associated with the token
  */
-export async function discoverWhatsAppPhoneNumberId() {
+export async function discoverWhatsAppPhoneNumberId(): Promise<string | null> {
   const token = metaConfig.whatsappAccessToken || metaConfig.pageAccessToken;
   if (!token) return null;
 
@@ -197,7 +200,7 @@ export async function discoverWhatsAppPhoneNumberId() {
 /**
  * Automatically discover the Instagram Business Account ID associated with the page
  */
-export async function discoverInstagramBusinessId() {
+export async function discoverInstagramBusinessId(): Promise<string | null> {
   const token = metaConfig.pageAccessToken;
   if (!token) return null;
 
@@ -219,7 +222,7 @@ export async function discoverInstagramBusinessId() {
 export async function sendWhatsAppMessage(
   phoneNumber: string,
   content: string,
-) {
+): Promise<MetaApiResponse> {
   const token = metaConfig.whatsappAccessToken || metaConfig.pageAccessToken;
   let phoneNumberId = metaConfig.whatsappPhoneNumberId;
 
@@ -270,7 +273,10 @@ export async function sendWhatsAppMessage(
 /**
  * Reply to a specific Facebook or Instagram comment
  */
-export async function replyToMetaComment(commentId: string, content: string) {
+export async function replyToMetaComment(
+  commentId: string,
+  content: string,
+): Promise<MetaApiResponse<{ id: string }>> {
   const token = metaConfig.pageAccessToken;
   if (!token) return { success: false, error: "Missing token" };
 
@@ -290,7 +296,7 @@ export async function replyToMetaComment(commentId: string, content: string) {
       };
     }
     const resData = await response.json();
-    return { success: true, id: resData.id };
+    return { success: true, data: { id: resData.id } };
   } catch (err: any) {
     console.error("Error replying to comment:", err);
     return { success: false, error: err.message };
@@ -303,8 +309,8 @@ export async function replyToMetaComment(commentId: string, content: string) {
 export async function sendPrivateReply(
   commentId: string,
   content: string,
-  platform: "FACEBOOK" | "INSTAGRAM",
-) {
+  platform: MetaPlatform,
+): Promise<MetaApiResponse> {
   const token = metaConfig.pageAccessToken;
   if (!token) return { success: false, error: "Missing token" };
 
@@ -316,12 +322,17 @@ export async function sendPrivateReply(
       // FB Private Reply endpoint
       url = `${metaConfig.graphApiUrl}/${commentId}/private_replies?access_token=${token}`;
       body = { message: content };
-    } else {
+    } else if (platform === "INSTAGRAM") {
       // Instagram Private Reply uses the normal messages endpoint but with comment_id
       url = `${metaConfig.graphApiUrl}/me/messages?access_token=${token}`;
       body = {
         recipient: { comment_id: commentId },
         message: { text: content },
+      };
+    } else {
+      return {
+        success: false,
+        error: "Private reply not supported for WhatsApp",
       };
     }
 
@@ -348,7 +359,9 @@ export async function sendPrivateReply(
 /**
  * Fetch detailed lead data from Facebook Lead Ads ID
  */
-export async function fetchFacebookLeadDetails(leadgenId: string) {
+export async function fetchFacebookLeadDetails(
+  leadgenId: string,
+): Promise<any | null> {
   const token = metaConfig.pageAccessToken;
   if (!token) return null;
 
@@ -369,8 +382,8 @@ export async function fetchFacebookLeadDetails(leadgenId: string) {
 export async function postToMetaPage(
   content: string,
   imageUrls?: string | string[],
-  platform: "FACEBOOK" | "INSTAGRAM" = "FACEBOOK",
-) {
+  platform: MetaPlatform = "FACEBOOK",
+): Promise<MetaApiResponse> {
   const token = metaConfig.pageAccessToken;
   if (!token) return { success: false, error: "Missing token" };
 
@@ -441,7 +454,7 @@ export async function postToMetaPage(
       return feedRes.ok
         ? { success: true, data: feedData }
         : { success: false, error: feedData.error?.message };
-    } else {
+    } else if (platform === "INSTAGRAM") {
       // Instagram Post
       const igId = await discoverInstagramBusinessId();
       if (!igId) {
@@ -512,6 +525,11 @@ export async function postToMetaPage(
       return publishRes.ok
         ? { success: true, data: publishData }
         : { success: false, error: publishData.error?.message };
+    } else {
+      return {
+        success: false,
+        error: "WhatsApp does not support feed posting via this endpoint",
+      };
     }
   } catch (err: any) {
     console.error("Error posting to Meta:", err);

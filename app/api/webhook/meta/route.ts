@@ -13,6 +13,23 @@ import {
   getSiteSettings,
   SocialKeyword,
 } from "@/features/site-settings/actions";
+import { z } from "zod";
+import { MetaPlatform, MetaWebhookBody } from "@/types/meta";
+
+/**
+ * Zod Schemas for Meta Webhook Validation
+ */
+const MetaWebhookSchema = z.object({
+  object: z.string(),
+  entry: z.array(
+    z.object({
+      id: z.string(),
+      time: z.number().optional(),
+      messaging: z.array(z.any()).optional(),
+      changes: z.array(z.any()).optional(),
+    }),
+  ),
+});
 
 /**
  * GET handler for Meta Webhook Verification
@@ -39,9 +56,21 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const rawBody = await req.json();
 
-    // Check if it's a page subscription
+    // 1. Validate Payload Structure
+    const validation = MetaWebhookSchema.safeParse(rawBody);
+    if (!validation.success) {
+      console.error(
+        "[Meta Webhook] Validation Failed:",
+        validation.error.format(),
+      );
+      return NextResponse.json({ error: "Invalid Payload" }, { status: 400 });
+    }
+
+    const body = validation.data as MetaWebhookBody;
+
+    // 2. Route by Object Type
     if (body.object === "page") {
       for (const entry of body.entry) {
         // Facebook Messenger events
@@ -198,7 +227,7 @@ async function handleFacebookChange(change: any) {
       .single();
 
     if (createError) {
-      console.error(`Error creating FB ${field} lead:`, createError);
+      console.error(`[route.ts] Error creating FB ${field} lead:`, createError);
       return;
     }
     lead = newLead as { id: string };
@@ -217,7 +246,7 @@ async function handleFacebookChange(change: any) {
   }
 }
 
-async function handleMetaMessage(event: any, source: "FACEBOOK" | "INSTAGRAM") {
+async function handleMetaMessage(event: any, source: MetaPlatform) {
   const senderId = event.sender.id; // PSID
   const text = event.message.text || "";
 
@@ -254,7 +283,10 @@ async function handleMetaMessage(event: any, source: "FACEBOOK" | "INSTAGRAM") {
       .single();
 
     if (createError) {
-      console.error(`Error creating ${source} auto-lead:`, createError);
+      console.error(
+        `[route.ts] Error creating ${source} auto-lead:`,
+        createError,
+      );
       return;
     }
     lead = newLead as { id: string };
@@ -264,7 +296,7 @@ async function handleMetaMessage(event: any, source: "FACEBOOK" | "INSTAGRAM") {
   if (lead) {
     await saveOmniMessage({
       lead_id: lead.id,
-      source: source,
+      source: source as any,
       external_message_id: event.message.mid,
       content: text,
       payload: event,
@@ -402,7 +434,7 @@ async function handleWhatsAppWebhook(message: any, contact: any) {
 async function handleKeywordAutomation(
   text: string,
   commentId: string,
-  platform: "FACEBOOK" | "INSTAGRAM",
+  platform: MetaPlatform,
   postId?: string,
   senderId?: string,
 ) {
