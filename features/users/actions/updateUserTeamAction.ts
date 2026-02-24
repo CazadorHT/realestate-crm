@@ -48,7 +48,7 @@ export async function updateUserTeamAction(
       metadata: { teamId },
     });
 
-    revalidatePath("/protected/settings");
+    revalidatePath("/protected/settings/users");
     return { success: true };
   } catch (error) {
     return { success: false, message: "Unauthorized" };

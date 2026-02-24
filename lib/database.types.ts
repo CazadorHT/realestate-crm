@@ -898,6 +898,8 @@ export type Database = {
           parking_type: string | null
           popular_area: string | null
           postal_code: string | null
+          posted_to_line_at: string | null
+          posted_to_tiktok_at: string | null
           price: number | null
           price_per_sqm: number | null
           property_source: string | null
@@ -1011,6 +1013,8 @@ export type Database = {
           parking_type?: string | null
           popular_area?: string | null
           postal_code?: string | null
+          posted_to_line_at?: string | null
+          posted_to_tiktok_at?: string | null
           price?: number | null
           price_per_sqm?: number | null
           property_source?: string | null
@@ -1124,6 +1128,8 @@ export type Database = {
           parking_type?: string | null
           popular_area?: string | null
           postal_code?: string | null
+          posted_to_line_at?: string | null
+          posted_to_tiktok_at?: string | null
           price?: number | null
           price_per_sqm?: number | null
           property_source?: string | null

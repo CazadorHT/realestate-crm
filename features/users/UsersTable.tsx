@@ -32,6 +32,8 @@ import { formatDate } from "@/lib/utils";
 interface Profile {
   id: string;
   full_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
   phone: string | null;
   role: UserRole;
   created_at: string;
@@ -116,22 +118,22 @@ export function UsersTable({ users, currentUserId, teams }: UsersTableProps) {
             <Table>
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
-                  <TableHead className="py-4 px-6 font-bold text-slate-900">
+                  <TableHead className="py-4 px-6 font-semibold text-slate-900">
                     ชื่อ-นามสกุล
                   </TableHead>
-                  <TableHead className="py-4 px-6 font-bold text-slate-900">
+                  <TableHead className="py-4 px-6 font-semibold text-slate-900">
                     เบอร์โทร
                   </TableHead>
-                  <TableHead className="py-4 px-6 font-bold text-slate-900">
+                  <TableHead className="py-4 px-6 font-semibold text-slate-900">
                     บทบาท
                   </TableHead>
-                  <TableHead className="py-4 px-6 font-bold text-slate-900">
+                  <TableHead className="py-4 px-6 font-semibold text-slate-900">
                     ทีม
                   </TableHead>
-                  <TableHead className="py-4 px-6 font-bold text-slate-900">
+                  <TableHead className="py-4 px-6 font-semibold text-slate-900">
                     วันที่สร้าง
                   </TableHead>
-                  <TableHead className="py-4 px-6 text-right font-bold text-slate-900">
+                  <TableHead className="py-4 px-6 text-right font-semibold text-slate-900">
                     การจัดการ
                   </TableHead>
                 </TableRow>
@@ -174,18 +176,22 @@ export function UsersTable({ users, currentUserId, teams }: UsersTableProps) {
                         <TableCell className="py-4 px-6">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10 border border-slate-100 shadow-sm ring-2 ring-white">
+                              <AvatarImage src={user.avatar_url || undefined} />
                               <AvatarFallback className="bg-blue-50 text-blue-600 text-xs font-bold">
                                 {initials}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col min-w-0">
-                              <span className="font-bold text-slate-800 flex items-center gap-2 truncate">
+                              <span className="font-semibold text-slate-800 flex items-center gap-2 truncate">
                                 {user.full_name || "ไม่มีชื่อ"}
                                 {isCurrentUser && (
                                   <span className="shrink-0 text-[10px] bg-blue-500 text-white py-0.5 px-2 rounded-full font-bold uppercase tracking-wider">
                                     ตัวคุณ
                                   </span>
                                 )}
+                              </span>
+                              <span className="text-xs text-slate-500 truncate">
+                                {user.email || "-"}
                               </span>
                               <span className="text-[10px] text-slate-400 font-mono">
                                 ID: {user.id.slice(0, 8)}...
@@ -279,13 +285,14 @@ export function UsersTable({ users, currentUserId, teams }: UsersTableProps) {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12 border border-slate-100 shadow-sm">
+                        <AvatarImage src={user.avatar_url || undefined} />
                         <AvatarFallback className="bg-blue-50 text-blue-600 font-bold">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900 truncate">
+                          <span className="font-semibold text-slate-900 truncate">
                             {user.full_name || "ไม่มีชื่อ"}
                           </span>
                           {isCurrentUser && (
@@ -294,6 +301,9 @@ export function UsersTable({ users, currentUserId, teams }: UsersTableProps) {
                             </span>
                           )}
                         </div>
+                        <span className="text-xs text-slate-500 truncate mb-1">
+                          {user.email || "-"}
+                        </span>
                         <span className="text-[10px] text-slate-400 font-mono">
                           ID: {user.id.slice(0, 8)}
                         </span>

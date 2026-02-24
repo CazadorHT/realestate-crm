@@ -79,4 +79,8 @@ export interface PropertyTableData {
   original_rental_price?: number | null;
   total_units?: number;
   sold_units?: number;
+  posted_to_facebook_at?: string | null;
+  posted_to_instagram_at?: string | null;
+  posted_to_line_at?: string | null;
+  posted_to_tiktok_at?: string | null;
 }

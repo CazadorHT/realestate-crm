@@ -207,9 +207,15 @@ export function SocialAutomationSettings() {
               <p>
                 ตัวแปร (Tags) ที่ใช้เรียกแสดง:
                 {"{{title}}"}: ชื่อทรัพย์สิน
-                {"{{price}}"}: ราคาปัจจุบัน
-                {"{{original}}"}: ราคาเดิม (สำหรับโชว์ส่วนลด)
-                {"{{description}}"}: รายละเอียดแบบเต็ม
+                {"{{sale_price}}"}: ราคาขาย
+                {"{{rental_price}}"}: ราคาเช่า
+                {"{{original_sale_price}}"}: ราคาขายเดิม
+                {"{{original_rental_price}}"}: ราคาเช่าเดิม 
+                {"{{amenities}}"}: สิ่งอำนวยความสะดวก
+                {"{{location}}"}: ทำเล (เขต/จังหวัด)
+                {"{{nearby_places}}"}: สถานที่ใกล้เคียง
+                {"{{popular_area}}"}: ย่านยอดนิยม
+                {"{{verified}}"}: ป้ายตรวจสอบแล้ว
                 {"{{link}}"}: ลิงก์ไปยังหน้าเว็บ
               </p>
               <p className="text-[10px] text-blue-400/80 mt-1 italic leading-tight">
@@ -391,17 +397,26 @@ export function SocialAutomationSettings() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
               {[
                 { tag: "{{title}}", label: "ชื่อทรัพย์" },
-                { tag: "{{price}}", label: "ราคาสุทธิ" },
-                { tag: "{{original_price}}", label: "ราคาเดิม" },
+                { tag: "{{price}}", label: "ราคาสรุป" },
+                { tag: "{{original_price}}", label: "เดิมสรุป" },
+                { tag: "{{sale_price}}", label: "ราคาขาย" },
+                { tag: "{{rental_price}}", label: "ราคาเช่า" },
+                { tag: "{{original_sale_price}}", label: "ราคาขายเดิม" },
+                { tag: "{{original_rental_price}}", label: "ราคาเช่าเดิม" },
                 { tag: "{{bedrooms}}", label: "ห้องนอน" },
                 { tag: "{{bathrooms}}", label: "ห้องน้ำ" },
                 { tag: "{{size_sqm}}", label: "พื้นที่ (ตร.ม.)" },
                 { tag: "{{floor}}", label: "ชั้น" },
                 { tag: "{{property_type}}", label: "ประเภททรัพย์" },
                 { tag: "{{listing_type}}", label: "ประเภทประกาศ" },
-                { tag: "{{location}}", label: "ทำเล" },
-                { tag: "{{transit}}", label: "รถไฟฟ้าใกล้เคียง" },
+                { tag: "{{popular_area}}", label: "ย่านยอดนิยม" },
+                { tag: "{{amenities}}", label: "สิ่งอำนวยความสะดวก" },
+                { tag: "{{nearby_places}}", label: "สถานที่ใกล้เคียง" },
+                { tag: "{{near_transit}}", label: "รถไฟฟ้าทั้งหมด" },
+                { tag: "{{transit}}", label: "รถไฟฟ้าที่ใกล้สุด" },
                 { tag: "{{google_maps}}", label: "ลิงก์แผนที่" },
+                { tag: "{{verified}}", label: "ป้ายตรวจสอบแล้ว" },
+                { tag: "{{exclusive}}", label: "ป้าย Exclusive" },
                 { tag: "{{agent_name}}", label: "ชื่อคนดูแล" },
                 { tag: "{{agent_phone}}", label: "เบอร์คนดูแล" },
                 { tag: "{{agent_line}}", label: "LINE คนดูแล" },

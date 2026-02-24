@@ -12,7 +12,30 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ImageIcon, Users, Clock } from "lucide-react";
+import {
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Download,
+  Eye,
+  Edit3,
+  MapPin,
+  Facebook,
+  Instagram,
+  MessageCircle,
+  Music2,
+  Copy,
+  Clock,
+  Users,
+  ImageIcon,
+} from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { format } from "date-fns";
 import { PropertyStatusBadge } from "./PropertyStatusBadge";
 import {
   Dialog,
@@ -30,22 +53,12 @@ import { PropertyPrice } from "./PropertyPrice";
 import { PropertiesEmptyState } from "./PropertiesEmptyState";
 import { PropertyStatusSelect } from "./PropertyStatusDropdown";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Download,
-  Eye,
-  Edit3,
-  MapPin,
-} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeletePropertiesAction } from "@/features/properties/bulk-actions";
 import { exportPropertiesAction } from "@/features/properties/export-action";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DuplicatePropertyButton } from "./DuplicatePropertyButton";
 import type {
@@ -54,6 +67,7 @@ import type {
   ListingType,
   PropertyTableData,
 } from "@/features/properties/types";
+import { cn } from "@/lib/utils";
 
 interface PropertiesTableProps {
   data: PropertyTableData[];
@@ -121,6 +135,124 @@ function SortableHead({
       {label}
       {icon}
     </button>
+  );
+}
+
+function SocialStatusBadges({
+  facebookAt,
+  instagramAt,
+  lineAt,
+  tiktokAt,
+  className,
+}: {
+  facebookAt?: string | null;
+  instagramAt?: string | null;
+  lineAt?: string | null;
+  tiktokAt?: string | null;
+  className?: string;
+}) {
+  return (
+    <div className={cn("grid grid-cols-2 items-center gap-1.5", className)}>
+      {/* Facebook */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={cn(
+                "p-1.5 rounded-lg border transition-all duration-200",
+                facebookAt
+                  ? "bg-blue-50 border-blue-200 text-blue-600 shadow-sm"
+                  : "bg-slate-50 border-slate-100 text-slate-300",
+              )}
+            >
+              <Facebook className="h-3.5 w-3.5" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p className="text-[10px] font-medium">
+              {facebookAt
+                ? `โพสต์บน Facebook เมื่อ ${format(new Date(facebookAt), "d MMM yyyy HH:mm", { locale: th })}`
+                : "ยังไม่ได้โพสต์บน Facebook"}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* Instagram */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={cn(
+                "p-1.5 rounded-lg border transition-all duration-200",
+                instagramAt
+                  ? "bg-pink-50 border-pink-200 text-pink-600 shadow-sm"
+                  : "bg-slate-50 border-slate-100 text-slate-300",
+              )}
+            >
+              <Instagram className="h-3.5 w-3.5" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p className="text-[10px] font-medium">
+              {instagramAt
+                ? `โพสต์บน Instagram เมื่อ ${format(new Date(instagramAt), "d MMM yyyy HH:mm", { locale: th })}`
+                : "ยังไม่ได้โพสต์บน Instagram"}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* Line */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={cn(
+                "p-1.5 rounded-lg border transition-all duration-200",
+                lineAt
+                  ? "bg-green-50 border-green-200 text-green-600 shadow-sm"
+                  : "bg-slate-50 border-slate-100 text-slate-300",
+              )}
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p className="text-[10px] font-medium">
+              {lineAt
+                ? `แชร์บน Line เมื่อ ${format(new Date(lineAt), "d MMM yyyy HH:mm", { locale: th })}`
+                : "ยังไม่ได้แชร์บน Line"}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* TikTok */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={cn(
+                "p-1.5 rounded-lg border transition-all duration-200",
+                tiktokAt
+                  ? "bg-slate-900 border-slate-700 text-white shadow-sm"
+                  : "bg-slate-50 border-slate-100 text-slate-300",
+              )}
+            >
+              <Music2 className="h-3.5 w-3.5" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p className="text-[10px] font-medium">
+              {tiktokAt
+                ? `โพสต์บน TikTok เมื่อ ${format(new Date(tiktokAt), "d MMM yyyy HH:mm", { locale: th })}`
+                : "ยังไม่ได้โพสต์บน TikTok"}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
   );
 }
 
@@ -237,7 +369,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                 <TableHead className="w-[140px]">
                   <SortableHead label="สถานะ" sortKey="status" />
                 </TableHead>
-                <TableHead className="w-[100px]">สัญญา</TableHead>
+                <TableHead className="w-[100px]">Social</TableHead>
                 <TableHead className="w-[100px] text-right pr-4">
                   จัดการ
                 </TableHead>
@@ -489,9 +621,14 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                     />
                   </TableCell>
 
-                  {/* EXPIRY (MOCK) */}
+                  {/* SOCIAL */}
                   <TableCell>
-                    <span className="text-xs text-slate-400">-</span>
+                    <SocialStatusBadges
+                      facebookAt={property.posted_to_facebook_at}
+                      instagramAt={property.posted_to_instagram_at}
+                      lineAt={property.posted_to_line_at}
+                      tiktokAt={property.posted_to_tiktok_at}
+                    />
                   </TableCell>
 
                   {/* ACTIONS */}
@@ -531,7 +668,10 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                       />
 
                       {/* delete อยู่ในนี้ */}
-                      <PropertyRowActions id={property.id} />
+                      <PropertyRowActions
+                        id={property.id}
+                        title={property.title}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -565,7 +705,10 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                 {/* Card Header/Actions Button */}
                 <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">
                   <div className="p-1 bg-white/80 backdrop-blur-sm rounded-lg border border-slate-200 shadow-sm">
-                    <PropertyRowActions id={property.id} />
+                    <PropertyRowActions
+                      id={property.id}
+                      title={property.title}
+                    />
                   </div>
                 </div>
 
@@ -642,6 +785,15 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                         <Eye className="h-3.5 w-3.5 text-slate-400" />
                         {property.view_count || 0}
                       </div>
+
+                      {/* Social Badges for Mobile */}
+                      <SocialStatusBadges
+                        facebookAt={property.posted_to_facebook_at}
+                        instagramAt={property.posted_to_instagram_at}
+                        lineAt={property.posted_to_line_at}
+                        tiktokAt={property.posted_to_tiktok_at}
+                        className="ml-auto"
+                      />
                     </div>
 
                     <div className="flex items-center gap-1.5 w-full">

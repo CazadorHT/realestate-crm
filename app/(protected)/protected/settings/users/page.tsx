@@ -30,7 +30,9 @@ export default async function UsersManagementPage() {
   // ดึงข้อมูลผู้ใช้ทั้งหมด
   const { data: users, error: usersError } = await supabase
     .from("profiles")
-    .select("id, full_name, phone, role, created_at, team_id")
+    .select(
+      "id, full_name, email, avatar_url, phone, role, created_at, team_id",
+    )
     .order("created_at", { ascending: false });
 
   // ดึงข้อมูลทีมทั้งหมด
@@ -69,7 +71,7 @@ export default async function UsersManagementPage() {
       <div className="space-y-4">
         <div className="flex items-center gap-2 px-1">
           <div className="h-4 w-1 bg-blue-600 rounded-full" />
-          <h2 className="text-lg font-bold text-slate-800">
+          <h2 className="text-lg font-semibold text-slate-800">
             รายชื่อสมาชิกทีมทั้งหมด
           </h2>
         </div>

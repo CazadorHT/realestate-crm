@@ -5,6 +5,7 @@ import { Home, ArrowLeft } from "lucide-react";
 import React from "react";
 import Image from "next/image";
 import { siteConfig } from "@/lib/site-config";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ export function AuthLayout({
   subtitle,
   features,
 }: AuthLayoutProps) {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen flex animate-in fade-in duration-500">
       {/* Left Side - Branding & Visual */}
@@ -81,7 +83,7 @@ export function AuthLayout({
               className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors group"
             >
               <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-              <span>กลับสู่หน้าหลัก</span>
+              <span>{t("auth.back_to_home")}</span>
             </Link>
           </div>
 
@@ -103,7 +105,7 @@ export function AuthLayout({
               className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors group"
             >
               <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-              <span>กลับสู่หน้าหลัก</span>
+              <span>{t("auth.back_to_home")}</span>
             </Link>
           </div>
 

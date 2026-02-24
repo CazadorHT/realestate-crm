@@ -215,61 +215,67 @@ export async function logActivityAction(
 }
 
 export async function notifySignupAction(email: string) {
-  const templateConfig = await getTemplateConfig("SIGNUP");
-  const headerIcon = "👤";
+  console.log("[NOTIFY] Starting notifySignupAction for:", email);
+  try {
+    const templateConfig = await getTemplateConfig("SIGNUP");
+    const headerIcon = "👤";
 
-  await sendLineNotification({
-    type: "flex",
-    altText: "👤 มีสมาชิกใหม่สมัครใช้งาน",
-    contents: {
-      type: "bubble",
-      header: {
-        type: "box",
-        layout: "horizontal",
-        contents: [
-          {
-            type: "text",
-            text: headerIcon,
-            size: "xxl",
-            flex: 1,
-            align: "center",
-            gravity: "center",
-          },
-          {
-            type: "text",
-            text: templateConfig.config.headerText || "สมาชิกใหม่ (New User)",
-            weight: "bold",
-            color: "#FFFFFF",
-            size: "md",
-            flex: 8,
-            gravity: "center",
-            wrap: true,
-          },
-        ],
-        backgroundColor: templateConfig.config.headerColor || "#F57C00",
-        paddingAll: "lg",
+    await sendLineNotification({
+      type: "flex",
+      altText: "👤 มีสมาชิกใหม่สมัครใช้งาน",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "horizontal",
+          contents: [
+            {
+              type: "text",
+              text: headerIcon,
+              size: "xxl",
+              flex: 1,
+              align: "center",
+              gravity: "center",
+            },
+            {
+              type: "text",
+              text: templateConfig.config.headerText || "สมาชิกใหม่ (New User)",
+              weight: "bold",
+              color: "#FFFFFF",
+              size: "md",
+              flex: 8,
+              gravity: "center",
+              wrap: true,
+            },
+          ],
+          backgroundColor: templateConfig.config.headerColor || "#F57C00",
+          paddingAll: "lg",
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📧 อีเมล:",
+              size: "sm",
+              color: "#555555",
+            },
+            {
+              type: "text",
+              text: email,
+              weight: "bold",
+              size: "lg",
+              color: "#111111",
+              margin: "sm",
+              wrap: true,
+            },
+          ],
+        },
       },
-      body: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          {
-            type: "text",
-            text: "📧 อีเมล:",
-            size: "sm",
-            color: "#555555",
-          },
-          {
-            type: "text",
-            text: email,
-            weight: "bold",
-            size: "lg",
-            color: "#111111",
-            margin: "sm",
-            wrap: true,
-          },
-        ],
-      },
-    },
-  });
+    });
+    console.log("[NOTIFY] notifySignupAction completed for:", email);
+  } catch (error) {
+    console.error("[NOTIFY] Error in notifySignupAction:", error);
+  }
 }

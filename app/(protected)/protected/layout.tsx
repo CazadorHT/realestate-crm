@@ -12,6 +12,7 @@ import { siteConfig } from "@/lib/site-config";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
 import { getRecentNotifications } from "@/features/dashboard/queries";
+import { SocialPostMonitor } from "@/components/properties/SocialPostMonitor";
 
 export default async function ProtectedLayout({
   children,
@@ -35,7 +36,7 @@ export default async function ProtectedLayout({
     return redirect("/auth/login");
   }
   if (!isStaff(profile.role)) {
-    return redirect("/auth/error?error=forbidden");
+    return redirect("/auth/pending");
   }
 
   // Fetch Notifications
@@ -63,6 +64,7 @@ export default async function ProtectedLayout({
         </header>
 
         <main className="flex-1 p-6 md:p-8 mx-auto w-full">{children}</main>
+        <SocialPostMonitor />
       </div>
     </div>
   );

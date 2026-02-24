@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAuthContext } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type DeleteUserResult = {
   success: boolean;
@@ -13,7 +14,7 @@ export type DeleteUserResult = {
  * ลบบัญชีผู้ใช้ (เฉพาะ AGENT เท่านั้น)
  */
 export async function deleteUserAction(
-  userId: string
+  userId: string,
 ): Promise<DeleteUserResult> {
   try {
     const ctx = await requireAuthContext();
@@ -39,15 +40,16 @@ export async function deleteUserAction(
       return { success: false, message: "ไม่สามารถลบบัญชี ADMIN ได้" };
     }
 
-    // 4) Delete user (profile)
-    const { error } = await ctx.supabase
-      .from("profiles")
-      .delete()
-      .eq("id", userId);
+    // 4) Delete user from AUTH (this will cascade to PROFILES)
+    const adminClient = createAdminClient();
+    const { error } = await adminClient.auth.admin.deleteUser(userId);
 
     if (error) {
       console.error("Delete user error:", error);
-      return { success: false, message: "เกิดข้อผิดพลาดในการลบผู้ใช้" };
+      return {
+        success: false,
+        message: "เกิดข้อผิดพลาดในการลบผู้ใช้จากระบบ Auth",
+      };
     }
 
     await logAudit(ctx, {

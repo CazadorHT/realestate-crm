@@ -76,9 +76,7 @@ export function UserRoleSelect({
         </SelectContent>
       </Select>
 
-      {isLoading && (
-        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-      )}
+      {isLoading && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
     </div>
   );
 }

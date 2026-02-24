@@ -69,7 +69,7 @@ export function UsersStatsSummary({
               <div className="space-y-1">
                 <p
                   className={cn(
-                    "text-xs font-bold uppercase tracking-widest opacity-70",
+                    "text-xs font-semibold uppercase tracking-widest opacity-70",
                     stat.color,
                   )}
                 >

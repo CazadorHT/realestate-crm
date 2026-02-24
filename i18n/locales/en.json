@@ -935,28 +935,62 @@
     "assistant_name": "AI Assistant"
   },
   "auth": {
-    "change_password": "Change Password",
-    "change_password_desc": "Please enter your current password and a new password.",
-    "current_password": "Current Password",
-    "new_password": "New Password",
-    "confirm_new_password": "Confirm New Password",
-    "current_password_placeholder": "Enter current password",
-    "new_password_placeholder": "At least 6 characters",
-    "confirm_password_placeholder": "Confirm new password",
-    "save_password": "Save New Password",
-    "saving": "Saving...",
-    "back_to_profile": "Back to Profile",
-    "errors": {
-      "current_password_required": "Current password is required",
-      "new_password_min_length": "New password must be at least 6 characters",
-      "passwords_dont_match": "New passwords do not match",
-      "new_same_as_old": "New password must be different from current password",
-      "user_not_found": "User not found. Please log in again.",
-      "incorrect_current_password": "Incorrect current password",
-      "generic_error": "An error occurred"
-    },
+    "back_to_home": "Back to Home",
     "success": {
       "password_updated": "Password updated successfully"
+    },
+    "login": {
+      "title": "Login",
+      "subtitle": "Login to manage your business",
+      "email_label": "Email",
+      "password_label": "Password",
+      "password_placeholder": "Enter your password",
+      "forgot_password": "Forgot Password?",
+      "submit_btn": "Login",
+      "logging_in": "Logging in...",
+      "no_account": "Don't have an account?",
+      "register": "Register",
+      "or_continue_with": "Or continue with"
+    },
+    "signup": {
+      "title": "Sign Up",
+      "subtitle": "Start managing your real estate business",
+      "email_label": "Email",
+      "password_label": "Password",
+      "confirm_password_label": "Confirm Password",
+      "password_placeholder": "Minimum 6 characters",
+      "confirm_password_placeholder": "Confirm your password",
+      "submit_btn": "Sign Up",
+      "signing_up": "Signing up...",
+      "have_account": "Already have an account?",
+      "login": "Login"
+    },
+    "forgot_password": {
+      "title": "Forgot Password",
+      "subtitle": "Enter your email to receive a reset link",
+      "email_label": "Email",
+      "submit_btn": "Send Reset Link",
+      "sending": "Sending...",
+      "back_to_login": "Back to Login",
+      "success_title": "Email Sent",
+      "success_desc": "We have sent a password reset link to your email. Please check your inbox."
+    },
+    "reset_password": {
+      "title": "Reset Password",
+      "subtitle": "Please set a new password for your account",
+      "new_password_label": "New Password",
+      "new_password_placeholder": "Enter new password",
+      "confirm_password_label": "Confirm New Password",
+      "confirm_password_placeholder": "Confirm new password",
+      "submit_btn": "Reset Password",
+      "resetting": "Resetting..."
+    },
+    "pending": {
+      "title": "Registration Successful",
+      "subtitle": "Awaiting Admin Approval",
+      "description": "Your account has been created successfully but is currently pending review and access assignment by an administrator.",
+      "notice": "We will notify you once your account has been approved.",
+      "back_to_login": "Back to Login"
     }
   },
   "recently_viewed": {

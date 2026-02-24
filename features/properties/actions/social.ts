@@ -16,7 +16,7 @@ export async function postPropertyToMetaAction(
     const { supabase, user, role } = await requireAuthContext();
     assertStaff(role);
 
-    // 1. ดึงข้อมูลทรัพย์ รูปภาพ และข้อมูลเอเจนท์ผู้ดูแล
+    // 1. ดึงข้อมูลทรัพย์ รูปภาพ ข้อมูลเอเจนท์ สิ่งอำนวยความสะดวก และสถานที่ใกล้เคียง
     const { data: property, error: propError } = await supabase
       .from("properties")
       .select(
@@ -30,6 +30,12 @@ export async function postPropertyToMetaAction(
             full_name,
             phone,
             line_id
+          )
+        ),
+        property_features (
+          features (
+            name,
+            icon_key
           )
         )
       `,
@@ -50,31 +56,84 @@ export async function postPropertyToMetaAction(
 
     let template =
       (settingsData?.value as string) ||
-      `🏠 {{title}}\n💰 {{price}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`;
+      `🏠 {{title}}\n💰 {{price}}\n\n📍 {{location}}\n\n✨ จุดเด่น:\n{{amenities}}\n\n🚗 สถานที่ใกล้เคียง:\n{{nearby_places}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`;
 
     // 3. เตรียมข้อมูลสำหรับ Tags
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "";
     const publicUrl = `${baseUrl}/properties/${property.slug || property.id}`;
 
-    // จัดการเรื่องราคา
-    const priceText =
-      property.listing_type === "RENT"
-        ? property.rental_price
-          ? `${property.rental_price.toLocaleString()} บาท/เดือน`
-          : ""
-        : property.price
-          ? `${property.price.toLocaleString()} บาท`
-          : "";
+    // รายการสิ่งอำนวยความสะดวก (Amenities)
+    const amenities =
+      (property as any).property_features
+        ?.map((f: any) => `- ${f.features?.name}`)
+        .filter(Boolean)
+        .join("\n") || "-";
 
-    const originalPriceText =
-      property.listing_type === "RENT"
-        ? property.original_rental_price
-          ? `${property.original_rental_price.toLocaleString()} บาท/เดือน`
-          : ""
-        : property.original_price
-          ? `${property.original_price.toLocaleString()} บาท`
-          : "";
+    // สถานที่ใกล้เคียง (Nearby Places & Transits)
+    const nearbyPlaces =
+      (property.nearby_places as any[])
+        ?.map((p: any) => `- ${p.name} (${p.distance || ""})`)
+        .slice(0, 5)
+        .join("\n") || "-";
+
+    const nearbyTransits =
+      (property.nearby_transits as any[])
+        ?.map((p: any) => `- ${p.name} (${p.distance || ""})`)
+        .join("\n") || "-";
+
+    // จัดการเรื่องราคา (Smart Price Tag)
+    let priceText = "";
+    if (property.listing_type === "SALE_AND_RENT") {
+      const parts = [];
+      if (property.price)
+        parts.push(`ขาย ${property.price.toLocaleString()} บาท`);
+      if (property.rental_price)
+        parts.push(`เช่า ${property.rental_price.toLocaleString()} บาท/เดือน`);
+      priceText = parts.join(" | ");
+    } else if (property.listing_type === "RENT") {
+      priceText = property.rental_price
+        ? `${property.rental_price.toLocaleString()} บาท/เดือน`
+        : "";
+    } else {
+      priceText = property.price
+        ? `${property.price.toLocaleString()} บาท`
+        : "";
+    }
+
+    let originalPriceText = "";
+    if (property.listing_type === "SALE_AND_RENT") {
+      const parts = [];
+      if (property.original_price)
+        parts.push(`ขาย ${property.original_price.toLocaleString()} บาท`);
+      if (property.original_rental_price)
+        parts.push(
+          `เช่า ${property.original_rental_price.toLocaleString()} บาท/เดือน`,
+        );
+      originalPriceText = parts.join(" | ");
+    } else if (property.listing_type === "RENT") {
+      originalPriceText = property.original_rental_price
+        ? `${property.original_rental_price.toLocaleString()} บาท/เดือน`
+        : "";
+    } else {
+      originalPriceText = property.original_price
+        ? `${property.original_price.toLocaleString()} บาท`
+        : "";
+    }
+
+    // Granular Price Tags (Fallback to empty string instead of "-")
+    const salePrice = property.price
+      ? `${property.price.toLocaleString()} บาท`
+      : "";
+    const rentPrice = property.rental_price
+      ? `${property.rental_price.toLocaleString()} บาท/เดือน`
+      : "";
+    const originalSalePrice = property.original_price
+      ? `${property.original_price.toLocaleString()} บาท`
+      : "";
+    const originalRentPrice = property.original_rental_price
+      ? `${property.original_rental_price.toLocaleString()} บาท/เดือน`
+      : "";
 
     // ข้อมูลเอเจนท์ (คนแรกที่เจอ)
     const primaryAgent = property.property_agents?.[0]?.profiles;
@@ -85,6 +144,10 @@ export async function postPropertyToMetaAction(
       .replace(/{{description}}/g, property.description || "")
       .replace(/{{price}}/g, priceText)
       .replace(/{{original_price}}/g, originalPriceText)
+      .replace(/{{sale_price}}/g, salePrice)
+      .replace(/{{rental_price}}/g, rentPrice)
+      .replace(/{{original_sale_price}}/g, originalSalePrice)
+      .replace(/{{original_rental_price}}/g, originalRentPrice)
       .replace(/{{bedrooms}}/g, property.bedrooms?.toString() || "-")
       .replace(/{{bathrooms}}/g, property.bathrooms?.toString() || "-")
       .replace(/{{size_sqm}}/g, property.size_sqm?.toString() || "-")
@@ -102,12 +165,18 @@ export async function postPropertyToMetaAction(
         /{{location}}/g,
         `${property.district || ""} ${property.province || ""}`.trim(),
       )
+      .replace(/{{popular_area}}/g, property.popular_area || "-")
+      .replace(/{{amenities}}/g, amenities)
+      .replace(/{{nearby_places}}/g, nearbyPlaces)
+      .replace(/{{near_transit}}/g, nearbyTransits)
       .replace(
-        /{{transit}}/g,
+        /{{transit}}/g, // Keep for backward compatibility
         property.transit_station_name
           ? `${property.transit_station_name} (${property.transit_distance_meters || 0} ม.)`
           : "-",
       )
+      .replace(/{{verified}}/g, property.verified ? "✅ ตรวจสอบแล้ว" : "")
+      .replace(/{{exclusive}}/g, property.is_exclusive ? "💎 Exclusive" : "")
       .replace(/{{google_maps}}/g, property.google_maps_link || "")
       .replace(/{{link}}/g, publicUrl)
       .replace(/{{agent_name}}/g, primaryAgent?.full_name || "")
@@ -133,6 +202,20 @@ export async function postPropertyToMetaAction(
           metadata: { platform, post_id: result.data?.id },
         },
       );
+
+      // 6. บันทึก Timestamp ลงในตาราง properties
+      const updateField =
+        platform === "FACEBOOK"
+          ? "posted_to_facebook_at"
+          : "posted_to_instagram_at";
+
+      await supabase
+        .from("properties")
+        .update({ [updateField]: new Date().toISOString() })
+        .eq("id", propertyId);
+
+      revalidatePath("/(protected)/protected/properties", "page");
+
       return { success: true, message: `โพสต์ไปยัง ${platform} สำเร็จ` };
     } else {
       return { success: false, message: `เกิดข้อผิดพลาด: ${result.error}` };

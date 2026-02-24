@@ -47,7 +47,10 @@ export async function sendLineNotification(
 
   if (!userId) {
     console.warn(
-      "ไม่พบ LINE_ADMIN_USER_ID และไม่พบผู้ใช้ที่ผูก Line ในฐานข้อมูล จึงไม่สามารถส่งแจ้งเตือนได้",
+      "⚠️ [LINE] ไม่สามารถส่งแจ้งเตือนได้: ไม่พบ LINE_ADMIN_USER_ID ใน .env และไม่มี Admin คนไหนผูก Line ไว้ในฐานข้อมูล",
+    );
+    console.info(
+      "💡 วิธีแก้: กรุณาเพิ่ม LINE_ADMIN_USER_ID=ของคุณ ในไฟล์ .env หรือ พิมพ์คำสั่ง /id ในแชทบอทเพื่อดู ID ของคุณ",
     );
     return;
   }

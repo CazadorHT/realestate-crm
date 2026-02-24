@@ -7,7 +7,7 @@ export function UsersPageHeader() {
         <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
           <Users className="h-5 w-5" />
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 ml-1">
+        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 ml-1">
           จัดการผู้ใช้ในระบบ
         </h1>
       </div>
