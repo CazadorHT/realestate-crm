@@ -63,7 +63,7 @@ export const siteConfig = {
   verificationTokens: {
     // TikTok domain verification tokens (TikTok Developer Portal → Verify domains)
     // Each token is tied to the specific URL that was verified
-    tiktok: "VLSWW5Lb3h4Ty6oimkS0RoLpxgM5BkvO", // https://realestate-crm-rho.vercel.app
+    tiktok: "D0uyXuS1UJ3oH5abBBbzzMSHQ6SK5ooO", // https://realestate-crm-rho.vercel.app
     tiktokTerms: "OWiapI7Ko87ppBWuO7psFBTnEpxggyIk", // /terms
     tiktokPrivacy: "4jTLp4VRupfxpoJNzW7uVkA5dL0SXWTX", // /privacy-policy
     google: "", // Google Search Console verification (if needed)
