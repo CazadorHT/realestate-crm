@@ -69,6 +69,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t("metadata.home_title", { siteName: siteConfig.name }),
     description: t("metadata.home_description"),
+    other: {
+      "tiktok-developers-site-verification":
+        siteConfig.verificationTokens.tiktok,
+    },
   };
 }
 
