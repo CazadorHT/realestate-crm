@@ -48,6 +48,13 @@ export async function generateMetadata(): Promise<Metadata> {
       title: t("metadata.default_title", { siteName: siteConfig.name }),
       description: t("metadata.default_description"),
     },
+    other: {
+      "tiktok-developers-site-verification":
+        siteConfig.verificationTokens.tiktok,
+      ...(siteConfig.verificationTokens.google && {
+        "google-site-verification": siteConfig.verificationTokens.google,
+      }),
+    },
   };
 }
 
