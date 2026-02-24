@@ -551,10 +551,10 @@ export async function getPropertiesTableData(params: {
       view_count: p.view_count || 0,
       total_units: p.total_units || undefined,
       sold_units: p.sold_units || undefined,
-      posted_to_facebook_at: p.posted_to_facebook_at,
-      posted_to_instagram_at: p.posted_to_instagram_at,
-      posted_to_line_at: p.posted_to_line_at,
-      posted_to_tiktok_at: p.posted_to_tiktok_at,
+      posted_to_facebook_at: p.posted_to_facebook_at ?? null,
+      posted_to_instagram_at: p.posted_to_instagram_at ?? null,
+      posted_to_line_at: p.posted_to_line_at ?? null,
+      posted_to_tiktok_at: p.posted_to_tiktok_at ?? null,
     };
   });
 
