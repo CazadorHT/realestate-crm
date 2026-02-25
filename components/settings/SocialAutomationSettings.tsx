@@ -210,7 +210,7 @@ export function SocialAutomationSettings() {
                 {"{{sale_price}}"}: ราคาขาย
                 {"{{rental_price}}"}: ราคาเช่า
                 {"{{original_sale_price}}"}: ราคาขายเดิม
-                {"{{original_rental_price}}"}: ราคาเช่าเดิม 
+                {"{{original_rental_price}}"}: ราคาเช่าเดิม
                 {"{{amenities}}"}: สิ่งอำนวยความสะดวก
                 {"{{location}}"}: ทำเล (เขต/จังหวัด)
                 {"{{nearby_places}}"}: สถานที่ใกล้เคียง
@@ -353,39 +353,41 @@ export function SocialAutomationSettings() {
       </Card>
 
       {/* Social Post Template Section */}
-      <Card className="mt-8 border-none bg-transparent shadow-none">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-amber-100 rounded-lg">
-            <Plus className="h-5 w-5 text-amber-600" />
-          </div>
+      <Card className="mt-8 border-slate-200 shadow-sm">
+        <CardHeader className="bg-linear-to-r from-slate-50 to-amber-50 border-b">
           <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-md font-bold text-slate-800">
-                Social Post Template (Auto-Post)
-              </h3>
-              <p className="text-sm text-slate-500">
-                กำหนดรูปแบบข้อความเริ่มต้นสำหรับปุ่ม "โพสต์ลง Facebook /
-                Instagram"
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-xl">
+                <Plus className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg font-bold">
+                  Social Post Template (Auto-Post)
+                </CardTitle>
+                <CardDescription>
+                  กำหนดรูปแบบข้อความเริ่มต้นสำหรับปุ่ม "โพสต์ลง Facebook /
+                  Instagram"
+                </CardDescription>
+              </div>
             </div>
             <Button
               variant="outline"
               size="sm"
-              className="border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800 gap-2 font-bold"
+              className="border-amber-200! bg-amber-50 text-amber-700 hover:text-amber-100! hover:bg-amber-600! gap-2 font-medium"
               onClick={() => handleAiGenerate("SOCIAL_POST")}
               disabled={!!isGenerating}
             >
               {isGenerating === "social-post" ? (
-                <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+                <Loader2 className="h-4 w-4 animate-spin text-amber-500 hover:text-amber-100" />
               ) : (
-                <Zap className="h-4 w-4 text-amber-500 fill-amber-500" />
+                <Zap className="h-4 w-4 text-amber-500 fill-amber-500 hover:text-amber-100" />
               )}
               AI ช่วยสร้างรูปแบบโพสต์
             </Button>
           </div>
-        </div>
+        </CardHeader>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <CardContent className="p-0">
           <div className="p-6 space-y-4">
             <Textarea
               placeholder="🏠 {{title}}\n💰 {{price}}\n..."
@@ -451,7 +453,7 @@ export function SocialAutomationSettings() {
               บันทึกรูปแบบข้อความ
             </Button>
           </div>
-        </div>
+        </CardContent>
       </Card>
     </>
   );

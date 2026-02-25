@@ -8,7 +8,10 @@ import { revalidatePath } from "next/cache";
  * หมายเหตุ: เนื่องจาก TikTok มีขั้นตอนที่ซับซ้อนกว่า (OAuth -> Upload -> Post)
  * ในเวอร์ชันเบื้องต้นนี้จะเป็นการบันทึกสถานะว่ากำลังเตรียมข้อมูล หรือส่งไปยังคิว
  */
-export async function postPropertyToTikTokAction(propertyId: string) {
+export async function postPropertyToTikTokAction(
+  propertyId: string,
+  caption?: string,
+) {
   try {
     const { supabase, role } = await requireAuthContext();
     assertStaff(role);
@@ -28,7 +31,8 @@ export async function postPropertyToTikTokAction(propertyId: string) {
     // ในอนาคตจะต้องรัน Step: Exchange Code -> Access Token จาก TikTok
 
     // 3. จำลองการโพสต์ (หรือส่งเข้า Queue สำหรับ Video Processing)
-    // สำหรับตอนนี้เราจะบันทึกสถานะว่า โพสต์แล้ว (Mocking success)
+    // สำหรับสถานะการสาธิต (Demo) เราจะตอบกลับด้วยข้อความที่ TikTok กำหนด
+    console.log("TikTok Demo Post with caption:", caption);
 
     await supabase
       .from("properties")
@@ -39,7 +43,7 @@ export async function postPropertyToTikTokAction(propertyId: string) {
 
     return {
       success: true,
-      message: "เตรียมโพสต์ลง TikTok เรียบร้อย (Video กำลังประมวลผล)",
+      message: "Post successfully sent to TikTok!",
     };
   } catch (err) {
     console.error("postPropertyToTikTokAction → error:", err);

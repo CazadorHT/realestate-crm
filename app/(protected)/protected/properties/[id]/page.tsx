@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BsStars } from "react-icons/bs";
 import { FacebookPostButton } from "@/features/properties/components/FacebookPostButton";
 import { InstagramPostButton } from "@/features/properties/components/InstagramPostButton";
+import { TikTokPostButton } from "@/features/properties/components/TikTokPostButton";
 
 export default async function PropertyDetailsPage({
   params,
@@ -205,7 +206,7 @@ export default async function PropertyDetailsPage({
   return (
     <div className="min-h-screen bg-white pb-24 lg:pb-32 font-sans ">
       {/* 1. Admin Breadcrumb & Edit Button */}
-      <div className="pt-6 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="pt-6 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4">
         <div className="flex items-center gap-4">
           <Breadcrumb
             backHref={`/protected/properties`}
@@ -231,18 +232,6 @@ export default async function PropertyDetailsPage({
             </Link>
           </Button>
 
-          <FacebookPostButton
-            propertyId={property.id}
-            variant="outline"
-            className="flex-1 lg:flex-none rounded-full bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
-          />
-
-          <InstagramPostButton
-            propertyId={property.id}
-            variant="outline"
-            className="flex-1 lg:flex-none rounded-full bg-pink-50 text-pink-600 border-pink-100 hover:bg-pink-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
-          />
-
           <Button
             variant="outline"
             size="sm"
@@ -256,7 +245,25 @@ export default async function PropertyDetailsPage({
           </Button>
         </div>
       </div>
+      <div className="lg:gap-4 flex items-end justify-end px-4 sm:px-6 lg:px-8 border-t pt-4 border-slate-100">
+        <FacebookPostButton
+          propertyId={property.id}
+          variant="outline"
+          className="flex-1 lg:flex-none rounded-full bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+        />
 
+        <InstagramPostButton
+          propertyId={property.id}
+          variant="outline"
+          className="flex-1 lg:flex-none rounded-full bg-pink-50 text-pink-600 border-pink-100 hover:bg-pink-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+        />
+
+        <TikTokPostButton
+          propertyId={property.id}
+          variant="outline"
+          className="flex-1 lg:flex-none rounded-full bg-slate-50 text-slate-900 border-slate-200 hover:bg-slate-900 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+        />
+      </div>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-6">
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-8 sm:pb-12 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
           <div className="mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-8">
