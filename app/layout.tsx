@@ -51,6 +51,7 @@ export async function generateMetadata(): Promise<Metadata> {
     other: {
       "tiktok-developers-site-verification":
         siteConfig.verificationTokens.tiktok,
+      "tiktok-site-verification": siteConfig.verificationTokens.tiktok,
       ...(siteConfig.verificationTokens.google && {
         "google-site-verification": siteConfig.verificationTokens.google,
       }),

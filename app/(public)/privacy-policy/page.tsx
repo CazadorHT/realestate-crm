@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   other: {
     "tiktok-developers-site-verification":
       siteConfig.verificationTokens.tiktokPrivacy,
+    "tiktok-site-verification": siteConfig.verificationTokens.tiktokPrivacy,
   },
 };
 
