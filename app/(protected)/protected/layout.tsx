@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarNav } from "@/components/dashboard/SidebarNav";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { isStaff } from "@/lib/auth-shared";
@@ -13,8 +12,6 @@ import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
 import { getRecentNotifications } from "@/features/dashboard/queries";
 import { SocialPostMonitor } from "@/components/properties/SocialPostMonitor";
-
-import { ThemeProvider } from "@/components/theme-provider";
 
 export default async function ProtectedLayout({
   children,
@@ -45,37 +42,28 @@ export default async function ProtectedLayout({
   const notifications = await getRecentNotifications();
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-      storageKey="admin-theme"
-    >
-      <div className="flex min-h-screen w-full bg-slate-50/50 dark:bg-slate-950">
-        <SidebarNav role={profile.role} />
+    <div className="flex min-h-screen w-full bg-slate-50/50">
+      <SidebarNav role={profile.role} />
 
-        <div className="flex flex-1 flex-col min-w-0">
-          <header className="sticky top-0 z-50 flex h-16 items-center gap-4 bg-white dark:bg-slate-900 px-4 md:px-6 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-sm  dark:supports-backdrop-filter:bg-slate-900/60">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <MobileNav role={profile.role} />
+      <div className="flex flex-1 flex-col min-w-0">
+        <header className="sticky top-0 z-50 flex h-16 items-center gap-4 bg-white px-4 md:px-6 backdrop-blur-md border-b border-slate-100 shadow-sm">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <MobileNav role={profile.role} />
 
-              <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight sm:hidden truncate max-w-[120px] uppercase">
-                {siteConfig.name}
-              </h1>
-            </div>
-            <div className="ml-auto flex items-center gap-2 sm:gap-4">
-              <NotificationBell notifications={notifications} />
-              <ThemeToggle />
-              <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block" />
-              <UserNav profile={profile} />
-            </div>
-          </header>
+            <h1 className="text-lg font-bold text-slate-800 tracking-tight sm:hidden truncate max-w-[120px] uppercase">
+              {siteConfig.name}
+            </h1>
+          </div>
+          <div className="ml-auto flex items-center gap-2 sm:gap-4">
+            <NotificationBell notifications={notifications} />
+            <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
+            <UserNav profile={profile} />
+          </div>
+        </header>
 
-          <main className="flex-1 p-6 md:p-8 mx-auto w-full">{children}</main>
-          <SocialPostMonitor />
-        </div>
+        <main className="flex-1 p-6 md:p-8 mx-auto w-full">{children}</main>
+        <SocialPostMonitor />
       </div>
-    </ThemeProvider>
+    </div>
   );
 }
