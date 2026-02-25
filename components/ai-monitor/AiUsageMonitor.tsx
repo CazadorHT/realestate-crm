@@ -6,20 +6,30 @@ import { Loader2, Activity, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AiUsageMonitor({ className }: { className?: string }) {
-  const [stats, setStats] = useState<AiUsageStats | null>(null);
+  const [stats, setStats] = useState<
+    (AiUsageStats & { totalCostThb?: number }) | null
+  >(null);
   const [loading, setLoading] = useState(true);
 
   const fetchStats = async () => {
     try {
+      // We need to fetch both RPM stats and total dashboard stats to get the cost
+      // Or we could update getAiUsageStats to include it.
+      // For now, let's just fetch dashboard stats if we want cost here.
       const data = await getAiUsageStats();
-      setStats(data);
+      // Import getAiDashboardStats dynamically to get totalCost
+      const { getAiDashboardStats } =
+        await import("@/features/ai-monitor/actions");
+      const dStats = await getAiDashboardStats();
+
+      setStats({ ...data, totalCostThb: dStats.totalCostThb });
     } catch (err) {
       console.error("Failed to fetch AI stats:", err);
     } finally {
       setLoading(false);
     }
   };
-
+  /* ... existing useEffect ... */
   useEffect(() => {
     fetchStats();
     // Refresh every 30 seconds
@@ -28,6 +38,7 @@ export function AiUsageMonitor({ className }: { className?: string }) {
   }, []);
 
   if (loading) {
+    /* ... existing loading state ... */
     return (
       <div
         className={cn(
@@ -103,6 +114,19 @@ export function AiUsageMonitor({ className }: { className?: string }) {
           )}
           style={{ width: `${usagePercent}%` }}
         />
+      </div>
+
+      <div className="flex items-center justify-between mt-1 pt-1 border-t border-slate-50 overflow-hidden">
+        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight shrink-0">
+          Total Investment
+        </span>
+        <span className="text-[11px] font-bold text-indigo-600 truncate">
+          ฿
+          {stats.totalCostThb?.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </span>
       </div>
 
       <div className="flex justify-between items-center mt-0.5 overflow-hidden">

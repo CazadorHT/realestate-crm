@@ -51,15 +51,17 @@ export async function generateLeadSummary(leadId: string): Promise<string> {
   const modelName = aiConfig.lead_model;
 
   try {
-    const summary = await generateText(prompt, modelName);
+    const result = await generateText(prompt, modelName);
 
     await logAiUsage({
       model: modelName,
       feature: "lead_summary",
       status: "success",
+      promptTokens: result.usage?.promptTokens,
+      completionTokens: result.usage?.completionTokens,
     });
 
-    return summary;
+    return result.text;
   } catch (error: any) {
     console.error("AI Lead Summary Error:", error);
 

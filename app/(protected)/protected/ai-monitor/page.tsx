@@ -56,7 +56,7 @@ export default async function AiDashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <StatsCard
             title="Total Requests"
             value={stats.totalRequests.toLocaleString()}
@@ -72,6 +72,14 @@ export default async function AiDashboardPage() {
             description="Operational status"
             trend="Stable"
             color="emerald"
+          />
+          <StatsCard
+            title="AI Investment"
+            value={`฿${stats.totalCostThb.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            icon={<BarChart3 className="w-6 h-6 text-blue-600" />}
+            description="Total API Cost (THB)"
+            trend="Est."
+            color="indigo"
           />
           <StatsCard
             title="Chatbot Convers."

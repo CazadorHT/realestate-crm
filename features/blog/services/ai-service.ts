@@ -100,7 +100,7 @@ export async function generateBlogPost(
 
   try {
     const response = await generateText(prompt, modelName);
-    const jsonStr = response.replace(/```json|```/g, "").trim();
+    const jsonStr = response.text.replace(/```json|```/g, "").trim();
     const blogData = JSON.parse(jsonStr);
 
     // FAQ processing...
@@ -158,6 +158,8 @@ export async function generateBlogPost(
       model: modelName,
       feature: "blog_generator",
       status: "success",
+      promptTokens: response.usage?.promptTokens,
+      completionTokens: response.usage?.completionTokens,
     });
     return blogData;
   } catch (error: any) {
@@ -233,6 +235,8 @@ export async function refineBlogContent(
       model: modelName,
       feature: "content_refiner",
       status: "success",
+      promptTokens: result.response.usageMetadata?.promptTokenCount,
+      completionTokens: result.response.usageMetadata?.candidatesTokenCount,
     });
     return refinedContent;
   } catch (error: any) {

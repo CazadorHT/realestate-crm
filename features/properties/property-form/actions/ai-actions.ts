@@ -92,10 +92,12 @@ export async function generateAIPropertyDescriptionAction(
       model: modelName,
       feature: "description_generator",
       status: "success",
+      promptTokens: response.usage?.promptTokens,
+      completionTokens: response.usage?.completionTokens,
     });
 
     // Cleanup simple AI artifacts if any
-    return response
+    return response.text
       .trim()
       .replace(/^```html/, "")
       .replace(/```$/, "");
@@ -140,7 +142,7 @@ export async function translatePlaceNamesAction(texts: string[]) {
 
   try {
     const response = await generateText(prompt);
-    const cleaned = response
+    const cleaned = response.text
       .trim()
       .replace(/^```json/, "")
       .replace(/^```/, "")
@@ -152,6 +154,8 @@ export async function translatePlaceNamesAction(texts: string[]) {
       model: "gemini-flash-latest",
       feature: "property_translator",
       status: "success",
+      promptTokens: response.usage?.promptTokens,
+      completionTokens: response.usage?.completionTokens,
     });
 
     // Map back to guarantee order and length matching input texts

@@ -16,29 +16,38 @@ export type Database = {
     Tables: {
       ai_usage_logs: {
         Row: {
+          completion_tokens: number | null
+          cost_thb: number | null
           created_at: string
           error_message: string | null
           feature: string
           id: string
           model: string
+          prompt_tokens: number | null
           status: string
           user_id: string | null
         }
         Insert: {
+          completion_tokens?: number | null
+          cost_thb?: number | null
           created_at?: string
           error_message?: string | null
           feature: string
           id?: string
           model: string
+          prompt_tokens?: number | null
           status: string
           user_id?: string | null
         }
         Update: {
+          completion_tokens?: number | null
+          cost_thb?: number | null
           created_at?: string
           error_message?: string | null
           feature?: string
           id?: string
           model?: string
+          prompt_tokens?: number | null
           status?: string
           user_id?: string | null
         }

@@ -10,28 +10,59 @@ export type AiLogInput = {
   feature: string;
   status: "success" | "error";
   errorMessage?: string;
+  promptTokens?: number;
+  completionTokens?: number;
 };
 
 export async function logAiUsage(input: AiLogInput) {
   const adminClient = createAdminClient();
   const user = await getCurrentProfile();
 
+  // Define Rates (in USD per 1M tokens)
+  const rates: Record<
+    string,
+    { input: number; output: number; isManual?: boolean }
+  > = {
+    "gemini-1.5-flash": { input: 0.1, output: 0.4 },
+    "gemini-1.5-pro": { input: 1.25, output: 5.0 },
+    "gemini-flash-latest": { input: 0.1, output: 0.4 },
+    "gemini-pro-latest": { input: 1.25, output: 5.0 },
+    "gemini-2.0-flash-exp": { input: 0.1, output: 0.4 }, // Assumption for experimental
+  };
+
+  const exchangeRate = 32; // 1 USD = 32 THB
+
+  let costThb = 0;
+  if (
+    input.status === "success" &&
+    input.promptTokens &&
+    input.completionTokens
+  ) {
+    const modelKey = Object.keys(rates).find((k) => input.model.includes(k));
+    const rate = modelKey ? rates[modelKey] : rates["gemini-1.5-flash"];
+
+    const inputCostUsd = (input.promptTokens / 1_000_000) * rate.input;
+    const outputCostUsd = (input.completionTokens / 1_000_000) * rate.output;
+    costThb = (inputCostUsd + outputCostUsd) * exchangeRate;
+  }
+
   try {
     console.log(
-      `[AI_LOG] Logging feature: ${input.feature}, model: ${input.model}`,
+      `[AI_LOG] Logging feature: ${input.feature}, model: ${input.model}, cost: ${costThb.toFixed(4)} ฿`,
     );
-    const { data, error } = await adminClient.from("ai_usage_logs").insert({
+    const { error } = await adminClient.from("ai_usage_logs").insert({
       model: input.model,
       feature: input.feature,
       status: input.status,
       error_message: input.errorMessage,
-      user_id: user?.id || null, // Allow anonymous logging
+      user_id: user?.id || null,
+      prompt_tokens: input.promptTokens || 0,
+      completion_tokens: input.completionTokens || 0,
+      cost_thb: costThb,
     });
 
     if (error) {
       console.error("[AI_LOG] Insert Error:", error);
-    } else {
-      console.log("[AI_LOG] Successfully inserted log record");
     }
 
     // Lazy Cleanup: 10% chance to prune logs older than 30 days
@@ -154,6 +185,7 @@ export type AiDashboardStats = {
   successRate: number;
   chatbotUsage: number;
   blogUsage: number;
+  totalCostThb: number;
 };
 
 export async function getAiDashboardStats(): Promise<AiDashboardStats> {
@@ -165,17 +197,15 @@ export async function getAiDashboardStats(): Promise<AiDashboardStats> {
       successRate: 0,
       chatbotUsage: 0,
       blogUsage: 0,
+      totalCostThb: 0,
     };
   }
 
   const client =
     user.role === "ADMIN" ? createAdminClient() : await createClient();
 
-  let query = client
-    .from("ai_usage_logs")
-    .select("feature, status")
-    .order("created_at", { ascending: false })
-    .limit(1000);
+  // Get total stats & total cost
+  let query = client.from("ai_usage_logs").select("feature, status, cost_thb");
 
   if (user.role !== "ADMIN") {
     query = query.eq("user_id", user.id);
@@ -189,13 +219,14 @@ export async function getAiDashboardStats(): Promise<AiDashboardStats> {
       successRate: 0,
       chatbotUsage: 0,
       blogUsage: 0,
+      totalCostThb: 0,
     };
   }
 
   const total = data.length;
   const successCount = data.filter((d) => d.status === "success").length;
   const chatbotCount = data.filter((d) => d.feature === "chatbot").length;
-  // All other features count as "Content/Tools" in the current UI logic
+  const totalCost = data.reduce((sum, d) => sum + (Number(d.cost_thb) || 0), 0);
   const contentUsage = total - chatbotCount;
 
   return {
@@ -203,5 +234,6 @@ export async function getAiDashboardStats(): Promise<AiDashboardStats> {
     successRate: Math.round((successCount / total) * 100),
     chatbotUsage: chatbotCount,
     blogUsage: contentUsage,
+    totalCostThb: totalCost,
   };
 }

@@ -67,11 +67,20 @@ function rotateApiKey(): boolean {
   return true;
 }
 
+export type AiGenerationResult = {
+  text: string;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+};
+
 export async function generateText(
   prompt: string,
   modelName: string = DEFAULT_MODEL,
   retryCount: number = 0,
-): Promise<string> {
+): Promise<AiGenerationResult> {
   const model = getModel(modelName);
 
   if (!model) {
@@ -81,7 +90,19 @@ export async function generateText(
   try {
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    return response.text();
+    const text = response.text();
+
+    // Capture token usage if available in the SDK response
+    const usage = result.response.usageMetadata
+      ? {
+          promptTokens: result.response.usageMetadata.promptTokenCount || 0,
+          completionTokens:
+            result.response.usageMetadata.candidatesTokenCount || 0,
+          totalTokens: result.response.usageMetadata.totalTokenCount || 0,
+        }
+      : undefined;
+
+    return { text, usage };
   } catch (error: any) {
     console.error("Gemini generation error detail:", {
       message: error.message,
@@ -96,7 +117,7 @@ export async function generateText(
         return generateText(prompt, modelName, retryCount + 1);
       }
       throw new Error(
-        "[RATE_LIMIT] โควต้า AI เต็มข้า (All Keys Exhausted) กรุณารอสักครู่แล้วลองใหม่ครับ",
+        "[RATE_LIMIT] โควต้า AI เต็มแล้ว (All Keys Exhausted) กรุณารอสักครู่แล้วลองใหม่ครับ",
       );
     }
 
