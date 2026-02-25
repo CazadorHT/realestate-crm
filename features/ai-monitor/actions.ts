@@ -131,6 +131,10 @@ export async function getAiUsageStats(): Promise<AiUsageStats> {
     const limit = 5;
     const rpmCount = rpmRes.count || 0;
 
+    console.log(
+      `[getAiUsageStats] now=${now.toISOString()}, 1minAgo=${oneMinuteAgo}, count=${rpmCount}`,
+    );
+
     return {
       requestsLastMinute: rpmCount,
       requestsLast24Hours: rpdRes.count || 0,
@@ -176,7 +180,7 @@ export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
       feature,
       status,
       error_message,
-      user:user_id (full_name, email)
+      user_id
     `);
 
     if (user.role !== "ADMIN") {
@@ -188,11 +192,33 @@ export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
       .limit(limit);
 
     if (error) {
-      console.error("[getAiLogs] Error:", error);
+      console.error("[getAiLogs] DB Error:", error);
       return [];
     }
 
-    return (data as any) || [];
+    if (!data || data.length === 0) return [];
+
+    // Manual Join: Fetch unique profiles for these logs
+    const userIds = Array.from(
+      new Set(
+        data.map((d: any) => d.user_id).filter((id: any): id is string => !!id),
+      ),
+    );
+    const { data: profiles, error: profilesError } = await client
+      .from("profiles")
+      .select("id, full_name, email")
+      .in("id", userIds as string[]);
+
+    if (profilesError) {
+      console.error("[getAiLogs] Profiles Fetch Error:", profilesError);
+    }
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+    return data.map((d: any) => ({
+      ...d,
+      user: d.user_id ? profileMap.get(d.user_id) : null,
+    }));
   } catch (error) {
     console.error("[getAiLogs] Exception:", error);
     return [];

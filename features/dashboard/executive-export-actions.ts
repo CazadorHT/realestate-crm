@@ -11,6 +11,7 @@ import {
   getQuarterlyRevenueData,
 } from "./executive-queries";
 import { generateExcelBuffer, ExcelColumn } from "@/lib/excel-export";
+import { ExecutiveAiInsights } from "./executive-ai-actions";
 
 const MONTH_COLUMNS: ExcelColumn[] = [
   { key: "month", header: "เดือน", width: 15 },
@@ -64,7 +65,10 @@ export async function exportExecutiveExcelAction(year?: number) {
   }
 }
 
-export async function exportExecutivePdfAction(year?: number) {
+export async function exportExecutivePdfAction(
+  year?: number,
+  aiInsights?: ExecutiveAiInsights | null,
+) {
   try {
     const { role } = await requireAuthContext();
     assertAdminOrManager(role);
@@ -83,6 +87,7 @@ export async function exportExecutivePdfAction(year?: number) {
       monthlyData,
       quarterlyData,
       targetYear,
+      aiInsights || undefined,
     );
     const base64 = Buffer.from(pdfBytes).toString("base64");
 

@@ -5,6 +5,8 @@ export type ExecutiveStats = {
   salesRevenue: number;
   rentalRevenue: number;
   totalCommission: number;
+  salesCommission: number;
+  rentalCommission: number;
   totalDeals: number;
   salesCount: number;
   rentalCount: number;
@@ -22,6 +24,12 @@ export type QuarterlyRevenue = {
   sales: number;
   rent: number;
   total: number;
+};
+
+export type PipelineStats = {
+  totalOpenDeals: number;
+  expectedValue: number;
+  stageBreakdown: Record<string, number>;
 };
 
 export async function getExecutiveStats(
@@ -62,15 +70,24 @@ export async function getExecutiveStats(
     salesRevenue: 0,
     rentalRevenue: 0,
     totalCommission: 0,
+    salesCommission: 0,
+    rentalCommission: 0,
     totalDeals: (deals || []).length,
     salesCount: 0,
     rentalCount: 0,
   };
 
   deals?.forEach((d) => {
-    stats.totalCommission += d.commission_amount || 0;
-    if (d.deal_type === "SALE") stats.salesCount++;
-    if (d.deal_type === "RENT") stats.rentalCount++;
+    const comm = d.commission_amount || 0;
+    stats.totalCommission += comm;
+    if (d.deal_type === "SALE") {
+      stats.salesCount++;
+      stats.salesCommission += comm;
+    }
+    if (d.deal_type === "RENT") {
+      stats.rentalCount++;
+      stats.rentalCommission += comm;
+    }
   });
 
   properties?.forEach((p) => {
@@ -158,4 +175,43 @@ export async function getQuarterlyRevenueData(
   });
 
   return quarterlyData;
+}
+
+export async function getPipelineStats(): Promise<PipelineStats> {
+  const supabase = await createClient();
+
+  // Fetch deals that are not closed, with their property price/rental_price
+  const { data: deals, error } = await supabase
+    .from("deals")
+    .select(
+      `
+      status, 
+      deal_type,
+      property:properties(price, rental_price)
+    `,
+    )
+    .not("status", "in", '("CLOSED_WIN","CLOSED_LOSS")');
+
+  if (error) {
+    console.error("[getPipelineStats] Error:", error);
+    return { totalOpenDeals: 0, expectedValue: 0, stageBreakdown: {} };
+  }
+
+  const stats: PipelineStats = {
+    totalOpenDeals: (deals || []).length,
+    expectedValue: 0,
+    stageBreakdown: {},
+  };
+
+  deals?.forEach((d: any) => {
+    const propertyPrice =
+      d.deal_type === "SALE"
+        ? d.property?.price || 0
+        : d.property?.rental_price || 0;
+
+    stats.expectedValue += propertyPrice;
+    stats.stageBreakdown[d.status] = (stats.stageBreakdown[d.status] || 0) + 1;
+  });
+
+  return stats;
 }

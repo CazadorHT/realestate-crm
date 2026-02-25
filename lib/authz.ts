@@ -92,5 +92,8 @@ export function authzFail(err: unknown): { success: false; message: string } {
   if (err instanceof AuthzError) {
     return { success: false, message: err.message };
   }
-  return { success: false, message: "Unexpected error GG" };
+  if (err instanceof Error) {
+    return { success: false, message: err.message };
+  }
+  return { success: false, message: "An unknown error occurred" };
 }

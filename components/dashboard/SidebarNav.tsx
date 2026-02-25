@@ -249,16 +249,10 @@ export function SidebarNav({ role }: { role: UserRole }) {
       icon: BarChart3,
       items: [
         {
-          title: "Executive Dashboard",
+          title: "รายงานและข้อมูลวิเคราะห์",
           href: "/protected/dashboard/executive",
           icon: Sparkles,
           active: pathname === "/protected/dashboard/executive",
-        },
-        {
-          title: "ส่งออกรายงาน",
-          href: "/protected/dashboard/executive/export",
-          icon: FileText,
-          active: pathname === "/protected/dashboard/executive/export",
         },
       ],
       roles: ["ADMIN", "MANAGER"],

@@ -41,9 +41,10 @@ export const metadata: Metadata = {
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const activeTab = (searchParams?.tab as string) || "general";
+  const resolvedParams = await searchParams;
+  const activeTab = (resolvedParams?.tab as string) || "general";
   const supabase = createAdminClient();
 
   // Fetch all relevant settings at once
@@ -83,9 +84,7 @@ export default async function SettingsPage({
           <Settings className="h-6 w-6 text-blue-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            การตั้งค่าระบบ
-          </h1>
+          <h1 className="text-2xl font-bold text-slate-900">การตั้งค่าระบบ</h1>
           <p className="text-slate-500 text-sm">
             จัดการการตั้งค่าระบบและฟีเจอร์ต่างๆ ทั้งหมดในที่เดียว
           </p>

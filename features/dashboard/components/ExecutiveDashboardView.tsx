@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   ExecutiveStats,
   MonthlyRevenue,
@@ -35,6 +37,7 @@ import {
   Download,
   Calendar,
   FileText,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatThaiCurrency } from "@/lib/excel-export";
@@ -43,6 +46,11 @@ import {
   exportExecutiveExcelAction,
   exportExecutivePdfAction,
 } from "../executive-export-actions";
+import {
+  generateExecutiveAiInsightsAction,
+  ExecutiveAiInsights,
+} from "../executive-ai-actions";
+import { AiExecutiveBriefing } from "./AiExecutiveBriefing";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -62,6 +70,32 @@ export function ExecutiveDashboardView({
   monthlyData,
   quarterlyData,
 }: ExecutiveDashboardViewProps) {
+  const [aiInsights, setAiInsights] = useState<ExecutiveAiInsights | null>(
+    null,
+  );
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+
+  const handleGenerateAi = async () => {
+    setIsGeneratingAi(true);
+    const toastId = toast.loading("AI กำลังวิเคราะห์ข้อมูลและจัดทำกลยุทธ์...");
+    try {
+      const result = await generateExecutiveAiInsightsAction();
+      if (result.success && result.data) {
+        setAiInsights(result.data);
+        toast.success("AI วิเคราะห์ข้อมูลสำเร็จ", { id: toastId });
+      } else {
+        toast.error(result.message || "AI ไม่สามารถวิเคราะห์ได้ในขณะนี้", {
+          id: toastId,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("เกิดข้อผิดพลาดในการเรียก AI", { id: toastId });
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
+
   const handleExport = async (type: "excel" | "pdf") => {
     const toastId = toast.loading(`กำลังเตรียมไฟล์ ${type.toUpperCase()}...`);
     try {
@@ -69,7 +103,7 @@ export function ExecutiveDashboardView({
         type === "excel"
           ? exportExecutiveExcelAction
           : exportExecutivePdfAction;
-      const result = await action();
+      const result = await action(undefined, aiInsights);
 
       if (result.success) {
         const link = document.createElement("a");
@@ -110,6 +144,18 @@ export function ExecutiveDashboardView({
             ปี {new Date().getFullYear() + 543}
           </Button>
 
+          <Button
+            onClick={handleGenerateAi}
+            disabled={isGeneratingAi}
+            variant="outline"
+            className="gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-sm"
+          >
+            <Sparkles
+              className={cn("h-4 w-4", isGeneratingAi && "animate-pulse")}
+            />
+            {aiInsights ? "Re-analyze with AI" : "AI Analysis"}
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-200 transition-all">
@@ -136,6 +182,9 @@ export function ExecutiveDashboardView({
           </DropdownMenu>
         </div>
       </div>
+
+      {/* AI Briefing Section */}
+      {aiInsights && <AiExecutiveBriefing insights={aiInsights} />}
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -333,8 +382,7 @@ export function ExecutiveDashboardView({
                     {formatThaiCurrency(stats.salesRevenue)}
                   </td>
                   <td className="px-6 py-4 text-right text-blue-600 font-bold">
-                    ฿ {(stats.totalCommission * 0.7).toLocaleString()}{" "}
-                    {/* Mock split */}
+                    {formatThaiCurrency(stats.salesCommission)}
                   </td>
                 </tr>
                 <tr>
@@ -346,8 +394,7 @@ export function ExecutiveDashboardView({
                     {formatThaiCurrency(stats.rentalRevenue)}
                   </td>
                   <td className="px-6 py-4 text-right text-emerald-600 font-bold">
-                    ฿ {(stats.totalCommission * 0.3).toLocaleString()}{" "}
-                    {/* Mock split */}
+                    {formatThaiCurrency(stats.rentalCommission)}
                   </td>
                 </tr>
               </tbody>
