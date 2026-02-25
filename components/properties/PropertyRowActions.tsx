@@ -24,6 +24,7 @@ import { postPropertyToLineAction } from "@/features/properties/actions/line";
 import { postPropertyToTikTokAction } from "@/features/properties/actions/tiktok";
 import { dispatchSocialPostEvent } from "@/lib/social-post-events";
 import { v4 as uuidv4 } from "uuid";
+import { FaFacebook, FaLine, FaTiktok } from "react-icons/fa";
 
 interface SocialActionResult {
   success: boolean;
@@ -170,7 +171,7 @@ export function PropertyRowActions({
             handlePostToSocial("FACEBOOK");
           }}
         >
-          <Facebook className="mr-2 h-4 w-4" />
+          <FaFacebook className="mr-2 h-4 w-4" />
           โพสต์ลง Facebook
         </DropdownMenuItem>
 
@@ -181,7 +182,7 @@ export function PropertyRowActions({
             handlePostToSocial("LINE");
           }}
         >
-          <MessageCircle className="mr-2 h-4 w-4" />
+          <FaLine className="mr-2 h-4 w-4" />
           ส่งลง Line (Broadcast)
         </DropdownMenuItem>
 
@@ -192,7 +193,7 @@ export function PropertyRowActions({
             handlePostToSocial("TIKTOK");
           }}
         >
-          <Music2 className="mr-2 h-4 w-4" />
+          <FaTiktok className="mr-2 h-4 w-4" />
           โพสต์ลง TikTok
         </DropdownMenuItem>
 
