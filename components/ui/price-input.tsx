@@ -12,14 +12,19 @@ export function PriceInput({
   onChange,
   placeholder = "0",
   className,
+  showSuffix = true,
+  suffix,
 }: {
   value: number;
   onChange: (val: number) => void;
   placeholder?: string;
   className?: string;
+  showSuffix?: boolean;
+  suffix?: string;
 }) {
   const [displayValue, setDisplayValue] = useState("");
   const { t } = useLanguage();
+  const finalSuffix = suffix || t("common.baht");
 
   useEffect(() => {
     if (value !== undefined && value !== null && value !== 0) {
@@ -51,11 +56,13 @@ export function PriceInput({
         placeholder={placeholder}
         value={displayValue}
         onChange={handleChange}
-        className="pr-12"
+        className={showSuffix ? "pr-12" : ""}
       />
-      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
-        {t("common.baht")}
-      </span>
+      {showSuffix && (
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
+          {finalSuffix}
+        </span>
+      )}
     </div>
   );
 }

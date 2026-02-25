@@ -85,10 +85,9 @@ export function NumberInput({
       aria-invalid={ariaInvalid}
       className={className}
       disabled={disabled}
-      onFocus={() => {
+      onFocus={(e) => {
         setIsFocused(true);
-        setDisplay(value == null ? "" : String(value));
-        // Move caret to end
+        // On focus, we still keep formatting but move caret to end
         requestAnimationFrame(() => {
           const el = inputRef.current;
           if (el) el.selectionStart = el.selectionEnd = el.value.length;
@@ -96,19 +95,42 @@ export function NumberInput({
       }}
       onChange={(e) => {
         const val = e.target.value;
-        setDisplay(val);
+        const cleaned = val.replace(/[^0-9.-]/g, "");
 
-        // Debounce committing
-        if (commitTimer.current) window.clearTimeout(commitTimer.current);
-        commitTimer.current = window.setTimeout(() => {
-          commitValue(val);
-          commitTimer.current = null;
-        }, 300);
+        if (cleaned === "" || cleaned === "-") {
+          setDisplay(cleaned);
+          commitValue("");
+          return;
+        }
+
+        const num = Number(cleaned);
+        if (!isNaN(num)) {
+          // Format immediately for "auto-comma" effect
+          const formatted = formatNumber(num, decimals);
+
+          // Basic caret preservation logic
+          const cursorPosition = e.target.selectionStart || 0;
+          const oldLen = val.length;
+
+          setDisplay(formatted);
+          commitValue(cleaned);
+
+          // After render, adjust cursor if commas were added/removed
+          requestAnimationFrame(() => {
+            const el = inputRef.current;
+            if (el) {
+              const newLen = el.value.length;
+              const diff = newLen - oldLen;
+              el.setSelectionRange(
+                cursorPosition + diff,
+                cursorPosition + diff,
+              );
+            }
+          });
+        }
       }}
       onBlur={(e) => {
         setIsFocused(false);
-        // Commit immediately on blur
-        if (commitTimer.current) window.clearTimeout(commitTimer.current);
         const parsed = parseNumber(e.target.value);
         if (
           (parsed === undefined && value !== undefined) ||

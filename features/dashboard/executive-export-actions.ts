@@ -13,6 +13,13 @@ import {
 import { generateExcelBuffer, ExcelColumn } from "@/lib/excel-export";
 import { ExecutiveAiInsights } from "./executive-ai-actions";
 
+export type ExportActionResponse = {
+  success: boolean;
+  message?: string;
+  data?: string; // base64 string
+  filename?: string;
+};
+
 const MONTH_COLUMNS: ExcelColumn[] = [
   { key: "month", header: "เดือน", width: 15 },
   {
@@ -35,7 +42,9 @@ const MONTH_COLUMNS: ExcelColumn[] = [
   },
 ];
 
-export async function exportExecutiveExcelAction(year?: number) {
+export async function exportExecutiveExcelAction(
+  year?: number,
+): Promise<ExportActionResponse> {
   try {
     const { role } = await requireAuthContext();
     assertAdminOrManager(role);
@@ -61,14 +70,15 @@ export async function exportExecutiveExcelAction(year?: number) {
     };
   } catch (error) {
     console.error("[exportExecutiveExcelAction] Failed:", error);
-    return authzFail(error);
+    const fail = authzFail(error);
+    return { success: false, message: fail.message };
   }
 }
 
 export async function exportExecutivePdfAction(
   year?: number,
   aiInsights?: ExecutiveAiInsights | null,
-) {
+): Promise<ExportActionResponse> {
   try {
     const { role } = await requireAuthContext();
     assertAdminOrManager(role);
@@ -98,6 +108,7 @@ export async function exportExecutivePdfAction(
     };
   } catch (error) {
     console.error("[exportExecutivePdfAction] Failed:", error);
-    return authzFail(error);
+    const fail = authzFail(error);
+    return { success: false, message: fail.message };
   }
 }

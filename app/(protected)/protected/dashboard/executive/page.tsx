@@ -3,6 +3,7 @@ import {
   getMonthlyRevenueData,
   getQuarterlyRevenueData,
 } from "@/features/dashboard/executive-queries";
+import { getAgentKpiStats } from "@/features/analytics/agent-kpis";
 import { ExecutiveDashboardView } from "@/features/dashboard/components/ExecutiveDashboardView";
 import { requireAuthContext, assertAdminOrManager } from "@/lib/authz";
 
@@ -13,10 +14,11 @@ export default async function ExecutiveDashboardPage() {
   const year = new Date().getFullYear();
 
   // Fetch data in parallel
-  const [stats, monthlyData, quarterlyData] = await Promise.all([
+  const [stats, monthlyData, quarterlyData, agentStats] = await Promise.all([
     getExecutiveStats(year),
     getMonthlyRevenueData(year),
     getQuarterlyRevenueData(year),
+    getAgentKpiStats(),
   ]);
 
   return (
@@ -25,6 +27,7 @@ export default async function ExecutiveDashboardPage() {
         stats={stats}
         monthlyData={monthlyData}
         quarterlyData={quarterlyData}
+        agentStats={agentStats}
       />
     </div>
   );

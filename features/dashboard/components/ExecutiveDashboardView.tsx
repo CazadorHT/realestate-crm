@@ -15,16 +15,12 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import {
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
   Legend,
-  LineChart,
-  Line,
   AreaChart,
   Area,
 } from "recharts";
@@ -38,13 +34,27 @@ import {
   Calendar,
   FileText,
   Sparkles,
+  Users,
+  Settings as SettingsIcon,
+  Calculator,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PriceInput } from "@/components/ui/price-input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input as CalculatorInput } from "@/components/ui/input";
 import { formatThaiCurrency } from "@/lib/excel-export";
 import { cn } from "@/lib/utils";
 import {
   exportExecutiveExcelAction,
   exportExecutivePdfAction,
+  ExportActionResponse,
 } from "../executive-export-actions";
 import {
   generateExecutiveAiInsightsAction,
@@ -59,16 +69,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AgentPerformanceTable } from "./AgentPerformanceTable";
+import { CommissionSettings } from "./CommissionSettings";
+import { AgentKpiStats } from "@/features/analytics/agent-kpis";
+import { calculateCommission } from "@/lib/finance/commissions";
+
 interface ExecutiveDashboardViewProps {
   stats: ExecutiveStats;
   monthlyData: MonthlyRevenue[];
   quarterlyData: QuarterlyRevenue[];
+  agentStats: AgentKpiStats[];
 }
 
 export function ExecutiveDashboardView({
   stats,
   monthlyData,
   quarterlyData,
+  agentStats,
 }: ExecutiveDashboardViewProps) {
   const [aiInsights, setAiInsights] = useState<ExecutiveAiInsights | null>(
     null,
@@ -103,20 +121,19 @@ export function ExecutiveDashboardView({
         type === "excel"
           ? exportExecutiveExcelAction
           : exportExecutivePdfAction;
-      const result = await action(undefined, aiInsights);
+      const result: ExportActionResponse = await action(undefined, aiInsights);
 
-      if (result.success) {
+      if (result.success && result.data) {
         const link = document.createElement("a");
-        link.href = `data:application/${type === "excel" ? "vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "pdf"};base64,${(result as any).data}`;
+        link.href = `data:application/${type === "excel" ? "vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "pdf"};base64,${result.data}`;
         link.download =
-          (result as any).filename ||
-          `report.${type === "excel" ? "xlsx" : "pdf"}`;
+          result.filename || `report.${type === "excel" ? "xlsx" : "pdf"}`;
         link.click();
         toast.success(`ดาวน์โหลดไฟล์ ${type.toUpperCase()} สำเร็จ`, {
           id: toastId,
         });
       } else {
-        toast.error((result as any).message || "ล้มเหลวในการสร้างไฟล์รายงาน", {
+        toast.error(result.message || "ล้มเหลวในการสร้างไฟล์รายงาน", {
           id: toastId,
         });
       }
@@ -186,235 +203,395 @@ export function ExecutiveDashboardView({
       {/* AI Briefing Section */}
       {aiInsights && <AiExecutiveBriefing insights={aiInsights} />}
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="ยอดขายรวม (Revenue)"
-          value={stats.totalRevenue}
-          icon={DollarSign}
-          description="รวมยอดขายและยอดเช่าทั้งหมด"
-          trend="+12.5% vs last year"
-          color="blue"
-        />
-        <StatsCard
-          title="ค่าคอมมิชชั่นรวม"
-          value={stats.totalCommission}
-          icon={TrendingUp}
-          description="รายได้จริงจากค่าคอมมิชชั่น"
-          trend="+8.2% vs last year"
-          color="emerald"
-        />
-        <StatsCard
-          title="จำนวนธุรกรรมรวม"
-          value={stats.totalDeals}
-          icon={Briefcase}
-          description={`ยอดขาย ${stats.salesCount} | ยอดเช่า ${stats.rentalCount}`}
-          trend={`${stats.totalDeals} Deals Closed`}
-          color="indigo"
-          isCurrency={false}
-        />
-        <StatsCard
-          title="Performance Score"
-          value={85}
-          icon={PieChartIcon}
-          description="ประสิทธิภาพเทียบกับเป้าหมาย"
-          trend="+5.4% vs last month"
-          color="amber"
-          isCurrency={false}
-          suffix="%"
-        />
-      </div>
+      <Tabs defaultValue="overview" className="space-y-8">
+        <TabsList className="bg-slate-100/50 p-1 scale-105 origin-left">
+          <TabsTrigger value="overview" className="gap-2 px-6">
+            <TrendingUp className="h-4 w-4" />
+            ภาพรวม (Overview)
+          </TabsTrigger>
+          <TabsTrigger value="agents" className="gap-2 px-6">
+            <Users className="h-4 w-4" />
+            ผลงานตัวแทน (Agents)
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="gap-2 px-6">
+            <SettingsIcon className="h-4 w-4" />
+            ตั้งค่าคอมมิชชั่น
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        {/* Monthly Revenue Chart */}
-        <Card className="lg:col-span-4 border-slate-100 shadow-sm border-0 bg-white/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-blue-500" />
-              แนวโน้มรายได้รายเดือน (Sale vs Rent)
-            </CardTitle>
-            <CardDescription>
-              การเปรียบเทียบยอดขายและยอดเช่าในแต่ละเดือน
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlyData}>
-                <defs>
-                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorRent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#f1f5f9"
-                />
-                <XAxis
-                  dataKey="month"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#64748b", fontSize: 12 }}
-                  dy={10}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#64748b", fontSize: 12 }}
-                  tickFormatter={(val) => `฿${(val / 1000000).toFixed(1)}M`}
-                />
-                <RechartsTooltip
-                  contentStyle={{
-                    borderRadius: "12px",
-                    border: "none",
-                    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-                  }}
-                  formatter={(val: any) => [
-                    formatThaiCurrency(Number(val)),
-                    "",
-                  ]}
-                />
-                <Legend verticalAlign="top" height={36} />
-                <Area
-                  type="monotone"
-                  dataKey="sales"
-                  name="ยอดขาย"
-                  stroke="#3b82f6"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorSales)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="rent"
-                  name="ยอดเช่า"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorRent)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div className="flex justify-end -mt-16 mb-8">
+          <CommissionCalculatorDialog />
+        </div>
 
-        {/* Quarterly Breakdown */}
-        <Card className="lg:col-span-3 border-slate-100 shadow-sm border-0 bg-white/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <PieChartIcon className="h-5 w-5 text-indigo-500" />
-              สรุปรายไตรมาส (Quarterly)
-            </CardTitle>
-            <CardDescription>ผลงานแยกตามไตรมาสของปีปัจจุบัน</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {quarterlyData.map((q) => (
-                <div key={q.quarter} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-semibold text-slate-700">
-                      {q.quarter}
-                    </span>
-                    <span className="font-bold text-slate-900">
-                      {formatThaiCurrency(q.total)}
-                    </span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
-                      style={{
-                        width: `${Math.min((q.total / stats.totalRevenue) * 100, 100) || 0}%`,
-                      }}
+        <TabsContent
+          value="overview"
+          className="space-y-8 animate-in fade-in-50 duration-500"
+        >
+          {/* Stats Grid */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              title="ยอดขายรวม (Revenue)"
+              value={stats.totalRevenue}
+              icon={DollarSign}
+              description="รวมยอดขายและยอดเช่าทั้งหมด"
+              trend="+12.5% vs last year"
+              color="blue"
+            />
+            <StatsCard
+              title="ค่าคอมมิชชั่นรวม"
+              value={stats.totalCommission}
+              icon={TrendingUp}
+              description="รายได้จริงจากค่าคอมมิชชั่น"
+              trend="+8.2% vs last year"
+              color="emerald"
+            />
+            <StatsCard
+              title="จำนวนธุรกรรมรวม"
+              value={stats.totalDeals}
+              icon={Briefcase}
+              description={`ยอดขาย ${stats.salesCount} | ยอดเช่า ${stats.rentalCount}`}
+              trend={`${stats.totalDeals} Deals Closed`}
+              color="indigo"
+              isCurrency={false}
+            />
+            <StatsCard
+              title="Performance Score"
+              value={85}
+              icon={PieChartIcon}
+              description="ประสิทธิภาพเทียบกับเป้าหมาย"
+              trend="+5.4% vs last month"
+              color="amber"
+              isCurrency={false}
+              suffix="%"
+            />
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+            {/* Monthly Revenue Chart */}
+            <Card className="lg:col-span-4 border-slate-100 shadow-sm border-0 bg-white/50 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-blue-500" />
+                  แนวโน้มรายได้รายเดือน (Sale vs Rent)
+                </CardTitle>
+                <CardDescription>
+                  การเปรียบเทียบยอดขายและยอดเช่าในแต่ละเดือน
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-[350px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={monthlyData}>
+                    <defs>
+                      <linearGradient
+                        id="colorSales"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#3b82f6"
+                          stopOpacity={0.1}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#3b82f6"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                      <linearGradient
+                        id="colorRent"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#10b981"
+                          stopOpacity={0.1}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#10b981"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#f1f5f9"
                     />
-                  </div>
-                  <div className="flex justify-between text-[10px] text-slate-500">
-                    <span>Sales: {formatThaiCurrency(q.sales)}</span>
-                    <span>Rent: {formatThaiCurrency(q.rent)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      tickFormatter={(val) => `฿${(val / 1000000).toFixed(1)}M`}
+                    />
+                    <RechartsTooltip
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+                      }}
+                      formatter={(val: any) => [
+                        formatThaiCurrency(Number(val)),
+                        "",
+                      ]}
+                    />
+                    <Legend verticalAlign="top" height={36} />
+                    <Area
+                      type="monotone"
+                      dataKey="sales"
+                      name="ยอดขาย"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorSales)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="rent"
+                      name="ยอดเช่า"
+                      stroke="#10b981"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorRent)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
-      {/* Transaction Volume Table/Summary */}
-      <Card className="border-slate-100 shadow-sm border-0">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-lg font-bold">
-              Transaction Overview
-            </CardTitle>
-            <CardDescription>
-              ตารางสรุปจำนวนดีลและมูลค่าตามประเภทธุรกรรม
-            </CardDescription>
+            {/* Quarterly Breakdown */}
+            <Card className="lg:col-span-3 border-slate-100 shadow-sm border-0 bg-white/50 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <PieChartIcon className="h-5 w-5 text-indigo-500" />
+                  สรุปรายไตรมาส (Quarterly)
+                </CardTitle>
+                <CardDescription>
+                  ผลงานแยกตามไตรมาสของปีปัจจุบัน
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {quarterlyData.map((q) => (
+                    <div key={q.quarter} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-semibold text-slate-700">
+                          {q.quarter}
+                        </span>
+                        <span className="font-bold text-slate-900">
+                          {formatThaiCurrency(q.total)}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
+                          style={{
+                            width: `${Math.min((q.total / stats.totalRevenue) * 100, 100) || 0}%`,
+                          }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-[10px] text-slate-500">
+                        <span>Sales: {formatThaiCurrency(q.sales)}</span>
+                        <span>Rent: {formatThaiCurrency(q.rent)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="relative overflow-x-auto rounded-xl border border-slate-100">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-slate-500 uppercase bg-slate-50">
-                <tr>
-                  <th className="px-6 py-4 font-semibold">ประเภทธุรกรรม</th>
-                  <th className="px-6 py-4 font-semibold text-center">
-                    จำนวนดีล
-                  </th>
-                  <th className="px-6 py-4 font-semibold text-right">
-                    ยอดรวม (Gross Value)
-                  </th>
-                  <th className="px-6 py-4 font-semibold text-right">
-                    ค่าคอมมิชชั่น
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                <tr>
-                  <td className="px-6 py-4 font-medium text-slate-900">
-                    การขาย (Sales)
-                  </td>
-                  <td className="px-6 py-4 text-center">{stats.salesCount}</td>
-                  <td className="px-6 py-4 text-right font-semibold">
-                    {formatThaiCurrency(stats.salesRevenue)}
-                  </td>
-                  <td className="px-6 py-4 text-right text-blue-600 font-bold">
-                    {formatThaiCurrency(stats.salesCommission)}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 font-medium text-slate-900">
-                    การเช่า (Rentals)
-                  </td>
-                  <td className="px-6 py-4 text-center">{stats.rentalCount}</td>
-                  <td className="px-6 py-4 text-right font-semibold">
-                    {formatThaiCurrency(stats.rentalRevenue)}
-                  </td>
-                  <td className="px-6 py-4 text-right text-emerald-600 font-bold">
-                    {formatThaiCurrency(stats.rentalCommission)}
-                  </td>
-                </tr>
-              </tbody>
-              <tfoot className="bg-slate-50/50 font-bold">
-                <tr>
-                  <td className="px-6 py-4">Total</td>
-                  <td className="px-6 py-4 text-center">{stats.totalDeals}</td>
-                  <td className="px-6 py-4 text-right">
-                    {formatThaiCurrency(stats.totalRevenue)}
-                  </td>
-                  <td className="px-6 py-4 text-right text-slate-900 bg-slate-100/50">
-                    {formatThaiCurrency(stats.totalCommission)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+
+          {/* Transaction Volume Table/Summary */}
+          <Card className="border-slate-100 shadow-sm border-0">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-bold">
+                  Transaction Overview
+                </CardTitle>
+                <CardDescription>
+                  ตารางสรุปจำนวนดีลและมูลค่าตามประเภทธุรกรรม
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="relative overflow-x-auto rounded-xl border border-slate-100">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-slate-500 uppercase bg-slate-50">
+                    <tr>
+                      <th className="px-6 py-4 font-semibold">ประเภทธุรกรรม</th>
+                      <th className="px-6 py-4 font-semibold text-center">
+                        จำนวนดีล
+                      </th>
+                      <th className="px-6 py-4 font-semibold text-right">
+                        ยอดรวม (Gross Value)
+                      </th>
+                      <th className="px-6 py-4 font-semibold text-right">
+                        ค่าคอมมิชชั่น
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    <tr>
+                      <td className="px-6 py-4 font-medium text-slate-900">
+                        การขาย (Sales)
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {stats.salesCount}
+                      </td>
+                      <td className="px-6 py-4 text-right font-semibold">
+                        {formatThaiCurrency(stats.salesRevenue)}
+                      </td>
+                      <td className="px-6 py-4 text-right text-blue-600 font-bold">
+                        {formatThaiCurrency(stats.salesCommission)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 font-medium text-slate-900">
+                        การเช่า (Rentals)
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {stats.rentalCount}
+                      </td>
+                      <td className="px-6 py-4 text-right font-semibold">
+                        {formatThaiCurrency(stats.rentalRevenue)}
+                      </td>
+                      <td className="px-6 py-4 text-right text-emerald-600 font-bold">
+                        {formatThaiCurrency(stats.rentalCommission)}
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot className="bg-slate-50/50 font-bold">
+                    <tr>
+                      <td className="px-6 py-4">Total</td>
+                      <td className="px-6 py-4 text-center">
+                        {stats.totalDeals}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {formatThaiCurrency(stats.totalRevenue)}
+                      </td>
+                      <td className="px-6 py-4 text-right text-slate-900 bg-slate-100/50">
+                        {formatThaiCurrency(stats.totalCommission)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent
+          value="agents"
+          className="animate-in slide-in-from-left-4 duration-500"
+        >
+          <AgentPerformanceTable agents={agentStats} />
+        </TabsContent>
+
+        <TabsContent
+          value="settings"
+          className="animate-in slide-in-from-right-4 duration-500"
+        >
+          <CommissionSettings />
+        </TabsContent>
+      </Tabs>
     </div>
+  );
+}
+
+function CommissionCalculatorDialog() {
+  const [price, setPrice] = useState<number>(10000000);
+  const [result, setResult] = useState<number | null>(null);
+
+  const performCalc = () => {
+    try {
+      if (isNaN(price) || price < 0) {
+        toast.error("กรุณาระบุราคาที่ถูกต้อง");
+        return;
+      }
+      // Current hardcoded rule for demo
+      const ruleSet = {
+        type: "TIERED" as const,
+        tiers: [
+          { minPrice: 0, maxPrice: 5000000, percentage: 3 },
+          { minPrice: 5000001, maxPrice: 10000000, percentage: 4 },
+          { minPrice: 10000001, maxPrice: null, percentage: 5 },
+        ],
+      };
+      const comm = calculateCommission(price, ruleSet);
+      setResult(comm);
+      toast.success("คำนวณสำเร็จ!");
+    } catch (error) {
+      console.error("Calculation error:", error);
+      toast.error("เกิดข้อผิดพลาดในการคำนวณ");
+    }
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          className="gap-2 border-slate-200 bg-white/50 hover:bg-white shadow-sm"
+        >
+          <Calculator className="h-4 w-4 text-blue-500" />
+          เครื่องคำนวณเบื้องต้น (Quick Calculator)
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Calculator className="h-5 w-5 text-blue-500" />
+            คำนวณค่าคอมมิชชั่นแบบรวดเร็ว
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 pt-4">
+          <div className="space-y-2">
+            <Label>ราคาอสังหาริมทรัพย์ (฿)</Label>
+            <PriceInput
+              value={price}
+              onChange={(val) => setPrice(val)}
+              placeholder="ระบุราคา..."
+              className="text-lg font-bold"
+              showSuffix={false}
+            />
+          </div>
+
+          <Button
+            onClick={performCalc}
+            className="w-full bg-blue-600 hover:bg-blue-700"
+          >
+            เริ่มคำนวณ
+          </Button>
+
+          {result !== null && (
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-2 animate-in fade-in zoom-in-95">
+              <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">
+                ประมาณการค่าคอมมิชชั่น (Estimate)
+              </p>
+              <h3 className="text-3xl font-black text-blue-600">
+                {formatThaiCurrency(result)}
+              </h3>
+              <p className="text-[10px] text-slate-400">
+                คำนวณจากเกณฑ์ขั้นบันไดที่ตั้งค่าไว้ในระบบปัจจุบัน
+              </p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

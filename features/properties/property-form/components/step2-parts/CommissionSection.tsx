@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import {
   FormField,
   FormItem,
@@ -11,9 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { NumberInput } from "../NumberInput";
 import { SectionHeader } from "../SectionHeader";
-import { Banknote, Clock, Coins, Lock, Percent } from "lucide-react";
+import { Banknote, Clock, Coins, Lock, Percent, Sparkles } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
+import { getCommissionRulesAction } from "@/features/dashboard/actions/commission-actions";
+import { CommissionRuleSet } from "@/lib/finance/commissions";
+import { toast } from "sonner";
 
 interface CommissionSectionProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -41,19 +44,65 @@ export function CommissionSection({
     if (val === undefined || val === null || val === "") return 0;
     if (typeof val === "number") return val;
     if (typeof val === "string") {
-      // Remove commas, spaces, and anything not a number or dot or minus
       const clean = val.replace(/[^0-9.-]/g, "");
       return Number(clean) || 0;
     }
     return 0;
   };
 
-  // Calculations - Direct calculation (no memo) to ensure responsiveness
+  const [globalRules, setGlobalRules] =
+    React.useState<CommissionRuleSet | null>(null);
+
+  React.useEffect(() => {
+    async function fetchRules() {
+      try {
+        const res = await getCommissionRulesAction();
+        if (res.success && res.data) {
+          setGlobalRules(res.data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch commission rules", e);
+      }
+    }
+    fetchRules();
+  }, []);
+
+  // Suggested commission based on price
+  const suggestedCommissionPercent = React.useMemo(() => {
+    if (!globalRules || showRent) return null;
+    const price = parseValue(salePrice) || parseValue(saleOriginal);
+    if (!price) return null;
+
+    if (globalRules.type === "TIERED") {
+      const matchingTier = globalRules.tiers?.find((tier) => {
+        const min = tier.minPrice;
+        const max = tier.maxPrice;
+        if (max === null) return price >= min;
+        return price >= min && price <= max;
+      });
+      return matchingTier?.percentage || null;
+    } else {
+      return globalRules.flatPercentage || null;
+    }
+  }, [globalRules, salePrice, saleOriginal, showRent]);
+
+  const applySuggested = () => {
+    if (suggestedCommissionPercent !== null) {
+      form.setValue("commission_sale_percentage", suggestedCommissionPercent, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      toast.success(
+        `ใช้ค่าคอมมิชชั่นตามเกณฑ์บริษัท (${suggestedCommissionPercent}%) เรียบร้อย`,
+      );
+    }
+  };
+
+  // Calculations
   const netPrice = parseValue(saleOriginal);
   const specialPrice = parseValue(salePrice);
   const salePercent = parseValue(commissionSalePercent);
 
-  // Use Special Price if > 0, else Net Price
   const baseSalePrice = specialPrice > 0 ? specialPrice : netPrice;
   const saleCommissionCalc =
     baseSalePrice > 0 && salePercent > 0
@@ -111,8 +160,25 @@ export function CommissionSection({
                   name="commission_sale_percentage"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
+                      {suggestedCommissionPercent !== null && (
+                        <div className="w-full flex items-center justify-between px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl mb-1 animate-in fade-in slide-in-from-top-1">
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+                            <span className="text-[11px] font-bold text-blue-700">
+                              แนะนำตามเกณฑ์: {suggestedCommissionPercent}%
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={applySuggested}
+                            className="text-[10px] font-bold text-blue-600 hover:text-blue-700 underline"
+                          >
+                            ใช้ค่านี้
+                          </button>
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3">
-                        {/* Buttons First */}
                         {[3, 4, 5].map((val) => {
                           const active = Number(field.value) === val;
                           return (
@@ -135,7 +201,6 @@ export function CommissionSection({
                           );
                         })}
 
-                        {/* Input Last */}
                         <FormControl>
                           <div className="relative w-full sm:w-28 col-span-2 sm:col-span-1">
                             <NumberInput
@@ -204,7 +269,6 @@ export function CommissionSection({
                   render={({ field }) => (
                     <FormItem className="space-y-3">
                       <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3">
-                        {/* Buttons First */}
                         {[0.5, 1, 1.5].map((val) => {
                           const active = Number(field.value) === val;
                           return (
@@ -227,7 +291,6 @@ export function CommissionSection({
                           );
                         })}
 
-                        {/* Input Last */}
                         <FormControl>
                           <div className="relative w-full sm:w-28 col-span-2 sm:col-span-1">
                             <NumberInput
