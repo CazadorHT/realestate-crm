@@ -13,7 +13,10 @@ export type AuthContext = {
 };
 
 export class AuthzError extends Error {
-  constructor(public code: "UNAUTHORIZED" | "FORBIDDEN", message?: string) {
+  constructor(
+    public code: "UNAUTHORIZED" | "FORBIDDEN",
+    message?: string,
+  ) {
     super(message ?? code);
     this.name = "AuthzError";
   }
@@ -25,7 +28,7 @@ export class AuthzError extends Error {
  */
 async function getRole(
   supabase: AuthContext["supabase"],
-  userId: string
+  userId: string,
 ): Promise<UserRole> {
   const { data } = await supabase
     .from("profiles")
@@ -70,6 +73,15 @@ export function assertStaff(role: UserRole) {
 export function assertAdmin(role: UserRole) {
   if (!isAdmin(role)) {
     throw new AuthzError("FORBIDDEN", "Forbidden: Admin access only");
+  }
+}
+
+export function assertAdminOrManager(role: UserRole) {
+  if (role !== "ADMIN" && role !== "MANAGER") {
+    throw new AuthzError(
+      "FORBIDDEN",
+      "Forbidden: Admin or Manager access only",
+    );
   }
 }
 

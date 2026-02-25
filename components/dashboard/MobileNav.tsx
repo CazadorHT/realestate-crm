@@ -210,6 +210,26 @@ export function MobileNav({ role }: { role: UserRole }) {
       icon: Settings,
       items: settingsItems,
     },
+    {
+      id: "executive",
+      title: "รายงานผู้บริหาร",
+      icon: BarChart3,
+      items: [
+        {
+          title: "Executive Dashboard",
+          href: "/protected/dashboard/executive",
+          icon: Sparkles,
+          active: pathname === "/protected/dashboard/executive",
+        },
+        {
+          title: "ส่งออกรายงาน",
+          href: "/protected/dashboard/executive/export",
+          icon: FileText,
+          active: pathname === "/protected/dashboard/executive/export",
+        },
+      ],
+      roles: ["ADMIN", "MANAGER"],
+    },
   ];
 
   const filterItems = (items: NavItem[]) => {

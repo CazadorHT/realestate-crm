@@ -243,6 +243,26 @@ export function SidebarNav({ role }: { role: UserRole }) {
       icon: Settings,
       items: settingsItems,
     },
+    {
+      id: "executive",
+      title: "รายงานผู้บริหาร",
+      icon: BarChart3,
+      items: [
+        {
+          title: "Executive Dashboard",
+          href: "/protected/dashboard/executive",
+          icon: Sparkles,
+          active: pathname === "/protected/dashboard/executive",
+        },
+        {
+          title: "ส่งออกรายงาน",
+          href: "/protected/dashboard/executive/export",
+          icon: FileText,
+          active: pathname === "/protected/dashboard/executive/export",
+        },
+      ],
+      roles: ["ADMIN", "MANAGER"],
+    },
   ];
 
   const filterItems = (items: NavItem[]) => {
@@ -534,9 +554,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
                 <p className="text-xs font-bold text-slate-900">
                   {siteConfig.tier} VERSION
                 </p>
-                <p className="text-[10px] text-slate-500">
-                  Active Tier
-                </p>
+                <p className="text-[10px] text-slate-500">Active Tier</p>
               </div>
             </div>
           </div>

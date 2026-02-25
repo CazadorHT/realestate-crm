@@ -27,7 +27,7 @@ export async function logAiUsage(input: AiLogInput) {
     "gemini-1.5-pro": { input: 1.25, output: 5.0 },
     "gemini-flash-latest": { input: 0.1, output: 0.4 },
     "gemini-pro-latest": { input: 1.25, output: 5.0 },
-    "gemini-2.0-flash-exp": { input: 0.1, output: 0.4 }, // Assumption for experimental
+    "gemini-2.0-flash-exp": { input: 0.1, output: 0.4 },
   };
 
   const exchangeRate = 32; // 1 USD = 32 THB
@@ -47,9 +47,6 @@ export async function logAiUsage(input: AiLogInput) {
   }
 
   try {
-    console.log(
-      `[AI_LOG] Logging feature: ${input.feature}, model: ${input.model}, cost: ${costThb.toFixed(4)} ฿`,
-    );
     const { error } = await adminClient.from("ai_usage_logs").insert({
       model: input.model,
       feature: input.feature,
@@ -62,34 +59,38 @@ export async function logAiUsage(input: AiLogInput) {
     });
 
     if (error) {
-      console.error("[AI_LOG] Insert Error:", error);
+      console.error("[logAiUsage] Insert Error:", error);
     }
 
-    // Lazy Cleanup: 10% chance to prune logs older than 30 days
     if (Math.random() < 0.1) {
       pruneAiLogs(30).catch(console.error);
     }
   } catch (error) {
-    console.error("[AI_LOG] Failed to log AI usage (Exception):", error);
+    console.error("[logAiUsage] Exception:", error);
   }
 }
 
 export async function pruneAiLogs(daysToKeep: number = 30) {
-  const adminClient = createAdminClient();
-  const dateThreshold = new Date();
-  dateThreshold.setDate(dateThreshold.getDate() - daysToKeep);
+  try {
+    const adminClient = createAdminClient();
+    const dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - daysToKeep);
 
-  const { error } = await adminClient
-    .from("ai_usage_logs")
-    .delete()
-    .lt("created_at", dateThreshold.toISOString());
+    const { error } = await adminClient
+      .from("ai_usage_logs")
+      .delete()
+      .lt("created_at", dateThreshold.toISOString());
 
-  if (error) {
-    console.error("Failed to prune AI logs:", error);
-    return { success: false, error: error.message };
+    if (error) {
+      console.error("[pruneAiLogs] Error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("[pruneAiLogs] Exception:", error);
+    return { success: false, error: "Internal server error during pruning" };
   }
-
-  return { success: true };
 }
 
 export type AiUsageStats = {
@@ -100,41 +101,51 @@ export type AiUsageStats = {
 };
 
 export async function getAiUsageStats(): Promise<AiUsageStats> {
-  const user = await getCurrentProfile();
-  // Using admin client for counting ensures accurate global stats for admins/monitors
-  const client =
-    user?.role === "ADMIN" ? createAdminClient() : await createClient();
+  try {
+    const user = await getCurrentProfile();
+    const client =
+      user?.role === "ADMIN" ? createAdminClient() : await createClient();
 
-  const now = new Date();
-  const oneMinuteAgo = new Date(now.getTime() - 60 * 1000).toISOString();
-  const twentyFourHoursAgo = new Date(
-    now.getTime() - 24 * 60 * 60 * 1000,
-  ).toISOString();
+    const now = new Date();
+    const oneMinuteAgo = new Date(now.getTime() - 60 * 1000).toISOString();
+    const twentyFourHoursAgo = new Date(
+      now.getTime() - 24 * 60 * 60 * 1000,
+    ).toISOString();
 
-  let query = client
-    .from("ai_usage_logs")
-    .select("*", { count: "exact", head: true });
+    const [rpmRes, rpdRes] = await Promise.all([
+      client
+        .from("ai_usage_logs")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneMinuteAgo),
+      client
+        .from("ai_usage_logs")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", twentyFourHoursAgo),
+    ]);
 
-  // If user is not admin, filter by their ID.
-  if (user && user.role !== "ADMIN") {
-    query = query.eq("user_id", user.id);
+    if (rpmRes.error)
+      console.error("[getAiUsageStats] RPM Error:", rpmRes.error);
+    if (rpdRes.error)
+      console.error("[getAiUsageStats] RPD Error:", rpdRes.error);
+
+    const limit = 5;
+    const rpmCount = rpmRes.count || 0;
+
+    return {
+      requestsLastMinute: rpmCount,
+      requestsLast24Hours: rpdRes.count || 0,
+      limitRPM: limit,
+      isRateLimited: rpmCount >= limit,
+    };
+  } catch (error) {
+    console.error("[getAiUsageStats] Exception:", error);
+    return {
+      requestsLastMinute: 0,
+      requestsLast24Hours: 0,
+      limitRPM: 5,
+      isRateLimited: false,
+    };
   }
-
-  // Get RPM (Requests Per Minute)
-  const { count: rpmCount } = await query.gte("created_at", oneMinuteAgo);
-
-  // Get RPD (Requests Per Day)
-  const { count: rpdCount } = await query.gte("created_at", twentyFourHoursAgo);
-
-  // Gemini 1.5 Flash Free limits (from screenshot: 5 RPM, 20 RPD)
-  const limit = 5;
-
-  return {
-    requestsLastMinute: rpmCount || 0,
-    requestsLast24Hours: rpdCount || 0,
-    limitRPM: limit,
-    isRateLimited: (rpmCount || 0) >= limit,
-  };
 }
 
 export type AiLogRecord = {
@@ -151,14 +162,14 @@ export type AiLogRecord = {
 };
 
 export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
-  const user = await getCurrentProfile();
-  if (!user) return [];
+  try {
+    const user = await getCurrentProfile();
+    if (!user) return [];
 
-  const client =
-    user.role === "ADMIN" ? createAdminClient() : await createClient();
+    const client =
+      user.role === "ADMIN" ? createAdminClient() : await createClient();
 
-  let query = client.from("ai_usage_logs").select(
-    `
+    let query = client.from("ai_usage_logs").select(`
       id,
       created_at,
       model,
@@ -166,18 +177,26 @@ export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
       status,
       error_message,
       user:user_id (full_name, email)
-    `,
-  );
+    `);
 
-  if (user.role !== "ADMIN") {
-    query = query.eq("user_id", user.id);
+    if (user.role !== "ADMIN") {
+      query = query.eq("user_id", user.id);
+    }
+
+    const { data, error } = await query
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("[getAiLogs] Error:", error);
+      return [];
+    }
+
+    return (data as any) || [];
+  } catch (error) {
+    console.error("[getAiLogs] Exception:", error);
+    return [];
   }
-
-  const { data } = await query
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  return (data as any) || [];
 }
 
 export type AiDashboardStats = {
@@ -189,9 +208,71 @@ export type AiDashboardStats = {
 };
 
 export async function getAiDashboardStats(): Promise<AiDashboardStats> {
-  const user = await getCurrentProfile();
+  try {
+    const user = await getCurrentProfile();
 
-  if (!user) {
+    if (!user) {
+      return {
+        totalRequests: 0,
+        successRate: 0,
+        chatbotUsage: 0,
+        blogUsage: 0,
+        totalCostThb: 0,
+      };
+    }
+
+    const client =
+      user.role === "ADMIN" ? createAdminClient() : await createClient();
+
+    let query = client
+      .from("ai_usage_logs")
+      .select("feature, status, cost_thb");
+
+    if (user.role !== "ADMIN") {
+      query = query.eq("user_id", user.id);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("[getAiDashboardStats] Error:", error);
+      return {
+        totalRequests: 0,
+        successRate: 0,
+        chatbotUsage: 0,
+        blogUsage: 0,
+        totalCostThb: 0,
+      };
+    }
+
+    if (!data || data.length === 0) {
+      return {
+        totalRequests: 0,
+        successRate: 0,
+        chatbotUsage: 0,
+        blogUsage: 0,
+        totalCostThb: 0,
+      };
+    }
+
+    const total = data.length;
+    const successCount = data.filter((d) => d.status === "success").length;
+    const chatbotCount = data.filter((d) => d.feature === "chatbot").length;
+    const totalCost = data.reduce(
+      (sum, d) => sum + (Number(d.cost_thb) || 0),
+      0,
+    );
+    const contentUsage = total - chatbotCount;
+
+    return {
+      totalRequests: total,
+      successRate: Math.round((successCount / total) * 100),
+      chatbotUsage: chatbotCount,
+      blogUsage: contentUsage,
+      totalCostThb: totalCost,
+    };
+  } catch (error) {
+    console.error("[getAiDashboardStats] Exception:", error);
     return {
       totalRequests: 0,
       successRate: 0,
@@ -200,40 +281,4 @@ export async function getAiDashboardStats(): Promise<AiDashboardStats> {
       totalCostThb: 0,
     };
   }
-
-  const client =
-    user.role === "ADMIN" ? createAdminClient() : await createClient();
-
-  // Get total stats & total cost
-  let query = client.from("ai_usage_logs").select("feature, status, cost_thb");
-
-  if (user.role !== "ADMIN") {
-    query = query.eq("user_id", user.id);
-  }
-
-  const { data } = await query;
-
-  if (!data || data.length === 0) {
-    return {
-      totalRequests: 0,
-      successRate: 0,
-      chatbotUsage: 0,
-      blogUsage: 0,
-      totalCostThb: 0,
-    };
-  }
-
-  const total = data.length;
-  const successCount = data.filter((d) => d.status === "success").length;
-  const chatbotCount = data.filter((d) => d.feature === "chatbot").length;
-  const totalCost = data.reduce((sum, d) => sum + (Number(d.cost_thb) || 0), 0);
-  const contentUsage = total - chatbotCount;
-
-  return {
-    totalRequests: total,
-    successRate: Math.round((successCount / total) * 100),
-    chatbotUsage: chatbotCount,
-    blogUsage: contentUsage,
-    totalCostThb: totalCost,
-  };
 }
