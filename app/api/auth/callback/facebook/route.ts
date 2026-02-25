@@ -57,7 +57,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.redirect(
-      new URL("/protected/settings?success=facebook_connected", request.url),
+      new URL(
+        "/protected/settings?tab=social&success=facebook_connected",
+        request.url,
+      ),
     );
   } catch (err) {
     console.error("Facebook Callback Exception:", err);

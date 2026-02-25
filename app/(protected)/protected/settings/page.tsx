@@ -19,6 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { IntegrationDisconnectButton } from "@/components/settings/IntegrationDisconnectButton";
+import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import {
   Card,
   CardHeader,
@@ -36,7 +37,12 @@ export const metadata: Metadata = {
   description: "Manage site settings",
 };
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  const activeTab = (searchParams?.tab as string) || "general";
   const supabase = createAdminClient();
 
   // Fetch all relevant settings at once
@@ -69,6 +75,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6 max-w-7xl pb-10">
+      <SuccessAnimation />
       {/* Page Header */}
       <div className="flex items-center gap-4">
         <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
@@ -84,7 +91,7 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="general" className="w-full">
+      <Tabs defaultValue={activeTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:w-auto h-auto p-1 bg-slate-100 dark:bg-slate-800 rounded-xl gap-1">
           <TabsTrigger
             value="general"

@@ -56,7 +56,10 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.redirect(
-      new URL("/protected/settings?success=google_connected", request.url),
+      new URL(
+        "/protected/settings?tab=social&success=google_connected",
+        request.url,
+      ),
     );
   } catch (err) {
     console.error("Google Callback Exception:", err);

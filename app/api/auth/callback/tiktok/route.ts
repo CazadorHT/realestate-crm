@@ -25,7 +25,10 @@ export async function GET(request: NextRequest) {
   if (tokenData) {
     await saveTikTokToken(tokenData);
     return NextResponse.redirect(
-      new URL("/protected/settings?success=tiktok_connected", request.url),
+      new URL(
+        "/protected/settings?tab=social&success=tiktok_connected",
+        request.url,
+      ),
     );
   } else {
     return NextResponse.redirect(
