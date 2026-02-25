@@ -242,21 +242,21 @@ export function MobileNav({ role }: { role: UserRole }) {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="sm:hidden">
-          <Menu className="h-6 w-6 text-slate-700 dark:text-slate-300" />
+          <Menu className="h-6 w-6 text-slate-700" />
         </Button>
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="w-[300px] p-0 overflow-y-auto border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95 "
+        className="w-[300px] p-0 overflow-y-auto border-r border-slate-200 bg-slate-50 "
       >
         <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
-        <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 sticky top-0 z-20">
+        <div className="p-6 border-b border-slate-200 bg-white/50 sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <div className="flex flex-col">
-              <h1 className="text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-100 uppercase leading-none">
+              <h1 className="text-xl font-semibold tracking-tight text-slate-800 uppercase leading-none">
                 {siteConfig.name}
               </h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 font-normal mt-1">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-blue-600 font-normal mt-1">
                 {siteConfig.description || "Real Estate CRM"}
               </p>
             </div>
@@ -270,8 +270,8 @@ export function MobileNav({ role }: { role: UserRole }) {
             className={cn(
               "flex items-center gap-4 rounded-xl px-4 py-4 transition-all duration-300 font-medium text-sm relative overflow-hidden group",
               pathname === "/protected"
-                ? "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-[0_4px_12px_-2px_rgba(59,130,246,0.12)] border border-blue-100/50 dark:border-blue-900/20"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm",
+                ? "bg-white text-blue-700 shadow-[0_4px_12px_-2px_rgba(59,130,246,0.12)] border border-blue-100/50"
+                : "text-slate-500 hover:text-slate-900 hover:bg-white hover:shadow-sm",
             )}
           >
             {pathname === "/protected" && (
@@ -281,8 +281,8 @@ export function MobileNav({ role }: { role: UserRole }) {
               className={cn(
                 "h-8 w-8 rounded-lg flex items-center justify-center transition-colors shrink-0",
                 pathname === "/protected"
-                  ? "bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-500",
+                  ? "bg-blue-50 text-blue-600"
+                  : "bg-slate-100 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500",
               )}
             >
               <BarChart3 className="h-5 w-5" />
@@ -301,8 +301,8 @@ export function MobileNav({ role }: { role: UserRole }) {
                   className={cn(
                     "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3.5 transition-all duration-300 font-medium text-xs uppercase tracking-[0.15em]",
                     hasActiveItem
-                      ? "bg-blue-100/50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                      : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-white dark:hover:bg-slate-800",
+                      ? "bg-blue-100/50 text-blue-700"
+                      : "text-slate-400 hover:text-slate-600 hover:bg-white",
                   )}
                 >
                   <div className="flex items-center gap-3">
@@ -324,7 +324,7 @@ export function MobileNav({ role }: { role: UserRole }) {
                 </button>
 
                 {isOpen && (
-                  <div className="space-y-1 ml-3 pl-3 border-l border-slate-100 dark:border-slate-800">
+                  <div className="space-y-1 ml-3 pl-3 border-l border-slate-100">
                     {group.items.map((item) => (
                       <Link
                         key={item.href}
@@ -333,8 +333,8 @@ export function MobileNav({ role }: { role: UserRole }) {
                         className={cn(
                           "flex items-center gap-3 rounded-lg px-4 py-3 transition-all duration-300 text-sm relative overflow-hidden group",
                           item.active
-                            ? "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 font-medium shadow-sm border border-blue-50/50"
-                            : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800 font-medium",
+                            ? "bg-white text-blue-700 font-medium shadow-sm border border-blue-50/50"
+                            : "text-slate-500 hover:text-slate-900 hover:bg-white font-medium",
                         )}
                       >
                         {item.active && (
@@ -344,7 +344,7 @@ export function MobileNav({ role }: { role: UserRole }) {
                           className={cn(
                             "h-4 w-4 transition-colors shrink-0",
                             item.active
-                              ? "text-blue-600 dark:text-blue-400"
+                              ? "text-blue-600"
                               : "text-slate-400 group-hover:text-blue-500",
                           )}
                         />

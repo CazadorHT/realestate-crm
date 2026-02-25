@@ -34,7 +34,7 @@ interface LeadStatusSectionProps {
 
 export function LeadStatusSection({ form }: LeadStatusSectionProps) {
   return (
-    <Card className="shadow-lg border-slate-200 dark:border-slate-800 overflow-hidden">
+    <Card className="shadow-lg border-slate-200 overflow-hidden">
       <CardHeader className="bg-linear-to-r from-violet-600 to-indigo-600 border-b border-white/10 pb-6">
         <div className="flex items-center gap-4">
           <div className="p-2.5 rounded-xl bg-white/20 text-white shadow-inner backdrop-blur-sm">

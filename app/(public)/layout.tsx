@@ -8,17 +8,9 @@ import { ChatWidget } from "@/components/chatbot/ChatWidget";
 
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
-import { ThemeProvider } from "@/components/theme-provider";
-
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="light"
-      enableSystem
-      disableTransitionOnChange
-      storageKey="frontoffice-theme"
-    >
+    <>
       <PublicNav />
       {children}
       <FloatingContactDial />
@@ -27,6 +19,6 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
 
       <PublicFooter />
       <ChatWidget />
-    </ThemeProvider>
+    </>
   );
 }

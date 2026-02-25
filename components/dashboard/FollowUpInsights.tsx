@@ -11,9 +11,9 @@ interface FollowUpInsightsProps {
 
 export function FollowUpInsights({ leads = [] }: FollowUpInsightsProps) {
   return (
-    <Card className="shadow-sm h-full border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-950/10">
+    <Card className="shadow-sm h-full border-orange-200 bg-orange-50/50">
       <CardHeader className="pb-2 px-4 sm:px-6">
-        <CardTitle className="text-sm font-semibold flex items-center gap-2 text-orange-800 dark:text-orange-200">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2 text-orange-800">
           <Phone className="h-4 w-4" />
           ต้องติดตาม (Follow Up)
         </CardTitle>
@@ -28,7 +28,7 @@ export function FollowUpInsights({ leads = [] }: FollowUpInsightsProps) {
             leads.map((lead) => (
               <div
                 key={lead.id}
-                className="flex items-center justify-between bg-white dark:bg-card p-2 rounded border border-stone-200 shadow-sm"
+                className="flex items-center justify-between bg-white p-2 rounded border border-stone-200 shadow-sm"
               >
                 <div>
                   <p className="text-sm font-medium">{lead.name}</p>

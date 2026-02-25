@@ -80,14 +80,14 @@ export function IntegrationDisconnectButton({
       <AlertDialogContent className="max-w-[400px]">
         <AlertDialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full text-red-600 dark:text-red-400">
+            <div className="p-3 bg-red-100 rounded-full text-red-600">
               <AlertTriangle className="h-6 w-6" />
             </div>
             <AlertDialogTitle className="text-xl">
               ยืนยันการยกเลิกการเชื่อมต่อ
             </AlertDialogTitle>
           </div>
-          <AlertDialogDescription className="text-base text-slate-600 dark:text-slate-400">
+          <AlertDialogDescription className="text-base text-slate-600">
             คุณต้องการยกเลิกการเชื่อมต่อกับ <b>{providerNames[provider]}</b>{" "}
             ใช่หรือไม่? การดำเนินการนี้จะลบการเข้าถึงข้อมูลของระบบ
           </AlertDialogDescription>

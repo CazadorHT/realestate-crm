@@ -64,10 +64,10 @@ export function SocialPostMonitor() {
         <motion.div
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden"
+          className="bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden"
         >
           {/* Header */}
-          <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border-b flex items-center justify-between">
+          <div className="p-3 bg-slate-50 border-b flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Loader2
@@ -83,7 +83,7 @@ export function SocialPostMonitor() {
                   </span>
                 )}
               </div>
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+              <span className="text-xs font-bold text-slate-700">
                 {activeCount > 0
                   ? `กำลังดำเนินการ ${activeCount} รายการ`
                   : `โพสต์สำเร็จแล้ว ${successCount} รายการ`}
@@ -125,7 +125,7 @@ export function SocialPostMonitor() {
                 {tasks.map((task) => (
                   <div
                     key={task.id}
-                    className="p-3 border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                    className="p-3 border-b last:border-0 hover:bg-slate-50 transition-colors"
                   >
                     <div className="flex items-start gap-3">
                       <div
@@ -143,7 +143,7 @@ export function SocialPostMonitor() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-slate-900 dark:text-white truncate">
+                        <p className="text-xs font-medium text-slate-900 truncate">
                           {task.propertyTitle}
                         </p>
                         <p className="text-[10px] text-slate-500 mt-0.5">

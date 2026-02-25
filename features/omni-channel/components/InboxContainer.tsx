@@ -18,9 +18,9 @@ export function InboxContainer({
   );
 
   return (
-    <div className="flex flex-1 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+    <div className="flex flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       {/* Sidebar: Conversation List */}
-      <div className="w-80 border-r border-slate-200 dark:border-slate-800">
+      <div className="w-80 border-r border-slate-200">
         <ConversationList
           conversations={initialConversations}
           selectedLeadId={selectedLeadId}

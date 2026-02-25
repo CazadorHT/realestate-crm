@@ -132,9 +132,9 @@ export function NotificationBell({
       <Button
         variant="ghost"
         size="icon"
-        className="relative h-9 w-9 rounded-full border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
+        className="relative h-9 w-9 rounded-full border border-slate-200 bg-white shadow-sm"
       >
-        <Bell className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+        <Bell className="h-4 w-4 text-slate-600" />
       </Button>
     );
   }
@@ -145,9 +145,9 @@ export function NotificationBell({
         <Button
           variant="ghost"
           size="icon"
-          className="relative h-9 w-9 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-800"
+          className="relative h-9 w-9 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-100"
         >
-          <Bell className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+          <Bell className="h-4 w-4 text-slate-600" />
           <span className="sr-only">Toggle notifications</span>
           {unreadCount > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
@@ -177,8 +177,8 @@ export function NotificationBell({
                 const Content = (
                   <div
                     className={cn(
-                      "group flex flex-col gap-1 p-4 border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer relative",
-                      !n.read && "bg-blue-50/50 dark:bg-blue-900/10",
+                      "group flex flex-col gap-1 p-4 border-b last:border-0 hover:bg-slate-50 transition-colors cursor-pointer relative",
+                      !n.read && "bg-blue-50/50",
                     )}
                     onClick={() => markAsRead(n.id)}
                   >
@@ -187,7 +187,7 @@ export function NotificationBell({
                         className={cn(
                           "text-sm",
                           !n.read &&
-                            "font-semibold text-slate-900 dark:text-slate-100",
+                            "font-semibold text-slate-900",
                         )}
                       >
                         {n.message}
@@ -203,7 +203,7 @@ export function NotificationBell({
                     {/* Delete Button */}
                     <button
                       onClick={(e) => deleteNotification(e, n.id)}
-                      className="absolute top-2 right-2 p-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-slate-400 hover:text-red-500"
+                      className="absolute top-2 right-2 p-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-slate-200 transition-all text-slate-400 hover:text-red-500"
                       title="ลบการแจ้งเตือน"
                     >
                       <span className="sr-only">Delete</span>
@@ -254,7 +254,7 @@ export function NotificationBell({
           </Button>
           <Button
             variant="ghost"
-            className="w-full justify-center text-xs h-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+            className="w-full justify-center text-xs h-8 text-red-500 hover:text-red-600 hover:bg-red-50"
             onClick={deleteAll}
             disabled={visibleNotifications.length === 0}
           >

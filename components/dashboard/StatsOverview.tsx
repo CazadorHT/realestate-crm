@@ -104,15 +104,15 @@ export function StatsOverview({ initialStats }: StatsOverviewProps) {
     <div className="space-y-3">
       {/* Time Range Indicator */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-slate-500">
           แสดงข้อมูล:{" "}
-          <span className="font-semibold text-slate-700 dark:text-slate-200">
+          <span className="font-semibold text-slate-700">
             {timeRangeLabels[timeRange]}
           </span>
         </p>
         <button
           onClick={cycleTimeRange}
-          className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline"
+          className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline"
         >
           เปลี่ยนช่วงเวลา →
         </button>
@@ -124,7 +124,7 @@ export function StatsOverview({ initialStats }: StatsOverviewProps) {
           return (
             <Card
               key={index}
-              className={`relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 bg-white dark:bg-slate-900 group cursor-pointer ${
+              className={`relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 bg-white group cursor-pointer ${
                 loading ? "opacity-60" : ""
               }`}
               onClick={cycleTimeRange}
@@ -134,12 +134,12 @@ export function StatsOverview({ initialStats }: StatsOverviewProps) {
                   <div
                     className={`p-2.5 rounded-xl ${
                       index === 0
-                        ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                        ? "bg-blue-50 text-blue-600"
                         : index === 1
-                          ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+                          ? "bg-indigo-50 text-indigo-600"
                           : index === 2
-                            ? "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
-                            : "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+                            ? "bg-amber-50 text-amber-600"
+                            : "bg-emerald-50 text-emerald-600"
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -147,8 +147,8 @@ export function StatsOverview({ initialStats }: StatsOverviewProps) {
                   <div
                     className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                       stat.change.startsWith("+")
-                        ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400"
-                        : "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400"
+                        ? "bg-emerald-50 text-emerald-600"
+                        : "bg-rose-50 text-rose-600"
                     }`}
                   >
                     {stat.change}
@@ -156,10 +156,10 @@ export function StatsOverview({ initialStats }: StatsOverviewProps) {
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">
+                  <p className="text-xs font-semibold text-slate-500 line-clamp-1">
                     {stat.title}
                   </p>
-                  <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
+                  <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
                     {stat.value}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-medium mt-1 truncate">
@@ -168,7 +168,7 @@ export function StatsOverview({ initialStats }: StatsOverviewProps) {
                 </div>
 
                 {/* Decorative subtle background icon */}
-                <Icon className="absolute -bottom-2 -right-2 h-16 w-16 text-slate-100 dark:text-slate-800/50 opacity-10 group-hover:scale-110 transition-transform duration-500" />
+                <Icon className="absolute -bottom-2 -right-2 h-16 w-16 text-slate-100 opacity-10 group-hover:scale-110 transition-transform duration-500" />
               </CardContent>
             </Card>
           );
@@ -176,7 +176,7 @@ export function StatsOverview({ initialStats }: StatsOverviewProps) {
       </div>
 
       {loading && (
-        <p className="text-xs text-center text-slate-400 dark:text-slate-500 animate-pulse">
+        <p className="text-xs text-center text-slate-400 animate-pulse">
           กำลังโหลดข้อมูล...
         </p>
       )}

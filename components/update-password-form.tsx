@@ -114,7 +114,7 @@ export function UpdatePasswordForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="border-slate-200 dark:border-slate-700 shadow-lg">
+      <Card className="border-slate-200 shadow-lg">
         <CardHeader className="text-center pb-2">
           <div className="mx-auto mb-4 p-3 rounded-full bg-primary/10">
             <KeyRound className="h-8 w-8 text-primary" />
@@ -210,7 +210,7 @@ export function UpdatePasswordForm({
               </div>
 
               {error && (
-                <p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg">
                   {error}
                 </p>
               )}

@@ -175,14 +175,14 @@ const KanbanColumn = React.memo(function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className="flex flex-col bg-slate-100/50 dark:bg-slate-900/50 rounded-xl w-[280px] min-w-[280px]  border border-slate-200  overflow-hidden "
+      className="flex flex-col bg-slate-100/50 rounded-xl w-[280px] min-w-[280px]  border border-slate-200  overflow-hidden "
     >
-      <div className="p-4 border-b border-slate-200 bg-white dark:bg-slate-950 flex items-center justify-between sticky top-0 z-10">
+      <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between sticky top-0 z-10">
         <h3 className="font-bold flex items-center gap-2">
           {title}
           <Badge
             variant="secondary"
-            className="ml-2 bg-slate-200 dark:bg-slate-800"
+            className="ml-2 bg-slate-200"
           >
             {leads.length}
           </Badge>
@@ -199,8 +199,8 @@ const KanbanColumn = React.memo(function KanbanColumn({
             <SortableLeadCard key={lead.id} lead={lead} />
           ))}
           {leads.length === 0 && (
-            <div className="h-32 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-muted-foreground text-xs italic gap-2 bg-white/30 dark:bg-black/20">
-              <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-800">
+            <div className="h-32 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-muted-foreground text-xs italic gap-2 bg-white/30">
+              <div className="p-2 rounded-full bg-slate-100">
                 <UserCircle className="h-5 w-5 opacity-20" />
               </div>
               ไม่มีรายการในขั้นนี้
@@ -286,7 +286,7 @@ const LeadCard = React.memo(function LeadCard({
           )}
 
           {(lead.budget_min || lead.budget_max) && (
-            <div className="flex items-center gap-2 text-green-600 dark:text-green-400 text-xs font-medium">
+            <div className="flex items-center gap-2 text-green-600 text-xs font-medium">
               <DollarSign className="h-3 w-3" />
               <span>
                 {lead.budget_min?.toLocaleString()}

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Prompt, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
 import "flag-icons/css/flag-icons.min.css";
-import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/common/CookieConsent";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";

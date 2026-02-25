@@ -23,7 +23,7 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
   const nationality = form.watch("nationality");
 
   return (
-    <Card className="shadow-lg border-slate-200 dark:border-slate-800 overflow-hidden h-full">
+    <Card className="shadow-lg border-slate-200 overflow-hidden h-full">
       <CardHeader className="bg-linear-to-br from-emerald-600 to-teal-600 border-b border-emerald-500/20 pb-6">
         <div className="flex items-center gap-4">
           <div className="p-2.5 rounded-xl bg-white/20 text-white shadow-inner backdrop-blur-sm">
@@ -84,7 +84,7 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
           </div>
         </div>
 
-        <Separator className="my-2 bg-slate-100 dark:bg-slate-800" />
+        <Separator className="my-2 bg-slate-100" />
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">

@@ -688,10 +688,10 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
               <div
                 key={property.id}
                 className={cn(
-                  "relative group bg-white dark:bg-slate-900 rounded-xl border transition-all duration-300 shadow-sm hover:shadow-md",
+                  "relative group bg-white rounded-xl border transition-all duration-300 shadow-sm hover:shadow-md",
                   isSelected(property.id)
-                    ? "border-blue-500 dark:border-blue-600 ring-1 ring-blue-500/20"
-                    : "border-slate-200 dark:border-slate-800",
+                    ? "border-blue-500 ring-1 ring-blue-500/20"
+                    : "border-slate-200",
                 )}
               >
                 {/* Checkbox Overlay */}
@@ -751,7 +751,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                     <div className="flex justify-between items-start gap-2">
                       <Link
                         href={`/protected/properties/${property.id}`}
-                        className="font-bold text-slate-900 dark:text-white text-base leading-snug line-clamp-1 hover:text-blue-600 transition-colors"
+                        className="font-bold text-slate-900 text-base leading-snug line-clamp-1 hover:text-blue-600 transition-colors"
                       >
                         {property.title || "ไม่ระบุชื่อ"}
                       </Link>
@@ -764,7 +764,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                     </div>
                   </div>
 
-                  <div className="py-2.5 border-y border-slate-100 dark:border-slate-800">
+                  <div className="py-2.5 border-y border-slate-100">
                     <PropertyPrice
                       variant="card"
                       listingType={property.listing_type}

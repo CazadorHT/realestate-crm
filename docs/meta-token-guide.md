@@ -1,5 +1,7 @@
 # คู่มือการดึง Page Access Token (แบบเจาะจง)
 
+> **อัปเดตล่าสุด:** 25 กุมภาพันธ์ 2026
+
 หากคุณพบปัญหาใน Graph API Explorer ที่กดเลือกเพจแล้วระบบเด้งกลับมาเป็น **User Token** ตลอดเวลา หรือไม่แสดงรายชื่อเพจให้เลือก ให้ใช้คู่มือนี้ในการ "เจาะ" เอากุญแจเพจออกมาครับ
 
 ## 1. สาเหตุที่ระบบเด้งกลับ (Bouncing)
@@ -20,6 +22,11 @@
    - `pages_show_list`
    - `pages_read_engagement`
    - `pages_manage_posts`
+   - `pages_messaging` (สำหรับ Comment-to-DM / Private Reply)
+   - `pages_manage_metadata` (สำหรับ Webhook Subscription)
+   - `instagram_basic` (สำหรับ Instagram Business)
+   - `instagram_content_publish` (สำหรับโพสต์ลง IG)
+   - `instagram_manage_comments` (สำหรับ Keyword Automation)
 2. หากยังไม่มี ให้พิมพ์หาแล้วกด **Generate Access Token** (ปุ่มสีฟ้า) 1 รอบ เพื่อให้ User Token มีสิทธิ์เหล่านี้ก่อน
 
 ### ขั้นตอนที่ ข: ขุด ID ของเพจทั้งหมด

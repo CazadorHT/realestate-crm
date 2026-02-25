@@ -23,7 +23,7 @@ export function ConversationList({
 }) {
   return (
     <div className="flex flex-col h-full overflow-y-auto">
-      <div className="p-4 border-b border-slate-100 dark:border-slate-800 font-semibold text-sm">
+      <div className="p-4 border-b border-slate-100 font-semibold text-sm">
         การสนทนาทั้งหมด ({conversations.length})
       </div>
       <div className="flex-1">
@@ -47,15 +47,15 @@ export function ConversationList({
               key={conv.id}
               onClick={() => onSelect(conv.id)}
               className={cn(
-                "w-full p-4 flex gap-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-50 dark:border-slate-800",
-                selectedLeadId === conv.id && "bg-blue-50 dark:bg-blue-900/20",
+                "w-full p-4 flex gap-3 text-left transition-colors hover:bg-slate-50 border-b border-slate-50",
+                selectedLeadId === conv.id && "bg-blue-50",
               )}
             >
               <div className="relative shrink-0">
-                <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center">
                   <User className="h-6 w-6 text-slate-500" />
                 </div>
-                <div className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-900 p-0.5 rounded-full">
+                <div className="absolute -bottom-1 -right-1 bg-white p-0.5 rounded-full">
                   <SourceIcon
                     className={cn(
                       "h-4 w-4",
@@ -86,7 +86,7 @@ export function ConversationList({
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                <p className="text-xs text-slate-500 truncate">
                   {lastMsg ? lastMsg.content : "เริ่มการสนทนา"}
                 </p>
               </div>

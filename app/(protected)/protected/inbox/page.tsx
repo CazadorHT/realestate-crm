@@ -34,10 +34,10 @@ export default async function InboxPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+        <h1 className="text-2xl font-bold text-slate-900">
           กล่องข้อความรวม
         </h1>
-        <p className="text-slate-500 dark:text-slate-400">
+        <p className="text-slate-500">
           จัดการการแชทจาก LINE, Facebook, และช่องทางอื่นๆ
         </p>
       </div>

@@ -79,14 +79,14 @@ export default async function SettingsPage({
       <SuccessAnimation />
       {/* Page Header */}
       <div className="flex items-center gap-4">
-        <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
-          <Settings className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <div className="p-3 bg-blue-50 rounded-xl">
+          <Settings className="h-6 w-6 text-blue-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl font-bold text-slate-900">
             การตั้งค่าระบบ
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-slate-500 text-sm">
             จัดการการตั้งค่าระบบและฟีเจอร์ต่างๆ ทั้งหมดในที่เดียว
           </p>
         </div>
@@ -101,7 +101,7 @@ export default async function SettingsPage({
               <Link href="/protected/profile">
                 <Card className="hover:border-blue-200 transition-colors h-full">
                   <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-                    <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <div className="p-2 bg-slate-100 rounded-lg">
                       <UserCircle className="h-5 w-5 text-slate-600" />
                     </div>
                     <div>
@@ -122,7 +122,7 @@ export default async function SettingsPage({
               <Card
                 className={
                   isLineConnected
-                    ? "bg-green-500 text-white border-slate-800 dark:bg-white dark:text-slate-900 transition-colors shadow-lg"
+                    ? "bg-green-500 text-white border-slate-800 transition-colors shadow-lg"
                     : ""
                 }
               >
@@ -183,22 +183,22 @@ export default async function SettingsPage({
               <Card
                 className={
                   isTikTokConnected
-                    ? "bg-slate-900 text-white border-slate-800 dark:bg-white dark:text-slate-900 transition-colors shadow-lg"
+                    ? "bg-slate-900 text-white border-slate-800 transition-colors shadow-lg"
                     : ""
                 }
               >
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center justify-between">
                     <div
-                      className={`flex items-center gap-2 ${isTikTokConnected ? "text-white dark:text-slate-900" : "text-slate-900 dark:text-white"}`}
+                      className={`flex items-center gap-2 ${isTikTokConnected ? "text-white" : "text-slate-900"}`}
                     >
                       <FaTiktok
-                        className={`h-6 w-6 ${isTikTokConnected ? "text-white dark:text-slate-900" : "text-slate-900 dark:text-white"}`}
+                        className={`h-6 w-6 ${isTikTokConnected ? "text-white" : "text-slate-900"}`}
                       />
                       TikTok Integration
                     </div>
                     {isTikTokConnected && (
-                      <div className="flex gap-4 items-center text-xs text-green-400 bg-slate-700 dark:bg-slate-200 p-2 rounded-2xl font-medium">
+                      <div className="flex gap-4 items-center text-xs text-green-400 bg-slate-700 p-2 rounded-2xl font-medium">
                         <CheckCircle className="h-5 w-5 text-green-500" />
                         เชื่อมต่อแล้ว
                       </div>
@@ -217,8 +217,8 @@ export default async function SettingsPage({
                         <Button
                           className={
                             isTikTokConnected
-                              ? "bg-white text-slate-900 hover:bg-slate-100 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800 font-bold"
-                              : "bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 font-bold"
+                              ? "bg-white text-slate-900 hover:bg-slate-100 font-bold"
+                              : "bg-slate-900 hover:bg-slate-800 text-white font-bold"
                           }
                         >
                           {isTikTokConnected
@@ -229,7 +229,7 @@ export default async function SettingsPage({
                       {isTikTokConnected && (
                         <IntegrationDisconnectButton
                           provider="tiktok"
-                          className={`w-full md:w-auto font-bold ${isTikTokConnected ? "text-white hover:text-white hover:bg-slate-800 dark:text-slate-900 dark:hover:bg-slate-100" : ""}`}
+                          className={`w-full md:w-auto font-bold ${isTikTokConnected ? "text-white hover:text-white hover:bg-slate-800" : ""}`}
                         />
                       )}
                       {!isTikTokConnected && (
@@ -245,7 +245,7 @@ export default async function SettingsPage({
               <Card
                 className={
                   isFacebookConnected
-                    ? "bg-slate-900 text-white border-slate-800 dark:bg-white dark:text-slate-900 transition-colors shadow-lg"
+                    ? "bg-slate-900 text-white border-slate-800 transition-colors shadow-lg"
                     : ""
                 }
               >
@@ -258,7 +258,7 @@ export default async function SettingsPage({
                       Facebook Integration
                     </div>
                     {isFacebookConnected && (
-                      <div className="flex gap-4 items-center text-xs text-green-400 bg-slate-700 dark:bg-slate-200 p-2 rounded-2xl font-medium">
+                      <div className="flex gap-4 items-center text-xs text-green-400 bg-slate-700 p-2 rounded-2xl font-medium">
                         <CheckCircle className="h-5 w-5 text-green-500" />
                         เชื่อมต่อแล้ว
                       </div>
@@ -277,7 +277,7 @@ export default async function SettingsPage({
                         <Button
                           className={
                             isFacebookConnected
-                              ? "bg-white text-slate-900 hover:bg-slate-100 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800 font-bold"
+                              ? "bg-white text-slate-900 hover:bg-slate-100 font-bold"
                               : "bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold"
                           }
                         >
@@ -290,7 +290,7 @@ export default async function SettingsPage({
                         <IntegrationDisconnectButton
                           provider="facebook"
                           variant="outline"
-                          className={`w-full md:w-auto font-bold ${isFacebookConnected ? "text-white hover:text-white hover:bg-slate-800 dark:text-slate-900 dark:hover:bg-slate-100" : ""}`}
+                          className={`w-full md:w-auto font-bold ${isFacebookConnected ? "text-white hover:text-white hover:bg-slate-800" : ""}`}
                         />
                       )}
                       {!isFacebookConnected && (
@@ -306,7 +306,7 @@ export default async function SettingsPage({
               <Card
                 className={
                   isGoogleConnected
-                    ? "bg-slate-900 text-white border-slate-800 dark:bg-white dark:text-slate-900 transition-colors shadow-lg"
+                    ? "bg-slate-900 text-white border-slate-800 transition-colors shadow-lg"
                     : ""
                 }
               >
@@ -334,7 +334,7 @@ export default async function SettingsPage({
                       Google Integration
                     </div>
                     {isGoogleConnected && (
-                      <div className="flex gap-4 items-center text-xs text-green-400 bg-slate-700 dark:bg-slate-200 p-2 rounded-2xl font-medium">
+                      <div className="flex gap-4 items-center text-xs text-green-400 bg-slate-700 p-2 rounded-2xl font-medium">
                         <CheckCircle className="h-5 w-5 text-green-500" />
                         เชื่อมต่อแล้ว
                       </div>
@@ -363,7 +363,7 @@ export default async function SettingsPage({
                         <IntegrationDisconnectButton
                           provider="google"
                           variant="outline"
-                          className={`w-full md:w-auto font-bold ${isGoogleConnected ? "text-white hover:text-white hover:bg-slate-800 dark:text-slate-900 dark:hover:bg-slate-100" : ""}`}
+                          className={`w-full md:w-auto font-bold ${isGoogleConnected ? "text-white hover:text-white hover:bg-slate-800" : ""}`}
                         />
                       )}
                       {!isGoogleConnected && (
@@ -386,7 +386,7 @@ export default async function SettingsPage({
               <Link href="/protected/ai-monitor">
                 <Card className="hover:border-blue-200 transition-colors">
                   <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-                    <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <div className="p-2 bg-blue-50 rounded-lg">
                       <Activity className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
@@ -402,7 +402,7 @@ export default async function SettingsPage({
               <Link href="/protected/admin/ai-config">
                 <Card className="hover:border-blue-200 transition-colors">
                   <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-                    <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                    <div className="p-2 bg-purple-50 rounded-lg">
                       <Cpu className="h-5 w-5 text-purple-600" />
                     </div>
                     <div>
@@ -420,7 +420,7 @@ export default async function SettingsPage({
               <Link href="/protected/settings/smart-match">
                 <Card className="hover:border-blue-200 transition-colors">
                   <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-                    <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
+                    <div className="p-2 bg-amber-50 rounded-lg">
                       <Sparkles className="h-5 w-5 text-amber-600" />
                     </div>
                     <div>
@@ -442,7 +442,7 @@ export default async function SettingsPage({
               <Link href="/protected/settings/users">
                 <Card className="hover:border-red-200 transition-colors">
                   <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-                    <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <div className="p-2 bg-slate-100 rounded-lg">
                       <Shield className="h-5 w-5 text-slate-600" />
                     </div>
                     <div>
@@ -458,7 +458,7 @@ export default async function SettingsPage({
               <Link href="/protected/settings/teams">
                 <Card className="hover:border-red-200 transition-colors">
                   <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-                    <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <div className="p-2 bg-slate-100 rounded-lg">
                       <Users className="h-5 w-5 text-slate-600" />
                     </div>
                     <div>
@@ -474,7 +474,7 @@ export default async function SettingsPage({
               <Link href="/protected/admin/audit-logs">
                 <Card className="hover:border-slate-200 transition-colors">
                   <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-                    <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <div className="p-2 bg-slate-100 rounded-lg">
                       <History className="h-5 w-5 text-slate-600" />
                     </div>
                     <div>

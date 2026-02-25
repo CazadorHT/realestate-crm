@@ -52,7 +52,7 @@ export function PropertyPrice({
           <div className="flex items-center gap-1.5">
             <span
               className={cn(
-                "font-bold text-red-600 dark:text-red-500",
+                "font-bold text-red-600",
                 isDesktop ? "text-sm" : "text-base font-black",
               )}
             >
@@ -78,7 +78,7 @@ export function PropertyPrice({
           <div className="flex items-center gap-1.5">
             <span
               className={cn(
-                "font-bold text-blue-600 dark:text-blue-400",
+                "font-bold text-blue-600",
                 isDesktop ? "text-xs font-semibold" : "text-sm",
               )}
             >

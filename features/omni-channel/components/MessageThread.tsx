@@ -62,13 +62,13 @@ export function MessageThread({ lead }: { lead: any }) {
   return (
     <div className="flex flex-col h-full bg-slate-50/10">
       {/* Header */}
-      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 shadow-sm z-10">
+      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white shadow-sm z-10">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700">
+          <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
             <User className="h-6 w-6 text-slate-500" />
           </div>
           <div>
-            <h2 className="font-bold text-sm uppercase tracking-tight text-slate-800 dark:text-slate-100">
+            <h2 className="font-bold text-sm uppercase tracking-tight text-slate-800">
               {lead.full_name}
             </h2>
             <div className="flex items-center gap-1.5">
@@ -128,7 +128,7 @@ export function MessageThread({ lead }: { lead: any }) {
                     "px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed shadow-sm transition-all",
                     msg.direction === "OUTGOING"
                       ? "bg-slate-900 text-white rounded-tr-none"
-                      : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-none border border-slate-100 dark:border-slate-700",
+                      : "bg-white text-slate-800 rounded-tl-none border border-slate-100",
                     isReply && "bg-slate-800 border-slate-700 italic",
                   )}
                 >
@@ -160,25 +160,25 @@ export function MessageThread({ lead }: { lead: any }) {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 shadow-lg">
+      <div className="p-4 bg-white border-t border-slate-100 shadow-lg">
         {replyTo && (
-          <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-900/30 flex items-center justify-between animate-in slide-in-from-bottom-2 duration-300">
+          <div className="mb-3 p-3 bg-blue-50 rounded-xl border border-blue-100 flex items-center justify-between animate-in slide-in-from-bottom-2 duration-300">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+              <div className="p-2 bg-blue-100 rounded-lg">
                 <MessageCircle className="h-4 w-4 text-blue-600" />
               </div>
               <div>
                 <p className="text-[11px] font-bold text-blue-600 uppercase tracking-tight">
                   กำลังตอบกลับคอมเมนต์
                 </p>
-                <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1 italic">
+                <p className="text-xs text-slate-600 line-clamp-1 italic">
                   "{replyTo.content}"
                 </p>
               </div>
             </div>
             <button
               onClick={() => setReplyTo(null)}
-              className="p-1.5 hover:bg-blue-200/50 dark:hover:bg-blue-800/50 rounded-full text-blue-400 transition-colors"
+              className="p-1.5 hover:bg-blue-200/50 rounded-full text-blue-400 transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
@@ -194,7 +194,7 @@ export function MessageThread({ lead }: { lead: any }) {
             placeholder={
               replyTo ? "พิมพ์คำตอบคอมเมนต์..." : "พิมพ์ข้อความแชท..."
             }
-            className="flex-1 bg-slate-100 dark:bg-slate-800 border-transparent focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 text-sm transition-all shadow-inner"
+            className="flex-1 bg-slate-100 border-transparent focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 text-sm transition-all shadow-inner"
           />
           <button
             onClick={handleSend}

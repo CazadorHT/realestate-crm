@@ -62,20 +62,20 @@ export function AiUsageMonitor({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 p-3.5 rounded-[20px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden",
+        "flex flex-col gap-2 p-3.5 rounded-[20px] bg-white border border-slate-100 shadow-sm overflow-hidden",
         className,
       )}
     >
       <div className="flex items-center justify-between gap-2 overflow-hidden">
-        <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs shrink-0">
+        <div className="flex items-center gap-1.5 font-semibold text-slate-800 text-[11px] md:text-xs shrink-0">
           <Activity className="w-3.5 h-3.5 text-blue-500 animate-pulse" />
           AI Performance
         </div>
-        <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shrink-0">
+        <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-slate-50 border border-slate-100 shrink-0">
           <span
             className={cn("w-1 h-1 rounded-full animate-pulse", statusColor)}
           />
-          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
             {statusText}
           </span>
         </div>
@@ -85,13 +85,13 @@ export function AiUsageMonitor({ className }: { className?: string }) {
         <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tight shrink-0">
           Speed (RPM)
         </span>
-        <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100 truncate">
+        <span className="text-xs font-bold tabular-nums text-slate-900 truncate">
           {stats.requestsLastMinute}{" "}
           <span className="text-slate-300 font-medium">/ {stats.limitRPM}</span>
         </span>
       </div>
 
-      <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+      <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
         <div
           className={cn(
             "h-full transition-all duration-700 rounded-full bg-linear-to-r",

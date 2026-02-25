@@ -77,7 +77,7 @@ export default async function AnalyticsPage(props: {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-white dark:bg-slate-900">
+        <Card className="border-none shadow-sm bg-white">
           <CardHeader className="pb-2">
             <CardDescription className="text-slate-500 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-green-500" />
@@ -96,7 +96,7 @@ export default async function AnalyticsPage(props: {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-white dark:bg-slate-900 sm:col-span-2 lg:col-span-1">
+        <Card className="border-none shadow-sm bg-white sm:col-span-2 lg:col-span-1">
           <CardHeader className="pb-2">
             <CardDescription className="text-slate-500 flex items-center gap-2">
               <Building2 className="h-4 w-4 text-orange-500" />

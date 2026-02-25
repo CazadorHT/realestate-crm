@@ -63,8 +63,8 @@ export default async function AuditLogsPage({
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-            <History className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <History className="h-6 w-6 text-blue-600" />
           </div>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">

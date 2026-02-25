@@ -50,7 +50,7 @@ export function RecentPropertiesTable({
     <div className="space-y-6 mt-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 sm:px-0">
         <div className="space-y-1">
-          <h3 className="text-xl font-semibold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+          <h3 className="text-xl font-semibold text-slate-900 tracking-tight flex items-center gap-2">
             <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
             ทรัพย์มาใหม่
             <span className="text-slate-400 font-medium text-sm hidden xs:inline">
@@ -73,9 +73,9 @@ export function RecentPropertiesTable({
 
       <Card className="shadow-lg border-none bg-transparent overflow-visible">
         {/* Desktop Table View */}
-        <div className="hidden lg:block overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <div className="hidden lg:block overflow-x-auto rounded-2xl border border-slate-200 bg-white">
           <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-500 uppercase text-xs font-semibold tracking-wider">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-xs font-semibold tracking-wider">
               <tr>
                 <th className="px-6 py-4 w-[40%]">รายละเอียดทรัพย์</th>
                 <th className="px-6 py-4">ประเภท/สถานะ</th>
@@ -84,11 +84,11 @@ export function RecentPropertiesTable({
                 <th className="px-6 py-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-950">
+            <tbody className="divide-y divide-slate-100 bg-white">
               {properties.map((property) => (
                 <tr
                   key={property.id}
-                  className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors group"
+                  className="hover:bg-slate-50 transition-colors group"
                 >
                   <td className="px-6 py-4 ">
                     <div className="flex items-start gap-4">
@@ -170,7 +170,7 @@ export function RecentPropertiesTable({
                       <div className="flex flex-col gap-1">
                         <Link
                           href={`/protected/properties/${property.id}`}
-                          className="font-semibold text-slate-900 dark:text-slate-100 hover:text-blue-600 transition-colors line-clamp-1 max-w-xs"
+                          className="font-semibold text-slate-900 hover:text-blue-600 transition-colors line-clamp-1 max-w-xs"
                         >
                           {property.title || "ไม่ระบุชื่อ"}
                         </Link>
@@ -296,7 +296,7 @@ export function RecentPropertiesTable({
                                         ราคาขาย
                                       </span>
                                     )}
-                                    <span className="font-bold text-sm text-slate-900 dark:text-white">
+                                    <span className="font-bold text-sm text-slate-900">
                                       ฿
                                       {(
                                         salePrice || originalSalePrice
@@ -338,7 +338,7 @@ export function RecentPropertiesTable({
                                   </div>
                                 ) : (
                                   <div className="flex flex-col mt-1">
-                                    <span className="font-semibold text-xs text-slate-600 dark:text-slate-300">
+                                    <span className="font-semibold text-xs text-slate-600">
                                       เช่า: ฿
                                       {(
                                         rentPrice || originalRentPrice
@@ -443,10 +443,10 @@ export function RecentPropertiesTable({
           {properties.map((property) => (
             <Card
               key={property.id}
-              className="group relative flex flex-col overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-500 bg-white dark:bg-slate-900 rounded-lg sm:rounded-xl"
+              className="group relative flex flex-col overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-500 bg-white rounded-lg sm:rounded-xl"
             >
               {/* Image Section (Vertical Stack) */}
-              <div className="relative aspect-4/3 w-full shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-inner">
+              <div className="relative aspect-4/3 w-full shrink-0 overflow-hidden bg-slate-100 shadow-inner">
                 {(() => {
                   const coverImg =
                     property.property_images?.find((img) => img.is_cover) ||
@@ -460,7 +460,7 @@ export function RecentPropertiesTable({
                       className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-50 dark:bg-slate-800">
+                    <div className="flex h-full w-full items-center justify-center bg-slate-50">
                       <ImageIcon className="h-8 w-8 text-slate-300" />
                     </div>
                   );
@@ -468,7 +468,7 @@ export function RecentPropertiesTable({
 
                 {/* Floating Badges on Image */}
                 <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1.5">
-                  <Badge className="text-[9px] px-2 py-0.5 h-5 font-bold bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-blue-600 border-none shadow-sm uppercase tracking-tight">
+                  <Badge className="text-[9px] px-2 py-0.5 h-5 font-bold bg-white/90 backdrop-blur-md text-blue-600 border-none shadow-sm uppercase tracking-tight">
                     {PROPERTY_TYPE_LABELS[
                       property.property_type as keyof typeof PROPERTY_TYPE_LABELS
                     ] || property.property_type}
@@ -497,7 +497,7 @@ export function RecentPropertiesTable({
                 <div className="space-y-1.5 mb-3">
                   <Link
                     href={`/protected/properties/${property.id}`}
-                    className="font-semibold text-slate-900 dark:text-slate-100 hover:text-blue-600 transition-colors line-clamp-1 text-sm sm:text-base leading-tight"
+                    className="font-semibold text-slate-900 hover:text-blue-600 transition-colors line-clamp-1 text-sm sm:text-base leading-tight"
                   >
                     {property.title || "ไม่ระบุชื่อ"}
                   </Link>
@@ -510,7 +510,7 @@ export function RecentPropertiesTable({
                   </div>
                 </div>
 
-                <div className="mt-auto pt-3 border-t border-slate-50 dark:border-slate-800 flex items-start justify-between gap-1">
+                <div className="mt-auto pt-3 border-t border-slate-50 flex items-start justify-between gap-1">
                   <div className="flex flex-col min-w-0 flex-1">
                     <div className="space-y-1">
                       {(() => {
@@ -576,7 +576,7 @@ export function RecentPropertiesTable({
                                     </div>
                                   </div>
                                 ) : (
-                                  <span className="font-black text-[12px] sm:text-[14px] text-slate-900 dark:text-white leading-tight wrap-break-word">
+                                  <span className="font-black text-[12px] sm:text-[14px] text-slate-900 leading-tight wrap-break-word">
                                     ฿
                                     {(
                                       salePrice || originalSalePrice
@@ -607,7 +607,7 @@ export function RecentPropertiesTable({
                                     </div>
                                   </div>
                                 ) : (
-                                  <span className="font-semibold text-[10px] sm:text-[12px] text-orange-600 dark:text-orange-400 leading-tight wrap-break-word">
+                                  <span className="font-semibold text-[10px] sm:text-[12px] text-orange-600 leading-tight wrap-break-word">
                                     เช่า: ฿
                                     {(
                                       rentPrice || originalRentPrice
@@ -633,7 +633,7 @@ export function RecentPropertiesTable({
                       asChild
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 hover:text-blue-600"
+                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-slate-50 hover:bg-blue-50 hover:text-blue-600"
                     >
                       <Link href={`/protected/properties/${property.id}`}>
                         <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -646,7 +646,7 @@ export function RecentPropertiesTable({
             </Card>
           ))}
           {properties.length === 0 && (
-            <div className="col-span-full p-16 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200">
+            <div className="col-span-full p-16 text-center text-slate-500 bg-white rounded-3xl border border-dashed border-slate-200">
               <div className="flex flex-col items-center gap-4">
                 <div className="p-3 bg-slate-50 rounded-full">
                   <Building className="h-10 w-10 text-slate-300" />

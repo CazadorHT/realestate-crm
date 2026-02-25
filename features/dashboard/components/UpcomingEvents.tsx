@@ -14,7 +14,7 @@ interface UpcomingEventsProps {
 
 export function UpcomingEvents({ events }: UpcomingEventsProps) {
   return (
-    <Card className="col-span-1 md:col-span-2 lg:col-span-1 shadow-sm border-slate-100 dark:border-slate-800">
+    <Card className="col-span-1 md:col-span-2 lg:col-span-1 shadow-sm border-slate-100">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">นัดหมายเร็วๆ นี้</CardTitle>
         <Calendar className="h-4 w-4 text-muted-foreground" />

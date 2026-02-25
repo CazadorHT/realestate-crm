@@ -10,10 +10,10 @@ export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
   const total = data.reduce((acc, curr) => acc + curr.count, 0);
 
   return (
-    <Card className="shadow-lg border-none bg-white dark:bg-slate-900 overflow-hidden h-full">
+    <Card className="shadow-lg border-none bg-white overflow-hidden h-full">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
             <div className="w-1.5 h-6 bg-indigo-600 rounded-full" />
             ภาพรวม Pipeline
           </CardTitle>
@@ -38,7 +38,7 @@ export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
               <div key={stage.stage} className="space-y-2 group cursor-default">
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 transition-colors">
+                    <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">
                       {stage.label}
                     </span>
                     <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
@@ -46,7 +46,7 @@ export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-base font-black text-slate-900 dark:text-white">
+                    <span className="text-base font-black text-slate-900">
                       {stage.count}
                     </span>
                     <span className="text-[10px] text-slate-400 font-bold">
@@ -55,7 +55,7 @@ export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
                   </div>
                 </div>
 
-                <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
+                <div className="relative h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
                   <div
                     className={`h-full ${bgClass} rounded-full shadow-[0_0_10px_rgba(0,0,0,0.05)] transition-all duration-1000 ease-out`}
                     style={{ width: `${percentage}%` }}

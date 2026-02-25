@@ -72,11 +72,11 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
             : `รายได้ปี ${selectedYear}`;
 
   return (
-    <Card className="shadow-lg border-none bg-white dark:bg-slate-900 overflow-hidden group h-full flex flex-col">
+    <Card className="shadow-lg border-none bg-white overflow-hidden group h-full flex flex-col">
       <CardHeader className="pb-2 shrink-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <CardTitle className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
               <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
               {title}
             </CardTitle>
@@ -85,7 +85,7 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
             </p>
           </div>
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-semibold focus:ring-blue-500">
+            <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl bg-slate-50 border-slate-200 font-semibold focus:ring-blue-500">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="rounded-xl shadow-xl border-slate-100">
@@ -117,13 +117,13 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
       <CardContent className="pt-4">
         <div className="h-[280px] w-full relative">
           {loading && (
-            <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-xl">
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-xl">
               <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent shadow-lg"></div>
             </div>
           )}
 
           {!data || data.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+            <div className="flex flex-col items-center justify-center h-full bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
               <p className="text-slate-400 text-sm font-medium">
                 ไม่มีข้อมูลรายได้ในช่วงนี้
               </p>

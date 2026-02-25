@@ -187,7 +187,7 @@ export function PropertyRowActions({
         </DropdownMenuItem>
 
         <DropdownMenuItem
-          className="cursor-pointer text-slate-900 dark:text-white"
+          className="cursor-pointer text-slate-900"
           onSelect={(e) => {
             e.preventDefault();
             handlePostToSocial("TIKTOK");

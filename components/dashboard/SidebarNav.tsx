@@ -303,8 +303,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
       className={cn(
         "flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-300 text-sm relative overflow-hidden group",
         item.active
-          ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-semibold"
-          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium",
+          ? "bg-blue-50 text-blue-700 font-semibold"
+          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium",
         isCollapsed && "justify-center px-0",
       )}
     >
@@ -320,8 +320,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
         className={cn(
           "h-4 w-4 transition-colors shrink-0",
           item.active
-            ? "text-blue-600 dark:text-blue-400"
-            : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300",
+            ? "text-blue-600"
+            : "text-slate-400 group-hover:text-slate-600",
         )}
       />
       {!isCollapsed && <span>{item.title}</span>}
@@ -334,7 +334,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "hidden flex-col border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 sm:flex shadow-sm z-40 h-screen sticky top-0 transition-all duration-300 ease-in-out",
+          "hidden flex-col border-r border-slate-100 bg-white sm:flex shadow-sm z-40 h-screen sticky top-0 transition-all duration-300 ease-in-out",
           isCollapsed ? "w-24" : "w-72",
         )}
       >
@@ -354,10 +354,10 @@ export function SidebarNav({ role }: { role: UserRole }) {
             />
             {!isCollapsed && (
               <div className="min-w-0">
-                <h1 className="text-xl font-medium tracking-tight text-slate-700 dark:text-slate-200 uppercase">
+                <h1 className="text-xl font-medium tracking-tight text-slate-700 uppercase">
                   {siteConfig.name}
                 </h1>
-                <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-medium">
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-medium">
                   {siteConfig.description}
                 </p>
               </div>
@@ -367,7 +367,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
           <button
             onClick={toggleCollapse}
             className={cn(
-              "absolute -right-3.5 top-16 h-7 w-7 rounded-full border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-md hover:shadow-lg hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 transition-all duration-300 z-50 hover:scale-110 active:scale-95 group/toggle",
+              "absolute -right-3.5 top-16 h-7 w-7 rounded-full border border-slate-200 bg-white items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-md hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 z-50 hover:scale-110 active:scale-95 group/toggle",
               isHovered
                 ? "opacity-100 translate-x-0"
                 : "opacity-70 -translate-x-1",
@@ -392,8 +392,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
                   className={cn(
                     "flex items-center justify-center rounded-xl h-12 w-full transition-all duration-300 font-bold text-sm relative overflow-hidden group",
                     pathname === "/protected"
-                      ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800",
+                      ? "bg-blue-50 text-blue-700 shadow-sm"
+                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50",
                   )}
                 >
                   {pathname === "/protected" && (
@@ -403,8 +403,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
                     className={cn(
                       "h-5 w-5 transition-colors",
                       pathname === "/protected"
-                        ? "text-blue-600 dark:text-blue-400"
-                        : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300",
+                        ? "text-blue-600"
+                        : "text-slate-400 group-hover:text-slate-600",
                     )}
                   />
                 </Link>
@@ -417,8 +417,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
               className={cn(
                 "flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all duration-300 font-bold text-sm relative overflow-hidden group",
                 pathname === "/protected"
-                  ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800",
+                  ? "bg-blue-50 text-blue-700 shadow-sm"
+                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50",
               )}
             >
               {pathname === "/protected" && (
@@ -428,8 +428,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
                 className={cn(
                   "h-5 w-5 transition-colors",
                   pathname === "/protected"
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300",
+                    ? "text-blue-600"
+                    : "text-slate-400 group-hover:text-slate-600",
                 )}
               />
               แดชบอร์ด
@@ -451,8 +451,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
                         className={cn(
                           "w-full flex items-center justify-center rounded-xl h-12 transition-all duration-300 font-semibold text-xs uppercase tracking-wider relative",
                           hasActiveItem
-                            ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
-                            : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800",
+                            ? "bg-blue-100 text-blue-700"
+                            : "text-slate-400 hover:text-slate-600 hover:bg-slate-50",
                         )}
                       >
                         <group.icon className="h-4 w-4" />
@@ -465,7 +465,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
                   </Tooltip>
 
                   {isOpen && (
-                    <div className="space-y-1 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-1 mx-1 border border-slate-100 dark:border-slate-700/50 shadow-inner">
+                    <div className="space-y-1 bg-slate-50 rounded-xl p-1 mx-1 border border-slate-100 shadow-inner">
                       {group.items.map((item) => (
                         <Tooltip key={item.href}>
                           <TooltipTrigger asChild>
@@ -492,8 +492,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
                   className={cn(
                     "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition-all duration-300 font-semibold text-xs uppercase tracking-wider",
                     hasActiveItem
-                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
-                      : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800",
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-50",
                   )}
                 >
                   <div className="flex items-center gap-3">
@@ -525,16 +525,16 @@ export function SidebarNav({ role }: { role: UserRole }) {
         </nav>
 
         {!isCollapsed && (
-          <div className="p-4 m-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+          <div className="p-4 m-4 rounded-2xl bg-slate-50 border border-slate-100">
             <div className="flex items-center gap-3 mb-2">
-              <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-lg">
-                <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <Shield className="h-4 w-4 text-blue-600" />
               </div>
               <div className="overflow-hidden">
-                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                <p className="text-xs font-bold text-slate-900">
                   {siteConfig.tier} VERSION
                 </p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                <p className="text-[10px] text-slate-500">
                   Active Tier
                 </p>
               </div>

@@ -214,13 +214,13 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
         </div>
 
         {/* Mobile/Tablet Card View */}
-        <div className="lg:hidden divide-y divide-slate-100 dark:divide-slate-800">
+        <div className="lg:hidden divide-y divide-slate-100">
           {leads.map((l) => (
             <div
               key={l.id}
               className={`p-4 transition-colors ${
                 isSelected(l.id)
-                  ? "bg-blue-50/50 dark:bg-blue-900/10"
+                  ? "bg-blue-50/50"
                   : "hover:bg-slate-50"
               }`}
             >
@@ -241,7 +241,7 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                       <div className="flex items-center gap-2">
                         <Link
                           href={`/protected/leads/${l.id}`}
-                          className="font-bold text-slate-900 dark:text-white text-sm hover:underline"
+                          className="font-bold text-slate-900 text-sm hover:underline"
                         >
                           {l.full_name}
                         </Link>

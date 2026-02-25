@@ -2,6 +2,11 @@
 
 ระบบ Keyword Automation จะช่วยให้คุณตอบกลับลูกค้าที่คอมเมนต์บนหน้าเพจ Facebook หรือ Instagram ได้โดยอัตโนมัติ พร้อมส่งรายละเอียดเชิงลึกเข้า Inbox ทันทีที่มีการพิมพ์คำค้นหาที่คุณตั้งไว้
 
+> **อัปเดตล่าสุด:** 25 กุมภาพันธ์ 2026
+
+> [!TIP]
+> **AI Template Generator:** คุณสามารถใช้ปุ่ม ✨ AI Generate ในหน้า Settings > Social เพื่อให้ AI สร้าง Template ข้อความ DM และ Social Post ให้อัตโนมัติ
+
 ---
 
 ## 🏷️ ตัวแปร (Dynamic Tags) ที่สามารถใช้งานได้
@@ -75,6 +80,12 @@
 2.  **ใช้ Public Reply คู่กัน**: ตั้งค่าคำตอบกลับสาธารณะ (Public Reply) เช่น _"ส่งข้อมูลให้ทางแชทเรียบร้อยแล้วนะครับคุณลูกค้า 😊"_ เพื่อให้คนอื่นเห็นว่าคุณตอบไว
 3.  **ใส่ Link เสมอ**: เพื่อให้ลูกค้าย้อนกลับมาดูข้อมูลบนเว็บและเก็บเป็น Lead ต่อไปได้
 4.  **รูปภาพมาอัตโนมัติ**: หากทรัพท์สินมีรูป ระบบจะส่ง **Photo Album (Carousel)** ตามไปหลังจากข้อความ DM เสมอ ไม่ต้องตั้งค่าเพิ่มครับ
+
+---
+
+> [!IMPORTANT]
+> ระบบ Keyword Automation รองรับทั้ง **Facebook Comments** และ **Instagram Comments** ผ่าน Meta Graph API
+> ต้องตรวจสอบว่า Meta App มีสิทธิ์ `pages_manage_metadata`, `pages_messaging`, และ `instagram_manage_comments`
 
 ---
 

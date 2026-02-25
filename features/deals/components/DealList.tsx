@@ -42,10 +42,10 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                       ?.image_url || deal.property.property_images[0].image_url
                   }
                   alt={deal.property.title || "Property"}
-                  className="h-16 w-16 rounded-lg object-cover border transition-all duration-300 border-slate-100 dark:border-slate-800"
+                  className="h-16 w-16 rounded-lg object-cover border transition-all duration-300 border-slate-100"
                 />
               ) : (
-                <div className="h-14 w-14 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 text-slate-400">
+                <div className="h-14 w-14 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 text-slate-400">
                   <Home className="h-6 w-6" />
                 </div>
               )}
@@ -87,7 +87,7 @@ export function DealList({ deals, properties = [] }: DealListProps) {
             </div>
 
             {/* Right: Status & Actions */}
-            <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center w-full md:w-auto gap-3 md:pl-4 md:border-l border-slate-100 dark:border-slate-800 ml-0 md:ml-auto shrink-0">
+            <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center w-full md:w-auto gap-3 md:pl-4 md:border-l border-slate-100 ml-0 md:ml-auto shrink-0">
               <div className="flex items-center gap-2 order-2 md:order-1">
                 <StatusBadge status={deal.status} />
               </div>
@@ -131,7 +131,7 @@ export function DealList({ deals, properties = [] }: DealListProps) {
 
               {deal.commission_amount && deal.commission_amount > 0 && (
                 <div className="order-1 md:order-3 md:mt-1">
-                  <span className="text-xs text-emerald-600 font-medium bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+                  <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">
                     ค่าคอม + {deal.commission_amount.toLocaleString()}
                   </span>
                 </div>

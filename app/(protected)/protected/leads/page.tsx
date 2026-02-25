@@ -91,7 +91,7 @@ export default async function LeadsPage({
         gradient="emerald"
       >
         <div className="flex justify-end">
-          <div className="flex bg-white/10 dark:bg-slate-800/10 p-1 rounded-xl border border-white/20 shadow-sm backdrop-blur-sm">
+          <div className="flex bg-white/10 p-1 rounded-xl border border-white/20 shadow-sm backdrop-blur-sm">
             <Link
               href={toggleViewHref("list")}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${

@@ -58,8 +58,8 @@ export default async function CalendarPage({
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-            <CalendarDays className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+          <div className="p-2 bg-indigo-100 rounded-lg">
+            <CalendarDays className="h-6 w-6 text-indigo-600" />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>

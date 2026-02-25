@@ -247,7 +247,7 @@ export function RentalContractSection({
                     className={cn(
                       "flex-1 sm:flex-initial gap-1.5 transition-all active:scale-95 shadow-xs h-9 sm:h-8",
                       !contract &&
-                        "bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-slate-200 dark:text-slate-900",
+                        "bg-slate-900 hover:bg-slate-800 text-white",
                     )}
                   >
                     {contract ? (
@@ -272,7 +272,7 @@ export function RentalContractSection({
                     }
                     className={`flex-1 sm:flex-initial gap-1.5 transition-all active:scale-95 h-9 sm:h-8 ${
                       ["DRAFT", "TERMINATED"].includes(contract.status)
-                        ? "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        ? "text-red-500 hover:text-red-600 hover:bg-red-50"
                         : "text-muted-foreground opacity-50 cursor-not-allowed"
                     }`}
                     onClick={() => setShowDeleteDialog(true)}
@@ -744,7 +744,7 @@ export function RentalContractSection({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 sm:flex-initial text-amber-600 border-amber-200 hover:bg-amber-100 hover:text-amber-700 dark:hover:bg-amber-900/20 gap-1.5 transition-all active:scale-95 flex items-center shadow-xs h-9 sm:h-8"
+                    className="flex-1 sm:flex-initial text-amber-600 border-amber-200 hover:bg-amber-100 hover:text-amber-700 gap-1.5 transition-all active:scale-95 flex items-center shadow-xs h-9 sm:h-8"
                     onClick={() => setShowStopDialog(true)}
                   >
                     <Ban className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
