@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { IntegrationDisconnectButton } from "@/components/settings/IntegrationDisconnectButton";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
+import { SettingsTabs } from "@/components/settings/SettingsTabs";
 import {
   Card,
   CardHeader,
@@ -92,32 +93,7 @@ export default async function SettingsPage({
       </div>
 
       <Tabs defaultValue={activeTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:w-auto h-auto p-1 bg-slate-100 dark:bg-slate-800 rounded-xl gap-1">
-          <TabsTrigger
-            value="general"
-            className="rounded-lg py-2 px-4 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm"
-          >
-            ทั่วไป
-          </TabsTrigger>
-          <TabsTrigger
-            value="social"
-            className="rounded-lg py-2 px-4 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm"
-          >
-            Social
-          </TabsTrigger>
-          <TabsTrigger
-            value="ai"
-            className="rounded-lg py-2 px-4 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm"
-          >
-            AI Tools
-          </TabsTrigger>
-          <TabsTrigger
-            value="admin"
-            className="rounded-lg py-2 px-4 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm"
-          >
-            Admin
-          </TabsTrigger>
-        </TabsList>
+        <SettingsTabs activeTab={activeTab} />
 
         <div className="mt-6">
           <TabsContent value="general" className="space-y-6">

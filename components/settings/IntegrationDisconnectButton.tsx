@@ -7,7 +7,18 @@ import {
   IntegrationProvider,
 } from "@/features/site-settings/integration-actions";
 import { toast } from "sonner";
-import { Loader2, Link2Off } from "lucide-react";
+import { Loader2, Link2Off, AlertTriangle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface IntegrationDisconnectButtonProps {
   provider: IntegrationProvider;
@@ -27,17 +38,22 @@ export function IntegrationDisconnectButton({
   className = "",
 }: IntegrationDisconnectButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const providerNames: Record<IntegrationProvider, string> = {
+    tiktok: "TikTok",
+    facebook: "Facebook",
+    google: "Google",
+    line: "LINE",
+  };
 
   const handleDisconnect = async () => {
-    if (!confirm(`คุณต้องการยกเลิกการเชื่อมต่อ ${provider} ใช่หรือไม่?`)) {
-      return;
-    }
-
     setIsLoading(true);
     try {
       const res = await disconnectIntegrationAction(provider);
       if (res.success) {
         toast.success(res.message);
+        setIsOpen(false);
       } else {
         toast.error(res.message);
       }
@@ -49,19 +65,52 @@ export function IntegrationDisconnectButton({
   };
 
   return (
-    <Button
-      variant={variant}
-      size="sm"
-      className={`gap-2 ${className}`}
-      onClick={handleDisconnect}
-      disabled={isLoading}
-    >
-      {isLoading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Link2Off className="h-4 w-4" />
-      )}
-      ยกเลิกการเชื่อมต่อ
-    </Button>
+    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant={variant}
+          size="sm"
+          className={`gap-2 ${className}`}
+          disabled={isLoading}
+        >
+          <Link2Off className="h-4 w-4" />
+          ยกเลิกการเชื่อมต่อ
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent className="max-w-[400px]">
+        <AlertDialogHeader>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full text-red-600 dark:text-red-400">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <AlertDialogTitle className="text-xl">
+              ยืนยันการยกเลิกการเชื่อมต่อ
+            </AlertDialogTitle>
+          </div>
+          <AlertDialogDescription className="text-base text-slate-600 dark:text-slate-400">
+            คุณต้องการยกเลิกการเชื่อมต่อกับ <b>{providerNames[provider]}</b>{" "}
+            ใช่หรือไม่? การดำเนินการนี้จะลบการเข้าถึงข้อมูลของระบบ
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="mt-4 gap-2">
+          <AlertDialogCancel className="font-bold border-slate-200">
+            ยกเลิก
+          </AlertDialogCancel>
+          <Button
+            onClick={handleDisconnect}
+            disabled={isLoading}
+            variant="destructive"
+            className="font-bold min-w-[120px]"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Link2Off className="h-4 w-4 mr-2" />
+            )}
+            ยืนยันการลบ
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
