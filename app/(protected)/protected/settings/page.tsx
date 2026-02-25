@@ -25,6 +25,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { FaLine, FaTiktok } from "react-icons/fa";
 
 export const metadata: Metadata = {
   title: "Settings | CRM",
@@ -100,14 +101,12 @@ export default function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="social" className="space-y-6">
-            <div id="social-automation">
-              <SocialAutomationSettings />
-            </div>
-
+           
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-green-500" />
+                  <FaLine className="h-5 w-5 text-green-500" />
                   LINE Integration
                 </CardTitle>
                 <CardDescription>
@@ -128,7 +127,7 @@ export default function SettingsPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Music2 className="h-5 w-5 text-slate-900 dark:text-white" />
+                  <FaTiktok className="h-5 w-5 text-slate-900 dark:text-white" />
                   TikTok Integration
                 </CardTitle>
                 <CardDescription>
@@ -221,7 +220,10 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card></div>
+             <div id="social-automation">
+              <SocialAutomationSettings />
+            </div>
           </TabsContent>
 
           <TabsContent value="ai" className="space-y-6">
