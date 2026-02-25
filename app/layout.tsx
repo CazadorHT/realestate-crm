@@ -70,18 +70,11 @@ export default async function RootLayout({
   return (
     <html lang={lang} suppressHydrationWarning>
       <body className={`${prompt.className} ${notoThai.variable} antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <LanguageProvider initialLanguage={lang as any}>
-            {children}
-            <Toaster />
-            <CookieConsent />
-          </LanguageProvider>
-        </ThemeProvider>
+        <LanguageProvider initialLanguage={lang as any}>
+          {children}
+          <Toaster />
+          <CookieConsent />
+        </LanguageProvider>
       </body>
     </html>
   );

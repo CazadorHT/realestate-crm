@@ -38,7 +38,7 @@ export function SuccessAnimation() {
           exit={{ opacity: 0, scale: 0.5 }}
           className="fixed inset-0 z-100 flex items-center justify-center pointer-events-none"
         >
-          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-12 rounded-full shadow-2xl flex flex-col items-center gap-4 border border-green-100 dark:border-green-900">
+          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-12 rounded-xl shadow-2xl flex flex-col items-center gap-4 border border-green-100 dark:border-green-900">
             <motion.div
               initial={{ rotate: -180, scale: 0 }}
               animate={{ rotate: 0, scale: 1 }}
