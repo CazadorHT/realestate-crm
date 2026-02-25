@@ -68,6 +68,7 @@ import type {
   PropertyTableData,
 } from "@/features/properties/types";
 import { cn } from "@/lib/utils";
+import { FaLine, FaTiktok } from "react-icons/fa";
 
 interface PropertiesTableProps {
   data: PropertyTableData[];
@@ -215,7 +216,7 @@ function SocialStatusBadges({
                   : "bg-slate-50 border-slate-100 text-slate-300",
               )}
             >
-              <MessageCircle className="h-3.5 w-3.5" />
+              <FaLine className="h-3.5 w-3.5" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
@@ -240,7 +241,7 @@ function SocialStatusBadges({
                   : "bg-slate-50 border-slate-100 text-slate-300",
               )}
             >
-              <Music2 className="h-3.5 w-3.5" />
+              <FaTiktok className="h-3.5 w-3.5" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
@@ -369,7 +370,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                 <TableHead className="w-[140px]">
                   <SortableHead label="สถานะ" sortKey="status" />
                 </TableHead>
-                <TableHead className="w-[100px]">Social</TableHead>
+                <TableHead className="w-[200px]">Social</TableHead>
                 <TableHead className="w-[100px] text-right pr-4">
                   จัดการ
                 </TableHead>
