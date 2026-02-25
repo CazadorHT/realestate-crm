@@ -3,7 +3,11 @@ import type { PropertyRow } from "@/features/properties/types";
 
 export const EMPTY_VALUES: PropertyFormValues = {
   title: "",
+  title_en: "",
+  title_cn: "",
   description: "",
+  description_en: "",
+  description_cn: "",
   property_type: undefined as any,
   listing_type: undefined as any,
   status: "DRAFT",
@@ -290,7 +294,11 @@ export function mapRowToFormValues(
 
   return {
     title: row.title ?? "",
+    title_en: (row as any).title_en ?? "",
+    title_cn: (row as any).title_cn ?? "",
     description: row.description ?? undefined,
+    description_en: (row as any).description_en ?? "",
+    description_cn: (row as any).description_cn ?? "",
     property_type: row.property_type ?? "HOUSE",
     listing_type: row.listing_type ?? "SALE",
     status: row.status ?? "DRAFT",
