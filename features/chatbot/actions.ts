@@ -276,13 +276,16 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
         };
 
         const result2 = await chat.sendMessage([functionResponse]);
-        finalText = await result2.response.text();
+        const response2 = await result2.response;
+        finalText = response2.text();
 
         // Log Success (Tool Used)
         await logAiUsage({
-          model: "gemini-2.5-flash",
+          model: modelName || "gemini-1.5-flash",
           feature: "chatbot",
           status: "success",
+          promptTokens: response2.usageMetadata?.promptTokenCount,
+          completionTokens: response2.usageMetadata?.candidatesTokenCount,
         });
 
         return {
@@ -313,9 +316,11 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
 
     // Log Success (Text Only)
     await logAiUsage({
-      model: "gemini-2.5-flash",
+      model: modelName || "gemini-1.5-flash",
       feature: "chatbot",
       status: "success",
+      promptTokens: response.usageMetadata?.promptTokenCount,
+      completionTokens: response.usageMetadata?.candidatesTokenCount,
     });
 
     return {

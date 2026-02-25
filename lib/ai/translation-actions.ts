@@ -45,31 +45,34 @@ export async function translateTextAction(
     const aiConfig = await getAiModelConfig();
     modelName = aiConfig.translation_model;
 
-    const response = await generateText(prompt, modelName);
+    const result = await generateText(prompt, modelName);
+    const responseText = result.text;
 
     // Attempt to parse JSON
     try {
       // Cleanup common AI artifacts just in case
-      const cleanedResponse = response
+      const cleanedResponse = responseText
         .trim()
         .replace(/^```json/, "")
         .replace(/```$/, "");
 
-      const result = JSON.parse(cleanedResponse) as TranslationResult;
+      const parsedResult = JSON.parse(cleanedResponse) as TranslationResult;
 
       // Log success
       await logAiUsage({
         model: modelName || "unknown",
         feature: "translation",
         status: "success",
+        promptTokens: result.usage?.promptTokens,
+        completionTokens: result.usage?.completionTokens,
       });
 
       return {
-        en: result.en || "",
-        cn: result.cn || "",
+        en: parsedResult.en || "",
+        cn: parsedResult.cn || "",
       };
     } catch (parseError) {
-      console.error("Failed to parse AI translation JSON:", response);
+      console.error("Failed to parse AI translation JSON:", responseText);
 
       // Log parsing error
       await logAiUsage({

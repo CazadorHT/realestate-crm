@@ -173,8 +173,8 @@ export async function bulkTranslatePopularAreasAction() {
       ]
     `;
 
-    const response = await generateText(prompt, modelName);
-    const jsonStr = response.replace(/```json|```/g, "").trim();
+    const result = await generateText(prompt, modelName);
+    const jsonStr = result.text.replace(/```json|```/g, "").trim();
     const translatedData = JSON.parse(jsonStr);
 
     if (!Array.isArray(translatedData))
@@ -198,6 +198,8 @@ export async function bulkTranslatePopularAreasAction() {
       model: modelName,
       feature: "popular_areas_translator",
       status: "success",
+      promptTokens: result.usage?.promptTokens,
+      completionTokens: result.usage?.completionTokens,
     });
 
     revalidatePath("/protected/admin/popular-areas");

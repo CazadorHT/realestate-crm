@@ -248,18 +248,20 @@ export async function generateSocialAutomationTemplatesAction(
       `;
     }
 
-    const response = await generateText(prompt, modelName);
+    const result = await generateText(prompt, modelName);
 
     const { logAiUsage } = await import("@/features/ai-monitor/actions");
     await logAiUsage({
       model: modelName,
       feature: "social_template_generator",
       status: "success",
+      promptTokens: result.usage?.promptTokens,
+      completionTokens: result.usage?.completionTokens,
     });
 
     return {
       success: true,
-      data: response.trim().replace(/^```/, "").replace(/```$/, ""),
+      data: result.text.trim().replace(/^```/, "").replace(/```$/, ""),
     };
   } catch (error: any) {
     console.error("AI Generation Error:", error);
