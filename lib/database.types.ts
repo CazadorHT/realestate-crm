@@ -182,6 +182,42 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_templates: {
+        Row: {
+          content: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          type: Database["public"]["Enums"]["document_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          type: Database["public"]["Enums"]["document_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          type?: Database["public"]["Enums"]["document_type"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       deals: {
         Row: {
           closed_at: string | null
@@ -269,40 +305,58 @@ export type Database = {
           created_at: string
           created_by: string | null
           document_type: Database["public"]["Enums"]["document_type"]
+          esign_envelope_id: string | null
+          esign_provider: string | null
+          esign_signed_at: string | null
+          esign_status: Database["public"]["Enums"]["esign_status"] | null
           file_name: string
           id: string
           is_encrypted: boolean
           mime_type: string | null
           owner_id: string
           owner_type: Database["public"]["Enums"]["document_owner_type"]
+          parent_id: string | null
           size_bytes: number | null
           storage_path: string
+          version: number | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           document_type: Database["public"]["Enums"]["document_type"]
+          esign_envelope_id?: string | null
+          esign_provider?: string | null
+          esign_signed_at?: string | null
+          esign_status?: Database["public"]["Enums"]["esign_status"] | null
           file_name: string
           id?: string
           is_encrypted?: boolean
           mime_type?: string | null
           owner_id: string
           owner_type: Database["public"]["Enums"]["document_owner_type"]
+          parent_id?: string | null
           size_bytes?: number | null
           storage_path: string
+          version?: number | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
           document_type?: Database["public"]["Enums"]["document_type"]
+          esign_envelope_id?: string | null
+          esign_provider?: string | null
+          esign_signed_at?: string | null
+          esign_status?: Database["public"]["Enums"]["esign_status"] | null
           file_name?: string
           id?: string
           is_encrypted?: boolean
           mime_type?: string | null
           owner_id?: string
           owner_type?: Database["public"]["Enums"]["document_owner_type"]
+          parent_id?: string | null
           size_bytes?: number | null
           storage_path?: string
+          version?: number | null
         }
         Relationships: [
           {
@@ -310,6 +364,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
             referencedColumns: ["id"]
           },
         ]
@@ -1896,6 +1957,8 @@ export type Database = {
         | "SALE_CONTRACT"
         | "TITLE_DEED"
         | "OTHER"
+        | "RESERVATION_DOCUMENT"
+      esign_status: "DRAFT" | "SENT" | "SIGNED" | "DECLINED" | "EXPIRED"
       lead_activity_type:
         | "CALL"
         | "LINE_CHAT"
@@ -2080,7 +2143,9 @@ export const Constants = {
         "SALE_CONTRACT",
         "TITLE_DEED",
         "OTHER",
+        "RESERVATION_DOCUMENT",
       ],
+      esign_status: ["DRAFT", "SENT", "SIGNED", "DECLINED", "EXPIRED"],
       lead_activity_type: [
         "CALL",
         "LINE_CHAT",
