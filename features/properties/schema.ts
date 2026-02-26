@@ -74,14 +74,13 @@ export const FormSchema = z
     currency: z.string().default("THB"),
 
     address_line1: z.string().trim().min(1, "กรุณากรอกที่อยู่ หรือชื่อโครงการ"),
+    address_line1_en: z.string().optional(),
+    address_line1_cn: z.string().optional(),
     province: z.string().min(1, "กรุณาเลือกจังหวัด"),
     district: z.string().min(1, "กรุณาเลือกจังหวัดเขต / อำเภอ"),
     subdistrict: z.string().min(1, "กรุณาเลือกจังหวัดแขวง / ตำบล"),
     postal_code: z.string().optional(),
-    google_maps_link: z
-      .string()
-      .trim()
-      .min(1, "กรุณาใส่ลิงก์ Google Maps "),
+    google_maps_link: z.string().trim().min(1, "กรุณาใส่ลิงก์ Google Maps "),
     popular_area: z.string().optional().nullable(),
 
     owner_id: z.string().uuid().nullable().optional(),
@@ -95,6 +94,8 @@ export const FormSchema = z
     commission_rent_months: z.coerce.number().optional().nullable(),
     near_transit: z.boolean().default(false),
     transit_station_name: z.string().optional().nullable(),
+    transit_station_name_en: z.string().optional().nullable(),
+    transit_station_name_cn: z.string().optional().nullable(),
     transit_type: z.enum(TRANSIT_TYPE_ENUM).optional().nullable(),
     transit_distance_meters: z.coerce.number().optional().nullable(),
 

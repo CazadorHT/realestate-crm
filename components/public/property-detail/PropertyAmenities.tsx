@@ -21,8 +21,17 @@ export function PropertyAmenities({
   features,
   language: customLanguage,
 }: PropertyAmenitiesProps) {
-  const { language: globalLanguage, t } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
+
+  // Custom t function for language override
+  const t = (key: string) => {
+    if (!customLanguage) return globalT(key);
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
+
   if (!features || features.length === 0) return null;
 
   return (
@@ -37,12 +46,12 @@ export function PropertyAmenities({
           const localizedName = getLocaleValue(item, "name", language);
           return (
             <div
-            key={i}
-            className="flex items-center gap-2 lg:gap-3 text-sm lg:text-base text-slate-600"
-          >
-            <div className="p-1.5 lg:p-2 rounded-full bg-blue-50 text-blue-600">
-              <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-            </div>
+              key={i}
+              className="flex items-center gap-2 lg:gap-3 text-sm lg:text-base text-slate-600"
+            >
+              <div className="p-1.5 lg:p-2 rounded-full bg-blue-50 text-blue-600">
+                <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+              </div>
               <span className="truncate">{localizedName}</span>
             </div>
           );

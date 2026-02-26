@@ -189,7 +189,46 @@ export function useAITranslation(form: UseFormReturn<PropertyFormValues>) {
     }
   };
 
-  // 5. Global Translate All
+  // 4b. Translate Address
+  const translateAddress = async (silent = false) => {
+    const address = form.getValues("address_line1");
+    if (!address?.trim()) {
+      if (!silent) toast.error("กรุณากรอกที่อยู่ภาษาไทยก่อนกดแปลครับ");
+      return;
+    }
+
+    const hasEn = !!form.getValues("address_line1_en");
+    const hasCn = !!form.getValues("address_line1_cn");
+    if (hasEn && hasCn) {
+      if (!silent) toast.success("ที่อยู่แปลครบถ้วนแล้ว ✨");
+      return;
+    }
+
+    setIsTranslating(true);
+    let toastId;
+    if (!silent)
+      toastId = toast.loading("กำลังแปลที่อยู่เป็นภาษาอังกฤษและจีน...");
+
+    try {
+      const result = await translateTextAction(address, "plain");
+      form.setValue("address_line1_en", result.en, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      form.setValue("address_line1_cn", result.cn, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      if (!silent) toast.success("แปลที่อยู่เรียบร้อยแล้ว ✨", { id: toastId });
+      return true;
+    } catch (error: any) {
+      if (!silent)
+        toast.error(error.message || "การแปลที่อยู่ขัดข้อง", { id: toastId });
+      return false;
+    } finally {
+      setIsTranslating(false);
+    }
+  };
   const translateAll = async () => {
     setIsTranslatingAll(true);
     const toastId = toast.loading("กำลังแปลข้อมูลทั้งหมดด้วย AI...");
@@ -200,6 +239,7 @@ export function useAITranslation(form: UseFormReturn<PropertyFormValues>) {
         translateDescription(true),
         translateTransits(true),
         translatePlaces(true),
+        translateAddress(true),
       ]);
       toast.success("แปลข้อมูลครบทุกส่วนเรียบร้อยแล้ว! ✨", { id: toastId });
     } catch (error) {
@@ -216,6 +256,7 @@ export function useAITranslation(form: UseFormReturn<PropertyFormValues>) {
     translateDescription,
     translateTransits,
     translatePlaces,
+    translateAddress,
     translateAll,
   };
 }

@@ -59,6 +59,12 @@ export async function getPropertyWithImages(
         is_cover,
         sort_order,
         created_at
+      ),
+      property_agents (
+        agent_id
+      ),
+      property_features (
+        feature_id
       )
     `,
     )

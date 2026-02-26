@@ -1,7 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Map as MapIcon,
+  MapPinned,
+  SignpostBig,
+  Mail,
+  MapPin,
+  Languages,
+  Sparkles,
+} from "lucide-react";
 import {
   FormField,
   FormItem,
@@ -18,11 +27,11 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { useThaiAddress } from "@/hooks/useThaiAddress";
-import { Map, MapPinned, SignpostBig, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "../../components/SectionHeader";
-import { MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAITranslation } from "../../hooks/use-ai-translation";
 import type { UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
 
@@ -39,6 +48,7 @@ export function AddressSection({ form }: AddressSectionProps) {
     ensureSubDistrictsLoaded,
     loading: addressLoading,
   } = useThaiAddress();
+  const { isTranslating, translateAddress } = useAITranslation(form);
 
   // Preload all address data once on mount
   React.useEffect(() => {
@@ -78,6 +88,23 @@ export function AddressSection({ form }: AddressSectionProps) {
           title="ที่ตั้งและทำเล"
           desc="ระบุพิกัดให้แม่นยำเพื่อการค้นหาที่ดีขึ้น"
           tone="blue"
+          right={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 font-bold px-3 shadow-xs transition-all active:scale-95"
+              disabled={isTranslating}
+              onClick={() => translateAddress()}
+            >
+              {isTranslating ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="h-3.5 w-3.5" />
+              )}
+              AI {isTranslating ? "กำลังแปล..." : "แปลที่อยู่"}
+            </Button>
+          }
         />
         <Separator className="bg-slate-200/70" />
       </CardHeader>
@@ -92,7 +119,7 @@ export function AddressSection({ form }: AddressSectionProps) {
             render={({ field }) => (
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
-                  <Map className="h-3.5 w-3.5 text-blue-500" />
+                  <MapIcon className="h-3.5 w-3.5 text-blue-500" />
                   จังหวัด <span className="text-red-500">*</span>{" "}
                   {addressLoading && (
                     <Loader2 className="inline h-3 w-3 animate-spin text-slate-400" />
@@ -254,6 +281,52 @@ export function AddressSection({ form }: AddressSectionProps) {
             )}
           />
 
+          {/* Address English */}
+          <FormField
+            control={form.control}
+            name="address_line1_en"
+            render={({ field }) => (
+              <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
+                <FormLabel className="flex items-center gap-2 text-slate-500 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
+                  <Languages className="w-3.5 h-3.5" />
+                  Address (English)
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    placeholder="Project Name / Address in English..."
+                    className="h-11 rounded-lg border-slate-200 bg-slate-50/50 px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Address Chinese */}
+          <FormField
+            control={form.control}
+            name="address_line1_cn"
+            render={({ field }) => (
+              <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
+                <FormLabel className="flex items-center gap-2 text-slate-500 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
+                  <Languages className="w-3.5 h-3.5" />
+                  地址 (Chinese)
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    placeholder="项目名称 / 地址 (中文)..."
+                    className="h-11 rounded-lg border-slate-200 bg-slate-50/50 px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Google Maps Link */}
           <FormField
             control={form.control}
@@ -261,7 +334,7 @@ export function AddressSection({ form }: AddressSectionProps) {
             render={({ field }) => (
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
                 <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
-                  <Map className="w-4 h-4 text-blue-500" />
+                  <MapIcon className="w-4 h-4 text-blue-500" />
                   Google Maps Link <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>

@@ -19,6 +19,8 @@ export type PropertyImageInsert =
 // Property with nested images
 export type PropertyWithImages = PropertyRow & {
   property_images: PropertyImage[];
+  property_agents?: { agent_id: string }[];
+  property_features?: { feature_id: string }[];
 };
 
 // Helper type for image upload data

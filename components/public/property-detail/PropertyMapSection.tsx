@@ -6,10 +6,12 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PropertyMapSectionProps {
   googleMapsLink: string | null;
+  language?: "th" | "en" | "cn";
 }
 
 export function PropertyMapSection({
   googleMapsLink,
+  language: customLanguage,
 }: PropertyMapSectionProps) {
   // Helper to extract location query from various Google Maps URL formats
   const extractQuery = (url: string | null) => {
@@ -50,7 +52,16 @@ export function PropertyMapSection({
     }
   };
 
-  const { t } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Custom t function for language override
+  const t = (key: string) => {
+    if (!customLanguage) return globalT(key);
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
 
   const locationQuery = extractQuery(googleMapsLink);
   const embedUrl = locationQuery

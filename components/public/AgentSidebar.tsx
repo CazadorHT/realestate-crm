@@ -32,6 +32,7 @@ interface AgentSidebarProps {
     title_cn?: string | null;
   };
   shareUrl: string;
+  language?: "th" | "en" | "cn";
 }
 
 export function AgentSidebar({
@@ -44,8 +45,18 @@ export function AgentSidebar({
   propertyTitle,
   property,
   shareUrl,
+  language: customLanguage,
 }: AgentSidebarProps) {
-  const { t, language } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Custom t function for language override
+  const t = (key: string) => {
+    if (!customLanguage) return globalT(key);
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
   const [showPhone, setShowPhone] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
 

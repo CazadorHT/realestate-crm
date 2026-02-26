@@ -86,8 +86,24 @@ export function PropertyHeader({
   language: customLanguage,
   keySellingPoints: incomingKeySellingPoints,
 }: PropertyHeaderProps) {
-  const { language: globalLanguage, t } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
+
+  // Custom t function for language override
+  const t = (key: string, params?: Record<string, string | number>) => {
+    if (!customLanguage) return globalT(key, params);
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    let value =
+      key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+
+    if (params && typeof value === "string") {
+      Object.entries(params).forEach(([k, v]) => {
+        value = value.replace(`{${k}}`, String(v));
+      });
+    }
+    return value;
+  };
 
   const { localized, loading: locationLoading } = useAddressLocalization(
     property.province,
@@ -486,7 +502,7 @@ export function PropertyHeader({
             </div>
             {/* Key Selling Points */}
             <div className="w-full max-w-[950px] ">
-                {/* <KeySellingPoints
+              {/* <KeySellingPoints
                   points={finalKeySellingPoints}
                   listingType={property.listing_type || "SALE"}
                 /> */}

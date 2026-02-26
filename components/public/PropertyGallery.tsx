@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { IoShieldCheckmark } from "react-icons/io5";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { PropertyImage } from "@/features/properties/types";
 
 interface PropertyGalleryProps {
@@ -30,6 +31,7 @@ interface PropertyGalleryProps {
   isHot?: boolean;
   verified?: boolean;
   petFriendly?: boolean;
+  language?: "th" | "en" | "cn";
 }
 
 // ImageWithFallback as a separate component to avoid re-creation on every render
@@ -116,11 +118,18 @@ export function PropertyGallery({
   isHot,
   verified,
   petFriendly,
+  language: customLanguage,
 }: PropertyGalleryProps) {
-  // Debug log for incoming images
-  // console.log(
-  //   `[PropertyGallery] Received ${images?.length} images for "${title}"`,
-  // );
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Custom t function for language override
+  const t = (key: string) => {
+    if (!customLanguage) return globalT(key);
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
 
   const [open, setOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -182,7 +191,7 @@ export function PropertyGallery({
       <div className="w-full aspect-video bg-slate-100 rounded-3xl flex items-center justify-center text-slate-400">
         <div className="flex flex-col items-center">
           <ImageIcon className="h-12 w-12 opacity-50 mb-2" />
-          <span className="block font-medium">ไม่มีรูปภาพ</span>
+          <span className="block font-medium">{t("common.no_images")}</span>
         </div>
       </div>
     );
@@ -230,7 +239,7 @@ export function PropertyGallery({
           <div className="absolute top-3 right-3 z-20">
             <Badge className="bg-black/60 text-white hover:bg-black/70 border-none backdrop-blur-md text-[10px] px-2 py-1">
               <ImageIcon className="w-3 h-3 mr-1" />
-              {sortedImages.length} รูป
+              {sortedImages.length} {t("common.images")}
             </Badge>
           </div>
 
@@ -345,7 +354,7 @@ export function PropertyGallery({
                 {/* Overlay for the last visible image if more exist */}
                 {idx === 3 && remainingCount > 0 && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg backdrop-blur-[2px] hover:bg-black/60 transition-colors">
-                    +{remainingCount} รูป
+                    +{remainingCount} {t("common.images")}
                   </div>
                 )}
               </div>
@@ -366,7 +375,7 @@ export function PropertyGallery({
               onClick={() => setOpen(true)}
             >
               <ImageIcon className="w-4 h-4 mr-1.5 lg:mr-2" />
-              ดูรูปทั้งหมด ({sortedImages.length})
+              {t("common.view_all_images")} ({sortedImages.length})
             </Button>
           </div>
         </div>

@@ -63,8 +63,16 @@ export function NearbyPlaces({
   transits = [],
   language: customLanguage,
 }: NearbyPlacesProps) {
-  const { language: globalLanguage, t } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
+
+  // Custom t function for language override
+  const t = (key: string) => {
+    if (!customLanguage) return globalT(key);
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
 
   // Group nearby places by category (NOT including transits)
   const grouped = data.reduce(

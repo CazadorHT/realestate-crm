@@ -282,6 +282,7 @@ export default async function PropertyDetailsPage({
             keySellingPoints={keySellingPoints}
             className="pt-4 lg:pt-6"
             hideBreadcrumbs={true}
+            language="th"
           />
 
           <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-4 lg:mt-8">
@@ -293,6 +294,7 @@ export default async function PropertyDetailsPage({
                 isHot={false}
                 verified={!!property.verified}
                 petFriendly={!!property.meta_keywords?.includes("Pet Friendly")}
+                language="th"
               />
             </section>
 
@@ -309,13 +311,17 @@ export default async function PropertyDetailsPage({
                   landSize={property.land_size_sqwah}
                   floor={property.floor}
                   type={property.property_type}
+                  language="th"
                 />
 
                 {/* Badges ticker */}
-                <PropertyBadgesSection property={property as any} />
+                <PropertyBadgesSection
+                  property={property as any}
+                  language="th"
+                />
 
                 {/* Description */}
-                <PropertyDescription property={property as any} />
+                <PropertyDescription property={property as any} language="th" />
 
                 {/* Nearby */}
                 <NearbyPlaces
@@ -345,12 +351,13 @@ export default async function PropertyDetailsPage({
                         : undefined,
                     })),
                   ]}
+                  language="th"
                 />
 
                 <hr className="border-slate-100" />
 
                 {/* Amenities */}
-                <PropertyAmenities features={features} />
+                <PropertyAmenities features={features} language="th" />
 
                 <hr className="border-slate-100" />
 
@@ -477,6 +484,7 @@ export default async function PropertyDetailsPage({
                   price={property.price ?? null}
                   rentalPrice={property.rental_price ?? null}
                   propertyType={property.property_type || undefined}
+                  language="th"
                 />
 
                 {/* Owner Card (Protected) */}

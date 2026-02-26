@@ -283,6 +283,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                 isHot={false}
                 verified={values.verified}
                 petFriendly={values.is_pet_friendly}
+                language={previewLanguage}
               />
             </section>
 
@@ -490,6 +491,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                 <hr className="border-slate-100" />
                 <PropertyMapSection
                   googleMapsLink={values.google_maps_link || null}
+                  language={previewLanguage}
                 />
               </div>
 
@@ -511,6 +513,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                     propertyId="preview-id"
                     propertyTitle={values.title}
                     shareUrl="#"
+                    language={previewLanguage}
                   />
                 </div>
               </div>

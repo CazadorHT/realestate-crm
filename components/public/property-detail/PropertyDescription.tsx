@@ -19,8 +19,16 @@ export function PropertyDescription({
   property,
   language: customLanguage,
 }: PropertyDescriptionProps) {
-  const { language: globalLanguage, t } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
+
+  // Custom t function for language override
+  const t = (key: string) => {
+    if (!customLanguage) return globalT(key);
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
   const [isExpanded, setIsExpanded] = useState(false);
   const [shouldShowButton, setShouldShowButton] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
