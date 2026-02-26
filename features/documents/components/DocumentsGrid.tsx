@@ -135,25 +135,25 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
             <Button
-              variant={filterType === "ALL" ? "white" : "ghost"}
+              variant="ghost"
               size="sm"
-              className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "ALL" ? "shadow-sm" : "hover:bg-white/50"}`}
+              className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "ALL" ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
               onClick={() => setFilterType("ALL")}
             >
               ทั้งหมด
             </Button>
             <Button
-              variant={filterType === "DOCUMENT" ? "white" : "ghost"}
+              variant="ghost"
               size="sm"
-              className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "DOCUMENT" ? "shadow-sm" : "hover:bg-white/50"}`}
+              className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "DOCUMENT" ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
               onClick={() => setFilterType("DOCUMENT")}
             >
               เอกสาร
             </Button>
             <Button
-              variant={filterType === "SLIP" ? "white" : "ghost"}
+              variant="ghost"
               size="sm"
-              className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "SLIP" ? "shadow-sm" : "hover:bg-white/50"}`}
+              className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "SLIP" ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
               onClick={() => setFilterType("SLIP")}
             >
               สลิป

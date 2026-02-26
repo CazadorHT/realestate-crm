@@ -125,7 +125,7 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
         version: finalVersion,
         created_by: user.id,
         is_encrypted: false, // Phase 3 item
-      })
+      } as any)
       .select()
       .single();
 

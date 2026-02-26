@@ -41,7 +41,7 @@ export async function createTemplateAction(input: CreateTemplateInput) {
       .insert({
         ...validated,
         created_by: user.id,
-      })
+      } as any)
       .select()
       .single();
 
