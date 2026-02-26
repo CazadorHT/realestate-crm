@@ -1974,6 +1974,7 @@ export type Database = {
         | "TITLE_DEED"
         | "OTHER"
         | "RESERVATION_DOCUMENT"
+        | "RENT_RECEIPT"
       esign_status: "DRAFT" | "SENT" | "SIGNED" | "DECLINED" | "EXPIRED"
       lead_activity_type:
         | "CALL"
@@ -2160,6 +2161,7 @@ export const Constants = {
         "TITLE_DEED",
         "OTHER",
         "RESERVATION_DOCUMENT",
+        "RENT_RECEIPT",
       ],
       esign_status: ["DRAFT", "SENT", "SIGNED", "DECLINED", "EXPIRED"],
       lead_activity_type: [

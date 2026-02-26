@@ -299,3 +299,71 @@ export async function downloadDocumentAction(storagePath: string) {
     return { success: false, message: error.message };
   }
 }
+// 6. Search Owner records
+export async function searchOwnerAction(
+  type: DocumentOwnerType,
+  query: string,
+) {
+  try {
+    const { supabase, role } = await requireAuthContext();
+    assertStaff(role);
+
+    const q = query.trim();
+    if (!q) return [];
+
+    if (type === "LEAD") {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("id, full_name, email")
+        .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`)
+        .limit(10);
+      if (error) throw error;
+      return (data || []).map((l) => ({
+        id: l.id,
+        label: `${l.full_name} (${l.email || "N/A"})`,
+      }));
+    } else if (type === "PROPERTY") {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("id, title")
+        .ilike("title", `%${q}%`)
+        .is("deleted_at", null)
+        .limit(10);
+      if (error) throw error;
+      return (data || []).map((p) => ({
+        id: p.id,
+        label: p.title,
+      }));
+    } else if (type === "DEAL") {
+      const { data, error } = await supabase
+        .from("deals")
+        .select("id, leads(full_name), properties(title)")
+        .or(`leads.full_name.ilike.%${q}%,properties.title.ilike.%${q}%`)
+        .limit(10);
+      if (error) throw error;
+      return (data || []).map((d: any) => ({
+        id: d.id,
+        label: `${d.leads?.full_name || "Unknown Lead"} - ${d.properties?.title || "Unknown Property"}`,
+      }));
+    } else if (type === "RENTAL_CONTRACT") {
+      // For rental contracts, we usually search by lead name or property in the associated deal
+      const { data, error } = await supabase
+        .from("rental_contracts")
+        .select("id, deals(leads(full_name), properties(title))")
+        .or(
+          `deals.leads.full_name.ilike.%${q}%,deals.properties.title.ilike.%${q}%`,
+        )
+        .limit(10);
+      if (error) throw error;
+      return (data || []).map((c: any) => ({
+        id: c.id,
+        label: `Contract: ${c.deals?.leads?.full_name || "N/A"} - ${c.deals?.properties?.title || "N/A"}`,
+      }));
+    }
+
+    return [];
+  } catch (err) {
+    console.error("Search Owner Error:", err);
+    return [];
+  }
+}

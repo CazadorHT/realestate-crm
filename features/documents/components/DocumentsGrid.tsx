@@ -16,6 +16,8 @@ import {
   Eye,
   Search,
   X,
+  CreditCard,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useTableSelection } from "@/hooks/useTableSelection";
@@ -65,11 +67,21 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
   } = useTableSelection(allIds);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<string>("ALL");
 
   const filteredDocuments = useMemo(() => {
-    if (!searchQuery.trim()) return documents;
+    let result = documents;
+
+    // Filter by type
+    if (filterType === "SLIP") {
+      result = result.filter((doc) => doc.document_type === "SLIP");
+    } else if (filterType === "DOCUMENT") {
+      result = result.filter((doc) => doc.document_type !== "SLIP");
+    }
+
+    if (!searchQuery.trim()) return result;
     const query = searchQuery.toLowerCase();
-    return documents.filter((doc) => {
+    return result.filter((doc) => {
       return (
         doc.file_name.toLowerCase().includes(query) ||
         doc.document_type?.toLowerCase().includes(query) ||
@@ -120,22 +132,51 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
               : `แสดง ${documents.length} เอกสาร`}
           </p>
         </div>
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="ค้นหาชื่อไฟล์, ประเภท หรือลูกค้า..."
-            className="pl-10 pr-10 bg-white"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <Button
+              variant={filterType === "ALL" ? "white" : "ghost"}
+              size="sm"
+              className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "ALL" ? "shadow-sm" : "hover:bg-white/50"}`}
+              onClick={() => setFilterType("ALL")}
             >
-              <X className="h-4 w-4" />
-            </button>
-          )}
+              ทั้งหมด
+            </Button>
+            <Button
+              variant={filterType === "DOCUMENT" ? "white" : "ghost"}
+              size="sm"
+              className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "DOCUMENT" ? "shadow-sm" : "hover:bg-white/50"}`}
+              onClick={() => setFilterType("DOCUMENT")}
+            >
+              เอกสาร
+            </Button>
+            <Button
+              variant={filterType === "SLIP" ? "white" : "ghost"}
+              size="sm"
+              className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "SLIP" ? "shadow-sm" : "hover:bg-white/50"}`}
+              onClick={() => setFilterType("SLIP")}
+            >
+              สลิป
+            </Button>
+          </div>
+
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="ค้นหาชื่อไฟล์, ประเภท หรือลูกค้า..."
+              className="pl-10 pr-10 bg-white"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -178,8 +219,18 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                       onCheckedChange={() => toggleSelect(doc.id)}
                       aria-label={`เลือก ${doc.file_name}`}
                     />
-                    <div className="h-12 w-12 bg-linear-to-br from-blue-50 to-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0 border border-blue-200">
-                      <FileText className="h-6 w-6" />
+                    <div
+                      className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${
+                        doc.document_type === "SLIP"
+                          ? "bg-linear-to-br from-emerald-50 to-emerald-100 text-emerald-600 border-emerald-200"
+                          : "bg-linear-to-br from-blue-50 to-blue-100 text-blue-600 border-blue-200"
+                      }`}
+                    >
+                      {doc.document_type === "SLIP" ? (
+                        <ImageIcon className="h-6 w-6" />
+                      ) : (
+                        <FileText className="h-6 w-6" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div
@@ -195,7 +246,11 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                   </div>
                   <Badge
                     variant="outline"
-                    className="text-xs shrink-0 bg-blue-50 text-blue-700 border-blue-200"
+                    className={`text-xs shrink-0 border shadow-xs ${
+                      doc.document_type === "SLIP"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-blue-50 text-blue-700 border-blue-200"
+                    }`}
                   >
                     {DOC_TYPE_LABELS[doc.document_type?.toUpperCase() || ""] ||
                       doc.document_type ||
@@ -368,7 +423,7 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8"
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>

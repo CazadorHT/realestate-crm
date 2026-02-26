@@ -52,6 +52,8 @@ export const siteConfig = {
     lineId: "@vcconnectasset",
     address: "ที่ตั้งออฟฟิศของคุณ...",
   },
+  companySignature: "/images/v-link-svg-png-logo.svg",
+  companyStamp: "/images/v-link-svg-png-dark.svg",
   tier: (process.env.NEXT_PUBLIC_APP_TIER || process.env.APP_TIER || "PRO") as
     | "LITE"
     | "PRO"

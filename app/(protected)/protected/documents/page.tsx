@@ -39,7 +39,7 @@ export default async function DocumentsPage() {
         gradient="blue"
         actionSlot={
           <div className="flex gap-2">
-            <TemplateDialog ownerId="" ownerType="LEAD" />
+            <TemplateDialog />
             <UploadDocumentDialog />
           </div>
         }
