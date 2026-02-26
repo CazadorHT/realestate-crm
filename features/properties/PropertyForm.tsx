@@ -286,7 +286,7 @@ export function PropertyForm({
       const canProceed = await checkDuplicates(values);
       if (!canProceed) return;
 
-      let result: CreatePropertyResult | { success: boolean; message?: string };
+      let result: CreatePropertyResult;
 
       if (mode === "create") {
         result = await createPropertyAction({ ...values }, uploadSessionId);
@@ -299,29 +299,8 @@ export function PropertyForm({
       }
 
       if (result.success) {
-        // === SAVE FEATURES ===
         const propertyId =
-          mode === "create" ? (result as any).data?.id : defaultValues!.id;
-
-        if (propertyId && values.feature_ids) {
-          const { createClient } = await import("@/lib/supabase/client");
-          const supabase = createClient();
-
-          if (mode === "edit") {
-            await supabase
-              .from("property_features")
-              .delete()
-              .eq("property_id", propertyId);
-          }
-
-          if (values.feature_ids.length > 0) {
-            const insertData = values.feature_ids.map((fid) => ({
-              property_id: propertyId,
-              feature_id: fid,
-            }));
-            await supabase.from("property_features").insert(insertData);
-          }
-        }
+          mode === "create" ? result.propertyId! : defaultValues!.id;
 
         toast.success(
           mode === "create" ? "เพิ่มทรัพย์ใหม่สำเร็จ" : "บันทึกข้อมูลสำเร็จ",
@@ -332,7 +311,7 @@ export function PropertyForm({
         // router.push("/protected/properties");
         setSuccessData({
           id: propertyId,
-          slug: (result as any).slug,
+          slug: result.slug,
         });
       } else {
         toast.error(result.message || "เกิดข้อผิดพลาด");
@@ -361,7 +340,7 @@ export function PropertyForm({
         // router.push("/protected/properties");
         setSuccessData({
           id: result.propertyId!,
-          slug: (result as any).slug,
+          slug: result.slug,
         });
       } else {
         toast.error(result.message || "เกิดข้อผิดพลาด");
