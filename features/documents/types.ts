@@ -9,8 +9,27 @@ export type DocumentWithRelations = {
   owner_id: string;
   property?: { id: string; title: string } | null;
   lead?: { id: string; full_name: string | null; email: string | null } | null;
-  deal?: { id: string; property: { title: string } | null } | null;
-  rental_contract?: { id: string; property: { title: string } | null } | null;
+  deal?: {
+    id: string;
+    property: { title: string } | null;
+    lead?: {
+      id: string;
+      full_name: string | null;
+      email: string | null;
+    } | null;
+  } | null;
+  rental_contract?: {
+    id: string;
+    deal?: {
+      id: string;
+      property: { title: string } | null;
+      lead?: {
+        id: string;
+        full_name: string | null;
+        email: string | null;
+      } | null;
+    } | null;
+  } | null;
   esign_status?: string | null;
   esign_envelope_id?: string | null;
   esign_signed_at?: string | null;

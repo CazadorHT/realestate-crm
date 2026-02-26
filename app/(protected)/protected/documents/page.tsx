@@ -1,7 +1,5 @@
 import { getAllDocuments } from "@/features/documents/actions";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 import { UploadDocumentDialog } from "./_components/UploadDocumentDialog";
 import { DocumentsGrid } from "@/features/documents/components/DocumentsGrid";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -41,10 +39,7 @@ export default async function DocumentsPage() {
         gradient="blue"
         actionSlot={
           <div className="flex gap-2">
-            <TemplateDialog
-              ownerId="" // Global context doesn't have a specific ownerId for generation yet, but we'll handle it
-              ownerType="LEAD"
-            />
+            <TemplateDialog ownerId="" ownerType="LEAD" />
             <UploadDocumentDialog />
           </div>
         }
@@ -53,27 +48,8 @@ export default async function DocumentsPage() {
       {/* Statistics Cards */}
       <DocumentStats documents={documents} />
 
-      {/* Documents Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">
-              รายการเอกสารทั้งหมด
-            </h2>
-            <p className="text-sm text-slate-500 mt-1">
-              แสดง {documents?.length || 0} เอกสาร
-            </p>
-          </div>
-          {/* Search - Placeholder */}
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input placeholder="ค้นหาเอกสาร..." className="pl-10" disabled />
-          </div>
-        </div>
-
-        {/* Documents Grid */}
-        <DocumentsGrid documents={documents || []} />
-      </div>
+      {/* Documents Grid */}
+      <DocumentsGrid documents={documents || []} />
 
       {/* Footer Stats */}
       {documents && documents.length > 0 && (

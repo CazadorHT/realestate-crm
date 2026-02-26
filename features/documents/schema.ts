@@ -34,6 +34,13 @@ export const DocumentOwnerTypeEnum = z.enum([
   "RENTAL_CONTRACT",
 ]);
 
+export const DOC_OWNER_TYPE_LABELS: Record<string, string> = {
+  LEAD: "จากลีด/ลูกค้า",
+  PROPERTY: "จากทรัพย์",
+  DEAL: "จากดีล",
+  RENTAL_CONTRACT: "จากสัญญาเช่า",
+};
+
 export const createDocumentSchema = z.object({
   owner_id: z.string().uuid(),
   owner_type: DocumentOwnerTypeEnum,

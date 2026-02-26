@@ -18,6 +18,12 @@ import { ESignDialog } from "./ESignDialog";
 import { AIDocumentInsight } from "./AIDocumentInsight";
 import { DocumentPreviewDialog } from "./DocumentPreviewDialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DocumentListProps {
   ownerId: string;
@@ -97,7 +103,9 @@ export function DocumentList({
                 </div>
                 <div className="text-xs text-muted-foreground flex gap-2">
                   <span>
-                    {DOC_TYPE_LABELS[doc.document_type] || doc.document_type}
+                    {DOC_TYPE_LABELS[doc.document_type?.toUpperCase()] ||
+                      doc.document_type ||
+                      "อื่นๆ"}
                   </span>
                   <span>•</span>
                   <span>
@@ -109,54 +117,97 @@ export function DocumentList({
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
-              <VersionHistoryDialog
-                documentId={doc.id}
-                documentName={doc.file_name}
-                ownerId={ownerId}
-                ownerType={ownerType}
-              />
-              {ownerType === "LEAD" && (
-                <ESignDialog
-                  documentId={doc.id}
-                  documentName={doc.file_name}
-                  currentStatus={doc.esign_status}
-                  recipientEmail={doc.lead?.email || (doc as any).email} // Fallback if lead joined
-                />
-              )}
-              <AIDocumentInsight
-                documentId={doc.id}
-                documentName={doc.file_name}
-                initialSummary={doc.ai_summary}
-                initialAnalysis={doc.ai_analysis}
-              />
-              <DocumentPreviewDialog
-                documentId={doc.id}
-                documentName={doc.file_name}
-                storagePath={doc.storage_path}
-                trigger={
-                  <Button variant="ghost" size="icon">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                }
-              />
-              <ConfirmDialog
-                title="ลบเอกสาร"
-                description={`คุณแน่ใจหรือไม่ที่จะลบเอกสาร "${doc.file_name}"?`}
-                confirmText="ลบออก"
-                variant="destructive"
-                onConfirm={() => handleDelete(doc.id, doc.storage_path)}
-                trigger={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                }
-              />
-            </div>
+            <TooltipProvider delayDuration={0}>
+              <div className="flex items-center gap-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <VersionHistoryDialog
+                        documentId={doc.id}
+                        documentName={doc.file_name}
+                        ownerId={ownerId}
+                        ownerType={ownerType}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>ประวัติเวอร์ชัน</TooltipContent>
+                </Tooltip>
+
+                {ownerType === "LEAD" && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <ESignDialog
+                          documentId={doc.id}
+                          documentName={doc.file_name}
+                          currentStatus={doc.esign_status}
+                          recipientEmail={doc.lead?.email || (doc as any).email}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>ส่งเซ็น E-Signature</TooltipContent>
+                  </Tooltip>
+                )}
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <AIDocumentInsight
+                        documentId={doc.id}
+                        documentName={doc.file_name}
+                        initialSummary={doc.ai_summary}
+                        initialAnalysis={doc.ai_analysis}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>วิเคราะห์ด้วย AI</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DocumentPreviewDialog
+                        documentId={doc.id}
+                        documentName={doc.file_name}
+                        storagePath={doc.storage_path}
+                        trigger={
+                          <Button variant="ghost" size="icon">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>ดูพรีวิวเอกสาร</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <ConfirmDialog
+                        title="ลบเอกสาร"
+                        description={`คุณแน่ใจหรือไม่ที่จะลบเอกสาร "${doc.file_name}"?`}
+                        confirmText="ลบออก"
+                        variant="destructive"
+                        onConfirm={() => handleDelete(doc.id, doc.storage_path)}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-red-600 text-white border-red-600 fill-red-600">
+                    ลบเอกสาร
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
           </CardContent>
         </Card>
       ))}

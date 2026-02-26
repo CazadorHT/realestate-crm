@@ -117,7 +117,7 @@ export function ESignDialog({
           <PenTool className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-fit min-w-[400px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <PenTool className="h-5 w-5 text-indigo-600" />

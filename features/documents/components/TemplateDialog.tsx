@@ -102,7 +102,7 @@ export function TemplateDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="lg" className="gap-2">
             <FileText className="h-4 w-4" />
             สร้างจาก Template
           </Button>

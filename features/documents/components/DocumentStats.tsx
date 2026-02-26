@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
+import { DOC_TYPE_LABELS } from "../schema";
 
 interface DocumentStatsProps {
   documents: any[];
@@ -110,9 +111,9 @@ export function DocumentStats({ documents }: DocumentStatsProps) {
                 <Badge
                   key={type}
                   variant="outline"
-                  className="bg-white border-purple-200 text-purple-700"
+                  className="bg-white border-purple-200 text-purple-700 font-medium"
                 >
-                  {type}: {count}
+                  {DOC_TYPE_LABELS[type.toUpperCase()] || type}: {count}
                 </Badge>
               ))}
             </div>

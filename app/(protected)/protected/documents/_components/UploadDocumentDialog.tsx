@@ -99,7 +99,7 @@ export function UploadDocumentDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button size="lg" >
           <Upload className="mr-2 h-4 w-4" />
           อัพโหลดเอกสาร
         </Button>

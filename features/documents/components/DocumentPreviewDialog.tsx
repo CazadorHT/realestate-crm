@@ -89,8 +89,8 @@ export function DocumentPreviewDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0">
+      <DialogContent className="max-w-7xl! h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="py-4 px-10 border-b flex flex-row items-center justify-between space-y-0">
           <DialogTitle className="text-base font-medium truncate pr-4">
             ดูตัวอย่างเอกสาร: {documentName}
           </DialogTitle>

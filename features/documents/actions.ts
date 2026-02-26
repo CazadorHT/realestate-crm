@@ -68,14 +68,18 @@ export async function getAllDocuments(limit = 50) {
         } else if (doc.owner_type === "DEAL") {
           const { data: deal } = await supabase
             .from("deals")
-            .select("id, property:properties(title)")
+            .select(
+              "id, property:properties(title), lead:leads(id, full_name, email)",
+            )
             .eq("id", doc.owner_id)
             .single();
           ownerData = { deal };
         } else if (doc.owner_type === "RENTAL_CONTRACT") {
           const { data: contract } = await supabase
             .from("rental_contracts")
-            .select("id, property:properties(title)")
+            .select(
+              "id, deal:deals(id, property:properties(title), lead:leads(id, full_name, email))",
+            )
             .eq("id", doc.owner_id)
             .single();
           ownerData = { rental_contract: contract };

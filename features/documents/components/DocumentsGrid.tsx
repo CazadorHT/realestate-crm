@@ -7,7 +7,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Calendar, User, Download, Trash2, Eye } from "lucide-react";
+import {
+  FileText,
+  Calendar,
+  User,
+  Download,
+  Trash2,
+  Eye,
+  Search,
+  X,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteDocumentsAction } from "@/features/documents/bulk-actions";
@@ -18,7 +28,13 @@ import { AIDocumentInsight } from "./AIDocumentInsight";
 import { DocumentPreviewDialog } from "./DocumentPreviewDialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DocumentWithRelations } from "../types";
-import { DOC_TYPE_LABELS } from "../schema";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { DOC_TYPE_LABELS, DOC_OWNER_TYPE_LABELS } from "../schema";
 
 interface DocumentsGridProps {
   documents: DocumentWithRelations[];
@@ -48,6 +64,26 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
     selectedIds,
   } = useTableSelection(allIds);
 
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredDocuments = useMemo(() => {
+    if (!searchQuery.trim()) return documents;
+    const query = searchQuery.toLowerCase();
+    return documents.filter((doc) => {
+      return (
+        doc.file_name.toLowerCase().includes(query) ||
+        doc.document_type?.toLowerCase().includes(query) ||
+        doc.lead?.full_name?.toLowerCase().includes(query) ||
+        doc.property?.title?.toLowerCase().includes(query)
+      );
+    });
+  }, [documents, searchQuery]);
+
+  const filteredIds = useMemo(
+    () => filteredDocuments.map((d) => d.id),
+    [filteredDocuments],
+  );
+
   const handleDelete = async (id: string, storagePath: string) => {
     const result = await bulkDeleteDocumentsAction([id]);
     if (result.success) {
@@ -72,6 +108,37 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
 
   return (
     <div className="space-y-4">
+      {/* Search & Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">
+            รายการเอกสารทั้งหมด
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">
+            {searchQuery
+              ? `พบ ${filteredDocuments.length} รายการจากผลการค้นหา`
+              : `แสดง ${documents.length} เอกสาร`}
+          </p>
+        </div>
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="ค้นหาชื่อไฟล์, ประเภท หรือลูกค้า..."
+            className="pl-10 pr-10 bg-white"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
       <BulkActionToolbar
         selectedCount={selectedCount}
         onClear={clearSelection}
@@ -80,11 +147,11 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
       />
 
       {/* Select All Header */}
-      {documents && documents.length > 0 && (
+      {filteredDocuments && filteredDocuments.length > 0 && (
         <div className="flex items-center gap-2 px-2">
           <Checkbox
-            checked={isAllSelected}
-            onCheckedChange={() => toggleSelectAll(allIds)}
+            checked={isAllSelected && filteredDocuments.length > 0}
+            onCheckedChange={() => toggleSelectAll(filteredIds)}
             aria-label="เลือกทั้งหมด"
             className={
               isPartialSelected ? "data-[state=checked]:bg-primary/50" : ""
@@ -95,8 +162,8 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
       )}
 
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {documents && documents.length > 0 ? (
-          documents.map((doc) => (
+        {filteredDocuments && filteredDocuments.length > 0 ? (
+          filteredDocuments.map((doc) => (
             <Card
               key={doc.id}
               className={`hover:shadow-lg hover:border-blue-200 transition-all ${
@@ -130,8 +197,9 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                     variant="outline"
                     className="text-xs shrink-0 bg-blue-50 text-blue-700 border-blue-200"
                   >
-                    {DOC_TYPE_LABELS[doc.document_type || ""] ||
-                      doc.document_type}
+                    {DOC_TYPE_LABELS[doc.document_type?.toUpperCase() || ""] ||
+                      doc.document_type ||
+                      "อื่นๆ"}
                   </Badge>
                 </div>
 
@@ -145,96 +213,176 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-slate-400" />
                     <span className="text-xs">
-                      {doc.owner_type === "PROPERTY" && doc.property?.title ? (
-                        <>
-                          ทรัพย์:{" "}
-                          <span className="font-medium">
-                            {doc.property.title}
-                          </span>
-                        </>
-                      ) : doc.owner_type === "LEAD" && doc.lead ? (
-                        <>
-                          ลีด:{" "}
-                          <span className="font-medium">
-                            {doc.lead.full_name || doc.lead.email}
-                          </span>
-                        </>
-                      ) : doc.owner_type === "DEAL" &&
-                        doc.deal?.property?.title ? (
-                        <>
-                          ดีล:{" "}
-                          <span className="font-medium">
-                            {doc.deal.property.title}
-                          </span>
-                        </>
-                      ) : doc.owner_type === "RENTAL_CONTRACT" &&
-                        doc.rental_contract?.property?.title ? (
-                        <>
-                          สัญญา:{" "}
-                          <span className="font-medium">
-                            {doc.rental_contract.property.title}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-slate-400">{doc.owner_type}</span>
-                      )}
+                      <span className="text-slate-500 mr-1">
+                        {DOC_OWNER_TYPE_LABELS[doc.owner_type] ||
+                          doc.owner_type}
+                        :
+                      </span>
+                      <span className="font-medium text-slate-700">
+                        {doc.owner_type === "PROPERTY" ? (
+                          doc.property?.title || "ไม่ระบุชื่อทรัพย์"
+                        ) : doc.owner_type === "LEAD" ? (
+                          doc.lead?.full_name ||
+                          doc.lead?.email ||
+                          "ไม่ระบุชื่อลูกค้า"
+                        ) : doc.owner_type === "DEAL" ? (
+                          doc.deal ? (
+                            <>
+                              {doc.deal.property?.title || "ไม่ระบุชื่อทรัพย์"}{" "}
+                              {doc.deal.lead ? (
+                                <span className="text-slate-400 font-normal">
+                                  (
+                                  {doc.deal.lead.full_name ||
+                                    doc.deal.lead.email}
+                                  )
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 font-normal">
+                                  (ไม่ระบุลูกค้า)
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            "ไม่พบข้อมูลดีล"
+                          )
+                        ) : doc.owner_type === "RENTAL_CONTRACT" ? (
+                          doc.rental_contract?.deal ? (
+                            <>
+                              {doc.rental_contract.deal.property?.title ||
+                                "ไม่ระบุชื่อทรัพย์"}{" "}
+                              {doc.rental_contract.deal.lead ? (
+                                <span className="text-slate-400 font-normal">
+                                  (
+                                  {doc.rental_contract.deal.lead.full_name ||
+                                    doc.rental_contract.deal.lead.email}
+                                  )
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 font-normal">
+                                  (ไม่ระบุลูกค้า)
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            "ไม่พบข้อมูลสัญญาเช่า"
+                          )
+                        ) : (
+                          doc.owner_id
+                        )}
+                      </span>
                     </span>
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 items-center justify-between">
-                  <DocumentPreviewDialog
-                    documentId={doc.id}
-                    documentName={doc.file_name}
-                    storagePath={doc.storage_path}
-                    trigger={
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <Eye className="h-4 w-4" />
-                        ดูตัวอย่าง
-                      </Button>
-                    }
-                  />
-                  <VersionHistoryDialog
-                    documentId={doc.id}
-                    documentName={doc.file_name}
-                    ownerId={doc.owner_id}
-                    ownerType={doc.owner_type}
-                  />
-                  {doc.owner_type === "LEAD" && (
-                    <>
-                      <ESignDialog
-                        documentId={doc.id}
-                        documentName={doc.file_name}
-                        currentStatus={doc.esign_status}
-                        recipientEmail={doc.lead?.email}
-                      />
-                      <AIDocumentInsight
-                        documentId={doc.id}
-                        documentName={doc.file_name}
-                        initialSummary={doc.ai_summary}
-                        initialAnalysis={doc.ai_analysis}
-                      />
-                    </>
-                  )}
-                  <div className="flex gap-1 ml-auto">
-                    <ConfirmDialog
-                      title="ลบเอกสาร"
-                      description={`คุณแน่ใจหรือไม่ที่จะลบเอกสาร "${doc.file_name}"?`}
-                      confirmText="ลบออก"
-                      variant="destructive"
-                      onConfirm={() => handleDelete(doc.id, doc.storage_path)}
-                      trigger={
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      }
-                    />
+                <TooltipProvider delayDuration={0}>
+                  <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 items-center justify-between">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <DocumentPreviewDialog
+                            documentId={doc.id}
+                            documentName={doc.file_name}
+                            storagePath={doc.storage_path}
+                            trigger={
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                              >
+                                <Eye className="h-4 w-4" />
+                                ดูตัวอย่าง
+                              </Button>
+                            }
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>ดูพรีวิวเอกสาร</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <VersionHistoryDialog
+                            documentId={doc.id}
+                            documentName={doc.file_name}
+                            ownerId={doc.owner_id}
+                            ownerType={doc.owner_type}
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>ประวัติเวอร์ชัน</TooltipContent>
+                    </Tooltip>
+
+                    {(doc.owner_type === "LEAD" ||
+                      doc.owner_type === "DEAL" ||
+                      doc.owner_type === "RENTAL_CONTRACT") && (
+                      <>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <ESignDialog
+                                documentId={doc.id}
+                                documentName={doc.file_name}
+                                currentStatus={doc.esign_status}
+                                recipientEmail={
+                                  doc.owner_type === "LEAD"
+                                    ? doc.lead?.email
+                                    : doc.owner_type === "DEAL"
+                                      ? doc.deal?.lead?.email
+                                      : doc.rental_contract?.deal?.lead?.email
+                                }
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>ส่งเซ็น E-Signature</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <AIDocumentInsight
+                                documentId={doc.id}
+                                documentName={doc.file_name}
+                                initialSummary={doc.ai_summary}
+                                initialAnalysis={doc.ai_analysis}
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>วิเคราะห์ด้วย AI</TooltipContent>
+                        </Tooltip>
+                      </>
+                    )}
+                    <div className="flex gap-1 ml-auto">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            <ConfirmDialog
+                              title="ลบเอกสาร"
+                              description={`คุณแน่ใจหรือไม่ที่จะลบเอกสาร "${doc.file_name}"?`}
+                              confirmText="ลบออก"
+                              variant="destructive"
+                              onConfirm={() =>
+                                handleDelete(doc.id, doc.storage_path)
+                              }
+                              trigger={
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              }
+                            />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-red-600 text-white border-red-600 fill-red-600">
+                          ลบเอกสาร
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </div>
-                </div>
+                </TooltipProvider>
               </CardContent>
             </Card>
           ))
