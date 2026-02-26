@@ -55,13 +55,16 @@ export function ConfirmDialog({
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
-      <AlertDialogContent>
+      <AlertDialogContent className="sm:max-w-fit min-w-[350px]">
         <AlertDialogHeader>
           <AlertDialogTitle>{finalTitle}</AlertDialogTitle>
           <AlertDialogDescription>{finalDescription}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="text-blue-600" onClick={(e) => e.stopPropagation()}>
+          <AlertDialogCancel
+            className="text-blue-600"
+            onClick={(e) => e.stopPropagation()}
+          >
             {finalCancelText}
           </AlertDialogCancel>
           <AlertDialogAction

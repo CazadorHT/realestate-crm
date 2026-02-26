@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { getTemplatesAction } from "../template-actions";
 import { generateDocumentFromTemplateAction } from "../generation-actions";
+import { DOC_TYPE_LABELS } from "../schema";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ import { useRouter } from "next/navigation";
 interface TemplateDialogProps {
   ownerId: string;
   ownerType: "LEAD" | "PROPERTY" | "DEAL" | "RENTAL_CONTRACT";
+  onGenerateComplete?: () => void;
   trigger?: React.ReactNode;
 }
 
@@ -35,6 +37,7 @@ export function TemplateDialog({
   ownerId,
   ownerType,
   trigger,
+  onGenerateComplete,
 }: TemplateDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -82,6 +85,7 @@ export function TemplateDialog({
       if (res.success) {
         toast.success("สร้างเอกสารสำเร็จแล้ว!");
         setOpen(false);
+        if (onGenerateComplete) onGenerateComplete();
         router.refresh();
       } else {
         toast.error(res.message || "สร้างเอกสารไม่สำเร็จ");
@@ -104,7 +108,7 @@ export function TemplateDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wand2 className="h-5 w-5 text-blue-600" />
@@ -127,10 +131,10 @@ export function TemplateDialog({
               <SelectTrigger id="template">
                 <SelectValue placeholder="เลือกต้นแบบ..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-200">
                 {templates.map((t) => (
                   <SelectItem key={t.id} value={t.id}>
-                    {t.name} ({t.type})
+                    {t.name} ({DOC_TYPE_LABELS[t.type] || t.type})
                   </SelectItem>
                 ))}
                 {templates.length === 0 && (

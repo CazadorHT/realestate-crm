@@ -44,6 +44,7 @@ export function DocumentSection({ ownerId, ownerType }: Props) {
           <TemplateDialog
             ownerId={ownerId}
             ownerType={ownerType as any}
+            onGenerateComplete={() => setRefreshKey((k) => k + 1)}
             trigger={
               <Button
                 size="sm"

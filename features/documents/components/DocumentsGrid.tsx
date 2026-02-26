@@ -7,17 +7,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Calendar, User, Download, Trash2 } from "lucide-react";
+import { FileText, Calendar, User, Download, Trash2, Eye } from "lucide-react";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteDocumentsAction } from "@/features/documents/bulk-actions";
 import { toast } from "sonner";
-import { DocumentBtn } from "@/app/(protected)/protected/documents/DocumentBtn";
 import { VersionHistoryDialog } from "./VersionHistoryDialog";
 import { ESignDialog } from "./ESignDialog";
 import { AIDocumentInsight } from "./AIDocumentInsight";
-
+import { DocumentPreviewDialog } from "./DocumentPreviewDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DocumentWithRelations } from "../types";
+import { DOC_TYPE_LABELS } from "../schema";
 
 interface DocumentsGridProps {
   documents: DocumentWithRelations[];
@@ -46,6 +47,16 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
     selectedCount,
     selectedIds,
   } = useTableSelection(allIds);
+
+  const handleDelete = async (id: string, storagePath: string) => {
+    const result = await bulkDeleteDocumentsAction([id]);
+    if (result.success) {
+      toast.success("ลบเอกสารสำเร็จ");
+      window.location.reload();
+    } else {
+      toast.error(result.message || "เกิดข้อผิดพลาด");
+    }
+  };
 
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
@@ -119,7 +130,8 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                     variant="outline"
                     className="text-xs shrink-0 bg-blue-50 text-blue-700 border-blue-200"
                   >
-                    {doc.document_type}
+                    {DOC_TYPE_LABELS[doc.document_type || ""] ||
+                      doc.document_type}
                   </Badge>
                 </div>
 
@@ -171,7 +183,17 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                 </div>
 
                 <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 items-center justify-between">
-                  <DocumentBtn storagePath={doc.storage_path} />
+                  <DocumentPreviewDialog
+                    documentId={doc.id}
+                    documentName={doc.file_name}
+                    storagePath={doc.storage_path}
+                    trigger={
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Eye className="h-4 w-4" />
+                        ดูตัวอย่าง
+                      </Button>
+                    }
+                  />
                   <VersionHistoryDialog
                     documentId={doc.id}
                     documentName={doc.file_name}
@@ -194,6 +216,24 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                       />
                     </>
                   )}
+                  <div className="flex gap-1 ml-auto">
+                    <ConfirmDialog
+                      title="ลบเอกสาร"
+                      description={`คุณแน่ใจหรือไม่ที่จะลบเอกสาร "${doc.file_name}"?`}
+                      confirmText="ลบออก"
+                      variant="destructive"
+                      onConfirm={() => handleDelete(doc.id, doc.storage_path)}
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      }
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>

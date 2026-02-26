@@ -150,7 +150,9 @@ export async function getDocumentSignedUrl(
   // Create a signed URL valid for 1 hour (3600 seconds)
   const { data, error } = await supabase.storage
     .from(bucket)
-    .createSignedUrl(storagePath, 3600);
+    .createSignedUrl(storagePath, 3600, {
+      download: false,
+    });
 
   if (error) return null;
   return data.signedUrl;
@@ -268,5 +270,28 @@ export async function deleteDocumentAction(id: string, storagePath: string) {
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "An error occurred";
     return { success: false, message: msg };
+  }
+}
+
+/**
+ * 5. Download Document Content (for in-app preview)
+ */
+export async function downloadDocumentAction(storagePath: string) {
+  try {
+    const { supabase, role } = await requireAuthContext();
+    assertStaff(role);
+
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .download(storagePath);
+
+    if (error) throw error;
+
+    // Convert Blob to text
+    const text = await data.text();
+    return { success: true, data: text };
+  } catch (error: any) {
+    console.error("Download Document Error:", error);
+    return { success: false, message: error.message };
   }
 }

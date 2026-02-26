@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DocumentOwnerType, DocumentType } from "../schema";
+import { DocumentOwnerType, DocumentType, DOC_TYPE_LABELS } from "../schema";
 import {
   getDocumentsByOwner,
   getDocumentSignedUrl,
@@ -16,6 +16,8 @@ import { th } from "date-fns/locale";
 import { VersionHistoryDialog } from "./VersionHistoryDialog";
 import { ESignDialog } from "./ESignDialog";
 import { AIDocumentInsight } from "./AIDocumentInsight";
+import { DocumentPreviewDialog } from "./DocumentPreviewDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface DocumentListProps {
   ownerId: string;
@@ -30,6 +32,7 @@ export function DocumentList({
 }: DocumentListProps) {
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchDocs = async () => {
     setLoading(true);
@@ -52,15 +55,16 @@ export function DocumentList({
   };
 
   const handleDelete = async (id: string, storagePath: string) => {
-    if (!confirm("ยืนยันการลบไฟล์?")) return;
-
+    setLoading(true);
     const res = await deleteDocumentAction(id, storagePath);
     if (res.success) {
       toast.success("ลบไฟล์สำเร็จ");
       fetchDocs();
     } else {
       toast.error("ลบไฟล์ไม่สำเร็จ");
+      setLoading(false);
     }
+    setDeletingId(null);
   };
 
   if (loading)
@@ -88,11 +92,13 @@ export function DocumentList({
                 <FileText className="h-5 w-5" />
               </div>
               <div>
-                <div className="font-medium text-sm truncate max-w-[200px]">
+                <div className="font-medium text-sm truncate max-w-[400px]">
                   {doc.file_name}
                 </div>
                 <div className="text-xs text-muted-foreground flex gap-2">
-                  <span>{doc.document_type}</span>
+                  <span>
+                    {DOC_TYPE_LABELS[doc.document_type] || doc.document_type}
+                  </span>
                   <span>•</span>
                   <span>
                     {format(new Date(doc.created_at), "d MMM yy", {
@@ -124,21 +130,32 @@ export function DocumentList({
                 initialSummary={doc.ai_summary}
                 initialAnalysis={doc.ai_analysis}
               />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleView(doc.storage_path)}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                onClick={() => handleDelete(doc.id, doc.storage_path)}
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
+              <DocumentPreviewDialog
+                documentId={doc.id}
+                documentName={doc.file_name}
+                storagePath={doc.storage_path}
+                trigger={
+                  <Button variant="ghost" size="icon">
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                }
+              />
+              <ConfirmDialog
+                title="ลบเอกสาร"
+                description={`คุณแน่ใจหรือไม่ที่จะลบเอกสาร "${doc.file_name}"?`}
+                confirmText="ลบออก"
+                variant="destructive"
+                onConfirm={() => handleDelete(doc.id, doc.storage_path)}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                }
+              />
             </div>
           </CardContent>
         </Card>

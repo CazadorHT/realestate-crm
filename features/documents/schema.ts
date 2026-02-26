@@ -16,6 +16,17 @@ export const DocumentTypeEnum = z.enum([
   "RESERVATION_DOCUMENT",
 ]);
 
+export const DOC_TYPE_LABELS: Record<string, string> = {
+  ID_CARD: "บัตรประชาชน",
+  PASSPORT: "พาสปอร์ต",
+  COMPANY_REGISTRATION: "หนังสือรับรองบริษัท",
+  LEASE_CONTRACT: "สัญญาเช่า",
+  SALE_CONTRACT: "สัญญาซื้อขาย",
+  TITLE_DEED: "โฉนดที่ดิน",
+  OTHER: "อื่นๆ",
+  RESERVATION_DOCUMENT: "ใบจองทรัพย์",
+};
+
 export const DocumentOwnerTypeEnum = z.enum([
   "LEAD",
   "PROPERTY",

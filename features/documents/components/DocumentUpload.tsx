@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { DocumentOwnerType, DocumentType, DocumentTypeEnum } from "../schema";
+import {
+  DocumentOwnerType,
+  DocumentType,
+  DocumentTypeEnum,
+  DOC_TYPE_LABELS,
+} from "../schema";
 import { createDocumentRecordAction } from "../actions";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Loader2, UploadCloud } from "lucide-react";
+import { Loader2, Trash, UploadCloud } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
 interface DocumentUploadProps {
@@ -37,13 +42,71 @@ export function DocumentUpload({
   >([]);
   const [uploading, setUploading] = useState(false);
 
+  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+  const ALLOWED_TYPES = [
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/html",
+    "text/plain",
+  ];
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files).map((file) => ({
-        file,
-        type: "OTHER" as DocumentType,
-      }));
-      setSelectedFiles((prev) => [...prev, ...newFiles]);
+      const filesArray = Array.from(e.target.files);
+      const validFiles: { file: File; type: DocumentType }[] = [];
+      let rejectedSize = 0;
+      let rejectedType = 0;
+
+      filesArray.forEach((file) => {
+        if (file.size > MAX_FILE_SIZE) {
+          rejectedSize++;
+          return;
+        }
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          // Check extension as fallback for some systems
+          const ext = file.name.split(".").pop()?.toLowerCase();
+          const allowedExts = [
+            "pdf",
+            "jpg",
+            "jpeg",
+            "png",
+            "webp",
+            "doc",
+            "docx",
+            "xls",
+            "xlsx",
+            "html",
+            "txt",
+          ];
+          if (!ext || !allowedExts.includes(ext)) {
+            rejectedType++;
+            return;
+          }
+        }
+        validFiles.push({
+          file,
+          type: "OTHER" as DocumentType,
+        });
+      });
+
+      if (rejectedSize > 0) {
+        toast.error(`พบ ${rejectedSize} ไฟล์ที่มีขนาดเกิน 20MB และถูกยกเว้น`);
+      }
+      if (rejectedType > 0) {
+        toast.error(
+          `พบ ${rejectedType} ไฟล์ที่มีนามสกุลไม่รองรับ และถูกยกเว้น`,
+        );
+      }
+
+      if (validFiles.length > 0) {
+        setSelectedFiles((prev) => [...prev, ...validFiles]);
+      }
     }
   };
 
@@ -159,31 +222,32 @@ export function DocumentUpload({
   };
 
   return (
-    <div className="space-y-4 border p-4 rounded-lg bg-muted/5">
+    <div className="space-y-4 border border-slate-200 p-4 rounded-lg bg-muted/5">
       <div className="space-y-2">
         <Label className="text-sm font-semibold">
           เลือกไฟล์เอกสาร (ได้หลายไฟล์)
         </Label>
+
         <Input
           type="file"
           multiple
           onChange={handleFileChange}
           disabled={uploading}
-          className="cursor-pointer"
+          className="cursor-pointer "
         />
       </div>
 
       {selectedFiles.length > 0 && (
         <div className="space-y-3">
           <Separator />
-          <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
             รายการไฟล์ที่เลือก
           </Label>
-          <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
+          <div className="max-h-[350px] overflow-y-auto space-y-2 pr-2 -mr-2">
             {selectedFiles.map((item, index) => (
               <div
                 key={index}
-                className="flex flex-col gap-2 p-3 border rounded-md bg-background shadow-sm"
+                className="flex flex-col gap-2 p-3 border border-slate-200 rounded-md bg-background shadow-sm"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex flex-col min-w-0">
@@ -201,7 +265,7 @@ export function DocumentUpload({
                     onClick={() => removeFile(index)}
                     disabled={uploading}
                   >
-                    <Loader2 className="h-4 w-4" />{" "}
+                    <Trash className="h-4 w-4" />{" "}
                     {/* Swap with Trash later or just Loader if uploading */}
                   </Button>
                 </div>
@@ -216,12 +280,12 @@ export function DocumentUpload({
                     disabled={uploading}
                   >
                     <SelectTrigger className="h-8 text-xs">
-                      <SelectValue />
+                      <SelectValue placeholder="เลือกประเภท..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-200">
                       {DocumentTypeEnum.options.map((option) => (
                         <SelectItem key={option} value={option}>
-                          {option}
+                          {DOC_TYPE_LABELS[option] || option}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -28,7 +28,7 @@ export function replacePlaceholders(content: string, data: any): string {
  * Format currency for templates
  */
 export function formatCurrency(amount: number | null | undefined) {
-  if (amount === null || amount === undefined) return "0.00";
+  if (amount === null || amount === undefined) return "";
   return new Intl.NumberFormat("th-TH", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,

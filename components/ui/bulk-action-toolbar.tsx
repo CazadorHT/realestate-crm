@@ -104,7 +104,7 @@ export function BulkActionToolbar({
     <>
       <div
         className={cn(
-          "flex items-center justify-between gap-4 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg animate-in slide-in-from-top-2 duration-200",
+          "inline-flex items-center justify-between gap-4 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg animate-in slide-in-from-top-2 duration-200 shadow-sm",
           className,
         )}
       >
