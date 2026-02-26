@@ -82,6 +82,8 @@ export const FormSchema = z
     postal_code: z.string().optional(),
     google_maps_link: z.string().trim().min(1, "กรุณาใส่ลิงก์ Google Maps "),
     popular_area: z.string().optional().nullable(),
+    popular_area_en: z.string().optional().nullable(),
+    popular_area_cn: z.string().optional().nullable(),
 
     owner_id: z.string().uuid().nullable().optional(),
     assigned_to: z.string().uuid().nullable().optional(), // For primary agent / backward compatibility

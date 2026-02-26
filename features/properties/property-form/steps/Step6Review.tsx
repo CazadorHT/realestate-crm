@@ -26,6 +26,7 @@ import {
   Languages,
   Loader2,
   Clock,
+  MapPin,
 } from "lucide-react";
 import { useAITranslation } from "../hooks/use-ai-translation";
 import { translateTextAction } from "@/lib/ai/translation-actions";
@@ -101,10 +102,29 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
 
         if (profile) setCurrentUser(profile);
       }
+
+      // 3. Load Popular Area Translations if missing
+      if (
+        values.popular_area &&
+        (!values.popular_area_en || !values.popular_area_cn)
+      ) {
+        const { data: areaData } = await supabase
+          .from("popular_areas")
+          .select("name_en, name_cn")
+          .eq("name", values.popular_area)
+          .maybeSingle();
+
+        if (areaData) {
+          if (!values.popular_area_en)
+            form.setValue("popular_area_en", areaData.name_en);
+          if (!values.popular_area_cn)
+            form.setValue("popular_area_cn", areaData.name_cn);
+        }
+      }
     }
 
     loadData();
-  }, [values.feature_ids]);
+  }, [values.feature_ids, values.popular_area, form]);
 
   // Transform images for Gallery (using real URLs from form)
   const images = useMemo(() => {
@@ -148,21 +168,76 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
     values.is_renovated && { name: "รีโนเวทใหม่", icon: "sparkles" },
     values.is_fully_furnished && { name: "ตกแต่งครบ", icon: "armchair" },
     (values.floor || 0) > 15 && {
-      name: `วิวสวยชั้นสูง (ชั้น ${values.floor})`,
+      name:
+        previewLanguage === "en"
+          ? `High Floor (Fl. ${values.floor})`
+          : previewLanguage === "cn"
+            ? `高层 (第 ${values.floor} 层)`
+            : `วิวสวยชั้นสูง (ชั้น ${values.floor})`,
       icon: "building-2",
     },
-    values.has_city_view && { name: "วิวเมือง", icon: "building-2" },
-    values.has_pool_view && { name: "วิวสระว่ายน้ำ", icon: "waves" },
-    values.has_garden_view && { name: "วิวสวน", icon: "trees" },
-    values.is_selling_with_tenant && { name: "ขายพร้อมผู้เช่า", icon: "users" },
+    values.has_city_view && {
+      name:
+        previewLanguage === "en"
+          ? "City View"
+          : previewLanguage === "cn"
+            ? "城市景观"
+            : "วิวเมือง",
+      icon: "building-2",
+    },
+    values.has_pool_view && {
+      name:
+        previewLanguage === "en"
+          ? "Pool View"
+          : previewLanguage === "cn"
+            ? "泳池景观"
+            : "วิวสระว่ายน้ำ",
+      icon: "waves",
+    },
+    values.has_garden_view && {
+      name:
+        previewLanguage === "en"
+          ? "Garden View"
+          : previewLanguage === "cn"
+            ? "园景"
+            : "วิวสวน",
+      icon: "trees",
+    },
+    values.is_selling_with_tenant && {
+      name:
+        previewLanguage === "en"
+          ? "Sold with Tenant"
+          : previewLanguage === "cn"
+            ? "带租约出售"
+            : "ขายพร้อมผู้เช่า",
+      icon: "users",
+    },
     values.is_tax_registered && {
-      name: "จดทะเบียนบริษัทได้",
+      name:
+        previewLanguage === "en"
+          ? "Tax Registered"
+          : previewLanguage === "cn"
+            ? "可开具发票"
+            : "จดทะเบียนบริษัทได้",
       icon: "file-check",
     },
-    values.is_foreigner_quota && { name: "โควต้าต่างชาติ", icon: "globe" },
+    values.is_foreigner_quota && {
+      name:
+        previewLanguage === "en"
+          ? "Foreigner Quota"
+          : previewLanguage === "cn"
+            ? "外籍配额"
+            : "โควต้าต่างชาติ",
+      icon: "globe",
+    },
     values.near_transit &&
       values.transit_station_name && {
-        name: `ใกล้ ${values.transit_station_name}`,
+        name:
+          previewLanguage === "en"
+            ? `Near ${values.transit_station_name_en || values.transit_station_name}`
+            : previewLanguage === "cn"
+              ? `靠近 ${values.transit_station_name_cn || values.transit_station_name}`
+              : `ใกล้ ${values.transit_station_name}`,
         icon: "map-pin",
       },
   ]
@@ -192,12 +267,18 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
           </div>
           <div className="space-y-1">
             <h3 className="text-sm sm:text-base font-bold text-blue-700">
-              ขั้นตอนที่ 6: ตรวจสอบหน้าประกาศ (Review & Publish)
+              {previewLanguage === "th"
+                ? "ขั้นตอนที่ 6: ตรวจสอบหน้าประกาศ (Review & Publish)"
+                : previewLanguage === "en"
+                  ? "Step 6: Review & Publish"
+                  : "第 6 步：查看并发布"}
             </h3>
             <p className="text-[11px] sm:text-sm text-blue-600/80 leading-relaxed max-w-2xl">
-              นี่คือตัวอย่างหน้าประกาศของคุณที่จะแสดงให้ลูกค้าเห็นจริง
-              กรุณาตรวจสอบความถูกต้องของข้อมูลทั้งหมด
-              และสามารถเลือกดูพรีวิวในภาษาต่างๆ ได้ทางขวามือครับ
+              {previewLanguage === "th"
+                ? "นี่คือตัวอย่างหน้าประกาศของคุณที่จะแสดงให้ลูกค้าเห็นจริง กรุณาตรวจสอบความถูกต้องของข้อมูลทั้งหมด และสามารถเลือกดูพรีวิวในภาษาต่างๆ ได้ทางขวามือครับ"
+                : previewLanguage === "en"
+                  ? "This is a preview of your listing as it will appear to customers. Please check all information for accuracy. You can preview in different languages using the buttons on the right."
+                  : "这是房源发布的实际预览。请检查所有信息的准确性。您可以使用右侧的按钮预览不同语言。"}
             </p>
           </div>
         </div>
@@ -270,8 +351,6 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
               min_contract_months: values.min_contract_months ?? null,
             } as any
           }
-          locationParts={locationParts}
-          keySellingPoints={keySellingPoints}
           language={previewLanguage}
         />
         <div className="pt-16 sm:pt-20 md:pt-24 px-4 sm:px-6 lg:px-8 bg-white relative">
@@ -315,7 +394,11 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-base sm:text-lg flex items-center gap-2 text-slate-800">
                       <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
-                      แก้ไขรายละเอียด
+                      {previewLanguage === "en"
+                        ? "Listing Details"
+                        : previewLanguage === "cn"
+                          ? "房源详情"
+                          : "รายละเอียดประกาศ"}
                     </h3>
                     <div className="flex gap-2">
                       {isEditingDesc ? (
@@ -387,7 +470,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                             ) : (
                               <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                             )}
-                            <span className="sm:inline">AI แปลรวดเดียว</span>
+                            <span className="sm:inline">AI แปลรวมทุกภาษา</span>
                           </Button>
                         </div>
 
@@ -457,29 +540,31 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                 </div>
 
                 <NearbyPlaces
-                  location={values.popular_area || undefined}
-                  data={[
-                    ...(values.nearby_places || []),
+                  location={
+                    (previewLanguage === "en"
+                      ? values.popular_area_en
+                      : previewLanguage === "cn"
+                        ? values.popular_area_cn
+                        : null) ||
+                    values.popular_area ||
+                    undefined
+                  }
+                  data={values.nearby_places || []}
+                  transits={[
                     ...(values.near_transit && values.transit_station_name
                       ? [
                           {
-                            category: "Transport",
-                            name: `${values.transit_type || "BTS/MRT"} ${values.transit_station_name}`,
-                            distance: values.transit_distance_meters
-                              ? (
-                                  values.transit_distance_meters / 1000
-                                ).toString()
-                              : undefined,
-                          },
+                            type: values.transit_type || "BTS",
+                            station_name: values.transit_station_name,
+                            station_name_en:
+                              values.transit_station_name_en || undefined,
+                            station_name_cn:
+                              values.transit_station_name_cn || undefined,
+                            distance_meters: values.transit_distance_meters,
+                          } as any,
                         ]
                       : []),
-                    ...(values.nearby_transits || []).map((t) => ({
-                      category: "Transport",
-                      name: `${t.type} ${t.station_name}`,
-                      distance: t.distance_meters
-                        ? (t.distance_meters / 1000).toString()
-                        : undefined,
-                    })),
+                    ...(values.nearby_transits || []),
                   ]}
                   language={previewLanguage}
                 />

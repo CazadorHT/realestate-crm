@@ -12,8 +12,10 @@ export function useAddressLocalization(
   provinceTh?: string | null,
   districtTh?: string | null,
   subdistrictTh?: string | null,
+  customLanguage?: "th" | "en" | "cn",
 ) {
-  const { language } = useLanguage();
+  const { language: globalLanguage } = useLanguage();
+  const language = customLanguage || globalLanguage;
   const [localized, setLocalized] = useState<LocalizedAddress>({});
   const [loading, setLoading] = useState(false);
 

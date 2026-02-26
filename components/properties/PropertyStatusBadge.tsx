@@ -1,15 +1,31 @@
+"use client";
+
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface PropertyStatusBadgeProps {
   status: "DRAFT" | "ACTIVE" | "ARCHIVED" | string;
   className?: string;
+  language?: "th" | "en" | "cn";
 }
 
 export function PropertyStatusBadge({
   status,
   className,
+  language: customLanguage,
 }: PropertyStatusBadgeProps) {
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Custom t function
+  const t = (key: string) => {
+    if (!customLanguage) return globalT(key);
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
+
   const styles: Record<string, string> = {
     ACTIVE:
       "bg-green-100 text-green-700 hover:bg-green-100/80 border-green-200",
@@ -22,11 +38,11 @@ export function PropertyStatusBadge({
   };
 
   const labels: Record<string, string> = {
-    ACTIVE: "เผยแพร่",
-    DRAFT: "ฉบับร่าง",
-    ARCHIVED: "เก็บเข้ากรุ",
-    SOLD: "ขายแล้ว",
-    RENTED: "เช่าแล้ว",
+    ACTIVE: t("property.status.active"),
+    DRAFT: t("property.status.draft"),
+    ARCHIVED: t("property.status.archived"),
+    SOLD: t("property.status.sold"),
+    RENTED: t("property.status.rented"),
   };
 
   const normalizedStatus = status.toUpperCase();

@@ -42,12 +42,28 @@ interface ContactAgentDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   defaultMessage?: string;
+  language?: "th" | "en" | "cn";
 }
 
 // ── Submit Button ──
-function SubmitButton({ compact }: { compact?: boolean }) {
+function SubmitButton({
+  compact,
+  language: customLanguage,
+}: {
+  compact?: boolean;
+  language?: "th" | "en" | "cn";
+}) {
   const { pending } = useFormStatus();
-  const { t } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Custom t function
+  const t = (key: string) => {
+    if (!customLanguage) return globalT(key);
+    const { dictionaries } = require("../providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
 
   return (
     <Button
@@ -114,8 +130,18 @@ export function ContactAgentDialog({
   open: controlledOpen,
   onOpenChange,
   defaultMessage = "",
+  language: customLanguage,
 }: ContactAgentDialogProps) {
-  const { t, language } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Custom t function
+  const t = (key: string) => {
+    if (!customLanguage) return globalT(key);
+    const { dictionaries } = require("../providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
   const [internalOpen, setInternalOpen] = useState(false);
   const [state, setState] = useState<LeadState>({});
   const [phone, setPhone] = useState("");
@@ -532,7 +558,7 @@ export function ContactAgentDialog({
 
               {/* Submit */}
               <div className="pt-1">
-                <SubmitButton compact />
+                <SubmitButton compact language={language} />
               </div>
             </form>
           </div>
@@ -671,7 +697,7 @@ export function ContactAgentDialog({
                     <ChevronRight className="w-4 h-4 ml-1.5" />
                   </Button>
                 ) : (
-                  <SubmitButton />
+                  <SubmitButton language={language} />
                 )}
               </div>
             </div>

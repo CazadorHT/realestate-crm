@@ -10,13 +10,24 @@ export interface KeySellingPoint {
 interface KeySellingPointsProps {
   points?: KeySellingPoint[];
   listingType: "SALE" | "RENT" | "SALE_AND_RENT";
+  language?: "th" | "en" | "cn";
 }
 
 export function KeySellingPoints({
   points = [],
   listingType,
+  language: customLanguage,
 }: KeySellingPointsProps) {
-  const { t } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Custom t function
+  const t = (key: string) => {
+    if (!customLanguage) return globalT(key);
+    const { dictionaries } = require("@/components/providers/LanguageProvider");
+    const dict = dictionaries[language];
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
 
   // Default points if none provided (Fallbacks for now)
   const defaultPoints: KeySellingPoint[] = [

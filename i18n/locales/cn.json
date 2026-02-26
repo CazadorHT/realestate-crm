@@ -884,6 +884,11 @@
     "transit_types": {
       "BTS": "曼谷轻轨 (BTS)",
       "MRT": "曼谷地铁 (MRT)",
+      "ARL": "机场快线 (ARL)",
+      "SRT": "红线 (SRT)",
+      "SRT2": "橙线 (SRT)",
+      "SRT3": "粉红线 (SRT)",
+      "MRT2": "紫线 (MRT)",
       "OTHER": "其他"
     },
     "favorite": {

@@ -229,6 +229,28 @@ export function useAITranslation(form: UseFormReturn<PropertyFormValues>) {
       setIsTranslating(false);
     }
   };
+  // 4c. Translate Popular Area
+  const translatePopularArea = async (silent = false) => {
+    const area = form.getValues("popular_area");
+    if (!area?.trim()) return;
+
+    const hasEn = !!form.getValues("popular_area_en");
+    const hasCn = !!form.getValues("popular_area_cn");
+    if (hasEn && hasCn) return;
+
+    setIsTranslating(true);
+    try {
+      const result = await translateTextAction(area, "plain");
+      form.setValue("popular_area_en", result.en, { shouldDirty: true });
+      form.setValue("popular_area_cn", result.cn, { shouldDirty: true });
+      return true;
+    } catch (error) {
+      return false;
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const translateAll = async () => {
     setIsTranslatingAll(true);
     const toastId = toast.loading("กำลังแปลข้อมูลทั้งหมดด้วย AI...");
@@ -240,6 +262,7 @@ export function useAITranslation(form: UseFormReturn<PropertyFormValues>) {
         translateTransits(true),
         translatePlaces(true),
         translateAddress(true),
+        translatePopularArea(true),
       ]);
       toast.success("แปลข้อมูลครบทุกส่วนเรียบร้อยแล้ว! ✨", { id: toastId });
     } catch (error) {

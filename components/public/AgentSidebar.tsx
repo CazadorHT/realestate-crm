@@ -193,6 +193,7 @@ export function AgentSidebar({
                 propertyTitle={propertyTitle}
                 property={property}
                 defaultMessage={t("property.viewing_msg")}
+                language={language}
                 trigger={
                   <Button
                     variant="outline"
@@ -213,6 +214,7 @@ export function AgentSidebar({
                 defaultMessage={t("property.inquiry_msg")}
                 open={contactDialogOpen}
                 onOpenChange={setContactDialogOpen}
+                language={language}
                 trigger={
                   <Button
                     variant="outline"

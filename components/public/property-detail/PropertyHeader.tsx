@@ -109,6 +109,7 @@ export function PropertyHeader({
     property.province,
     property.district,
     property.subdistrict,
+    language,
   );
 
   const displayProvince =
@@ -433,6 +434,7 @@ export function PropertyHeader({
                 <KeySellingPoints
                   points={finalKeySellingPoints}
                   listingType={property.listing_type || "SALE"}
+                  language={language}
                 />
               </div>
               {/* Price */}

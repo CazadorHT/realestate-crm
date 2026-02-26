@@ -278,8 +278,6 @@ export default async function PropertyDetailsPage({
           {/* 2. Public Header Component */}
           <PropertyHeader
             property={property as any}
-            locationParts={locationParts}
-            keySellingPoints={keySellingPoints}
             className="pt-4 lg:pt-6"
             hideBreadcrumbs={true}
             language="th"
@@ -364,6 +362,7 @@ export default async function PropertyDetailsPage({
                 {/* Map */}
                 <PropertyMapSection
                   googleMapsLink={property.google_maps_link}
+                  language="th"
                 />
 
                 {/* Deal & Contracts (CRM only) */}
@@ -374,6 +373,7 @@ export default async function PropertyDetailsPage({
                         <PropertyStatusBadge
                           status={property.status || "DRAFT"}
                           className="text-[10px] sm:text-sm px-2 py-0.5 sm:px-3 sm:py-1"
+                          language="th"
                         />
                         CRM ดีลสถานะสำเร็จ
                       </h3>
@@ -460,7 +460,10 @@ export default async function PropertyDetailsPage({
                     <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                       Property Status
                     </span>
-                    <PropertyStatusBadge status={property.status || "DRAFT"} />
+                    <PropertyStatusBadge
+                      status={property.status || "DRAFT"}
+                      language="th"
+                    />
                   </div>
                   <Separator className="bg-white/10" />
                   <div className="space-y-3">
