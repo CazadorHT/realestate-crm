@@ -11,4 +11,7 @@ export type DocumentWithRelations = {
   lead?: { id: string; full_name: string | null; email: string | null } | null;
   deal?: { id: string; property: { title: string } | null } | null;
   rental_contract?: { id: string; property: { title: string } | null } | null;
+  esign_status?: string | null;
+  esign_envelope_id?: string | null;
+  esign_signed_at?: string | null;
 };

@@ -23,12 +23,14 @@ interface DocumentUploadProps {
   ownerId: string;
   ownerType: DocumentOwnerType;
   onUploadComplete?: () => void;
+  parentId?: string; // If provided, new uploads will be versions of this document
 }
 
 export function DocumentUpload({
   ownerId,
   ownerType,
   onUploadComplete,
+  parentId,
 }: DocumentUploadProps) {
   const [selectedFiles, setSelectedFiles] = useState<
     { file: File; type: DocumentType }[]
@@ -108,7 +110,7 @@ export function DocumentUpload({
             } catch (pdfError) {
               console.error(
                 "PDF compression failed, uploading original:",
-                pdfError
+                pdfError,
               );
               // Continue with original file
             }
@@ -130,6 +132,7 @@ export function DocumentUpload({
             storage_path: fileName,
             mime_type: file.type,
             size_bytes: finalSize,
+            parent_id: parentId,
           });
 
           if (!res.success) throw new Error(res.message);
@@ -143,7 +146,7 @@ export function DocumentUpload({
       if (successCount > 0) {
         toast.success(
           `อัปโหลดสำเร็จ ${successCount} ไฟล์` +
-            (failCount > 0 ? ` (ล้มเหลว ${failCount})` : "")
+            (failCount > 0 ? ` (ล้มเหลว ${failCount})` : ""),
         );
         setSelectedFiles([]);
         if (onUploadComplete) onUploadComplete();
@@ -241,7 +244,7 @@ export function DocumentUpload({
             <Button
               onClick={handleUpload}
               disabled={uploading}
-              className="flex-[2]"
+              className="flex-2"
               size="sm"
             >
               {uploading ? (

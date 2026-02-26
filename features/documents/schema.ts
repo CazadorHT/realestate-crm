@@ -31,6 +31,22 @@ export const createDocumentSchema = z.object({
   storage_path: z.string().min(1),
   size_bytes: z.number().optional(),
   mime_type: z.string().optional(),
+  parent_id: z.string().uuid().optional().nullable(),
+  version: z.number().optional().default(1),
 });
 
-export type CreateDocumentInput = z.infer<typeof createDocumentSchema>;
+export type CreateDocumentInput = z.input<typeof createDocumentSchema>;
+
+// Contract Template Schemas
+export const createTemplateSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  content: z.string().min(1),
+  type: DocumentTypeEnum,
+  is_active: z.boolean().default(true),
+});
+
+export type CreateTemplateInput = z.infer<typeof createTemplateSchema>;
+
+export const updateTemplateSchema = createTemplateSchema.partial();
+export type UpdateTemplateInput = z.infer<typeof updateTemplateSchema>;

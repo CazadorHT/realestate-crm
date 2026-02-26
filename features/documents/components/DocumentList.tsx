@@ -9,10 +9,12 @@ import {
 } from "../actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Eye, Trash, Loader2 } from "lucide-react";
+import { FileText, Eye, Trash, Loader2, History } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
+import { VersionHistoryDialog } from "./VersionHistoryDialog";
+import { ESignDialog } from "./ESignDialog";
 
 interface DocumentListProps {
   ownerId: string;
@@ -101,6 +103,20 @@ export function DocumentList({
             </div>
 
             <div className="flex items-center gap-1">
+              <VersionHistoryDialog
+                documentId={doc.id}
+                documentName={doc.file_name}
+                ownerId={ownerId}
+                ownerType={ownerType}
+              />
+              {ownerType === "LEAD" && (
+                <ESignDialog
+                  documentId={doc.id}
+                  documentName={doc.file_name}
+                  currentStatus={doc.esign_status}
+                  recipientEmail={doc.lead?.email || (doc as any).email} // Fallback if lead joined
+                />
+              )}
               <Button
                 variant="ghost"
                 size="icon"

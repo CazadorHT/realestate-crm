@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { DocumentStats } from "@/features/documents/components/DocumentStats";
 import { DocumentWithRelations } from "@/features/documents/types";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
+import { TemplateDialog } from "@/features/documents/components/TemplateDialog";
 
 export default async function DocumentsPage() {
   const { role } = await requireAuthContext();
@@ -38,7 +39,15 @@ export default async function DocumentsPage() {
         count={totalDocuments}
         icon="fileText"
         gradient="blue"
-        actionSlot={<UploadDocumentDialog />}
+        actionSlot={
+          <div className="flex gap-2">
+            <TemplateDialog
+              ownerId="" // Global context doesn't have a specific ownerId for generation yet, but we'll handle it
+              ownerType="LEAD"
+            />
+            <UploadDocumentDialog />
+          </div>
+        }
       />
 
       {/* Statistics Cards */}

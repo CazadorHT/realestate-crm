@@ -4,6 +4,7 @@ import { useState } from "react";
 import { DocumentOwnerType } from "../schema";
 import { DocumentList } from "./DocumentList";
 import { DocumentUpload } from "./DocumentUpload";
+import { TemplateDialog } from "./TemplateDialog";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText } from "lucide-react";
+import { Upload, FileText, Wand2 } from "lucide-react";
 
 type Props = {
   ownerId: string;
@@ -39,31 +40,46 @@ export function DocumentSection({ ownerId, ownerType }: Props) {
             </p>
           </div>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full sm:w-auto h-9 sm:h-8 font-bold sm:font-semibold"
-            >
-              <Upload className="mr-2 h-4 w-4 shrink-0" /> อัปโหลด
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="w-[calc(100vw-1.5rem)] rounded-2xl sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Upload Document</DialogTitle>
-            </DialogHeader>
-            <DocumentUpload
-              ownerId={ownerId}
-              ownerType={ownerType}
-              onUploadComplete={() => {
-                setRefreshKey((k) => k + 1);
-                // close dialog after success
-                setOpen(false);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <TemplateDialog
+            ownerId={ownerId}
+            ownerType={ownerType as any}
+            trigger={
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full sm:w-auto h-9 sm:h-8 font-bold sm:font-semibold text-blue-600 border-blue-200 hover:bg-blue-50"
+              >
+                <Wand2 className="mr-2 h-4 w-4 shrink-0" /> สร้างจากแบบ
+              </Button>
+            }
+          />
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full sm:w-auto h-9 sm:h-8 font-bold sm:font-semibold"
+              >
+                <Upload className="mr-2 h-4 w-4 shrink-0" /> อัปโหลด
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="w-[calc(100vw-1.5rem)] rounded-2xl sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Upload Document</DialogTitle>
+              </DialogHeader>
+              <DocumentUpload
+                ownerId={ownerId}
+                ownerType={ownerType}
+                onUploadComplete={() => {
+                  setRefreshKey((k) => k + 1);
+                  // close dialog after success
+                  setOpen(false);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-hidden">

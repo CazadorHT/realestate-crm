@@ -13,20 +13,10 @@ import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteDocumentsAction } from "@/features/documents/bulk-actions";
 import { toast } from "sonner";
 import { DocumentBtn } from "@/app/(protected)/protected/documents/DocumentBtn";
+import { VersionHistoryDialog } from "./VersionHistoryDialog";
+import { ESignDialog } from "./ESignDialog";
 
-interface DocumentWithRelations {
-  id: string;
-  file_name: string;
-  size_bytes: number | null;
-  document_type: string | null;
-  storage_path: string;
-  created_at: string;
-  owner_type: string;
-  property?: { title: string } | null;
-  lead?: { full_name: string | null; email: string | null } | null;
-  deal?: { id: string; property: { title: string } | null } | null;
-  rental_contract?: { id: string; property: { title: string } | null } | null;
-}
+import { DocumentWithRelations } from "../types";
 
 interface DocumentsGridProps {
   documents: DocumentWithRelations[];
@@ -179,8 +169,22 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100">
+                <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 items-center justify-between">
                   <DocumentBtn storagePath={doc.storage_path} />
+                  <VersionHistoryDialog
+                    documentId={doc.id}
+                    documentName={doc.file_name}
+                    ownerId={doc.owner_id}
+                    ownerType={doc.owner_type}
+                  />
+                  {doc.owner_type === "LEAD" && (
+                    <ESignDialog
+                      documentId={doc.id}
+                      documentName={doc.file_name}
+                      currentStatus={doc.esign_status}
+                      recipientEmail={doc.lead?.email}
+                    />
+                  )}
                 </div>
               </CardContent>
             </Card>
