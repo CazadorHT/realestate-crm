@@ -302,6 +302,8 @@ export type Database = {
       }
       documents: {
         Row: {
+          ai_analysis: Json | null
+          ai_summary: string | null
           created_at: string
           created_by: string | null
           document_type: Database["public"]["Enums"]["document_type"]
@@ -316,11 +318,14 @@ export type Database = {
           owner_id: string
           owner_type: Database["public"]["Enums"]["document_owner_type"]
           parent_id: string | null
+          root_id: string | null
           size_bytes: number | null
           storage_path: string
           version: number | null
         }
         Insert: {
+          ai_analysis?: Json | null
+          ai_summary?: string | null
           created_at?: string
           created_by?: string | null
           document_type: Database["public"]["Enums"]["document_type"]
@@ -335,11 +340,14 @@ export type Database = {
           owner_id: string
           owner_type: Database["public"]["Enums"]["document_owner_type"]
           parent_id?: string | null
+          root_id?: string | null
           size_bytes?: number | null
           storage_path: string
           version?: number | null
         }
         Update: {
+          ai_analysis?: Json | null
+          ai_summary?: string | null
           created_at?: string
           created_by?: string | null
           document_type?: Database["public"]["Enums"]["document_type"]
@@ -354,6 +362,7 @@ export type Database = {
           owner_id?: string
           owner_type?: Database["public"]["Enums"]["document_owner_type"]
           parent_id?: string | null
+          root_id?: string | null
           size_bytes?: number | null
           storage_path?: string
           version?: number | null
@@ -369,6 +378,13 @@ export type Database = {
           {
             foreignKeyName: "documents_parent_id_fkey"
             columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_root_id_fkey"
+            columns: ["root_id"]
             isOneToOne: false
             referencedRelation: "documents"
             referencedColumns: ["id"]

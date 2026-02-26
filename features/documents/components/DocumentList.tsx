@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { VersionHistoryDialog } from "./VersionHistoryDialog";
 import { ESignDialog } from "./ESignDialog";
+import { AIDocumentInsight } from "./AIDocumentInsight";
 
 interface DocumentListProps {
   ownerId: string;
@@ -117,6 +118,12 @@ export function DocumentList({
                   recipientEmail={doc.lead?.email || (doc as any).email} // Fallback if lead joined
                 />
               )}
+              <AIDocumentInsight
+                documentId={doc.id}
+                documentName={doc.file_name}
+                initialSummary={doc.ai_summary}
+                initialAnalysis={doc.ai_analysis}
+              />
               <Button
                 variant="ghost"
                 size="icon"

@@ -51,6 +51,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState<string[]>([
     "crm",
+    "documents",
     "public",
     "settings",
   ]);

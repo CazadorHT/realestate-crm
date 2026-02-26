@@ -14,4 +14,6 @@ export type DocumentWithRelations = {
   esign_status?: string | null;
   esign_envelope_id?: string | null;
   esign_signed_at?: string | null;
+  ai_summary?: string | null;
+  ai_analysis?: any | null;
 };

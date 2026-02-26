@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { DocumentBtn } from "@/app/(protected)/protected/documents/DocumentBtn";
 import { VersionHistoryDialog } from "./VersionHistoryDialog";
 import { ESignDialog } from "./ESignDialog";
+import { AIDocumentInsight } from "./AIDocumentInsight";
 
 import { DocumentWithRelations } from "../types";
 
@@ -178,12 +179,20 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                     ownerType={doc.owner_type}
                   />
                   {doc.owner_type === "LEAD" && (
-                    <ESignDialog
-                      documentId={doc.id}
-                      documentName={doc.file_name}
-                      currentStatus={doc.esign_status}
-                      recipientEmail={doc.lead?.email}
-                    />
+                    <>
+                      <ESignDialog
+                        documentId={doc.id}
+                        documentName={doc.file_name}
+                        currentStatus={doc.esign_status}
+                        recipientEmail={doc.lead?.email}
+                      />
+                      <AIDocumentInsight
+                        documentId={doc.id}
+                        documentName={doc.file_name}
+                        initialSummary={doc.ai_summary}
+                        initialAnalysis={doc.ai_analysis}
+                      />
+                    </>
                   )}
                 </div>
               </CardContent>
