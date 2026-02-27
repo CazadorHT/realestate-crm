@@ -5,6 +5,7 @@ import "flag-icons/css/flag-icons.min.css";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/common/CookieConsent";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
+import { TenantProvider } from "@/components/providers/TenantProvider";
 import { getServerTranslations } from "@/lib/i18n";
 import { cookies } from "next/headers";
 import { siteConfig } from "@/lib/site-config";
@@ -70,9 +71,11 @@ export default async function RootLayout({
     <html lang={lang} suppressHydrationWarning>
       <body className={`${prompt.className} ${notoThai.variable} antialiased`}>
         <LanguageProvider initialLanguage={lang as any}>
-          {children}
-          <Toaster />
-          <CookieConsent />
+          <TenantProvider>
+            {children}
+            <Toaster />
+            <CookieConsent />
+          </TenantProvider>
         </LanguageProvider>
       </body>
     </html>

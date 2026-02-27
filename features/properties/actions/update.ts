@@ -36,8 +36,9 @@ export async function updatePropertyAction(
   sessionId: string,
 ): Promise<CreatePropertyResult> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     // 1) Validate form data
     const parsed = FormSchema.safeParse(values);
@@ -55,9 +56,10 @@ export async function updatePropertyAction(
     const { data: existing, error: findErr } = await supabase
       .from("properties")
       .select(
-        "id, created_by, meta_keywords, price, rental_price, original_price, original_rental_price, status, title, listing_type, property_images(image_url, is_cover, sort_order)",
+        "id, tenant_id, created_by, meta_keywords, price, rental_price, original_price, original_rental_price, status, title, listing_type, property_images(image_url, is_cover, sort_order)",
       )
       .eq("id", id)
+      .eq("tenant_id", tenantId)
       .single();
 
     if (findErr || !existing) {
@@ -132,7 +134,8 @@ export async function updatePropertyAction(
         structured_data: seoData.structuredData as any,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("tenant_id", tenantId);
 
     if (updateErr) {
       return { success: false, message: updateErr.message };
@@ -353,8 +356,9 @@ export async function updatePropertyStatusAction(input: {
   status: PropertyStatus;
 }): Promise<UpdatePropertyStatusResult> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     const UUID_RE =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -372,6 +376,7 @@ export async function updatePropertyStatusAction(input: {
       .from("properties")
       .select("id, title, status, listing_type")
       .eq("id", input.id)
+      .eq("tenant_id", tenantId)
       .single();
 
     const { error } = await supabase
@@ -380,7 +385,8 @@ export async function updatePropertyStatusAction(input: {
         status: input.status,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", input.id);
+      .eq("id", input.id)
+      .eq("tenant_id", tenantId);
 
     if (error) {
       return { success: false, message: error.message };

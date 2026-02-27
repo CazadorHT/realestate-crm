@@ -5,7 +5,10 @@ import { updateLeadAction } from "@/features/leads/actions";
 import { leadRowToFormValues } from "@/features/leads/mapper";
 import { LeadFormValues } from "@/features/leads/types";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { leadSourceLabelNullable, leadStageLabelNullable } from "@/features/leads/labels";
+import {
+  leadSourceLabelNullable,
+  leadStageLabelNullable,
+} from "@/features/leads/labels";
 
 export default async function LeadEditPage({
   params,
@@ -18,8 +21,8 @@ export default async function LeadEditPage({
 
   async function onSubmitAction(values: LeadFormValues) {
     "use server";
-    const res = await updateLeadAction(id, values);
-    if (!res.success) throw new Error(res.message);
+    const res = await updateLeadAction({ id, ...values });
+    if (!res.success) throw new Error(res.error);
     redirect(`/protected/leads/${id}`);
   }
 

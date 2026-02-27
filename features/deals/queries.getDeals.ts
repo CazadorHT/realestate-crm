@@ -54,8 +54,9 @@ export async function getDeals({
   order = "created_at",
   ascending = false,
 }: ListArgs = {}) {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
+  if (!tenantId) throw new Error("Tenant ID is required but missing");
 
   const trimmed = q.trim();
   const pageSafe = Math.max(1, page);
@@ -71,6 +72,7 @@ export async function getDeals({
     `,
       { count: "exact" },
     )
+    .eq("tenant_id", tenantId)
     .is("property.deleted_at", null)
     .order(order, { ascending });
 
@@ -105,10 +107,12 @@ export async function getDeals({
       const propRes = await supabase
         .from("properties")
         .select("id")
+        .eq("tenant_id", tenantId)
         .ilike("title", `%${trimmed}%`);
       const leadRes = await supabase
         .from("leads")
         .select("id")
+        .eq("tenant_id", tenantId)
         .ilike("full_name", `%${trimmed}%`);
 
       const propIds = (propRes.data ?? []).map((p) => p.id);
@@ -130,6 +134,7 @@ export async function getDeals({
     `,
             { count: "exact" },
           )
+          .eq("tenant_id", tenantId)
           .is("property.deleted_at", null)
           .order(order, { ascending });
 

@@ -29,7 +29,14 @@ import {
 
 const ownerSchema = z.object({
   full_name: z.string().min(1, "กรุณากรอกชื่อเจ้าของ"),
-  phone: z.string().nullable().optional(),
+  phone: z
+    .string()
+    .refine(
+      (val) => !val || /^0[0-9]{8,9}$/.test(val.replace(/[- ]/g, "")),
+      "เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมี 9-10 หลัก)",
+    )
+    .nullable()
+    .optional(),
   line_id: z.string().nullable().optional(),
   facebook_url: z.string().nullable().optional(),
   other_contact: z.string().nullable().optional(),
@@ -99,7 +106,7 @@ export function OwnerForm(props: Props) {
 
     startTransition(async () => {
       try {
-        let res: any;
+        let res: { success: boolean; message?: string; id?: string };
         if (props.mode === "create") {
           res = await createOwnerAction(payload);
         } else {
@@ -107,7 +114,7 @@ export function OwnerForm(props: Props) {
         }
 
         if (res?.success === false) {
-          toast.error(res.message);
+          toast.error(res.message || "เกิดข้อผิดพลาด");
           return;
         }
 
@@ -117,15 +124,14 @@ export function OwnerForm(props: Props) {
 
         router.refresh();
 
-        // Call onSuccess callback if provided
         if (props.onSuccess) {
           props.onSuccess();
         } else {
-          // Default behavior for non-dialog: redirect to owners list
           router.push("/protected/owners");
         }
-      } catch (e: any) {
-        toast.error(e?.message ?? "เกิดข้อผิดพลาด");
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : "เกิดข้อผิดพลาด";
+        toast.error(message);
       }
     });
   };

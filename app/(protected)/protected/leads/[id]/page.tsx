@@ -4,6 +4,7 @@ import { UserPlus, Briefcase, History as HistoryIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getLeadWithActivitiesQuery } from "@/features/leads/queries";
 import { createLeadActivityAction } from "@/features/leads/actions";
+import { requireAuthContext } from "@/lib/authz";
 import { LeadTimeline } from "@/components/leads/LeadTimeline";
 import { LeadActivityDialog } from "@/components/leads/LeadActivityDialog";
 import { getPropertySummariesByIdsQuery } from "@/features/leads/queries";
@@ -23,6 +24,7 @@ import { LeadContactCard } from "@/features/leads/components/LeadContactCard";
 import { LeadRequirementsCard } from "@/features/leads/components/LeadRequirementsCard";
 import { LeadSummaryCard } from "@/features/leads/components/LeadSummaryCard";
 import { PDPAStatus } from "@/features/leads/components/PDPAStatus";
+import { LeadTransferButton } from "@/features/leads/components/LeadTransferButton";
 
 type LeadActivity = Database["public"]["Tables"]["lead_activities"]["Row"];
 
@@ -32,6 +34,10 @@ export default async function LeadDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const { tenantId } = await requireAuthContext();
+
+  if (!tenantId) return notFound();
+
   const lead = await getLeadWithActivitiesQuery(id);
 
   if (!lead) return notFound();
@@ -71,8 +77,8 @@ export default async function LeadDetailPage({
 
   async function onCreateActivity(values: LeadActivityFormValues) {
     "use server";
-    const res = await createLeadActivityAction(id, values);
-    if (!res.success) throw new Error(res.message);
+    const res = await createLeadActivityAction({ leadId: id, values });
+    if (!res.success) throw new Error(res.error);
   }
   const propertyIds = ((lead.lead_activities as LeadActivity[] | null) ?? [])
     .map((a) => a.property_id)
@@ -113,9 +119,14 @@ export default async function LeadDetailPage({
           >
             ✏️ แก้ไข
           </Link>
+          <LeadTransferButton
+            leadId={id}
+            leadName={lead.full_name ?? "Unknown"}
+            currentTenantId={tenantId}
+          />
           <LeadActivityDialog
             leadId={id}
-            leadName={lead.full_name}
+            leadName={lead.full_name ?? "Unknown"}
             onSubmitAction={onCreateActivity}
             triggerClassName="bg-blue-600 hover:bg-blue-500 text-white shadow-sm border-0"
           />
@@ -190,7 +201,7 @@ export default async function LeadDetailPage({
             </div>
             <LeadActivityDialog
               leadId={id}
-              leadName={lead.full_name}
+              leadName={lead.full_name ?? "Unknown"}
               onSubmitAction={onCreateActivity}
             />
           </div>

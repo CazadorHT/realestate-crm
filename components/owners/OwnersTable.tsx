@@ -25,10 +25,14 @@ import { exportOwnersAction } from "@/features/owners/export-action";
 import { toast } from "sonner";
 
 interface OwnersTableProps {
-  owners: (Owner & { property_count?: number })[];
+  owners: (Owner & {
+    property_count?: number;
+    tenants?: { name: string } | null;
+  })[];
+  showBranch?: boolean;
 }
 
-export function OwnersTable({ owners }: OwnersTableProps) {
+export function OwnersTable({ owners, showBranch }: OwnersTableProps) {
   const allIds = useMemo(() => owners.map((o) => o.id), [owners]);
   const {
     toggleSelect,
@@ -93,6 +97,7 @@ export function OwnersTable({ owners }: OwnersTableProps) {
                   />
                 </TableHead>
                 <TableHead>ชื่อ</TableHead>
+                {showBranch && <TableHead>สาขา</TableHead>}
                 <TableHead>เบอร์โทร</TableHead>
                 <TableHead>LINE</TableHead>
                 <TableHead>Facebook</TableHead>
@@ -137,6 +142,17 @@ export function OwnersTable({ owners }: OwnersTableProps) {
                         )}
                     </div>
                   </TableCell>
+                  {/* สาขา */}
+                  {showBranch && (
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className="font-normal capitalize"
+                      >
+                        {owner.tenants?.name || "-"}
+                      </Badge>
+                    </TableCell>
+                  )}
                   {/* เบอร์โทร */}
                   <TableCell>
                     {owner.phone ? (
@@ -233,6 +249,11 @@ export function OwnersTable({ owners }: OwnersTableProps) {
                       <div className="bg-slate-100 text-[10px] font-bold text-slate-500 px-2 py-0.5 rounded-full w-fit mt-1">
                         {owner.property_count || 0} ทรัพย์
                       </div>
+                      {showBranch && owner.tenants?.name && (
+                        <div className="bg-blue-100 text-[10px] font-bold text-blue-600 px-2 py-0.5 rounded-full w-fit mt-1">
+                          สาขา: {owner.tenants.name}
+                        </div>
+                      )}
                     </div>
                     <OwnerRowActions id={owner.id} fullName={owner.full_name} />
                   </div>

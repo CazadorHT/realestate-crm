@@ -32,6 +32,12 @@ const LOG_ACTIONS = [
   "lead.update",
   "deal.create",
   "deal.update",
+  "member.add",
+  "member.remove",
+  "member.transfer",
+  "tenant.create",
+  "tenant.update",
+  "tenant.delete",
   "auth.login",
 ];
 
@@ -41,6 +47,8 @@ const LOG_ENTITIES = [
   "deals",
   "owners",
   "users",
+  "tenants",
+  "tenant_members",
   "auth",
 ];
 

@@ -12,6 +12,8 @@ import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
 import { getRecentNotifications } from "@/features/dashboard/queries";
 import { SocialPostMonitor } from "@/components/properties/SocialPostMonitor";
+import { TenantSwitcher } from "@/components/common/TenantSwitcher";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
 export default async function ProtectedLayout({
   children,
@@ -55,13 +57,16 @@ export default async function ProtectedLayout({
             </h1>
           </div>
           <div className="ml-auto flex items-center gap-2 sm:gap-4">
+            <TenantSwitcher />
             <NotificationBell notifications={notifications} />
             <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
             <UserNav profile={profile} />
           </div>
         </header>
 
-        <main className="flex-1 p-6 md:p-8 mx-auto w-full">{children}</main>
+        <main className="flex-1 p-6 md:p-8 mx-auto w-full">
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </main>
         <SocialPostMonitor />
       </div>
     </div>

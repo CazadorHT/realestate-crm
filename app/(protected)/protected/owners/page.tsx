@@ -10,6 +10,8 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SectionTitle } from "@/components/dashboard/SectionTitle";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { CreateOwnerDialog } from "@/components/owners/CreateOwnerDialog";
+import { requireAuthContext } from "@/lib/authz";
+import { GlobalLookupToggle } from "@/components/owners/GlobalLookupToggle";
 
 export const metadata: Metadata = {
   title: "จัดการเจ้าของทรัพย์",
@@ -20,6 +22,7 @@ type PageProps = {
   searchParams: Promise<{
     q?: string;
     page?: string;
+    all_branches?: string;
   }>;
 };
 
@@ -27,6 +30,10 @@ export default async function OwnersPage({ searchParams }: PageProps) {
   const sp = await searchParams;
   const page = Number(sp.page) || 1;
   const q = sp.q || "";
+  const allBranches = sp.all_branches === "true";
+
+  const { role } = await requireAuthContext();
+  const isAdminUser = role === "ADMIN";
 
   const {
     data: owners,
@@ -36,6 +43,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
     q,
     page,
     pageSize: 10,
+    allBranches: isAdminUser && allBranches,
   });
 
   const stats = await getOwnersDashboardStatsQuery();
@@ -43,6 +51,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
   const makeHref = (newPage: number) => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
+    if (allBranches) params.set("all_branches", "true");
     params.set("page", newPage.toString());
     return `/protected/owners?${params.toString()}`;
   };
@@ -59,7 +68,13 @@ export default async function OwnersPage({ searchParams }: PageProps) {
         icon="userCircle"
         actionSlot={<CreateOwnerDialog />}
         gradient="purple"
-      />
+      >
+        {isAdminUser && (
+          <div className="flex justify-end">
+            <GlobalLookupToggle />
+          </div>
+        )}
+      </PageHeader>
 
       <OwnersStats stats={stats} />
 
@@ -79,7 +94,10 @@ export default async function OwnersPage({ searchParams }: PageProps) {
           />
         ) : (
           <>
-            <OwnersTable owners={owners} />
+            <OwnersTable
+              owners={owners}
+              showBranch={isAdminUser && allBranches}
+            />
 
             <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-sm bg-slate-50 rounded-xl p-4 border border-gray-200 shadow-xs">
               <div className="text-slate-600 font-medium order-2 lg:order-1 text-center lg:text-left">

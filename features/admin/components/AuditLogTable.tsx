@@ -33,11 +33,11 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-50/50">
-            <TableHead className="w-[180px]">เวลา</TableHead>
-            <TableHead className="w-[280px]">ผู้ใช้งาน</TableHead>
-            <TableHead>กิจกรรม (Action)</TableHead>
-            <TableHead>หมวดหมู่ (Entity)</TableHead>
-            <TableHead className="text-right">รายละเอียด</TableHead>
+            <TableHead className="w-[160px]">เวลา</TableHead>
+            <TableHead className="w-[200px]">ผู้ใช้งาน</TableHead>
+            <TableHead className="w-[180px]">กิจกรรม</TableHead>
+            <TableHead>รายละเอียดกิจกรรม (Summary)</TableHead>
+            <TableHead className="text-right w-[80px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -63,21 +63,18 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
                         ? `/protected/settings/users/${log.user.id}`
                         : "#"
                     }
-                    className="flex items-center gap-3 w-fit group/user transition-all"
+                    className="flex items-center gap-2 w-fit group/user transition-all"
                   >
-                    <Avatar className="h-9 w-9 border border-slate-100 shadow-xs group-hover/user:ring-2 group-hover/user:ring-blue-500/20 group-hover/user:border-blue-200 transition-all">
+                    <Avatar className="h-8 w-8 border border-slate-100 shadow-xs">
                       <AvatarImage src={log.user?.avatar_url || ""} />
-                      <AvatarFallback className="bg-slate-50 text-slate-400 text-xs font-bold">
+                      <AvatarFallback className="bg-slate-50 text-slate-400 text-[10px] font-bold">
                         {log.user?.full_name?.substring(0, 2).toUpperCase() ||
                           "U"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-700 group-hover/user:text-blue-600 transition-colors">
-                        {log.user?.full_name || "Unknown User"}
-                      </span>
-                      <span className="text-[11px] text-slate-400 font-medium">
-                        {log.user?.email}
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-slate-700 truncate max-w-[120px]">
+                        {log.user?.full_name || "Unknown"}
                       </span>
                     </div>
                   </Link>
@@ -86,13 +83,20 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
                   <FormatActionBadge action={log.action} />
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-mono text-xs">{log.entity}</span>
-                    {log.entity_id && (
-                      <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[100px]">
-                        {log.entity_id}
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm text-slate-700 font-medium">
+                      {getReadableSummary(log)}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {log.entity}
                       </span>
-                    )}
+                      {log.entity_id && (
+                        <span className="text-[10px] text-slate-300 font-mono">
+                          ID: {log.entity_id.substring(0, 8)}...
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
@@ -152,6 +156,55 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
       </Table>
     </div>
   );
+}
+
+interface AuditLogMetadata {
+  email?: string;
+  fullName?: string;
+  full_name?: string;
+  name?: string;
+  title?: string;
+  role?: string;
+}
+
+function getReadableSummary(log: AuditLogWithUser): string {
+  const meta = log.metadata as unknown as AuditLogMetadata;
+  const action = log.action;
+
+  switch (action) {
+    case "member.transfer":
+      return `ย้ายพนักงาน ${meta.email || ""} ไปยังสาขาใหม่`;
+    case "lead.transfer":
+      return `ส่งต่อลูกค้าคุณ ${meta.fullName || "N/A"} ให้สาขาอื่นดูแล`;
+    case "member.add":
+      return `เพิ่มพนักงาน ${meta.email || ""} เข้าสู่สาขา (Role: ${meta.role || "N/A"})`;
+    case "member.remove":
+      return `ลบพนักงานออกจากสาขา`;
+    case "tenant.create":
+      return `สร้างสาขาใหม่: ${meta.name || "N/A"}`;
+    case "tenant.update":
+      return `แก้ไขข้อมูลสาขา: ${meta.name || "N/A"}`;
+    case "tenant.delete":
+      return `ลบสาขาออกจากระบบ`;
+    case "property.create":
+      return `เพิ่มทรัพย์สินใหม่: ${meta.title || "N/A"}`;
+    case "property.update":
+      return `อัปเดตข้อมูลทรัพย์สิน`;
+    case "lead.create":
+      return `เพิ่มลีดใหม่: ${meta.full_name || "N/A"}`;
+    case "lead.update":
+      return `อัปเดตข้อมูลลีด`;
+    case "deal.create":
+      return `สร้างดีลใหม่`;
+    case "auth.login":
+      return `เข้าสู่ระบบ`;
+    default:
+      if (action.includes("delete")) return `ลบข้อมูล (${log.entity})`;
+      if (action.includes("create")) return `สร้างข้อมูลใหม่ (${log.entity})`;
+      if (action.includes("status.update"))
+        return `อัปเดตสถานะ (${log.entity})`;
+      return action;
+  }
 }
 
 function FormatActionBadge({ action }: { action: string }) {

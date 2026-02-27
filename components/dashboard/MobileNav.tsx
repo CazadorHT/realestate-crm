@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site-config";
+import { TenantSwitcher } from "@/components/common/TenantSwitcher";
 
 export function MobileNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
@@ -228,6 +229,21 @@ export function MobileNav({ role }: { role: UserRole }) {
           href: "/protected/dashboard/executive",
           icon: Sparkles,
           active: pathname === "/protected/dashboard/executive",
+          roles: ["ADMIN", "MANAGER"],
+        },
+        {
+          title: "ภาพรวมทุกสาขา (Cross-branch)",
+          href: "/protected/admin/executive",
+          icon: Globe,
+          active: pathname === "/protected/admin/executive",
+          roles: ["ADMIN"],
+        },
+        {
+          title: "คลังทรัพย์สินรวม",
+          href: "/protected/admin/inventory",
+          icon: Box,
+          active: pathname === "/protected/admin/inventory",
+          roles: ["ADMIN"],
         },
       ],
       roles: ["ADMIN", "MANAGER"],
@@ -273,7 +289,7 @@ export function MobileNav({ role }: { role: UserRole }) {
       >
         <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
         <div className="p-6 border-b border-slate-200 bg-white/50 sticky top-0 z-20">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex flex-col">
               <h1 className="text-xl font-semibold tracking-tight text-slate-800 uppercase leading-none">
                 {siteConfig.name}
@@ -282,6 +298,7 @@ export function MobileNav({ role }: { role: UserRole }) {
                 {siteConfig.description || "Real Estate CRM"}
               </p>
             </div>
+            <TenantSwitcher />
           </div>
         </div>
 

@@ -9,8 +9,8 @@ export default function LeadNewPage() {
   async function onSubmitAction(values: LeadFormValues) {
     "use server";
     const res = await createLeadAction(values);
-    if (!res.success) throw new Error(res.message);
-    redirect(`/protected/leads/${res.leadId}`);
+    if (!res.success) throw new Error(res.error);
+    redirect(`/protected/leads/${res.data.leadId}`);
   }
 
   return (

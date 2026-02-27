@@ -18,7 +18,14 @@ const nullableNumber = z.preprocess((val) => {
 
 export const leadFormSchema = z.object({
   full_name: z.string().min(1, "กรุณากรอกชื่อ"),
-  phone: z.string().optional().nullable(),
+  phone: z
+    .string()
+    .refine(
+      (val) => !val || /^0[0-9]{8,9}$/.test(val.replace(/[- ]/g, "")),
+      "เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมี 9-10 หลัก)",
+    )
+    .optional()
+    .nullable(),
   email: z
     .string()
     .email("อีเมลไม่ถูกต้อง")

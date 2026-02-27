@@ -18,7 +18,11 @@ export async function getOwnersAction() {
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
 
-    let query = ctx.supabase.from("owners").select("*").order("full_name");
+    let query = ctx.supabase
+      .from("owners")
+      .select("*")
+      .eq("tenant_id", ctx.tenantId!)
+      .order("full_name");
 
     // Allow all authenticated users (Agents/Admins) to see all owners
     // if (ctx.role !== "ADMIN") {
@@ -48,6 +52,7 @@ export async function getOwnerByIdAction(id: string) {
     .from("owners")
     .select("*")
     .eq("id", id)
+    .eq("tenant_id", ctx.tenantId!)
     .single();
 
   if (error || !owner) {
@@ -76,9 +81,10 @@ export async function createOwnerAction(values: OwnerFormValues) {
         line_id: values.line_id || null,
         facebook_url: values.facebook_url || null,
         other_contact: values.other_contact || null,
-        owner_type: (values as any).owner_type ?? null, // ถ้าใน form มีจริงค่อยปรับ type ให้ตรง
-        company_name: (values as any).company_name ?? null,
+        owner_type: values.owner_type || null,
+        company_name: values.company_name || null,
         created_by: ctx.user.id,
+        tenant_id: ctx.tenantId!,
         updated_at: new Date().toISOString(),
       })
       .select("id")
@@ -102,7 +108,7 @@ export async function createOwnerAction(values: OwnerFormValues) {
     return { success: true, id: owner.id };
   } catch (err) {
     return authzFail(err);
-  }   
+  }
 }
 
 export async function updateOwnerAction(id: string, values: OwnerFormValues) {
@@ -134,11 +140,12 @@ export async function updateOwnerAction(id: string, values: OwnerFormValues) {
         line_id: values.line_id || null,
         facebook_url: values.facebook_url || null,
         other_contact: values.other_contact || null,
-        owner_type: (values as any).owner_type ?? null,
-        company_name: (values as any).company_name ?? null,
+        owner_type: values.owner_type || null,
+        company_name: values.company_name || null,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("tenant_id", ctx.tenantId!);
 
     if (error) return { success: false, message: error.message };
 
@@ -178,7 +185,11 @@ export async function deleteOwnerAction(id: string) {
       role: ctx.role,
     });
 
-    const { error } = await ctx.supabase.from("owners").delete().eq("id", id);
+    const { error } = await ctx.supabase
+      .from("owners")
+      .delete()
+      .eq("id", id)
+      .eq("tenant_id", ctx.tenantId!);
     if (error) return { success: false, message: error.message };
 
     await logAudit(ctx, {
@@ -200,7 +211,11 @@ export async function getOwnersWithPropertyCountAction() {
   const ctx = await requireAuthContext();
   assertStaff(ctx.role);
 
-  let query = ctx.supabase.from("owners").select("*").order("full_name");
+  let query = ctx.supabase
+    .from("owners")
+    .select("*")
+    .eq("tenant_id", ctx.tenantId!)
+    .order("full_name");
 
   // Allow all authenticated users (Agents/Admins) to see all owners
   // if (ctx.role !== "ADMIN") {
@@ -216,7 +231,8 @@ export async function getOwnersWithPropertyCountAction() {
 
   const { data: propertyCounts, error: countsError } = await ctx.supabase
     .from("properties")
-    .select("owner_id");
+    .select("owner_id")
+    .eq("tenant_id", ctx.tenantId!);
 
   if (countsError) {
     console.error("Error fetching property counts:", countsError);

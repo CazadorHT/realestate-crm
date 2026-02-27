@@ -141,7 +141,6 @@ export function DocumentList({
                           documentId={doc.id}
                           documentName={doc.file_name}
                           currentStatus={doc.esign_status}
-                          recipientEmail={doc.lead?.email || (doc as any).email}
                         />
                       </div>
                     </TooltipTrigger>

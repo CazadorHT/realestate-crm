@@ -29,8 +29,9 @@ type ListArgs = {
 };
 // ใช้สำหรับแสดง leads หลายรายการ
 export async function getLeadsQuery(args: ListArgs = {}) {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
+  if (!tenantId) throw new Error("Tenant ID is required but missing");
 
   const q = (args.q ?? "").trim();
   const stage = (args.stage ?? "").trim();
@@ -40,6 +41,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   let query = supabase
     .from("leads")
     .select("*, property:properties(id, title)", { count: "exact" })
+    .eq("tenant_id", tenantId!) // Tenant isolation
     .order("created_at", { ascending: false });
 
   if (q) {
@@ -95,12 +97,14 @@ export async function getLeadsQuery(args: ListArgs = {}) {
  * Optimized query for Kanban view, fetching all active/recent leads (limited)
  */
 export async function getLeadsForKanbanQuery() {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
+  if (!tenantId) throw new Error("Tenant ID is required but missing");
 
   const { data, error } = await supabase
     .from("leads")
     .select("*")
+    .eq("tenant_id", tenantId!)
     .order("updated_at", { ascending: false })
     .limit(200);
 
@@ -110,12 +114,14 @@ export async function getLeadsForKanbanQuery() {
 }
 // ใช้สำหรับแสดง leads รายเดียว
 export async function getLeadByIdQuery(id: string): Promise<LeadRow | null> {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
+  if (!tenantId) throw new Error("Tenant ID is required but missing");
   const { data, error } = await supabase
     .from("leads")
     .select("*")
     .eq("id", id)
+    .eq("tenant_id", tenantId!)
     .single();
 
   if (error) {
@@ -129,7 +135,7 @@ export async function getLeadWithActivitiesQuery(
   id: string,
 ): Promise<LeadWithActivities | null> {
   try {
-    const { supabase, role } = await requireAuthContext();
+    const { supabase, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     const { data, error } = await supabase
@@ -144,6 +150,7 @@ export async function getLeadWithActivitiesQuery(
             `,
       )
       .eq("id", id)
+      .eq("tenant_id", tenantId!)
       .single();
 
     if (error) {
@@ -165,8 +172,9 @@ export async function getLeadWithActivitiesQuery(
 }
 // ใช้สำหรับแสดง summary ของ property ที่มีใน leads
 export async function getPropertySummariesByIdsQuery(ids: string[]) {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
+  if (!tenantId) throw new Error("Tenant ID is required but missing");
   const uniq = Array.from(new Set(ids)).filter(Boolean);
   if (uniq.length === 0) return {} as Record<string, PropertySummary>;
 
@@ -175,6 +183,7 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
     .select(
       "id,title,property_type,listing_type,status,price,original_price,rental_price,original_rental_price,currency",
     )
+    .eq("tenant_id", tenantId!)
     .is("deleted_at", null)
     .in("id", uniq);
 
@@ -207,18 +216,21 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
 
 // ใช้สำหรับ dashboard stats
 export async function getLeadsDashboardStatsQuery() {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
+  if (!tenantId) throw new Error("Tenant ID is required but missing");
 
   // 1. Total Count
   const { count: totalLeads } = await supabase
     .from("leads")
-    .select("*", { count: "exact", head: true });
+    .select("*", { count: "exact", head: true })
+    .eq("tenant_id", tenantId!);
 
   // 2. Active Count (Not closed)
   const { count: activeLeads } = await supabase
     .from("leads")
     .select("*", { count: "exact", head: true })
+    .eq("tenant_id", tenantId!)
     .neq("stage", "CLOSED");
 
   // 3. New this month
@@ -231,10 +243,14 @@ export async function getLeadsDashboardStatsQuery() {
   const { count: newLeadsMonth } = await supabase
     .from("leads")
     .select("*", { count: "exact", head: true })
+    .eq("tenant_id", tenantId!)
     .gte("created_at", startOfMonth);
 
   // 4. Source distribution (for Chart/Cards)
-  const { data: leads } = await supabase.from("leads").select("stage, source");
+  const { data: leads } = await supabase
+    .from("leads")
+    .select("stage, source")
+    .eq("tenant_id", tenantId);
 
   const byStage: Record<string, number> = {};
   const bySource: Record<string, number> = {};

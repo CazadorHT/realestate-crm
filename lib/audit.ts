@@ -12,6 +12,7 @@ export type AuditAction =
   | "lead.update"
   | "lead.delete"
   | "lead.bulk_delete"
+  | "lead.transfer"
   | "lead_activity.create"
   | "lead_activity.update"
   | "lead_activity.delete"
@@ -42,7 +43,13 @@ export type AuditAction =
   | "document.bulk_delete"
   | "team.create"
   | "team.update"
-  | "team.delete";
+  | "team.delete"
+  | "tenant.create"
+  | "tenant.update"
+  | "tenant.delete"
+  | "member.add"
+  | "member.remove"
+  | "member.transfer";
 
 type AuditInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];
 

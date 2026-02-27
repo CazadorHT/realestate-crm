@@ -15,6 +15,7 @@ import {
   Music2,
   Facebook,
   CheckCircle,
+  Building2,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
@@ -448,6 +449,22 @@ export default async function SettingsPage({
                       <CardTitle className="text-base">จัดการผู้ใช้</CardTitle>
                       <CardDescription className="text-xs">
                         เพิ่ม/ลด สิทธิ์ และจัดการบัญชีผู้ใช้งาน
+                      </CardDescription>
+                    </div>
+                  </CardHeader>
+                </Card>
+              </Link>
+
+              <Link href="/protected/settings/branches">
+                <Card className="hover:border-blue-200 transition-colors">
+                  <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                      <Building2 className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">จัดการสาขา</CardTitle>
+                      <CardDescription className="text-xs">
+                        บริหารจัดการสาขา แฟรนไชส์ และพนักงานในสังกัด
                       </CardDescription>
                     </div>
                   </CardHeader>

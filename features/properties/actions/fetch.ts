@@ -1,4 +1,4 @@
-"use server";
+  "use server";
 import { createClient } from "@/lib/supabase/server";
 import {
   requireAuthContext,
@@ -13,13 +13,15 @@ import type { PropertyRow, PropertyWithImages } from "../types";
  */
 export async function getPropertyById(id: string): Promise<PropertyRow> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     const { data: property, error: propErr } = await supabase
       .from("properties")
       .select("*")
       .eq("id", id)
+      .eq("tenant_id", tenantId)
       .single();
 
     if (propErr) throw propErr;
@@ -43,8 +45,9 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
 export async function getPropertyWithImages(
   id: string,
 ): Promise<PropertyWithImages> {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
+  if (!tenantId) throw new Error("Tenant ID is required but missing");
 
   const { data, error } = await supabase
     .from("properties")
@@ -69,6 +72,7 @@ export async function getPropertyWithImages(
     `,
     )
     .eq("id", id)
+    .eq("tenant_id", tenantId)
     .single();
 
   if (error || !data) throw error;
@@ -155,4 +159,83 @@ export async function addPopularAreaAction(data: {
   }
 
   return { success: true };
+}
+
+/**
+ * Get global properties for administration (cross-tenant)
+ */
+export async function getGlobalPropertiesTableDataAction(params: {
+  page?: number;
+  q?: string;
+  propertyType?: string;
+  listingType?: string;
+  status?: string;
+  targetTenantId?: string;
+}): Promise<{
+  tableData: any[];
+  count: number;
+}> {
+  const { supabase, role } = await requireAuthContext();
+  if (role !== "ADMIN") throw new Error("Forbidden: Admin only");
+
+  const {
+    page = 1,
+    q,
+    propertyType,
+    listingType,
+    status,
+    targetTenantId,
+  } = params;
+  const PAGE_SIZE = 10;
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
+  let query = supabase
+    .from("properties")
+    .select("*, tenants(name)", { count: "exact" })
+    .is("deleted_at", null)
+    .range(from, to)
+    .order("created_at", { ascending: false });
+
+  if (q) {
+    query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
+  }
+
+  if (propertyType && propertyType !== "ALL") {
+    query = query.eq("property_type", propertyType as any);
+  }
+
+  if (listingType && listingType !== "ALL") {
+    query = query.eq("listing_type", listingType as any);
+  }
+
+  if (status && status !== "ALL") {
+    query = query.eq("status", status as any);
+  }
+
+  if (targetTenantId && targetTenantId !== "ALL") {
+    query = query.eq("tenant_id", targetTenantId);
+  }
+
+  const { data, error, count } = await query;
+
+  if (error || !data) {
+    if (error)
+      console.error("getGlobalPropertiesTableDataAction error:", error);
+    return { tableData: [], count: 0 };
+  }
+
+  const tableData = data.map((p: any) => ({
+    id: p.id,
+    title: p.title,
+    price: p.price || p.original_price,
+    rental_price: p.rental_price || p.original_rental_price,
+    status: p.status,
+    property_type: p.property_type,
+    listing_type: p.listing_type,
+    tenant_name: (p.tenants as any)?.name || "Unknown Branch",
+    created_at: p.created_at,
+  }));
+
+  return { tableData, count: count || 0 };
 }

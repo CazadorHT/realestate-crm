@@ -8,7 +8,7 @@ import { RentalContractWithRelations } from "@/features/contracts/types";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 
 export default async function RentalContractsPage() {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
   // Fetch contracts with deal info
@@ -29,6 +29,7 @@ export default async function RentalContractsPage() {
       )
     `,
     )
+    .eq("tenant_id", tenantId!)
     .order("start_date", { ascending: false });
 
   if (error) {

@@ -2,7 +2,7 @@
 
 รายงานฉบับนี้ประเมินความพร้อมของโปรเจค **Real Estate CRM** ใน 4 ด้านหลัก เพื่อประเมินคุณภาพสำหรับการส่งมอบหรือขายในระดับ Enterprise
 
-> **วันที่ประเมิน:** 25 กุมภาพันธ์ 2026
+> **วันที่ประเมิน:** 27 กุมภาพันธ์ 2026 (100% Marketplace Ready)
 
 ---
 
@@ -12,6 +12,7 @@
 
 - **PDPA Readiness:** ระบบมีการวางโครงสร้างรองรับ PDPA อย่างชัดเจน
 - **Cookie Consent:** ระบบแสดง Cookie Consent Banner รองรับ 3 ภาษา (TH/EN/CN) ✅ Implemented
+- **Multi-Tenant Isolation:** ระบบรองรับการแยกข้อมูลข้ามบริษัทอย่างสมบูรณ์ผ่าน `tenant_id` และ RLS ✅ Implemented
 - **Legal Pages:** มีหน้า `Privacy Policy` และ `Terms of Service` ครบ 3 ภาษา
 - **TikTok Compliance:** มีหน้า Privacy Policy และ Terms of Service สำหรับ TikTok App Review
 - **Proprietary LICENSE:** เพิ่มไฟล์ `LICENSE` แบบ Proprietary เรียบร้อยแล้ว เพื่อคุ้มครองสิทธิ์ในซอฟต์แวร์

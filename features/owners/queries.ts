@@ -1,12 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireAuthContext } from "@/lib/authz";
 import type { Owner } from "./types";
 
 export async function getOwnerById(id: string): Promise<Owner | null> {
-  const supabase = await createClient();
+  const { supabase, tenantId } = await requireAuthContext();
   const { data, error } = await supabase
     .from("owners")
     .select("*")
     .eq("id", id)
+    .eq("tenant_id", tenantId!)
     .single();
 
   if (error) {
@@ -18,7 +20,7 @@ export async function getOwnerById(id: string): Promise<Owner | null> {
 }
 
 export async function getOwners() {
-  const supabase = await createClient();
+  const { supabase, tenantId } = await requireAuthContext();
 
   // Fetch owners with property count
   const { data, error } = await supabase
@@ -27,8 +29,9 @@ export async function getOwners() {
       `
       *,
       properties:properties(count)
-    `
+    `,
     )
+    .eq("tenant_id", tenantId!)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -46,11 +49,12 @@ export async function getOwners() {
 }
 
 export async function getOwnerProperties(ownerId: string) {
-  const supabase = await createClient();
+  const { supabase, tenantId } = await requireAuthContext();
   const { data, error } = await supabase
     .from("properties")
     .select("*")
     .eq("owner_id", ownerId)
+    .eq("tenant_id", tenantId!)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -65,24 +69,35 @@ export type GetOwnersParams = {
   q?: string;
   page?: number;
   pageSize?: number;
+  allBranches?: boolean;
 };
 
 export async function getOwnersQuery({
   q,
   page = 1,
   pageSize = 10,
+  allBranches = false,
 }: GetOwnersParams) {
-  const supabase = await createClient();
+  const { supabase, tenantId, role } = await requireAuthContext();
   const start = (page - 1) * pageSize;
   const end = start + pageSize - 1;
 
   let query = supabase
     .from("owners")
-    .select("*, properties:properties(count)", { count: "exact" });
+    .select("*, properties:properties(count), tenants(name)", {
+      count: "exact",
+    });
+
+  // Only Admin can see across branches
+  if (allBranches && role === "ADMIN") {
+    // No tenant_id filter
+  } else {
+    query = query.eq("tenant_id", tenantId!);
+  }
 
   if (q) {
     query = query.or(
-      `full_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`
+      `full_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`,
     );
   }
 
@@ -113,23 +128,25 @@ export async function getOwnersQuery({
 }
 
 export async function getOwnersDashboardStatsQuery() {
-  const supabase = await createClient();
+  const { supabase, tenantId } = await requireAuthContext();
 
   // 1. Total Owners
   const { count: totalOwners } = await supabase
     .from("owners")
-    .select("*", { count: "exact", head: true });
+    .select("*", { count: "exact", head: true })
+    .eq("tenant_id", tenantId!);
 
   // 2. New this month
   const now = new Date();
   const startOfMonth = new Date(
     now.getFullYear(),
     now.getMonth(),
-    1
+    1,
   ).toISOString();
   const { count: newOwnersMonth } = await supabase
     .from("owners")
     .select("*", { count: "exact", head: true })
+    .eq("tenant_id", tenantId!)
     .gte("created_at", startOfMonth);
 
   // 3. Owners with properties (Active)
@@ -146,6 +163,7 @@ export async function getOwnersDashboardStatsQuery() {
   const { count: totalPropertiesLinked } = await supabase
     .from("properties")
     .select("*", { count: "exact", head: true })
+    .eq("tenant_id", tenantId!)
     .not("owner_id", "is", null);
 
   return {

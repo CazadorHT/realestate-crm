@@ -133,3 +133,32 @@ export async function syncESignStatusAction(documentId: string) {
     return { success: false, message: msg };
   }
 }
+
+/**
+ * Manually mark a document as signed (Simple mode)
+ */
+export async function markAsSignedAction(documentId: string) {
+  try {
+    const { supabase, role, user } = await requireAuthContext();
+    assertStaff(role);
+
+    const { error } = await supabase
+      .from("documents")
+      .update({
+        esign_status: "SIGNED",
+        esign_signed_at: new Date().toISOString(),
+      })
+      .eq("id", documentId);
+
+    if (error)
+      throw new Error("ไม่สามารถอัปเดตสถานะเอกสารได้: " + error.message);
+
+    revalidatePath("/protected/documents");
+    return { success: true, status: "SIGNED" as const };
+  } catch (error: unknown) {
+    console.error("Manual Sign Error:", error);
+    const msg =
+      error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการบันทึก";
+    return { success: false, message: msg };
+  }
+}

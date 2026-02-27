@@ -18,6 +18,7 @@ import { logAudit } from "@/lib/audit";
 // Helper: Adjust property stock and auto-update status
 async function adjustPropertyStock(
   supabase: Awaited<ReturnType<typeof requireAuthContext>>["supabase"],
+  tenantId: string,
   propertyId: string,
   adjustment: number, // +1 or -1
   dealType?: "SALE" | "RENT",
@@ -27,8 +28,9 @@ async function adjustPropertyStock(
   // 1. Get current stock
   const { data: prop, error } = await supabase
     .from("properties")
-    .select("id, total_units, sold_units, status")
+    .select("id, total_units, sold_units, status, tenant_id")
     .eq("id", propertyId)
+    .eq("tenant_id", tenantId)
     .single();
 
   if (error || !prop) {
@@ -65,12 +67,14 @@ async function adjustPropertyStock(
       sold_units: newSold,
       status: newStatus,
     })
-    .eq("id", propertyId);
+    .eq("id", propertyId)
+    .eq("tenant_id", tenantId);
 }
 
 export async function createDealAction(input: CreateDealInput) {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     // Validate Input
     const validated = createDealSchema.parse(input);
@@ -127,6 +131,7 @@ export async function createDealAction(input: CreateDealInput) {
       .from("deals")
       .insert({
         ...insertData,
+        tenant_id: tenantId,
         created_by: user.id,
       })
       .select()
@@ -148,6 +153,7 @@ export async function createDealAction(input: CreateDealInput) {
     if (validated.status === "CLOSED_WIN" && validated.property_id) {
       await adjustPropertyStock(
         supabase,
+        tenantId,
         validated.property_id,
         1,
         validated.deal_type,
@@ -167,7 +173,8 @@ export async function createDealAction(input: CreateDealInput) {
 
 export async function updateDealAction(input: UpdateDealInput) {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     const validated = updateDealSchema.parse(input);
 
@@ -177,8 +184,9 @@ export async function updateDealAction(input: UpdateDealInput) {
 
     const { data: currentDeal, error: currentErr } = await supabase
       .from("deals")
-      .select("id, status, property_id, deal_type")
+      .select("id, status, property_id, deal_type, tenant_id")
       .eq("id", validated.id)
+      .eq("tenant_id", tenantId)
       .single();
 
     if (currentErr || !currentDeal) {
@@ -233,6 +241,7 @@ export async function updateDealAction(input: UpdateDealInput) {
       .from("deals")
       .update(updateData)
       .eq("id", validated.id)
+      .eq("tenant_id", tenantId)
       .single();
 
     if (error) throw new Error(error.message);
@@ -261,6 +270,7 @@ export async function updateDealAction(input: UpdateDealInput) {
       if (prevStatus === "CLOSED_WIN" && prevPropertyId) {
         await adjustPropertyStock(
           supabase,
+          tenantId,
           prevPropertyId,
           -1,
           currentDeal.deal_type,
@@ -270,6 +280,7 @@ export async function updateDealAction(input: UpdateDealInput) {
       if (nextStatus === "CLOSED_WIN" && nextPropertyId) {
         await adjustPropertyStock(
           supabase,
+          tenantId,
           nextPropertyId,
           1,
           validated.deal_type || currentDeal.deal_type,
@@ -282,6 +293,7 @@ export async function updateDealAction(input: UpdateDealInput) {
           // Won!
           await adjustPropertyStock(
             supabase,
+            tenantId,
             nextPropertyId,
             1,
             validated.deal_type || currentDeal.deal_type,
@@ -290,6 +302,7 @@ export async function updateDealAction(input: UpdateDealInput) {
           // Lost/Cancelled!
           await adjustPropertyStock(
             supabase,
+            tenantId,
             nextPropertyId,
             -1,
             currentDeal.deal_type,
@@ -307,22 +320,28 @@ export async function updateDealAction(input: UpdateDealInput) {
 
 export async function deleteDealAction(dealId: string, leadId: string) {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     assertAuthenticated({ userId: user.id, role });
     assertStaff(role);
 
     const { data: existingDeal, error: fetchErr } = await supabase
       .from("deals")
-      .select("id, status, property_id, deal_type")
+      .select("id, status, property_id, deal_type, tenant_id")
       .eq("id", dealId)
+      .eq("tenant_id", tenantId)
       .single();
 
     if (fetchErr || !existingDeal) {
       return { success: false, message: "Deal not found" };
     }
 
-    const { error } = await supabase.from("deals").delete().eq("id", dealId);
+    const { error } = await supabase
+      .from("deals")
+      .delete()
+      .eq("id", dealId)
+      .eq("tenant_id", tenantId);
 
     if (error) throw new Error(error.message);
 
@@ -343,6 +362,7 @@ export async function deleteDealAction(dealId: string, leadId: string) {
       // Release stock using the deal_type from the deleted deal
       await adjustPropertyStock(
         supabase,
+        tenantId,
         existingDeal.property_id,
         -1,
         (existingDeal as any).deal_type,

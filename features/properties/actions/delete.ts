@@ -17,8 +17,9 @@ import { PROPERTY_IMAGES_BUCKET } from "../logic/images";
  */
 export async function deletePropertyAction(formData: FormData) {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     const id = formData.get("id") as string | null;
     if (!id) throw new Error("Missing property id");
@@ -26,8 +27,9 @@ export async function deletePropertyAction(formData: FormData) {
     // 0) โหลดเจ้าของทรัพย์เพื่อเช็คสิทธิ (owner/admin)
     const { data: property, error: propErr } = await supabase
       .from("properties")
-      .select("id, created_by")
+      .select("id, created_by, tenant_id")
       .eq("id", id)
+      .eq("tenant_id", tenantId)
       .single();
 
     if (propErr || !property) throw new Error("Property not found");
@@ -98,7 +100,11 @@ export async function deletePropertyAction(formData: FormData) {
     await supabase.from("property_images").delete().eq("property_id", id);
 
     // 4) Delete property
-    const { error } = await supabase.from("properties").delete().eq("id", id);
+    const { error } = await supabase
+      .from("properties")
+      .delete()
+      .eq("id", id)
+      .eq("tenant_id", tenantId);
 
     if (error) {
       // Catch specific FK error to give better message

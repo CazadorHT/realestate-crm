@@ -82,7 +82,7 @@ export async function getPublicPropertyWithImagesBySlug(
 export async function getProtectedPropertyWithImagesById(
   id: string,
 ): Promise<PropertyWithImages> {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
   const { data, error } = await supabase
@@ -102,6 +102,7 @@ export async function getProtectedPropertyWithImagesById(
     `,
     )
     .eq("id", id)
+    .eq("tenant_id", tenantId!)
     .single();
 
   if (error || !data) throw error;
@@ -121,7 +122,7 @@ export async function getProtectedPropertyWithImagesById(
  * Return minimal properties for select inputs in protected CRM
  */
 export async function getPropertiesForSelect() {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
   const { data, error } = await supabase
@@ -129,6 +130,7 @@ export async function getPropertiesForSelect() {
     .select(
       `id, title, price, original_price, rental_price, original_rental_price, commission_sale_percentage, commission_rent_months, popular_area, province, property_images(image_url, is_cover)`,
     )
+    .eq("tenant_id", tenantId!)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
@@ -157,13 +159,15 @@ export type PropertyStats = {
 };
 
 export async function getPropertiesDashboardStatsQuery(): Promise<PropertyStats> {
-  const supabase = await createClient();
+  const { supabase, role, tenantId } = await requireAuthContext();
+  assertStaff(role);
 
   const { data, error } = await supabase
     .from("properties")
     .select(
       "id, status, price, rental_price, original_price, original_rental_price, property_type, listing_type, commission_sale_percentage, commission_rent_months",
     )
+    .eq("tenant_id", tenantId!)
     .is("deleted_at", null);
 
   if (error || !data) {
@@ -306,7 +310,7 @@ export async function getPropertiesTableData(params: {
   count: number;
   filterMetadata: any[];
 }> {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
   const {
@@ -339,6 +343,7 @@ export async function getPropertiesTableData(params: {
   let query = supabase
     .from("properties")
     .select("*", { count: "exact" }) // Get count for pagination
+    .eq("tenant_id", tenantId!)
     .is("deleted_at", null)
     .range(from, to);
 
@@ -478,6 +483,7 @@ export async function getPropertiesTableData(params: {
         .select(
           "status, property_type, province, popular_area, listing_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, near_transit, is_pet_friendly, is_fully_furnished",
         )
+        .eq("tenant_id", tenantId!)
         .is("deleted_at", null),
     ]);
 

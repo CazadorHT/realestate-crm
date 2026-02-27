@@ -1,8 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { refreshNotificationsAction } from "@/features/dashboard/actions";
-
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -12,140 +9,28 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import type { Notification } from "@/features/dashboard/queries";
 import { cn } from "@/lib/utils";
+import { useNotifications } from "@/hooks/use-notifications";
+import { formatDistanceToNow } from "date-fns";
+import { th } from "date-fns/locale";
 
-interface NotificationBellProps {
-  notifications?: Notification[];
-}
-
-export function NotificationBell({
-  notifications: initialNotifications = [],
-}: NotificationBellProps) {
-  // State to track read/deleted notification IDs locally
-  const [readIds, setReadIds] = useState<Set<string | number>>(new Set());
-  const [deletedIds, setDeletedIds] = useState<Set<string | number>>(new Set());
-  const [mounted, setMounted] = useState(false);
-  const [serverNotifications, setServerNotifications] =
-    useState<Notification[]>(initialNotifications);
-
-  // Load state from LocalStorage on mount
-  useEffect(() => {
-    setMounted(true);
-
-    // Load Read IDs
-    const storedRead = localStorage.getItem("read_notifications");
-    if (storedRead) {
-      try {
-        const parsed = JSON.parse(storedRead);
-        if (Array.isArray(parsed)) setReadIds(new Set(parsed));
-      } catch (e) {
-        console.error("Failed to parse read_notifications", e);
-      }
-    }
-
-    // Load Deleted IDs
-    const storedDeleted = localStorage.getItem("deleted_notifications");
-    if (storedDeleted) {
-      try {
-        const parsed = JSON.parse(storedDeleted);
-        if (Array.isArray(parsed)) setDeletedIds(new Set(parsed));
-      } catch (e) {
-        console.error("Failed to parse deleted_notifications", e);
-      }
-    }
-  }, []);
-
-  // Polling for new notifications every 5 minutes
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      const latest = await refreshNotificationsAction();
-      if (latest && latest.length > 0) {
-        setServerNotifications(latest);
-      }
-    }, 300000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Filter and merge notifications
-  const visibleNotifications = serverNotifications
-    .filter((n) => !deletedIds.has(n.id))
-    .map((n) => ({
-      ...n,
-      read: n.read || readIds.has(n.id),
-    }));
-
-  const unreadCount = visibleNotifications.filter((n) => !n.read).length;
-
-  const markAsRead = (id: string | number) => {
-    const newReadIds = new Set(readIds);
-    newReadIds.add(id);
-    setReadIds(newReadIds);
-    localStorage.setItem(
-      "read_notifications",
-      JSON.stringify(Array.from(newReadIds)),
-    );
-  };
-
-  const deleteNotification = (e: React.MouseEvent, id: string | number) => {
-    e.stopPropagation(); // Prevent triggering navigation/read
-    e.preventDefault();
-
-    const newDeletedIds = new Set(deletedIds);
-    newDeletedIds.add(id);
-    setDeletedIds(newDeletedIds);
-    localStorage.setItem(
-      "deleted_notifications",
-      JSON.stringify(Array.from(newDeletedIds)),
-    );
-  };
-
-  const markAllRead = () => {
-    const newReadIds = new Set(readIds);
-    visibleNotifications.forEach((n) => newReadIds.add(n.id));
-    setReadIds(newReadIds);
-    localStorage.setItem(
-      "read_notifications",
-      JSON.stringify(Array.from(newReadIds)),
-    );
-  };
-
-  const deleteAll = () => {
-    const newDeletedIds = new Set(deletedIds);
-    visibleNotifications.forEach((n) => newDeletedIds.add(n.id));
-    setDeletedIds(newDeletedIds);
-    localStorage.setItem(
-      "deleted_notifications",
-      JSON.stringify(Array.from(newDeletedIds)),
-    );
-  };
-
-  const handleOpenChange = (open: boolean) => {
-    if (open && unreadCount > 0) {
-      markAllRead();
-    }
-  };
-
-  if (!mounted) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative h-9 w-9 rounded-full border border-slate-200 bg-white shadow-sm"
-      >
-        <Bell className="h-4 w-4 text-slate-600" />
-      </Button>
-    );
-  }
+export function NotificationBell() {
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+  } = useNotifications();
 
   return (
-    <Popover onOpenChange={handleOpenChange}>
+    <Popover>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
-          className="relative h-9 w-9 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-100"
+          className="relative h-9 w-9 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-100 transition-all"
         >
           <Bell className="h-4 w-4 text-slate-600" />
           <span className="sr-only">Toggle notifications</span>
@@ -157,62 +42,92 @@ export function NotificationBell({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="flex items-center justify-between p-4 pb-2">
-          <h4 className="text-sm font-semibold leading-none">การแจ้งเตือน</h4>
-          <span className="text-xs text-muted-foreground">
-            {unreadCount} รายการใหม่
-          </span>
+      <PopoverContent
+        className="w-80 p-0 overflow-hidden rounded-2xl border-slate-200 shadow-xl"
+        align="end"
+      >
+        <div className="flex items-center justify-between p-4 bg-slate-50/50">
+          <div>
+            <h4 className="text-sm font-bold text-slate-900">การแจ้งเตือน</h4>
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+              {unreadCount} รายการที่ยังไม่ได้อ่าน
+            </p>
+          </div>
+          {unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-[10px] text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-bold"
+              onClick={markAllAsRead}
+            >
+              อ่านทั้งหมด
+            </Button>
+          )}
         </div>
         <Separator />
-        <div className="h-[300px] overflow-y-auto">
-          {visibleNotifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-10 text-center text-sm text-muted-foreground">
-              <Bell className="h-10 w-10 opacity-20" />
-              <p>ไม่มีการแจ้งเตือนใหม่</p>
+        <div className="max-h-[350px] overflow-y-auto">
+          {loading ? (
+            <div className="p-8 text-center text-sm text-slate-400 animate-pulse">
+              กำลังโหลด...
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-12 text-center text-slate-400">
+              <Bell className="h-10 w-10 opacity-10" />
+              <p className="text-sm">ไม่มีการแจ้งเตือน</p>
             </div>
           ) : (
             <div className="flex flex-col">
-              {visibleNotifications.map((n) => {
-                const Content = (
+              {notifications.map((n) => {
+                const timeAgo = formatDistanceToNow(new Date(n.created_at), {
+                  addSuffix: true,
+                  locale: th,
+                });
+
+                const content = (
                   <div
                     className={cn(
-                      "group flex flex-col gap-1 p-4 border-b last:border-0 hover:bg-slate-50 transition-colors cursor-pointer relative",
-                      !n.read && "bg-blue-50/50",
+                      "group flex flex-col gap-1 p-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors cursor-pointer relative",
+                      !n.is_read && "bg-blue-50/30",
                     )}
-                    onClick={() => markAsRead(n.id)}
+                    onClick={() => !n.is_read && markAsRead(n.id)}
                   >
                     <div className="flex items-start justify-between gap-2 pr-6">
-                      <p
-                        className={cn(
-                          "text-sm",
-                          !n.read &&
-                            "font-semibold text-slate-900",
-                        )}
-                      >
-                        {n.message}
-                      </p>
-                      {!n.read && (
-                        <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-1.5" />
+                      <div className="space-y-0.5">
+                        <p
+                          className={cn(
+                            "text-xs font-bold text-slate-800",
+                            !n.is_read && "text-blue-700",
+                          )}
+                        >
+                          {n.title}
+                        </p>
+                        <p className="text-sm text-slate-600 leading-snug">
+                          {n.message}
+                        </p>
+                      </div>
+                      {!n.is_read && (
+                        <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-1" />
                       )}
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {n.time}
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      {timeAgo}
                     </span>
 
                     {/* Delete Button */}
                     <button
-                      onClick={(e) => deleteNotification(e, n.id)}
-                      className="absolute top-2 right-2 p-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-slate-200 transition-all text-slate-400 hover:text-red-500"
-                      title="ลบการแจ้งเตือน"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        deleteNotification(n.id);
+                      }}
+                      className="absolute top-4 right-4 p-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-slate-200 transition-all text-slate-400 hover:text-red-500"
                     >
-                      <span className="sr-only">Delete</span>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2"
+                        strokeWidth="2.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         className="w-3 h-3"
@@ -224,41 +139,28 @@ export function NotificationBell({
                   </div>
                 );
 
-                if (n.href) {
+                if (n.link) {
                   return (
-                    <Link
-                      key={n.id}
-                      href={n.href}
-                      className="block"
-                      onClick={() => markAsRead(n.id)}
-                    >
-                      {Content}
+                    <Link key={n.id} href={n.link} className="block">
+                      {content}
                     </Link>
                   );
                 }
 
-                return <div key={n.id}>{Content}</div>;
+                return <div key={n.id}>{content}</div>;
               })}
             </div>
           )}
         </div>
         <Separator />
-        <div className="p-2 grid grid-cols-2 gap-2">
+        <div className="p-3 bg-slate-50/30">
           <Button
-            variant="ghost"
-            className="w-full justify-center text-xs h-8"
-            onClick={markAllRead}
-            disabled={unreadCount === 0}
+            variant="outline"
+            size="sm"
+            className="w-full text-xs font-bold text-slate-500 hover:text-slate-700 rounded-lg h-8"
+            asChild
           >
-            อ่านทั้งหมด
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full justify-center text-xs h-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-            onClick={deleteAll}
-            disabled={visibleNotifications.length === 0}
-          >
-            ลบทั้งหมด
+            <Link href="/protected/notifications">ดูการแจ้งเตือนทั้งหมด</Link>
           </Button>
         </div>
       </PopoverContent>

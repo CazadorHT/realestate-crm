@@ -30,6 +30,7 @@ export async function getContractByDealId(
       .from("rental_contracts")
       .select("*")
       .eq("deal_id", dealId)
+      .eq("tenant_id", ctx.tenantId!)
       .order("created_at", { ascending: false })
       .limit(1);
 
@@ -42,10 +43,12 @@ export async function getContractByDealId(
 }
 
 export async function upsertContractAction(
-  input: ContractFormInput & { id?: string },
+  id: string | null,
+  values: ContractFormInput,
 ) {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const ctx = await requireAuthContext();
+    const { supabase, user, role } = ctx;
     assertAuthenticated({ userId: user.id, role });
     assertStaff(role);
 
@@ -54,11 +57,11 @@ export async function upsertContractAction(
     let error: any = null;
     let dealIdForAudit = "";
 
-    if (input.id) {
+    if (id) {
       // Update - Use partial schema
-      const validatedUpdate = updateContractSchema.parse(input);
+      const validatedUpdate = updateContractSchema.parse(values);
       // Remove id from update payload to avoid primary key update attempt
-      const { id, ...updateData } = validatedUpdate;
+      const { id: _id, ...updateData } = validatedUpdate; // Use _id to avoid conflict with function parameter 'id'
 
       // Try to get deal_id for audit if provided in update
       dealIdForAudit = validatedUpdate.deal_id || "";
@@ -67,6 +70,7 @@ export async function upsertContractAction(
         .from("rental_contracts")
         .update(updateData)
         .eq("id", id)
+        .eq("tenant_id", ctx.tenantId!)
         .select()
         .single();
       data = updateRes.data;
@@ -78,7 +82,7 @@ export async function upsertContractAction(
       }
     } else {
       // Create - Use full schema
-      const validatedCreate = contractFormSchema.parse(input);
+      const validatedCreate = contractFormSchema.parse(values);
       dealIdForAudit = validatedCreate.deal_id;
 
       // Check if a contract already exists for this deal to prevent duplicates
@@ -86,6 +90,7 @@ export async function upsertContractAction(
         .from("rental_contracts")
         .select("id")
         .eq("deal_id", validatedCreate.deal_id)
+        .eq("tenant_id", ctx.tenantId!)
         .maybeSingle();
 
       if (existingContract) {
@@ -101,6 +106,7 @@ export async function upsertContractAction(
         .from("deals")
         .select("id, deal_type")
         .eq("id", validatedCreate.deal_id)
+        .eq("tenant_id", ctx.tenantId!)
         .single();
 
       if (dealErr || !deal)
@@ -112,7 +118,7 @@ export async function upsertContractAction(
         };
 
       // Create -> auto-generate contract number if not provided
-      const toInsert: any = { ...validatedCreate };
+      const toInsert: any = { ...validatedCreate, tenant_id: ctx.tenantId! };
       if (!toInsert.contract_number) {
         toInsert.contract_number = `RC-${new Date().getFullYear()}-${Math.random()
           .toString(36)
@@ -145,7 +151,7 @@ export async function upsertContractAction(
     // Log audit
     try {
       await logAudit({ supabase, user, role } as any, {
-        action: input.id ? "rental_contract.update" : "rental_contract.create",
+        action: id ? "rental_contract.update" : "rental_contract.create",
         entity: "rental_contracts",
         entityId: data.id,
         metadata: { dealId: dealIdForAudit },
@@ -168,7 +174,8 @@ export async function upsertContractAction(
 
 export async function deleteContractAction(id: string) {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const ctx = await requireAuthContext();
+    const { supabase, user, role } = ctx;
     assertAuthenticated({ userId: user.id, role });
     assertStaff(role);
 
@@ -177,6 +184,7 @@ export async function deleteContractAction(id: string) {
       .from("rental_contracts")
       .select("id, deal_id")
       .eq("id", id)
+      .eq("tenant_id", ctx.tenantId!)
       .single();
 
     if (fetchErr || !existing)
@@ -185,7 +193,8 @@ export async function deleteContractAction(id: string) {
     const { error } = await supabase
       .from("rental_contracts")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("tenant_id", ctx.tenantId!);
     if (error) return { success: false, message: error.message };
 
     await logAudit({ supabase, user, role } as any, {

@@ -10,6 +10,7 @@ export type AuthContext = {
   supabase: Awaited<ReturnType<typeof createClient>>;
   user: User;
   role: UserRole;
+  tenantId?: string;
 };
 
 export class AuthzError extends Error {
@@ -48,9 +49,43 @@ export async function getAuthContextOrNull(): Promise<AuthContext | null> {
   return { supabase, user: data.user, role };
 }
 
-export async function requireAuthContext(): Promise<AuthContext> {
+import { getSystemConfig } from "@/lib/actions/system-config";
+
+export async function requireAuthContext(
+  requestedTenantId?: string,
+): Promise<AuthContext> {
   const ctx = await getAuthContextOrNull();
   if (!ctx) throw new AuthzError("UNAUTHORIZED", "Unauthorized");
+
+  // Get global system config
+  const config = await getSystemConfig();
+
+  // Rule 1: If multi-tenant is disabled, always use default tenant
+  if (!config.multi_tenant_enabled) {
+    return { ...ctx, tenantId: config.default_tenant_id ?? undefined };
+  }
+
+  // Rule 2: If multi-tenant is enabled, use requested or throw if missing members
+  const finalTenantId = requestedTenantId;
+
+  if (finalTenantId) {
+    const { data: member, error } = await ctx.supabase
+      .from("tenant_members")
+      .select("role")
+      .eq("tenant_id", finalTenantId)
+      .eq("profile_id", ctx.user.id)
+      .single();
+
+    if (error || !member) {
+      throw new AuthzError(
+        "FORBIDDEN",
+        "Forbidden: You are not a member of this tenant",
+      );
+    }
+
+    return { ...ctx, tenantId: finalTenantId };
+  }
+
   return ctx;
 }
 

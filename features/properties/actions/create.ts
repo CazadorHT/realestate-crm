@@ -22,8 +22,9 @@ export async function createPropertyAction(
 ): Promise<CreatePropertyResult> {
   try {
     // ✅ Step 1.2: require auth context (แทน getUser แบบเดิม)
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
     if (!sessionId)
       return { success: false, message: "Missing upload session" };
 
@@ -79,6 +80,7 @@ export async function createPropertyAction(
       .from("properties")
       .insert({
         ...propertyData,
+        tenant_id: tenantId,
         original_price: propertyData.original_price, // Force include
         original_rental_price: propertyData.original_rental_price,
         created_by: user.id,
@@ -193,13 +195,15 @@ export async function duplicatePropertyAction(
   id: string,
 ): Promise<DuplicatePropertyResult> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     const { data: src, error: srcErr } = await supabase
       .from("properties")
       .select("*")
       .eq("id", id)
+      .eq("tenant_id", tenantId)
       .single();
 
     if (srcErr || !src)
@@ -232,6 +236,7 @@ export async function duplicatePropertyAction(
     // omit fields ที่ไม่ควรถูก copy ตรง ๆ
     const {
       id: _id,
+      tenant_id: _tenant_id,
       created_at: _created_at,
       updated_at: _updated_at,
       created_by: _created_by,
@@ -249,6 +254,7 @@ export async function duplicatePropertyAction(
         ...rest,
         title: newTitle,
         status: "DRAFT", // แนะนำให้เป็น draft เสมอ
+        tenant_id: tenantId,
         created_by: user.id,
         slug: uniqueSlug,
         meta_title: seoData.metaTitle,

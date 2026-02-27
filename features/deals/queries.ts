@@ -4,8 +4,9 @@ import { DealWithProperty } from "./types";
 export async function getDealsByLeadId(
   leadId: string,
 ): Promise<DealWithProperty[]> {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
+  if (!tenantId) throw new Error("Tenant ID is required but missing");
 
   // Fetch deals and join with properties (select title, price, etc.)
   const { data, error } = await supabase
@@ -25,6 +26,7 @@ export async function getDealsByLeadId(
     `,
     )
     .eq("lead_id", leadId)
+    .eq("tenant_id", tenantId)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -38,8 +40,9 @@ export async function getDealsByLeadId(
 export async function getDealById(
   dealId: string,
 ): Promise<DealWithProperty | null> {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
+  if (!tenantId) throw new Error("Tenant ID is required but missing");
 
   const { data, error } = await supabase
     .from("deals")
@@ -65,6 +68,7 @@ export async function getDealById(
     `,
     )
     .eq("id", dealId)
+    .eq("tenant_id", tenantId)
     .single();
 
   if (error || !data) {

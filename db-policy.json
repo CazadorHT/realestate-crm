@@ -22,22 +22,22 @@
   {
     "schemaname": "public",
     "tablename": "ai_usage_logs",
-    "policyname": "Allow authenticated users to insert logs",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "INSERT",
-    "qual": null,
-    "with_check": "(auth.role() = 'authenticated'::text)"
-  },
-  {
-    "schemaname": "public",
-    "tablename": "ai_usage_logs",
     "policyname": "Allow admins to view all logs",
     "permissive": "PERMISSIVE",
     "roles": "{public}",
     "cmd": "SELECT",
     "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'ADMIN'::user_role))))",
     "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "ai_usage_logs",
+    "policyname": "Allow authenticated users to insert logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.role() = 'authenticated'::text)"
   },
   {
     "schemaname": "public",
@@ -52,16 +52,6 @@
   {
     "schemaname": "public",
     "tablename": "audit_logs",
-    "policyname": "audit_logs_select_admin",
-    "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "SELECT",
-    "qual": "(EXISTS ( SELECT 1\n   FROM profiles p\n  WHERE ((p.id = auth.uid()) AND (p.role = 'ADMIN'::user_role))))",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "audit_logs",
     "policyname": "audit_logs_insert_own",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
@@ -71,12 +61,12 @@
   },
   {
     "schemaname": "public",
-    "tablename": "blog_categories",
-    "policyname": "Authenticated users can manage categories",
+    "tablename": "audit_logs",
+    "policyname": "audit_logs_select_admin",
     "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "ALL",
-    "qual": "(auth.role() = 'authenticated'::text)",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles p\n  WHERE ((p.id = auth.uid()) AND (p.role = 'ADMIN'::user_role))))",
     "with_check": null
   },
   {
@@ -91,8 +81,8 @@
   },
   {
     "schemaname": "public",
-    "tablename": "blog_posts",
-    "policyname": "Authenticated users can manage posts",
+    "tablename": "blog_categories",
+    "policyname": "Authenticated users can manage categories",
     "permissive": "PERMISSIVE",
     "roles": "{public}",
     "cmd": "ALL",
@@ -108,6 +98,46 @@
     "cmd": "SELECT",
     "qual": "(is_published = true)",
     "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "blog_posts",
+    "policyname": "Authenticated users can manage posts",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "contract_templates",
+    "policyname": "Allow admins to manage templates",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'ADMIN'::user_role))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "contract_templates",
+    "policyname": "Allow authenticated users to read templates",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "deals",
+    "policyname": "deals_update_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "true",
+    "with_check": "true"
   },
   {
     "schemaname": "public",
@@ -132,16 +162,6 @@
   {
     "schemaname": "public",
     "tablename": "deals",
-    "policyname": "Deals Enterprise Access",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "ALL",
-    "qual": "(is_admin() OR (is_staff() AND ((NOT get_isolation_setting('isolation_deals_enabled'::text)) OR (created_by = auth.uid()) OR is_manager_of(created_by))))",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "deals",
     "policyname": "deals_delete_auth",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
@@ -152,22 +172,12 @@
   {
     "schemaname": "public",
     "tablename": "deals",
-    "policyname": "deals_update_auth",
+    "policyname": "Deals Enterprise Access",
     "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "UPDATE",
-    "qual": "true",
-    "with_check": "true"
-  },
-  {
-    "schemaname": "public",
-    "tablename": "documents",
-    "policyname": "documents_update_auth",
-    "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "UPDATE",
-    "qual": "true",
-    "with_check": "true"
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(is_admin() OR (is_staff() AND ((NOT get_isolation_setting('isolation_deals_enabled'::text)) OR (created_by = auth.uid()) OR is_manager_of(created_by))))",
+    "with_check": null
   },
   {
     "schemaname": "public",
@@ -176,6 +186,16 @@
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
     "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "documents",
+    "policyname": "documents_delete_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "DELETE",
     "qual": "true",
     "with_check": null
   },
@@ -192,27 +212,17 @@
   {
     "schemaname": "public",
     "tablename": "documents",
-    "policyname": "documents_delete_auth",
+    "policyname": "documents_update_auth",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "DELETE",
+    "cmd": "UPDATE",
     "qual": "true",
-    "with_check": null
+    "with_check": "true"
   },
   {
     "schemaname": "public",
     "tablename": "faqs",
     "policyname": "Enable read access for all users",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "SELECT",
-    "qual": "true",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "faqs",
-    "policyname": "Public FAQs are viewable by everyone",
     "permissive": "PERMISSIVE",
     "roles": "{public}",
     "cmd": "SELECT",
@@ -228,6 +238,16 @@
     "cmd": "ALL",
     "qual": "true",
     "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "faqs",
+    "policyname": "Public FAQs are viewable by everyone",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
   },
   {
     "schemaname": "public",
@@ -261,12 +281,62 @@
   },
   {
     "schemaname": "public",
+    "tablename": "lead_transfers",
+    "policyname": "Users can see transfers involving their tenants",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((from_tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) OR (to_tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "lead_transfers",
+    "policyname": "Users can create transfers from their tenants",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(from_tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "leads",
+    "policyname": "Staff can insert leads",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "is_staff()"
+  },
+  {
+    "schemaname": "public",
     "tablename": "leads",
     "policyname": "Leads Enterprise Access",
     "permissive": "PERMISSIVE",
     "roles": "{public}",
     "cmd": "ALL",
     "qual": "(is_admin() OR (is_staff() AND ((NOT get_isolation_setting('isolation_leads_enabled'::text)) OR (created_by = auth.uid()) OR (assigned_to = auth.uid()) OR is_manager_of(created_by) OR is_manager_of(assigned_to))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "leads",
+    "policyname": "Tenant Isolation: Leads",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "leads",
+    "policyname": "Staff can view leads",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "is_staff()",
     "with_check": null
   },
   {
@@ -291,23 +361,13 @@
   },
   {
     "schemaname": "public",
-    "tablename": "leads",
-    "policyname": "Staff can view leads",
+    "tablename": "line_groups",
+    "policyname": "Enable all access for service_role",
     "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "SELECT",
-    "qual": "is_staff()",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "leads",
-    "policyname": "Staff can insert leads",
-    "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "INSERT",
-    "qual": null,
-    "with_check": "is_staff()"
+    "roles": "{service_role}",
+    "cmd": "ALL",
+    "qual": "true",
+    "with_check": "true"
   },
   {
     "schemaname": "public",
@@ -321,22 +381,22 @@
   },
   {
     "schemaname": "public",
-    "tablename": "line_groups",
-    "policyname": "Enable all access for service_role",
+    "tablename": "notifications",
+    "policyname": "Users can see their own notifications",
     "permissive": "PERMISSIVE",
-    "roles": "{service_role}",
-    "cmd": "ALL",
-    "qual": "true",
-    "with_check": "true"
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
   },
   {
     "schemaname": "public",
-    "tablename": "omni_messages",
-    "policyname": "Staff can view all omni messages",
+    "tablename": "notifications",
+    "policyname": "Users can update their own notifications",
     "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "SELECT",
-    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role = 'ADMIN'::user_role) OR (profiles.role = 'AGENT'::user_role)))))",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = user_id)",
     "with_check": null
   },
   {
@@ -351,6 +411,16 @@
   },
   {
     "schemaname": "public",
+    "tablename": "omni_messages",
+    "policyname": "Staff can view all omni messages",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role = 'ADMIN'::user_role) OR (profiles.role = 'AGENT'::user_role)))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
     "tablename": "owners",
     "policyname": "Staff can manage owners",
     "permissive": "PERMISSIVE",
@@ -361,13 +431,13 @@
   },
   {
     "schemaname": "public",
-    "tablename": "partners",
-    "policyname": "Enable all access for authenticated users",
+    "tablename": "owners",
+    "policyname": "Tenant Isolation: Owners",
     "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
+    "roles": "{public}",
     "cmd": "ALL",
-    "qual": "true",
-    "with_check": "true"
+    "qual": "(tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))",
+    "with_check": null
   },
   {
     "schemaname": "public",
@@ -391,12 +461,12 @@
   },
   {
     "schemaname": "public",
-    "tablename": "popular_areas",
-    "policyname": "Allow authenticated insert",
+    "tablename": "partners",
+    "policyname": "Enable all access for authenticated users",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "INSERT",
-    "qual": null,
+    "cmd": "ALL",
+    "qual": "true",
     "with_check": "true"
   },
   {
@@ -421,53 +491,13 @@
   },
   {
     "schemaname": "public",
-    "tablename": "profiles",
-    "policyname": "profiles_admin_update_all",
+    "tablename": "popular_areas",
+    "policyname": "Allow authenticated insert",
     "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "UPDATE",
-    "qual": "(COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text)",
-    "with_check": "((COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text) AND (role = ANY (ARRAY['ADMIN'::user_role, 'AGENT'::user_role])))"
-  },
-  {
-    "schemaname": "public",
-    "tablename": "profiles",
-    "policyname": "profiles_agent_update_self",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "UPDATE",
-    "qual": "((id = auth.uid()) AND (role = 'AGENT'::user_role))",
-    "with_check": "((id = auth.uid()) AND (role = 'AGENT'::user_role))"
-  },
-  {
-    "schemaname": "public",
-    "tablename": "profiles",
-    "policyname": "profiles_select_own",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "SELECT",
-    "qual": "(id = auth.uid())",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "profiles",
-    "policyname": "profiles_admin_select_all",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "SELECT",
-    "qual": "(COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text)",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "profiles",
-    "policyname": "profiles_admin_delete_agents",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "DELETE",
-    "qual": "((COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text) AND (role = 'AGENT'::user_role))",
-    "with_check": null
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
   },
   {
     "schemaname": "public",
@@ -487,6 +517,66 @@
     "roles": "{authenticated}",
     "cmd": "SELECT",
     "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_select_own",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_agent_update_self",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "((id = auth.uid()) AND (role = 'AGENT'::user_role))",
+    "with_check": "((id = auth.uid()) AND (role = 'AGENT'::user_role))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_admin_select_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_admin_update_all",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text)",
+    "with_check": "((COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text) AND (role = ANY (ARRAY['ADMIN'::user_role, 'AGENT'::user_role])))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_admin_delete_agents",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "((COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text) AND (role = 'AGENT'::user_role))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "Users can view their own profile",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = id)",
     "with_check": null
   },
   {
@@ -512,6 +602,16 @@
   {
     "schemaname": "public",
     "tablename": "properties",
+    "policyname": "Tenant Isolation: Properties",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "properties",
     "policyname": "Staff can manage properties",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
@@ -532,12 +632,12 @@
   {
     "schemaname": "public",
     "tablename": "property_agents",
-    "policyname": "Allow insert for authenticated users",
+    "policyname": "Allow delete for authenticated users",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "INSERT",
-    "qual": null,
-    "with_check": "true"
+    "cmd": "DELETE",
+    "qual": "true",
+    "with_check": null
   },
   {
     "schemaname": "public",
@@ -552,21 +652,11 @@
   {
     "schemaname": "public",
     "tablename": "property_agents",
-    "policyname": "Allow delete for authenticated users",
+    "policyname": "Allow insert for authenticated users",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "DELETE",
-    "qual": "true",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "property_image_uploads",
-    "policyname": "authenticated_manage_all_piu",
-    "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "ALL",
-    "qual": "true",
+    "cmd": "INSERT",
+    "qual": null,
     "with_check": "true"
   },
   {
@@ -581,13 +671,13 @@
   },
   {
     "schemaname": "public",
-    "tablename": "property_images",
-    "policyname": "Staff can manage property images",
+    "tablename": "property_image_uploads",
+    "policyname": "authenticated_manage_all_piu",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
     "cmd": "ALL",
-    "qual": "is_staff()",
-    "with_check": "is_staff()"
+    "qual": "true",
+    "with_check": "true"
   },
   {
     "schemaname": "public",
@@ -598,6 +688,16 @@
     "cmd": "SELECT",
     "qual": "(EXISTS ( SELECT 1\n   FROM properties p\n  WHERE ((p.id = property_images.property_id) AND (p.status = 'ACTIVE'::property_status))))",
     "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "property_images",
+    "policyname": "Staff can manage property images",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "is_staff()",
+    "with_check": "is_staff()"
   },
   {
     "schemaname": "public",
@@ -622,12 +722,12 @@
   {
     "schemaname": "public",
     "tablename": "rental_contracts",
-    "policyname": "rental_contracts_update_auth",
+    "policyname": "rental_contracts_delete_auth",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "UPDATE",
+    "cmd": "DELETE",
     "qual": "true",
-    "with_check": "true"
+    "with_check": null
   },
   {
     "schemaname": "public",
@@ -642,11 +742,21 @@
   {
     "schemaname": "public",
     "tablename": "rental_contracts",
-    "policyname": "rental_contracts_delete_auth",
+    "policyname": "Contracts Enterprise Access",
     "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "DELETE",
-    "qual": "true",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(is_admin() OR (is_staff() AND ((NOT get_isolation_setting('isolation_deals_enabled'::text)) OR (created_by = auth.uid()) OR is_manager_of(created_by))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "rental_contracts",
+    "policyname": "Tenant Isolation: Rental Contracts",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))",
     "with_check": null
   },
   {
@@ -662,11 +772,31 @@
   {
     "schemaname": "public",
     "tablename": "rental_contracts",
-    "policyname": "Contracts Enterprise Access",
+    "policyname": "rental_contracts_update_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "true",
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "site_settings",
+    "policyname": "Public Read Site Settings",
     "permissive": "PERMISSIVE",
     "roles": "{public}",
-    "cmd": "ALL",
-    "qual": "(is_admin() OR (is_staff() AND ((NOT get_isolation_setting('isolation_deals_enabled'::text)) OR (created_by = auth.uid()) OR is_manager_of(created_by))))",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "site_settings",
+    "policyname": "Allow authenticated to read site_settings",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
     "with_check": null
   },
   {
@@ -681,12 +811,12 @@
   },
   {
     "schemaname": "public",
-    "tablename": "site_settings",
-    "policyname": "Allow authenticated to read site_settings",
+    "tablename": "smart_match_budget_ranges",
+    "policyname": "Allow authenticated users to manage budget ranges",
     "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "SELECT",
-    "qual": "true",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(auth.role() = 'authenticated'::text)",
     "with_check": null
   },
   {
@@ -697,16 +827,6 @@
     "roles": "{public}",
     "cmd": "SELECT",
     "qual": "true",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "smart_match_budget_ranges",
-    "policyname": "Allow authenticated users to manage budget ranges",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "ALL",
-    "qual": "(auth.role() = 'authenticated'::text)",
     "with_check": null
   },
   {
@@ -752,6 +872,16 @@
   {
     "schemaname": "public",
     "tablename": "smart_match_settings",
+    "policyname": "Allow public read for settings",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "smart_match_settings",
     "policyname": "Allow authenticated users to manage settings",
     "permissive": "PERMISSIVE",
     "roles": "{public}",
@@ -761,33 +891,53 @@
   },
   {
     "schemaname": "public",
-    "tablename": "smart_match_settings",
-    "policyname": "Allow public read for settings",
+    "tablename": "tenant_invitations",
+    "policyname": "Admins can manage invitations",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(tenant_id IN ( SELECT tm.tenant_id\n   FROM tenant_members tm\n  WHERE ((tm.profile_id = auth.uid()) AND (tm.role = ANY (ARRAY['OWNER'::text, 'ADMIN'::text])))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tenant_members",
+    "policyname": "View Members in Same Tenant",
     "permissive": "PERMISSIVE",
     "roles": "{public}",
     "cmd": "SELECT",
-    "qual": "true",
+    "qual": "(tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tenants",
+    "policyname": "Users can view tenants they are members of",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))",
     "with_check": null
   },
   {
     "schemaname": "storage",
     "tablename": "objects",
-    "policyname": "Allow authenticated users to delete documents",
+    "policyname": "Allow authenticated users to update documents",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "DELETE",
+    "cmd": "UPDATE",
     "qual": "(bucket_id = 'documents'::text)",
-    "with_check": null
+    "with_check": "(bucket_id = 'documents'::text)"
   },
   {
     "schemaname": "storage",
     "tablename": "objects",
-    "policyname": "Public Access",
+    "policyname": "Staff Upload",
     "permissive": "PERMISSIVE",
     "roles": "{public}",
-    "cmd": "SELECT",
-    "qual": "(bucket_id = 'blog-images'::text)",
-    "with_check": null
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((bucket_id = 'documents'::text) AND (auth.role() = 'authenticated'::text))"
   },
   {
     "schemaname": "storage",
@@ -802,21 +952,11 @@
   {
     "schemaname": "storage",
     "tablename": "objects",
-    "policyname": "Staff can manage property images storage",
+    "policyname": "Staff Delete",
     "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "ALL",
-    "qual": "((bucket_id = 'property-images'::text) AND is_staff())",
-    "with_check": "((bucket_id = 'property-images'::text) AND is_staff())"
-  },
-  {
-    "schemaname": "storage",
-    "tablename": "objects",
-    "policyname": "Allow authenticated users to view documents",
-    "permissive": "PERMISSIVE",
-    "roles": "{authenticated}",
-    "cmd": "SELECT",
-    "qual": "(bucket_id = 'documents'::text)",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "((bucket_id = 'documents'::text) AND (auth.role() = 'authenticated'::text))",
     "with_check": null
   },
   {
@@ -842,21 +982,21 @@
   {
     "schemaname": "storage",
     "tablename": "objects",
-    "policyname": "Allow authenticated users to upload documents",
+    "policyname": "Staff can manage property images storage",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "INSERT",
-    "qual": null,
-    "with_check": "(bucket_id = 'documents'::text)"
+    "cmd": "ALL",
+    "qual": "((bucket_id = 'property-images'::text) AND is_staff())",
+    "with_check": "((bucket_id = 'property-images'::text) AND is_staff())"
   },
   {
     "schemaname": "storage",
     "tablename": "objects",
-    "policyname": "Allow authenticated users to update documents",
+    "policyname": "Allow authenticated users to view documents",
     "permissive": "PERMISSIVE",
     "roles": "{authenticated}",
-    "cmd": "UPDATE",
+    "cmd": "SELECT",
     "qual": "(bucket_id = 'documents'::text)",
-    "with_check": "(bucket_id = 'documents'::text)"
+    "with_check": null
   }
 ]
