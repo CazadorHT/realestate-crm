@@ -2,7 +2,7 @@
 
 ระบบ Keyword Automation จะช่วยให้คุณตอบกลับลูกค้าที่คอมเมนต์บนหน้าเพจ Facebook หรือ Instagram ได้โดยอัตโนมัติ พร้อมส่งรายละเอียดเชิงลึกเข้า Inbox ทันทีที่มีการพิมพ์คำค้นหาที่คุณตั้งไว้
 
-> **อัปเดตล่าสุด:** 25 กุมภาพันธ์ 2026
+> **อัปเดตล่าสุด:** 27 กุมภาพันธ์ 2026
 
 > [!TIP]
 > **AI Template Generator:** คุณสามารถใช้ปุ่ม ✨ AI Generate ในหน้า Settings > Social เพื่อให้ AI สร้าง Template ข้อความ DM และ Social Post ให้อัตโนมัติ
@@ -84,7 +84,7 @@
 ---
 
 > [!IMPORTANT]
-> ระบบ Keyword Automation รองรับทั้ง **Facebook Comments** และ **Instagram Comments** ผ่าน Meta Graph API
+> ระบบ Keyword Automation รองรับทั้ง **Facebook Comments**, **Instagram Comments**, และ **TikTok Comments** ผ่าน Graph API และ TikTok Webhooks
 > ต้องตรวจสอบว่า Meta App มีสิทธิ์ `pages_manage_metadata`, `pages_messaging`, และ `instagram_manage_comments`
 
 ---

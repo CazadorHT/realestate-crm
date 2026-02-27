@@ -19,16 +19,32 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
-import {
-  searchPropertiesAction,
-  type PropertyPickItem,
-} from "@/features/leads/actions";
+import { searchPropertiesAction } from "@/features/leads/actions";
+
+export type PropertyPickItem = {
+  id: string;
+  title: string;
+  price: number | null;
+  original_price: number | null;
+  rental_price: number | null;
+  original_rental_price: number | null;
+  listing_type: string | null;
+  cover_image_url: string | null;
+  province: string | null;
+  district: string | null;
+  popular_area: string | null;
+};
 
 type Props = {
   value: string | null;
   onChange: (value: string | null, picked?: PropertyPickItem | null) => void;
   placeholder?: string;
-  initialProperty?: PropertyPickItem | null;
+  initialProperty?: {
+    id: string;
+    title: string;
+    cover_image_url?: string | null;
+    [key: string]: any;
+  } | null;
 };
 
 const renderPriceBlock = (
@@ -79,8 +95,8 @@ export function PropertyCombobox({
 
     const handle = setTimeout(() => {
       startTransition(async () => {
-        const data = await searchPropertiesAction(q);
-        setItems(data);
+        const res = await searchPropertiesAction({ q });
+        if (res.success) setItems(res.data || []);
       });
     }, 250);
 
@@ -96,8 +112,8 @@ export function PropertyCombobox({
     setQ("");
 
     startTransition(async () => {
-      const data = await searchPropertiesAction("");
-      setItems(data);
+      const res = await searchPropertiesAction({ q: "" });
+      if (res.success) setItems(res.data || []);
     });
   }, [open, startTransition]);
 

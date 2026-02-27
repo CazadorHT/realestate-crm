@@ -22,8 +22,8 @@ export function LeadRowActions({ id, fullName }: LeadRowActionsProps) {
   const onDelete = () =>
     startTransition(async () => {
       try {
-        const res = await deleteLeadAction(id);
-        if (!res?.success) throw new Error(res?.message || "Delete failed");
+        const res = await deleteLeadAction({ id });
+        if (!res?.success) throw new Error(res?.error || "Delete failed");
         toast.success("ลบ Lead เรียบร้อยแล้ว");
         router.refresh();
       } catch (e: any) {

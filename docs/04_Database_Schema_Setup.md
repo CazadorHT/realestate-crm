@@ -37,6 +37,7 @@ CREATE TYPE document_type AS ENUM (
   'LEASE_CONTRACT',
   'SALE_CONTRACT',
   'TITLE_DEED',
+  'SLIP',
   'OTHER'
 );
 

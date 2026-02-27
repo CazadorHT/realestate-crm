@@ -350,13 +350,16 @@ function EventActions({
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const result = await deleteLeadActivityAction(eventId, leadId);
+      const result = await deleteLeadActivityAction({
+        activityId: eventId,
+        leadId,
+      });
       if (result.success) {
         toast.success("ลบนัดหมายเรียบร้อย");
         onClose();
         router.refresh();
       } else {
-        toast.error(result.message || "ลบไม่สำเร็จ");
+        toast.error(result.error || "ลบไม่สำเร็จ");
       }
     } catch (error) {
       toast.error("เกิดข้อผิดพลาด");
@@ -367,13 +370,17 @@ function EventActions({
   };
 
   const handleEdit = async (values: LeadActivityFormValues) => {
-    const result = await updateLeadActivityAction(eventId, leadId, values);
+    const result = await updateLeadActivityAction({
+      activityId: eventId,
+      leadId,
+      values,
+    });
     if (result.success) {
       toast.success("แก้ไขนัดหมายเรียบร้อย");
       onClose();
       router.refresh();
     } else {
-      toast.error(result.message || "แก้ไขไม่สำเร็จ");
+      toast.error(result.error || "แก้ไขไม่สำเร็จ");
     }
   };
 

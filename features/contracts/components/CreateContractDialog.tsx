@@ -75,7 +75,7 @@ export function CreateContractDialog() {
   async function onSubmit(data: ContractFormInput) {
     setIsSubmitting(true);
     try {
-      const res = await upsertContractAction(data);
+      const res = await upsertContractAction(null, data);
       if (res.success) {
         toast.success("สร้างสัญญาเรียบร้อย");
         // Close form dialog first

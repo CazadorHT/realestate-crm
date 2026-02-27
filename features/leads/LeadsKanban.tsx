@@ -116,9 +116,12 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
 
     if (originalLead && originalLead.stage !== newStage) {
       try {
-        const result = await updateLeadStageAction(activeId, newStage);
+        const result = await updateLeadStageAction({
+          id: activeId,
+          stage: newStage,
+        });
         if (!result.success) {
-          toast.error(result.message || "Failed to update stage");
+          toast.error(result.error || "Failed to update stage");
           setLeads(initialLeads); // Rollback
         } else {
           toast.success(
@@ -180,10 +183,7 @@ const KanbanColumn = React.memo(function KanbanColumn({
       <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between sticky top-0 z-10">
         <h3 className="font-bold flex items-center gap-2">
           {title}
-          <Badge
-            variant="secondary"
-            className="ml-2 bg-slate-200"
-          >
+          <Badge variant="secondary" className="ml-2 bg-slate-200">
             {leads.length}
           </Badge>
         </h3>

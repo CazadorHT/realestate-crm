@@ -379,13 +379,6 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                                 documentId={doc.id}
                                 documentName={doc.file_name}
                                 currentStatus={doc.esign_status}
-                                recipientEmail={
-                                  doc.owner_type === "LEAD"
-                                    ? doc.lead?.email
-                                    : doc.owner_type === "DEAL"
-                                      ? doc.deal?.lead?.email
-                                      : doc.rental_contract?.deal?.lead?.email
-                                }
                               />
                             </div>
                           </TooltipTrigger>

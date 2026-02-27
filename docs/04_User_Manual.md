@@ -86,7 +86,7 @@
 - **Social Post Template:** ตั้งค่ารูปแบบข้อความที่จะโพสต์อัตโนมัติ (ใช้ Dynamic Tags เช่น `{{title}}`, `{{price}}`)
 - **Keyword Automation:** ตั้งค่า Comment-to-DM สำหรับ Facebook/Instagram
 - **Site Settings:** สำหรับ Admin เท่านั้น สามารถเปลี่ยนโลโก้ และข้อมูลติดต่อบริษัทได้
-- **AI Settings:** ตั้งค่า AI Model และ Parameters สำหรับระบบ AI ทั้งหมด
+- **AI Settings:** ตั้งค่า AI Model (เช่น Gemini) และ Parameters สำหรับระบบ AI ทั้งหมด รวมถึง Smart Match และ Auto-Summary
 
 ---
 

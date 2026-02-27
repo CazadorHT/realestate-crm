@@ -10,7 +10,6 @@ import { siteConfig } from "@/lib/site-config";
 
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
-import { getRecentNotifications } from "@/features/dashboard/queries";
 import { SocialPostMonitor } from "@/components/properties/SocialPostMonitor";
 import { TenantSwitcher } from "@/components/common/TenantSwitcher";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
@@ -40,8 +39,7 @@ export default async function ProtectedLayout({
     return redirect("/auth/pending");
   }
 
-  // Fetch Notifications
-  const notifications = await getRecentNotifications();
+  // Note: Notifications are fetched client-side inside NotificationBell
 
   return (
     <div className="flex min-h-screen w-full bg-slate-50/50">
@@ -58,7 +56,7 @@ export default async function ProtectedLayout({
           </div>
           <div className="ml-auto flex items-center gap-2 sm:gap-4">
             <TenantSwitcher />
-            <NotificationBell notifications={notifications} />
+            <NotificationBell />
             <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
             <UserNav profile={profile} />
           </div>

@@ -2,7 +2,7 @@
 
 รายละเอียดการติดตั้ง โครงสร้างฐานข้อมูล และผังการทำงานของระบบ Real Estate CRM
 
-> **อัปเดตล่าสุด:** 25 กุมภาพันธ์ 2026
+> **อัปเดตล่าสุด:** 27 กุมภาพันธ์ 2026
 
 ---
 
@@ -86,7 +86,7 @@ graph TD
 ### 🧠 Workflow สำคัญ
 
 1.  **Lead Capture (Omni-channel):** ลูกค้าทักจาก LINE/FB Messenger/IG DM/Web → บันทึกลง CRM → แจ้งเตือนเข้า LINE นายหน้า → ตอบกลับได้ทันทีจาก Dashboard
-2.  **Agent Isolation & Team Flow:** Admin ตั้งค่าความปลอดภัย → ระบบแยกข้อมูลให้อัตโนมัติ (Agent เห็นเฉพาะของตัวเอง / Manager เห็นทั้งทีม / Admin เห็นทั้งหมด)
+2.  **Agent Isolation & Team Flow (Multi-Tenant):** Admin ตั้งค่าความปลอดภัยระดับบริษัท/สาขา (Company/Branch) → ระบบแยกข้อมูลให้อัตโนมัติ (Agent เห็นเฉพาะของตัวเอง / Manager เห็นทั้งสาขา / Admin เห็นทั้งหมดทุกสาขา)
 3.  **AI Smart Interaction:** ระบบ Chatbot ค้นหาทรัพย์สินอัตโนมัติ และระบบแปลภาษา 3 ภาษาแบบ Real-time
 4.  **Social Media Automation:** โพสต์ทรัพย์ลง FB/IG/TikTok จาก CRM → ลูกค้าคอมเมนต์ → Keyword Automation ส่ง DM อัตโนมัติ
 5.  **Enterprise Security:** การทำ Audit Trail บันทึกทุกการแก้ไขข้อมูลสำคัญ และ RLS ป้องกันการเข้าถึงข้อมูลข้ามเขตสิทธิ์แบบ 100%

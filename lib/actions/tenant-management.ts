@@ -419,6 +419,10 @@ export async function updateTenantAction(
     .select()
     .single();
 
+  if (error || !data) {
+    return { error: mapDatabaseError(error) };
+  }
+
   revalidatePath("/protected/settings/branches");
   revalidatePath(`/protected/settings/branches/${id}`);
 
@@ -436,7 +440,7 @@ export async function updateTenantAction(
     },
   );
 
-  return { data };
+  return { data, error: null };
 }
 
 export async function deleteTenantAction(id: string) {
@@ -450,6 +454,10 @@ export async function deleteTenantAction(id: string) {
     .from("tenants")
     .update({ is_deleted: true })
     .eq("id", id);
+
+  if (error) {
+    return { error: mapDatabaseError(error) };
+  }
 
   revalidatePath("/protected/settings/branches");
 

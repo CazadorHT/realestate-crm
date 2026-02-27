@@ -18,11 +18,11 @@ export function PDPAStatus({ leadId, consent, consentDate }: PDPAStatusProps) {
   const handleToggle = async () => {
     setIsPending(true);
     try {
-      const res = await updateLeadPDPAAction(leadId, !consent);
+      const res = await updateLeadPDPAAction({ id: leadId, consent: !consent });
       if (res.success) {
         toast.success("อัปเดตสถานะ PDPA เรียบร้อย");
       } else {
-        toast.error(res.message || "เกิดข้อผิดพลาด");
+        toast.error(res.error || "เกิดข้อผิดพลาด");
       }
     } catch (err) {
       toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");

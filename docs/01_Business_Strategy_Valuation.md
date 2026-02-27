@@ -1,116 +1,108 @@
 # 💰 แผนธุรกิจและการประเมินมูลค่า (Business Strategy & Valuation)
 
-เอกสารรวบรวมข้อมูลด้านการตลาด การประเมินราคาขาย และกลยุทธ์การสร้างรายได้จากโปรเจค VC Connect Asset CRM
+เอกสารรวบรวมข้อมูลด้านการตลาด การประเมินราคาขาย และกลยุทธ์การสร้างรายได้จากโปรเจค VC Connect Asset CRM (Enterprise Multi-Tenant Edition)
 
-> **อัปเดตล่าสุด:** 25 กุมภาพันธ์ 2026
+> **อัปเดตล่าสุด:** 27 กุมภาพันธ์ 2026
 
 ---
 
 ## 1. การประเมินมูลค่าโครงการ (Project Valuation)
 
-### 🏗️ โครงสร้างราคาแบ่งตามโมดูล
+### 🏗️ โครงสร้างราคาแบ่งตามโมดูล (อิงตามตลาดซอฟต์แวร์ Enterprise)
 
 | โมดูล (Module)                                                        | มูลค่าประเมิน (THB) |
 | :-------------------------------------------------------------------- | :------------------ |
-| **1. Public Listing Portal** (Search, Filter, SEO, UI/UX)             | 750,000 - 950,000   |
-| **2. Professional CRM Backend** (Lead, Pipeline, Audit)               | 650,000 - 850,000   |
-| **3. AI-First System** (Chatbot, Multi-lang Translation, AI Settings) | 450,000 - 650,000   |
-| **4. Omni-channel Integration** (LINE, Facebook, Instagram, WhatsApp) | 550,000 - 750,000   |
-| **5. Enterprise Agent Isolation** (Teams, Managers, RLS)              | 550,000 - 850,000   |
-| **6. Core Architecture & i18n** (React 19, Next.js 16)                | 250,000 - 400,000   |
-| **7. Social Media Integration** (TikTok, Meta Posting, Automation)    | 350,000 - 550,000   |
+| **1. Public Listing Portal** (Search, Filter, SEO, Premium UI/UX)     | 750,000 - 950,000   |
+| **2. Professional CRM Backend** (Lead, Pipeline, Contract, Audit)     | 850,000 - 1,200,000 |
+| **3. AI-First Ecosytem** (Gemini AI, Chatbot, Smart Translation)      | 650,000 - 850,000   |
+| **4. Omni-channel Integration** (LINE, Facebook, Instagram, WhatsApp) | 650,000 - 850,000   |
+| **5. Multi-Tenant & Agent Isolation** (Branch Switcher, Teams, RLS)   | 850,000 - 1,200,000 |
+| **6. Core Architecture & i18n** (React 19, Next.js 16, Supabase)      | 450,000 - 650,000   |
+| **7. Social Media Automation** (TikTok, Meta Posting, Comment-to-DM)  | 550,000 - 750,000   |
 
-**รวมมูลค่าโครงการโดยประมาณ:** **3,550,000 – 5,000,000 บาท**
-_(มูลค่าเพิ่มขึ้นจากระบบ Social Media Integration ครบวงจร, Omni-channel ขยายครอบคลุม 4 ช่องทาง, และ Cron Automation - **ราคาชุดนี้ยังไม่รวมภาษีมูลค่าเพิ่ม 7%**)_
+**รวมมูลค่าโครงการ (Fair Market Value):** **4,750,000 – 6,450,000 บาท**
+_(มูลค่าสะท้อนฟีเจอร์ระดับ Enterprise ที่พร้อมใช้งานจริงในสเกลองค์กรขนาดใหญ่ระดับมหาชน - **ราคายังไม่รวมภาษีมูลค่าเพิ่ม 7%**)_
 
 ---
 
 ## 2. กลยุทธ์การขายขาด (Exclusive Buyout Strategy) 🚀
 
-หากเป้าหมายคือการ **"ขายขาด/ถอนทุนคืนแบบ High-Ticket"** ระบบนี้ถูกออกแบบมาให้มีมูลค่าสูงในสายตาผู้ซื้อระดับ Enterprise หรือนักลงทุน:
+หากเป้าหมายคือการ **"ขายขาด/ถอนทุนคืนแบบ High-Ticket"** ระบบนี้ถูกออกแบบมาเพื่อดึงดูดผู้ซื้อระดับ Enterprise หรือกองทุนที่ต้องการ Platform ที่สมบูรณ์แบบ:
 
-### 👑 โมเดลขายสิทธิ์ขาด (Exclusive Rights) - 4,000,000 THB++
+### 👑 โมเดลขายสิทธิ์ขาด (Exclusive Rights) - 5,000,000 THB++
 
-_(ราคาประเมินสำหรับการขายขาดระบบทั้งหมด **ยังไม่รวมภาษีมูลค่าเพิ่ม 7%**)_
+_(ราคาประเมินสำหรับการขายขาดระบบทั้งหมด พร้อมสิทธิ์ในการนำไปทำ White-label ต่อ **ยังไม่รวมภาษีมูลค่าเพิ่ม 7%**)_
 
 การขาย Source Code ทั้งหมดพร้อมสิทธิ์ความเป็นเจ้าของ 100% เหมาะสำหรับ:
 
-- **Real Estate Developer ค่ายใหญ่:** ที่ต้องการมีระบบ CRM/Portal ของตัวเองโดยไม่ต้องเสียเวลาพัฒนานานกว่า 1 ปี
-- **Software House:** ที่ต้องการซัพซอร์สโค้ดระดับ State-of-the-art ไปต่อยอดขายลูกค้าคนอื่น
-- **Investment Group:** ที่ต้องการซื้อโปรเจคที่ "พร้อมรัน" (Turn-key) ไปสเกลต่อ
+- **Real Estate Developer (Top Tier):** ต้องการเจาะตลาดนายหน้า หรือมีระบบ Ecosystem ของตัวเองโดยประหยัดเวลาพัฒนาไปกว่า 1.5 ปี
+- **Software House & Agency:** ต้องการระบบ CRM อสังหาฯ ระดับแนวหน้าไปต่อยอดขาย License ให้ลูกค้าปัจจุบัน
+- **Venture Capital / Investment Group:** ต้องการซื้อโปรเจค Turn-key ที่มีศักยภาพทำเงินแบบ SaaS ได้ทันที
 
-### 💎 สิ่งที่ผู้ซื้อจะได้รับ (The Buyout Package)
+### 💎 สิ่งที่ผู้ซื้อจะได้รับ (The Ultimate Buyout Package)
 
-1. **Full IP Ownership:** สิทธิ์ใน Source Code, ดีไซน์ และ AI Logic ทั้งหมด
-2. **Clean & Scalable Architecture:** โครงสร้างที่รองรับการ Scale ระดับหมื่นล้าน (Next.js 16 + Supabase)
-3. **Enterprise Shield:** ระบบ Agent Isolation และ RLS ที่ผ่านการ Audit แล้ว (หัวใจสำคัญของการขายให้บริษัทใหญ่)
-4. **Social Media Suite:** ระบบโพสต์ทรัพย์ลง Facebook/Instagram/TikTok อัตโนมัติ + Keyword Comment-to-DM
-5. **Knowledge Transfer:** เอกสารคู่มือครบชุด (Technical, Database, Security, User Manual)
-6. **Setup & Deployment:** การติดตั้งระบบบน Cloud ของผู้ซื้อพร้อมใช้งานทันที
-
----
-
-## 3. การประเมินมูลค่าสำหรับการเจรจา (Valuation Justification)
-
-เพื่อให้เห็นภาพชัดเจนว่าทำไมราคานี้ถึงคุ้มค่าเมื่อเทียบกับการ **"สร้างใหม่เอง"**:
-
-| ปัจจัยการประเมิน  | สร้างใหม่เอง (In-house)             | ซื้อโปรเจคนี้ (Buyout)         |
-| :---------------- | :---------------------------------- | :----------------------------- |
-| **ต้นทุนเวลา**    | 10 - 15 เดือน                       | **1 สัปดาห์ (พร้อมรัน)**       |
-| **ต้นทุนพนักงาน** | Dev 3-4 คน (4-5 ล้านบาท++)          | **ลงทุนครั้งเดียวจบ**          |
-| **ความเสี่ยง**    | สูง (Error, ทิ้งงาน, เทคโนโลยีเก่า) | **ต่ำ (ผ่านการ Audit แล้ว)**   |
-| **เทคโนโลยี**     | อาจล้าสมัยเมื่อพัฒนาเสร็จ           | **Latest (Next 16, React 19)** |
+1. **Full IP Ownership:** สิทธิ์ขาดใน Source Code, รูปแบบ UI/UX, และสถาปัตยกรรมระบบ 100%
+2. **Enterprise Architecture:** โครงสร้าง Next.js 16 + Supabase ที่พร้อมรองรับผู้ใช้งานนับแสนราย (Highly Scalable)
+3. **Multi-Tenant Shield:** ระบบจัดการความปลอดภัยขั้นสูงสุดระดับแยกสาขา (Branch Switcher) และ RLS Agent Isolation
+4. **Complete Output Engine:** โพสต์รวดเดียวลง Facebook, Instagram, และ TikTok พร้อมระบบ AI Comment-to-DM
+5. **Knowledge Transfer:** เอกสารคู่มือวิศวกรรมและการปฏิบัติการฉบับสมบูรณ์ (13 ฉบับ)
+6. **White-glove Deployment:** การติดตั้งและส่งมอบระบบบน Cloud Infrastructure ของผู้ซื้อ
 
 ---
 
-## 4. ชุดข้อมูลสำหรับการขาย (Sales & Marketing Kit)
+## 3. การประเมินมูลค่าสำหรับการเจรจาต่อรอง (Valuation Justification)
 
-### ✨ จุดเด่นที่ทำให้เราเหนือกว่า (USPs)
+จุดแข็งในการเจรจากับผู้ซื้อ คือการเปรียบเทียบข้อได้เปรียบระหว่างการ **"สร้างใหม่"** กับ **"การซื้อระบบนี้"**:
 
-- **AI-First & Smart Interaction:**
-  - **AI Chatbot:** ค้นหาทรัพย์สินและตอบโต้แบบธรรมชาติ (Context-Aware)
-  - **AI Multi-language:** แปลข้อมูลทรัพย์สินอัตโนมัติ 3 ภาษา (ไทย, อังกฤษ, จีน)
-  - **AI Content Gen:** สร้างคำบรรยายทรัพย์สิน, บทความบล็อก, และ Social Post Templates ในคลิกเดียว
-- **Ultra Modern Tech:** Next.js 16 + Tailwind 4 + React 19 (เร็วและทันสมัยที่สุด)
-- **Omni-channel Native:** เชื่อมต่อ LINE, Facebook Messenger, Instagram DM, WhatsApp ครบทุกช่องทาง
-- **Social Media Automation:**
-  - **One-Click Posting:** โพสต์ทรัพย์ลง Facebook Page, Instagram, TikTok ได้ทันทีจาก CRM
-  - **Keyword Comment-to-DM:** ลูกค้าคอมเมนต์คำค้นหา → ระบบส่ง DM ข้อมูลทรัพย์อัตโนมัติ
-  - **Social Post Monitor:** ติดตามสถานะการโพสต์ทุก Platform แบบ Real-time
-- **Enterprise Grade:**
-  - **Agent Isolation (RLS):** ระบบแยกฐานข้อมูลลูกค้า/ทรัพย์สินรายคน (ความปลอดภัยระดับธนาคาร)
-  - **Team Hierarchy:** รองรับระบบทีมขาย (Manager/Agent) พร้อมระบบโอนย้ายงาน (Lead Transfer)
-  - **Audit Logs:** บันทึกทุกความเคลื่อนไหวเพื่อความโปร่งใส
+| ปัจจัยเชิงธุรกิจ  | สร้างใหม่เอง (In-house Development)  | ซื้อโปรเจคนี้ (Instant Buyout)              |
+| :---------------- | :----------------------------------- | :------------------------------------------ |
+| **ต้นทุนเวลา**    | 12 - 18 เดือน                        | **1 สัปดาห์ (พร้อมทำกำไร)**                 |
+| **ต้นทุนบุคลากร** | ทีมงาน 5-7 คน (งบประมาณ 5-8 ล้าน)    | **ลงทุนครั้งเดียว ควบคุมงบได้**             |
+| **ความเสี่ยง**    | สูงมาก (โปรเจคล่าช้า, เทคโนโลยีเก่า) | **ความเสี่ยง 0% (ระบบผ่าน Audit)**          |
+| **คุณภาพ/เทคฯ**   | อาจตกรุ่นเมื่อพัฒนาเสร็จสิ้น         | **State-of-the-Art (Tailwind 4, React 19)** |
 
 ---
 
-## 5. แผนธุรกิจสำหรับบุคคลธรรมดา (Solo Entrepreneur)
+## 4. ชุดข้อมูลสำหรับการขาย (Executive Sales & Marketing Kit)
 
-- **Professional Branding:** ใช้เอกสารชุดนี้สร้างความน่าเชื่อถือเทียบเท่าบริษัทใหญ่
-- **Service Excellence:** รับทำเว็บให้นายหน้าโดยใช้โปรเจคนี้เป็นฐาน (กำไรสูงเพราะต้นทุนเวลาต่ำ)
-- **Data Compliance (PDPA):** วางรากฐานระบบให้รองรับ PDPA ตั้งแต่แรกเริ่ม พร้อม Cookie Consent 3 ภาษา
-- **Scalability:** ใช้ระบบ Feature Flags เพื่อเปิด-ปิดความสามารถของระบบตามราคาที่ลูกค้าจ่าย
+### ✨ จุดเด่นที่เหนือกว่าคู่แข่งในตลาด (Unfair Advantages)
+
+- **AI-Powered Ecosystem:**
+  - **Gemini AI Integration:** ขับเคลื่อนการสร้างเนื้อหาแปล 3 ภาษา อัตโนมัติและสร้างคอนเทนต์โซเชียลมีเดียอัจฉริยะ
+  - **Smart Matching System:** แกนประมวลผลความสอดคล้องระหว่างทรัพย์และผู้ซื้อที่แม่นยำ
+- **Omni-channel & Social Automation:**
+  - **Centralized Command Center:** รวบแชทจาก LINE, FB Messenger, IG DM, และ WhatsApp เข้ามาที่เดียว
+  - **1-Click Broadcast:** โพสต์ลิสติ้งเดียว กระจายลง Facebook, Instagram, TikTok อัตโนมัติ
+  - **Smart Auto-Reply:** ตอบกลับคอมเมนต์เป็น DM พร้อมแนบทรัพย์สินให้พิจารณาตลอด 24 ชม.
+- **Enterprise-Grade Operations:**
+  - **Multi-Tenant / Branch Management:** รองรับการจัดการหลายบริษัทหรือหลายสาขา สลับไปมาได้อย่างไร้รอยต่อ
+  - **Military-Grade Isolation:** ระบบ Row-Level Security (RLS) ปกป้องข้อมูลลูกค้าของแต่ละ Agent แยกจากกันเด็ดขาด
+  - **Automated Workflows:** Cron Jobs ที่คอยจัดการแจ้งเตือนสัญญาเช่า, วันหมดอายุ, และลบข้อมูลขยะอัตโนมัติ
 
 ---
 
-## 6. แผนการพัฒนาในอนาคต (Future Roadmap)
+## 5. แผนธุรกิจสำหรับเจ้าของระบบ (Solo/SME Entrepreneur)
 
-### ✅ ความสำเร็จในปัจจุบัน (Current Milestones - V2)
+- **B2B SaaS Provider:** ปรับแต่งระบบเปิดเช่าใช้งานแบบรายเดือน (SaaS) ให้กับ Agency ขนาดเล็ก
+- **Premium Freelance Agency:** นำโปรเจคนี้ไปเป็น Base Framework สำหรับรับจ้างพัฒนาระบบให้ลูกค้าองค์กรแบบรับทำจบ (Turn-key) ในราคาสูง
+- **PDPA Privacy First:** ระบบมาพร้อมโครงสร้างรองรับกฎหมายคุ้มครองข้อมูลส่วนบุคคล (PDPA) ระดับสากล ช่วยเพิ่มความอุ่นใจให้ลูกค้าระดับองค์กร
 
-- **Omni-channel Complete:** ใช้งานระบบ Centralized Inbox สำหรับ LINE, Facebook Messenger, Instagram DM, WhatsApp ได้สมบูรณ์
-- **Social Media Suite:** โพสต์ทรัพย์ลง Facebook/Instagram/TikTok + Keyword Automation (Comment-to-DM)
-- **AI Ecosystem:** ระบบ Chatbot ค้นหาทรัพย์สิน, แปลภาษาอัตโนมัติ (TH/EN/CN), AI Social Post Templates
-- **Enterprise Security:** ระบบ Audit Logs, Agent Isolation, RLS, Cookie Consent (PDPA)
-- **Automation:** Cron Jobs สำหรับแจ้งเตือนสัญญาหมดอายุ, แจ้งค่าเช่ารายเดือน, ล้างข้อมูลขยะอัตโนมัติ
-- **Property Syndication:** XML Feed สำหรับเผยแพร่ทรัพย์ไปเว็บภายนอก
+---
 
-### 🚀 แผนพัฒนาเฟสถัดไป (Next Phases)
+## 6. วิสัยทัศน์และการพัฒนาต่อยอด (Future Roadmap)
 
-- **Listing Syndication (One-Click Posting):** ลงขายที่เดียว ข้อมูลกระจายไปทุกที่อัตโนมัติ (DDProperty, LivingInsider, FB Marketplace)
-- **Advanced Business Tools:**
-  - ระบบ Virtual Tour 360 และ e-Signature
-  - ระบบวิเคราะห์ Lead Scoring ด้วย AI
-- **Mobile Native:** พัฒนาแอปพลิเคชันมือถือ (React Native/Expo) เพื่อความคล่องตัวของ Agent
-- **Market Insights:** ระบบวิเคราะห์ราคาตลาดเปรียบเทียบ (CMA) แบบ Real-time
+### ✅ ความสำเร็จในปัจจุบัน (Version 2.0 Enterprise Readiness)
+
+- ระบบ Multi-Tenant และ Omni-channel Inbox พร้อมใช้งานจริงในโปรดักชัน
+- โซเชียลมีเดียแบบครบวงจร (Facebook, IG, TikTok + Keyword Automation)
+- AI Ecosystem โดย Gemini ทำงานได้อย่างลื่นไหลและเสถียร
+- ผ่านการ Audit ด้าน Security, PDPA และ Zero Vulnerability ของ Dependency ทั้งหมด
+
+### 🚀 แผนพัฒนาเฟสถัดไป (Visionary Next Steps)
+
+- **Mass Syndication Engine:** ระบบยิงข้อมูลไปสู่ Property Portals ระดับโลกและในประเทศ (DDproperty, DotProperty, FazWaz) ในคลิกเดียว
+- **AI Predictive Analytics:** ระบบทำนายและประเมินราคาตลาด (CMA - Comparative Market Analysis) เชิงลึก
+- **Mobile Native Application:** พัฒนาแอปพลิเคชันสำหรับ iOS/Android ผ่าน React Native ตอบสนองการทำงานภาคสนาม
+- **Virtual Reality & e-Signing:** ปิดจบธุรกรรมด้วยลายเซ็นดิจิทัลที่ผ่านการรับรองทางกฎหมาย พร้อมระบบดูห้องแบบ 360 องศา
 
 ---

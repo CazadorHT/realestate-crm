@@ -20,7 +20,7 @@ This CRM empowers real estate professionals to manage properties, leads, and dea
 - **Omni-channel Communication**: Centralized inbox for LINE, Facebook Messenger, Instagram DM, and WhatsApp.
 - **Social Media Automation**: One-click posting to Facebook, Instagram, and TikTok with keyword Comment-to-DM.
 - **Global Ready**: Built-in support for Thai, English, and Chinese audiences.
-- **Enterprise Security**: Agent Isolation via Row-Level Security (RLS), Audit Logs, and PDPA compliance.
+- **Enterprise Security**: Agent Isolation, Multi-Tenant Branch Support, Row-Level Security (RLS), Audit Logs, and PDPA compliance.
 - **Premium UX**: Modern, responsive interface built with Tailwind CSS 4 and shadcn/ui.
 
 ## 🚀 Key Features
@@ -62,7 +62,7 @@ This CRM empowers real estate professionals to manage properties, leads, and dea
 ### 🔐 Enterprise Security
 
 - **Agent Isolation**: Row-Level Security (RLS) ensures agents only see their own data.
-- **Team Hierarchy**: Admin → Manager → Agent role structure with granular permissions.
+- **Team Hierarchy**: Admin → Manager → Agent role structure with granular permissions and Multi-Tenant branch logic.
 - **Audit Logs**: Complete activity trail for all critical actions including social posting.
 - **PDPA Compliance**: Cookie consent (3 languages), Privacy Policy, and Terms of Service.
 
@@ -175,9 +175,14 @@ Comprehensive documentation is available in the [`docs/`](./docs) folder:
 | [Security Guide](./docs/03_Security_Maintenance.md)           | Security audit, monitoring, and troubleshooting |
 | [User Manual](./docs/04_User_Manual.md)                       | End-user guide for all features                 |
 | [Database Schema](./docs/04_Database_Schema_Setup.md)         | SQL schema, RLS policies, and storage           |
-| [Enterprise Roles](./docs/05_Enterprise_Operations_Roles.md)  | Team structure and agent isolation              |
+| [Enterprise Roles](./docs/05_Enterprise_Operations_Roles.md)  | Team structure, isolation, and branch switcher  |
 | [Handover Guide](./docs/06_Technical_Handover_Guide.md)       | System handover checklist                       |
 | [PDPA Checklist](./docs/07_PDPA_Compliance_Checklist.md)      | Data privacy compliance                         |
+| [Audit Report](./docs/Audit_Report.md)                        | Quality audit and vulnerability report          |
+| [Keyword Automation](./docs/keyword-automation-guide.md)      | Setup guide for Comment-to-DM features          |
+| [Meta Token Guide](./docs/meta-token-guide.md)                | Manual retrieval of Meta Page Access Tokens     |
+| [Roles & Permissions](./docs/roles-permissions.md)            | Multi-Tenant permission matrix                  |
+| [Project Summary](./docs/สรุปโปรเจค.md)                       | Comprehensive project assessment & pricing      |
 
 ---
 

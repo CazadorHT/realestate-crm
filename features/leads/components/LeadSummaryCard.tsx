@@ -18,12 +18,13 @@ export function LeadSummaryCard({ leadId }: LeadSummaryCardProps) {
   const handleGenerate = async () => {
     setIsLoading(true);
     try {
-      const result = await generateLeadSummaryAction(leadId);
-      setSummary(result);
+      const result = await generateLeadSummaryAction({ leadId });
+      if (!result.success) throw new Error(result.error);
+      setSummary(result.data);
       toast.success("สรุปข้อมูลด้วย AI เรียบร้อยแล้ว ✨");
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI Summary Error:", error);
-      toast.error("ไม่สามารถสรุปข้อมูลได้ในขณะนี้");
+      toast.error(error.message || "ไม่สามารถสรุปข้อมูลได้ในขณะนี้");
     } finally {
       setIsLoading(false);
     }

@@ -157,11 +157,11 @@ export function LeadTimeline({
 
   const handleDelete = (id: string) => {
     startTransition(async () => {
-      const res = await deleteLeadActivityAction(id, leadId);
+      const res = await deleteLeadActivityAction({ activityId: id, leadId });
       if (res.success) {
         toast.success("ลบกิจกรรมเรียบร้อย");
       } else {
-        toast.error(res.message);
+        toast.error(res.error || "เกิดข้อผิดพลาดในการลบกิจกรรม");
       }
       setDeleteId(null);
     });
@@ -169,12 +169,16 @@ export function LeadTimeline({
 
   const handleEdit = async (values: LeadActivityFormValues) => {
     if (!editActivity) return;
-    const res = await updateLeadActivityAction(editActivity.id, leadId, values);
+    const res = await updateLeadActivityAction({
+      activityId: editActivity.id,
+      leadId,
+      values,
+    });
     if (res.success) {
       toast.success("แก้ไขกิจกรรมเรียบร้อย");
       setEditActivity(null);
     } else {
-      toast.error(res.message);
+      toast.error(res.error || "เกิดข้อผิดพลาดในการแก้ไขกิจกรรม");
     }
   };
 
