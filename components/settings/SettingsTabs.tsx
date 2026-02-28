@@ -19,13 +19,20 @@ export function SettingsTabs({ activeTab }: SettingsTabsProps) {
   };
 
   return (
-    <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:w-auto h-auto p-1 bg-slate-100 rounded-xl gap-1">
+    <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 lg:w-auto h-auto p-1 bg-slate-100 rounded-xl gap-1">
       <TabsTrigger
         value="general"
         onClick={() => handleTabChange("general")}
         className="rounded-lg py-2 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
       >
         ทั่วไป
+      </TabsTrigger>
+      <TabsTrigger
+        value="branding"
+        onClick={() => handleTabChange("branding")}
+        className="rounded-lg py-2 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+      >
+        Branding
       </TabsTrigger>
       <TabsTrigger
         value="social"

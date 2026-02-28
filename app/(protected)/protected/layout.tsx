@@ -9,6 +9,7 @@ import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { siteConfig } from "@/lib/site-config";
 
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
+import { DynamicTenantName } from "@/components/common/DynamicTenantName";
 
 import { SocialPostMonitor } from "@/components/properties/SocialPostMonitor";
 import { TenantSwitcher } from "@/components/common/TenantSwitcher";
@@ -51,7 +52,7 @@ export default async function ProtectedLayout({
             <MobileNav role={profile.role} />
 
             <h1 className="text-lg font-bold text-slate-800 tracking-tight sm:hidden truncate max-w-[120px] uppercase">
-              {siteConfig.name}
+              <DynamicTenantName fallback={siteConfig.name} />
             </h1>
           </div>
           <div className="ml-auto flex items-center gap-2 sm:gap-4">

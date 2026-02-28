@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -45,8 +46,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site-config";
 import { TenantSwitcher } from "@/components/common/TenantSwitcher";
+import { useTenant } from "@/components/providers/TenantProvider";
 
 export function MobileNav({ role }: { role: UserRole }) {
+  const { activeTenant } = useTenant();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>([
@@ -80,7 +83,7 @@ export function MobileNav({ role }: { role: UserRole }) {
     roles?: UserRole[];
   }
 
-  // Same configuration as SidebarNav
+  // Menus configuration
   const crmItems: NavItem[] = [
     {
       title: "ทรัพย์สิน",
@@ -177,7 +180,6 @@ export function MobileNav({ role }: { role: UserRole }) {
     },
   ];
 
-  // Settings Group
   const settingsItems: NavItem[] = [
     {
       title: "โปรไฟล์",
@@ -291,11 +293,26 @@ export function MobileNav({ role }: { role: UserRole }) {
         <div className="p-6 border-b border-slate-200 bg-white/50 sticky top-0 z-20">
           <div className="flex items-center justify-between gap-3">
             <div className="flex flex-col">
+              {activeTenant?.logo_url && (
+                <div className="relative h-10 w-24 mb-2">
+                  <Image
+                    src={activeTenant.logo_url}
+                    alt={activeTenant.name}
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              )}
               <h1 className="text-xl font-semibold tracking-tight text-slate-800 uppercase leading-none">
-                {siteConfig.name}
+                {activeTenant?.name ||
+                  activeTenant?.settings?.name ||
+                  siteConfig.name}
               </h1>
               <p className="text-[10px] uppercase tracking-[0.2em] text-blue-600 font-normal mt-1">
-                {siteConfig.description || "Real Estate CRM"}
+                {activeTenant?.slug ||
+                  activeTenant?.settings?.description ||
+                  siteConfig.description ||
+                  "Real Estate CRM"}
               </p>
             </div>
             <TenantSwitcher />

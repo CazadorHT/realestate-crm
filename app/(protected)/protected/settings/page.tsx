@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { SiteSettingsPanel } from "@/components/settings/SiteSettingsPanel";
+import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { SocialAutomationSettings } from "@/components/settings/SocialAutomationSettings";
 import {
   Settings,
@@ -16,6 +17,7 @@ import {
   Facebook,
   CheckCircle,
   Building2,
+  Palette,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
@@ -115,6 +117,10 @@ export default async function SettingsPage({
               </Link>
             </div>
             <SiteSettingsPanel />
+          </TabsContent>
+
+          <TabsContent value="branding" className="space-y-6">
+            <BrandingSettings />
           </TabsContent>
 
           <TabsContent value="social" className="space-y-6">

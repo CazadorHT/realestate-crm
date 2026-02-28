@@ -46,8 +46,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isFeatureEnabled } from "@/lib/features";
+import { useTenant } from "@/components/providers/TenantProvider";
 
 export function SidebarNav({ role }: { role: UserRole }) {
+  const { activeTenant } = useTenant();
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState<string[]>([
     "crm",
@@ -96,7 +98,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
     roles?: UserRole[];
   }
 
-  // Core CRM Group
+  // Menus configuration
   const crmItems: NavItem[] = [
     {
       title: "ทรัพย์สิน",
@@ -128,7 +130,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
       icon: Handshake,
       active: pathname?.startsWith("/protected/deals") ?? false,
     },
-
     {
       title: "ปฏิทิน",
       href: "/protected/calendar",
@@ -150,7 +151,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
     },
   ];
 
-  // Documents Group
   const documentsItems: NavItem[] = [
     {
       title: "สัญญาเช่า",
@@ -166,7 +166,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
     },
   ];
 
-  // Public Content Group
   const publicItems: NavItem[] = [
     {
       title: "บทความ (Blog)",
@@ -202,7 +201,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
     },
   ];
 
-  // Settings Group
   const settingsItems: NavItem[] = [
     {
       title: "โปรไฟล์",
@@ -277,28 +275,9 @@ export function SidebarNav({ role }: { role: UserRole }) {
 
   const filterItems = (items: NavItem[]) => {
     return items.filter((item) => {
-      // Role Check
       if (item.roles && item.roles.length > 0) {
         if (!role || !item.roles.includes(role)) return false;
       }
-
-      // Feature Gating Checks
-      if (
-        item.href.includes("line-manager") &&
-        !isFeatureEnabled("line_integration")
-      )
-        return false;
-      if (
-        item.href.includes("ai-monitor") &&
-        !isFeatureEnabled("ai_smart_summary")
-      )
-        return false;
-      if (
-        item.href.includes("smart-match") &&
-        !isFeatureEnabled("ai_smart_summary")
-      )
-        return false;
-
       return true;
     });
   };
@@ -310,7 +289,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
         items: filterItems(group.items),
       }))
       .filter((group) => {
-        // Only show group if it has items and user has permission
         if (group.items.length === 0) return false;
         if (group.roles && group.roles.length > 0) {
           if (!role || !group.roles.includes(role)) return false;
@@ -376,19 +354,23 @@ export function SidebarNav({ role }: { role: UserRole }) {
         >
           <div className="flex items-center gap-3">
             <Image
-              src={siteConfig.logo}
-              alt={`${siteConfig.name} Logo`}
+              src={activeTenant?.logo_url || siteConfig.logo}
+              alt={`${activeTenant?.name || siteConfig.name} Logo`}
               width={70}
               height={70}
               className="rounded-lg object-contain"
             />
             {!isCollapsed && (
               <div className="min-w-0">
-                <h1 className="text-xl font-medium tracking-tight text-slate-700 uppercase">
-                  {siteConfig.name}
+                <h1 className="text-xl font-medium tracking-tight text-slate-700 uppercase truncate">
+                  {activeTenant?.name ||
+                    activeTenant?.settings?.name ||
+                    siteConfig.name}
                 </h1>
-                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-medium">
-                  {siteConfig.description}
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-medium truncate">
+                  {activeTenant?.slug ||
+                    activeTenant?.settings?.description ||
+                    siteConfig.description}
                 </p>
               </div>
             )}
@@ -516,7 +498,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
 
             return (
               <div key={group.id} className="space-y-1">
-                {/* Group Header */}
                 <button
                   onClick={() => toggleGroup(group.id)}
                   className={cn(
@@ -537,7 +518,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
                   )}
                 </button>
 
-                {/* Group Items */}
                 {isOpen && (
                   <div className="space-y-1 ml-2">
                     {group.items.map((item) => (

@@ -17,6 +17,15 @@ type Tenant = {
   slug: string;
   logo_url: string | null;
   subscription_status: string | null;
+  settings?: {
+    theme?: {
+      primary?: string;
+      secondary?: string;
+    };
+    logo_dark_url?: string | null;
+    favicon_url?: string | null;
+    [key: string]: any;
+  };
   userRole?: string;
 };
 
@@ -66,7 +75,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
             name,
             slug,
             logo_url,
-            subscription_status
+            subscription_status,
+            settings
           )
         `,
         )

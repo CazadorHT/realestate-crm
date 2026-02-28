@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { readFavoriteIds } from "@/lib/favorite-store";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useTenant } from "@/components/providers/TenantProvider";
 import { siteConfig } from "@/lib/site-config";
 import {
   DropdownMenu,
@@ -20,6 +21,7 @@ import { DepositWizard } from "./deposit/DepositWizard";
 import { CheckCircle } from "lucide-react";
 
 export function PublicNav() {
+  const { activeTenant } = useTenant();
   const pathname = usePathname();
   const router = useRouter();
   const [favoriteCount, setFavoriteCount] = useState(0);
@@ -142,11 +144,11 @@ export function PublicNav() {
                   className="hover:scale-105 transition-transform block"
                 >
                   <Image
-                    src={siteConfig.logo}
-                    alt={`${siteConfig.name} Logo`}
+                    src={activeTenant?.logo_url || siteConfig.logo}
+                    alt={`${activeTenant?.name || siteConfig.name} Logo`}
                     width={220}
                     height={70}
-                    className="h-16 w-auto"
+                    className="h-16 w-auto object-contain"
                     priority
                   />
                 </Link>

@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/common/CookieConsent";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { TenantProvider } from "@/components/providers/TenantProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { getServerTranslations } from "@/lib/i18n";
 import { cookies } from "next/headers";
 import { siteConfig } from "@/lib/site-config";
@@ -24,28 +25,57 @@ const notoThai = Noto_Sans_Thai({
   variable: "--font-noto-thai",
 });
 
+import { getSystemConfig } from "@/lib/actions/system-config";
+import { createClient } from "@/lib/supabase/server";
+
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
+  const systemConfig = await getSystemConfig();
+  const supabase = await createClient();
+
+  let tenantSettings: any = null;
+
+  // For the root layout, we check the default tenant if multi-tenant is disabled
+  // or if we can identify the tenant from headers (subdomain support)
+  if (systemConfig.default_tenant_id) {
+    const { data: defaultTenant } = await supabase
+      .from("tenants")
+      .select("settings, name, logo_url")
+      .eq("id", systemConfig.default_tenant_id)
+      .single();
+
+    if (defaultTenant) {
+      tenantSettings = defaultTenant.settings || {};
+    }
+  }
+
+  const siteName = tenantSettings?.name || siteConfig.name;
+  const favicon = tenantSettings?.favicon_url || "/favicon.ico";
 
   return {
     metadataBase: new URL(siteConfig.url),
     title: {
-      default: t("metadata.default_title", { siteName: siteConfig.name }),
-      template: `%s | ${siteConfig.name}`,
+      default: t("metadata.default_title", { siteName: siteName }),
+      template: `%s | ${siteName}`,
     },
     description: t("metadata.default_description"),
-    keywords: [...siteConfig.keywords, "Real Estate Thailand", siteConfig.name],
+    keywords: [...siteConfig.keywords, "Real Estate Thailand", siteName],
+    icons: {
+      icon: favicon,
+      shortcut: favicon,
+      apple: favicon,
+    },
     openGraph: {
       type: "website",
       locale: "th_TH",
       url: siteConfig.url,
-      title: t("metadata.default_title", { siteName: siteConfig.name }),
+      title: t("metadata.default_title", { siteName: siteName }),
       description: t("metadata.default_description"),
-      siteName: siteConfig.name,
+      siteName: siteName,
     },
     twitter: {
       card: "summary_large_image",
-      title: t("metadata.default_title", { siteName: siteConfig.name }),
+      title: t("metadata.default_title", { siteName: siteName }),
       description: t("metadata.default_description"),
     },
     other: {
@@ -72,9 +102,11 @@ export default async function RootLayout({
       <body className={`${prompt.className} ${notoThai.variable} antialiased`}>
         <LanguageProvider initialLanguage={lang as any}>
           <TenantProvider>
-            {children}
-            <Toaster />
-            <CookieConsent />
+            <ThemeProvider>
+              {children}
+              <Toaster />
+              <CookieConsent />
+            </ThemeProvider>
           </TenantProvider>
         </LanguageProvider>
       </body>
