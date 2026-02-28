@@ -28,29 +28,29 @@ const THEME_PRESETS = [
     id: "professional",
     name: "Professional Blue",
     primary: "#1F4ED8",
-    secondary: "#F8FAFC",
-    accent: "#3B82F6",
+    secondary: "#64748B",
+    neutral: "#F8FAFC",
   },
   {
     id: "emerald",
     name: "Elegant Emerald",
     primary: "#059669",
-    secondary: "#F0FDF4",
-    accent: "#10B981",
+    secondary: "#34D399",
+    neutral: "#F0FDF4",
   },
   {
     id: "sunset",
     name: "Sunset Orange",
     primary: "#EA580C",
-    secondary: "#FFF7ED",
-    accent: "#F97316",
+    secondary: "#F97316",
+    neutral: "#FFF7ED",
   },
   {
     id: "custom",
     name: "Custom Profile",
     primary: "#1F4ED8",
-    secondary: "#F1F5F9",
-    accent: "#3B82F6",
+    secondary: "#64748B",
+    neutral: "#F1F5F9",
   },
 ];
 
@@ -66,8 +66,8 @@ export function BrandingSettings() {
   const currentTheme = settings.theme || {
     profile: "professional",
     primary: "#1F4ED8",
-    secondary: "#F8FAFC",
-    accent: "#3B82F6",
+    secondary: "#64748B",
+    neutral: "#F8FAFC",
   };
 
   const [theme, setTheme] = useState(currentTheme);
@@ -83,7 +83,7 @@ export function BrandingSettings() {
         profile: preset.id,
         primary: preset.primary,
         secondary: preset.secondary,
-        accent: preset.accent,
+        neutral: preset.neutral,
       });
     } else {
       setTheme({ ...theme, profile: "custom" });
@@ -142,17 +142,17 @@ export function BrandingSettings() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Palette className="h-5 w-5 text-blue-600" />
-            โทนสีประจำแบรนด์
+            <Palette className="h-5 w-5 text-brand-600" />
+            โทนสี 60-30-10 (Design System)
           </CardTitle>
           <CardDescription>
-            กำหนดสีหลักของระบบที่แสดงผลในปุ่ม ลิงก์ และองค์ประกอบต่างๆ
+            กำหนดสีหลักของระบบตามสัดส่วน 60:30:10 เพื่อความสวยงามและสมดุล
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Profile Selection */}
           <div className="space-y-3">
-            <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <Label className="text-xs font-semibold text-secondary-500 uppercase tracking-wider">
               เลือกธีมสำเร็จรูป (Theme Presets)
             </Label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -163,25 +163,32 @@ export function BrandingSettings() {
                   className={cn(
                     "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center",
                     selectedProfile === preset.id
-                      ? "border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/10"
-                      : "border-slate-100 bg-white hover:border-slate-200",
+                      ? "border-brand-600 bg-brand-50/50 ring-2 ring-brand-600/10"
+                      : "border-neutral-200 bg-white hover:border-neutral-300",
                   )}
                 >
                   <div className="flex gap-1">
                     <div
                       className="h-4 w-4 rounded-full border border-black/5 shadow-sm"
+                      title="10% Primary"
                       style={{ backgroundColor: preset.primary }}
                     />
                     <div
                       className="h-4 w-4 rounded-full border border-black/5 shadow-sm"
+                      title="30% Secondary"
                       style={{ backgroundColor: preset.secondary }}
                     />
+                    <div
+                      className="h-4 w-4 rounded-full border border-black/5 shadow-sm"
+                      title="60% Neutral"
+                      style={{ backgroundColor: preset.neutral }}
+                    />
                   </div>
-                  <span className="text-[10px] font-medium text-slate-700 whitespace-nowrap">
+                  <span className="text-[10px] font-medium text-secondary-700 whitespace-nowrap">
                     {preset.name}
                   </span>
                   {selectedProfile === preset.id && (
-                    <div className="h-1 w-1 rounded-full bg-blue-600 mt-0.5"></div>
+                    <div className="h-1 w-1 rounded-full bg-brand-600 mt-0.5"></div>
                   )}
                 </button>
               ))}
@@ -197,26 +204,26 @@ export function BrandingSettings() {
               )}
             >
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <Label className="text-xs font-semibold text-secondary-500 uppercase tracking-wider">
                   ปรับแต่งสี (Custom Overrides)
                 </Label>
                 {selectedProfile !== "custom" && (
-                  <span className="text-[9px] text-slate-400 italic">
+                  <span className="text-[9px] text-secondary-400 italic">
                     เลือก "Custom Profile" เพื่อปรับแต่งสีเอง
                   </span>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="primary" className="text-xs">
-                    สีหลัก (Primary Color)
+                    สีเด่น (10% Primary)
                   </Label>
                   <div className="flex gap-2">
                     <Input
                       id="primary"
                       type="color"
-                      className="w-10 h-8 p-1 cursor-pointer border-slate-200"
+                      className="w-10 h-8 p-1 cursor-pointer border-neutral-200"
                       value={theme.primary}
                       onChange={(e) =>
                         setTheme({
@@ -236,20 +243,20 @@ export function BrandingSettings() {
                           profile: "custom",
                         })
                       }
-                      className="h-8 text-xs font-mono uppercase"
+                      className="h-8 text-[10px] font-mono uppercase"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="secondary" className="text-xs">
-                    สีรอง (Secondary Color)
+                    สีรอง (30% Secondary)
                   </Label>
                   <div className="flex gap-2">
                     <Input
                       id="secondary"
                       type="color"
-                      className="w-10 h-8 p-1 cursor-pointer border-slate-200"
+                      className="w-10 h-8 p-1 cursor-pointer border-neutral-200"
                       value={theme.secondary}
                       onChange={(e) =>
                         setTheme({
@@ -269,7 +276,40 @@ export function BrandingSettings() {
                           profile: "custom",
                         })
                       }
-                      className="h-8 text-xs font-mono uppercase"
+                      className="h-8 text-[10px] font-mono uppercase"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="neutral" className="text-xs">
+                    สีพื้น (60% Neutral)
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="neutral"
+                      type="color"
+                      className="w-10 h-8 p-1 cursor-pointer border-neutral-200"
+                      value={theme.neutral || "#F8FAFC"}
+                      onChange={(e) =>
+                        setTheme({
+                          ...theme,
+                          neutral: e.target.value,
+                          profile: "custom",
+                        })
+                      }
+                    />
+                    <Input
+                      type="text"
+                      value={theme.neutral || "#F8FAFC"}
+                      onChange={(e) =>
+                        setTheme({
+                          ...theme,
+                          neutral: e.target.value,
+                          profile: "custom",
+                        })
+                      }
+                      className="h-8 text-[10px] font-mono uppercase"
                     />
                   </div>
                 </div>
@@ -389,11 +429,14 @@ export function BrandingSettings() {
 
       {/* Comprehensive Mini Site Preview */}
       <div className="lg:col-span-2 mt-4">
-        <Card className="border-2 border-slate-200 shadow-xl overflow-hidden bg-slate-50">
-          <CardHeader className="bg-white border-b border-slate-200 py-4 flex flex-row items-center justify-between">
+        <Card
+          className="border-2 border-neutral-200 shadow-xl overflow-hidden"
+          style={{ backgroundColor: theme.neutral || "#F8FAFC" }}
+        >
+          <CardHeader className="bg-white border-b border-neutral-200 py-4 flex flex-row items-center justify-between">
             <div>
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Globe className="h-5 w-5 text-blue-600" />
+                <Globe className="h-5 w-5 text-brand-600" />
                 ตัวอย่างการแสดงผลจริง (Live Site Preview)
               </CardTitle>
               <CardDescription className="text-xs">
@@ -408,27 +451,27 @@ export function BrandingSettings() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-0 divide-y xl:divide-y-0 xl:divide-x divide-slate-200">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-0 divide-y xl:divide-y-0 xl:divide-x divide-neutral-200">
               {/* Dashboard Preview Mockup */}
               <div className="p-6 space-y-4">
-                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                  หน้าจัดการหลังบ้าน (Dashboard)
+                <h4 className="text-xs font-semibold text-secondary-500 uppercase tracking-wider mb-2">
+                  หน้าจัดการหลังบ้าน (Dashboard - 60% Neutral)
                 </h4>
-                <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white aspect-4/3 flex flex-col">
+                <div className="border border-neutral-200 rounded-xl overflow-hidden shadow-sm bg-white aspect-4/3 flex flex-col">
                   {/* Top Nav Mockup */}
-                  <div className="h-10 border-b border-slate-100 px-3 flex items-center justify-between bg-white z-10">
+                  <div className="h-10 border-b border-neutral-100 px-3 flex items-center justify-between bg-white z-10">
                     <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 rounded bg-slate-100"></div>
-                      <div className="h-2 w-16 bg-slate-50 rounded"></div>
+                      <div className="h-4 w-4 rounded bg-neutral-100"></div>
+                      <div className="h-2 w-16 bg-neutral-50 rounded"></div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="h-6 w-6 rounded-full bg-slate-200"></div>
+                      <div className="h-6 w-6 rounded-full bg-neutral-200"></div>
                     </div>
                   </div>
 
                   <div className="flex flex-1 overflow-hidden">
                     {/* Sidebar Mockup */}
-                    <div className="w-20 border-r border-slate-100 flex flex-col p-2 gap-2 bg-white">
+                    <div className="w-20 border-r border-neutral-100 flex flex-col p-2 gap-2 bg-white">
                       <div className="h-8 w-full relative mb-2">
                         {(activeTenant?.logo_url || siteConfig.logo) && (
                           <Image
@@ -443,15 +486,20 @@ export function BrandingSettings() {
                         className="h-1.5 w-full rounded-full"
                         style={{ backgroundColor: theme.primary, opacity: 0.1 }}
                       ></div>
-                      <div className="h-1.5 w-4/5 bg-slate-50 rounded-full"></div>
-                      <div className="h-1.5 w-3/4 bg-slate-50 rounded-full"></div>
-                      <div className="mt-auto h-6 w-full rounded bg-slate-50"></div>
+                      <div className="h-1.5 w-4/5 bg-neutral-50 rounded-full"></div>
+                      <div className="h-1.5 w-3/4 bg-neutral-50 rounded-full"></div>
+                      <div className="mt-auto h-6 w-full rounded bg-neutral-50"></div>
                     </div>
 
                     {/* Content Mockup */}
-                    <div className="flex-1 p-4 bg-slate-50/50 space-y-3">
+                    <div
+                      className="flex-1 p-4 space-y-3"
+                      style={{
+                        backgroundColor: theme.neutral + "10" || "#F8FAFC",
+                      }}
+                    >
                       <div className="flex justify-between items-center">
-                        <div className="h-3 w-24 bg-slate-200 rounded"></div>
+                        <div className="h-3 w-24 bg-neutral-200 rounded"></div>
                         <Button
                           size="sm"
                           className="h-6 text-[10px] px-3"
@@ -464,41 +512,26 @@ export function BrandingSettings() {
                         </Button>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
-                        <div className="h-12 rounded-lg bg-white border border-slate-100 p-2">
+                        {[1, 2, 3].map((i) => (
                           <div
-                            className="h-1.5 w-8 mb-1"
-                            style={{
-                              backgroundColor: theme.primary,
-                              opacity: 0.4,
-                            }}
-                          ></div>
-                          <div className="h-3 w-12 bg-slate-100 rounded"></div>
-                        </div>
-                        <div className="h-12 rounded-lg bg-white border border-slate-100 p-2">
-                          <div
-                            className="h-1.5 w-8 mb-1"
-                            style={{
-                              backgroundColor: theme.primary,
-                              opacity: 0.4,
-                            }}
-                          ></div>
-                          <div className="h-3 w-12 bg-slate-100 rounded"></div>
-                        </div>
-                        <div className="h-12 rounded-lg bg-white border border-slate-100 p-2">
-                          <div
-                            className="h-1.5 w-8 mb-1"
-                            style={{
-                              backgroundColor: theme.primary,
-                              opacity: 0.4,
-                            }}
-                          ></div>
-                          <div className="h-3 w-12 bg-slate-100 rounded"></div>
-                        </div>
+                            key={i}
+                            className="h-12 rounded-lg bg-white border border-neutral-100 p-2"
+                          >
+                            <div
+                              className="h-1.5 w-8 mb-1"
+                              style={{
+                                backgroundColor: theme.primary,
+                                opacity: 0.4,
+                              }}
+                            ></div>
+                            <div className="h-3 w-12 bg-neutral-100 rounded"></div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="h-24 rounded-lg bg-white border border-slate-100 p-3 space-y-2">
-                        <div className="h-2 w-full bg-slate-50 rounded"></div>
-                        <div className="h-2 w-full bg-slate-50 rounded"></div>
-                        <div className="h-2 w-2/3 bg-slate-50 rounded"></div>
+                      <div className="h-24 rounded-lg bg-white border border-neutral-100 p-3 space-y-2">
+                        <div className="h-2 w-full bg-neutral-50 rounded"></div>
+                        <div className="h-2 w-full bg-neutral-50 rounded"></div>
+                        <div className="h-2 w-2/3 bg-neutral-50 rounded"></div>
                         <div className="flex gap-2 pt-2">
                           <div
                             className="h-5 w-12 rounded border"
@@ -517,13 +550,14 @@ export function BrandingSettings() {
                             className="h-5 w-12 rounded"
                             style={{
                               backgroundColor: theme.secondary,
+                              color: "white",
                               fontSize: "8px",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                             }}
                           >
-                            Edit
+                            30% Sec
                           </div>
                         </div>
                       </div>
@@ -534,13 +568,13 @@ export function BrandingSettings() {
 
               {/* Public Site Mockup */}
               <div className="p-6 space-y-4">
-                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                  หน้าบ้านสำหรับลูกค้า (Public Portal)
+                <h4 className="text-xs font-semibold text-secondary-500 uppercase tracking-wider mb-2">
+                  หน้าบ้านสำหรับลูกค้า (Public Portal - 10% Primary Accent)
                 </h4>
-                <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-slate-900 aspect-4/3 flex flex-col relative">
+                <div className="border border-neutral-200 rounded-xl overflow-hidden shadow-sm bg-neutral-900 aspect-4/3 flex flex-col relative">
                   {/* Hero Background Simulation */}
                   <div className="absolute inset-0 z-0">
-                    <div className="absolute inset-0 bg-linear-to-br from-slate-900 via-slate-900/90 to-blue-900/20"></div>
+                    <div className="absolute inset-0 bg-linear-to-br from-neutral-900 via-neutral-900/90 to-brand-900/20"></div>
                   </div>
 
                   {/* Public Nav Mockup */}
@@ -566,12 +600,11 @@ export function BrandingSettings() {
                     <div className="flex gap-3 text-[8px] text-white/70">
                       <span>Home</span>
                       <span>Buy</span>
-                      <span>Rent</span>
                       <div
                         className="px-2 py-1 rounded-full text-white"
                         style={{ backgroundColor: theme.primary }}
                       >
-                        Login
+                        10% Primary
                       </div>
                     </div>
                   </div>
@@ -589,12 +622,12 @@ export function BrandingSettings() {
                     </h3>
                     <p className="text-[8px] text-white/50 mb-4 max-w-[180px]">
                       สัมผัสประสบการณ์การค้นหาที่อยู่อาศัยที่ง่ายและรวดเร็วที่สุด
-                      ด้วยเทคโนโลยี AI อัจฉริยะ
+                      ด้วยความสวยงามระดับพรีเมียม
                     </p>
 
                     <div className="w-full max-w-[220px] bg-white rounded-lg p-2 shadow-2xl flex gap-1">
-                      <div className="flex-1 h-6 bg-slate-100 rounded flex items-center px-2">
-                        <div className="h-1.5 w-20 bg-slate-300 rounded"></div>
+                      <div className="flex-1 h-6 bg-neutral-100 rounded flex items-center px-2">
+                        <div className="h-1.5 w-20 bg-neutral-300 rounded"></div>
                       </div>
                       <div
                         className="h-6 w-14 rounded flex items-center justify-center text-[8px] text-white shadow-lg"
@@ -610,7 +643,10 @@ export function BrandingSettings() {
                     <div className="flex justify-between items-end">
                       <div className="flex gap-1.5 p-1.5 bg-white/10 backdrop-blur-md border border-white/5 rounded-lg">
                         <div className="h-4 w-4 rounded-full bg-white/20"></div>
-                        <div className="h-4 w-4 rounded-full bg-white/20"></div>
+                        <div
+                          className="h-4 w-4 rounded-full"
+                          style={{ backgroundColor: theme.secondary }}
+                        ></div>
                         <div className="h-4 w-4 rounded-full bg-white/20"></div>
                       </div>
                       <div
@@ -625,11 +661,11 @@ export function BrandingSettings() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="bg-white border-t border-slate-200 py-3 flex justify-center">
+          <CardFooter className="bg-white border-t border-neutral-200 py-3 flex justify-center">
             <Button
               variant="ghost"
               size="sm"
-              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-xs gap-2"
+              className="text-brand-600 hover:text-brand-700 hover:bg-brand-50 text-xs gap-2"
               asChild
             >
               <a href="/" target="_blank" rel="noopener noreferrer">

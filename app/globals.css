@@ -3,44 +3,79 @@
 
 @layer base {
   :root {
-    /* Base Background & Foreground */
-    --background: 210 40% 98%; /* #F8FAFC */
-    --foreground: 222 47% 11%; /* #0F172A */
+    /* --- 60-30-10 Design System Tokens --- */
+    
+    /* 10% - Brand / Accent (The "Hook") */
+    --brand-50: 226 100% 97%;
+    --brand-100: 226 95% 93%;
+    --brand-200: 226 92% 86%;
+    --brand-300: 226 90% 75%;
+    --brand-400: 226 88% 60%;
+    --brand-500: 226 85% 52%;
+    --brand-600: 226 75% 48%; /* Main Brand */
+    --brand-700: 226 70% 40%;
+    --brand-800: 226 65% 30%;
+    --brand-900: 226 60% 20%;
 
-    /* Surfaces */
-    --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%; /* #FFFFFF */
-    --popover-foreground: 222 47% 11%;
+    /* 30% - Secondary (The "Support") */
+    --secondary-50: 210 40% 98%;
+    --secondary-100: 210 40% 96%;
+    --secondary-200: 214 32% 91%;
+    --secondary-300: 214 25% 84%;
+    --secondary-400: 215 20% 65%;
+    --secondary-500: 215 16% 47%;
+    --secondary-600: 215 13% 34%;
+    --secondary-700: 215 13% 28%;
+    --secondary-800: 215 13% 20%;
+    --secondary-900: 215 13% 15%;
 
-    /* Branding */
-    --primary: 226 75% 48%; /* #1F4ED8 */
+    /* 60% - Neutral (The "Canvas") */
+    --neutral-50: 210 40% 99%;
+    --neutral-100: 210 40% 98%;
+    --neutral-200: 210 30% 96%;
+    --neutral-300: 210 20% 94%;
+    --neutral-400: 210 15% 90%;
+    --neutral-500: 210 10% 85%;
+    --neutral-600: 210 5% 70%;
+    --neutral-700: 215 47% 11%;
+    --neutral-800: 215 47% 8%;
+    --neutral-900: 215 47% 5%;
+
+    /* --- Semantic Mapping (Usage Rules) --- */
+    --background: var(--neutral-50);
+    --foreground: var(--neutral-700);
+
+    --card: 0 0% 100%;
+    --card-foreground: var(--neutral-700);
+
+    --popover: 0 0% 100%;
+    --popover-foreground: var(--neutral-700);
+
+    --primary: var(--brand-600);
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
 
-    /* Status */
+    --secondary: var(--secondary-100);
+    --secondary-foreground: var(--secondary-900);
+
+    --muted: var(--secondary-100);
+    --muted-foreground: var(--secondary-500);
+
+    --accent: var(--brand-50);
+    --accent-foreground: var(--brand-600);
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    /* UI Elements */
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --border: var(--secondary-200);
+    --input: var(--secondary-200);
+    --ring: var(--brand-500);
 
-    /* Legacy compatibility (keeping for old bg-bg, bg-surface calls) */
-    --color-bg: 248 250 252;
-    --color-surface: 255 255 255;
-    --color-primary: 31 78 216;
-    --color-primary-soft: 219 234 254;
-    --color-accent: 59 130 246;
-    --color-text: 15 23 42;
-    --color-text-muted: 100 116 139;
+    --radius: 0.75rem;
+
+    /* State Layer */
+    --state-hover: 0 0% 0% / 0.05;
+    --state-pressed: 0 0% 0% / 0.1;
+    --state-selected: var(--brand-50);
   }
 
  

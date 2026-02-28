@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { useTenant } from "./TenantProvider";
-import { hexToHslValues } from "@/lib/theme-utils";
+import { hexToHslValues, generateColorScale } from "@/lib/theme-utils";
 
 /**
  * ThemeProvider injects dynamic CSS variables into the document root
@@ -23,6 +23,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (theme.primary) {
+      const scale = generateColorScale(theme.primary);
+
+      if (scale) {
+        Object.entries(scale).forEach(([step, value]) => {
+          document.documentElement.style.setProperty(
+            `--brand-${step}`,
+            value as string,
+          );
+        });
+      }
+
+      // Legacy support for --primary
       const hsl = hexToHslValues(theme.primary);
       document.documentElement.style.setProperty("--primary", hsl);
 
@@ -35,13 +47,38 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (theme.secondary) {
+      const scale = generateColorScale(theme.secondary);
+      if (scale) {
+        Object.entries(scale).forEach(([step, value]) => {
+          document.documentElement.style.setProperty(
+            `--secondary-${step}`,
+            value as string,
+          );
+        });
+      }
+      // Legacy support
       document.documentElement.style.setProperty(
         "--secondary",
         hexToHslValues(theme.secondary),
       );
     }
 
-    // You can add more variables here as needed (e.g. radius, background etc.)
+    if (theme.neutral) {
+      const scale = generateColorScale(theme.neutral);
+      if (scale) {
+        Object.entries(scale).forEach(([step, value]) => {
+          document.documentElement.style.setProperty(
+            `--neutral-${step}`,
+            value as string,
+          );
+        });
+      }
+      // Legacy support
+      document.documentElement.style.setProperty(
+        "--background",
+        hexToHslValues(theme.neutral),
+      );
+    }
   }, [activeTenant]);
 
   return <>{children}</>;
