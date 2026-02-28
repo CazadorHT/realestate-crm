@@ -99,7 +99,9 @@ export default async function RootLayout({
 
   return (
     <html lang={lang} suppressHydrationWarning>
-      <body className={`${prompt.className} ${notoThai.variable} antialiased`}>
+      <body
+        className={`${prompt.className} ${prompt.variable} ${notoThai.variable} antialiased`}
+      >
         <LanguageProvider initialLanguage={lang as any}>
           <TenantProvider>
             <ThemeProvider>

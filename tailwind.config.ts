@@ -164,17 +164,22 @@ const config = {
       },
 
       boxShadow: {
-        card: "0 12px 40px rgba(15, 23, 42, 0.12)",
-        soft: "0 4px 20px rgba(15, 23, 42, 0.06)",
+        card: "var(--shadow-card)",
+        soft: "var(--shadow-soft)",
       },
 
       borderRadius: {
         "2xl": "1.25rem",
         "3xl": "1.5rem",
+        custom: "var(--radius)",
+      },
+      spacing: {
+        "layout-gap": "var(--layout-gap)",
+        "layout-padding": "var(--layout-padding)",
       },
       fontFamily: {
-        sans: ["var(--font-prompt)", "var(--font-noto-thai)", "sans-serif"],
-        display: ["var(--font-prompt)", "sans-serif"],
+        sans: ["var(--font-body)", "var(--font-noto-thai)", "sans-serif"],
+        display: ["var(--font-heading)", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {

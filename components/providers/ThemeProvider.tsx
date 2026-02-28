@@ -73,11 +73,54 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           );
         });
       }
-      // Legacy support
       document.documentElement.style.setProperty(
         "--background",
         hexToHslValues(theme.neutral),
       );
+    }
+
+    // Advanced Settings
+    if (theme.radius !== undefined) {
+      document.documentElement.style.setProperty(
+        "--radius",
+        `${theme.radius}rem`,
+      );
+    }
+    if (theme.shadowIntensity !== undefined) {
+      document.documentElement.style.setProperty(
+        "--shadow-intensity",
+        theme.shadowIntensity,
+      );
+    }
+    if (theme.glassEffect !== undefined) {
+      document.documentElement.style.setProperty(
+        "--glass-opacity",
+        theme.glassEffect ? "0.4" : "0",
+      );
+      document.documentElement.style.setProperty(
+        "--glass-blur",
+        theme.glassEffect ? "8px" : "0px",
+      );
+    }
+    if (theme.density === "luxury") {
+      document.documentElement.style.setProperty("--layout-gap", "2.5rem");
+      document.documentElement.style.setProperty("--layout-padding", "2.5rem");
+    } else if (theme.density === "compact") {
+      document.documentElement.style.setProperty("--layout-gap", "0.75rem");
+      document.documentElement.style.setProperty("--layout-padding", "0.75rem");
+    } else {
+      document.documentElement.style.setProperty("--layout-gap", "1.5rem");
+      document.documentElement.style.setProperty("--layout-padding", "1.5rem");
+    }
+
+    if (theme.fontHeading) {
+      document.documentElement.style.setProperty(
+        "--font-heading",
+        theme.fontHeading,
+      );
+    }
+    if (theme.fontBody) {
+      document.documentElement.style.setProperty("--font-body", theme.fontBody);
     }
   }, [activeTenant]);
 
