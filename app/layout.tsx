@@ -38,14 +38,27 @@ export async function generateMetadata(): Promise<Metadata> {
   // For the root layout, we check the default tenant if multi-tenant is disabled
   // or if we can identify the tenant from headers (subdomain support)
   if (systemConfig.default_tenant_id) {
-    const { data: defaultTenant } = await supabase
-      .from("tenants")
-      .select("settings, name, logo_url")
+    const { data: defaultTenant } = (await (
+      supabase.from("tenant_branding" as any) as any
+    )
+      .select("theme, name, logo_url, favicon_url")
       .eq("id", systemConfig.default_tenant_id)
-      .single();
+      .single()) as {
+      data: {
+        theme: any;
+        name: string;
+        logo_url: string | null;
+        favicon_url: string | null;
+      };
+    };
 
     if (defaultTenant) {
-      tenantSettings = defaultTenant.settings || {};
+      tenantSettings = {
+        name: defaultTenant.name,
+        logo_url: defaultTenant.logo_url,
+        favicon_url: defaultTenant.favicon_url,
+        theme: defaultTenant.theme,
+      };
     }
   }
 

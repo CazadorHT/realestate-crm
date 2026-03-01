@@ -104,11 +104,11 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
           // If not in user's list (e.g. admin not added yet), fetch it directly
           if (!initial) {
-            const { data: defaultTenant } = await supabase
-              .from("tenants")
+            const { data: defaultTenant } = (await supabase
+              .from("tenant_branding" as any)
               .select("id, name, slug, logo_url, subscription_status")
               .eq("id", config.default_tenant_id)
-              .single();
+              .single()) as any;
 
             if (defaultTenant) {
               initial = defaultTenant as Tenant;
