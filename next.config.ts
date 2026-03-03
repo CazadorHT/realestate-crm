@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
   images: {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    qualities: [75, 90],
     formats: ["image/avif", "image/webp"], // แนะนำให้เพิ่มเพื่อให้ประสิทธิภาพสูงสุด
     remotePatterns: (() => {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

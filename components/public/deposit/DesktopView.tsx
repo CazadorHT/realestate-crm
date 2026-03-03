@@ -5,7 +5,12 @@ import { DialogTitle } from "@/components/ui/dialog";
 import { UseFormReturn } from "react-hook-form";
 import { DepositLeadInput } from "@/features/public/types";
 import { MdRealEstateAgent } from "react-icons/md";
-import { FaClock, FaShieldAlt, FaHeadset } from "react-icons/fa";
+import { motion } from "framer-motion";
+import {
+  AnimatedClock,
+  AnimatedShield,
+  AnimatedHeadset,
+} from "@/components/common/animated-icons";
 import {
   renderNameField,
   renderPhoneField,
@@ -39,9 +44,15 @@ export function DepositDesktopView({
 
         <div className="relative z-10 space-y-8">
           {/* Logo / Icon */}
-          <div className="w-16 h-16 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20 shadow-xl">
-            <MdRealEstateAgent className="w-9 h-9 text-white" />
-          </div>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="w-16 h-16 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-2xl relative group"
+          >
+            <div className="absolute inset-0 bg-white/5 rounded-2xl animate-pulse group-hover:bg-white/10 transition-colors" />
+            <MdRealEstateAgent className="w-9 h-9 text-white relative z-10" />
+          </motion.div>
 
           {/* Title */}
           <div className="space-y-3">
@@ -58,46 +69,46 @@ export function DepositDesktopView({
 
           {/* Trust Signals */}
           <div className="space-y-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                <FaClock className="w-4 h-4 text-blue-200" />
+            <div className="flex items-start gap-4 group/item">
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-white/20 transition-colors">
+                <AnimatedClock size={16} className="text-blue-200" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-white/95">
+                <p className="text-sm font-semibold text-white/95 group-hover/item:text-white transition-colors">
                   {t("property.contact_dialog.trust_response") ||
                     "ตอบเร็วทันใจ"}
                 </p>
-                <p className="text-xs text-blue-200/60 leading-relaxed mt-0.5">
+                <p className="text-xs text-blue-200/60 leading-relaxed mt-0.5 group-hover/item:text-blue-100/80 transition-colors">
                   {t("property.contact_dialog.trust_response_desc") ||
                     "เจ้าหน้าที่พร้อมดูแลภายใน 24 ชม."}
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                <FaShieldAlt className="w-4 h-4 text-blue-200" />
+            <div className="flex items-start gap-4 group/item">
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-white/20 transition-colors">
+                <AnimatedShield size={16} className="text-blue-200" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-white/95">
+                <p className="text-sm font-semibold text-white/95 group-hover/item:text-white transition-colors">
                   {t("property.contact_dialog.trust_safe") ||
                     "ปลอดภัย มั่นใจได้"}
                 </p>
-                <p className="text-xs text-blue-200/60 leading-relaxed mt-0.5">
+                <p className="text-xs text-blue-200/60 leading-relaxed mt-0.5 group-hover/item:text-blue-100/80 transition-colors">
                   {t("property.contact_dialog.trust_safe_desc") ||
                     "รับประกันความเป็นส่วนตัวของข้อมูล"}
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                <FaHeadset className="w-4 h-4 text-blue-200" />
+            <div className="flex items-start gap-4 group/item">
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-white/20 transition-colors">
+                <AnimatedHeadset size={16} className="text-blue-200" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-white/95">
+                <p className="text-sm font-semibold text-white/95 group-hover/item:text-white transition-colors">
                   {t("property.contact_dialog.trust_free") ||
                     "ไม่มีค่าใช้จ่ายล่วงหน้า"}
                 </p>
-                <p className="text-xs text-blue-200/60 leading-relaxed mt-0.5">
+                <p className="text-xs text-blue-200/60 leading-relaxed mt-0.5 group-hover/item:text-blue-100/80 transition-colors">
                   {t("property.contact_dialog.trust_free_desc") ||
                     "ฝากทรัพย์ได้ฟรี ไม่มีข้อผูกมัด"}
                 </p>

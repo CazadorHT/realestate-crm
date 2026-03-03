@@ -110,7 +110,7 @@ export function PublicFooter() {
 
         <div className="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-16 relative z-10">
           {/* Main Footer Content */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16 px-4">
             {/* 1. Brand & Contact (4 cols) */}
             <div className="lg:col-span-4 space-y-6">
               <div className="flex items-center gap-2">

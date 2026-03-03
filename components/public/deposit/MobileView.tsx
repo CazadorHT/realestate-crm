@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
 import { DepositLeadInput } from "@/features/public/types";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   renderNameField,
   renderPhoneField,
@@ -53,56 +54,64 @@ export function DepositMobileView({
   return (
     <>
       {/* ── Mobile Header ── */}
-      <div className="sm:hidden bg-white rounded-t-[28px] flex flex-col items-center relative">
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="sm:hidden bg-white rounded-t-[28px] flex flex-col items-center relative shadow-sm"
+      >
         {/* Pull Handle */}
-        <div className="w-10 h-1 bg-slate-200/80 rounded-full mt-3 mb-4" />
+        <div className="w-12 h-1.5 bg-slate-100 rounded-full mt-3 mb-4" />
 
         {/* Title */}
         <div className="px-6 text-center mb-5">
-          <h2 className="text-xl font-bold text-slate-800 tracking-tight leading-tight">
+          <motion.h2
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            className="text-2xl font-bold bg-linear-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent tracking-tight leading-tight"
+          >
             {t("deposit.dialog.title")}
-          </h2>
-          <p className="text-xs text-slate-400 line-clamp-1 mt-1 font-normal">
-            ⚡ {t("deposit.dialog.subtitle")}
+          </motion.h2>
+          <p className="text-xs text-slate-400 mt-1 font-medium tracking-wide">
+            {t("deposit.dialog.subtitle")}
           </p>
         </div>
 
         {/* Step Indicator */}
-        <div className="w-full px-6 pb-4">
+        <div className="w-full px-8 pb-5">
           <div className="flex items-center justify-between relative">
-            <div className="absolute top-4 left-[16%] right-[16%] h-[2px] bg-slate-100 z-0" />
-            <div
-              className="absolute top-4 left-[16%] h-[2px] bg-blue-500 z-0 transition-all duration-500 ease-out"
-              style={{
+            <div className="absolute top-4 left-[10%] right-[10%] h-[2px] bg-slate-50 z-0" />
+            <motion.div
+              className="absolute top-4 left-[10%] h-[2px] bg-linear-to-r from-blue-500 to-indigo-500 z-0"
+              initial={{ width: "0%" }}
+              animate={{
                 width:
-                  currentStep === 1 ? "0%" : currentStep === 2 ? "34%" : "68%",
+                  currentStep === 1 ? "0%" : currentStep === 2 ? "40%" : "80%",
               }}
+              transition={{ type: "spring", stiffness: 100, damping: 20 }}
             />
 
             {STEPS.map((step) => (
               <div
                 key={step.id}
-                className="flex flex-col items-center z-10 flex-1"
+                className="flex flex-col items-center z-10 w-20"
               >
                 <StepIcon stepNum={step.id} currentStep={currentStep} />
-                <span
-                  className={`text-[10px] mt-1.5 font-medium transition-colors duration-300 ${
-                    currentStep === step.id
-                      ? "text-blue-600"
-                      : currentStep > step.id
-                        ? "text-blue-500"
-                        : "text-slate-400"
-                  }`}
+                <motion.span
+                  animate={{
+                    scale: currentStep === step.id ? 1.1 : 1,
+                    color: currentStep === step.id ? "#2563eb" : "#94a3b8",
+                  }}
+                  className="text-[10px] mt-2 font-bold uppercase tracking-wider transition-colors duration-300"
                 >
                   {step.label}
-                </span>
+                </motion.span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="w-full h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
-      </div>
+        <div className="w-full h-px bg-linear-to-r from-transparent via-slate-100 to-transparent" />
+      </motion.div>
 
       {/* ── Mobile Form Content Area ── */}
       <div className="sm:hidden p-6 flex flex-col overflow-y-auto">
@@ -110,41 +119,31 @@ export function DepositMobileView({
           onSubmit={form.handleSubmit(onSubmit)}
           className="space-y-5 flex-1 flex flex-col relative"
         >
-          <div className="space-y-5">
-            <div
-              className={
-                currentStep === 1
-                  ? "block animate-in fade-in slide-in-from-right-8"
-                  : "hidden"
-              }
-            >
-              {renderNameField(form, true)}
-            </div>
-            <div
-              className={
-                currentStep === 2
-                  ? "block animate-in fade-in slide-in-from-right-8"
-                  : "hidden"
-              }
-            >
-              <div className="grid grid-cols-1 gap-5">
-                {renderPhoneField(form, true)}
-                {renderLineField(form, true)}
-              </div>
-            </div>
-            <div
-              className={
-                currentStep === 3
-                  ? "block animate-in fade-in slide-in-from-right-8"
-                  : "hidden"
-              }
-            >
-              <div className="space-y-6">
-                {renderPropertyTypeField(form, true)}
-                {renderMessageField(form, true)}
-              </div>
-            </div>
-
+          <div className="space-y-5 flex-1 relative min-h-[300px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -20, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="absolute inset-0 pt-2"
+              >
+                {currentStep === 1 && renderNameField(form, true)}
+                {currentStep === 2 && (
+                  <div className="grid grid-cols-1 gap-5">
+                    {renderPhoneField(form, true)}
+                    {renderLineField(form, true)}
+                  </div>
+                )}
+                {currentStep === 3 && (
+                  <div className="space-y-6">
+                    {renderPropertyTypeField(form, true)}
+                    {renderMessageField(form, true)}
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* ── Mobile Footer ── */}

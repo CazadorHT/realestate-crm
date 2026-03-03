@@ -5,6 +5,7 @@ import { Loader2, Check, X, ChevronRight, ChevronLeft } from "lucide-react";
 import { FaPaperPlane } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { AnimatedSend } from "@/components/common/animated-icons";
 
 // ── Submit Button ──
 export function SubmitButton({
@@ -33,7 +34,7 @@ export function SubmitButton({
         </>
       ) : (
         <>
-          <FaPaperPlane className="mr-2 h-4 w-4" />
+          <AnimatedSend size={16} className="mr-2" />
           {title || t("property.contact_dialog.submit") || "ส่งข้อมูล"}
         </>
       )}

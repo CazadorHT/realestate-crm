@@ -24,6 +24,11 @@ import {
 import { FaUser, FaPhoneAlt, FaLine, FaCommentDots } from "react-icons/fa";
 import { UseFormReturn } from "react-hook-form";
 import { DepositLeadInput } from "@/features/public/types";
+import {
+  AnimatedUser,
+  AnimatedPhone,
+} from "@/components/common/animated-icons";
+import { motion } from "framer-motion";
 
 export function renderNameField(
   form: UseFormReturn<DepositLeadInput>,
@@ -42,14 +47,14 @@ export function renderNameField(
               isMobile ? "text-base" : "text-sm",
             )}
           >
-            {!isMobile && <FaUser className="w-3 h-3 text-blue-500" />}
+            {!isMobile && <AnimatedUser size={14} className="text-blue-500" />}
             {t("deposit.form.name_label")}
             <span className="text-red-500 text-xs ml-0.5">*</span>
           </FormLabel>
           <FormControl>
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 group-focus-within:text-blue-600 transition-colors">
-                <FaUser className="w-4 h-4" />
+                <AnimatedUser size={18} />
               </div>
               <Input
                 placeholder={t("deposit.form.name_placeholder")}
@@ -87,14 +92,14 @@ export function renderPhoneField(
               isMobile ? "text-base" : "text-sm",
             )}
           >
-            {!isMobile && <FaPhoneAlt className="w-3 h-3 text-blue-500" />}
+            {!isMobile && <AnimatedPhone size={14} className="text-blue-500" />}
             {t("deposit.form.phone_label")}
             <span className="text-red-500 text-xs ml-0.5">*</span>
           </FormLabel>
           <FormControl>
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 group-focus-within:text-blue-600 transition-colors">
-                <FaPhoneAlt className="w-4 h-4" />
+                <AnimatedPhone size={18} />
               </div>
               <Input
                 type="tel"
@@ -236,16 +241,18 @@ export function renderPropertyTypeField(
           </FormLabel>
           <div
             className={cn(
-              "flex overflow-x-auto no-scrollbar pb-2",
+              "flex overflow-x-auto no-scrollbar px-4 py-4",
               isMobile
                 ? "-mx-6 px-6 snap-x"
                 : "grid grid-cols-2 md:grid-cols-3 gap-3",
             )}
           >
             {propertyOptions.map((option) => (
-              <button
+              <motion.button
                 key={option.value}
                 type="button"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => field.onChange(option.value)}
                 className={cn(
                   "relative flex flex-col items-center mr-2 justify-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[100px] sm:min-w-0 snap-center shrink-0",
@@ -259,8 +266,8 @@ export function renderPropertyTypeField(
                   className={cn(
                     "mb-2 p-2 rounded-xl transition-colors",
                     field.value === option.value
-                      ? `${option.iconColor} text-white`
-                      : "bg-white text-slate-400",
+                      ? `${option.iconColor} text-white shadow-lg`
+                      : "bg-white text-slate-400 border border-slate-100",
                   )}
                 >
                   <option.icon
@@ -271,7 +278,17 @@ export function renderPropertyTypeField(
                 <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider">
                   {option.label}
                 </span>
-              </button>
+                {field.value === option.value && (
+                  <motion.div
+                    layoutId="active-indicator"
+                    className="absolute -top-1 -right-1 w-4 h-4 bg-white border-2 border-current rounded-full flex items-center justify-center"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                  >
+                    <div className="w-1.5 h-1.5 bg-current rounded-full" />
+                  </motion.div>
+                )}
+              </motion.button>
             ))}
           </div>
           <FormMessage />
