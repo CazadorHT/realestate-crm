@@ -21,6 +21,8 @@ import {
   MapPin,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function AiDashboardPage() {
   const stats = await getAiDashboardStats();
   const logs = await getAiLogs(50);
