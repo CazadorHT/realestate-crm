@@ -102,7 +102,23 @@
       "description": "本网站使用 Cookie 以提升您的使用体验并分析网站流量。您可以在我们的",
       "privacy_policy": "隐私政策",
       "decline": "拒绝",
-      "accept": "接受全部"
+      "accept": "接受全部",
+      "settings": "Cookie 设置",
+      "save_preferences": "保存设置",
+      "categories": {
+        "necessary": {
+          "title": "必要 Cookie",
+          "description": "这些 Cookie 是网站运行所必需的，无法关闭。"
+        },
+        "analytics": {
+          "title": "分析 Cookie",
+          "description": "这些 Cookie 帮助我们了解访客如何与网站互动以优化性能。"
+        },
+        "marketing": {
+          "title": "营销 Cookie",
+          "description": "这些 Cookie 用于跨网站跟踪访客以展示相关的广告。"
+        }
+      }
     },
     "floating": {
       "chat_with_us": "与我们聊天",

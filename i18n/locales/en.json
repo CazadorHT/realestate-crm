@@ -104,7 +104,23 @@
       "description": "This website uses cookies to improve your experience and analyze website traffic. You can learn more in our",
       "privacy_policy": "Privacy Policy",
       "decline": "Decline",
-      "accept": "Accept All"
+      "accept": "Accept All",
+      "settings": "Cookie Settings",
+      "save_preferences": "Save Preferences",
+      "categories": {
+        "necessary": {
+          "title": "Strictly Necessary",
+          "description": "These cookies are required for the website to function and cannot be switched off."
+        },
+        "analytics": {
+          "title": "Analytics Cookies",
+          "description": "These allow us to understand how visitors interact with the website to improve performance."
+        },
+        "marketing": {
+          "title": "Marketing Cookies",
+          "description": "These are used to track visitors across websites to display relevant advertisements."
+        }
+      }
     }
   },
   "blog": {
