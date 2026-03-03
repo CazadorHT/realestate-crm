@@ -57,6 +57,7 @@
     "back": "Back",
     "next": "Next",
     "read_more": "Read More",
+    "show_more": "Show More",
     "show_less": "Show Less",
     "submit": "Submit Info",
     "share": "Share",
@@ -601,7 +602,8 @@
     "sidebar_quick_title": "Need a quick answer?",
     "sidebar_quick_desc1": "Add LINE Official Account",
     "sidebar_quick_desc2": "Our team is ready to answer 24 hours a day.",
-    "sidebar_line_button": "Add Line"
+    "sidebar_line_button": "Add Line",
+    "title_badge": "Professional Services"
   },
   "services": {
     "title_badge": "Professional Services",

@@ -55,7 +55,8 @@
     "back": "返回",
     "next": "下一步",
     "read_more": "阅读更多",
-    "show_less": "收起",
+    "show_more": "显示更多",
+    "show_less": "显示更少",
     "submit": "提交信息",
     "share": "分享",
     "copy_link": "复制链接",
@@ -606,7 +607,8 @@
     "sidebar_quick_title": "需要快速回答？",
     "sidebar_quick_desc1": "添加 LINE 官方账号",
     "sidebar_quick_desc2": "我们的团队全天24小时为您解答。",
-    "sidebar_line_button": "添加 LINE"
+    "sidebar_line_button": "添加 LINE",
+    "title_badge": "专业服务"
   },
   "services": {
     "title_badge": "专业服务",

@@ -114,8 +114,7 @@ export function getPriceFormatter(language: string = "th") {
   return new Intl.NumberFormat(
     language === "th" ? "th-TH" : language === "cn" ? "zh-CN" : "en-US",
     {
-      style: "currency",
-      currency: "THB",
+      style: "decimal",
       maximumFractionDigits: 0,
     },
   );
@@ -125,7 +124,7 @@ export function getPriceFormatter(language: string = "th") {
  * Format price with currency based on language
  */
 export function formatPrice(value: number, language: string = "th"): string {
-  return getPriceFormatter(language).format(value);
+  return `฿ ${getPriceFormatter(language).format(value)}`;
 }
 
 /**

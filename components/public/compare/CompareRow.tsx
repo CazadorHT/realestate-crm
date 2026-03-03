@@ -8,6 +8,14 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
 import { useAddressLocalization } from "@/hooks/useAddressLocalization";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import {
+  TRANSIT_TYPE_LABELS,
+  TRANSIT_TYPE_STYLES,
+  TransitType,
+} from "@/features/properties/labels";
+import DOMPurify from "isomorphic-dompurify";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
 
 interface CompareRowProps {
   row: ComparisonRow;
@@ -17,6 +25,7 @@ interface CompareRowProps {
 
 export function CompareRow({ row, properties, idx }: CompareRowProps) {
   const { t, language } = useLanguage();
+  const [isExpanded, setIsExpanded] = useState(false);
   const locale =
     language === "th" ? "th-TH" : language === "cn" ? "zh-CN" : "en-US";
 
@@ -134,9 +143,30 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
         gridTemplateColumns: `150px repeat(${properties.length}, 1fr)`,
       }}
     >
-      <div className="p-2 md:p-4 text-xs md:text-sm font-semibold text-slate-600 flex items-center gap-1 md:gap-2">
-        <row.icon className="h-3 w-3 md:h-4 md:w-4 text-slate-400 shrink-0" />
-        <span className="truncate">{t(`compare_page.labels.${row.key}`)}</span>
+      <div className="p-2 md:p-4 text-xs md:text-sm font-semibold text-slate-600 flex flex-col items-start gap-1 md:gap-2">
+        <div className="flex items-center gap-1 md:gap-2">
+          <row.icon className="h-3 w-3 md:h-4 md:w-4 text-slate-400 shrink-0" />
+          <span className="truncate">
+            {t(`compare_page.labels.${row.key}`)}
+          </span>
+        </div>
+
+        {row.key === "description" && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-[10px] md:text-xs text-blue-600 hover:text-blue-700 flex items-center gap-0.5 mt-1 transition-colors"
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="h-3 w-3" /> {t("common.show_less")}
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-3 w-3" /> {t("common.show_more")}
+              </>
+            )}
+          </button>
+        )}
       </div>
       {properties.map((p) => {
         // Check overlap Winner
@@ -247,9 +277,17 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                 {(p as any)[row.key] || "-"}
               </span>
             ) : row.key === "description" ? (
-              <div className="line-clamp-3 text-[10px] md:text-xs">
-                {getLocalizedField<string>(p, "description", language) || "-"}
-              </div>
+              <div
+                className={`${
+                  isExpanded ? "" : "line-clamp-6"
+                } text-[10px] md:text-xs prose prose-slate prose-compact dark:prose-invert max-w-none transition-all duration-300`}
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(
+                    getLocalizedField<string>(p, "description", language) ||
+                      "-",
+                  ),
+                }}
+              />
             ) : row.key === "property_type" ? (
               p.property_type ? (
                 <span className="inline-block px-2 py-1 rounded bg-slate-100 text-xs font-semibold text-slate-600">
@@ -321,16 +359,25 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                   p.transit_station_name_en ||
                   p.transit_station_name_cn) ? (
                   <div className="flex flex-col items-start gap-1">
-                    <span className="inline-flex px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[10px] md:text-xs font-bold border border-indigo-100 uppercase">
-                      {p.transit_type}{" "}
-                      {getLocalizedField<string>(
-                        p,
-                        "transit_station_name",
-                        language,
-                      )}
-                    </span>
+                    {(() => {
+                      const type = p.transit_type as TransitType;
+                      const style =
+                        TRANSIT_TYPE_STYLES[type] || TRANSIT_TYPE_STYLES.OTHER;
+                      return (
+                        <span
+                          className={`inline-flex px-2 py-0.5 rounded text-md font-bold border shadow-sm uppercase ${style.bg} ${style.text} border-slate-100`}
+                        >
+                          {TRANSIT_TYPE_LABELS[type] || type}{" "}
+                          {getLocalizedField<string>(
+                            p,
+                            "transit_station_name",
+                            language,
+                          )}
+                        </span>
+                      );
+                    })()}
                     {p.transit_distance_meters && (
-                      <span className="text-[10px] md:text-xs text-slate-500 pl-1">
+                      <span className="text-md text-slate-500 pl-1">
                         {t("compare_page.values.distance_meters", {
                           distance: p.transit_distance_meters,
                         })}
@@ -350,23 +397,37 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
 
                       if (Array.isArray(transits) && transits.length > 0) {
                         return (
-                          <div className="flex flex-col gap-1 border-t border-slate-50 pt-1 mt-1">
+                          <div className="flex flex-col gap-1 border-t border-slate-50 pt-2 mt-2">
                             {transits
                               .slice(0, 3)
-                              .map((item: any, i: number) => (
-                                <div
-                                  key={i}
-                                  className="text-[10px] text-slate-500"
-                                >
-                                  •{" "}
-                                  {getLocalizedField(
-                                    item,
-                                    "station_name",
-                                    language,
-                                  )}{" "}
-                                  ({item.distance_meters}m)
-                                </div>
-                              ))}
+                              .map((item: any, i: number) => {
+                                const type = item.type as TransitType;
+                                const style =
+                                  TRANSIT_TYPE_STYLES[type] ||
+                                  TRANSIT_TYPE_STYLES.OTHER;
+                                return (
+                                  <div
+                                    key={i}
+                                    className="text-md flex items-center gap-1.5"
+                                  >
+                                    <span
+                                      className={`inline-flex px-1.5 py-0 rounded text-md font-bold border ${style.bg} ${style.text} border-slate-100 uppercase`}
+                                    >
+                                      {TRANSIT_TYPE_LABELS[type] || type}
+                                    </span>
+                                    <span className="text-slate-600 truncate">
+                                      {getLocalizedField(
+                                        item,
+                                        "station_name",
+                                        language,
+                                      )}
+                                    </span>
+                                    <span className="text-slate-400 shrink-0">
+                                      ({item.distance_meters}m)
+                                    </span>
+                                  </div>
+                                );
+                              })}
                           </div>
                         );
                       }

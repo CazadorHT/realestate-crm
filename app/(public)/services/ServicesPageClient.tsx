@@ -19,6 +19,7 @@ import { siteConfig } from "@/lib/site-config";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useState, useEffect } from "react";
 import { SectionBackground } from "@/components/public/SectionBackground";
+import { FaLine } from "react-icons/fa";
 
 function ServicesContent() {
   const { t } = useLanguage();
@@ -258,7 +259,7 @@ function ServicesContent() {
                     size="lg"
                     className="w-full sm:w-auto rounded-2xl h-16 px-10 bg-green-600 hover:bg-green-700 text-white border-none shadow-xl shadow-green-900/20"
                   >
-                    <MessageCircle className="h-5 w-5 mr-3" />
+                    <FaLine className="h-10 w-10 mr-3" />
                     {t("contact.sidebar_line_button")}
                   </Button>
                 </a>
@@ -266,7 +267,7 @@ function ServicesContent() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full sm:w-auto rounded-2xl h-16 px-10 border-white/20 text-white hover:bg-white/10 hover:border-white/40"
+                    className="w-full sm:w-auto rounded-2xl h-16 px-10 border-white/20 hover:bg-white/10 hover:border-white/40"
                   >
                     {t("contact.title_badge")}
                   </Button>

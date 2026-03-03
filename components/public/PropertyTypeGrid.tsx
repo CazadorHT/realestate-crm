@@ -200,7 +200,7 @@ export function PropertyTypeGrid({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
-      <div className="max-w-screen-2xl mx-auto relative z-10">
+      <div className="max-w-screen-2xl mx-auto relative z-10 px-4 md:px-6 lg:px-8">
         {/* SEO-Optimized Section Header */}
         <div className="text-center mb-10" data-aos="fade-up">
           <h2 className="text-2xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">

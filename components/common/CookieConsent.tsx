@@ -80,7 +80,7 @@ export function CookieConsent() {
       {!isVisible && (
         <button
           onClick={handleOpenSettings}
-          className="fixed bottom-6 left-6 z-[90] h-12 w-12 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md border border-slate-200 shadow-lg text-slate-600 hover:text-blue-600 hover:scale-110 transition-all duration-300 group"
+          className="fixed bottom-6 left-6 z-90 h-12 w-12 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md border border-slate-200 shadow-lg text-slate-600 hover:text-blue-600 hover:scale-110 transition-all duration-300 group"
           aria-label="Manage Cookie Settings"
         >
           <Cookie className="h-6 w-6" />
@@ -91,10 +91,10 @@ export function CookieConsent() {
       )}
 
       {isVisible && (
-        <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 md:p-6 lg:p-8 animate-in slide-in-from-bottom-full duration-700 ease-out">
+        <div className="fixed bottom-0 left-0 right-0 z-100 p-4 md:p-6 lg:p-8 animate-in slide-in-from-bottom-full duration-700 ease-out">
           <div className="max-w-7xl mx-auto">
             <div className={cn(
-              "bg-white/90 backdrop-blur-xl border border-slate-200/50 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-3xl overflow-hidden transition-all duration-500",
+              "bg-white/90 backdrop-blur-xl border border-slate-200/50 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-2xl overflow-hidden transition-all duration-500",
               showSettings ? "max-h-[80vh] overflow-y-auto" : "max-h-96"
             )}>
               <div className="p-6 md:p-8">
@@ -140,7 +140,7 @@ export function CookieConsent() {
                       </Button>
                       <Button
                         onClick={handleAcceptAll}
-                        className="flex-[2] lg:flex-none h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-[0_4px_12px_rgba(37,99,235,0.25)] hover:shadow-[0_6px_16px_rgba(37,99,235,0.35)] transition-all"
+                        className="flex-2 lg:flex-none h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-[0_4px_12px_rgba(37,99,235,0.25)] hover:shadow-[0_6px_16px_rgba(37,99,235,0.35)] transition-all"
                       >
                         {t("common.cookie_consent.accept")}
                       </Button>
