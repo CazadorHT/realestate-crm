@@ -58,7 +58,7 @@ export function MortgageCalculatorSection() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
           {/* Left: SEO-Optimized Text Content */}
           <div className="lg:col-span-5 space-y-4" data-aos="fade-right">

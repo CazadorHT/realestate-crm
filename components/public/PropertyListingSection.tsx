@@ -419,9 +419,9 @@ function PropertyListingContent() {
                         }}
                         role="tab"
                         aria-selected={active}
-                        className={`shrink-0 snap-start px-4 py-2 rounded-full border text-sm font-semibold transition-all pointer-events-auto ${
+                        className={`shrink-0 snap-start px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-300 pointer-events-auto ${
                           active
-                            ? "bg-slate-900 text-white border-slate-900 shadow-md"
+                            ? "bg-blue-600 text-white border-blue-600 shadow-md"
                             : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600"
                         }`}
                       >

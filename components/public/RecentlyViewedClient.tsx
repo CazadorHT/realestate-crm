@@ -384,7 +384,7 @@ export function RecentlyViewedClient({
     return (
       <section className="py-10 md:py-12 px-4 md:px-6 lg:px-8 bg-slate-50 border-t border-slate-100 overflow-hidden relative z-0">
         <SectionBackground pattern="blobs" intensity="low" />
-        <div className={cn("max-w-7xl mx-auto", containerClassName)}>
+        <div className={cn("max-w-7xl mx-auto px-4 md:px-6 lg:px-8", containerClassName)}>
           {/* Header Skeleton */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
             <div className="flex items-center gap-3">
@@ -461,7 +461,7 @@ export function RecentlyViewedClient({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
-      <div className={cn("max-w-7xl mx-auto", containerClassName)}>
+      <div className={cn("max-w-7xl mx-auto px-4 md:px-6 lg:px-8", containerClassName)}>
         {/* === HEADER WITH CLEAR ACTION === */}
         <div
           className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2 md:mb-4"
@@ -547,7 +547,7 @@ export function RecentlyViewedClient({
             onMouseLeave={handleMouseLeave}
             onMouseUp={handleMouseUp}
             onMouseMove={handleMouseMove}
-            className={`flex gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-6 scrollbar-hide px-1 md:px-2 select-none ${
+            className={`flex gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-6 scrollbar-hide select-none ${
               isDragging ? "cursor-grabbing" : "cursor-grab"
             }`}
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}

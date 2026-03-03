@@ -92,7 +92,7 @@ export function CookieConsent() {
 
       {isVisible && (
         <div className="fixed bottom-0 left-0 right-0 z-100 p-4 md:p-6 lg:p-8 animate-in slide-in-from-bottom-full duration-700 ease-out">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl px-4 md:px-6 lg:px-8 mx-auto">
             <div className={cn(
               "bg-white/90 backdrop-blur-xl border border-slate-200/50 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-2xl overflow-hidden transition-all duration-500",
               showSettings ? "max-h-[80vh] overflow-y-auto" : "max-h-96"
