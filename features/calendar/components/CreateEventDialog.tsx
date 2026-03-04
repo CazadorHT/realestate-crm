@@ -120,7 +120,7 @@ export function CreateEventDialog({
               <SelectTrigger>
                 <SelectValue placeholder="เลือกทรัพย์สิน..." />
               </SelectTrigger>
-              <SelectContent className="max-h-[200px] overflow-y-auto">
+              <SelectContent className="max-h-[200px] mx-auto overflow-y-auto">
                 <SelectItem value="none">ไม่ระบุ</SelectItem>
                 {properties.map((prop) => (
                   <SelectItem key={prop.id} value={prop.id}>

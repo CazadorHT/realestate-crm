@@ -211,7 +211,7 @@ export function DealCombobox({
       </div>
 
       <PopoverContent
-        className="w-[320px] lg:w-[calc(100vw-1.5rem)] md:w-[700px]  p-0 bg-white shadow-xl border border-slate-200"
+        className="w-[320px] md:w-[700px]  p-0 bg-white shadow-xl border border-slate-200"
         align="start"
       >
         <Command>

@@ -2,9 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { getTemplatesAction } from "../template-actions";
-import { generateDocumentFromTemplateAction } from "../generation-actions";
+import {
+  generateDocumentFromTemplateAction,
+  generateDocxDocumentFromTemplateAction,
+} from "../generation-actions";
 import { createDocumentRecordAction, searchOwnerAction } from "../actions";
 import { DOC_TYPE_LABELS, DocumentOwnerType } from "../schema";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -54,6 +58,10 @@ export function TemplateDialog({
   const [templates, setTemplates] = useState<any[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [language, setLanguage] = useState<string>("th");
+  const [templateSource, setTemplateSource] = useState<"standard" | "custom">(
+    "standard",
+  );
+  const [customFile, setCustomFile] = useState<File | null>(null);
 
   // Owner Selection State (for global context)
   const [targetOwnerType, setTargetOwnerType] = useState<DocumentOwnerType>(
@@ -99,6 +107,8 @@ export function TemplateDialog({
     setClientEmail("");
     setClientLine("");
     setTargetOwnerType(initialOwnerType || "DEAL");
+    setTemplateSource("standard");
+    setCustomFile(null);
   };
 
   useEffect(() => {
@@ -142,14 +152,22 @@ export function TemplateDialog({
 
       try {
         if (targetOwnerType === "LEAD" || initialOwnerType === "LEAD") {
-          const { data } = await supabase.from("leads").select("*").eq("id", finalId).single();
+          const { data } = await supabase
+            .from("leads")
+            .select("*")
+            .eq("id", finalId)
+            .single();
           if (data) {
             setClientName(data.full_name || "");
             setClientEmail(data.email || "");
             setClientLine(data.line_id || "");
           }
         } else if (targetOwnerType === "DEAL" || initialOwnerType === "DEAL") {
-          const { data } = await supabase.from("deals").select("*, leads(*)").eq("id", finalId).single();
+          const { data } = await supabase
+            .from("deals")
+            .select("*, leads(*)")
+            .eq("id", finalId)
+            .single();
           if (data && data.leads) {
             setClientName(data.leads.full_name || "");
             setClientEmail(data.leads.email || "");
@@ -200,9 +218,27 @@ export function TemplateDialog({
       return;
     }
 
-    if (!selectedTemplateId) {
+    if (templateSource === "standard" && !selectedTemplateId) {
       toast.error("กรุณาเลือกต้นแบบสัญญา");
       return;
+    }
+    if (templateSource === "custom") {
+      if (!customFile) {
+        toast.error("กรุณาอัปโหลดไฟล์ด็อก (DOCX) เป็นต้นแบบ");
+        return;
+      }
+
+      const fileExt = customFile.name.split(".").pop()?.toLowerCase();
+      if (fileExt !== "docx") {
+        toast.error("รูปแบบไฟล์ไม่ถูกต้อง รองรับเฉพาะไฟล์ .docx เท่านั้น");
+        return;
+      }
+
+      const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+      if (customFile.size > MAX_FILE_SIZE) {
+        toast.error("ขนาดไฟล์ต้องไม่เกิน 5 MB");
+        return;
+      }
     }
 
     setLoading(true);
@@ -232,28 +268,59 @@ export function TemplateDialog({
           version: 1,
         });
 
-        // Pass the storage path directly.
-        // The server action will convert this to Base64 securely.
         slipUrl = filePath;
       }
 
-      const res = await generateDocumentFromTemplateAction(
-        selectedTemplateId,
-        finalOwnerId as string,
-        finalOwnerType as any,
-        {
-          language,
-          slip_url: slipUrl,
-          bank_name: bankName,
-          bank_account_no: bankAccountNo,
-          payment_period: paymentPeriod,
-          payment_method: paymentMethod,
-          account_name: accountName,
-          client_name_override: clientName,
-          client_email_override: clientEmail,
-          client_line_override: clientLine,
-        },
-      );
+      let res;
+      if (templateSource === "standard") {
+        res = await generateDocumentFromTemplateAction(
+          selectedTemplateId,
+          finalOwnerId as string,
+          finalOwnerType as any,
+          {
+            language,
+            slip_url: slipUrl,
+            bank_name: bankName,
+            bank_account_no: bankAccountNo,
+            payment_period: paymentPeriod,
+            payment_method: paymentMethod,
+            account_name: accountName,
+            client_name_override: clientName,
+            client_email_override: clientEmail,
+            client_line_override: clientLine,
+          },
+        );
+      } else {
+        // Custom Upload DOCX
+        const fileExt = customFile!.name.split(".").pop();
+        const fileName = `template_${Date.now()}.${fileExt}`;
+        const filePath = `temp_templates/${finalOwnerId}/${fileName}`;
+
+        const { error: uploadCustomError } = await supabase.storage
+          .from("documents")
+          .upload(filePath, customFile!);
+
+        if (uploadCustomError) throw new Error("อัปโหลดไฟล์เทมเพลตไม่สำเร็จ");
+
+        res = await generateDocxDocumentFromTemplateAction(
+          finalOwnerId as string,
+          finalOwnerType as any,
+          filePath,
+          {
+            language,
+            slip_url: slipUrl,
+            bank_name: bankName,
+            bank_account_no: bankAccountNo,
+            payment_period: paymentPeriod,
+            payment_method: paymentMethod,
+            account_name: accountName,
+            client_name_override: clientName,
+            client_email_override: clientEmail,
+            client_line_override: clientLine,
+          },
+          { templateName: customFile!.name.replace(".docx", "") },
+        );
+      }
 
       if (res.success) {
         toast.success("สร้างเอกสารสำเร็จแล้ว!");
@@ -392,49 +459,187 @@ export function TemplateDialog({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="template" className="font-bold text-slate-700">
-                ต้นแบบเอกสาร
-              </Label>
-              <Select
-                value={selectedTemplateId}
-                onValueChange={setSelectedTemplateId}
-                disabled={loading}
-              >
-                <SelectTrigger id="template" className="bg-white">
-                  <SelectValue placeholder="เลือกต้นแบบ..." />
-                </SelectTrigger>
-                <SelectContent className="z-200">
-                  {templates.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <Tabs
+            value={templateSource}
+            onValueChange={(v: any) => setTemplateSource(v)}
+          >
+            <TabsList className="grid w-full grid-cols-2 mb-4 h-10">
+              <TabsTrigger value="standard" className="text-xs font-bold">
+                เลือกจากที่มีในระบบ (HTML)
+              </TabsTrigger>
+              <TabsTrigger value="custom" className="text-xs font-bold">
+                อัปโหลดไฟล์ Word (.docx)
+              </TabsTrigger>
+            </TabsList>
 
-            <div className="space-y-2">
-              <Label htmlFor="language" className="font-bold text-slate-700">
-                ภาษา (Language)
-              </Label>
-              <Select
-                value={language}
-                onValueChange={setLanguage}
-                disabled={loading}
-              >
-                <SelectTrigger id="language" className="bg-white">
-                  <SelectValue placeholder="เลือกภาษา..." />
-                </SelectTrigger>
-                <SelectContent className="z-200">
-                  <SelectItem value="th">ภาษาไทย</SelectItem>
-                  <SelectItem value="en">English (US)</SelectItem>
-                  <SelectItem value="cn">中文 (简体)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+            <TabsContent value="standard" className="mt-0">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="template"
+                    className="font-bold text-slate-700"
+                  >
+                    ต้นแบบเอกสาร
+                  </Label>
+                  <Select
+                    value={selectedTemplateId}
+                    onValueChange={setSelectedTemplateId}
+                    disabled={loading}
+                  >
+                    <SelectTrigger id="template" className="bg-white">
+                      <SelectValue placeholder="เลือกต้นแบบ..." />
+                    </SelectTrigger>
+                    <SelectContent className="z-200">
+                      {templates.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="language"
+                    className="font-bold text-slate-700"
+                  >
+                    ภาษา (Language)
+                  </Label>
+                  <Select
+                    value={language}
+                    onValueChange={setLanguage}
+                    disabled={loading}
+                  >
+                    <SelectTrigger id="language" className="bg-white">
+                      <SelectValue placeholder="เลือกภาษา..." />
+                    </SelectTrigger>
+                    <SelectContent className="z-200">
+                      <SelectItem value="th">ภาษาไทย</SelectItem>
+                      <SelectItem value="en">English (US)</SelectItem>
+                      <SelectItem value="cn">中文 (简体)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="custom" className="mt-0 space-y-4">
+              <div className="p-4 border-2 border-dashed rounded-xl bg-slate-50 border-blue-200">
+                <Label className="font-bold flex items-center gap-2 mb-2 text-blue-800">
+                  <FileText className="h-4 w-4" />
+                  อัปโหลดเทมเพลต .docx ของท่าน
+                </Label>
+                <Input
+                  type="file"
+                  accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={(e) => setCustomFile(e.target.files?.[0] || null)}
+                  className="bg-white cursor-pointer"
+                />
+
+                <div className="mt-4 p-3 bg-white rounded-md border text-xs text-slate-600 shadow-sm">
+                  <p className="font-bold text-slate-800 mb-2">
+                    คู่มือการใส่ตัวแปร (ผูกข้อมูลอัตโนมัติ):
+                  </p>
+                  <p className="mb-2 text-slate-500">
+                    พิมพ์ตัวแปรเหล่านี้ลงใน Word ของท่าน
+                    ระบบจะแทนที่ให้เมื่อกดออกเอกสาร
+                  </p>
+                  <ul className="list-disc pl-4 space-y-1.5 font-mono text-[11px] bg-slate-50 p-2 rounded">
+                    <li>
+                      <span className="text-blue-700">
+                        {"{{lead.full_name}}"}
+                      </span>{" "}
+                      <span className="font-sans text-slate-500">
+                        - ชื่อลูกค้า
+                      </span>
+                    </li>
+                    <li>
+                      <span className="text-blue-700">
+                        {"{{property.name}}"}
+                      </span>{" "}
+                      <span className="font-sans text-slate-500">
+                        - ชื่อทรัพย์
+                      </span>
+                    </li>
+                    <li>
+                      <span className="text-blue-700">
+                        {"{{deal.formatted_price}}"}
+                      </span>{" "}
+                      <span className="font-sans text-slate-500">
+                        - ราคา ฟอร์แมตตัดลูกน้ำ
+                      </span>
+                    </li>
+                    <li>
+                      <span className="text-blue-700">
+                        {"{{deal.amount_in_words}}"}
+                      </span>{" "}
+                      <span className="font-sans text-slate-500">
+                        - ราคาเป็นข้อความ (เช่น หนึ่งแสนถ้วน)
+                      </span>
+                    </li>
+                    <li>
+                      <span className="text-blue-700">{"{{date.today}}"}</span>{" "}
+                      <span className="font-sans text-slate-500">
+                        - วันที่วันนี้
+                      </span>
+                    </li>
+                    <li>
+                      <span className="text-blue-700">
+                        {"{{deal.payment_period}}"}
+                      </span>{" "}
+                      <span className="font-sans text-slate-500">
+                        - กำหนดชำระงวดแรก
+                      </span>
+                    </li>
+                    <li>
+                      <span className="text-blue-700">{"{{bank_name}}"}</span>{" "}
+                      <span className="font-sans text-slate-500">
+                        - ธนาคารที่โอน
+                      </span>
+                    </li>
+                    <li>
+                      <span className="text-blue-700">
+                        {"{{bank_account_no}}"}
+                      </span>{" "}
+                      <span className="font-sans text-slate-500">
+                        - เลขที่ธนาคารที่โอน
+                      </span>
+                    </li>
+                  </ul>
+                  <p className="mt-3 text-[10.5px] text-blue-600 font-sans italic flex items-center gap-1">
+                    💡 ทริค: จัดหน้า Word ให้สวยตามต้องการได้เลย Layout
+                    จะไม่พังเหมือนแปลง PDF ทั่วไป
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="customLanguage"
+                  className="font-bold text-slate-700"
+                >
+                  ภาษาข้อมูลอัตโนมัติ (Language Localization)
+                </Label>
+                <Select
+                  value={language}
+                  onValueChange={setLanguage}
+                  disabled={loading}
+                >
+                  <SelectTrigger id="customLanguage" className="bg-white">
+                    <SelectValue placeholder="เลือกภาษา..." />
+                  </SelectTrigger>
+                  <SelectContent className="z-200">
+                    <SelectItem value="th">
+                      ภาษาไทย (แปลตัวเลขเป็นภาษาไทย)
+                    </SelectItem>
+                    <SelectItem value="en">
+                      English (Translate numbers to English)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -466,7 +671,10 @@ export function TemplateDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="paymentPeriod" className="font-bold text-slate-700">
+              <Label
+                htmlFor="paymentPeriod"
+                className="font-bold text-slate-700"
+              >
                 รอบการชำระ (Payment Period)
               </Label>
               <Input
@@ -477,7 +685,10 @@ export function TemplateDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="paymentMethod" className="font-bold text-slate-700">
+              <Label
+                htmlFor="paymentMethod"
+                className="font-bold text-slate-700"
+              >
                 วิธีชำระ (Payment Method)
               </Label>
               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
@@ -488,7 +699,9 @@ export function TemplateDialog({
                   <SelectItem value="Transfer">Transfer (โอนเงิน)</SelectItem>
                   <SelectItem value="Cash">Cash (เงินสด)</SelectItem>
                   <SelectItem value="Cheque">Cheque (เช็ค)</SelectItem>
-                  <SelectItem value="Credit Card">Credit Card (บัตรเครดิต)</SelectItem>
+                  <SelectItem value="Credit Card">
+                    Credit Card (บัตรเครดิต)
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -513,7 +726,9 @@ export function TemplateDialog({
             </Label>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-[11px] text-slate-500">ชื่อ-นามสกุล</Label>
+                <Label className="text-[11px] text-slate-500">
+                  ชื่อ-นามสกุล
+                </Label>
                 <Input
                   size={1}
                   className="h-8 text-sm"

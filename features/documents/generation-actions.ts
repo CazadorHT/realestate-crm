@@ -15,12 +15,18 @@ import { revalidatePath } from "next/cache";
 import { siteConfig } from "@/lib/site-config";
 import fs from "fs";
 import path from "path";
+import PizZip from "pizzip";
+// @ts-ignore
+import Docxtemplater from "docxtemplater";
 
 /**
  * Convert an image URL or Storage path to a Base64 Data URL.
  * Supports: Local paths (/images/...), Storage paths (slips/...), and full URLs.
  */
-async function getImageBase64(imageUrl: string, supabase?: any): Promise<string> {
+async function getImageBase64(
+  imageUrl: string,
+  supabase?: any,
+): Promise<string> {
   if (!imageUrl) return "";
 
   try {
@@ -28,8 +34,15 @@ async function getImageBase64(imageUrl: string, supabase?: any): Promise<string>
     if (imageUrl.startsWith("data:")) return imageUrl;
 
     // 2. If it's a Supabase storage path (e.g. slips/ownerid/file.jpg)
-    if (imageUrl.includes("/") && !imageUrl.startsWith("/") && !imageUrl.startsWith("http") && supabase) {
-      const { data, error } = await supabase.storage.from("documents").download(imageUrl);
+    if (
+      imageUrl.includes("/") &&
+      !imageUrl.startsWith("/") &&
+      !imageUrl.startsWith("http") &&
+      supabase
+    ) {
+      const { data, error } = await supabase.storage
+        .from("documents")
+        .download(imageUrl);
       if (error || !data) {
         console.error("Storage download error:", error);
         return "";
@@ -91,7 +104,7 @@ export async function generateDocumentFromTemplateAction(
     // Base64 process for config images (Logo, Signature, Stamp)
     // We convert them to Base64 so documents are self-contained and don't require public bucket access.
     const config = { ...siteConfig };
-    
+
     // Process config images in parallel
     const [logoB64, logoDarkB64, signatureB64, stampB64] = await Promise.all([
       getImageBase64(config.logo),
@@ -153,7 +166,9 @@ export async function generateDocumentFromTemplateAction(
 
         // Add amount in words
         contextData.deal.amount_in_words =
-          lang === "th" ? amountToThaiWords(price) : amountToEnglishWords(price);
+          lang === "th"
+            ? amountToThaiWords(price)
+            : amountToEnglishWords(price);
 
         // Ensure payment_period has a fallback (e.g. from transaction date)
         contextData.deal.payment_period =
@@ -194,7 +209,10 @@ export async function generateDocumentFromTemplateAction(
     // Final Image Processing (e.g. Slip) - Convert to Base64
     if (contextData.slip_url) {
       // If it's a URL, convert it. If it's a storage path, convert it.
-      contextData.slip_url = await getImageBase64(contextData.slip_url, supabase);
+      contextData.slip_url = await getImageBase64(
+        contextData.slip_url,
+        supabase,
+      );
     }
 
     // Fix: Ensure slip_url is available consistently across all owner types
@@ -202,7 +220,7 @@ export async function generateDocumentFromTemplateAction(
     if (!contextData.deal) {
       contextData.deal = {};
     }
-    
+
     if (contextData.slip_url) {
       contextData.deal.slip_url = contextData.slip_url;
     }
@@ -219,7 +237,8 @@ export async function generateDocumentFromTemplateAction(
     }
 
     // Ensure common fields are at top level context for easier template access
-    contextData.payment_period = contextData.payment_period || contextData.deal?.payment_period || "";
+    contextData.payment_period =
+      contextData.payment_period || contextData.deal?.payment_period || "";
     contextData.payment_method = contextData.payment_method || "Transfer";
     contextData.account_name = contextData.account_name || "";
 
@@ -387,6 +406,216 @@ export async function generateDocumentFromTemplateAction(
     console.error("Document Generation Error:", error);
     const msg =
       error instanceof Error ? error.message : "เกิดข้อผิดพลาดที่ไม่รู้จัก";
+    return { success: false, message: msg };
+  }
+}
+
+export async function generateDocxDocumentFromTemplateAction(
+  ownerId: string,
+  ownerType: "LEAD" | "PROPERTY" | "DEAL" | "RENTAL_CONTRACT",
+  docxStoragePath: string,
+  additionalData: any = {},
+  options?: { templateName?: string },
+) {
+  try {
+    const { supabase, role } = await requireAuthContext();
+    assertStaff(role);
+
+    // 1. Fetch the DOCX template from storage
+    const { data: fileData, error: fileError } = await supabase.storage
+      .from("documents") // assuming the template is uploaded to 'documents' bucket
+      .download(docxStoragePath);
+
+    if (fileError || !fileData) {
+      throw new Error(
+        `ไม่สามารถโหลดไฟล์เทมเพลต DOCX ได้: ${fileError?.message || "File not found"}`,
+      );
+    }
+
+    const templateBuffer = Buffer.from(await fileData.arrayBuffer());
+
+    // 2. Prepare Context (similar to generateDocumentFromTemplateAction)
+    const lang = (additionalData.language as "th" | "en" | "cn") || "th";
+    const translations = await getTranslations(lang);
+
+    let contextData: any = {
+      date: { today: formatDate(new Date(), lang) },
+      config: siteConfig,
+      t: translations,
+      lang: lang,
+    };
+
+    if (ownerType === "LEAD") {
+      const { data: lead, error: lError } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("id", ownerId)
+        .single();
+      if (lError || !lead) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
+      contextData.lead = localizeObject(lead, lang);
+    } else if (ownerType === "PROPERTY") {
+      const { data: property, error: pError } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("id", ownerId)
+        .single();
+      if (pError || !property) throw new Error("ไม่พบข้อมูลทรัพย์สินที่ระบุ");
+      contextData.property = localizeObject(property, lang);
+    } else if (ownerType === "DEAL") {
+      const { data: deal, error: dError } = await supabase
+        .from("deals")
+        .select("*, lead:leads(*), property:properties(*)")
+        .eq("id", ownerId)
+        .single();
+      if (dError || !deal) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
+      contextData.deal = localizeObject(deal, lang);
+      contextData.lead = localizeObject((deal as any)?.lead, lang);
+      contextData.property = localizeObject((deal as any)?.property, lang);
+
+      if (deal && contextData.property) {
+        const isRent = deal.deal_type === "RENT";
+        const price = isRent
+          ? contextData.property.rental_price
+          : contextData.property.price;
+        contextData.deal.formatted_price = formatCurrency(price);
+        contextData.deal.price = price;
+        contextData.deal.amount_in_words =
+          lang === "th"
+            ? amountToThaiWords(price)
+            : amountToEnglishWords(price);
+        contextData.deal.payment_period =
+          contextData.deal.payment_period ||
+          formatDate(deal.transaction_date, lang);
+
+        if (isRent) {
+          const { data: contract } = await supabase
+            .from("rental_contracts")
+            .select("*")
+            .eq("deal_id", ownerId)
+            .maybeSingle();
+          if (contract) {
+            contextData.contract = contract;
+            contextData.deal.deposit_amount = formatCurrency(
+              contract.deposit_amount,
+            );
+            contextData.deal.advance_payment_amount = formatCurrency(
+              contract.advance_payment_amount,
+            );
+            contextData.deal.lease_term = contract.lease_term_months;
+            contextData.deal.start_date = formatDate(contract.start_date, lang);
+          }
+        }
+      }
+      contextData.deal.reservation_fee = contextData.deal.reservation_fee || "";
+      contextData.deal.booking_amount = contextData.deal.booking_amount || "";
+    }
+
+    // Merge additional overrides
+    contextData = { ...contextData, ...additionalData };
+
+    if (contextData.client_name_override && contextData.lead) {
+      contextData.lead.full_name = contextData.client_name_override;
+    }
+    if (contextData.client_email_override && contextData.lead) {
+      contextData.lead.email = contextData.client_email_override;
+    }
+    if (contextData.client_line_override && contextData.lead) {
+      contextData.lead.line_id = contextData.client_line_override;
+    }
+
+    contextData.payment_period =
+      contextData.payment_period || contextData.deal?.payment_period || "";
+    contextData.payment_method = contextData.payment_method || "Transfer";
+    contextData.account_name = contextData.account_name || "";
+
+    // 3. Process the DOCX with docxtemplater
+    let zip;
+    try {
+      zip = new PizZip(templateBuffer);
+    } catch (e) {
+      throw new Error(
+        "ไฟล์ DOCX ไม่ถูกต้อง หรืออาจจะเสียหาย โปรดตรวจสอบไฟล์อีกครั้ง",
+      );
+    }
+
+    let doc;
+    try {
+      doc = new Docxtemplater(zip, {
+        paragraphLoop: true,
+        linebreaks: true,
+      });
+
+      // Render the document
+      // It will replace e.g. {{lead.full_name}} with contextData.lead.full_name
+      doc.render(contextData);
+    } catch (error: any) {
+      console.error("Docxtemplater parsing error:", error);
+      let errorMsg = "รูปแบบตัวแปร(Tag) ในไฟล์ DOCX ไม่ถูกต้อง";
+
+      // Attempt to extract specific docxtemplater errors
+      if (error.properties && error.properties.errors instanceof Array) {
+        const errorDetails = error.properties.errors
+          .map((e: any) => e.properties.explanation || e.message)
+          .join(", ");
+        errorMsg += ` รายละเอียด: ${errorDetails}`;
+      } else if (error.message) {
+        errorMsg += ` (${error.message})`;
+      }
+
+      throw new Error(errorMsg);
+    }
+
+    const buf = doc.getZip().generate({
+      type: "nodebuffer",
+      compression: "DEFLATE",
+    });
+
+    // 4. Save to Storage
+    const timestamp = new Date().getTime();
+    const safeTemplateName = (
+      options?.templateName || "custom_contract"
+    ).replace(/[^a-zA-Z0-9ก-๙]/g, "_");
+    const displayFileName = `${safeTemplateName}_${timestamp}.docx`;
+    const storageFileName = `generated_${timestamp}.docx`;
+    const finalStoragePath = `generated/${ownerType}/${ownerId}/${storageFileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("documents")
+      .upload(finalStoragePath, buf, {
+        contentType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      throw new Error(`อัปโหลดไฟล์ไม่สำเร็จ: ${uploadError.message}`);
+    }
+
+    // 5. Create DB Record
+    const docRes = await createDocumentRecordAction({
+      owner_id: ownerId,
+      owner_type: ownerType,
+      document_type: "OTHER", // Can be mapped if needed
+      file_name: displayFileName,
+      storage_path: finalStoragePath,
+      mime_type:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      version: 1,
+    });
+
+    if (!docRes.success) {
+      throw new Error("บันทึกข้อมูลเอกสารลงระบบไม่สำเร็จ");
+    }
+
+    revalidatePath("/protected/documents");
+    return { success: true, data: docRes.data };
+  } catch (error: unknown) {
+    console.error("DOCX Generation Error:", error);
+    const msg =
+      error instanceof Error
+        ? error.message
+        : "เกิดข้อผิดพลาดในการสร้างไฟล์ DOCX";
     return { success: false, message: msg };
   }
 }
