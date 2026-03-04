@@ -150,63 +150,74 @@ export default async function DealsPage() {
         </Card>
       )}
 
-      {/* Deals Table */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">
-              รายการดีลทั้งหมด
-            </h2>
-            <p className="text-sm text-slate-500 mt-1">
-              แสดง {data.slice(0, 20).length} จาก {count} ดีล
-            </p>
-          </div>
-          {activeDeals > 0 && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-100">
-              <Clock className="h-4 w-4" />
-              <span className="text-sm font-medium">
-                {activeDeals} รอดำเนินการ
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden p-4">
-          <DealsTable
-            initialData={data.slice(0, 20)}
-            initialCount={count}
-            initialPage={1}
-            pageSize={20}
-            properties={properties}
+      {isEmptyState ? (
+        <div className="mt-8">
+          <EmptyState
+            icon="handshake"
+            title="ยังไม่มีดีลในระบบ"
+            description="เริ่มต้นสร้างดีลแรกของคุณเพื่อติดตามความคืบหน้าการขายหรือเช่า"
+            actionSlot={<CreateDealButton properties={properties} />}
           />
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Deals Table */}
+          <div className="space-y-4 mt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  รายการดีลทั้งหมด
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  แสดง {data.slice(0, 20).length} จาก {count} ดีล
+                </p>
+              </div>
+              {activeDeals > 0 && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-100">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    {activeDeals} รอดำเนินการ
+                  </span>
+                </div>
+              )}
+            </div>
 
-      {/* Footer Stats */}
-      {data.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm text-slate-500 px-2 mt-2">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span className="font-medium text-slate-700">
-              แสดงทั้งหมด {totalDeals} ดีล
-            </span>
-            {activeDeals > 0 && (
-              <span className="flex items-center gap-1 text-blue-600 font-medium whitespace-nowrap">
-                <Clock className="h-4 w-4" />
-                {activeDeals} กำลังดำเนินการ
-              </span>
-            )}
-            {wonDeals > 0 && (
-              <span className="text-green-600 font-medium whitespace-nowrap">
-                {wonDeals} สำเร็จ
-              </span>
-            )}
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden p-4">
+              <DealsTable
+                initialData={data.slice(0, 20)}
+                initialCount={count}
+                initialPage={1}
+                pageSize={20}
+                properties={properties}
+              />
+            </div>
           </div>
-          <div className="text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
-            <p className="text-xs">
-              อัพเดทล่าสุด: {new Date().toLocaleDateString("th-TH")}
-            </p>
+
+          {/* Footer Stats */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm text-slate-500 px-2 mt-2">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span className="font-medium text-slate-700">
+                แสดงทั้งหมด {totalDeals} ดีล
+              </span>
+              {activeDeals > 0 && (
+                <span className="flex items-center gap-1 text-blue-600 font-medium whitespace-nowrap">
+                  <Clock className="h-4 w-4" />
+                  {activeDeals} กำลังดำเนินการ
+                </span>
+              )}
+              {wonDeals > 0 && (
+                <span className="text-green-600 font-medium whitespace-nowrap">
+                  {wonDeals} สำเร็จ
+                </span>
+              )}
+            </div>
+            <div className="text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
+              <p className="text-xs">
+                อัพเดทล่าสุด: {new Date().toLocaleDateString("th-TH")}
+              </p>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

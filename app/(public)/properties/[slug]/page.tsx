@@ -549,10 +549,15 @@ export async function generateMetadata(props: {
     is_cover: img.is_cover,
   }));
 
-  const COVER_IMAGE =
+  let COVER_IMAGE =
     propertyImages?.find((img) => img.is_cover)?.image_url ||
     propertyImages?.[0]?.image_url ||
     "/images/hero-realestate.png";
+
+  // Ensure COVER_IMAGE is an absolute URL for OpenGraph compatibility
+  if (COVER_IMAGE.startsWith("/")) {
+    COVER_IMAGE = `${siteConfig.url}${COVER_IMAGE}`;
+  }
 
   const canonicalUrl = `${siteConfig.url}/properties/${data.slug || slug}`;
 
@@ -566,10 +571,12 @@ export async function generateMetadata(props: {
     openGraph: {
       title: pageTitle,
       description: pageDesc,
-      images: [COVER_IMAGE],
+      images: [{ url: COVER_IMAGE, width: 1200, height: 630 }],
       url: canonicalUrl,
       type: "website",
       siteName: siteConfig.name, // Branding
+      locale:
+        language === "th" ? "th_TH" : language === "cn" ? "zh_CN" : "en_US",
     },
     twitter: {
       card: "summary_large_image",

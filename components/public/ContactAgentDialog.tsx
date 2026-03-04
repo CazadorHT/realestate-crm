@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -45,7 +45,7 @@ interface ContactAgentDialogProps {
   language?: "th" | "en" | "cn";
 }
 
-// ── Submit Button ──
+// â”€â”€ Submit Button â”€â”€
 function SubmitButton({
   compact,
   language: customLanguage,
@@ -61,7 +61,7 @@ function SubmitButton({
   const t = (key: string) => {
     if (!customLanguage) return globalT(key);
     const { dictionaries } = require("../providers/LanguageProvider");
-    const dict = dictionaries[language];
+    const dict = dictionaries[language as keyof typeof dictionaries] as any;
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
 
@@ -88,7 +88,7 @@ function SubmitButton({
   );
 }
 
-// ── Step Indicator Icon (Mobile) ──
+// â”€â”€ Step Indicator Icon (Mobile) â”€â”€
 function StepIcon({
   stepNum,
   currentStep,
@@ -139,7 +139,7 @@ export function ContactAgentDialog({
   const t = (key: string) => {
     if (!customLanguage) return globalT(key);
     const { dictionaries } = require("../providers/LanguageProvider");
-    const dict = dictionaries[language];
+    const dict = dictionaries[language as keyof typeof dictionaries] as any;
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
   const [internalOpen, setInternalOpen] = useState(false);
@@ -211,7 +211,7 @@ export function ContactAgentDialog({
     if (step === 1) {
       if (!fullName.trim()) {
         toast.error(
-          t("property.contact_dialog.name_required") || "กรุณากรอกชื่อ",
+          t("property.contact_dialog.name_required") || "à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¸Šà¸·à¹ˆà¸­",
         );
         return;
       }
@@ -219,7 +219,7 @@ export function ContactAgentDialog({
     } else if (step === 2) {
       if (!phone.trim()) {
         toast.error(
-          t("property.contact_dialog.phone_required") || "กรุณากรอกเบอร์โทร",
+          t("property.contact_dialog.phone_required") || "à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¹€à¸šà¸­à¸£à¹Œà¹‚à¸—à¸£",
         );
         return;
       }
@@ -252,7 +252,7 @@ export function ContactAgentDialog({
     }
   }
 
-  // ── Shared Form Fields (used in both mobile & desktop) ──
+  // â”€â”€ Shared Form Fields (used in both mobile & desktop) â”€â”€
   const renderNameField = (isMobile: boolean) => (
     <div
       className={
@@ -432,7 +432,7 @@ export function ContactAgentDialog({
         data-[state=open]:animate-in data-[state=closed]:animate-out
         data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
 
-        // ── Mobile: Bottom Sheet ──
+        // â”€â”€ Mobile: Bottom Sheet â”€â”€
         bg-white
         bottom-0 top-auto left-0 right-0 translate-x-0 translate-y-0
         rounded-t-[28px] rounded-b-none
@@ -440,7 +440,7 @@ export function ContactAgentDialog({
         data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
         shadow-xl
 
-        // ── Desktop/Tablet: Centered Dialog ──
+        // â”€â”€ Desktop/Tablet: Centered Dialog â”€â”€
         sm:bottom-auto sm:top-[50%] sm:left-[50%]
         sm:translate-x-[-50%] sm:translate-y-[-50%]
         sm:h-auto sm:max-h-[90vh]
@@ -449,17 +449,17 @@ export function ContactAgentDialog({
         sm:data-[state=closed]:slide-out-to-bottom-4 sm:data-[state=open]:slide-in-from-bottom-4
         sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:zoom-out-95
 
-        // ── Close Button ──
+        // â”€â”€ Close Button â”€â”€
         [&>button]:top-4 [&>button]:right-4 [&>button]:z-20
         [&>button]:text-slate-400 [&>button]:hover:text-slate-600
         sm:[&>button]:text-white/60 sm:[&>button]:hover:text-white
       "
       >
-        {/* ════════════════════════════════════════════════════
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             Desktop / Tablet: Split-Panel Layout
-        ════════════════════════════════════════════════════ */}
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <div className="hidden sm:flex sm:flex-row h-full">
-          {/* ── Left Panel: Branding & Trust ── */}
+          {/* â”€â”€ Left Panel: Branding & Trust â”€â”€ */}
           <div className="w-[280px] shrink-0 bg-linear-to-b from-blue-800 via-blue-700 to-indigo-800 text-white p-7 flex flex-col justify-between relative overflow-hidden sm:rounded-l-2xl">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-24 -mt-24 blur-2xl" />
@@ -539,7 +539,7 @@ export function ContactAgentDialog({
             </div>
           </div>
 
-          {/* ── Right Panel: Form ── */}
+          {/* â”€â”€ Right Panel: Form â”€â”€ */}
           <div className="flex-1 p-7 overflow-y-auto bg-slate-50 sm:rounded-r-2xl">
             <form action={clientAction} className="space-y-5">
               <input type="hidden" name="propertyId" value={propertyId} />
@@ -564,9 +564,9 @@ export function ContactAgentDialog({
           </div>
         </div>
 
-        {/* ════════════════════════════════════════════════════
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             Mobile Header
-        ════════════════════════════════════════════════════ */}
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <div className="sm:hidden bg-white rounded-t-[28px] flex flex-col items-center relative">
           {/* Pull Handle */}
           <div className="w-10 h-1 bg-slate-200/80 rounded-full mt-3 mb-4" />
@@ -578,7 +578,7 @@ export function ContactAgentDialog({
             </h2>
             {displayTitle && (
               <p className="text-xs text-slate-400 line-clamp-1 mt-1 font-normal">
-                ⚡ {displayTitle}
+                âš¡ {displayTitle}
               </p>
             )}
           </div>
@@ -616,9 +616,9 @@ export function ContactAgentDialog({
           <div className="w-full h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
         </div>
 
-        {/* ════════════════════════════════════════════════════
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             Mobile Form Content
-        ════════════════════════════════════════════════════ */}
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <div className="sm:hidden p-6 flex flex-col overflow-y-auto">
           <form
             action={clientAction}
@@ -707,3 +707,4 @@ export function ContactAgentDialog({
     </Dialog>
   );
 }
+

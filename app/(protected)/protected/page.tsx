@@ -42,8 +42,10 @@ import {
   type AgendaEvent,
   type FollowUpLead,
   type RiskDeal,
+  getSetupProgress,
 } from "@/features/dashboard/queries";
 import { TopAgents } from "@/components/dashboard/TopAgents";
+import { SetupChecklist } from "@/components/dashboard/SetupChecklist";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { isStaff } from "@/lib/authz";
 import { getCalendarEvents } from "@/features/calendar/queries";
@@ -106,12 +108,16 @@ export default async function DashboardPage() {
       upcomingPromise,
     ]);
 
+  const setupProgress = await getSetupProgress();
+
   return (
     <div className="flex flex-col gap-6 p-2 pb-20">
       {/* 1. HEADER & SEARCH */}
       <DashboardHeader email={user?.email} name={profile?.full_name} />
 
       <SystemStatus />
+
+      <SetupChecklist progress={setupProgress} />
 
       <>
         {/* 2. SMART SUMMARY (AI GATED) */}

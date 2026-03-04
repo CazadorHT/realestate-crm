@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -32,7 +32,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import type { Database } from "@/lib/database.types";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 import { cn } from "@/lib/utils";
 
 type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
@@ -51,8 +51,7 @@ export function PropertyBadgesSection({
 
   // Custom t function
   const t = (key: string) => {
-    const { dictionaries } = require("@/components/providers/LanguageProvider");
-    const dict = dictionaries[language];
+    const dict = dictionaries[language as keyof typeof dictionaries] as any;
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -406,3 +405,5 @@ export function PropertyBadgesSection({
     </section>
   );
 }
+
+

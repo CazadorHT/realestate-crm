@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { ArrowLeft, BadgeHelp, CalendarDays, MapPin } from "lucide-react";
@@ -14,7 +14,7 @@ import {
   getOfficePrice,
   getTypeColor,
 } from "@/lib/property-utils";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { useAddressLocalization } from "@/hooks/useAddressLocalization";
@@ -92,8 +92,7 @@ export function PropertyHeader({
   // Custom t function for language override
   const t = (key: string, params?: Record<string, string | number>) => {
     if (!customLanguage) return globalT(key, params);
-    const { dictionaries } = require("@/components/providers/LanguageProvider");
-    const dict = dictionaries[language];
+    const dict = dictionaries[language as keyof typeof dictionaries] as any;
     let value =
       key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
 
@@ -182,7 +181,7 @@ export function PropertyHeader({
       ...features
         .filter(
           (f) =>
-            f.category === "คุณสมบัติพิเศษ" ||
+            f.category === "à¸„à¸¸à¸“à¸ªà¸¡à¸šà¸±à¸•à¸´à¸žà¸´à¹€à¸¨à¸©" ||
             f.category === "Special Features",
         )
         .map((f) => ({
@@ -192,7 +191,7 @@ export function PropertyHeader({
       ...features
         .filter(
           (f) =>
-            f.category !== "คุณสมบัติพิเศษ" &&
+            f.category !== "à¸„à¸¸à¸“à¸ªà¸¡à¸šà¸±à¸•à¸´à¸žà¸´à¹€à¸¨à¸©" &&
             f.category !== "Special Features",
         )
         .map((f) => ({
@@ -306,7 +305,7 @@ export function PropertyHeader({
         </div>
         {officePrice?.isCalculated && (
           <span className="text-[10px] text-slate-400 font-medium">
-            (฿ {officePrice.sqmPrice?.toLocaleString()} / {t("common.sqm")})
+            (à¸¿ {officePrice.sqmPrice?.toLocaleString()} / {t("common.sqm")})
           </span>
         )}
       </div>
@@ -407,7 +406,7 @@ export function PropertyHeader({
                       variant="outline"
                       className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm whitespace-nowrap"
                     >
-                      ✨ {t("property.specs.fully_furnished")}
+                      âœ¨ {t("property.specs.fully_furnished")}
                     </Badge>
                   )}
 
@@ -416,7 +415,7 @@ export function PropertyHeader({
                       variant="outline"
                       className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
                     >
-                      🏗️ {t("property.specs.bare_shell")}
+                      ðŸ—ï¸ {t("property.specs.bare_shell")}
                     </Badge>
                   )}
                 </div>
@@ -579,3 +578,5 @@ export function PropertyHeader({
     </div>
   );
 }
+
+

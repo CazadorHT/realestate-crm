@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { BsStars } from "react-icons/bs";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 interface PropertyDescriptionProps {
@@ -25,8 +25,7 @@ export function PropertyDescription({
   // Custom t function for language override
   const t = (key: string) => {
     if (!customLanguage) return globalT(key);
-    const { dictionaries } = require("@/components/providers/LanguageProvider");
-    const dict = dictionaries[language];
+    const dict = dictionaries[language as keyof typeof dictionaries] as any;
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
   const [isExpanded, setIsExpanded] = useState(false);
@@ -126,3 +125,5 @@ export function PropertyDescription({
     </section>
   );
 }
+
+

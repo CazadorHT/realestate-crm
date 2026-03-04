@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { BedDouble, Bath, Car, Maximize, Building2, Home } from "lucide-react";
 import {
@@ -34,7 +34,6 @@ export function PropertySpecs({
   const t = (key: string): string => {
     if (!customLanguage) return globalT(key);
 
-    const { dictionaries } = require("@/components/providers/LanguageProvider");
     const dict = dictionaries[language] as any;
     const value = key.split(".").reduce((prev, curr) => prev?.[curr], dict);
     return typeof value === "string" ? value : key;
@@ -113,3 +112,4 @@ export function PropertySpecs({
     </div>
   );
 }
+

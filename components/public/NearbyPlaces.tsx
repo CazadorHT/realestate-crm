@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import {
   School,
   ShoppingBag,
@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { TRANSIT_TYPE_STYLES } from "@/features/properties/labels";
 import { MdOutlineExplore } from "react-icons/md";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 
 export interface NearbyPlaceItem {
   category: string;
@@ -69,8 +69,7 @@ export function NearbyPlaces({
   // Custom t function for language override
   const t = (key: string) => {
     if (!customLanguage) return globalT(key);
-    const { dictionaries } = require("@/components/providers/LanguageProvider");
-    const dict = dictionaries[language];
+    const dict = dictionaries[language as keyof typeof dictionaries] as any;
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
 
@@ -125,7 +124,7 @@ export function NearbyPlaces({
         {t("property.nearby_places")}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Nearby Places Categories (Transport = ทางด่วน) */}
+        {/* Nearby Places Categories (Transport = à¸—à¸²à¸‡à¸”à¹ˆà¸§à¸™) */}
         {categories.map((catKey) => {
           const items = grouped[catKey];
           const Icon = ICON_MAP[catKey] || Map;
@@ -175,7 +174,7 @@ export function NearbyPlaces({
           );
         })}
 
-        {/* Transit - Single card called "รถไฟฟ้า" */}
+        {/* Transit - Single card called "à¸£à¸–à¹„à¸Ÿà¸Ÿà¹‰à¸²" */}
         {transits.length > 0 && (
           <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
@@ -235,3 +234,5 @@ export function NearbyPlaces({
     </div>
   );
 }
+
+

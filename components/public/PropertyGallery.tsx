@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { IoShieldCheckmark } from "react-icons/io5";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 import { PropertyImage } from "@/features/properties/types";
 
 interface PropertyGalleryProps {
@@ -126,8 +126,7 @@ export function PropertyGallery({
   // Custom t function for language override
   const t = (key: string) => {
     if (!customLanguage) return globalT(key);
-    const { dictionaries } = require("@/components/providers/LanguageProvider");
-    const dict = dictionaries[language];
+    const dict = dictionaries[language as keyof typeof dictionaries] as any;
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
 
@@ -399,11 +398,11 @@ export function PropertyGallery({
         >
           <VisuallyHidden>
             <DialogTitle>
-              รูปภาพ: {title} ({currentIndex + 1}/{sortedImages.length})
+              à¸£à¸¹à¸›à¸ à¸²à¸ž: {title} ({currentIndex + 1}/{sortedImages.length})
             </DialogTitle>
             <DialogDescription>
-              รูปภาพที่ {currentIndex + 1} จากทั้งหมด {sortedImages.length}{" "}
-              รูปของ {title}
+              à¸£à¸¹à¸›à¸ à¸²à¸žà¸—à¸µà¹ˆ {currentIndex + 1} à¸ˆà¸²à¸à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” {sortedImages.length}{" "}
+              à¸£à¸¹à¸›à¸‚à¸­à¸‡ {title}
             </DialogDescription>
           </VisuallyHidden>
 
@@ -542,3 +541,5 @@ export function PropertyGallery({
     </>
   );
 }
+
+

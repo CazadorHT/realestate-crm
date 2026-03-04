@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,7 @@ import { FavoriteButton } from "@/components/public/FavoriteButton";
 import { ShareButtons } from "@/components/public/ShareButtons";
 import { FaLine } from "react-icons/fa";
 import { useState } from "react";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 
@@ -53,8 +53,7 @@ export function AgentSidebar({
   // Custom t function for language override
   const t = (key: string) => {
     if (!customLanguage) return globalT(key);
-    const { dictionaries } = require("@/components/providers/LanguageProvider");
-    const dict = dictionaries[language];
+    const dict = dictionaries[language as keyof typeof dictionaries] as any;
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
   const [showPhone, setShowPhone] = useState(false);
@@ -265,3 +264,5 @@ export function AgentSidebar({
     </div>
   );
 }
+
+

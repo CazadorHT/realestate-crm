@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { ICON_MAP, DEFAULT_ICON } from "@/features/amenities/icons";
 import { LuLayoutGrid } from "react-icons/lu";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 interface PropertyAmenitiesProps {
@@ -27,8 +27,7 @@ export function PropertyAmenities({
   // Custom t function for language override
   const t = (key: string) => {
     if (!customLanguage) return globalT(key);
-    const { dictionaries } = require("@/components/providers/LanguageProvider");
-    const dict = dictionaries[language];
+    const dict = dictionaries[language as keyof typeof dictionaries] as any;
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
 
@@ -60,3 +59,5 @@ export function PropertyAmenities({
     </section>
   );
 }
+
+

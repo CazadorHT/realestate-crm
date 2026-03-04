@@ -880,3 +880,32 @@ export async function getAnalyticsStats(days?: number): Promise<{
     totalViews,
   };
 }
+
+export async function getSetupProgress(): Promise<{
+  hasBranchProfile: boolean;
+  hasStaff: boolean;
+  hasProperty: boolean;
+  hasLead: boolean;
+}> {
+  const supabase = await createClient();
+
+  const [staffRes, propRes, leadRes, tenantRes] = await Promise.all([
+    supabase.from("tenant_members").select("*", { count: "exact", head: true }),
+    supabase
+      .from("properties")
+      .select("*", { count: "exact", head: true })
+      .is("deleted_at", null),
+    supabase
+      .from("leads")
+      .select("*", { count: "exact", head: true })
+      .is("deleted_at", null),
+    supabase.from("tenants").select("logo_url, created_at").limit(1).single(),
+  ]);
+
+  return {
+    hasBranchProfile: !!tenantRes.data?.logo_url,
+    hasStaff: (staffRes.count || 0) > 1, // More than just the owner
+    hasProperty: (propRes.count || 0) > 0,
+    hasLead: (leadRes.count || 0) > 0,
+  };
+}
