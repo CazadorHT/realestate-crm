@@ -4,7 +4,8 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { DialogTitle } from "@/components/ui/dialog";
 import { UseFormReturn } from "react-hook-form";
 import { DepositLeadInput } from "@/features/public/types";
-import { MdRealEstateAgent } from "react-icons/md";
+import { siteConfig } from "@/lib/site-config";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   AnimatedClock,
@@ -36,10 +37,10 @@ export function DepositDesktopView({
   return (
     <div className="hidden sm:flex sm:flex-row h-full min-h-[500px]">
       {/* ── Left Panel: Branding & Trust ── */}
-      <div className="w-[280px] shrink-0 bg-linear-to-b from-blue-800 via-blue-700 to-indigo-800 text-white p-7 flex flex-col justify-between relative overflow-hidden sm:rounded-l-2xl">
+      <div className="w-[280px] shrink-0 bg-linear-to-b from-blue-800 via-sky-600 to-indigo-700 text-white p-7 flex flex-col justify-between relative overflow-hidden sm:rounded-l-2xl">
         {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-24 -mt-24 blur-2xl" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400/10 rounded-full -ml-16 -mb-16 blur-2xl" />
+        <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-24 -mt-24 blur-xs" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400/10 rounded-full -ml-16 -mb-16 blur-xs" />
         <div className="absolute top-1/2 left-1/2 w-20 h-20 bg-blue-400/10 rounded-full blur-xl" />
 
         <div className="relative z-10 space-y-8">
@@ -48,10 +49,18 @@ export function DepositDesktopView({
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="w-16 h-16 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-2xl relative group"
+            className="w-20 h-20 bg-white/15 rounded-xl flex items-center justify-center border border-white/20 shadow-2xl relative group"
           >
             <div className="absolute inset-0 bg-white/5 rounded-2xl animate-pulse group-hover:bg-white/10 transition-colors" />
-            <MdRealEstateAgent className="w-9 h-9 text-white relative z-10" />
+            <div className="relative z-10 w-16 h-16 flex items-center justify-center overflow-hidden">
+              <Image
+                src={siteConfig.logoDark}
+                alt={siteConfig.name}
+                width={80}
+                height={80}
+                className="object-contain"
+              />
+            </div>
           </motion.div>
 
           {/* Title */}
@@ -120,7 +129,7 @@ export function DepositDesktopView({
         {/* Footer info */}
         <div className="relative z-10 pt-6 border-t border-white/10">
           <p className="text-[10px] text-blue-200/40 text-center uppercase tracking-widest font-bold">
-            Real Estate Professional
+            {siteConfig.company}
           </p>
         </div>
       </div>
