@@ -328,7 +328,8 @@ export function useSmartMatchWizard() {
     const max = selectedBudget?.max || 1000000000;
 
     try {
-      const results = await searchPropertiesAction({
+      // Add a timeout for the search to prevent infinite loading
+      const searchPromise = searchPropertiesAction({
         purpose,
         budgetMin: min,
         budgetMax: max,
@@ -339,11 +340,21 @@ export function useSmartMatchWizard() {
         language: languageContext.language,
       });
 
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Search timed out")), 15000),
+      );
+
+      const results = (await Promise.race([
+        searchPromise,
+        timeoutPromise,
+      ])) as any;
+
       setSessionId(results.sessionId || "");
       setMatches(results.matches);
 
       setTimeout(() => setStep(9), 1500);
     } catch (error) {
+      console.error("Search failed or timed out:", error);
       toast.error(t("smart_match.search_error"));
       setStep(1);
     }

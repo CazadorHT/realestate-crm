@@ -131,10 +131,10 @@ export function BlogSidebar({ posts }: BlogSidebarProps) {
                   <Link
                     key={tag}
                     href={isActive ? "/blog" : `/blog?tag=${tag}`}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-all duration-300 hover:shadow-md hover:scale-105 ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all duration-300 hover:shadow-lg hover:scale-105 ${
                       isActive
-                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                        : "bg-white text-slate-700 border-slate-200 hover:bg-linear-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white hover:border-transparent"
+                        ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white border-transparent shadow-md"
+                        : "bg-white/60 backdrop-blur-sm text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600 hover:bg-white"
                     }`}
                   >
                     #{tag}

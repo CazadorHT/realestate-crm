@@ -42,11 +42,13 @@
     --color-text: 15 23 42;
     --color-text-muted: 100 116 139;
   }
-
- 
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground overflow-x-hidden;
   }

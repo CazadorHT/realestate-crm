@@ -123,6 +123,12 @@ export function PartnerSection() {
                         }`}
                         title={partner.name}
                         className="h-16 w-auto md:h-20 object-contain hover:scale-110 transition-transform duration-300 "
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "/images/v-link-svg-png-logo.svg";
+                          (e.target as HTMLImageElement).className =
+                            "h-12 w-auto opacity-30 grayscale";
+                        }}
                       />
                     </div>
                   ))}
@@ -160,6 +166,12 @@ export function PartnerSection() {
                         }`}
                         title={partner.name}
                         className="h-16 w-auto md:h-20 object-contain hover:scale-110 transition-transform duration-300 "
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "/images/v-link-svg-png-logo.svg";
+                          (e.target as HTMLImageElement).className =
+                            "h-12 w-auto opacity-30 grayscale";
+                        }}
                       />
                     </div>
                   ))}

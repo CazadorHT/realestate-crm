@@ -50,7 +50,10 @@ export function MortgageCalculatorSection() {
   };
 
   return (
-    <section className="py-12 md:py-16 px-4 md:px-6 lg:px-8 bg-linear-to-br from-blue-50 to-blue-100 relative overflow-hidden z-0">
+    <section
+      id="mortgage-calculator"
+      className="py-12 md:py-16 px-4 md:px-6 lg:px-8 bg-linear-to-br from-blue-50 to-blue-100 relative overflow-hidden z-0"
+    >
       <SectionBackground pattern="icons" intensity="low" />
       {/* Schema.org Structured Data */}
       <script

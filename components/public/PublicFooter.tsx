@@ -56,7 +56,7 @@ export function PublicFooter() {
       name: t("home.property_types.office"),
       href: "/properties?category=office",
     },
-    { name: t("home.mortgage.title"), href: "/valuation" },
+    { name: t("home.mortgage.title"), href: "/#mortgage-calculator" },
   ];
 
   const about = [

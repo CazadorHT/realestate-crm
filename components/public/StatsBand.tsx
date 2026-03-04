@@ -69,7 +69,7 @@ export function StatsBand() {
 
       <div className="max-w-screen-2xl mx-auto">
         {/* SEO-Critical Heading */}
-        <h2 className="sr-only">{t("home.property_listing.title")}</h2>
+        <h2 className="sr-only">{t("property_listing.title")}</h2>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-12">
           {stats.map((stat, index) => (

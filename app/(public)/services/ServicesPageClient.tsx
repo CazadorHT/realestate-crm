@@ -20,6 +20,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useState, useEffect } from "react";
 import { SectionBackground } from "@/components/public/SectionBackground";
 import { FaLine } from "react-icons/fa";
+import { animate } from "framer-motion";
 
 function ServicesContent() {
   const { t } = useLanguage();
@@ -32,6 +33,22 @@ function ServicesContent() {
       setLoading(false);
     });
   }, []);
+
+  const scrollToServices = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const element = document.getElementById("services");
+    if (element) {
+      const offset = 96; // scroll-mt-24 equivalent
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      animate(window.scrollY, offsetPosition, {
+        duration: 2, // 2 seconds for "slow" feel
+        ease: [0.32, 0.72, 0, 1], // Premium quintic ease-out
+        onUpdate: (latest) => window.scrollTo(0, latest),
+      });
+    }
+  };
 
   const CORE_SERVICES = [
     {
@@ -109,19 +126,23 @@ function ServicesContent() {
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 animate-in fade-in-0 zoom-in-95 duration-1000 delay-300">
-            <Button
-              size="lg"
-              className="rounded-lg h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-900/20 border-none transition-all hover:scale-105"
-            >
-              {t("common.start_search")}
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-lg h-14 px-8 border-white/20 hover:text-white hover:bg-white/10 backdrop-blur-sm"
-            >
-              {t("contact.title")}
-            </Button>
+            <Link href="#services" onClick={scrollToServices}>
+              <Button
+                size="lg"
+                className="rounded-lg h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-900/20 border-none transition-all hover:scale-105"
+              >
+                {t("common.start_search")}
+              </Button>
+            </Link>
+            <Link href="/contact">
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-lg h-14 px-8 border-white/20 hover:text-white hover:bg-white/10 backdrop-blur-sm"
+              >
+                {t("contact.title")}
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -157,7 +178,10 @@ function ServicesContent() {
 
       {/* Dynamic Services from DB */}
       {services.length > 0 && (
-        <section className="py-24 bg-slate-50 relative overflow-hidden">
+        <section
+          id="services"
+          className="py-24 bg-slate-50 relative overflow-hidden scroll-mt-24"
+        >
           <div className="container mx-auto px-4 relative z-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
               <div className="space-y-4">

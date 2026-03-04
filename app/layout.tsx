@@ -69,7 +69,10 @@ export default async function RootLayout({
 
   return (
     <html lang={lang} suppressHydrationWarning>
-      <body className={`${prompt.className} ${notoThai.variable} antialiased`}>
+      <body
+        className={`${prompt.className} ${notoThai.variable} antialiased`}
+        suppressHydrationWarning
+      >
         <LanguageProvider initialLanguage={lang as any}>
           <TenantProvider>
             {children}
