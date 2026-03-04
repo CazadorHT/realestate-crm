@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { PropertyCard, PropertyCardProps } from "./PropertyCard";
 import { Button } from "@/components/ui/button";
@@ -99,106 +99,128 @@ export function PropertySearchPage({
     load();
   }, [initialProperties]);
 
-  // Compute unique Popular Areas with Counts
-  // Compute available Provinces
+  // shared filter logic
+  const matchesFilters = useCallback(
+    (p: ApiProperty, excludeFilters: string[] = []) => {
+      // Keyword
+      if (!excludeFilters.includes("keyword") && keyword.trim()) {
+        const k = keyword.toLowerCase();
+        const matchesKeyword =
+          p.title.toLowerCase().includes(k) ||
+          (p.description || "").toLowerCase().includes(k) ||
+          (p.popular_area || "").toLowerCase().includes(k) ||
+          (p.province || "").toLowerCase().includes(k);
+        if (!matchesKeyword) return false;
+      }
+
+      // Province
+      if (!excludeFilters.includes("province") && province !== "ALL") {
+        if (p.province !== province) return false;
+      }
+
+      // Type
+      if (!excludeFilters.includes("type") && type !== "ALL") {
+        if (p.property_type !== type) return false;
+      }
+
+      // Listing Type
+      if (!excludeFilters.includes("listingType") && listingType !== "ALL") {
+        if (listingType === "SALE") {
+          if (p.listing_type !== "SALE" && p.listing_type !== "SALE_AND_RENT")
+            return false;
+        } else if (listingType === "RENT") {
+          if (p.listing_type !== "RENT" && p.listing_type !== "SALE_AND_RENT")
+            return false;
+        } else if (listingType === "SALE_AND_RENT") {
+          if (p.listing_type !== "SALE_AND_RENT") return false;
+        }
+      }
+
+      // Area
+      if (!excludeFilters.includes("area") && area !== "ALL") {
+        if (p.popular_area !== area) return false;
+      }
+
+      // Near Train
+      if (!excludeFilters.includes("nearTrain") && nearTrain) {
+        const txt = (p.title + " " + (p.description || "")).toLowerCase();
+        const isNearTrain =
+          p.near_transit === true ||
+          txt.includes("bts") ||
+          txt.includes("mrt") ||
+          txt.includes("รถไฟฟ้า") ||
+          txt.includes("ใกล้สถานี");
+        if (!isNearTrain) return false;
+      }
+
+      // Pet Friendly
+      if (!excludeFilters.includes("petFriendly") && petFriendly) {
+        if (!p.meta_keywords?.includes("Pet Friendly")) return false;
+      }
+
+      // Fully Furnished
+      if (!excludeFilters.includes("fullyFurnished") && fullyFurnished) {
+        const isFurnished =
+          p.is_fully_furnished === true ||
+          p.meta_keywords?.includes("Fully Furnished");
+        if (!isFurnished) return false;
+      }
+
+      // Bedrooms
+      if (!excludeFilters.includes("bedrooms") && bedrooms !== "ALL") {
+        const beds = p.bedrooms || 0;
+        if (bedrooms === "4+") {
+          if (beds < 4) return false;
+        } else if (beds !== parseInt(bedrooms)) {
+          return false;
+        }
+      }
+
+      // Price Range
+      if (!excludeFilters.includes("price")) {
+        const min = minPrice ? parseFloat(minPrice) : 0;
+        const max = maxPrice ? parseFloat(maxPrice) : Infinity;
+        if (min > 0 || max < Infinity) {
+          const price = p.price || 0;
+          const rent = p.rental_price || 0;
+          const pVal = price > 0 ? price : rent;
+          if (pVal < min || pVal > max) return false;
+        }
+      }
+
+      return true;
+    },
+    [
+      keyword,
+      province,
+      type,
+      listingType,
+      area,
+      nearTrain,
+      petFriendly,
+      fullyFurnished,
+      bedrooms,
+      minPrice,
+      maxPrice,
+    ],
+  );
+
+  // Compute available Provinces with Counts
   const availableProvinces = useMemo(() => {
-    const set = new Set<string>();
+    const map = new Map<string, number>();
     properties.forEach((p) => {
-      if (p.province) set.add(p.province);
+      // Apply all filters EXCEPT province itself
+      if (!matchesFilters(p, ["province"])) return;
+
+      if (p.province) {
+        map.set(p.province, (map.get(p.province) || 0) + 1);
+      }
     });
-    return Array.from(set).sort();
-  }, [properties]);
 
-  // Shared filter helper
-  const matchesFilters = (p: ApiProperty, excludeFilters: string[] = []) => {
-    // Keyword
-    if (!excludeFilters.includes("keyword") && keyword.trim()) {
-      const k = keyword.toLowerCase();
-      const matchesKeyword =
-        p.title.toLowerCase().includes(k) ||
-        (p.description || "").toLowerCase().includes(k) ||
-        (p.popular_area || "").toLowerCase().includes(k) ||
-        (p.province || "").toLowerCase().includes(k);
-      if (!matchesKeyword) return false;
-    }
-
-    // Province
-    if (!excludeFilters.includes("province") && province !== "ALL") {
-      if (p.province !== province) return false;
-    }
-
-    // Type
-    if (!excludeFilters.includes("type") && type !== "ALL") {
-      if (p.property_type !== type) return false;
-    }
-
-    // Listing Type
-    if (!excludeFilters.includes("listingType") && listingType !== "ALL") {
-      if (listingType === "SALE") {
-        if (p.listing_type !== "SALE" && p.listing_type !== "SALE_AND_RENT")
-          return false;
-      } else if (listingType === "RENT") {
-        if (p.listing_type !== "RENT" && p.listing_type !== "SALE_AND_RENT")
-          return false;
-      } else if (listingType === "SALE_AND_RENT") {
-        if (p.listing_type !== "SALE_AND_RENT") return false;
-      }
-    }
-
-    // Area
-    if (!excludeFilters.includes("area") && area !== "ALL") {
-      if (p.popular_area !== area) return false;
-    }
-
-    // Near Train
-    if (!excludeFilters.includes("nearTrain") && nearTrain) {
-      const txt = (p.title + " " + (p.description || "")).toLowerCase();
-      const isNearTrain =
-        p.near_transit === true ||
-        txt.includes("bts") ||
-        txt.includes("mrt") ||
-        txt.includes("รถไฟฟ้า") ||
-        txt.includes("ใกล้สถานี");
-      if (!isNearTrain) return false;
-    }
-
-    // Pet Friendly
-    if (!excludeFilters.includes("petFriendly") && petFriendly) {
-      if (!p.meta_keywords?.includes("Pet Friendly")) return false;
-    }
-
-    // Fully Furnished
-    if (!excludeFilters.includes("fullyFurnished") && fullyFurnished) {
-      const isFurnished =
-        p.is_fully_furnished === true ||
-        p.meta_keywords?.includes("Fully Furnished");
-      if (!isFurnished) return false;
-    }
-
-    // Bedrooms
-    if (!excludeFilters.includes("bedrooms") && bedrooms !== "ALL") {
-      const beds = p.bedrooms || 0;
-      if (bedrooms === "4+") {
-        if (beds < 4) return false;
-      } else if (beds !== parseInt(bedrooms)) {
-        return false;
-      }
-    }
-
-    // Price Range
-    if (!excludeFilters.includes("price")) {
-      const min = minPrice ? parseFloat(minPrice) : 0;
-      const max = maxPrice ? parseFloat(maxPrice) : Infinity;
-      if (min > 0 || max < Infinity) {
-        const price = p.price || 0;
-        const rent = p.rental_price || 0;
-        const pVal = price > 0 ? price : rent;
-        if (pVal < min || pVal > max) return false;
-      }
-    }
-
-    return true;
-  };
+    return Array.from(map.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count); // Sort by count descending
+  }, [properties, matchesFilters]);
 
   // Compute unique Popular Areas with Counts
   const availableAreas = useMemo(() => {
@@ -238,18 +260,7 @@ export function PropertySearchPage({
         name_cn: val.name_cn,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [
-    properties,
-    province,
-    type,
-    listingType,
-    nearTrain,
-    petFriendly,
-    fullyFurnished,
-    bedrooms,
-    minPrice,
-    maxPrice,
-  ]);
+  }, [properties, matchesFilters]);
 
   // Compute property type counts
   const availableTypes = useMemo(() => {
@@ -264,19 +275,7 @@ export function PropertySearchPage({
       }
     });
     return counts;
-  }, [
-    properties,
-    province,
-    listingType,
-    area,
-    keyword,
-    nearTrain,
-    petFriendly,
-    fullyFurnished,
-    bedrooms,
-    minPrice,
-    maxPrice,
-  ]);
+  }, [properties, matchesFilters]);
 
   const filtered = useMemo(() => {
     let result = properties.filter((p) => matchesFilters(p));
@@ -302,21 +301,7 @@ export function PropertySearchPage({
     });
 
     return result;
-  }, [
-    properties,
-    keyword,
-    type,
-    listingType,
-    minPrice,
-    maxPrice,
-    sort,
-    area,
-    nearTrain,
-    petFriendly,
-    fullyFurnished,
-    bedrooms,
-    province,
-  ]);
+  }, [properties, matchesFilters, sort]);
 
   // Reset page when filters change
   useEffect(() => {

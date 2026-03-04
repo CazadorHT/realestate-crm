@@ -75,7 +75,7 @@ interface SearchFilterBarProps {
   }[];
   province: string;
   setProvince: (v: string) => void;
-  availableProvinces: string[];
+  availableProvinces: { name: string; count: number }[];
   availableTypes: Record<string, number>;
 }
 
@@ -221,18 +221,38 @@ export function SearchFilterBar({
                             )
                             .map((p) => (
                               <button
-                                key={p}
+                                key={p.name}
                                 onClick={() => {
-                                  setProvince(p);
+                                  setProvince(p.name);
                                   setArea("ALL");
                                 }}
-                                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
-                                  province === p
+                                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all flex items-center justify-between gap-3 ${
+                                  province === p.name
                                     ? "bg-blue-600 text-white border-blue-600"
                                     : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
                                 }`}
                               >
-                                {getProvinceName(p, language)}
+                                <div className="flex items-center gap-2">
+                                  <span>
+                                    {getProvinceName(p.name, language)}
+                                  </span>
+                                </div>
+                                  <span
+                                    className={`h-1.5 w-1.5 rounded-full ${
+                                      province === p.name
+                                        ? "bg-white"
+                                        : "bg-emerald-500"
+                                    }`}
+                                  />
+                                <span
+                                  className={`text-[10px] opacity-70 ${
+                                    province === p.name
+                                      ? "text-white"
+                                      : "text-slate-400"
+                                  }`}
+                                >
+                                  ({p.count})
+                                </span>
                               </button>
                             ))}
                           {availableProvinces.length > MOBILE_ITEMS_LIMIT && (
@@ -624,8 +644,16 @@ export function SearchFilterBar({
                     {t("search.all_provinces")}
                   </SelectItem>
                   {availableProvinces.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {getProvinceName(p, language)}
+                    <SelectItem key={p.name} value={p.name}>
+                      <div className="flex items-center justify-between w-full gap-4">
+                        <div className="flex items-center gap-1.5">
+                          <span>{getProvinceName(p.name, language)}</span>
+                        </div>
+                          <span className="h-1 w-1 rounded-full bg-emerald-500" />
+                        <span className="text-[10px] text-slate-400 font-normal">
+                          {p.count}
+                        </span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
