@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { AdminSystemSettings } from "@/components/settings/AdminSystemSettings";
 import { SiteSettingsPanel } from "@/components/settings/SiteSettingsPanel";
 import { SocialAutomationSettings } from "@/components/settings/SocialAutomationSettings";
 import {
@@ -97,23 +98,6 @@ export default async function SettingsPage({
 
         <div className="mt-6">
           <TabsContent value="general" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link href="/protected/profile">
-                <Card className="hover:border-blue-200 transition-colors h-full">
-                  <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-                    <div className="p-2 bg-slate-100 rounded-lg">
-                      <UserCircle className="h-5 w-5 text-slate-600" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base">โปรไฟล์ของคุณ</CardTitle>
-                      <CardDescription className="text-xs">
-                        จัดการข้อมูลส่วนตัวและรหัสผ่าน
-                      </CardDescription>
-                    </div>
-                  </CardHeader>
-                </Card>
-              </Link>
-            </div>
             <SiteSettingsPanel />
           </TabsContent>
 
@@ -438,6 +422,7 @@ export default async function SettingsPage({
           </TabsContent>
 
           <TabsContent value="admin" className="space-y-6">
+            <AdminSystemSettings />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link href="/protected/settings/users">
                 <Card className="hover:border-red-200 transition-colors">

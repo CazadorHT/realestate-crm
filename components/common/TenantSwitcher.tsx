@@ -20,7 +20,7 @@ import {
   User,
   Shield,
 } from "lucide-react";
-import { FaBuilding } from "react-icons/fa";
+import { FaBuilding, FaUser } from "react-icons/fa";
 
 const roleMapping: Record<string, { label: string; color: string; icon: any }> =
   {
@@ -60,29 +60,9 @@ export function TenantSwitcher() {
     isMultiTenantEnabled,
   } = useTenant();
 
-  // If multi-tenant is disabled, show a static branch indicator
+  // If multi-tenant is disabled, hide the switcher entirely
   if (!isMultiTenantEnabled) {
-    const roleInfo = activeTenant?.userRole
-      ? roleMapping[activeTenant.userRole]
-      : null;
-
-    return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl shadow-sm">
-        <FaBuilding className="h-4 w-4 text-slate-400" />
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-700 truncate max-w-[150px]">
-            {activeTenant?.name || "ยังไม่ได้ตั้งชื่อสาขา"}
-          </span>
-        </div>
-          {roleInfo && (
-            <span
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${roleInfo.color}`}
-            >
-              {roleInfo.label}
-            </span>
-          )}
-      </div>
-    );
+    return null;
   }
 
   if (isLoading) {
@@ -100,24 +80,23 @@ export function TenantSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
-          className="h-10 min-w-[200px] justify-between border-slate-200 bg-white hover:bg-slate-50 rounded-xl shadow-sm px-3"
+          className="h-10 min-w-[200px] justify-between border-slate-200 bg-white  hover:bg-slate-100 rounded-xl shadow-sm px-3"
         >
           <div className="flex items-center overflow-hidden gap-2">
-            <Building2 className="h-4 w-4 shrink-0 text-slate-400" />
-            <div className="flex flex-col items-start min-w-0 leading-tight">
-              <span className="truncate text-xs font-bold text-slate-900">
+            <FaUser className="h-4 w-4 shrink-0 text-slate-400" />
+            <div className="flex flex-col items-start min-w-0 leading-tight !">
+              <span className="truncate text-xs font-medium text-slate-900">
                 {activeTenant?.name || "เลือกสาขา"}
               </span>
               {activeTenant?.userRole && (
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                <span className="text-[11px] font-normal text-slate-400 uppercase tracking-tighter">
                   {roleMapping[activeTenant.userRole]?.label ||
                     activeTenant.userRole}
                 </span>
               )}
             </div>
           </div>
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-30" />
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[200px]" align="start">

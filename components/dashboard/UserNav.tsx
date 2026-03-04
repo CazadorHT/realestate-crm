@@ -91,40 +91,48 @@ export function UserNav({ profile }: UserNavProps) {
             </Link>
           </DropdownMenuItem>
 
-          {/* สลับสาขา */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger
-              className="cursor-pointer"
-              disabled={tenants.length <= 1}
-            >
-              <Building2 className="mr-2 h-4 w-4" />
-              <span>สลับสาขา</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="w-56">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">
-                สาขาของคุณ
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {tenants.map((t) => (
-                <DropdownMenuItem
-                  key={t.id}
-                  className="cursor-pointer flex items-center justify-between"
-                  onClick={() => setTenantId(t.id)}
-                >
-                  <span
-                    className={
-                      activeTenant?.id === t.id ? "font-bold text-primary" : ""
-                    }
-                  >
-                    {t.name}
-                  </span>
-                  {activeTenant?.id === t.id && (
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+          {/* สลับสาขา - แสดงเฉพาะเมื่อเปิด Multi-Branch Mode */}
+          {isMultiTenantEnabled && (
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="cursor-pointer">
+                <Building2 className="mr-2 h-4 w-4" />
+                <span>สลับสาขา</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-56">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                  สาขาทั้งหมด ({tenants.length})
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {tenants.map((t) => {
+                  const isActive = activeTenant?.id === t.id;
+                  return (
+                    <DropdownMenuItem
+                      key={t.id}
+                      disabled={isActive}
+                      className="flex items-center justify-between"
+                      onClick={() => !isActive && setTenantId(t.id)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Building2
+                          className={`h-3.5 w-3.5 ${isActive ? "text-primary" : "text-slate-400"}`}
+                        />
+                        <span
+                          className={isActive ? "font-medium text-primary" : ""}
+                        >
+                          {t.name}
+                        </span>
+                      </div>
+                      {isActive && (
+                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                          ปัจจุบัน
+                        </span>
+                      )}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          )}
 
           <DropdownMenuItem className="cursor-pointer" asChild>
             <Link href="/protected/settings">
