@@ -211,7 +211,8 @@ export function ContactAgentDialog({
     if (step === 1) {
       if (!fullName.trim()) {
         toast.error(
-          t("property.contact_dialog.name_required") || "à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¸Šà¸·à¹ˆà¸­",
+          t("property.contact_dialog.name_required") ||
+            "กรุณากรอกชื่อ-นามสกุล",
         );
         return;
       }
@@ -219,7 +220,8 @@ export function ContactAgentDialog({
     } else if (step === 2) {
       if (!phone.trim()) {
         toast.error(
-          t("property.contact_dialog.phone_required") || "à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¹€à¸šà¸­à¸£à¹Œà¹‚à¸—à¸£",
+          t("property.contact_dialog.phone_required") ||
+            "กรุณากรอกเบอร์โทรศัพท์",
         );
         return;
       }
@@ -578,7 +580,7 @@ export function ContactAgentDialog({
             </h2>
             {displayTitle && (
               <p className="text-xs text-slate-400 line-clamp-1 mt-1 font-normal">
-                âš¡ {displayTitle}
+                ⚡ {displayTitle}
               </p>
             )}
           </div>
@@ -707,4 +709,3 @@ export function ContactAgentDialog({
     </Dialog>
   );
 }
-

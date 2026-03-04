@@ -14,7 +14,10 @@ import {
   getOfficePrice,
   getTypeColor,
 } from "@/lib/property-utils";
-import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
+import {
+  useLanguage,
+  dictionaries,
+} from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { useAddressLocalization } from "@/hooks/useAddressLocalization";
@@ -181,7 +184,7 @@ export function PropertyHeader({
       ...features
         .filter(
           (f) =>
-            f.category === "à¸„à¸¸à¸“à¸ªà¸¡à¸šà¸±à¸•à¸´à¸žà¸´à¹€à¸¨à¸©" ||
+            f.category === "คุณสมบัติพิเศษ" ||
             f.category === "Special Features",
         )
         .map((f) => ({
@@ -191,7 +194,7 @@ export function PropertyHeader({
       ...features
         .filter(
           (f) =>
-            f.category !== "à¸„à¸¸à¸“à¸ªà¸¡à¸šà¸±à¸•à¸´à¸žà¸´à¹€à¸¨à¸©" &&
+            f.category !== "คุณสมบัติพิเศษ" &&
             f.category !== "Special Features",
         )
         .map((f) => ({
@@ -305,7 +308,7 @@ export function PropertyHeader({
         </div>
         {officePrice?.isCalculated && (
           <span className="text-[10px] text-slate-400 font-medium">
-            (à¸¿ {officePrice.sqmPrice?.toLocaleString()} / {t("common.sqm")})
+            (฿ {officePrice.sqmPrice?.toLocaleString()} / {t("common.sqm")})
           </span>
         )}
       </div>
@@ -406,7 +409,7 @@ export function PropertyHeader({
                       variant="outline"
                       className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm whitespace-nowrap"
                     >
-                      âœ¨ {t("property.specs.fully_furnished")}
+                      ✨ {t("property.specs.fully_furnished")}
                     </Badge>
                   )}
 
@@ -415,7 +418,7 @@ export function PropertyHeader({
                       variant="outline"
                       className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
                     >
-                      ðŸ—ï¸ {t("property.specs.bare_shell")}
+                     🏗️ {t("property.specs.bare_shell")}
                     </Badge>
                   )}
                 </div>
@@ -578,5 +581,3 @@ export function PropertyHeader({
     </div>
   );
 }
-
-

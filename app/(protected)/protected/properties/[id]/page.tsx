@@ -34,6 +34,7 @@ import { BsStars } from "react-icons/bs";
 import { FacebookPostButton } from "@/features/properties/components/FacebookPostButton";
 import { InstagramPostButton } from "@/features/properties/components/InstagramPostButton";
 import { TikTokPostButton } from "@/features/properties/components/TikTokPostButton";
+import { QuickShareButton } from "@/features/properties/components/QuickShareButton";
 
 export default async function PropertyDetailsPage({
   params,
@@ -245,7 +246,18 @@ export default async function PropertyDetailsPage({
           </Button>
         </div>
       </div>
-      <div className="lg:gap-4 flex items-end justify-end px-4 sm:px-6 lg:px-8 border-t pt-4 border-slate-100">
+      <div className="lg:gap-4 flex items-center justify-end px-4 sm:px-6 lg:px-8 border-t pt-4 border-slate-100 gap-2 flex-wrap">
+        <QuickShareButton
+          property={
+            {
+              ...property,
+              cover_image_url:
+                images.find((img) => img.is_cover)?.image_url ||
+                images[0]?.image_url,
+            } as any
+          }
+          className="flex-1 lg:flex-none h-10 px-6"
+        />
         <FacebookPostButton
           propertyId={property.id}
           variant="outline"

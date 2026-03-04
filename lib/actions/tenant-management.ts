@@ -9,11 +9,11 @@ import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
 
 const createTenantSchema = z.object({
-  name: z.string().min(2, "à¸Šà¸·à¹ˆà¸­à¸ªà¸²à¸‚à¸²à¸•à¹‰à¸­à¸‡à¸¡à¸µà¸­à¸¢à¹ˆà¸²à¸‡à¸™à¹‰à¸­à¸¢ 2 à¸•à¸±à¸§à¸­à¸±à¸à¸©à¸£"),
+  name: z.string().min(2, "ชื่อสาขาต้องมีอย่างน้อย 2 ตัวอักษร"),
   slug: z
     .string()
-    .min(2, "Slug à¸•à¹‰à¸­à¸‡à¸¡à¸µà¸­à¸¢à¹ˆà¸²à¸‡à¸™à¹‰à¸­à¸¢ 2 à¸•à¸±à¸§à¸­à¸±à¸à¸©à¸£")
-    .regex(/^[a-z0-h-]+$/, "Slug à¸•à¹‰à¸­à¸‡à¹€à¸›à¹‡à¸™à¸ à¸²à¸©à¸²à¸­à¸±à¸‡à¸à¸¤à¸©à¸•à¸±à¸§à¹€à¸¥à¹‡à¸à¹à¸¥à¸°à¸‚à¸µà¸”à¸à¸¥à¸²à¸‡à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™"),
+    .min(2, "Slug ต้องมีอย่างน้อย 2 ตัวอักษร")
+    .regex(/^[a-z0-h-]+$/, "Slug ต้องเป็นภาษาอังกฤษตัวเล็กและขีดกลางเท่านั้น"),
 });
 
 export async function getTenantCountAction() {
@@ -234,7 +234,7 @@ export async function getTenantMembersAction(tenantId: string) {
 
 const addMemberSchema = z.object({
   tenantId: z.string().uuid(),
-  email: z.string().email("à¸­à¸µà¹€à¸¡à¸¥à¹„à¸¡à¹ˆà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡"),
+  email: z.string().email("อีเมลไม่ถูกต้อง"),
   role: z.enum(["OWNER", "ADMIN", "MANAGER", "AGENT", "VIEWER"]),
 });
 
@@ -256,7 +256,7 @@ export async function addTenantMemberAction(
 
   if (pError || !profile) {
     return {
-      error: "à¹„à¸¡à¹ˆà¸žà¸šà¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¸‡à¸²à¸™à¸£à¸²à¸¢à¸™à¸µà¹‰à¹ƒà¸™à¸£à¸°à¸šà¸š (à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¸‡à¸²à¸™à¸•à¹‰à¸­à¸‡à¸ªà¸¡à¸±à¸„à¸£à¸ªà¸¡à¸²à¸Šà¸´à¸à¸à¹ˆà¸­à¸™)",
+      error: "ไม่พบผู้ใช้งานรายนี้ในระบบ (ผู้ใช้งานต้องสมัครสมาชิกก่อน)",
     };
   }
 
@@ -376,7 +376,7 @@ export async function transferTenantMemberAction(
 
 const inviteSchema = z.object({
   tenantId: z.string().uuid(),
-  email: z.string().email("à¸­à¸µà¹€à¸¡à¸¥à¹„à¸¡à¹ˆà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡"),
+  email: z.string().email("อีเมลไม่ถูกต้อง"),
   role: z.enum(["ADMIN", "MANAGER", "AGENT", "VIEWER"]),
 });
 
@@ -436,8 +436,8 @@ export async function createTenantInvitationAction(
         userId: profile.id,
         tenantId: validated.tenantId,
         type: "BRANCH_INVITE",
-        title: "à¸„à¸³à¹€à¸Šà¸´à¸à¹€à¸‚à¹‰à¸²à¸£à¹ˆà¸§à¸¡à¸ªà¸²à¸‚à¸²à¹ƒà¸«à¸¡à¹ˆ",
-        message: `à¸„à¸¸à¸“à¹„à¸”à¹‰à¸£à¸±à¸šà¸„à¸³à¹€à¸Šà¸´à¸à¹ƒà¸«à¹‰à¹€à¸‚à¹‰à¸²à¸£à¹ˆà¸§à¸¡à¸ªà¸²à¸‚à¸² "${tenant?.name || "à¹ƒà¸«à¸¡à¹ˆ"}" à¹ƒà¸™à¸šà¸—à¸šà¸²à¸— ${validated.role}`,
+        title: "คำเชิญเข้าร่วมสาขาใหม่",
+        message: `คุณได้รับคำเชิญให้เข้าร่วมสาขา "${tenant?.name || "ใหม่"}" ในบทบาท ${validated.role}`,
         link: "/protected/settings/branches", // Link to where Ð¾Ð½Ð¸ can accept/see invitations
       });
     }
@@ -479,7 +479,7 @@ export async function cancelTenantInvitationAction(invitationId: string) {
     .single();
 
   if (fetchError || !inv) {
-    return { error: "à¹„à¸¡à¹ˆà¸žà¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸„à¸³à¹€à¸Šà¸´à¸" };
+    return { error: "ไม่พบข้อมูลคำเชิญ" };
   }
 
   const { error } = await adminSupabase

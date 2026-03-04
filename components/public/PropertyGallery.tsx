@@ -22,7 +22,10 @@ import {
 } from "lucide-react";
 import { IoShieldCheckmark } from "react-icons/io5";
 import { cn } from "@/lib/utils";
-import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
+import {
+  useLanguage,
+  dictionaries,
+} from "@/components/providers/LanguageProvider";
 import { PropertyImage } from "@/features/properties/types";
 
 interface PropertyGalleryProps {
@@ -398,11 +401,11 @@ export function PropertyGallery({
         >
           <VisuallyHidden>
             <DialogTitle>
-              à¸£à¸¹à¸›à¸ à¸²à¸ž: {title} ({currentIndex + 1}/{sortedImages.length})
+              รูปภาพ: {title} ({currentIndex + 1}/{sortedImages.length})
             </DialogTitle>
             <DialogDescription>
-              à¸£à¸¹à¸›à¸ à¸²à¸žà¸—à¸µà¹ˆ {currentIndex + 1} à¸ˆà¸²à¸à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” {sortedImages.length}{" "}
-              à¸£à¸¹à¸›à¸‚à¸­à¸‡ {title}
+              รูปภาพที่ {currentIndex + 1} จากทั้งหมด {sortedImages.length}{" "}
+              รูปของ {title}
             </DialogDescription>
           </VisuallyHidden>
 
@@ -541,5 +544,3 @@ export function PropertyGallery({
     </>
   );
 }
-
-

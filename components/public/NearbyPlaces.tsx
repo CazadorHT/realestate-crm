@@ -127,7 +127,7 @@ export function NearbyPlaces({
         {t("property.nearby_places")}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Nearby Places Categories (Transport = à¸—à¸²à¸‡à¸”à¹ˆà¸§à¸™) */}
+        {/* Nearby Places Categories (Transport = ทางด่วน) */}
         {categories.map((catKey) => {
           const items = grouped[catKey];
           const Icon = ICON_MAP[catKey] || Map;
@@ -180,7 +180,7 @@ export function NearbyPlaces({
           );
         })}
 
-        {/* Transit - Single card called "à¸£à¸–à¹„à¸Ÿà¸Ÿà¹‰à¸²" */}
+        {/* Transit - Single card called "รถไฟฟ้า" */}
         {transits.length > 0 && (
           <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 group hover:bg-white hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/40 transition-all duration-500 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-bl from-blue-100/40 via-blue-50/20 to-transparent rounded-bl-full z-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out transform translate-x-4 -translate-y-4 group-hover:translate-x-0 group-hover:translate-y-0" />
