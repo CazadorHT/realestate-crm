@@ -9,6 +9,7 @@ import { readFavoriteIds } from "@/lib/favorite-store";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +32,8 @@ export function PublicNav() {
 
   // Hook for translation
   const { language, setLanguage, t } = useLanguage();
+  const settings = useSiteConfig();
+  const siteName = settings.site_name || siteConfig.name;
 
   useEffect(() => {
     // Initial load
@@ -142,8 +145,8 @@ export function PublicNav() {
                   className="hover:scale-105 transition-transform block"
                 >
                   <Image
-                    src={siteConfig.logo}
-                    alt={`${siteConfig.name} Logo`}
+                    src={settings.logo_dark || siteConfig.logo}
+                    alt={`${siteName} Logo`}
                     width={220}
                     height={70}
                     className="h-16 w-auto"

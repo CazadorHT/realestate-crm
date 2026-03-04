@@ -5,6 +5,7 @@ import { DialogTitle } from "@/components/ui/dialog";
 import { UseFormReturn } from "react-hook-form";
 import { DepositLeadInput } from "@/features/public/types";
 import { siteConfig } from "@/lib/site-config";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
@@ -33,6 +34,9 @@ export function DepositDesktopView({
   onSubmit: (values: DepositLeadInput) => Promise<void>;
 }) {
   const { t } = useLanguage();
+  const settings = useSiteConfig();
+  const siteName = settings.site_name || siteConfig.name;
+  const companyName = settings.company_name || siteConfig.company;
 
   return (
     <div className="hidden sm:flex sm:flex-row h-full min-h-[500px]">
@@ -55,7 +59,7 @@ export function DepositDesktopView({
             <div className="relative z-10 w-16 h-16 flex items-center justify-center overflow-hidden">
               <Image
                 src={siteConfig.logoDark}
-                alt={siteConfig.name}
+                alt={siteName}
                 width={80}
                 height={80}
                 className="object-contain"
@@ -129,7 +133,7 @@ export function DepositDesktopView({
         {/* Footer info */}
         <div className="relative z-10 pt-6 border-t border-white/10">
           <p className="text-[10px] text-blue-200/40 text-center uppercase tracking-widest font-bold">
-            {siteConfig.company}
+            {companyName}
           </p>
         </div>
       </div>

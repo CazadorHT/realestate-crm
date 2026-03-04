@@ -46,6 +46,7 @@ import {
 } from "@/features/dashboard/queries";
 import { TopAgents } from "@/components/dashboard/TopAgents";
 import { SetupChecklist } from "@/components/dashboard/SetupChecklist";
+import { ProactiveSetupTrigger } from "@/components/dashboard/ProactiveSetupTrigger";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { isStaff } from "@/lib/authz";
 import { getCalendarEvents } from "@/features/calendar/queries";
@@ -116,6 +117,11 @@ export default async function DashboardPage() {
       <DashboardHeader email={user?.email} name={profile?.full_name} />
 
       <SystemStatus />
+
+      <ProactiveSetupTrigger
+        branchCount={setupProgress.branchCount}
+        role={profile?.role}
+      />
 
       <SetupChecklist progress={setupProgress} />
 

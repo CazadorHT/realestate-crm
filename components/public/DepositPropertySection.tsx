@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import { DepositWizard } from "./deposit/DepositWizard";
 
-export function DepositPropertySection() {
+export function DepositPropertySection({ className }: { className?: string }) {
   const { t } = useLanguage();
+  const settings = useSiteConfig();
+  const siteName = settings.site_name || siteConfig.name;
   const [isSuccess, setIsSuccess] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -18,11 +21,11 @@ export function DepositPropertySection() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Service",
-    name: t("deposit.subtitle"),
+    name: siteName,
     description: t("deposit.description"),
     provider: {
       "@type": "RealEstateAgent",
-      name: siteConfig.name,
+      name: siteName,
     },
     areaServed: "Thailand",
     availableChannel: {

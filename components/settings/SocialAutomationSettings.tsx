@@ -26,9 +26,9 @@ import { toast } from "sonner";
 import {
   getSiteSettings,
   updateSiteSetting,
-  SocialKeyword,
   generateSocialAutomationTemplatesAction,
 } from "@/features/site-settings/actions";
+import { SocialKeyword } from "@/features/site-settings/schema";
 import { Badge } from "@/components/ui/badge";
 
 export function SocialAutomationSettings() {

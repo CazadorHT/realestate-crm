@@ -32,8 +32,8 @@ import {
 import {
   getSiteSettings,
   updateSiteSettings,
-  SiteSettings,
 } from "@/features/site-settings/actions";
+import { SiteSettings } from "@/features/site-settings/schema";
 import { cn } from "@/lib/utils";
 
 export function SiteSettingsPanel() {
@@ -45,6 +45,21 @@ export function SiteSettingsPanel() {
     isolation_leads_enabled: false,
     isolation_deals_enabled: false,
     social_automation_keywords: [],
+    site_name: "",
+    company_name: "",
+    site_description: "",
+    contact_phone: "",
+    contact_email: "",
+    contact_address: "",
+    google_maps_url: "",
+    facebook_url: "",
+    instagram_url: "",
+    line_url: "",
+    tiktok_url: "",
+    line_id: "",
+    logo_light: "",
+    logo_dark: "",
+    favicon: "",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
@@ -177,7 +192,9 @@ export function SiteSettingsPanel() {
           </div>
         </div>
         <div className="flex flex-2 items-center gap-3">
-          <p className="text-xs text-slate-500 leading-relaxed ">{description}</p>
+          <p className="text-xs text-slate-500 leading-relaxed ">
+            {description}
+          </p>
           <Switch
             id={id}
             checked={isEnabled}

@@ -2,34 +2,13 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-
-export type SiteSettingKey =
-  | "smart_match_wizard_enabled"
-  | "chatbot_enabled"
-  | "floating_contact_enabled"
-  | "isolation_properties_enabled"
-  | "isolation_leads_enabled"
-  | "isolation_deals_enabled"
-  | "social_automation_keywords"
-  | "social_post_template";
-
-export interface SocialKeyword {
-  keyword: string;
-  dm_content: string;
-  public_reply?: string;
-  enabled?: boolean;
-}
-
-export interface SiteSettings {
-  smart_match_wizard_enabled: boolean;
-  chatbot_enabled: boolean;
-  floating_contact_enabled: boolean;
-  isolation_properties_enabled: boolean;
-  isolation_leads_enabled: boolean;
-  isolation_deals_enabled: boolean;
-  social_automation_keywords: SocialKeyword[];
-  social_post_template?: string;
-}
+import { z } from "zod";
+import {
+  SiteSettingKey,
+  SocialKeyword,
+  SiteSettings,
+  siteSettingsSchema,
+} from "./schema";
 
 const DEFAULT_SETTINGS: SiteSettings = {
   smart_match_wizard_enabled: true,
@@ -40,7 +19,35 @@ const DEFAULT_SETTINGS: SiteSettings = {
   isolation_deals_enabled: false,
   social_automation_keywords: [],
   social_post_template: `🏠 {{title}}\n💰 {{price}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`,
+  site_name: "VC Connect Asset",
+  company_name: "VC Connect Asset Co., Ltd.",
+  site_description: "Real Estate CRM & Listing Portal",
+  contact_phone: "0XX-XXX-XXXX",
+  contact_email: "vcconnect.asset@gmail.com",
+  contact_address: "ที่ตั้งออฟฟิศของคุณ...",
+  google_maps_url: "",
+  facebook_url: "https://facebook.com/vcconnectasset",
+  instagram_url: "https://instagram.com/vcconnectasset",
+  line_url: "https://line.me/ti/p/@811slazm",
+  tiktok_url: "https://tiktok.com/@vcconnectasset",
+  line_id: "@vcconnectasset",
+  logo_light: "/images/v-link-svg-png-logo.svg",
+  logo_dark: "/images/v-link-svg-png-dark.svg",
+  favicon: "/favicon.ico",
+  onboarding_line_skipped: false,
+  onboarding_staff_skipped: false,
 };
+
+/**
+ * Action to skip an onboarding step
+ */
+export async function skipOnboardingStepAction(
+  step: "line" | "staff",
+): Promise<{ success: boolean; message?: string }> {
+  const key: SiteSettingKey =
+    step === "line" ? "onboarding_line_skipped" : "onboarding_staff_skipped";
+  return updateSiteSetting(key, true);
+}
 
 /**
  * Get all site settings
@@ -67,7 +74,24 @@ export async function getSiteSettings(): Promise<SiteSettings> {
           (settings as any)[key] = Array.isArray(row.value)
             ? (row.value as any)
             : [];
-        } else if (key === "social_post_template") {
+        } else if (
+          key === "social_post_template" ||
+          key === "site_name" ||
+          key === "company_name" ||
+          key === "site_description" ||
+          key === "contact_phone" ||
+          key === "contact_email" ||
+          key === "contact_address" ||
+          key === "google_maps_url" ||
+          key === "facebook_url" ||
+          key === "instagram_url" ||
+          key === "line_url" ||
+          key === "tiktok_url" ||
+          key === "line_id" ||
+          key === "logo_light" ||
+          key === "logo_dark" ||
+          key === "favicon"
+        ) {
           (settings as any)[key] =
             typeof row.value === "string" ? row.value : (settings as any)[key];
         } else {
@@ -128,6 +152,30 @@ export async function updateSiteSetting(
   try {
     const supabase = await createClient();
 
+    // Basic validation for single key update if it's part of branding
+    if (
+      [
+        "contact_email",
+        "google_maps_url",
+        "facebook_url",
+        "instagram_url",
+        "line_url",
+        "tiktok_url",
+        "logo_light",
+        "logo_dark",
+        "favicon",
+      ].includes(key)
+    ) {
+      const partialSchema = siteSettingsSchema.partial();
+      const result = partialSchema.safeParse({ [key]: value });
+      if (!result.success) {
+        return {
+          success: false,
+          message: result.error.issues[0]?.message || "ข้อมูลไม่ถูกต้อง",
+        };
+      }
+    }
+
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData?.user?.id;
 
@@ -164,6 +212,15 @@ export async function updateSiteSettings(
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const supabase = await createClient();
+
+    // Validation
+    const result = siteSettingsSchema.partial().safeParse(settings);
+    if (!result.success) {
+      return {
+        success: false,
+        message: result.error.issues[0]?.message || "ข้อมูลไม่ถูกต้อง",
+      };
+    }
 
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData?.user?.id;
@@ -269,5 +326,38 @@ export async function generateSocialAutomationTemplatesAction(
       success: false,
       message: "ไม่สามารถสร้างข้อความด้วย AI ได้ในขณะนี้",
     };
+  }
+}
+
+/**
+ * Action to upload site assets (logos, favicon)
+ */
+export async function uploadSiteAssetAction(
+  formData: FormData,
+  folder: string = "branding",
+): Promise<{
+  success: boolean;
+  message: string;
+  data?: { publicUrl: string };
+}> {
+  try {
+    const { getCurrentProfile } =
+      await import("@/lib/supabase/getCurrentProfile");
+    const user = await getCurrentProfile();
+
+    if (!user || !["ADMIN", "MANAGER"].includes(user.role)) {
+      return { success: false, message: "Unauthorized" };
+    }
+
+    const file = formData.get("file") as File | null;
+    if (!file) return { success: false, message: "No file provided" };
+
+    const { uploadSiteAsset } = await import("./storage");
+    const result = await uploadSiteAsset(file, file.name, file.type, folder);
+
+    return result;
+  } catch (error) {
+    console.error("Error in uploadSiteAssetAction:", error);
+    return { success: false, message: "Internal server error" };
   }
 }

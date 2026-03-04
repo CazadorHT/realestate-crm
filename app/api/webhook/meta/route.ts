@@ -9,10 +9,8 @@ import {
   sendMetaCarousel,
 } from "@/lib/meta";
 import { saveOmniMessage } from "@/lib/line"; // reuse same util since it's generic enough
-import {
-  getSiteSettings,
-  SocialKeyword,
-} from "@/features/site-settings/actions";
+import { getSiteSettings } from "@/features/site-settings/actions";
+import { SocialKeyword } from "@/features/site-settings/schema";
 import { z } from "zod";
 import { MetaPlatform, MetaWebhookBody } from "@/types/meta";
 

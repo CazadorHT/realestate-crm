@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { AdminSystemSettings } from "@/components/settings/AdminSystemSettings";
 import { SiteSettingsPanel } from "@/components/settings/SiteSettingsPanel";
+import { SiteConfigPanel } from "@/components/settings/SiteConfigPanel";
 import { SocialAutomationSettings } from "@/components/settings/SocialAutomationSettings";
 import {
   Settings,
@@ -78,7 +79,7 @@ export default async function SettingsPage({
     !!process.env.LINE_CHANNEL_ACCESS_TOKEN || (lineProfilesCount || 0) > 0;
 
   return (
-    <div className="space-y-6 max-w-7xl pb-10">
+    <div className="space-y-6 max-w-screen-2xl pb-10">
       <SuccessAnimation />
       {/* Page Header */}
       <div className="flex items-center gap-4">
@@ -99,6 +100,10 @@ export default async function SettingsPage({
         <div className="mt-6">
           <TabsContent value="general" className="space-y-6">
             <SiteSettingsPanel />
+          </TabsContent>
+
+          <TabsContent value="branding" className="space-y-6">
+            <SiteConfigPanel />
           </TabsContent>
 
           <TabsContent value="social" className="space-y-6">

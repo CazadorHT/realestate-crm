@@ -12,9 +12,13 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 
 export function FloatingContactDial() {
   const { t } = useLanguage();
+  const settings = useSiteConfig();
+  const siteName = settings.site_name || siteConfig.name;
+
   const [isVisible, setIsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isPhoneListOpen, setIsPhoneListOpen] = useState(false);
@@ -53,7 +57,9 @@ export function FloatingContactDial() {
               id: "default",
               phone: "093-550-2143",
               agentName: t("common.floating.agent_fallback", {
-                name: siteConfig.name,
+                name: siteName,
+                telephone: settings.contact_phone || siteConfig.contact.phone,
+                url: siteConfig.url,
               }),
             },
           ]);
@@ -64,7 +70,7 @@ export function FloatingContactDial() {
     }
 
     fetchContactInfo();
-  }, [t]);
+  }, [t, settings.contact_phone]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -140,7 +146,7 @@ export function FloatingContactDial() {
                 {agent.phone &&
                   (revealedAgentId === agent.id ? (
                     <a
-                      href={`tel:${agent.phone}`}
+                      href={`tel:${settings.contact_phone || siteConfig.contact.phone}`}
                       className="block group"
                       onClick={() => setIsOpen(false)}
                     >

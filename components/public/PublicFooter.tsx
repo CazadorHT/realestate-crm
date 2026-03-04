@@ -8,23 +8,33 @@ import { useState, useTransition, Suspense } from "react";
 import { subscribeToLineAction } from "@/features/leads/public-actions";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 
 export function PublicFooter() {
   const { t } = useLanguage();
+  const settings = useSiteConfig();
   const currentYear = new Date().getFullYear();
+
+  const siteName = settings.site_name || siteConfig.name;
+  const companyName = settings.company_name || siteConfig.company;
+  const contactPhone = settings.contact_phone || siteConfig.contact.phone;
+  const contactEmail = settings.contact_email || siteConfig.contact.email;
+  const contactAddress = settings.contact_address || siteConfig.contact.address;
+  const googleMapsUrl = settings.google_maps_url || siteConfig.googleMapsUrl;
+
   const companyMeta = {
-    name_th: siteConfig.name,
+    name_th: siteName,
   };
 
   // Schema.org Organization for SEO
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    name: siteConfig.name,
-    description: t("footer.company_desc"),
+    name: siteName,
+    description: settings.site_description || t("footer.company_desc"),
     url: siteConfig.url,
-    telephone: siteConfig.contact.phone,
-    email: siteConfig.contact.email,
+    telephone: contactPhone,
+    email: contactEmail,
     address: {
       "@type": "PostalAddress",
       addressCountry: "TH",
@@ -32,9 +42,10 @@ export function PublicFooter() {
       addressRegion: "Bangkok",
     },
     sameAs: [
-      siteConfig.links.facebook,
-      siteConfig.links.instagram,
-      siteConfig.links.line,
+      settings.facebook_url || siteConfig.links.facebook,
+      settings.instagram_url || siteConfig.links.instagram,
+      settings.line_url || siteConfig.links.line,
+      settings.tiktok_url || siteConfig.links.tiktok,
     ],
     areaServed: {
       "@type": "Country",
@@ -124,8 +135,8 @@ export function PublicFooter() {
                   className="block w-48 transition-opacity hover:opacity-90"
                 >
                   <Image
-                    src={siteConfig.logoDark}
-                    alt={`${siteConfig.name} Logo`}
+                    src={settings.logo_light || siteConfig.logoDark}
+                    alt={`${siteName} Logo`}
                     width={180}
                     height={60}
                     className="w-auto h-26"
@@ -144,7 +155,7 @@ export function PublicFooter() {
                     <Phone className="w-4 h-4 text-blue-400" />
                   </div>
                   <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
-                    {siteConfig.contact.phone}
+                    {contactPhone}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 group cursor-pointer transition-colors">
@@ -152,11 +163,11 @@ export function PublicFooter() {
                     <Mail className="w-4 h-4 text-blue-400" />
                   </div>
                   <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
-                    {siteConfig.contact.email}
+                    {contactEmail}
                   </span>
                 </div>
                 <a
-                  href={siteConfig.googleMapsUrl}
+                  href={googleMapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-start gap-3 group cursor-pointer transition-colors"
@@ -165,7 +176,7 @@ export function PublicFooter() {
                     <MapPin className="w-4 h-4 text-blue-400" />
                   </div>
                   <span className="text-sm text-slate-300 leading-snug group-hover:text-white transition-colors pt-2">
-                    {siteConfig.contact.address}
+                    {contactAddress}
                   </span>
                 </a>
               </div>
@@ -228,11 +239,21 @@ export function PublicFooter() {
                     <a
                       key={social.name}
                       href={
+                        (social.name === "Facebook"
+                          ? settings.facebook_url
+                          : social.name === "Instagram"
+                            ? settings.instagram_url
+                            : social.name === "Line @"
+                              ? settings.line_url
+                              : social.name === "TikTok"
+                                ? settings.tiktok_url
+                                : "") ||
                         siteConfig.links[
                           social.name
                             .toLowerCase()
                             .split(" ")[0] as keyof typeof siteConfig.links
-                        ] || "#"
+                        ] ||
+                        "#"
                       }
                       className={`w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:border-slate-600 ${social.color}`}
                       aria-label={social.name}

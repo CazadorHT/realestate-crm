@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 
 type Partner = {
   id: string;
@@ -15,6 +16,8 @@ type Partner = {
 
 export function PartnerSection() {
   const { t } = useLanguage();
+  const settings = useSiteConfig();
+  const siteName = settings.site_name || siteConfig.name;
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +50,8 @@ export function PartnerSection() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: siteConfig.name,
+    name: siteName,
+    url: siteConfig.url,
     description: t("home.partners.description"),
     hasCredential: {
       "@type": "EducationalOccupationalCredential",

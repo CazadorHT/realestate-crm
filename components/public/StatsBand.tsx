@@ -3,9 +3,12 @@
 import { Building2, Users2, Trophy, Headset } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 
 export function StatsBand() {
   const { t } = useLanguage();
+  const settings = useSiteConfig();
+  const siteName = settings.site_name || siteConfig.name;
   const stats = [
     {
       icon: <Building2 className="w-6 h-6" />,
@@ -37,7 +40,7 @@ export function StatsBand() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    name: siteConfig.name,
+    name: siteName,
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: "4.9",

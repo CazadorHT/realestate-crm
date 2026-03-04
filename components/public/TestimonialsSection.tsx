@@ -4,9 +4,12 @@ import { Star, Quote, CheckCircle2, Award } from "lucide-react";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 
 export function TestimonialsSection() {
   const { t } = useLanguage();
+  const settings = useSiteConfig();
+  const siteName = settings.site_name || siteConfig.name;
 
   const TESTIMONIALS = [
     {
@@ -45,7 +48,8 @@ export function TestimonialsSection() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: siteConfig.name,
+    name: siteName,
+    url: siteConfig.url,
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: "5.0",
