@@ -18,12 +18,14 @@ import {
   Facebook,
   CheckCircle,
   Building2,
+  Calculator,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { IntegrationDisconnectButton } from "@/components/settings/IntegrationDisconnectButton";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import { SettingsTabs } from "@/components/settings/SettingsTabs";
+import { CommissionSettings } from "@/features/dashboard/components/CommissionSettings";
 import {
   Card,
   CardHeader,
@@ -493,6 +495,10 @@ export default async function SettingsPage({
                 </Card>
               </Link>
             </div>
+          </TabsContent>
+
+          <TabsContent value="commission" className="space-y-6">
+            <CommissionSettings />
           </TabsContent>
         </div>
       </Tabs>

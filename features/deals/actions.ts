@@ -14,6 +14,8 @@ import {
   UpdateDealInput,
 } from "./schema";
 import { logAudit } from "@/lib/audit";
+import { getCommissionRulesAction } from "../dashboard/actions/commission-actions";
+import { calculateAdvancedSplit } from "@/lib/finance/commissions";
 
 // Helper: Adjust property stock and auto-update status
 async function adjustPropertyStock(
@@ -371,6 +373,105 @@ export async function deleteDealAction(dealId: string, leadId: string) {
 
     return { success: true };
   } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+}
+
+export async function calculateAndSaveCommissionsAction(dealId: string) {
+  try {
+    const { supabase, user, role, tenantId } = await requireAuthContext();
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
+
+    assertStaff(role);
+
+    // 1. Fetch Deal and Property
+    const { data: deal, error: dealErr } = await supabase
+      .from("deals")
+      .select(
+        `
+        *,
+        property:properties (
+          id,
+          assigned_to
+        )
+      `,
+      )
+      .eq("id", dealId)
+      .eq("tenant_id", tenantId)
+      .single();
+
+    if (dealErr || !deal) throw new Error("ไม่พบข้อมูลดีล");
+
+    // 2. Get Global Rules
+    const rulesRes = await getCommissionRulesAction();
+    if (!rulesRes.success || !rulesRes.data) {
+      throw new Error(
+        rulesRes.message || "ไม่สามารถโหลดการตั้งค่าคอมมิชชั่นได้",
+      );
+    }
+    const rules = rulesRes.data;
+
+    // 3. Simple or Advanced Split
+    let splits: any[] = [];
+
+    if (rules.enableAdvancedSplit) {
+      splits = calculateAdvancedSplit(
+        deal.commission_amount || 0,
+        {
+          listingPercent: rules.defaultListingPercent ?? 30,
+          closingPercent: rules.defaultClosingPercent ?? 50,
+          agencyPercent: rules.defaultAgencyPercent ?? 20,
+          teamPoolPercent: rules.defaultTeamPoolPercent ?? 2,
+          enableTeamPool: rules.enableTeamPoolByDefault ?? false,
+        },
+        {
+          listingAgentId: (deal.property as any)?.assigned_to || undefined,
+          closingAgentId: deal.created_by || undefined,
+        },
+      );
+    } else {
+      // Simple Split: 100% to AGENCY if advanced split is disabled
+      splits = [
+        {
+          role: "AGENCY",
+          percentage: 100,
+          amount: deal.commission_amount || 0,
+          whtAmount: 0,
+          netAmount: deal.commission_amount || 0,
+        },
+      ];
+    }
+
+    // 4. Save to deal_commissions
+    // First clear existing
+    await (supabase as any)
+      .from("deal_commissions")
+      .delete()
+      .eq("deal_id", dealId)
+      .eq("tenant_id", tenantId);
+
+    const insertData = splits.map((s) => ({
+      deal_id: dealId,
+      agent_id: s.agentId ?? null,
+      role: s.role,
+      percentage: s.percentage,
+      amount: s.amount,
+      wht_amount: s.whtAmount,
+      net_amount: s.netAmount,
+      tenant_id: tenantId,
+      status: "PENDING",
+    }));
+
+    const { error: insertErr } = await (supabase as any)
+      .from("deal_commissions")
+      .insert(insertData);
+
+    if (insertErr) throw new Error(insertErr.message);
+
+    revalidatePath("/protected/deals/[id]"); // Update specifically if in detail view
+    return { success: true };
+  } catch (error: any) {
+    console.error("Calculate Commissions Error:", error);
     return { success: false, message: error.message };
   }
 }

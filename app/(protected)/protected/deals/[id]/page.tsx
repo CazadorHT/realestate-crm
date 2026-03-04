@@ -10,7 +10,7 @@ import {
 } from "react-icons/ri";
 
 import { getPropertiesForSelect } from "@/features/properties/queries";
-import { getDealById } from "@/features/deals/queries";
+import { getDealById, getDealCommissions } from "@/features/deals/queries";
 import { Button } from "@/components/ui/button";
 import { DealFormDialog } from "@/features/deals/components/DealFormDialog";
 import { DocumentSection } from "@/features/documents/components/DocumentSection";
@@ -32,6 +32,7 @@ interface PageProps {
 export default async function DealDetailPage({ params }: PageProps) {
   const { id } = await params;
   const deal = await getDealById(id);
+  const commissions = await getDealCommissions(id);
   const properties = await getPropertiesForSelect();
 
   if (!deal) {
@@ -124,7 +125,11 @@ export default async function DealDetailPage({ params }: PageProps) {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column - Deal Info */}
         <div className="lg:col-span-2 space-y-6">
-          <DealFinancials deal={deal} isRent={isRent} />
+          <DealFinancials
+            deal={deal}
+            isRent={isRent}
+            commissions={commissions}
+          />
 
           <DealLeadCard lead={deal.lead ?? null} />
 

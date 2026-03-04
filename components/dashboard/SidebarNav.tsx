@@ -446,7 +446,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
 
         {/* Dashboard - Fixed Top Level */}
         <div className="px-4 pb-2 bg-red-50/20">
-         
           {isCollapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>

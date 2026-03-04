@@ -77,3 +77,32 @@ export async function getDealById(
 
   return data as unknown as DealWithProperty;
 }
+
+export async function getDealCommissions(dealId: string) {
+  const { supabase, role, tenantId } = await requireAuthContext();
+  assertStaff(role);
+  if (!tenantId) throw new Error("Tenant ID is required but missing");
+
+  const { data, error } = await (supabase as any)
+    .from("deal_commissions")
+    .select(
+      `
+      *,
+      agent:profiles (
+        id,
+        full_name,
+        avatar_url
+      )
+    `,
+    )
+    .eq("deal_id", dealId)
+    .eq("tenant_id", tenantId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching deal commissions:", error);
+    return [];
+  }
+
+  return data;
+}

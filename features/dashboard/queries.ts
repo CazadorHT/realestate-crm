@@ -406,6 +406,79 @@ export async function getTopAgents(): Promise<TopAgent[]> {
     .sort((a, b) => b.total_commission - a.total_commission)
     .slice(0, 5);
 }
+
+export async function getAdvancedTopAgents(): Promise<TopAgent[]> {
+  const supabase = await createClient();
+  const now = new Date();
+  const startOfMonth = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    1,
+  ).toISOString();
+
+  // Fetch commissions from deal_commissions joined with profiles
+  // We use "any" for the table name since it's newly added and might not be in Database types yet
+  const { data: commissions, error } = await (supabase
+    .from("deal_commissions" as any)
+    .select(
+      `
+      net_amount,
+      agent_id,
+      agent:profiles (
+        id,
+        full_name,
+        avatar_url
+      )
+    `,
+    )
+    .eq("status", "PAID") // Only count paid commissions for leaderboard? Or all PENDING too?
+    // User usually wants to see "Performance" so let's count all that are not CANCELLED
+    .neq("status", "CANCELLED")
+    .gte("created_at", startOfMonth) as any);
+
+  if (error || !commissions) {
+    console.error("Error fetching advanced top agents:", error);
+    return [];
+  }
+
+  const agentMap = new Map<
+    string,
+    {
+      count: number;
+      amount: number;
+      profile: { full_name: string | null; avatar_url: string | null };
+    }
+  >();
+
+  commissions.forEach((c: any) => {
+    if (!c.agent_id || !c.agent) return;
+    const current = agentMap.get(c.agent_id) || {
+      count: 0,
+      amount: 0,
+      profile: {
+        full_name: c.agent.full_name,
+        avatar_url: c.agent.avatar_url,
+      },
+    };
+
+    agentMap.set(c.agent_id, {
+      count: current.count + 1,
+      amount: current.amount + (Number(c.net_amount) || 0),
+      profile: current.profile,
+    });
+  });
+
+  return Array.from(agentMap.entries())
+    .map(([id, stats]) => ({
+      id,
+      name: stats.profile.full_name || "Unknown",
+      avatar_url: stats.profile.avatar_url,
+      deals_count: stats.count,
+      total_commission: stats.amount,
+    }))
+    .sort((a, b) => b.total_commission - a.total_commission)
+    .slice(0, 5);
+}
 // ... existing code ...
 
 export type Notification = {

@@ -1,5 +1,6 @@
 import { Database } from "@/lib/database.types";
 import { type PropertyImage } from "@/features/properties/types";
+import { CommissionRole } from "@/lib/finance/commissions";
 
 export type DealStatus = Database["public"]["Enums"]["deal_status"];
 export type DealType = Database["public"]["Enums"]["deal_type"];
@@ -46,4 +47,23 @@ export type DealPropertyOption = {
   commission_sale_percentage?: number | null;
   commission_rent_months?: number | null;
   cover_image?: string | null;
+};
+
+export type DealCommission = {
+  id: string;
+  deal_id: string;
+  agent_id: string | null;
+  role: CommissionRole;
+  percentage: number;
+  amount: number;
+  wht_amount: number;
+  net_amount: number;
+  status: "PENDING" | "PAID" | "CANCELLED";
+  tenant_id: string;
+  created_at: string;
+  agent?: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
 };

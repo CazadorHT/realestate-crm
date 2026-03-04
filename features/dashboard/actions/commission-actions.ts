@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 import { CommissionRuleSet } from "@/lib/finance/commissions";
 
 export type CommissionActionResponse = {
@@ -36,15 +37,31 @@ export async function getCommissionRulesAction(): Promise<CommissionActionRespon
               { minPrice: 5000001, maxPrice: 10000000, percentage: 4 },
               { minPrice: 10000001, maxPrice: null, percentage: 5 },
             ],
+            defaultListingPercent: 30,
+            defaultClosingPercent: 50,
+            defaultAgencyPercent: 20,
+            defaultTeamPoolPercent: 2,
+            enableTeamPoolByDefault: false,
+            enableAdvancedSplit: true,
           },
         };
       }
       throw error;
     }
 
+    const ruleSet = data.value as unknown as CommissionRuleSet;
+
     return {
       success: true,
-      data: data.value as unknown as CommissionRuleSet,
+      data: {
+        ...ruleSet,
+        defaultListingPercent: ruleSet.defaultListingPercent ?? 30,
+        defaultClosingPercent: ruleSet.defaultClosingPercent ?? 50,
+        defaultAgencyPercent: ruleSet.defaultAgencyPercent ?? 20,
+        defaultTeamPoolPercent: ruleSet.defaultTeamPoolPercent ?? 2,
+        enableTeamPoolByDefault: ruleSet.enableTeamPoolByDefault ?? false,
+        enableAdvancedSplit: ruleSet.enableAdvancedSplit ?? true,
+      },
     };
   } catch (error) {
     console.error("Error fetching commission rules:", error);
@@ -71,6 +88,9 @@ export async function saveCommissionRulesAction(
     });
 
     if (error) throw error;
+
+    revalidatePath("/protected/dashboard");
+    revalidatePath("/protected/deals");
 
     return {
       success: true,

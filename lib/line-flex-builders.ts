@@ -1183,4 +1183,194 @@ export function buildNoResultsMessage(
       ],
     },
   };
+} // ============================
+// Commission Statement Flex
+// ============================
+export function buildCommissionStatementFlex(data: {
+  dealTitle: string;
+  agentName: string;
+  role: string;
+  grossAmount: number;
+  whtAmount: number;
+  netAmount: number;
+  date: string;
+}): FlexMessage {
+  return {
+    type: "flex",
+    altText: `ใบแจ้งค่าคอมมิชชั่น: ${data.dealTitle}`,
+    contents: {
+      type: "bubble",
+      size: "mega",
+      header: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: "ใบสรุปยอดคอมมิชชั่น",
+            weight: "bold",
+            color: "#FFFFFF",
+            size: "lg",
+          },
+          {
+            type: "text",
+            text: data.date,
+            color: "#AABBDD",
+            size: "xs",
+          },
+        ],
+        backgroundColor: "#1E3A5F",
+        paddingAll: "lg",
+      },
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: data.dealTitle,
+            weight: "bold",
+            size: "md",
+            wrap: true,
+            color: "#1E3A5F",
+          },
+          {
+            type: "box",
+            layout: "horizontal",
+            contents: [
+              {
+                type: "text",
+                text: "Recipient:",
+                size: "xs",
+                color: "#888888",
+                flex: 2,
+              },
+              {
+                type: "text",
+                text: data.agentName,
+                size: "xs",
+                color: "#333333",
+                flex: 4,
+                weight: "bold",
+              },
+            ],
+            margin: "md",
+          },
+          {
+            type: "box",
+            layout: "horizontal",
+            contents: [
+              {
+                type: "text",
+                text: "Role:",
+                size: "xs",
+                color: "#888888",
+                flex: 2,
+              },
+              {
+                type: "text",
+                text: data.role,
+                size: "xs",
+                color: "#333333",
+                flex: 4,
+              },
+            ],
+          },
+          { type: "separator", margin: "lg" },
+          {
+            type: "box",
+            layout: "vertical",
+            margin: "lg",
+            spacing: "sm",
+            contents: [
+              {
+                type: "box",
+                layout: "horizontal",
+                contents: [
+                  {
+                    type: "text",
+                    text: "Gross Amount",
+                    size: "sm",
+                    color: "#555555",
+                  },
+                  {
+                    type: "text",
+                    text: `฿${data.grossAmount.toLocaleString()}`,
+                    size: "sm",
+                    align: "end",
+                    weight: "bold",
+                  },
+                ],
+              },
+              {
+                type: "box",
+                layout: "horizontal",
+                contents: [
+                  {
+                    type: "text",
+                    text: "WHT (3%)",
+                    size: "sm",
+                    color: "#555555",
+                  },
+                  {
+                    type: "text",
+                    text: `-฿${data.whtAmount.toLocaleString()}`,
+                    size: "sm",
+                    align: "end",
+                    color: "#E53935",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            type: "box",
+            layout: "vertical",
+            margin: "xl",
+            backgroundColor: "#F0F4F8",
+            paddingAll: "md",
+            cornerRadius: "md",
+            contents: [
+              {
+                type: "box",
+                layout: "horizontal",
+                contents: [
+                  {
+                    type: "text",
+                    text: "NET PAYOUT",
+                    weight: "bold",
+                    color: "#1E3A5F",
+                    size: "sm",
+                  },
+                  {
+                    type: "text",
+                    text: `฿${data.netAmount.toLocaleString()}`,
+                    weight: "bold",
+                    color: "#0066CC",
+                    align: "end",
+                    size: "md",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        paddingAll: "lg",
+      },
+      footer: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: "Thank you for being part of our team! 🚀",
+            size: "xxs",
+            align: "center",
+            color: "#AAAAAA",
+          },
+        ],
+        paddingAll: "sm",
+      },
+    },
+  };
 }

@@ -123,8 +123,8 @@ export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
                     {isPrimary && (
                       <div className="absolute -top-3 left-4">
                         <span className="flex items-center gap-1 text-[10px] uppercase font-bold text-blue-700 tracking-wider bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-full shadow-sm">
-                          <ShieldCheck className="w-3 h-3" /> ผู้ดูแลหลัก
-                          (Primary)
+                          <ShieldCheck className="w-3 h-3" /> ผู้ดูแลหลัก /
+                          Listing Agent 🏢
                         </span>
                       </div>
                     )}

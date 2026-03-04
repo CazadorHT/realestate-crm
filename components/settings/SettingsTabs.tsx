@@ -19,7 +19,7 @@ export function SettingsTabs({ activeTab }: SettingsTabsProps) {
   };
 
   return (
-    <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 lg:w-auto h-auto p-1 bg-slate-100 rounded-xl gap-1">
+    <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 lg:w-auto h-auto p-1 bg-slate-100 rounded-xl gap-1">
       <TabsTrigger
         value="general"
         onClick={() => handleTabChange("general")}
@@ -54,6 +54,13 @@ export function SettingsTabs({ activeTab }: SettingsTabsProps) {
         className="rounded-lg py-2 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
       >
         Admin
+      </TabsTrigger>
+      <TabsTrigger
+        value="commission"
+        onClick={() => handleTabChange("commission")}
+        className="rounded-lg py-2 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+      >
+        คอมมิชชั่น
       </TabsTrigger>
     </TabsList>
   );

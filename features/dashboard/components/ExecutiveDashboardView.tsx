@@ -72,6 +72,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AgentPerformanceTable } from "./AgentPerformanceTable";
 import { CommissionSettings } from "./CommissionSettings";
+import { CommissionLeaderboard } from "./CommissionLeaderboard";
+import { TopAgent } from "../queries";
 import { AgentKpiStats } from "@/features/analytics/agent-kpis";
 import { calculateCommission } from "@/lib/finance/commissions";
 
@@ -80,6 +82,7 @@ interface ExecutiveDashboardViewProps {
   monthlyData: MonthlyRevenue[];
   quarterlyData: QuarterlyRevenue[];
   agentStats: AgentKpiStats[];
+  topAgents: TopAgent[];
 }
 
 export function ExecutiveDashboardView({
@@ -87,6 +90,7 @@ export function ExecutiveDashboardView({
   monthlyData,
   quarterlyData,
   agentStats,
+  topAgents,
 }: ExecutiveDashboardViewProps) {
   const [aiInsights, setAiInsights] = useState<ExecutiveAiInsights | null>(
     null,
@@ -209,22 +213,22 @@ export function ExecutiveDashboardView({
       {aiInsights && <AiExecutiveBriefing insights={aiInsights} />}
 
       <Tabs defaultValue="overview" className="space-y-8">
-        <TabsList className="bg-slate-100/50 p-1 scale-105 origin-left">
-          <TabsTrigger value="overview" className="gap-2 px-6">
-            <TrendingUp className="h-4 w-4" />
-            ภาพรวม (Overview)
-          </TabsTrigger>
-          <TabsTrigger value="agents" className="gap-2 px-6">
-            <Users className="h-4 w-4" />
-            ผลงานตัวแทน (Agents)
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2 px-6">
-            <SettingsIcon className="h-4 w-4" />
-            ตั้งค่าคอมมิชชั่น
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <TabsList className="bg-slate-100/50 p-1">
+            <TabsTrigger value="overview" className="gap-2 px-6">
+              <TrendingUp className="h-4 w-4" />
+              ภาพรวม (Overview)
+            </TabsTrigger>
+            <TabsTrigger value="agents" className="gap-2 px-6">
+              <Users className="h-4 w-4" />
+              ผลงานตัวแทน (Agents)
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2 px-6">
+              <SettingsIcon className="h-4 w-4" />
+              ตั้งค่าคอมมิชชั่น
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="flex justify-end -mt-16 mb-8">
           <CommissionCalculatorDialog />
         </div>
 
@@ -387,6 +391,16 @@ export function ExecutiveDashboardView({
               </CardContent>
             </Card>
 
+            {/* Commission Leaderboard (Gamified) */}
+            <div className="lg:col-span-3 h-full">
+              <CommissionLeaderboard
+                data={topAgents}
+                title="🏆 Agent Ranking"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
             {/* Quarterly Breakdown */}
             <Card className="lg:col-span-3 border-slate-100 shadow-sm border-0 bg-white/50 backdrop-blur-sm">
               <CardHeader>
@@ -427,85 +441,87 @@ export function ExecutiveDashboardView({
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Transaction Volume Table/Summary */}
-          <Card className="border-slate-100 shadow-sm border-0">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-bold">
-                  Transaction Overview
-                </CardTitle>
-                <CardDescription>
-                  ตารางสรุปจำนวนดีลและมูลค่าตามประเภทธุรกรรม
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="relative overflow-x-auto rounded-xl border border-slate-100">
-                <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-slate-500 uppercase bg-slate-50">
-                    <tr>
-                      <th className="px-6 py-4 font-semibold">ประเภทธุรกรรม</th>
-                      <th className="px-6 py-4 font-semibold text-center">
-                        จำนวนดีล
-                      </th>
-                      <th className="px-6 py-4 font-semibold text-right">
-                        ยอดรวม (Gross Value)
-                      </th>
-                      <th className="px-6 py-4 font-semibold text-right">
-                        ค่าคอมมิชชั่น
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    <tr>
-                      <td className="px-6 py-4 font-medium text-slate-900">
-                        การขาย (Sales)
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {stats.salesCount}
-                      </td>
-                      <td className="px-6 py-4 text-right font-semibold">
-                        {formatThaiCurrency(stats.salesRevenue)}
-                      </td>
-                      <td className="px-6 py-4 text-right text-blue-600 font-bold">
-                        {formatThaiCurrency(stats.salesCommission)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 font-medium text-slate-900">
-                        การเช่า (Rentals)
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {stats.rentalCount}
-                      </td>
-                      <td className="px-6 py-4 text-right font-semibold">
-                        {formatThaiCurrency(stats.rentalRevenue)}
-                      </td>
-                      <td className="px-6 py-4 text-right text-emerald-600 font-bold">
-                        {formatThaiCurrency(stats.rentalCommission)}
-                      </td>
-                    </tr>
-                  </tbody>
-                  <tfoot className="bg-slate-50/50 font-bold">
-                    <tr>
-                      <td className="px-6 py-4">Total</td>
-                      <td className="px-6 py-4 text-center">
-                        {stats.totalDeals}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        {formatThaiCurrency(stats.totalRevenue)}
-                      </td>
-                      <td className="px-6 py-4 text-right text-slate-900 bg-slate-100/50">
-                        {formatThaiCurrency(stats.totalCommission)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Transaction Volume Table/Summary */}
+            <Card className="lg:col-span-4 border-slate-100 shadow-sm border-0">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold">
+                    Transaction Overview
+                  </CardTitle>
+                  <CardDescription>
+                    ตารางสรุปจำนวนดีลและมูลค่าตามประเภทธุรกรรม
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="relative overflow-x-auto rounded-xl border border-slate-100">
+                  <table className="w-full text-sm text-left">
+                    <thead className="text-xs text-slate-500 uppercase bg-slate-50">
+                      <tr>
+                        <th className="px-6 py-4 font-semibold">
+                          ประเภทธุรกรรม
+                        </th>
+                        <th className="px-6 py-4 font-semibold text-center">
+                          จำนวนดีล
+                        </th>
+                        <th className="px-6 py-4 font-semibold text-right">
+                          ยอดรวม (Gross Value)
+                        </th>
+                        <th className="px-6 py-4 font-semibold text-right">
+                          ค่าคอมมิชชั่น
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      <tr>
+                        <td className="px-6 py-4 font-medium text-slate-900">
+                          การขาย (Sales)
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {stats.salesCount}
+                        </td>
+                        <td className="px-6 py-4 text-right font-semibold">
+                          {formatThaiCurrency(stats.salesRevenue)}
+                        </td>
+                        <td className="px-6 py-4 text-right text-blue-600 font-bold">
+                          {formatThaiCurrency(stats.salesCommission)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-6 py-4 font-medium text-slate-900">
+                          การเช่า (Rentals)
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {stats.rentalCount}
+                        </td>
+                        <td className="px-6 py-4 text-right font-semibold">
+                          {formatThaiCurrency(stats.rentalRevenue)}
+                        </td>
+                        <td className="px-6 py-4 text-right text-emerald-600 font-bold">
+                          {formatThaiCurrency(stats.rentalCommission)}
+                        </td>
+                      </tr>
+                    </tbody>
+                    <tfoot className="bg-slate-50/50 font-bold border-t border-slate-200">
+                      <tr>
+                        <td className="px-6 py-4">Total</td>
+                        <td className="px-6 py-4 text-center">
+                          {stats.totalDeals}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          {formatThaiCurrency(stats.totalRevenue)}
+                        </td>
+                        <td className="px-6 py-4 text-right text-slate-900 bg-slate-100/50">
+                          {formatThaiCurrency(stats.totalCommission)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent

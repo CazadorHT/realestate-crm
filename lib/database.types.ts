@@ -224,6 +224,80 @@ export type Database = {
         }
         Relationships: []
       }
+      deal_commissions: {
+        Row: {
+          agent_id: string | null
+          amount: number
+          created_at: string
+          deal_id: string
+          id: string
+          net_amount: number
+          percentage: number
+          role: Database["public"]["Enums"]["commission_role"]
+          status: Database["public"]["Enums"]["commission_status"]
+          tenant_id: string | null
+          updated_at: string
+          wht_amount: number
+        }
+        Insert: {
+          agent_id?: string | null
+          amount?: number
+          created_at?: string
+          deal_id: string
+          id?: string
+          net_amount?: number
+          percentage?: number
+          role: Database["public"]["Enums"]["commission_role"]
+          status?: Database["public"]["Enums"]["commission_status"]
+          tenant_id?: string | null
+          updated_at?: string
+          wht_amount?: number
+        }
+        Update: {
+          agent_id?: string | null
+          amount?: number
+          created_at?: string
+          deal_id?: string
+          id?: string
+          net_amount?: number
+          percentage?: number
+          role?: Database["public"]["Enums"]["commission_role"]
+          status?: Database["public"]["Enums"]["commission_status"]
+          tenant_id?: string | null
+          updated_at?: string
+          wht_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_commissions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_commissions_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_commissions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_commissions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deals: {
         Row: {
           closed_at: string | null
@@ -2400,6 +2474,13 @@ export type Database = {
       }
     }
     Enums: {
+      commission_role:
+        | "LISTING"
+        | "CLOSING"
+        | "AGENCY"
+        | "CO_AGENT"
+        | "TEAM_POOL"
+      commission_status: "PENDING" | "PAID" | "CANCELLED"
       deal_status:
         | "NEGOTIATING"
         | "SIGNED"
@@ -2587,6 +2668,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      commission_role: [
+        "LISTING",
+        "CLOSING",
+        "AGENCY",
+        "CO_AGENT",
+        "TEAM_POOL",
+      ],
+      commission_status: ["PENDING", "PAID", "CANCELLED"],
       deal_status: [
         "NEGOTIATING",
         "SIGNED",
