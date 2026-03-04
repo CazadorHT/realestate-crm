@@ -3,7 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { BsStars } from "react-icons/bs";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
+import {
+  useLanguage,
+  dictionaries,
+} from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 interface PropertyDescriptionProps {
@@ -90,7 +93,7 @@ export function PropertyDescription({
         <div
           ref={contentRef}
           className={`prose prose-slate max-w-none text-slate-600 leading-5 text-sm md:text-base transition-all duration-500 ease-in-out border-b border-slate-200/60 pb-10 overflow-hidden ${
-            !isExpanded && shouldShowButton ? "max-h-[500px]" : "max-h-full"
+            !isExpanded && shouldShowButton ? "max-h-[500px]" : "max-h-[5000px]"
           }`}
           dangerouslySetInnerHTML={{
             __html: sanitizedDescription || t("property.no_description"),
@@ -125,5 +128,3 @@ export function PropertyDescription({
     </section>
   );
 }
-
-

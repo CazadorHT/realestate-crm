@@ -196,7 +196,7 @@ export function AgentSidebar({
                 trigger={
                   <Button
                     variant="outline"
-                    className="w-full rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 h-12 text-sm font-semibold px-2"
+                    className="w-full rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 h-12 text-sm font-semibold px-2"
                     type="button"
                   >
                     <CalendarSearch className="w-3.5 h-3.5 mr-1.5 shrink-0" />
@@ -217,7 +217,7 @@ export function AgentSidebar({
                 trigger={
                   <Button
                     variant="outline"
-                    className="w-full rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-800 h-12 text-sm font-semibold px-2"
+                    className="w-full rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 h-12 text-sm font-semibold px-2"
                     type="button"
                   >
                     <MessageCircleQuestion className="w-3.5 h-3.5 mr-1.5 shrink-0" />
