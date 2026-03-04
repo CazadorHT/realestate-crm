@@ -34,7 +34,11 @@ import {
   Cpu,
   Bell,
   Handshake,
+  Headset,
+  Phone,
+  ShieldCheck,
 } from "lucide-react";
+import { FaLine } from "react-icons/fa";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/site-config";
@@ -54,6 +58,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
     "documents",
     "public",
     "settings",
+    "support",
   ]);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -219,6 +224,28 @@ export function SidebarNav({ role }: { role: UserRole }) {
     },
   ];
 
+  // Support Group
+  const supportItems: NavItem[] = [
+    {
+      title: "LINE Support",
+      href: siteConfig.links.line,
+      icon: FaLine,
+      active: false,
+    },
+    {
+      title: "โทรแจ้งปัญหา",
+      href: `tel:${siteConfig.contact.phone}`,
+      icon: Phone,
+      active: false,
+    },
+    {
+      title: "SLA Agreement",
+      href: "/protected/support/sla",
+      icon: ShieldCheck,
+      active: pathname === "/protected/support/sla",
+    },
+  ];
+
   const groups: NavGroup[] = [
     {
       id: "crm",
@@ -257,7 +284,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
           roles: ["ADMIN", "MANAGER"],
         },
         {
-          title: "ภาพรวมทุกสาขา (Cross-branch)",
+          title: "ภาพรวมทุกสาขา",
           href: "/protected/admin/executive",
           icon: Globe,
           active: pathname === "/protected/admin/executive",
@@ -272,6 +299,12 @@ export function SidebarNav({ role }: { role: UserRole }) {
         },
       ],
       roles: ["ADMIN", "MANAGER"],
+    },
+    {
+      id: "support",
+      title: "ความช่วยเหลือ",
+      icon: Headset,
+      items: supportItems,
     },
   ];
 

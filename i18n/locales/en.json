@@ -12,7 +12,8 @@
     "favorites": "My Favorites",
     "trash": "Trash",
     "privacy_policy": "Privacy Policy",
-    "terms_of_use": "Terms of Use"
+    "terms_of_use": "Terms of Use",
+    "support": "Help & Support"
   },
   "breadcrumb": {
     "home": "Home",
@@ -543,7 +544,39 @@
   },
   "about": {
     "title": "About Us",
-    "description": "This page is currently being updated with more details."
+    "description": "Committed to raising the standard of Thailand's real estate industry with sincerity and professionalism.",
+    "hero_subtitle": "Partnering for Your Real Estate Success",
+    "mission_title": "Our Mission",
+    "mission_desc": "To be the most trusted real estate platform in Thailand, focusing on transparent, fast, and fair service.",
+    "values_title": "Our Core Values",
+    "value1_title": "Trust",
+    "value1_desc": "Transparency and honesty in every transaction.",
+    "value2_title": "Professionalism",
+    "value2_desc": "Expert team and agents with deep market knowledge.",
+    "value3_title": "Innovation",
+    "value3_desc": "Leading with technology to find your perfect match.",
+    "stats_years": "10+ Years",
+    "stats_years_desc": "Industry Experience",
+    "stats_properties": "5,000+",
+    "stats_properties_desc": "Verified Listings Managed",
+    "stats_satisfaction": "98%",
+    "stats_satisfaction_desc": "Customer Satisfaction",
+    "why_title": "Why Choose Us",
+    "why_desc": "Credibility isn't built in a day; it's forged through consistent, tangible results.",
+    "why_point1_title": "Verified Data",
+    "why_point1_desc": "Every listing on our platform undergoes rigorous verification for accuracy and ownership.",
+    "why_point2_title": "Global Network",
+    "why_point2_desc": "We partner with leading banks, legal firms, and international agencies to support you.",
+    "why_point3_title": "End-to-End Service",
+    "why_point3_desc": "From initial consultation to property viewing and legal transfer, we've got you covered.",
+    "process_title": "Our Standardized Process",
+    "process_step1_title": "Consultation",
+    "process_step1_desc": "We analyze your specific needs to find the most suitable properties.",
+    "process_step2_title": "Shortlisting",
+    "process_step2_desc": "Save time as we present only the most relevant properties for your review.",
+    "process_step3_title": "Negotiation",
+    "process_step3_desc": "We negotiate to ensure you get the best and fairest deal for all parties.",
+    "contact_us_btn": "Ready to work with us?"
   },
   "contact": {
     "title": "Contact Us",
@@ -1088,5 +1121,22 @@
     "upload_slip_label": "Upload Transfer Slip",
     "slip_upload_hint": "Supports JPG, PNG (Max 5MB) - Image will appear in the document automatically",
     "generate_btn": "Confirm & Generate"
+  },
+  "support": {
+    "title": "Help & Support",
+    "dedicated_support": "Dedicated Support",
+    "line_support": "Contact via LINE",
+    "phone_support": "Call Support",
+    "agent_support": "Hotline",
+    "desc": "Direct channels to report issues or ask for assistance.",
+    "sla": {
+      "title": "Service Level Agreement (SLA)",
+      "uptime_title": "99.9% Uptime Guarantee",
+      "uptime_desc": "High availability system with maximum 8.77 hours of downtime per year.",
+      "response_title": "4-Hour Response Time",
+      "response_desc": "Our team will acknowledge and respond to urgent issues within 4 hours.",
+      "uptime_detail": "Ensures your business continuity with highly stable infrastructure.",
+      "response_detail": "We prioritize your issues. Our support team is ready to act quickly."
+    }
   }
 }

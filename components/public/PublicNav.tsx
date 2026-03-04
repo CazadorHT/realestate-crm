@@ -65,8 +65,8 @@ export function PublicNav() {
     { name: t("nav.home"), href: "/" },
     { name: t("nav.properties"), href: "#latest-properties" },
     { name: t("nav.services"), href: "/services" },
-    { name: t("nav.blog"), href: "#blog" },
-    { name: t("nav.about"), href: "#trust" },
+    { name: t("nav.blog"), href: "/blog" },
+    { name: t("nav.about"), href: "/about" },
     { name: t("nav.contact"), href: "/contact" },
   ];
 

@@ -232,7 +232,7 @@ export function MobileNav({ role }: { role: UserRole }) {
           roles: ["ADMIN", "MANAGER"],
         },
         {
-          title: "ภาพรวมทุกสาขา (Cross-branch)",
+          title: "ภาพรวมทุกสาขา",
           href: "/protected/admin/executive",
           icon: Globe,
           active: pathname === "/protected/admin/executive",

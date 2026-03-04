@@ -50,20 +50,25 @@ export function PublicFooter() {
   };
 
   const services = [
-    { name: t("nav.properties"), href: "/properties?type=sale" },
-    { name: t("nav.services"), href: "/properties?type=rent" },
+    { name: t("property_types.house"), href: "/properties?category=house" },
+    { name: t("property_types.condo"), href: "/properties?category=condo" },
     {
-      name: t("home.property_types.office"),
-      href: "/properties?category=office",
+      name: t("property_types.townhome"),
+      href: "/properties?category=townhome",
     },
-    { name: t("home.mortgage.title"), href: "/#mortgage-calculator" },
+    {
+      name: t("property_types.pool_villa"),
+      href: "/properties?category=pool_villa",
+    },
+    { name: t("property_types.villa"), href: "/properties?category=villa" },
   ];
 
   const about = [
-    { name: t("nav.about"), href: "#trust" },
-    { name: t("footer.team"), href: "/team" },
-    { name: t("nav.contact"), href: "/contact" },
+    { name: t("nav.properties"), href: "/properties" },
+    { name: t("nav.services"), href: "/services" },
     { name: t("nav.blog"), href: "/blog" },
+    { name: t("nav.about"), href: "/about" },
+    { name: t("nav.contact"), href: "/contact" },
   ];
 
   const socialMedia = [

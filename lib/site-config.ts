@@ -43,7 +43,7 @@ export const siteConfig = {
   links: {
     facebook: "https://facebook.com/vcconnectasset",
     instagram: "https://instagram.com/vcconnectasset",
-    line: "https://line.me/ti/p/@vcconnectasset",
+    line: "https://line.me/ti/p/@811slazm",
     tiktok: "https://tiktok.com/@vcconnectasset",
   },
   contact: {

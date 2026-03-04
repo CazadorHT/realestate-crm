@@ -10,7 +10,8 @@
     "dashboard": "仪表盘",
     "deposit": "委托出租/出售",
     "favorites": "我的收藏",
-    "privacy_policy": "隐私政策"
+    "privacy_policy": "隐私政策",
+    "support": "帮助与支持"
   },
   "breadcrumb": {
     "home": "首页",
@@ -548,7 +549,39 @@
   },
   "about": {
     "title": "关于我们",
-    "description": "此页面目前正在更新更多详情。"
+    "description": "致力于通过诚信和专业提升泰国房地产行业的标准。",
+    "hero_subtitle": "携手共创您的房地产成功",
+    "mission_title": "我们的使命",
+    "mission_desc": "成为泰国最值得信赖的房地产平台，专注于透明、快速和公平的服务。",
+    "values_title": "我们的核心价值观",
+    "value1_title": "信任",
+    "value1_desc": "每一笔交易都保持透明和诚信。",
+    "value2_title": "专业",
+    "value2_desc": "拥有深厚市场知识的专家团队和经纪人。",
+    "value3_title": "创新",
+    "value3_desc": "利用先进技术为您寻找完美匹配。",
+    "stats_years": "10+ 年",
+    "stats_years_desc": "行业经验",
+    "stats_properties": "5,000+",
+    "stats_properties_desc": "管理的核实房源",
+    "stats_satisfaction": "98%",
+    "stats_satisfaction_desc": "客户满意度",
+    "why_title": "为什么选择我们",
+    "why_desc": "公信力并非一日之功，而是通过持续、切实的成果铸就的。",
+    "why_point1_title": "核实数据",
+    "why_point1_desc": "我们平台上的每个房源都经过严格的准确性和所有权核实。",
+    "why_point2_title": "全球网络",
+    "why_point2_desc": "我们与领先的银行、律师事务所和国际机构合作，为您提供支持。",
+    "why_point3_title": "全方位服务",
+    "why_point3_desc": "从初始咨询到看房及法律过户，我们全程为您保驾护航。",
+    "process_title": "我们的标准化流程",
+    "process_step1_title": "专业咨询",
+    "process_step1_desc": "我们分析您的具体需求，寻找最合适的房产。",
+    "process_step2_title": "精选房源",
+    "process_step2_desc": "我们只向您展示最相关的房产，为您节省宝贵时间。",
+    "process_step3_title": "协助谈判",
+    "process_step3_desc": "我们协助谈判，确保您获得对各方都最有利、最公平的交易。",
+    "contact_us_btn": "准备好与我们合作了吗？"
   },
   "contact": {
     "title": "联系我们",
@@ -1030,6 +1063,23 @@
     "upload_slip_label": "上传转账凭证 (Slip)",
     "slip_upload_hint": "支持 JPG, PNG (最大 5MB) - 图片将自动出现在文档中",
     "generate_btn": "确认并生成文件"
+  },
+  "support": {
+    "title": "帮助与支持",
+    "dedicated_support": "专属支持",
+    "line_support": "在线咨询 (LINE)",
+    "phone_support": "拨打支持电话",
+    "agent_support": "客服热线",
+    "desc": "报告问题或寻求帮助的直接渠道。",
+    "sla": {
+      "title": "服务等级协议 (SLA)",
+      "uptime_title": "99.9% 运行时间保证",
+      "uptime_desc": "高可用性系统，每年停机时间不超过 8.77 小时。",
+      "response_title": "4 小时响应时间",
+      "response_desc": "我们的团队将在 4 小时内确认并响紧急问题。",
+      "uptime_detail": "通过高度稳定的基础设施确保您的业务连续性。",
+      "response_detail": "我们优先处理您的问题。我们的支持团队随时准备迅速采取行动。"
+    }
   }
 }
 }
