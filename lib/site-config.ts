@@ -54,10 +54,6 @@ export const siteConfig = {
   },
   companySignature: "/images/v-link-svg-png-logo.svg",
   companyStamp: "/images/v-link-svg-png-dark.svg",
-  tier: (process.env.NEXT_PUBLIC_APP_TIER || process.env.APP_TIER || "PRO") as
-    | "LITE"
-    | "PRO"
-    | "ENTERPRISE",
   // ============================================================
   // Third-party site verification tokens
   // Update these when transferring ownership of the project
@@ -72,33 +68,11 @@ export const siteConfig = {
   },
 };
 
-export const FEATURES = {
-  LITE: {
-    dashboard_analytics: false,
-    ai_smart_summary: false,
-    ai_auto_description: false,
-    advanced_reports: false,
-    line_integration: true,
-    max_properties: 50,
-  },
-  PRO: {
-    dashboard_analytics: true,
-    ai_smart_summary: true,
-    ai_auto_description: true,
-    advanced_reports: true,
-    line_integration: true,
-    max_properties: 500,
-  },
-  ENTERPRISE: {
-    dashboard_analytics: true,
-    ai_smart_summary: true,
-    ai_auto_description: true,
-    advanced_reports: true,
-    line_integration: true,
-    max_properties: 10000,
-  },
-};
-
 export type SiteConfig = typeof siteConfig;
-export type AppTier = keyof typeof FEATURES;
-export type FeatureName = keyof (typeof FEATURES)["PRO"];
+export type FeatureName =
+  | "dashboard_analytics"
+  | "ai_smart_summary"
+  | "ai_auto_description"
+  | "advanced_reports"
+  | "line_integration"
+  | "max_properties";

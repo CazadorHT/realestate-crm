@@ -204,7 +204,9 @@ export async function getTenantsAction() {
   const adminSupabase = createAdminClient();
   const { data, error } = await adminSupabase
     .from("tenants")
-    .select("*, member_count:tenant_members(count)")
+    .select(
+      "id, name, slug, logo_url, created_at, member_count:tenant_members(count)",
+    )
     .eq("is_deleted", false)
     .order("created_at", { ascending: false });
 

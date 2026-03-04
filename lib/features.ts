@@ -1,46 +1,23 @@
-import { siteConfig, FEATURES, AppTier, FeatureName } from "./site-config";
+import { FeatureName } from "./site-config";
 
 /**
- * Checks if a specific feature is enabled for the current application tier.
+ * Checks if a specific feature is enabled (Always true now).
  */
 export function isFeatureEnabled(featureName: FeatureName): boolean {
-  const tier = siteConfig.tier as AppTier;
-  const tierFeatures = FEATURES[tier];
-
-  const value = tierFeatures[featureName];
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  // If it's a number (quota), it's considered "enabled" if > 0
-  if (typeof value === "number") {
-    return value > 0;
-  }
-
-  return false;
+  return true;
 }
 
 /**
- * Gets the quota value for a specific feature (e.g., max_properties).
+ * Gets the quota value for a specific feature (Always high now).
  */
 export function getFeatureQuota(featureName: FeatureName): number {
-  const tier = siteConfig.tier as AppTier;
-  const tierFeatures = FEATURES[tier];
-
-  const value = tierFeatures[featureName];
-  if (typeof value === "number") {
-    return value;
-  }
-
-  return 0;
+  if (featureName === "max_properties") return 99999;
+  return 1;
 }
 
 /**
- * Helper to check if the current tier is at least a certain level.
+ * Helper to check if the current tier is at least a certain level (Always true).
  */
-export function isAtLeastTier(requiredTier: AppTier): boolean {
-  const currentTier = siteConfig.tier as AppTier;
-  const tierOrder: AppTier[] = ["LITE", "PRO", "ENTERPRISE"];
-
-  return tierOrder.indexOf(currentTier) >= tierOrder.indexOf(requiredTier);
+export function isAtLeastTier(requiredTier: string): boolean {
+  return true;
 }

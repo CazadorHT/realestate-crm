@@ -216,16 +216,6 @@ export default function BranchesPage() {
                         <Building2 className="h-5 w-5 text-blue-600 group-hover:text-white" />
                       </div>
                       <div className="flex items-center gap-2">
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                            branch.subscription_status === "ACTIVE"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-amber-100 text-amber-700"
-                          }`}
-                        >
-                          {branch.subscription_status}
-                        </span>
-
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button

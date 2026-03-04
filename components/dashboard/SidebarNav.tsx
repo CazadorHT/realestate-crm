@@ -586,22 +586,6 @@ export function SidebarNav({ role }: { role: UserRole }) {
             );
           })}
         </nav>
-
-        {!isCollapsed && (
-          <div className="p-4 m-4 rounded-2xl bg-slate-50 border border-slate-100">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <Shield className="h-4 w-4 text-blue-600" />
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-xs font-bold text-slate-900">
-                  {siteConfig.tier} VERSION
-                </p>
-                <p className="text-[10px] text-slate-500">Active Tier</p>
-              </div>
-            </div>
-          </div>
-        )}
       </aside>
     </TooltipProvider>
   );

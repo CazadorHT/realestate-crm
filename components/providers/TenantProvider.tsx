@@ -16,7 +16,6 @@ type Tenant = {
   name: string;
   slug: string;
   logo_url: string | null;
-  subscription_status: string | null;
   userRole?: string;
 };
 
@@ -65,8 +64,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
             id,
             name,
             slug,
-            logo_url,
-            subscription_status
+            logo_url
           )
         `,
         )
@@ -96,7 +94,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
           if (!initial) {
             const { data: defaultTenant } = await supabase
               .from("tenants")
-              .select("id, name, slug, logo_url, subscription_status")
+              .select("id, name, slug, logo_url")
               .eq("id", config.default_tenant_id)
               .single();
 
