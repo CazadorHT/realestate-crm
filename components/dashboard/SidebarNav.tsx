@@ -364,7 +364,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-300 text-sm relative overflow-hidden group",
+        "flex h-10 items-center gap-3 rounded-lg px-4 transition-all duration-300 text-sm relative overflow-hidden group",
         item.active
           ? "bg-blue-50 text-blue-700 font-semibold"
           : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium",
@@ -374,8 +374,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
       {item.active && (
         <div
           className={cn(
-            "absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 bg-blue-600 rounded-r-full",
-            isCollapsed && "h-8 w-1",
+            "absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-blue-600 rounded-r-full",
           )}
         />
       )}
@@ -403,7 +402,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
       >
         <div
           className={cn(
-            "p-8 pb-4 relative",
+            "p-6 pb-2 relative",
             isCollapsed && "p-4 flex justify-center",
           )}
         >
@@ -445,17 +444,18 @@ export function SidebarNav({ role }: { role: UserRole }) {
           </button>
         </div>
 
-        <nav className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto scrollbar-hide">
-          {/* Dashboard - Top Level */}
+        {/* Dashboard - Fixed Top Level */}
+        <div className="px-4 pb-2 bg-red-50/20">
+         
           {isCollapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
                   href="/protected"
                   className={cn(
-                    "flex items-center justify-center rounded-xl h-12 w-full transition-all duration-300 font-bold text-sm relative overflow-hidden group",
+                    "flex h-10 items-center justify-center rounded-lg w-full transition-all duration-300 relative overflow-hidden group",
                     pathname === "/protected"
-                      ? "bg-blue-50 text-blue-700 shadow-sm"
+                      ? "bg-blue-50 text-blue-700 shadow-sm border border-blue-100"
                       : "text-slate-500 hover:text-slate-900 hover:bg-slate-50",
                   )}
                 >
@@ -464,7 +464,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
                   )}
                   <BarChart3
                     className={cn(
-                      "h-5 w-5 transition-colors",
+                      "h-4 w-4 transition-colors",
                       pathname === "/protected"
                         ? "text-blue-600"
                         : "text-slate-400 group-hover:text-slate-600",
@@ -478,10 +478,10 @@ export function SidebarNav({ role }: { role: UserRole }) {
             <Link
               href="/protected"
               className={cn(
-                "flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all duration-300 font-bold text-sm relative overflow-hidden group",
+                "flex h-10 items-center gap-4 rounded-lg px-4 transition-all duration-300 font-bold text-sm relative overflow-hidden group border",
                 pathname === "/protected"
-                  ? "bg-blue-50 text-blue-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50",
+                  ? "bg-blue-50 text-blue-700 shadow-sm border-blue-100"
+                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 border-transparent",
               )}
             >
               {pathname === "/protected" && (
@@ -489,7 +489,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
               )}
               <BarChart3
                 className={cn(
-                  "h-5 w-5 transition-colors",
+                  "h-4 w-4 transition-colors",
                   pathname === "/protected"
                     ? "text-blue-600"
                     : "text-slate-400 group-hover:text-slate-600",
@@ -498,7 +498,9 @@ export function SidebarNav({ role }: { role: UserRole }) {
               แดชบอร์ด
             </Link>
           )}
+        </div>
 
+        <nav className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto scrollbar-hide">
           {/* Grouped Menus */}
           {filteredGroups.map((group) => {
             const isOpen = openGroups.includes(group.id);
@@ -553,9 +555,9 @@ export function SidebarNav({ role }: { role: UserRole }) {
                 <button
                   onClick={() => toggleGroup(group.id)}
                   className={cn(
-                    "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition-all duration-300 font-semibold text-xs uppercase tracking-wider",
+                    "w-full flex h-10 items-center justify-between gap-3 rounded-lg px-4 transition-all duration-300 font-semibold text-xs uppercase tracking-wider",
                     hasActiveItem
-                      ? "bg-blue-100 text-blue-700"
+                      ? "bg-blue-50 text-blue-700 border border-blue-100"
                       : "text-slate-400 hover:text-slate-600 hover:bg-slate-50",
                   )}
                 >

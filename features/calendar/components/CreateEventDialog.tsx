@@ -101,10 +101,15 @@ export function CreateEventDialog({
               <SelectTrigger>
                 <SelectValue placeholder="เลือกลูกค้า..." />
               </SelectTrigger>
-              <SelectContent className="max-h-[200px] overflow-y-auto">
+              <SelectContent
+                align="start"
+                className="w-[--radix-select-trigger-width] max-h-[200px] overflow-y-auto"
+              >
                 {leads.map((lead) => (
                   <SelectItem key={lead.id} value={lead.id}>
-                    {lead.full_name}
+                    <span className="truncate block max-w-[300px]">
+                      {lead.full_name}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -120,11 +125,16 @@ export function CreateEventDialog({
               <SelectTrigger>
                 <SelectValue placeholder="เลือกทรัพย์สิน..." />
               </SelectTrigger>
-              <SelectContent className="max-h-[200px] mx-auto overflow-y-auto">
+              <SelectContent
+                align="start"
+                className="w-[--radix-select-trigger-width] max-h-[200px] overflow-y-auto"
+              >
                 <SelectItem value="none">ไม่ระบุ</SelectItem>
                 {properties.map((prop) => (
                   <SelectItem key={prop.id} value={prop.id}>
-                    {prop.title}
+                    <span className="truncate block max-w-[300px]">
+                      {prop.title}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -139,7 +149,10 @@ export function CreateEventDialog({
               <SelectTrigger>
                 <SelectValue placeholder="เลือกประเภท..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent
+                align="start"
+                className="w-[--radix-select-trigger-width]"
+              >
                 <SelectItem value="VIEWING">
                   <div className="flex items-center gap-2">
                     <Eye className="h-4 w-4 text-blue-500" />
