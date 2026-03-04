@@ -36,6 +36,133 @@ const createTenantSchema = z.object({
     .regex(/^[a-z0-h-]+$/, "Slug ต้องเป็นภาษาอังกฤษตัวเล็กและขีดกลางเท่านั้น"),
 });
 
+export async function getTenantCountAction() {
+  const { role } = await requireAuthContext();
+  assertAdmin(role);
+
+  const adminSupabase = createAdminClient();
+  const { count, error } = await adminSupabase
+    .from("tenants")
+    .select("*", { count: "exact", head: true })
+    .eq("is_deleted", false);
+
+  if (error) {
+    return { error: mapDatabaseError(error) };
+  }
+
+  return { count: count || 0 };
+}
+
+export async function createInitialTenantAction(
+  values: z.infer<typeof createTenantSchema>,
+) {
+  const ctx = await requireAuthContext();
+  assertAdmin(ctx.role);
+
+  const adminSupabase = createAdminClient();
+  const validated = createTenantSchema.parse(values);
+
+  // 1. Create the tenant
+  const { data: tenant, error: tError } = await adminSupabase
+    .from("tenants")
+    .insert({
+      name: validated.name,
+      slug: validated.slug,
+    })
+    .select()
+    .single();
+
+  if (tError || !tenant) {
+    return { error: mapDatabaseError(tError) };
+  }
+
+  // 2. Add current admin as OWNER
+  const { error: mError } = await adminSupabase.from("tenant_members").insert({
+    tenant_id: tenant.id,
+    profile_id: ctx.user.id,
+    role: "OWNER",
+  });
+
+  if (mError) {
+    // Soft failure for member addition, log it but return tenant
+    console.error("Failed to add admin as owner to initial tenant", mError);
+  }
+
+  revalidatePath("/protected/settings/branches");
+
+  await logAudit(ctx, {
+    action: "tenant.create",
+    entity: "tenants",
+    entityId: tenant.id,
+    metadata: { name: validated.name, slug: validated.slug, is_initial: true },
+  });
+
+  return { data: tenant };
+}
+
+export async function migrateDataToTenantAction(tenantId: string) {
+  const ctx = await requireAuthContext();
+  assertAdmin(ctx.role);
+
+  const adminSupabase = createAdminClient();
+
+  try {
+    // 1. Migrate Users (Profiles) to this Tenant
+    const { data: profiles, error: pError } = await adminSupabase
+      .from("profiles")
+      .select("id, role");
+
+    if (pError) throw pError;
+
+    if (profiles && profiles.length > 0) {
+      const membersToInsert = profiles
+        .filter((p: any) => p.id !== ctx.user.id) // Skip admin since they are already OWNER
+        .map((p: any) => ({
+          tenant_id: tenantId,
+          profile_id: p.id,
+          role: p.role === "ADMIN" ? "ADMIN" : "AGENT", // fallback mapping
+        }));
+
+      if (membersToInsert.length > 0) {
+        await adminSupabase.from("tenant_members").insert(membersToInsert);
+      }
+    }
+
+    // 2. Migrate Tables with tenant_id
+    const tablesToMigrate = [
+      "properties",
+      "contacts",
+      "leads",
+      "deals",
+      "contracts",
+      "tasks",
+    ];
+
+    for (const table of tablesToMigrate) {
+      // We only update rows that are currently NOT assigned to any tenant
+      const { error } = await adminSupabase
+        .from(table as any)
+        .update({ tenant_id: tenantId })
+        .is("tenant_id", null);
+
+      if (error) {
+        console.error(`Failed to migrate ${table}:`, error);
+      }
+    }
+
+    await logAudit(ctx, {
+      action: "tenant.update",
+      entity: "tenants",
+      entityId: tenantId,
+      metadata: { migrated_tables: tablesToMigrate },
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    return { error: mapDatabaseError(error) };
+  }
+}
+
 export async function createTenantAction(
   values: z.infer<typeof createTenantSchema>,
 ) {

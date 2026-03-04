@@ -11,7 +11,9 @@ import {
   updateSystemConfig,
   SystemConfig,
 } from "@/lib/actions/system-config";
+import { getTenantCountAction } from "@/lib/actions/tenant-management";
 import { cn } from "@/lib/utils";
+import { InitialBranchSetupDialogs } from "./InitialBranchSetupDialogs";
 
 export function AdminSystemSettings() {
   const [systemConfig, setSystemConfig] = useState<SystemConfig>({
@@ -21,6 +23,8 @@ export function AdminSystemSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const { refresh: refreshTenant } = useTenant();
+
+  const [showSetupDialog, setShowSetupDialog] = useState(false);
 
   useEffect(() => {
     async function loadConfig() {
@@ -39,25 +43,53 @@ export function AdminSystemSettings() {
   const handleToggle = (checked: boolean) => {
     startTransition(async () => {
       try {
-        const newConfig = { ...systemConfig, multi_tenant_enabled: checked };
-        await updateSystemConfig(newConfig);
-        setSystemConfig(newConfig);
-        toast.success(
-          checked
-            ? "✅ เปิดใช้งานระบบหลายสาขาแล้ว"
-            : "ปิดใช้งานระบบหลายสาขาแล้ว",
-        );
-        await refreshTenant(); // อัปเดต nav bar ทันที
+        if (checked) {
+          // Check if we have branches
+          const { count, error } = await getTenantCountAction();
+
+          if (error) throw new Error(error);
+
+          if (count === 0) {
+            // First time setup: NO branches exist, trigger setup dialog
+            setShowSetupDialog(true);
+            return; // Do NOT save config yet
+          }
+        }
+
+        await saveToggleState(checked);
       } catch (error) {
-        toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        toast.error("เกิดข้อผิดพลาดในการตรวจสอบข้อมูลสาขา");
       }
     });
+  };
+
+  const saveToggleState = async (checked: boolean) => {
+    try {
+      const newConfig = { ...systemConfig, multi_tenant_enabled: checked };
+      await updateSystemConfig(newConfig);
+      setSystemConfig(newConfig);
+      toast.success(
+        checked ? "✅ เปิดใช้งานระบบหลายสาขาแล้ว" : "ปิดใช้งานระบบหลายสาขาแล้ว",
+      );
+      await refreshTenant(); // อัปเดต nav bar ทันที
+    } catch (error) {
+      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    }
+  };
+
+  const handleSetupComplete = () => {
+    saveToggleState(true);
   };
 
   const isEnabled = systemConfig.multi_tenant_enabled;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-linear-to-br from-indigo-50 via-white to-violet-50 p-6 shadow-sm">
+      <InitialBranchSetupDialogs
+        open={showSetupDialog}
+        onOpenChange={setShowSetupDialog}
+        onSetupComplete={handleSetupComplete}
+      />
       {/* Decorative blobs */}
       <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-indigo-200/30 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-violet-200/30 blur-2xl" />
