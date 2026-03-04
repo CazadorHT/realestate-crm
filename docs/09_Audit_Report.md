@@ -2,7 +2,7 @@
 
 รายงานฉบับนี้ประเมินความพร้อมของโปรเจค **VC Connect Asset CRM** ในระดับ Enterprise v2.0 Baseline
 
-> **วันที่ประเมิน:** 28 กุมภาพันธ์ 2026 (Enterprise v2.0 Ready)
+> **วันที่ประเมิน:** 4 มีนาคม 2026 (Enterprise v2.0 Ready)
 
 ---
 

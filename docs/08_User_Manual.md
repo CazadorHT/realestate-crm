@@ -2,7 +2,7 @@
 
 วิธีใช้งานฟีเจอร์ต่างๆ ในระบบ Real Estate CRM สำหรับ Agent และ Admin (Enterprise Edition)
 
-> **อัปเดตล่าสุด:** 28 กุมภาพันธ์ 2026 (Enterprise v2.0 Baseline)
+> **อัปเดตล่าสุด:** 4 มีนาคม 2026 (Enterprise v2.0 & Multi-Branch Ready)
 
 ---
 
@@ -53,6 +53,13 @@
 - **Branch Switcher:** สลับหน้าจอระหว่างสาขาได้ทันทีที่แถบ Navbar (สำหรับผู้ที่มีสิทธิ์ดูแลหลายที่)
 - **Agent Isolation:** ระบบล็อคข้อมูลให้เอเจนท์เห็นเฉพาะทรัพย์และลูกค้าของตนเอง (เพื่อความเป็นส่วนตัวสูงสุด)
 - **Member Invitations:** ระบบส่งอีเมลคำเชิญพนักงานใหม่เข้าสู่ระบบ พร้อมระบทบาท (Role) และสาขาที่สังกัดชัดเจน
+
+---
+
+## 6. การตั้งค่าระบบและการเชื่อมต่อ (Settings & Integrations) 🆕
+
+- **System Integrations:** หน้า Status Center ที่ผู้ดูแลระบบสามารถดูสถานะการเชื่อมต่อ API แบบ Real-time (Supabase, TikTok)
+- **Tenant Branding & Live Preview:** ระบบกำหนดหน้าตาสีสัน (Branding) และโลโก้แยกตามสาขา พร้อมปุ่ม Live Site Preview ดูผลลัพธ์บนเว็บจริงทันที
 
 ---
 

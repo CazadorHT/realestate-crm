@@ -1,6 +1,6 @@
 # 04. Database Schema Setup Guide
 
-This document provides the complete SQL schema and setup instructions required to initialize a new Supabase database for a new client deployment.
+This document provides the complete SQL schema and setup instructions required to initialize a new Supabase database for a new client deployment. (Updated: March 4, 2026)
 
 ## Prerequisites
 

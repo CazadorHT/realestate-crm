@@ -2,7 +2,7 @@
 
 เอกสารรวบรวมข้อมูลด้านการตลาด การประเมินราคาขาย และกลยุทธ์การสร้างรายได้จากโปรเจค VC Connect Asset CRM (Enterprise Multi-Tenant Edition)
 
-> **อัปเดตล่าสุด:** 28 กุมภาพันธ์ 2026 (Enterprise v2.0 Baseline)
+> **อัปเดตล่าสุด:** 4 มีนาคม 2026 (Enterprise v2.0 & Multi-Branch Ready)
 
 ---
 
@@ -10,17 +10,17 @@
 
 ### 🏗️ โครงสร้างราคาแบ่งตามโมดูล (อิงตามตลาดซอฟต์แวร์ Enterprise)
 
-| โมดูล (Module)                                                        | มูลค่าประเมิน (THB)   | สถานะ (Status)  |
-| :-------------------------------------------------------------------- | :-------------------- | :-------------- |
-| **1. Public Listing Portal** (Search, Filter, SEO, Premium UI/UX)     | 750,000 - 950,000     | ✅ เสร็จสมบูรณ์ |
-| **2. Professional CRM Backend** (Lead, Pipeline, Contract, Audit)     | 850,000 - 1,200,000   | ✅ เสร็จสมบูรณ์ |
-| **3. AI-First Ecosystem** (Gemini 2.0, Cost Tracking, Insights)       | 950,000 - 1,250,000   | ✅ เสร็จสมบูรณ์ |
-| **4. Omni-channel Integration** (LINE, Facebook, Instagram, WhatsApp) | 650,000 - 850,000     | ✅ เสร็จสมบูรณ์ |
-| **5. Multi-Tenant & Branch Management** (RLS Isolation, Centralized)  | 1,200,000 - 1,800,000 | ✅ เสร็จสมบูรณ์ |
-| **6. Advanced Document Engine** (E-Sign, Versioning, Previews)        | 550,000 - 750,000     | ✅ เสร็จสมบูรณ์ |
-| **7. Core Architecture** (React 19, Next.js 16, Supabase RLS)         | 450,000 - 650,000     | ✅ เสร็จสมบูรณ์ |
+| โมดูล (Module)                                                         | มูลค่าประเมิน (THB)   | สถานะ (Status)  |
+| :--------------------------------------------------------------------- | :-------------------- | :-------------- |
+| **1. Public Listing Portal** (Search, Filter, SEO, Premium UI/UX)      | 900,000 - 1,200,000   | ✅ เสร็จสมบูรณ์ |
+| **2. Professional CRM Backend** (Lead, Pipeline, Advanced Analytics)   | 1,000,000 - 1,500,000 | ✅ เสร็จสมบูรณ์ |
+| **3. AI-First Ecosystem** (Gemini 2.0, Social Generation, Insights)    | 1,200,000 - 1,600,000 | ✅ เสร็จสมบูรณ์ |
+| **4. Omni-channel Integration** (LINE, Meta, TikTok, Auto-Keyword)     | 850,000 - 1,100,000   | ✅ เสร็จสมบูรณ์ |
+| **5. Multi-Tenant & Branch Management** (Org Structure, Branding)      | 1,500,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ |
+| **6. Advanced Document Engine** (E-Sign, Versioning, Previews)         | 600,000 - 850,000     | ✅ เสร็จสมบูรณ์ |
+| **7. Core Architecture & System Health** (Monitoring, API Integration) | 650,000 - 850,000     | ✅ เสร็จสมบูรณ์ |
 
-**รวมมูลค่าโครงการ (Fair Market Value):** **5,400,000 – 7,450,000 บาท**
+**รวมมูลค่าโครงการ (Fair Market Value):** **6,700,000 – 9,600,000 บาท**
 _(มูลค่าสะท้อนฟีเจอร์ระดับ Enterprise ที่พร้อมใช้งานจริงในสเกลองค์กรขนาดใหญ่ระดับมหาชน - **ราคายังไม่รวมภาษีมูลค่าเพิ่ม 7%**)_
 
 ---
@@ -29,7 +29,7 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
 
 ระบบนี้ถูกออกแบบมาเพื่อเป็น **"Platform-as-a-Product"** ที่พร้อมให้บริษัทอสังหาฯ ขนาดใหญ่หรือบริษัทซอฟต์แวร์ซื้อไปเป็นของตัวเอง (White-label):
 
-### 👑 โมเดลขายสิทธิ์ขาด (Exclusive Rights) - 6,500,000 THB++
+### 👑 โมเดลขายสิทธิ์ขาด (Exclusive Rights) - 8,500,000 THB++
 
 การขาย Source Code ทั้งหมดพร้อมสิทธิ์ความเป็นเจ้าของ 100% เหมาะสำหรับ:
 
@@ -47,10 +47,16 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
   - **Financial AI Tracking:** ระบบคำนวณต้นทุน AI จริงตามจำนวน Token (อิงอัตราแลกเปลี่ยนคงที่ 32 THB/USD) แสดงผลแบบ Real-time
   - **Executive AI Insights:** AI สรุปวิเคราะห์ยอดขาย พยากรณ์เทรนด์เดือนถัดไป (Forecasting) และให้คำแนะนำเชิงกลยุทธ์ผ่านหน้า Dashboard
   - **AI Document Assistant:** ใช้ Gemini ช่วยสรุปสัญญา ตรวจสอบจุดเสี่ยง และดึงข้อมูลสำคัญจากไฟล์เอกสารโดยอัตโนมัติ
-- **🏢 Multi-Tenant Branch Logic:**
+- **🏢 Multi-Tenant Branch & Branding Logic:**
   - **Branch Switcher:** ผู้บริหารสามารถสลับดูข้อมูลรายสาขาหรือดูภาพรวมทั้งบริษัทได้ในคลิกเดียว
+  - **Live Branding Customization:** ปรับแต่งสี โลโก้ และเนื้อหาแยกตามผู้เช่า (Tenant) พร้อม Live Site Preview Real-time
   - **Seamless Data Sharing:** ระบบส่งต่อ Lead ระหว่างสาขา (Referral) พร้อมระบบแจ้งเตือนทันที
   - **Global Inventory:** ระบบค้นหาทรัพย์สินส่วนกลางที่อนุญาตให้ Agent ข้ามสาขาเข้าดูข้อมูลที่ได้รับอนุญาตได้ (Cross-Selling)
+- **📈 Advanced Analytics & Integrations:**
+  - **System Health Monitor:** ตรวจสอบสถานะการเชื่อมต่อ API ของระบบ (เช่น Supabase, TikTok, Meta) รวมในหน้าเดียว
+  - **Time-based Analytics:** กรองข้อมูลและสรุปผล Dashboard ตามช่วงเวลา พร้อมปุ่มรีเซ็ต View Count
+  - **Social Media Studio:** สร้างเทมเพลตและส่งคำสั่งโพสต์ไปยัง Facebook, Instagram, TikTok แบบ One-stop
+  - **Keyword Automation:** ตอบกลับลูกค้าตาม Keyword และสเตตัสใน Social Media อัตโนมัติ
 - **📄 Advanced Document Mastery:**
   - **In-App Preview:** ดูตัวอย่างสัญญา HTML ก่อนพิมพ์หรือส่งเซ็น โดยไม่ต้องดาวน์โหลดไฟล์
   - **e-Signature Workflow:** รองรับการส่งเซ็นออนไลน์ (Adobe Sign/NDID Ready) พร้อมระบบติดตามสถานะ
@@ -74,11 +80,11 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
 
 ### 📈 กรณีศึกษาการสร้างรายได้ (Scenario Analysis)
 
-| สถานการณ์ (Scenario)  | รายได้รวม (THB/Month) | รายละเอียดโมเดลธุรกิจ                           |
-| :-------------------- | :-------------------- | :---------------------------------------------- |
-| **SaaS Per Branch**   | 150,000 - 450,000     | เก็บค่าบริการแยกตามสาขา (5,000 - 15,000 / สาขา) |
-| **AI Usage Plan**     | 20,000 - 50,000++     | รายได้เสริมจากการบวกกำไรค่า Token AI            |
-| **Enterprise Buyout** | 5,500,000 - 7,000,000 | ขายขาดระบบให้องค์กรใหญ่ครั้งเดียวจบ             |
+| สถานการณ์ (Scenario)  | รายได้รวม (THB/Month)  | รายละเอียดโมเดลธุรกิจ                           |
+| :-------------------- | :--------------------- | :---------------------------------------------- |
+| **SaaS Per Branch**   | 150,000 - 450,000      | เก็บค่าบริการแยกตามสาขา (5,000 - 15,000 / สาขา) |
+| **AI Usage Plan**     | 20,000 - 50,000++      | รายได้เสริมจากการบวกกำไรค่า Token AI            |
+| **Enterprise Buyout** | 8,500,000 - 12,000,000 | ขายขาดระบบให้องค์กรใหญ่ครั้งเดียวจบ             |
 
 ### 💰 การวิเคราะห์จุดคุ้มทุน (Break-even Analysis)
 

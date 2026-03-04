@@ -2,7 +2,7 @@
 
 รายละเอียดการติดตั้ง โครงสร้างฐานข้อมูล และผังการทำงานของระบบ Real Estate CRM (Enterprise Edition)
 
-> **อัปเดตล่าสุด:** 28 กุมภาพันธ์ 2026 (Enterprise v2.0 Baseline)
+> **อัปเดตล่าสุด:** 4 มีนาคม 2026 (Enterprise v2.0 & Multi-Branch Ready)
 
 ---
 
@@ -21,6 +21,7 @@
 - **Backend:** Next.js Server Actions, Edge Functions
 - **Database:** Supabase (PostgreSQL) + **RLS (Multi-Tenancy)**
 - **AI Engine:** Google Gemini 2.0 (Flash/Pro)
+- **Monitoring:** System Health & Integration Checks (Supabase, TikTok)
 
 ---
 
