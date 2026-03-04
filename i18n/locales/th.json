@@ -799,6 +799,15 @@
     "commercial_building": "🏦 อาคารพาณิชย์"
   },
   "property": {
+    "status": {
+      "active": "เปิดขาย/เช่า",
+      "draft": "ฉบับร่าง",
+      "archived": "เก็บถาวร",
+      "sold": "ขายแล้ว",
+      "rented": "เช่าแล้ว",
+      "reserved": "จองแล้ว",
+      "closed": "ปิดการขาย"
+    },
     "details": "รายละเอียดทรัพย์",
     "amenities": "สิ่งอำนวยความสะดวก",
     "no_description": "ไม่มีรายละเอียดเพิ่มเติม",

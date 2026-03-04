@@ -280,10 +280,11 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
             <div className="h-[300px] w-full">
               {mounted ? (
                 <ResponsiveContainer
-                  width="99%"
+                  width="100%"
                   height="100%"
                   minWidth={0}
                   minHeight={0}
+                  debounce={50}
                 >
                   <PieChart>
                     <defs>
@@ -392,10 +393,11 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
             <div className="h-[300px] w-full">
               {mounted ? (
                 <ResponsiveContainer
-                  width="99%"
+                  width="100%"
                   height="100%"
                   minWidth={0}
                   minHeight={0}
+                  debounce={50}
                 >
                   <BarChart
                     data={statusData}

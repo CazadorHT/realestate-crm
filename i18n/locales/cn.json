@@ -806,6 +806,15 @@
     "commercial_building": "🏦 商业建筑"
   },
   "property": {
+    "status": {
+      "active": "已上线",
+      "draft": "草稿",
+      "archived": "已归档",
+      "sold": "已售",
+      "rented": "已租",
+      "reserved": "已预订",
+      "closed": "已关闭"
+    },
     "details": "房产详情",
     "amenities": "配套设施",
     "no_description": "无更多详细说明。",

@@ -797,6 +797,15 @@
     "commercial_building": "🏦 Commercial Building"
   },
   "property": {
+    "status": {
+      "active": "Active",
+      "draft": "Draft",
+      "archived": "Archived",
+      "sold": "Sold",
+      "rented": "Rented",
+      "reserved": "Reserved",
+      "closed": "Closed"
+    },
     "details": "Property Details",
     "amenities": "Amenities",
     "no_description": "No additional details available.",
