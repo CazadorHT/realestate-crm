@@ -159,7 +159,7 @@ export function SiteConfigPanel() {
         {/* Save Action Bar */}
         <div
           className={cn(
-            "flex items-center justify-between p-4 rounded-2xl border bg-white/80 backdrop-blur-md shadow-lg sticky top-16 z-50 transition-all duration-500",
+            "flex items-center justify-between p-4 rounded-2xl border bg-white/80 backdrop-blur-md shadow-lg sticky top-20 z-50 transition-all duration-500",
             isDirty ? "border-amber-200" : "border-slate-100",
           )}
         >
@@ -596,7 +596,7 @@ export function SiteConfigPanel() {
 
           {/* Social Sharing Preview Sidebar */}
           <div className="space-y-8">
-            <Card className="border-slate-200 shadow-xl overflow-hidden sticky top-[150px]">
+            <Card className="border-slate-200 shadow-xl overflow-hidden sticky top-[180px]">
               <CardHeader className="bg-slate-900 text-white border-b border-slate-800">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-slate-800 rounded-lg">
