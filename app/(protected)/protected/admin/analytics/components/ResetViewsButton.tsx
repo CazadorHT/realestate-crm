@@ -45,7 +45,7 @@ export function ResetViewsButton() {
         <Button
           variant="outline"
           size="sm"
-          className="text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200 gap-2 transition-all"
+          className="text-slate-500 hover:text-white  hover:border-blue-200 gap-2 transition-all"
           disabled={isLoading}
         >
           <RefreshCcw

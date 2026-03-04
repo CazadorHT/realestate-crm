@@ -66,8 +66,8 @@ export default async function AnalyticsPage(props: {
               <Eye className="h-4 w-4" />
               ยอดเข้าชมรวม (Top 10)
             </CardDescription>
-            <CardTitle className="text-3xl md:text-4xl font-semibold">
-              {totalViews.toLocaleString()}
+            <CardTitle className="text-3xl md:text-4xl font-semibold text-white">
+              {totalViews.toLocaleString()} <span className="text-blue-50 text-xs font-normal tracking-normal">ยอดเข้าชมรวม</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
