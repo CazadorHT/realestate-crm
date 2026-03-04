@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { UsersPageHeader } from "@/features/users/UsersPageHeader";
 import { UsersStatsSummary } from "@/features/users/UsersStatsSummary";
@@ -34,6 +35,23 @@ export default async function UsersManagementPage() {
       "id, full_name, email, avatar_url, phone, role, created_at, team_id",
     )
     .order("created_at", { ascending: false });
+
+  // ดึง Auth Provider จาก auth.users ผ่าน Admin API
+  const adminClient = createAdminClient();
+  const { data: authUsersData } = await adminClient.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  });
+
+  // สร้าง Map: userId → provider
+  const providerMap = new Map<string, string>();
+  for (const authUser of authUsersData?.users ?? []) {
+    const provider =
+      authUser.app_metadata?.provider ??
+      authUser.identities?.[0]?.provider ??
+      "email";
+    providerMap.set(authUser.id, provider);
+  }
 
   // ดึงข้อมูลทีมทั้งหมด
   const { data: teams } = await supabase.from("teams").select("id, name");
@@ -76,7 +94,10 @@ export default async function UsersManagementPage() {
           </h2>
         </div>
         <UsersTable
-          users={users || []}
+          users={(users || []).map((u) => ({
+            ...u,
+            auth_provider: providerMap.get(u.id) ?? "email",
+          }))}
           currentUserId={user.id}
           teams={teams || []}
         />
