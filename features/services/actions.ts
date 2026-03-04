@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { mapDbError } from "@/lib/db-error";
 
 export type ServiceRow = {
   id: string;
@@ -115,7 +116,7 @@ export async function createService(input: CreateServiceInput) {
       : null,
   });
 
-  if (error) return { success: false, message: error.message };
+  if (error) return { success: false, message: mapDbError(error) };
 
   revalidatePath("/services");
   revalidatePath("/protected/services");
@@ -137,7 +138,7 @@ export async function updateService(input: UpdateServiceInput) {
     })
     .eq("id", id);
 
-  if (error) return { success: false, message: error.message };
+  if (error) return { success: false, message: mapDbError(error) };
 
   revalidatePath("/services");
   revalidatePath("/protected/services");
@@ -148,7 +149,7 @@ export async function deleteService(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("services").delete().eq("id", id);
 
-  if (error) return { success: false, message: error.message };
+  if (error) return { success: false, message: mapDbError(error) };
 
   revalidatePath("/services");
   revalidatePath("/protected/services");

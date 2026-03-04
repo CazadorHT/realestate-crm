@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { getSystemConfig } from "./system-config";
+import { mapDbError } from "@/lib/db-error";
 
 export type ActionState<TOutput> =
   | { success: true; data: TOutput }
@@ -96,7 +97,7 @@ export function createSafeAction<TInput, TOutput>(
       console.error("Action Error:", err);
       return {
         success: false,
-        error: err.message || "เกิดข้อผิดพลาดที่ไม่คาดคิด",
+        error: mapDbError(err),
       };
     }
   };

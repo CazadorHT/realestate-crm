@@ -6,6 +6,18 @@
  */
 export async function getSystemStatus() {
   const status = {
+    supabase: {
+      configured: !!(
+        process.env.NEXT_PUBLIC_SUPABASE_URL &&
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY &&
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      ),
+      missing: [
+        !process.env.NEXT_PUBLIC_SUPABASE_URL && "Supabase URL",
+        !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY && "Anon Key",
+        !process.env.SUPABASE_SERVICE_ROLE_KEY && "Service Role Key",
+      ].filter(Boolean) as string[],
+    },
     meta: {
       configured: !!(
         process.env.META_PAGE_ACCESS_TOKEN &&
@@ -27,6 +39,15 @@ export async function getSystemStatus() {
       missing: [
         !process.env.LINE_CHANNEL_ACCESS_TOKEN && "Channel Access Token",
         !process.env.LINE_CHANNEL_SECRET && "Channel Secret",
+      ].filter(Boolean) as string[],
+    },
+    tiktok: {
+      configured: !!(
+        process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET
+      ),
+      missing: [
+        !process.env.TIKTOK_CLIENT_KEY && "Client Key",
+        !process.env.TIKTOK_CLIENT_SECRET && "Client Secret",
       ].filter(Boolean) as string[],
     },
     ai: {

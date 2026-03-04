@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -6,34 +6,14 @@ import { requireAuthContext, assertAdmin, AuthzError } from "@/lib/authz";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { logAudit } from "@/lib/audit";
-
-/**
- * Maps common Database error codes to user-friendly Thai messages
- */
-function mapDatabaseError(error: any): string {
-  if (!error) return "เกิดข้อผิดพลาดไม่ทราบสาเหตุ";
-
-  const code = error.code;
-  switch (code) {
-    case "23505": // unique_violation
-      return "ข้อมูลนี้มีอยู่ในระบบแล้ว (ซ้ำซ้อน)";
-    case "23503": // foreign_key_violation
-      return "ไม่สามารถดำเนินการได้ เนื่องจากข้อมูลนี้ยังถูกใช้งานอยู่ในส่วนอื่น";
-    case "42P01": // undefined_table
-      return "ไม่พบตารางข้อมูลในระบบ";
-    case "PGRST116": // multiple_rows_yielded
-      return "พบข้อมูลซ้ำซ้อนมากกว่าที่คาดไว้";
-    default:
-      return error.message || "เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล";
-  }
-}
+import { mapDbError } from "@/lib/db-error";
 
 const createTenantSchema = z.object({
-  name: z.string().min(2, "ชื่อสาขาต้องมีอย่างน้อย 2 ตัวอักษร"),
+  name: z.string().min(2, "à¸Šà¸·à¹ˆà¸­à¸ªà¸²à¸‚à¸²à¸•à¹‰à¸­à¸‡à¸¡à¸µà¸­à¸¢à¹ˆà¸²à¸‡à¸™à¹‰à¸­à¸¢ 2 à¸•à¸±à¸§à¸­à¸±à¸à¸©à¸£"),
   slug: z
     .string()
-    .min(2, "Slug ต้องมีอย่างน้อย 2 ตัวอักษร")
-    .regex(/^[a-z0-h-]+$/, "Slug ต้องเป็นภาษาอังกฤษตัวเล็กและขีดกลางเท่านั้น"),
+    .min(2, "Slug à¸•à¹‰à¸­à¸‡à¸¡à¸µà¸­à¸¢à¹ˆà¸²à¸‡à¸™à¹‰à¸­à¸¢ 2 à¸•à¸±à¸§à¸­à¸±à¸à¸©à¸£")
+    .regex(/^[a-z0-h-]+$/, "Slug à¸•à¹‰à¸­à¸‡à¹€à¸›à¹‡à¸™à¸ à¸²à¸©à¸²à¸­à¸±à¸‡à¸à¸¤à¸©à¸•à¸±à¸§à¹€à¸¥à¹‡à¸à¹à¸¥à¸°à¸‚à¸µà¸”à¸à¸¥à¸²à¸‡à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™"),
 });
 
 export async function getTenantCountAction() {
@@ -47,7 +27,7 @@ export async function getTenantCountAction() {
     .eq("is_deleted", false);
 
   if (error) {
-    return { error: mapDatabaseError(error) };
+    return { error: mapDbError(error) };
   }
 
   return { count: count || 0 };
@@ -73,7 +53,7 @@ export async function createInitialTenantAction(
     .single();
 
   if (tError || !tenant) {
-    return { error: mapDatabaseError(tError) };
+    return { error: mapDbError(tError) };
   }
 
   // 2. Add current admin as OWNER
@@ -159,7 +139,7 @@ export async function migrateDataToTenantAction(tenantId: string) {
 
     return { success: true };
   } catch (error: any) {
-    return { error: mapDatabaseError(error) };
+    return { error: mapDbError(error) };
   }
 }
 
@@ -182,7 +162,7 @@ export async function createTenantAction(
     .single();
 
   if (error || !data) {
-    return { error: mapDatabaseError(error) };
+    return { error: mapDbError(error) };
   }
 
   revalidatePath("/protected/settings/branches");
@@ -211,7 +191,7 @@ export async function getTenantsAction() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return { error: mapDatabaseError(error) };
+    return { error: mapDbError(error) };
   }
 
   // Flatten member count if necessary (Supabase return type can be complex)
@@ -246,7 +226,7 @@ export async function getTenantMembersAction(tenantId: string) {
     .eq("tenant_id", tenantId);
 
   if (error) {
-    return { error: error.message };
+    return { error: mapDbError(error) };
   }
 
   return { data };
@@ -254,7 +234,7 @@ export async function getTenantMembersAction(tenantId: string) {
 
 const addMemberSchema = z.object({
   tenantId: z.string().uuid(),
-  email: z.string().email("อีเมลไม่ถูกต้อง"),
+  email: z.string().email("à¸­à¸µà¹€à¸¡à¸¥à¹„à¸¡à¹ˆà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡"),
   role: z.enum(["OWNER", "ADMIN", "MANAGER", "AGENT", "VIEWER"]),
 });
 
@@ -276,7 +256,7 @@ export async function addTenantMemberAction(
 
   if (pError || !profile) {
     return {
-      error: "ไม่พบผู้ใช้งานรายนี้ในระบบ (ผู้ใช้งานต้องสมัครสมาชิกก่อน)",
+      error: "à¹„à¸¡à¹ˆà¸žà¸šà¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¸‡à¸²à¸™à¸£à¸²à¸¢à¸™à¸µà¹‰à¹ƒà¸™à¸£à¸°à¸šà¸š (à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¸‡à¸²à¸™à¸•à¹‰à¸­à¸‡à¸ªà¸¡à¸±à¸„à¸£à¸ªà¸¡à¸²à¸Šà¸´à¸à¸à¹ˆà¸­à¸™)",
     };
   }
 
@@ -354,7 +334,7 @@ export async function getAllProfilesAction() {
     .order("full_name", { ascending: true });
 
   if (error) {
-    return { error: error.message };
+    return { error: mapDbError(error) };
   }
 
   return { data };
@@ -386,7 +366,7 @@ export async function transferTenantMemberAction(
   });
 
   if (error) {
-    return { error: mapDatabaseError(error) };
+    return { error: mapDbError(error) };
   }
 
   revalidatePath(`/protected/settings/branches/${validated.fromTenantId}`);
@@ -396,7 +376,7 @@ export async function transferTenantMemberAction(
 
 const inviteSchema = z.object({
   tenantId: z.string().uuid(),
-  email: z.string().email("อีเมลไม่ถูกต้อง"),
+  email: z.string().email("à¸­à¸µà¹€à¸¡à¸¥à¹„à¸¡à¹ˆà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡"),
   role: z.enum(["ADMIN", "MANAGER", "AGENT", "VIEWER"]),
 });
 
@@ -421,7 +401,7 @@ export async function createTenantInvitationAction(
     .single();
 
   if (error) {
-    return { error: mapDatabaseError(error) };
+    return { error: mapDbError(error) };
   }
 
   await logAudit(ctx, {
@@ -456,9 +436,9 @@ export async function createTenantInvitationAction(
         userId: profile.id,
         tenantId: validated.tenantId,
         type: "BRANCH_INVITE",
-        title: "คำเชิญเข้าร่วมสาขาใหม่",
-        message: `คุณได้รับคำเชิญให้เข้าร่วมสาขา "${tenant?.name || "ใหม่"}" ในบทบาท ${validated.role}`,
-        link: "/protected/settings/branches", // Link to where они can accept/see invitations
+        title: "à¸„à¸³à¹€à¸Šà¸´à¸à¹€à¸‚à¹‰à¸²à¸£à¹ˆà¸§à¸¡à¸ªà¸²à¸‚à¸²à¹ƒà¸«à¸¡à¹ˆ",
+        message: `à¸„à¸¸à¸“à¹„à¸”à¹‰à¸£à¸±à¸šà¸„à¸³à¹€à¸Šà¸´à¸à¹ƒà¸«à¹‰à¹€à¸‚à¹‰à¸²à¸£à¹ˆà¸§à¸¡à¸ªà¸²à¸‚à¸² "${tenant?.name || "à¹ƒà¸«à¸¡à¹ˆ"}" à¹ƒà¸™à¸šà¸—à¸šà¸²à¸— ${validated.role}`,
+        link: "/protected/settings/branches", // Link to where Ð¾Ð½Ð¸ can accept/see invitations
       });
     }
   } catch (notifyErr) {
@@ -481,7 +461,7 @@ export async function getTenantInvitationsAction(tenantId: string) {
     .eq("status", "PENDING");
 
   if (error) {
-    return { error: mapDatabaseError(error) };
+    return { error: mapDbError(error) };
   }
 
   return { data };
@@ -499,7 +479,7 @@ export async function cancelTenantInvitationAction(invitationId: string) {
     .single();
 
   if (fetchError || !inv) {
-    return { error: "ไม่พบข้อมูลคำเชิญ" };
+    return { error: "à¹„à¸¡à¹ˆà¸žà¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸„à¸³à¹€à¸Šà¸´à¸" };
   }
 
   const { error } = await adminSupabase
@@ -508,7 +488,7 @@ export async function cancelTenantInvitationAction(invitationId: string) {
     .eq("id", invitationId);
 
   if (error) {
-    return { error: mapDatabaseError(error) };
+    return { error: mapDbError(error) };
   }
 
   await logAudit(
@@ -549,7 +529,7 @@ export async function updateTenantAction(
     .single();
 
   if (error || !data) {
-    return { error: mapDatabaseError(error) };
+    return { error: mapDbError(error) };
   }
 
   revalidatePath("/protected/settings/branches");
@@ -585,7 +565,7 @@ export async function deleteTenantAction(id: string) {
     .eq("id", id);
 
   if (error) {
-    return { error: mapDatabaseError(error) };
+    return { error: mapDbError(error) };
   }
 
   revalidatePath("/protected/settings/branches");

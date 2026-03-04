@@ -10,6 +10,7 @@ import {
   authzFail,
 } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
+import { mapDbError } from "@/lib/db-error";
 
 import type { OwnerFormValues } from "./types";
 
@@ -57,7 +58,7 @@ export async function getOwnerByIdAction(id: string) {
 
   if (error || !owner) {
     console.error("Error fetching owner:", error);
-    throw new Error("Owner not found");
+    throw new Error("ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ");
   }
 
   assertAuthenticated({
@@ -93,7 +94,7 @@ export async function createOwnerAction(values: OwnerFormValues) {
     if (error || !owner)
       return {
         success: false,
-        message: error?.message ?? "Create owner failed",
+        message: mapDbError(error) ?? "ไม่สามารถสร้างข้อมูลเจ้าของทรัพย์ได้",
       };
 
     await logAudit(ctx, {
@@ -124,7 +125,7 @@ export async function updateOwnerAction(id: string, values: OwnerFormValues) {
       .single();
 
     if (findError || !existing) {
-      return { success: false, message: "Owner not found" };
+      return { success: false, message: "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ" };
     }
 
     assertAuthenticated({
@@ -147,7 +148,7 @@ export async function updateOwnerAction(id: string, values: OwnerFormValues) {
       .eq("id", id)
       .eq("tenant_id", ctx.tenantId!);
 
-    if (error) return { success: false, message: error.message };
+    if (error) return { success: false, message: mapDbError(error) };
 
     await logAudit(ctx, {
       action: "owner.update",
@@ -177,7 +178,7 @@ export async function deleteOwnerAction(id: string) {
       .single();
 
     if (findError || !existing) {
-      return { success: false, message: "Owner not found" };
+      return { success: false, message: "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ" };
     }
 
     assertAuthenticated({
@@ -190,7 +191,7 @@ export async function deleteOwnerAction(id: string) {
       .delete()
       .eq("id", id)
       .eq("tenant_id", ctx.tenantId!);
-    if (error) return { success: false, message: error.message };
+    if (error) return { success: false, message: mapDbError(error) };
 
     await logAudit(ctx, {
       action: "owner.delete",

@@ -7,6 +7,7 @@ import { CookieConsent } from "@/components/common/CookieConsent";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { TenantProvider } from "@/components/providers/TenantProvider";
 import { SiteConfigProvider } from "@/components/providers/SiteConfigProvider";
+import { NavigationProgressBar } from "@/components/common/NavigationProgressBar";
 import { getServerTranslations } from "@/lib/i18n";
 import { cookies } from "next/headers";
 import { siteConfig } from "@/lib/site-config";
@@ -88,6 +89,7 @@ export default async function RootLayout({
           <SiteConfigProvider initialSettings={settings}>
             <TenantProvider>
               {children}
+              <NavigationProgressBar />
               <Toaster />
               <CookieConsent />
             </TenantProvider>

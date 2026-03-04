@@ -9,6 +9,7 @@ import {
   SiteSettings,
   siteSettingsSchema,
 } from "./schema";
+import { mapDbError } from "@/lib/db-error";
 
 const DEFAULT_SETTINGS: SiteSettings = {
   smart_match_wizard_enabled: true,
@@ -191,7 +192,7 @@ export async function updateSiteSetting(
 
     if (error) {
       console.error("Error updating site setting:", error);
-      return { success: false, message: error.message };
+      return { success: false, message: mapDbError(error) };
     }
 
     revalidatePath("/");
@@ -200,7 +201,7 @@ export async function updateSiteSetting(
     return { success: true };
   } catch (error) {
     console.error("Error in updateSiteSetting:", error);
-    return { success: false, message: "Unknown error" };
+    return { success: false, message: "เกิดข้อผิดพลาดที่ไม่คาดคิด" };
   }
 }
 
@@ -238,7 +239,7 @@ export async function updateSiteSettings(
 
     if (error) {
       console.error("Error updating site settings:", error);
-      return { success: false, message: error.message };
+      return { success: false, message: mapDbError(error) };
     }
 
     revalidatePath("/");

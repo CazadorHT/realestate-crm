@@ -12,8 +12,9 @@ import {
   UpdateContractInput,
   RentalContract,
 } from "./schema";
-import { logAudit } from "@/lib/audit"; // Need to update audit types if I log specific contract events
+import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { mapDbError } from "@/lib/db-error";
 
 export async function getContractByDealId(
   dealId: string,
@@ -96,8 +97,7 @@ export async function upsertContractAction(
       if (existingContract) {
         return {
           success: false,
-          message:
-            "A contract already exists for this deal. Please edit the existing one.",
+          message: "ดีลนี้มีสัญญาอยู่แล้ว กรุณาแก้ไขสัญญาเดิมแทน",
         };
       }
 
@@ -110,11 +110,11 @@ export async function upsertContractAction(
         .single();
 
       if (dealErr || !deal)
-        return { success: false, message: "Deal not found" };
+        return { success: false, message: "ไม่พบข้อมูลดีลที่ต้องการ" };
       if (!["RENT", "SALE"].includes(deal.deal_type))
         return {
           success: false,
-          message: "Contracts are allowed only for RENT or SALE deals",
+          message: "สามารถสร้างสัญญาได้เฉพาะดีลประเภทเช่าหรือขายเท่านั้น",
         };
 
       // Create -> auto-generate contract number if not provided
@@ -142,10 +142,10 @@ export async function upsertContractAction(
       if (errMsg && /unique/.test(errMsg.toLowerCase())) {
         return {
           success: false,
-          message: "A contract already exists for this deal",
+          message: "ดีลนี้มีสัญญาอยู่แล้ว",
         };
       }
-      throw new Error(errMsg);
+      throw new Error(mapDbError(error));
     }
 
     // Log audit
@@ -167,7 +167,10 @@ export async function upsertContractAction(
     return { success: true, data: data };
   } catch (error: unknown) {
     console.error("Upsert Contract Error:", error);
-    const msg = error instanceof Error ? error.message : "An error occurred";
+    const msg =
+      error instanceof Error
+        ? mapDbError(error)
+        : "เกิดข้อผิดพลาดในการบันทึกสัญญา";
     return { success: false, message: msg };
   }
 }
@@ -188,14 +191,14 @@ export async function deleteContractAction(id: string) {
       .single();
 
     if (fetchErr || !existing)
-      return { success: false, message: "Contract not found" };
+      return { success: false, message: "ไม่พบสัญญาที่ต้องการ" };
 
     const { error } = await supabase
       .from("rental_contracts")
       .delete()
       .eq("id", id)
       .eq("tenant_id", ctx.tenantId!);
-    if (error) return { success: false, message: error.message };
+    if (error) return { success: false, message: mapDbError(error) };
 
     await logAudit({ supabase, user, role } as any, {
       action: "rental_contract.delete",
@@ -210,7 +213,8 @@ export async function deleteContractAction(id: string) {
     return { success: true };
   } catch (err: unknown) {
     console.error("deleteContractAction error:", err);
-    const msg = err instanceof Error ? err.message : "An error occurred";
+    const msg =
+      err instanceof Error ? mapDbError(err) : "เกิดข้อผิดพลาดในการลบสัญญา";
     return { success: false, message: msg };
   }
 }
