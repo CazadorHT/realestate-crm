@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Prompt, Noto_Sans_Thai } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import "flag-icons/css/flag-icons.min.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -81,10 +82,32 @@ export default async function RootLayout({
 
   return (
     <html lang={lang} suppressHydrationWarning>
+      <head>
+        {/* Google Tag Manager */}
+        <Script id="gtm" strategy="afterInteractive">
+          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+          })(window,document,'script','dataLayer','GTM-NBG46JLN');`}
+        </Script>
+        {/* End Google Tag Manager */}
+      </head>
       <body
         className={`${prompt.className} ${notoThai.variable} antialiased`}
         suppressHydrationWarning
       >
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-NBG46JLN"
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          ></iframe>
+        </noscript>
+        {/* End Google Tag Manager (noscript) */}
+
         <LanguageProvider initialLanguage={lang as any}>
           <SiteConfigProvider initialSettings={settings}>
             <TenantProvider>

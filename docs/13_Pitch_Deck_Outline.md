@@ -1,6 +1,6 @@
 # 📊 Pitch Deck Outline: VC Connect Asset CRM (Enterprise Edition)
 
-> สไลด์นำเสนอ 15 หน้า สำหรับ Pitching นำเสนอขายขาด (Exclusive Buyout) มูลค่า 12.5M - 15M บาท
+> สไลด์นำเสนอ 16 หน้า สำหรับ Pitching นำเสนอขายขาด (Exclusive Buyout) มูลค่า 12.5M - 15M บาท
 > กลุ่มเป้าหมาย: Top 10 Real Estate Developers & International Agencies
 
 ---
@@ -54,16 +54,25 @@
 - **Bullet 2:** โพสต์ทรัพย์ลงทุก Social Media พร้อมกันใน 1 คลิก
 - **Bullet 3:** _Keyword Automation_ คอมเมนต์ว่า "สนใจ" ระบบดึงเข้า DM พร้อมพ่นข้อมูลบ้านให้ทันที
 
-## Slide 7: Enterprise Architecture & Security (ความปลอดภัย)
+## Slide 7: Key Feature 4 - AI-Driven Marketing & Analytics 🆕
+
+- **Header:** เปลี่ยน Data ให้เป็นกำไรด้วย AI Tracking
+- **Concept:** ผสาน Google Analytics 4 (GA4) และ GTM เข้ากับ AI ของระบบ CRM
+- **Bullet 1:** AI Lead Scoring - ประเมินโอกาสปิดการขาย (1-100) ทันทีที่ลูกค้าทักมาจากพฤติกรรมการดูเว็บ
+- **Bullet 2:** AI Executive Briefing - วิเคราะห์ข้อมูลคนเข้าเว็บและสรุปเทรนด์ตลาดรายสัปดาห์ (เช่น "สัปดาห์นี้คนหาคอนโดสุขุมวิทเพิ่ม 45% ควรยิง Ads เพิ่ม")
+- **Bullet 3:** Smart Retargeting - จัดกลุ่มพฤติกรรมลูกค้าที่ "กำลังตัดสินใจ" เพื่อนำไปทำ Lookalike โฆษณาต่อบน Meta หรือ TikTok
+- **Visual:** ภาพจำลอง AI วิเคราะห์กราฟแท่ง GA4 พ่นออกมาเป็นคำแนะนำภาษาไทย
+
+## Slide 8: Enterprise Architecture & Security (ความปลอดภัย)
 
 - **Header:** Bank-Grade Security & Multi-Tenant Isolation
-- **Concept:** ปกป้องข้อมูลลูกค้าขั้นสูงสุด (PDPA 100% Ready)
+- **Concept:** ปกป้องข้อมูลลูกค้าขั้นสูงสุด (PDPA 100% Ready + GA4 Consent Mode)
 - **Bullet 1:** ข้อมูลถูกแยกตามสาขาและบริษัทในระดับ Database (RLS) อย่างเด็ดขาด
 - **Bullet 2:** พนักงานสาขา ก. ไม่มีทางเห็นหรือขโมยลูกค้าสาขา ข. ได้
 - **Bullet 3:** Audit Logs ละเอียด บันทึกทุกการกระทำเพื่อความโปร่งใส
 - **Visual:** Diagram แสดง Tenant -> Branches -> Agents Isolation
 
-## Slide 8: The Dashboard & Exec Insights
+## Slide 9: The Dashboard & Exec Insights
 
 - **Header:** มองเห็นภาพรวมธุรกิจใน 10 วินาที
 - **Concept:** สถิติสำหรับผู้บริหาร C-Level
@@ -72,7 +81,7 @@
 - **Bullet 3:** AI Budget Monitor - คุมงบการเรียกใช้ Gemini API ได้แบบเรียลไทม์ (32 บาท/USD)
 - **Visual:** Screenshot สวยๆ ของ Executive Dashboard Chart
 
-## Slide 9: "Build vs. Buy" (ทำไมไม่ควรจ้างทีมทำเอง)
+## Slide 10: "Build vs. Buy" (ทำไมไม่ควรจ้างทีมทำเอง)
 
 - **Header:** Why Acquire Instead of Building? (ซื้อคุ้มกว่าสร้างเองมหาศาล)
 - **Comparison Table:**
@@ -80,16 +89,16 @@
   - **VC Connect Buyout:** ใช้งานได้พรุ่งนี้ | ทดสอบระบบแล้ว 100% (Zero Bugs) | Latest Tech Stack (Next.js 16)
 - **Conclusion:** "ประหยัดเวลา 2 ปี เพื่อเข้าทำตลาดและขยายสาขาได้ทันที"
 
-## Slide 10: Scalability & Tech Stack
+## Slide 11: Scalability & Tech Stack
 
 - **Header:** ล้ำหน้าที่สุดในตลาด พร้อมขยายระดับ Global
-- **Tech Stack Logos:** Next.js, React 19, Tailwind 4, Supabase (PostgreSQL), Gemini 2.0
+- **Tech Stack Logos:** Next.js, React 19, Tailwind 4, Supabase (PostgreSQL), Gemini 2.0, GA4/GTM
 - **Concept:** ทิ้งระบบเก่า (Legacy) ไว้ข้างหลัง
 - **Bullet 1:** 0% Server Maintenance ด้วย Cloud-Native Architecture
 - **Bullet 2:** รองรับการทำงาน Multi-language 3 ภาษา (TH, EN, CN)
 - **Visual:** สัญลักษณ์จรวด (Rocket) ทะยานขึ้น Cloud
 
-## Slide 11: ROI Calculation
+## Slide 12: ROI Calculation
 
 - **Header:** จุดคุ้มทุนที่รวดเร็ว (Fastest ROI)
 - **Concept:** คุณสร้างรายได้จากการถือระบบนี้ได้อย่างไร?
@@ -97,7 +106,7 @@
 - **Option 2 (Agency SaaS):** แตกบริษัทลูกเปิด White-label ปล่อยเช่าเพียง 20 สาขา (สาขาละ 35,000/เดือน) จะคืนทุนโปรเจคใน 1.5 ปี
 - **Visual:** กราฟจำลองกำไร (Break-even chart)
 
-## Slide 12: Business Model Transition
+## Slide 13: Business Model Transition
 
 - **Header:** โอกาสในการเติบโตของบริษัท (Future Expansion)
 - **Bullet 1:** Phase 1: ใช้งานภายในบริษัท (Internal Operations Optimization)
@@ -105,7 +114,7 @@
 - **Bullet 3:** Phase 3: ต่อยอดเป็น Data Ecosystem (ขาย Market Trend)
 - **Visual:** Roadmap 3 แกนการเติบโต
 
-## Slide 13: Summary of the Deal
+## Slide 14: Summary of the Deal
 
 - **Header:** The Exclusive Buyout Package (สิทธิ์ขาดทั้งหมด)
 - **Bullet 1:** Full Source Code Ownership 100% (Git Repositories)
@@ -114,14 +123,14 @@
 - **Bullet 4:** 1-Year Technical Warranty & Support
 - **Visual:** กล่องของขวัญพรีเมียม / ใบ License
 
-## Slide 14: Value Proposition & Pricing
+## Slide 15: Value Proposition & Pricing
 
 - **Header:** The Investment
 - **Title:** Platinum Exclusive Buyout
 - **Price:** $350,000 USD (≈ 12.5M THB)
 - **Call to Action:** พิเศษสำหรับ Developer ที่ต้องการ Lead ตลาดในปี 2026 รับมอบ Source Code ทันที และเราจะทำงานร่วมกับทีม IT ของคุณจนกว่าทุกอย่างจะ On-board 100%
 
-## Slide 15: Q&A / Contact
+## Slide 16: Q&A / Contact
 
 - **Header:** Questions & Next Steps
 - **Contact Info:** ชื่อ, ตำแหน่ง, อีเมล, เบอร์โทร
