@@ -16,6 +16,7 @@ import {
   Zap,
   Scale,
   Loader2,
+  Printer,
 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
@@ -101,6 +102,32 @@ export function AvmResultDialog({
     }
   };
 
+  const handleExportPdf = () => {
+    if (!result) return;
+
+    const values = form.getValues();
+    const exportData = {
+      result,
+      inputs: {
+        propertyType: values.property_type,
+        listingType: listingType,
+        sizeSqm: values.size_sqm,
+        bedrooms: values.bedrooms,
+        bathrooms: values.bathrooms,
+        province: values.province,
+        district: values.district,
+        subdistrict: values.subdistrict,
+        popularArea: values.popular_area,
+      },
+    };
+
+    // Base64 encode the JSON data
+    const encodedStr = btoa(
+      unescape(encodeURIComponent(JSON.stringify(exportData))),
+    );
+    window.open(`/avm-report?data=${encodedStr}`, "_blank");
+  };
+
   const applyPrice = (price: number) => {
     if (listingType === "SALE") {
       form.setValue("original_price", price, {
@@ -126,12 +153,12 @@ export function AvmResultDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[700px] overflow-hidden p-0 border-0 shadow-2xl rounded-2xl">
         <div className="bg-linear-to-r from-indigo-600 to-violet-600 p-6 sm:p-8 text-white">
-          <DialogHeader>
+          <DialogHeader className="flex flex-row items-start justify-between pr-8">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-xl">
                 <Sparkles className="h-6 w-6 text-yellow-300" />
               </div>
-              <div>
+              <div className="mt-1">
                 <DialogTitle className="text-2xl font-bold tracking-tight">
                   AI Smart Valuation
                 </DialogTitle>
@@ -140,6 +167,18 @@ export function AvmResultDialog({
                 </DialogDescription>
               </div>
             </div>
+
+            {result && (
+              <Button
+                onClick={handleExportPdf}
+                variant="outline"
+                size="sm"
+                className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-full cursor-pointer h-9 px-4 mt-2"
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                พิมพ์รายงาน (PDF)
+              </Button>
+            )}
           </DialogHeader>
         </div>
 
