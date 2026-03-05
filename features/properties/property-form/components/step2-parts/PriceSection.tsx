@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
+import { AvmResultDialog } from "./AvmResultDialog";
 
 // Helper for smooth height animations
 function CollapsibleSection({
@@ -63,6 +64,8 @@ export function PriceSection({
   const [showSaleDiscount, setShowSaleDiscount] = useState(false);
   const [showRentDiscount, setShowRentDiscount] = useState(false);
   const [showCommonFee, setShowCommonFee] = useState(false);
+  const [isAvmSaleOpen, setIsAvmSaleOpen] = useState(false);
+  const [isAvmRentOpen, setIsAvmRentOpen] = useState(false);
 
   // Auto-open discount fields ONLY if there's an actual discount
   const saleOriginal = form.watch("original_price");
@@ -198,6 +201,17 @@ export function PriceSection({
                       : "text-sm font-medium "
                   }
                 />
+
+                {/* AI Evaluate Button for Sale */}
+                {!isReadOnly && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAvmSaleOpen(true)}
+                    className="flex w-fit items-center gap-2 px-3 py-1.5 mt-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 transition-colors shadow-sm cursor-pointer hover:shadow-md"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />✨ ประเมินราคาด้วย AI
+                  </button>
+                )}
 
                 {/* Discount Section */}
                 <div className="space-y-3">
@@ -435,6 +449,18 @@ export function PriceSection({
                         : "text-sm font-medium"
                     }
                   />
+
+                  {/* AI Evaluate Button for Rent */}
+                  {!isReadOnly && (
+                    <button
+                      type="button"
+                      onClick={() => setIsAvmRentOpen(true)}
+                      className="flex w-fit items-center gap-2 px-3 py-1.5 mt-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 transition-colors shadow-sm cursor-pointer hover:shadow-md"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />✨ ประเมินค่าเช่าด้วย
+                      AI
+                    </button>
+                  )}
                 </div>
 
                 {/* Discount Section */}
@@ -585,6 +611,20 @@ export function PriceSection({
           </p>
         </div>
       </CardContent>
+
+      {/* AVM Result Dialogs */}
+      <AvmResultDialog
+        form={form}
+        isOpen={isAvmSaleOpen}
+        onClose={() => setIsAvmSaleOpen(false)}
+        listingType="SALE"
+      />
+      <AvmResultDialog
+        form={form}
+        isOpen={isAvmRentOpen}
+        onClose={() => setIsAvmRentOpen(false)}
+        listingType="RENT"
+      />
     </Card>
   );
 }
