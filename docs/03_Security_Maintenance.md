@@ -22,15 +22,17 @@
 
 ## 2. ความปลอดภัยของข้อมูล AI และเอกสาร
 
-### 🤖 AI Data Privacy
+### 🤖 AI Data Privacy & AVM Security
 
-- ข้อมูลที่ส่งไปยัง Gemini API จะไม่ถูกนำไป Train Model ต่อ (อิงตาม Enterprise API Terms)
-- ระบบเก็บ Log เฉพาะจำนวน Token (Prompt/Completion) และต้นทุนเงินบาท (32 THB/USD) เพื่อการตรวจสอบทางการเงิน
+- **No Model Training:** ข้อมูลทรัพย์สินและลูกค้าที่ส่งไปยัง Gemini API จะไม่ถูกนำไป Train Model ต่อ (อิงตาม Enterprise API Terms)
+- **Financial Logging:** ระบบเก็บ Log เฉพาะจำนวน Token (Prompt/Completion) และต้นทุนเงินบาท (32 THB/USD) เพื่อการตรวจสอบทางการเงินที่รัดกุม
+- **AVM Data Handling:** ข้อมูล Market Comps ที่ดึงมาประเมินราคา จะถูกแปลงเป็นโครงสร้างแบบจำลอง (Anonymized) ไม่ส่งข้อมูล PII (Personally Identifiable Information) ของเจ้าของทรัพย์ไปให้ AI วิเคราะห์
 
-### 📄 Document Security
+### 📄 Document Security & Smart Contracts
 
 - **HTML-to-Base64:** รูปภาพในเอกสารจะถูกฝังเป็น Base64 ป้องกันการเข้าถึงไฟล์รูปภาพโดยตรงจากภายนอก
-- **Signed URL:** การเข้าดูไฟล์ใน Storage ต้องผ่าน URL ที่มีอายุจำกัด (Expiring Link) เท่านั้น
+- **Signed URL:** การเข้าดูไฟล์ใน Storage ทั่วไปต้องผ่าน URL ที่มีอายุจำกัด (Expiring Link) เท่านั้น
+- **Template Storage:** ไฟล์ `.docx` ที่แอดมินอัปโหลดไว้สำหรับการสร้างฟอร์ม Dynamic Contract จะถูกเก็บใน Bucket Private ที่เข้าถึงได้เฉพาะ Server Role
 - **E-Signature Audit:** บันทึก IP Address และ Digital Fingerprint ของผู้ลงนามเพื่อใช้เป็นหลักฐานทางกฎหมาย
 
 ---

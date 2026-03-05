@@ -30,11 +30,17 @@
 
 ## 👥 ระบบจัดการทีมและพนักงาน (Team & Member Management)
 
-### 🔄 Workflow การทำงาน
+### 🔄 Workflow การทำงานที่สำคัญ
 
 - **Invitation System:** การเพิ่มพนักงานใหม่ทำผ่านระบบส่งคำเชิญ (Invitations) เพื่อความปลอดภัย
 - **Role Assignment:** พนักงานหนึ่งคนสามารถมีบทบาทแตกต่างกันในแต่ละสาขาได้
 - **Referral Flow:** ระบบอนุญาตให้พนักงานสาขา A ส่งต่อลูกค้าให้พนักงานสาขา B (Lead Transfer) โดยมีบันทึกประวัติ (Audit Log) อย่างชัดเจน
+- **Automated Valuation Model (AVM):**
+  - **Agent:** สร้างทรัพย์สินและกดปุ่ม "ประเมินราคาด้วย AI" เพื่อได้ราคา Max Profit, Market Price, Quick Sale จากนั้นสามารถ **"พ่น PDF เสนอราคา"** ให้ผู้ขายได้
+  - **Manager / Admin:** ดูแลภาพรวม และจะได้รับการแจ้งเตือน (Market Drop Alert) หาก Agent ปิดดีลหรือตั้งราคาต่ำกว่าตลาดเกิน 15%
+- **Smart Contract & Document Generation:**
+  - **Admin:** อัปโหลดเทมเพลต Word (`.docx`) กลางของบริษัทเข้าระบบ
+  - **Agent:** เมื่อปิดดีล สามารถกด "สร้างสัญญา" ระบบจะดึงข้อมูล Lead และ Property ไปแทนที่ตัวแปรใน Word และแปลงเป็น PDF พร้อมส่ง E-Sign ทันที
 
 ---
 

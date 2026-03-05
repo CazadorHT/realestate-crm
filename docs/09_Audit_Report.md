@@ -11,7 +11,9 @@
 **สถานะ:** ✅ **สมบูรณ์ (100%)**
 
 - **Enterprise Multi-Tenancy:** ระบบ RLS (Row Level Security) รองรับการแยกข้อมูลรายสาขาอย่างเด็ดขาด ผ่านการทดสอบ Penetration Test เบื้องต้น
-- **AI Financial Engine:** ระบบคำนวณต้นทุน AI จริง (32 ฿/$) ทำงานร่วมกับ Gemini 2.0 อย่างเสถียร
+- **Automated Valuation Model (AVM) 🆕:** ระบบวิเคราะห์ราคาอัจฉริยะ (Max Profit, Market Price, Quick Sale) ทำงานร่วมกับ Gemini 2.0 Flash/Pro อย่างแม่นยำ
+- **Advanced Document Engine 🆕:** รองรับการอัปโหลดไฟล์ Word (`.docx`) พร้อมตัวแปร เพื่อสร้างสัญญาแบบ Dynamic PDF อย่างรวดเร็ว
+- **AI Financial Engine:** ระบบคำนวณต้นทุน AI จริง (32 ฿/$) ควบคุมงบประมาณบริษัทได้แบบ Real-time
 - **Modern Stack:** ใช้งาน React 19 และ Tailwind 4 พร้อมระบบ Safe Mode (Error Boundaries) เพื่อความต่อเนื่องของธุรกิจ
 - **Zero Vulnerabilities:** ตรวจเช็ค Dependency ทั้งหมดแล้ว ไม่พบช่องโหว่ความปลอดภัย (found 0 vulnerabilities)
 
@@ -22,7 +24,8 @@
 **สถานะ:** ✅ **สมบูรณ์ (100%)**
 
 - **PDPA Readiness:** ระบบ Cookie Consent 3 ภาษา และการจัดการข้อมูลส่วนบุคคลตามมาตรฐานสากล
-- **Document Integrity:** ระบบสร้างเอกสารแบบ HTML-to-Base64 ป้องกันการแก้ไขไฟล์ภาพและรักษาความถูกต้องของสัญญา
+- **AVM Anonymization 🆕:** ระบบวิเคราะห์อสังหาฯ ตัดข้อมูล PII ของลูกค้าออกก่อนส่งให้ AI ประมวลผลเสมอ
+- **Document Integrity:** ระบบสร้างเอกสารแบบ HTML-to-Base64 หรือ DOCX-to-PDF ป้องกันการแก้ไขไฟล์ภาพและรักษาความถูกต้องของสัญญา
 - **Audit Trails:** บันทึกประวัติการใช้งานละเอียดทุกการกระทำสำคัญ พร้อมระบบล้างข้อมูลอัตโนมัติ (Retention Policy)
 
 ---

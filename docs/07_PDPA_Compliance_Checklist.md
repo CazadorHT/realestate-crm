@@ -7,6 +7,7 @@
 ## 1. การจัดการข้อมูลส่วนบุคคล (Data Handling)
 
 - [x] **Data Minimization:** เราเก็บเฉพาะข้อมูลที่จำเป็น (ชื่อ, เบอร์โทร, LINE ID, งบประมาณ)
+- [x] **Data Anonymization (AVM):** ข้อมูลในการอ้างอิงราคาสำหรับเทรน AVM จะถูกตัดข้อมูลส่วนบุคคลของเจ้าของทรัพย์ออกทั้งหมด
 - [x] **Retention Policy:** มีการใช้ `pg_cron` ในการลบข้อมูล Audit Logs เก่าเกิน 365 วันอัตโนมัติตามนโยบายรักษาความปลอดภัย ✅ Implemented
 - [x] **Data Encryption:** ข้อมูลเบอร์โทรและอีเมลมีการป้องกันการเข้าถึงจากบุคคลภายนอก (ผ่าน RLS) เรียบร้อยแล้ว
 
@@ -19,12 +20,14 @@
   - วิธีการขอลบข้อมูล (Right to be Forgotten)
 - [x] **Terms of Service:** หน้าเว็บ `/terms` ระบุข้อตกลงการใช้งานระบบโดยละเอียด
 - [x] **TikTok Compliance:** มีหน้า Privacy Policy และ Terms of Service เฉพาะสำหรับ TikTok App Review
+- [ ] **E-Signature Agreement:** มีข้อตกลงและเงื่อนไขรองรับการเซ็นสัญญาอิเล็กทรอนิกส์ (NDID/Adobe Sign) ตามพ.ร.บ.ธุรกรรมทางอิเล็กทรอนิกส์
 
 ## 3. ความยินยอม (Consent Management)
 
 - [x] **Cookie Consent:** ระบบแสดง Cookie Consent Banner รองรับ 3 ภาษา (TH/EN/CN) ก่อนเก็บ Cookie
 - [x] **Contact Form Consent:** ฟอร์มติดต่อมีการระบุว่าข้อมูลจะถูกใช้เพื่ออะไร
 - [x] **AI Chatbot Disclosure:** Chatbot แจ้งให้ผู้ใช้ทราบว่ากำลังสนทนากับ AI
+- [ ] **E-Signature Consent:** ผู้ใช้ต้องกดยอมรับการเซ็นสัญญาทางอิเล็กทรอนิกส์ก่อนเข้าสู่กระบวนการ Sign Document
 
 ## 4. ความปลอดภัยเชิงระบบ (System Security)
 

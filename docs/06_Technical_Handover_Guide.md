@@ -32,9 +32,10 @@
     - เปลี่ยนค่า API Keys เป็นของผู้ซื้อทั้งหมด:
       - `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
       - `LINE_CHANNEL_ACCESS_TOKEN`, `LINE_CHANNEL_SECRET`
-      - `GEMINI_API_KEY`
+      - `GEMINI_API_KEY` (สำคัญมากสำหรับ AI Valuation และ Document Assistant)
       - `META_APP_ID`, `META_APP_SECRET`, `META_PAGE_ACCESS_TOKEN`, `META_VERIFY_TOKEN`
       - `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REDIRECT_URI`
+      - `DOCUSIGN_INTEGRATION_KEY` (หรือ API Key ของผู้ให้บริการ e-Signature ที่ต้องการ)
 3.  **LINE Webhook:**
     - เปลี่ยน URL ใน LINE Developers Console ให้ชี้ไปยัง Domain ใหม่ของผู้ซื้อ (`/api/webhook/line`)
 4.  **Meta Webhook:**
@@ -46,10 +47,11 @@
     - ตั้งค่า Redirect URI: `https://your-domain.com/api/auth/callback/tiktok`
     - เปิด Products: Login Kit, Content Posting API
 6.  **Vercel Cron Jobs:**
-    - ตรวจสอบว่า `vercel.json` มีการตั้งค่า Cron Schedule สำหรับ 3 Jobs:
+    - ตรวจสอบว่า `vercel.json` มีการตั้งค่า Cron Schedule สำหรับ 4 Jobs หลัก:
       - `/api/cron/contract-expiry`
       - `/api/cron/rent-notifications`
       - `/api/cron/trash-cleanup`
+      - `/api/cron/market-alerts` (ระบบแจ้งเตือนราคา AVM ตก)
 
 ---
 

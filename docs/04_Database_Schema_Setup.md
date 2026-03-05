@@ -359,6 +359,31 @@ CREATE TABLE public.line_templates (
   config jsonb NOT NULL,
   is_active boolean DEFAULT true
 );
+
+-- PDF Document Templates (Dynamic Smart Contracts)
+CREATE TABLE public.docx_templates (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name text NOT NULL,
+  description text,
+  file_path text NOT NULL, -- Path in storage bucket
+  variables jsonb DEFAULT '[]'::jsonb, -- Discovered tags like {{tenant_name}}
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  created_by uuid REFERENCES public.profiles(id)
+);
+
+-- AVM (Automated Valuation Model) Contexts
+CREATE TABLE public.avm_contexts (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  property_id uuid REFERENCES public.properties(id) ON DELETE CASCADE,
+  request_payload jsonb NOT NULL,
+  comps_data jsonb NOT NULL, -- The surrounding properties used for calculation (radius)
+  ai_response jsonb NOT NULL, -- The resulting 3 pricing tiers + explanation
+  selected_strategy text, -- e.g., 'QUICK_SALE', 'MARKET_PRICE', 'MAX_PROFIT'
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  created_by uuid REFERENCES public.profiles(id)
+);
 ```
 
 ---
@@ -405,6 +430,7 @@ Ensure you create the following buckets in the Supabase Storage tab:
 2.  `documents`: Set to **Private**. Stores contracts, ID cards, and private deals.
 3.  `avatars`: Set to **Public**. Stores user profile pictures.
 4.  `site`: Set to **Public**. Stores site branding, logos, and blog images.
+5.  `templates`: Set to **Private**. Stores `.docx` files for Dynamic Smart Contracts.
 
 ---
 

@@ -50,28 +50,42 @@
 
 ---
 
-## 4. ระบบจัดการเอกสารอัจฉริยะ (Document Generation Engine)
+## 4. ระบบจัดการเอกสารและสัญญา (Document & Contract Engine)
 
 กลไกการสร้างเอกสารใน `features/documents/generation-actions.ts`:
 
-1. **HTML Template:** ใช้ไฟล์ HTML พร้อม Placeholder (เช่น `{{lead.full_name}}`)
-2. **Base64 Embedding:** ค้นหารูปภาพ (Logo, Signature, Stamp) และแปลงเป็น Base64 ฝังลงในไฟล์เพื่อความปลอดภัยและแสดงผลได้ทุกที่
-3. **In-App Preview:** ดึงรหัส HTML มาแสดงผลในแอปโดยตรงผ่าน `DocumentPreviewDialog` แก้ปัญหาภาษาไทยเพี้ยนและนโยบายความปลอดภัยของบราวเซอร์
-4. **E-Signature:** เชื่อมต่อกับ Mock/Production E-Sign Provider เพื่อส่งลิงก์เซ็นสัญญาออนไลน์
+1. **Dynamic Smart Contracts (.docx to PDF):** ระบบหน้า Admin รองรับการอัปโหลดไฟล์ Microsoft Word (`.docx`) ที่ฝังตัวแปร (เช่น `{{tenant_name}}`, `{{price}}`) ระบบจะคำนวณและแปลงเป็น PDF ผ่านไลบรารีหรือ API แบบจับคู่
+2. **HTML Template Fallback:** กรณีเอกสารทั่วไป ใช้ไฟล์ HTML พร้อม Placeholder
+3. **Base64 Embedding:** ค้นหารูปภาพ (Logo, Signature, Stamp) และแปลงเป็น Base64 ฝังลงในไฟล์เพื่อความปลอดภัยและแสดงผลได้ทุกที่
+4. **In-App Preview:** ดึงรหัส HTML หรือแสดง PDF Thumbnail ในแอปโดยตรงผ่าน `DocumentPreviewDialog` แก้ปัญหาภาษาไทยเพี้ยนและนโยบายความปลอดภัยของบราวเซอร์
+5. **E-Signature:** เชื่อมต่อกับ Mock/Production E-Sign Provider เพื่อส่งลิงก์เซ็นสัญญาออนไลน์ พร้อมสถานะ Version Control
 
 ---
 
-## 5. โครงสร้างฐานข้อมูลสำคัญ (Database Schema)
+## 5. ระบบประเมินราคาอัจฉริยะ (Automated Valuation Model - AVM)
+
+กลไกวิเคราะห์ราคาใน `features/properties/actions/avm.ts`:
+
+- **Market Comps Analysis:** ดึงข้อมูลทรัพย์สินที่ประกาศขาย/เช่าในรัสมีใกล้เคียง (Radius Search via PostGIS หรือ Lat/Lng Matching)
+- **AI Dynamic Pricing:** Gemini 2.0 สังเคราะห์ข้อมูลเพื่อคำนวณราคาแนะนำ 3 สเตป: Max Profit, Market Price, Quick Sale
+- **Valuation PDF Report:** พ่นรายการข้อมูล AVM ออกมาเป็นรายงาน Document (PDF) เพื่อให้นายหน้าส่งต่อให้เจ้าของทรัพย์ (Lead Gen)
+- **Market Drop Alert Background:** รันเบื้องหลังเพื่อตรวจจับดีลที่ขายต่ำกว่าราคาตลาด แล้วบันทึกลง Audit/Notification
+
+---
+
+## 6. โครงสร้างฐานข้อมูลสำคัญ (Database Schema)
 
 - **`ai_usage_logs`**: เก็บประวัติการใช้งาน AI และต้นทุนเงินบาท
 - **`tenants` / `tenant_members`**: หัวใจของระบบ Multi-Tenant
 - **`notifications`**: ระบบแจ้งเตือน Real-time (Supabase Realtime)
 - **`documents`**: เก็บ Metadata เอกสาร พร้อมระบบ Versioning (`parent_id`, `version`)
+- **`docx_templates`**: เก็บไฟล์ต้นฉบับสัญญา `.docx` ที่รอการดึงไปแปลงค่า
+- **`avm_contexts`**: เก็บประวัติการประเมินราคา เพื่อนำไปใช้กับ PDF และโชว์ย้อนหลังได้
 - **`audit_logs`**: บันทึกกิจกรรมสำคัญพร้อมระบบ Auto-cleanup (1 ปี) ผ่าน `pg_cron`
 
 ---
 
-## 6. ผังการทำงานและ API (Architecture & API)
+## 7. ผังการทำงานและ API (Architecture & API)
 
 ### 📡 Webhook & Cron Registry
 
@@ -82,6 +96,7 @@
 | `/api/webhook/tiktok`               | รับ Webhook จาก TikTok                   |
 | `/api/cron/trash-cleanup`           | ลบ Audit Logs ที่เก่าเกิน 1 ปี (pg_cron) |
 | `/api/cron/notifications-retention` | ล้างแจ้งเตือนเก่าอัตโนมัติ               |
+| `/api/cron/market-alerts`           | ตรวจสอบราคาตลาดตก และพ่นแจ้งเตือน Agent  |
 
 ---
 
