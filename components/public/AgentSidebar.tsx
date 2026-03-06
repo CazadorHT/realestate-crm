@@ -180,9 +180,9 @@ export function AgentSidebar({
 
             <Button
               onClick={handlePhoneClick}
-              className="w-full h-12 rounded-xl text-base font-semibold bg-white text-slate-700 border-2 border-slate-100 hover:bg-slate-50 hover:border-slate-200 shadow-sm transition-all hover:-translate-y-0.5"
+              className="w-full h-12 rounded-xl text-base font-semibold bg-white text-slate-700 hover:text-blue-600 border border-blue-100 hover:bg-blue-100 hover:border-blue-100 shadow-sm transition-all hover:-translate-y-0.5"
             >
-              <Phone className="w-6 h-6 mr-2 text-slate-400" />
+              <Phone className="w-6 h-6 mr-2 text-slate-400 " />
               {getDisplayedPhone()}
             </Button>
 
@@ -196,7 +196,7 @@ export function AgentSidebar({
                 trigger={
                   <Button
                     variant="outline"
-                    className="w-full rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 h-12 text-sm font-semibold px-2"
+                    className="w-full rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-white h-12 text-sm font-semibold px-2"
                     type="button"
                   >
                     <CalendarSearch className="w-3.5 h-3.5 mr-1.5 shrink-0" />
@@ -217,7 +217,7 @@ export function AgentSidebar({
                 trigger={
                   <Button
                     variant="outline"
-                    className="w-full rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 h-12 text-sm font-semibold px-2"
+                    className="w-full rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-white h-12 text-sm font-semibold px-2"
                     type="button"
                   >
                     <MessageCircleQuestion className="w-3.5 h-3.5 mr-1.5 shrink-0" />

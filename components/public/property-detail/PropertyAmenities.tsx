@@ -49,12 +49,12 @@ export function PropertyAmenities({
           return (
             <div
               key={i}
-              className="flex items-center  gap-2 lg:gap-3 text-sm lg:text-base text-slate-600 group p-2 rounded-xl hover:bg-white hover:shadow-md hover:shadow-blue-100/40 border border-transparent hover:border-blue-100 transition-all duration-300 cursor-default"
+              className="flex items-center gap-2 lg:gap-3 text-sm lg:text-base text-slate-600 group/amenity transition-all duration-300 hover:translate-x-1"
             >
-              <div className="p-1.5 lg:p-2 rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 shadow-sm border border-transparent group-hover:border-blue-500 ">
-                <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4 group-hover:scale-110" />
+              <div className="p-1.5 lg:p-2 rounded-full bg-blue-50 text-blue-600 transition-all duration-300 group-hover/amenity:bg-blue-600 group-hover/amenity:text-white group-hover/amenity:shadow-sm">
+                <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4 transition-transform duration-300 group-hover/amenity:scale-110" />
               </div>
-              <span className="truncate group-hover:text-blue-800 transition-colors">
+              <span className="truncate group-hover/amenity:text-blue-900 group-hover/amenity:font-medium transition-colors">
                 {localizedName}
               </span>
             </div>

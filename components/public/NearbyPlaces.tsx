@@ -137,14 +137,11 @@ export function NearbyPlaces({
           return (
             <div
               key={catKey}
-              className="bg-slate-50 border border-slate-100 rounded-xl p-4 group hover:bg-white hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/40 transition-all duration-500 relative overflow-hidden"
+              className="bg-slate-50 border border-slate-100 rounded-xl p-4 transition-all duration-300 hover:shadow-md hover:border-blue-200 hover:bg-white group/card"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-bl from-blue-100/40 via-blue-50/20 to-transparent rounded-bl-full z-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out transform translate-x-4 -translate-y-4 group-hover:translate-x-0 group-hover:translate-y-0" />
-              <div className="flex items-center gap-3 mb-4 relative z-10">
-                <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-100 group-hover:bg-blue-600 group-hover:border-blue-600 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300">
-                  <Icon className="w-5 h-5 text-blue-500 group-hover:text-white transition-colors duration-300" />
-                </div>
-                <h4 className="font-semibold text-slate-700 text-sm group-hover:text-blue-700 transition-colors">
+              <div className="flex items-center gap-2 mb-3">
+                <Icon className="w-5 h-5 text-blue-500 transition-transform duration-300 group-hover/card:scale-120 group-hover/card:rotate-6" />
+                <h4 className="font-semibold text-slate-700 text-sm transition-colors group-hover/card:text-blue-700">
                   {label}
                 </h4>
               </div>
@@ -152,7 +149,7 @@ export function NearbyPlaces({
                 {items.map((item, i) => (
                   <li
                     key={i}
-                    className="flex justify-between items-center text-sm gap-2 group/item hover:bg-blue-50/70 p-2.5 -mx-2.5 rounded-xl transition-all duration-200 cursor-default relative z-10"
+                    className="flex justify-between items-start text-sm gap-2 p-1.5 -mx-1.5 rounded-lg transition-colors hover:bg-white/50 group/item"
                   >
                     <span className="text-slate-600 mr-auto wrap-break-word leading-tight group-hover/item:text-slate-800 transition-colors">
                       {(language === "en"
@@ -182,13 +179,10 @@ export function NearbyPlaces({
 
         {/* Transit - Single card called "รถไฟฟ้า" */}
         {transits.length > 0 && (
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 group hover:bg-white hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/40 transition-all duration-500 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-bl from-blue-100/40 via-blue-50/20 to-transparent rounded-bl-full z-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out transform translate-x-4 -translate-y-4 group-hover:translate-x-0 group-hover:translate-y-0" />
-            <div className="flex items-center gap-3 mb-4 relative z-10">
-              <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-100 group-hover:bg-blue-600 group-hover:border-blue-600 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300">
-                <TrainFront className="w-5 h-5 text-blue-500 group-hover:text-white transition-colors duration-300" />
-              </div>
-              <h4 className="font-semibold text-sm text-slate-700 group-hover:text-blue-700 transition-colors">
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 transition-all duration-300 hover:shadow-md hover:border-blue-200 hover:bg-white group/card">
+            <div className="flex items-center gap-2 mb-3">
+              <TrainFront className="w-5 h-5 text-blue-500 transition-transform duration-300 group-hover/card:scale-120 group-hover/card:rotate-6" />
+              <h4 className="font-semibold text-sm text-slate-700 transition-colors group-hover/card:text-blue-700">
                 {t("property.transit")}
               </h4>
             </div>
@@ -205,7 +199,7 @@ export function NearbyPlaces({
                 return (
                   <li
                     key={i}
-                    className="flex justify-between items-center text-sm gap-2 group/item hover:bg-blue-50/70 p-2.5 -mx-2.5 rounded-xl transition-all duration-200 cursor-default relative z-10"
+                    className="flex justify-between items-start text-sm gap-2 p-1.5 -mx-1.5 rounded-lg transition-colors hover:bg-white/50 group/item"
                   >
                     <div className="flex items-center gap-2.5 mr-auto">
                       <span

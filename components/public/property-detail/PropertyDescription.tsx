@@ -35,7 +35,7 @@ export function PropertyDescription({
   const [shouldShowButton, setShouldShowButton] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const THRESHOLD_HEIGHT = 280;
+  const THRESHOLD_HEIGHT = 300;
 
   const localizedDescription = getLocaleValue(
     property,
@@ -92,8 +92,8 @@ export function PropertyDescription({
       <div className="relative">
         <div
           ref={contentRef}
-          className={`prose prose-slate max-w-none text-slate-600 leading-5 text-sm md:text-base transition-all duration-500 ease-in-out border-b border-slate-200/60 pb-10 overflow-hidden ${
-            !isExpanded && shouldShowButton ? "max-h-[500px]" : "max-h-[5000px]"
+          className={`prose prose-slate max-w-none text-slate-600 leading-normal text-sm md:text-base transition-all duration-1000 ease-in-out border-b border-slate-200/60 pb-10 overflow-hidden ${
+            !isExpanded && shouldShowButton ? "max-h-[300px]" : "max-h-[5000px]"
           }`}
           dangerouslySetInnerHTML={{
             __html: sanitizedDescription || t("property.no_description"),
