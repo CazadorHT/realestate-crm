@@ -260,6 +260,7 @@ export function DealFormDialog({
                   <FormLabel>เลือกทรัพย์ *</FormLabel>
                   <FormControl>
                     <PropertyCombobox
+                      
                       value={field.value}
                       onChange={(id) => field.onChange(id)}
                       placeholder="พิมพ์เพื่อค้นหาทรัพย์..."

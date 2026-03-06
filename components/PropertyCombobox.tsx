@@ -124,7 +124,7 @@ export function PropertyCombobox({
           type="button"
           variant="outline"
           className={cn(
-            "w-full justify-between h-auto py-2 px-3 text-left border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-200 shadow-sm",
+            "w-full justify-between h-auto py-2 px-3 text-left border-slate-200 hover:border-blue-400 hover:bg-blue-50/30! transition-all duration-200 shadow-sm",
             value && "pr-10 border-blue-200 bg-blue-50/20",
           )}
         >

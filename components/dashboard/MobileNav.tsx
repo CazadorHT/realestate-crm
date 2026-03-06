@@ -49,12 +49,7 @@ import { TenantSwitcher } from "@/components/common/TenantSwitcher";
 export function MobileNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [openGroups, setOpenGroups] = useState<string[]>([
-    "crm",
-    "documents",
-    "public",
-    "settings",
-  ]);
+  const [openGroups, setOpenGroups] = useState<string[]>(["crm"]);
 
   const toggleGroup = (groupId: string) => {
     setOpenGroups((prev) =>

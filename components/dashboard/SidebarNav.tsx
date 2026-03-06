@@ -53,13 +53,7 @@ import { isFeatureEnabled } from "@/lib/features";
 
 export function SidebarNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
-  const [openGroups, setOpenGroups] = useState<string[]>([
-    "crm",
-    "documents",
-    "public",
-    "settings",
-    "support",
-  ]);
+  const [openGroups, setOpenGroups] = useState<string[]>(["crm"]);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 

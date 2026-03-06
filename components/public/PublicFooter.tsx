@@ -135,7 +135,7 @@ export function PublicFooter() {
                   className="block w-48 transition-opacity hover:opacity-90"
                 >
                   <Image
-                    src={settings.logo_light || siteConfig.logoDark}
+                    src={settings.logo_dark || siteConfig.logoDark}
                     alt={`${siteName} Logo`}
                     width={180}
                     height={60}

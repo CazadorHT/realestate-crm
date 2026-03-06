@@ -135,14 +135,14 @@ export function DealCombobox({
             type="button"
             variant="outline"
             className={cn(
-              "w-full justify-between h-auto py-2 px-3 text-left border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-200 shadow-sm",
-              value && "pr-10 border-blue-200 bg-blue-50/20",
+              "w-full justify-between h-auto py-2 px-3 text-left  border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-200 shadow-sm",
+              value && "pr-10 border-blue-200 bg-blue-50/20 x",
             )}
           >
-            <div className="flex items-center gap-3 truncate overflow-hidden ">
+            <div className="flex items-center gap-3 truncate overflow-hidden  ">
               {selected ? (
                 <>
-                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-slate-100 border border-slate-200 shadow-inner">
+                  <div className="h-10 w-10 shrink-0 overflow-hidden  rounded-md bg-slate-100 border border-slate-200 shadow-inner">
                     {selected.cover_image_url ? (
                       <img
                         src={selected.cover_image_url}
@@ -183,7 +183,7 @@ export function DealCombobox({
                   </div>
                 </>
               ) : (
-                <span className="text-slate-400 font-normal">
+                <span className="text-slate-400 font-normal ">
                   {placeholder}
                 </span>
               )}

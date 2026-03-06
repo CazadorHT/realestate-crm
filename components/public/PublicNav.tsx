@@ -145,7 +145,7 @@ export function PublicNav() {
                   className="hover:scale-105 transition-transform block"
                 >
                   <Image
-                    src={settings.logo_dark || siteConfig.logo}
+                    src={settings.logo_light || siteConfig.logo}
                     alt={`${siteName} Logo`}
                     width={220}
                     height={70}
