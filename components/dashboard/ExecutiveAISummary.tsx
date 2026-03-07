@@ -30,13 +30,13 @@ export function ExecutiveAISummary() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-indigo-500/20 rounded-lg">
-              <Sparkles className="h-5 w-5 text-indigo-400" />
+              <Sparkles className="h-5 w-5 text-indigo-300" />
             </div>
-            <CardTitle className="text-lg font-bold">AI Executive Summary</CardTitle>
+            <CardTitle className="text-lg font-bold text-white">AI Executive Summary</CardTitle>
           </div>
-          <Award className="h-5 w-5 text-amber-400 opacity-50" />
+          <Award className="h-5 w-5 text-amber-400 " />
         </div>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-slate-300">
           สรุปทิศทางธุรกิจรายสัปดาห์ด้วย AI (วิเคราะห์ลีดและโอกาสการขาย)
         </CardDescription>
       </CardHeader>
