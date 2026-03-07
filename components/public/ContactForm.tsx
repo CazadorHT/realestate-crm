@@ -66,8 +66,8 @@ export function ContactForm() {
           if (result.data) {
             pushToDataLayer(GTM_EVENTS.AI_LEAD_SCORE, {
               lead_id: result.data.id,
-              ai_score: result.data.aiScore,
-              is_hot_lead: result.data.isHotLead,
+              score: result.data.aiScore,
+              hot_lead: result.data.isHotLead,
               utm_source: result.data.utmSource,
             });
           }

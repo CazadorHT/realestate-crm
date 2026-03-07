@@ -69,8 +69,8 @@ export function AgentSidebar({
   const handlePhoneClick = () => {
     try {
       pushToDataLayer(GTM_EVENTS.CLICK_PHONE, {
-        property_id: propertyId,
-        property_title: propertyTitle,
+        item_id: propertyId,
+        item_name: propertyTitle,
         agent_name: agentName,
       });
     } catch (e) {}
@@ -174,8 +174,8 @@ export function AgentSidebar({
               onClick={() => {
                 try {
                   pushToDataLayer(GTM_EVENTS.CLICK_LINE, {
-                    property_id: propertyId,
-                    property_title: propertyTitle,
+                    item_id: propertyId,
+                    item_name: propertyTitle,
                     agent_name: agentName,
                   });
                 } catch (e) {}

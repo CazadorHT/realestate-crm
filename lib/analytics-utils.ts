@@ -1,6 +1,7 @@
 /**
  * Utility for capturing marketing attribution and calculating engagement scores
  */
+import { pushToDataLayer, GTM_EVENTS } from "./gtm";
 
 const UTM_KEYS = [
   "utm_source",
@@ -93,6 +94,19 @@ export const updateAIScore = (points: number) => {
   const currentScoreStr = localStorage.getItem(STORAGE_KEY_SCORE) || "0";
   const newScore = parseInt(currentScoreStr) + points;
   localStorage.setItem(STORAGE_KEY_SCORE, newScore.toString());
+
+  // Push to GTM so it can be tracked in real-time
+  try {
+    const marketingData = getStoredMarketingData();
+    pushToDataLayer(GTM_EVENTS.AI_LEAD_SCORE, {
+      score: newScore,
+      hot_lead: newScore >= 50,
+      utm_source: marketingData.utm_source || "direct",
+    });
+  } catch (err) {
+    console.error("Failed to push AI score to GTM:", err);
+  }
+
   return newScore;
 };
 
