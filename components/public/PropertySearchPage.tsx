@@ -9,6 +9,7 @@ import { SearchFilterBar } from "./search/SearchFilterBar";
 import { SearchPagination } from "./search/SearchPagination";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { toast } from "sonner";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
 type ApiProperty = PropertyCardProps;
 
@@ -87,6 +88,10 @@ export function PropertySearchPage({
         setProperties(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("PropertySearchPage fetch error:", err);
+        pushToDataLayer(GTM_EVENTS.SYSTEM_ERROR, {
+          error_message: err instanceof Error ? err.message : String(err),
+          source: "PropertySearchPage",
+        });
         toast.error(
           t("common.error") ||
             "Load failed: " +
@@ -302,6 +307,22 @@ export function PropertySearchPage({
 
     return result;
   }, [properties, matchesFilters, sort]);
+
+  // Track No Results (to identify high demand gaps)
+  useEffect(() => {
+    if (!isLoading && properties.length > 0 && filtered.length === 0) {
+      pushToDataLayer(GTM_EVENTS.SEARCH_NO_RESULTS, {
+        keyword,
+        province,
+        popular_area: area,
+        property_type: type,
+        listing_type: listingType,
+        min_price: minPrice,
+        max_price: maxPrice,
+        bedrooms,
+      });
+    }
+  }, [isLoading, filtered.length, properties.length]); // Dependencies to fire when search finishes and results are empty
 
   // Reset page when filters change
   useEffect(() => {

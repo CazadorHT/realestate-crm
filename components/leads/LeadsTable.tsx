@@ -109,7 +109,8 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                 <TableHead>ทรัพย์ที่สนใจ</TableHead>
                 <TableHead>ข้อความ</TableHead>
                 <TableHead>สถานะ</TableHead>
-                <TableHead>ที่มา</TableHead>
+                <TableHead>AI Score</TableHead>
+                <TableHead>ที่มา / UTM</TableHead>
                 <TableHead className="text-center">ดีลที่เกี่ยวข้อง</TableHead>
                 <TableHead className="text-right">จัดการ</TableHead>
               </TableRow>
@@ -185,9 +186,32 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                   <TableCell>
                     {safeEnumLabel(LEAD_STAGE_LABELS as any, l.stage)}
                   </TableCell>
-                  {/* Source */}
+                  {/* AI Score */}
                   <TableCell>
-                    {safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}
+                    <div className="flex flex-col gap-1">
+                      <Badge 
+                        variant="secondary" 
+                        className={`w-fit font-bold ${(l as any).ai_score >= 50 ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-100'}`}
+                      >
+                         {(l as any).ai_score ?? 0}
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        {(l as any).ai_status_label || "New Visitor"}
+                      </span>
+                    </div>
+                  </TableCell>
+                  {/* Source / UTM */}
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-medium">{safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}</span>
+                      {(l as any).utm_source && (
+                        <div className="flex items-center gap-1">
+                          <Badge variant="outline" className="text-[9px] h-4 px-1 border-emerald-100 bg-emerald-50 text-emerald-700">
+                            {(l as any).utm_source}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   {/* Action */}
                   <TableCell className="text-center">

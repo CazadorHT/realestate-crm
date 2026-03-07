@@ -16,6 +16,8 @@ import {
 import { FaLine } from "react-icons/fa";
 import { submitContactFormAction } from "@/features/leads/contact-action";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { getStoredMarketingData, getAIScore, getAIStatusLabel } from "@/lib/analytics-utils";
 
 const INTEREST_KEYS = [
   "consult",
@@ -55,6 +57,10 @@ export function ContactForm() {
       if (result.success) {
         setIsSuccess(true);
         setSelectedSubject(""); // Reset selection
+        
+        pushToDataLayer(GTM_EVENTS.SUBMIT_CONTACT_FORM, {
+          subject: selectedSubject,
+        });
         // Reset form visually handled by hiding it, effectively
       } else {
         setErrorMsg(result.message);
@@ -92,6 +98,24 @@ export function ContactForm() {
           {t("contact.subject_label")} <span className="text-red-500">*</span>
         </Label>
         <input type="hidden" name="subject" value={selectedSubject} />
+        
+        {/* Hidden Marketing & AI Data fields */}
+        {(() => {
+          const marketingData = getStoredMarketingData();
+          const score = getAIScore();
+          return (
+            <>
+              <input type="hidden" name="utm_source" value={marketingData.utm_source || ""} />
+              <input type="hidden" name="utm_medium" value={marketingData.utm_medium || ""} />
+              <input type="hidden" name="utm_campaign" value={marketingData.utm_campaign || ""} />
+              <input type="hidden" name="utm_content" value={marketingData.utm_content || ""} />
+              <input type="hidden" name="utm_term" value={marketingData.utm_term || ""} />
+              <input type="hidden" name="referral_url" value={marketingData.referral_url || ""} />
+              <input type="hidden" name="ai_score" value={score} />
+              <input type="hidden" name="ai_status_label" value={getAIStatusLabel(score)} />
+            </>
+          );
+        })()}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {INTEREST_OPTIONS.map((option) => (
             <button

@@ -21,6 +21,8 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { PendingApprovalCard } from "@/components/dashboard/PendingApprovalCard";
 import { RecentPropertiesTable } from "@/components/dashboard/RecentPropertiesTable";
 import { SystemStatus } from "@/components/dashboard/SystemStatus";
+import { MarketingROISummary } from "@/components/dashboard/MarketingROISummary";
+import { ExecutiveAISummary } from "@/components/dashboard/ExecutiveAISummary";
 
 // Queries
 import {
@@ -33,6 +35,7 @@ import {
   getTodayAgenda,
   getFollowUpLeads,
   getRiskDeals,
+  getMarketingPerformanceData,
   type DashboardStats,
   type RevenueChartData,
   type FunnelData,
@@ -170,7 +173,10 @@ export default async function DashboardPage() {
                       <TopAgentsWrapper />
                     </Suspense>
                   </div>
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-6">
+                    <Suspense fallback={<ChartSkeleton />}>
+                      <MarketingROIWrapper />
+                    </Suspense>
                     <FollowUpInsights leads={followUpLeads} />
                     <RiskAlerts deals={riskDeals} />
                   </div>
@@ -188,6 +194,7 @@ export default async function DashboardPage() {
           <div className="flex flex-col gap-6 ">
             <QuickActions />
             <UpcomingEvents events={upcomingEvents} />
+            <ExecutiveAISummary />
             <NotificationCenter notifications={notifications} />
             <AgendaList agenda={agendaData} />
           </div>
@@ -236,4 +243,9 @@ async function RevenueWrapper() {
 async function TopAgentsWrapper() {
   const data = await getTopAgents();
   return <TopAgents data={data} />;
+}
+
+async function MarketingROIWrapper() {
+  const data = await getMarketingPerformanceData();
+  return <MarketingROISummary data={data} />;
 }

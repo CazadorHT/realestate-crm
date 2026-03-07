@@ -570,3 +570,38 @@ export async function getPropertiesTableData(params: {
     filterMetadata: filterMetadataResult.data || [],
   };
 }
+
+/**
+ * AI Recommended Properties based on category preference
+ */
+export async function getRecommendedProperties(
+  category: string,
+  limit: number = 4,
+) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("properties")
+    .select(
+      `
+      id, title, price, original_price, rental_price, original_rental_price, 
+      popular_area, province, property_type, listing_type, slug, 
+      property_images(image_url, is_cover)
+    `,
+    )
+    .eq("status", "ACTIVE")
+    .eq("property_type", category as any)
+    .is("deleted_at", null)
+    .order("view_count", { ascending: false })
+    .limit(limit);
+
+  if (error) return [];
+
+  return (data || []).map((p) => ({
+    ...p,
+    cover_image:
+      p.property_images?.find((img: any) => img.is_cover)?.image_url ||
+      p.property_images?.[0]?.image_url ||
+      null,
+  }));
+}

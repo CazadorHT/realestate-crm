@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -26,6 +27,8 @@ import {
 import { toast } from "sonner";
 import {
   Globe,
+  Zap,
+  Sparkles,
   Phone,
   Mail,
   MapPin,
@@ -79,6 +82,10 @@ export function SiteConfigPanel() {
       logo_light: "",
       logo_dark: "",
       favicon: "",
+      google_tag_manager_id: "",
+      google_tag_manager_enabled: true,
+      hot_lead_threshold: 80,
+      executive_summary_enabled: true,
     },
   });
 
@@ -289,6 +296,128 @@ export function SiteConfigPanel() {
                         />
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="pt-4 border-t border-slate-100 flex flex-col gap-4">
+                  <FormField
+                    control={form.control}
+                    name="google_tag_manager_enabled"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-xl border border-slate-200 p-4 bg-blue-100/50">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base flex items-center gap-2">
+                            Google Tag Manager
+                            <Globe className="h-4 w-4 text-blue-400" />
+                          </FormLabel>
+                          <p className="text-xs text-slate-500">
+                            เปิดหรือปิดการทำงานของ GTM และ Tracking ทั้งหมด
+                          </p>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch("google_tag_manager_enabled") && (
+                    <FormField
+                      control={form.control}
+                      name="google_tag_manager_id"
+                      render={({ field }) => (
+                        <FormItem className="animate-in fade-in slide-in-from-top-2 duration-300">
+                          <FormLabel className="flex items-center gap-2">
+                            GTM Container ID
+                            <Info className="h-4 w-4 text-slate-400" />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="GTM-XXXXXXX"
+                              className="rounded-xl font-mono"
+                              {...field}
+                            />
+                          </FormControl>
+                          <p className="text-[10px] text-slate-400">
+                            ระบุ ID เพื่อให้ระบบเริ่มเก็บสถิติและ Marketing Attribution
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Smart Intelligence Settings */}
+            <Card className="border-none shadow-sm bg-indigo-50/30 overflow-hidden">
+              <CardHeader className="bg-indigo-50/50 border-b border-indigo-100">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Zap className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">
+                      ระบบ CRM Intelligence
+                    </CardTitle>
+                    <CardDescription>
+                      ตั้งค่าการแจ้งเตือนและการสรุปผลด้วย AI
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                <FormField
+                  control={form.control}
+                  name="hot_lead_threshold"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        Hot Lead Threshold (คะแนน)
+                        <Info className="h-4 w-4 text-slate-400" />
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="80"
+                          className="rounded-xl border-indigo-100"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <p className="text-[10px] text-slate-400">
+                        คะแนน AI Score ขั้นต่ำที่ระบบจะแจ้งเตือนเป็น "ลีดคุณภาพสูง" (แนะนำ: 80)
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="executive_summary_enabled"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-xl border border-indigo-100 p-4 bg-white/50">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base flex items-center gap-2">
+                          AI Executive Summary
+                          <Sparkles className="h-4 w-4 text-indigo-400" />
+                        </FormLabel>
+                        <p className="text-xs text-slate-500">
+                          เปิดใช้งานการสรุปรายงานบริหารรายสัปดาห์
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
                     </FormItem>
                   )}
                 />

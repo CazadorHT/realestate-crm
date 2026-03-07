@@ -6,6 +6,8 @@ import { AiFillInstagram } from "react-icons/ai";
 import { useState } from "react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { toast } from "sonner";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { updateAIScore } from "@/lib/analytics-utils";
 
 interface ShareButtonsProps {
   url: string;
@@ -35,6 +37,11 @@ export function ShareButtons({
       await navigator.clipboard.writeText(url);
       setCopied(true);
       toast.success(t("common.link_copied"));
+      pushToDataLayer(GTM_EVENTS.SHARE_PROPERTY, {
+        platform: "copy_link",
+        url: url,
+      });
+      updateAIScore(10);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Failed to copy:", err);
@@ -96,6 +103,13 @@ export function ShareButtons({
         href={shareLinks.facebook}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => {
+          pushToDataLayer(GTM_EVENTS.SHARE_PROPERTY, {
+            platform: "facebook",
+            url: url,
+          });
+          updateAIScore(10);
+        }}
         className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors font-medium text-sm"
       >
         <FaFacebook className="w-5 h-5" />
@@ -105,6 +119,12 @@ export function ShareButtons({
         href={shareLinks.line}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => {
+          pushToDataLayer(GTM_EVENTS.SHARE_PROPERTY, {
+            platform: "line",
+            url: url,
+          });
+        }}
         className="flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-colors font-medium text-sm"
       >
         <svg
@@ -121,6 +141,12 @@ export function ShareButtons({
         href={`https://www.instagram.com/`}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => {
+          pushToDataLayer(GTM_EVENTS.SHARE_PROPERTY, {
+            platform: "instagram",
+            url: url,
+          });
+        }}
         className="flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white rounded-xl transition-colors font-medium text-sm"
       >
         <AiFillInstagram className="w-5 h-5" />

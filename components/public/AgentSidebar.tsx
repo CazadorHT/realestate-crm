@@ -15,6 +15,8 @@ import { ShareButtons } from "@/components/public/ShareButtons";
 import { FaLine } from "react-icons/fa";
 import { useState } from "react";
 import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { updateAIScore } from "@/lib/analytics-utils";
 
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 
@@ -65,6 +67,12 @@ export function AgentSidebar({
 
   // Handle phone button click
   const handlePhoneClick = () => {
+    pushToDataLayer(GTM_EVENTS.CLICK_PHONE, {
+      property_id: propertyId,
+      property_title: propertyTitle,
+      agent_name: agentName,
+    });
+    updateAIScore(15);
     if (!agentPhone) {
       // No agent phone - open contact dialog instead
       setContactDialogOpen(true);
@@ -161,6 +169,14 @@ export function AgentSidebar({
             <Button
               asChild
               className="w-full h-12 rounded-xl text-base font-semibold bg-[#06C755] hover:bg-[#05B04C] text-white shadow-lg shadow-green-100 transition-all hover:-translate-y-0.5"
+              onClick={() => {
+                pushToDataLayer(GTM_EVENTS.CLICK_LINE, {
+                  property_id: propertyId,
+                  property_title: propertyTitle,
+                  agent_name: agentName,
+                });
+                updateAIScore(20);
+              }}
             >
               <a
                 href={

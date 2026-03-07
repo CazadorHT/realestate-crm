@@ -37,6 +37,10 @@ const DEFAULT_SETTINGS: SiteSettings = {
   favicon: "/favicon.ico",
   onboarding_line_skipped: false,
   onboarding_staff_skipped: false,
+  google_tag_manager_id: "GTM-NBG46JLN",
+  google_tag_manager_enabled: true,
+  hot_lead_threshold: 80,
+  executive_summary_enabled: true,
 };
 
 /**
@@ -91,14 +95,19 @@ export async function getSiteSettings(): Promise<SiteSettings> {
           key === "line_id" ||
           key === "logo_light" ||
           key === "logo_dark" ||
-          key === "favicon"
+          key === "favicon" ||
+          key === "google_tag_manager_id"
         ) {
           (settings as any)[key] =
             typeof row.value === "string" ? row.value : (settings as any)[key];
         } else {
-          // Value is stored as JSONB, parse boolean
+          // Value is stored as JSONB, parse boolean or number
           // Handle cases where it might be a string "true" or a boolean true
-          (settings as any)[key] = row.value === true || row.value === "true";
+          if (key === "hot_lead_threshold") {
+            (settings as any)[key] = Number(row.value) || 80;
+          } else {
+            (settings as any)[key] = row.value === true || row.value === "true";
+          }
         }
       }
     }

@@ -42,6 +42,13 @@ export type PipelineData = {
   label: string;
 };
 
+export type MarketingPerformanceData = {
+  source: string;
+  leadCount: number;
+  avgAiScore: number;
+  hotLeadCount: number;
+};
+
 export async function getDashboardStats(): Promise<DashboardStats> {
   const supabase = await createClient();
   const now = new Date();
@@ -702,6 +709,135 @@ export async function getRecentNotifications(
 
   // Sort by newest first
   return notifications.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
+
+export async function getMarketingPerformanceData(): Promise<
+  MarketingPerformanceData[]
+> {
+  try {
+    const supabase = await createClient();
+
+    const { data: leads } = await supabase
+      .from("leads")
+      .select("utm_source, ai_score")
+      .is("deleted_at", null);
+
+    if (!leads) return [];
+
+    const statsMap = new Map<
+      string,
+      { count: number; totalScore: number; hotLeads: number }
+    >();
+
+    leads.forEach((l) => {
+      const source = l.utm_source || "Direct / Unknown";
+      const score = l.ai_score || 0;
+      const isHot = score >= 80;
+
+      const current = statsMap.get(source) || {
+        count: 0,
+        totalScore: 0,
+        hotLeads: 0,
+      };
+      statsMap.set(source, {
+        count: current.count + 1,
+        totalScore: current.totalScore + score,
+        hotLeads: current.hotLeads + (isHot ? 1 : 0),
+      });
+    });
+
+    return Array.from(statsMap.entries())
+      .map(([source, stats]) => ({
+        source,
+        leadCount: stats.count,
+        avgAiScore: Math.round(stats.totalScore / stats.count),
+        hotLeadCount: stats.hotLeads,
+      }))
+      .sort((a, b) => b.leadCount - a.leadCount);
+  } catch (error) {
+    console.error("getMarketingPerformanceData Error:", error);
+    return [];
+  }
+}
+
+export async function getExecutiveWeeklyAISummaryAction() {
+  try {
+    const supabase = await createClient();
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const weekAgoStr = weekAgo.toISOString();
+
+    // 1. Fetch Stats
+    const [leadsRes, dealsRes, propertiesRes] = await Promise.all([
+      supabase
+        .from("leads")
+        .select("utm_source, ai_score, created_at")
+        .gte("created_at", weekAgoStr)
+        .is("deleted_at", null),
+      supabase
+        .from("deals")
+        .select("status, deal_type, commission_amount, created_at")
+        .gte("created_at", weekAgoStr)
+        .is("deleted_at", null),
+      supabase
+        .from("properties")
+        .select("view_count, property_type")
+        .is("deleted_at", null),
+    ]);
+
+    const leads = leadsRes.data || [];
+    const deals = dealsRes.data || [];
+    const props = propertiesRes.data || [];
+
+    const totalLeads = leads.length;
+    const hotLeads = leads.filter((l) => (l.ai_score || 0) >= 80).length;
+    const dealsWon = deals.filter(
+      (d) => d.status === "CLOSED_WIN" || d.status === "SIGNED",
+    ).length;
+
+    // Aggregate UTMs
+    const utmMap = new Map();
+    leads.forEach((l) => {
+      const s = l.utm_source || "Direct";
+      utmMap.set(s, (utmMap.get(s) || 0) + 1);
+    });
+    const topSource =
+      Array.from(utmMap.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+
+    // 2. AI Generate Summary
+    const { generateText } = await import("@/lib/ai/gemini");
+    const prompt = `
+    คุณเป็นผู้ช่วยวิเคราะห์ธุรกิจอสังหาริมทรัพย์ระดับสูง
+    สรุปผลการดำเนินงานในรอบ 7 วันที่ผ่านมาให้ผู้บริหารฟัง จากข้อมูลดังนี้:
+    - จำนวน Lead ใหม่: ${totalLeads} คน
+    - จำนวน Hot Lead (คุณภาพสูง): ${hotLeads} คน
+    - ดีลที่ปิดการขายได้สำเร็จ: ${dealsWon} ดีล
+    - ช่องทางที่ได้ Lead มากที่สุด: ${topSource}
+    
+    คำแนะนำ:
+    1. วิเคราะห์แนวโน้มสั้นๆ ว่าดีหรือควรปรับปรุงตรงไหน
+    2. ให้คำแนะนำเชิงกลยุทธ์ 2-3 ข้อ (เช่น เพิ่มงบช่องทาง X หรือ เน้นติดตาม Hot Lead)
+    3. ใช้ภาษาไทยที่เป็นทางการแต่กระชับ น่าเชื่อถือ
+    4. ไม่ต้องใส่หัวข้อใหญ่ เอาเฉพาะเนื้อหาที่สรุปมาเลย
+  `;
+
+    const result = await generateText(prompt, "gemini-2.0-flash-exp");
+
+    return {
+      summary: result.text || "ไม่สามารถสรุปข้อมูลได้ในขณะนี้",
+      stats: {
+        totalLeads,
+        hotLeads,
+        dealsWon,
+        topSource,
+      },
+    };
+  } catch (error) {
+    console.error("getExecutiveWeeklyAISummaryAction Error:", error);
+    throw new Error(
+      "ระบบ AI ไม่สามารถประมวลผลได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง",
+    );
+  }
 }
 
 function formatTimeAgo(dateString: string): string {

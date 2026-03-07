@@ -25,7 +25,11 @@ export type SiteSettingKey =
   | "logo_dark"
   | "favicon"
   | "onboarding_line_skipped"
-  | "onboarding_staff_skipped";
+  | "onboarding_staff_skipped"
+  | "google_tag_manager_id"
+  | "google_tag_manager_enabled"
+  | "hot_lead_threshold"
+  | "executive_summary_enabled";
 
 export interface SocialKeyword {
   keyword: string;
@@ -60,6 +64,10 @@ export interface SiteSettings {
   favicon: string;
   onboarding_line_skipped?: boolean;
   onboarding_staff_skipped?: boolean;
+  google_tag_manager_id?: string;
+  google_tag_manager_enabled?: boolean;
+  hot_lead_threshold?: number;
+  executive_summary_enabled?: boolean;
 }
 
 export const siteSettingsSchema = z.object({
@@ -106,4 +114,8 @@ export const siteSettingsSchema = z.object({
   isolation_deals_enabled: z.boolean().optional(),
   onboarding_line_skipped: z.boolean().optional(),
   onboarding_staff_skipped: z.boolean().optional(),
+  google_tag_manager_id: z.string().max(20).optional(),
+  google_tag_manager_enabled: z.boolean().optional(),
+  hot_lead_threshold: z.number().optional(),
+  executive_summary_enabled: z.boolean().optional(),
 });

@@ -1,4 +1,4 @@
-  "use server";
+"use server";
 import { createClient } from "@/lib/supabase/server";
 import {
   requireAuthContext,
@@ -7,6 +7,7 @@ import {
 } from "@/lib/authz";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { PropertyRow, PropertyWithImages } from "../types";
+import { getRecommendedProperties } from "../queries";
 
 /**
  * Get property by ID with images
@@ -238,4 +239,12 @@ export async function getGlobalPropertiesTableDataAction(params: {
   }));
 
   return { tableData, count: count || 0 };
+}
+
+/**
+ * Public action for AI recommendations
+ */
+export async function getRecommendedPropertiesAction(category: string) {
+  // Publicly accessible, no auth required
+  return getRecommendedProperties(category);
 }

@@ -696,6 +696,8 @@ export type Database = {
       }
       leads: {
         Row: {
+          ai_score: number | null
+          ai_status_label: string | null
           allow_airbnb: boolean | null
           assigned_to: string | null
           budget_max: number | null
@@ -710,6 +712,7 @@ export type Database = {
           id: string
           instagram_sid: string | null
           is_foreigner: boolean
+          last_viewed_at: string | null
           lead_type: Database["public"]["Enums"]["lead_type"]
           line_id: string | null
           max_size_sqm: number | null
@@ -728,12 +731,20 @@ export type Database = {
             | Database["public"]["Enums"]["property_type"][]
             | null
           property_id: string | null
+          referral_url: string | null
           source: Database["public"]["Enums"]["lead_source"] | null
           stage: Database["public"]["Enums"]["lead_stage"]
           tenant_id: string | null
           updated_at: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
         }
         Insert: {
+          ai_score?: number | null
+          ai_status_label?: string | null
           allow_airbnb?: boolean | null
           assigned_to?: string | null
           budget_max?: number | null
@@ -748,6 +759,7 @@ export type Database = {
           id?: string
           instagram_sid?: string | null
           is_foreigner?: boolean
+          last_viewed_at?: string | null
           lead_type?: Database["public"]["Enums"]["lead_type"]
           line_id?: string | null
           max_size_sqm?: number | null
@@ -766,12 +778,20 @@ export type Database = {
             | Database["public"]["Enums"]["property_type"][]
             | null
           property_id?: string | null
+          referral_url?: string | null
           source?: Database["public"]["Enums"]["lead_source"] | null
           stage?: Database["public"]["Enums"]["lead_stage"]
           tenant_id?: string | null
           updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Update: {
+          ai_score?: number | null
+          ai_status_label?: string | null
           allow_airbnb?: boolean | null
           assigned_to?: string | null
           budget_max?: number | null
@@ -786,6 +806,7 @@ export type Database = {
           id?: string
           instagram_sid?: string | null
           is_foreigner?: boolean
+          last_viewed_at?: string | null
           lead_type?: Database["public"]["Enums"]["lead_type"]
           line_id?: string | null
           max_size_sqm?: number | null
@@ -804,10 +825,16 @@ export type Database = {
             | Database["public"]["Enums"]["property_type"][]
             | null
           property_id?: string | null
+          referral_url?: string | null
           source?: Database["public"]["Enums"]["lead_source"] | null
           stage?: Database["public"]["Enums"]["lead_stage"]
           tenant_id?: string | null
           updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Relationships: [
           {

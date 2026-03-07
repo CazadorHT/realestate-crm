@@ -41,6 +41,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { RiArmchairFill } from "react-icons/ri";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
 interface SearchFilterBarProps {
   isLoading: boolean;
@@ -425,7 +426,13 @@ export function SearchFilterBar({
                             <SheetClose asChild key={pt.value}>
                               <button
                                 disabled={!hasItems}
-                                onClick={() => setType(pt.value)}
+                                onClick={() => {
+                                  setType(pt.value);
+                                  pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
+                                    filter_type: "property_type",
+                                    filter_value: pt.value,
+                                  });
+                                }}
                                 className={`w-full flex items-center justify-between px-4 py-4 rounded-2xl text-sm font-medium border transition-all ${
                                   isActive
                                     ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
@@ -474,7 +481,13 @@ export function SearchFilterBar({
                     ].map((opt) => (
                       <button
                         key={opt.val}
-                        onClick={() => setListingType(opt.val)}
+                        onClick={() => {
+                          setListingType(opt.val);
+                          pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
+                            filter_type: "listing_type",
+                            filter_value: opt.val,
+                          });
+                        }}
                         className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
                           listingType === opt.val
                             ? "bg-slate-900 text-white shadow-md"
@@ -728,7 +741,13 @@ export function SearchFilterBar({
                   {t("search.rent")}
                 </button>
                 <button
-                  onClick={() => setListingType("SALE_AND_RENT")}
+                  onClick={() => {
+                    setListingType("SALE_AND_RENT");
+                    pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
+                      filter_type: "listing_type",
+                      filter_value: "SALE_AND_RENT",
+                    });
+                  }}
                   className={`rounded-lg border-2 transition-colors duration-200 font-medium text-xs ${
                     listingType === "SALE_AND_RENT"
                       ? "bg-blue-600 border-blue-600 text-white shadow-md"

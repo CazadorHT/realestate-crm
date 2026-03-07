@@ -7,6 +7,8 @@ import { toggleFavoriteId, isFavorite } from "@/lib/favorite-store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { updateAIScore } from "@/lib/analytics-utils";
 
 interface FavoriteButtonProps {
   propertyId: string;
@@ -47,6 +49,10 @@ export function FavoriteButton({
 
     if (!favorited) {
       toast.success(t("property.favorite.added"));
+      pushToDataLayer(GTM_EVENTS.ADD_FAVORITE, {
+        property_id: propertyId,
+      });
+      updateAIScore(30);
     } else {
       toast.info(t("property.favorite.removed"));
     }

@@ -13,6 +13,15 @@ const contactSchema = z.object({
   lineId: z.string().optional(),
   subject: z.string().min(1, "Subject is required"),
   message: z.string().optional(),
+  // Attribution & AI Score
+  utm_source: z.string().optional(),
+  utm_medium: z.string().optional(),
+  utm_campaign: z.string().optional(),
+  utm_content: z.string().optional(),
+  utm_term: z.string().optional(),
+  referral_url: z.string().optional(),
+  ai_score: z.string().optional(),
+  ai_status_label: z.string().optional(),
 });
 
 export type ContactFormState = {
@@ -31,6 +40,7 @@ const limiter = rateLimit({
 });
 
 import { siteConfig } from "@/lib/site-config";
+import { getSiteSettings } from "@/features/site-settings/actions";
 
 export async function submitContactFormAction(
   prevState: ContactFormState,
@@ -55,6 +65,14 @@ export async function submitContactFormAction(
     lineId: formData.get("lineId"),
     subject: formData.get("subject"),
     message: formData.get("message"),
+    utm_source: formData.get("utm_source"),
+    utm_medium: formData.get("utm_medium"),
+    utm_campaign: formData.get("utm_campaign"),
+    utm_content: formData.get("utm_content"),
+    utm_term: formData.get("utm_term"),
+    referral_url: formData.get("referral_url"),
+    ai_score: formData.get("ai_score"),
+    ai_status_label: formData.get("ai_status_label"),
   });
 
   if (!validatedFields.success) {
@@ -89,6 +107,18 @@ export async function submitContactFormAction(
         stage: "NEW", // Initial stage
         note: `Contact Form Subject: ${subject || "N/A"}\nLine ID: ${lineId || "N/A"}\nMessage: ${message}`,
         lead_type: "INDIVIDUAL",
+        // Marketing & AI
+        utm_source: validatedFields.data.utm_source,
+        utm_medium: validatedFields.data.utm_medium,
+        utm_campaign: validatedFields.data.utm_campaign,
+        utm_content: validatedFields.data.utm_content,
+        utm_term: validatedFields.data.utm_term,
+        referral_url: validatedFields.data.referral_url,
+        ai_score: validatedFields.data.ai_score
+          ? parseInt(validatedFields.data.ai_score)
+          : 0,
+        ai_status_label: validatedFields.data.ai_status_label,
+        last_viewed_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -108,6 +138,14 @@ export async function submitContactFormAction(
         },
       };
     }
+
+    // Intelligence: Get Hot Lead Threshold
+    const settings = await getSiteSettings();
+    const threshold = settings.hot_lead_threshold || 80;
+    const aiScoreInt = validatedFields.data.ai_score
+      ? parseInt(validatedFields.data.ai_score)
+      : 0;
+    const isHotLead = aiScoreInt >= threshold;
 
     // Get Template Config
     const templateConfig = await getTemplateConfig("CONTACT");
@@ -241,7 +279,9 @@ export async function submitContactFormAction(
               wrap: true,
             },
           ],
-          backgroundColor: templateConfig.config.headerColor || "#7B1FA2",
+          backgroundColor: isHotLead
+            ? "#D32F2F"
+            : templateConfig.config.headerColor || "#7B1FA2",
           paddingAll: "lg",
         },
         body: {

@@ -261,6 +261,14 @@ const LeadCard = React.memo(function LeadCard({
             <span className="font-semibold text-sm line-clamp-1">
               {lead.full_name}
             </span>
+            {(lead as any).ai_score > 0 && (
+              <Badge 
+                variant="secondary" 
+                className={`text-[9px] h-4 px-1 ${(lead as any).ai_score >= 50 ? 'bg-orange-100 text-orange-600 border-orange-200' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
+              >
+                🔥 {(lead as any).ai_score}
+              </Badge>
+            )}
           </div>
           <button
             onMouseDown={(e) => e.stopPropagation()} // Prevent drag when clicking the view button

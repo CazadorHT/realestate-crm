@@ -25,6 +25,7 @@ export {
   getPropertyWithImages,
   getPopularAreasAction,
   addPopularAreaAction,
+  getRecommendedPropertiesAction,
   getGlobalPropertiesTableDataAction,
 } from "./actions/fetch";
 export { postPropertyToMetaAction } from "./actions/social";

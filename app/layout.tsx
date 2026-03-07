@@ -10,6 +10,8 @@ import { TenantProvider } from "@/components/providers/TenantProvider";
 import { SiteConfigProvider } from "@/components/providers/SiteConfigProvider";
 import { NavigationProgressBar } from "@/components/common/NavigationProgressBar";
 import { getServerTranslations } from "@/lib/i18n";
+import { AnalyticsTracker } from "@/components/providers/AnalyticsTracker";
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { siteConfig } from "@/lib/site-config";
 import { getSiteSettings } from "@/features/site-settings/actions";
@@ -83,30 +85,36 @@ export default async function RootLayout({
   return (
     <html lang={lang} suppressHydrationWarning>
       <head>
-        {/* Google Tag Manager */}
-        <Script id="gtm" strategy="afterInteractive">
-          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-          })(window,document,'script','dataLayer','GTM-NBG46JLN');`}
-        </Script>
+        {/* Google Tag Manager - Unified */}
+        {settings.google_tag_manager_enabled && settings.google_tag_manager_id && (
+          <Script id="gtm" strategy="afterInteractive">
+            {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','${settings.google_tag_manager_id}');`}
+          </Script>
+        )}
         {/* End Google Tag Manager */}
       </head>
       <body
         className={`${prompt.className} ${notoThai.variable} antialiased`}
         suppressHydrationWarning
       >
+        <Suspense fallback={null}>
+          <AnalyticsTracker />
+        </Suspense>
         {/* Google Tag Manager (noscript) */}
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-NBG46JLN"
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
-          ></iframe>
-        </noscript>
-        {/* End Google Tag Manager (noscript) */}
+        {settings.google_tag_manager_enabled && settings.google_tag_manager_id && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${settings.google_tag_manager_id}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            ></iframe>
+          </noscript>
+        )}
 
         <LanguageProvider initialLanguage={lang as any}>
           <SiteConfigProvider initialSettings={settings}>

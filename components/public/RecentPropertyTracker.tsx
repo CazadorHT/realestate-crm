@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { addRecentProperty } from "@/lib/recent-properties";
 import { incrementPropertyView } from "@/features/properties/actions";
+import { updateAIScore, trackPropertyPreference } from "@/lib/analytics-utils";
 
 export function RecentPropertyTracker({
   property,
@@ -41,6 +42,12 @@ export function RecentPropertyTracker({
     addRecentProperty(property);
     // Fire and forget view increment
     incrementPropertyView(property.id);
+    updateAIScore(5);
+
+    // Track preference for AI matching
+    if (property.property_type) {
+      trackPropertyPreference(property.property_type);
+    }
   }, [property]);
 
   return null;
