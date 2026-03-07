@@ -24,6 +24,8 @@ import { siteConfig } from "@/lib/site-config";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 // Lazy loaded components
+import { GTMPropertyPageView } from "@/components/providers/GTMPropertyPageView";
+
 const PropertyMapSection = dynamic(() =>
   import("@/components/public/property-detail/PropertyMapSection").then(
     (mod) => mod.PropertyMapSection,
@@ -251,6 +253,20 @@ export default async function PublicPropertyDetailPage(props: {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
+      <GTMPropertyPageView
+        property={{
+          id: data.id,
+          title: data.title,
+          listing_type: data.listing_type || "SALE",
+          property_type: data.property_type || "CONDO",
+          price: data.price,
+          original_price: data.original_price,
+          rental_price: data.rental_price,
+          original_rental_price: data.original_rental_price,
+          province: data.province,
+          popular_area: data.popular_area,
+        }}
       />
       {/* 1. Header & Breadcrumb */}
       <PropertyHeader property={data} features={features as any} />

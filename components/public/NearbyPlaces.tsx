@@ -14,6 +14,9 @@ import {
   useLanguage,
   dictionaries,
 } from "@/components/providers/LanguageProvider";
+import { useEffect } from "react";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { updateAIScore } from "@/lib/analytics-utils";
 
 export interface NearbyPlaceItem {
   category: string;
@@ -68,6 +71,18 @@ export function NearbyPlaces({
 }: NearbyPlacesProps) {
   const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
+
+  useEffect(() => {
+    try {
+      if (data.length > 0 || transits.length > 0) {
+        pushToDataLayer(GTM_EVENTS.VIEW_NEARBY, {
+          places_count: data.length,
+          transits_count: transits.length,
+        });
+        updateAIScore(5);
+      }
+    } catch (e) {}
+  }, [data.length, transits.length]);
 
   // Custom t function for language override
   const t = (key: string) => {

@@ -21,6 +21,10 @@ import {
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { useAddressLocalization } from "@/hooks/useAddressLocalization";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { updateAIScore } from "@/lib/analytics-utils";
+import { toast } from "sonner";
+import { Copy } from "lucide-react";
 
 interface PropertyHeaderProps {
   property: {
@@ -427,11 +431,30 @@ export function PropertyHeader({
                   {localizedTitle}
                 </h2>
 
-                <div className="flex items-center text-slate-600 gap-2 font-normal text-sm">
-                  <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
-                  <span className="line-clamp-1">
-                    {locationParts || t("common.no_location")}
-                  </span>
+                <div className="flex items-center text-slate-600 gap-4 font-normal text-sm">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
+                    <span className="line-clamp-1">
+                      {locationParts || t("common.no_location")}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(property.id);
+                      toast.success(t("common.id_copied") || "ID Copied");
+                      try {
+                        pushToDataLayer(GTM_EVENTS.COPY_PROPERTY_ID, {
+                          property_id: property.id,
+                        });
+                        updateAIScore(10);
+                      } catch (e) {}
+                    }}
+                    className="flex items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors group/copy cursor-pointer"
+                    title="Copy Property ID"
+                  >
+                    <Copy className="w-3.5 h-3.5 group-hover/copy:scale-110 transition-transform" />
+                    <span className="text-xs font-mono lowercase">ref: {property.id.slice(0, 8)}</span>
+                  </button>
                 </div>
                 <KeySellingPoints
                   points={finalKeySellingPoints}

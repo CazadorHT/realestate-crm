@@ -1,8 +1,11 @@
 ﻿"use client";
 
 import { MapPin } from "lucide-react";
+import { useEffect } from "react";
 import { LuMap } from "react-icons/lu";
 import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { updateAIScore } from "@/lib/analytics-utils";
 
 interface PropertyMapSectionProps {
   googleMapsLink: string | null;
@@ -62,6 +65,12 @@ export function PropertyMapSection({
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
 
+  useEffect(() => {
+    try {
+      pushToDataLayer(GTM_EVENTS.VIEW_MAP, { has_link: !!googleMapsLink });
+    } catch (e) {}
+  }, [googleMapsLink]);
+
   const locationQuery = extractQuery(googleMapsLink);
   const embedUrl = locationQuery
     ? `https://maps.google.com/maps?q=${encodeURIComponent(locationQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`
@@ -101,6 +110,12 @@ export function PropertyMapSection({
               href={googleMapsLink}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                try {
+                  pushToDataLayer(GTM_EVENTS.CLICK_MAP_EXTERNAL, { url: googleMapsLink });
+                  updateAIScore(10);
+                } catch (e) {}
+              }}
               className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-6 py-2.5 rounded-full text-sm font-semibold transition-all border border-slate-200 shadow-sm hover:shadow-md cursor-pointer group"
             >
               <MapPin className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />

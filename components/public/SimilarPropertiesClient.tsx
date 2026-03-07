@@ -7,6 +7,8 @@ import { PropertyCard } from "./PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import type { Database } from "@/lib/database.types";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { updateAIScore } from "@/lib/analytics-utils";
 
 type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 type PropertyType = Database["public"]["Enums"]["property_type"];
@@ -74,7 +76,19 @@ export function SimilarPropertiesClient({
                 : coverImg?.image_url;
 
           return (
-            <div key={property.id} className="min-w-0 ">
+            <div 
+              key={property.id} 
+              className="min-w-0 "
+              onClick={() => {
+                try {
+                  pushToDataLayer(GTM_EVENTS.CLICK_SIMILAR_PROPERTY, {
+                    property_id: property.id,
+                    property_title: property.title,
+                  });
+                  updateAIScore(15);
+                } catch (e) {}
+              }}
+            >
               <PropertyCard
                 property={{
                   ...property,

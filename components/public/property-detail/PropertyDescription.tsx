@@ -8,6 +8,8 @@ import {
   dictionaries,
 } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { updateAIScore } from "@/lib/analytics-utils";
 
 interface PropertyDescriptionProps {
   property: {
@@ -79,6 +81,17 @@ export function PropertyDescription({
         behavior: "smooth",
       });
     }
+    
+    // Track expansion
+    if (!isExpanded) {
+      try {
+        pushToDataLayer(GTM_EVENTS.EXPAND_DESCRIPTION, {
+          property_id: property.description?.slice(0, 50), // Use first 50 chars of desc as identifier or similar
+        });
+        updateAIScore(3);
+      } catch (e) {}
+    }
+    
     setIsExpanded(!isExpanded);
   };
 
