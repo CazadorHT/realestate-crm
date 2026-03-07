@@ -666,6 +666,12 @@ export function SearchFilterBar({
                 onValueChange={(val) => {
                   setProvince(val);
                   setArea("ALL");
+                  try {
+                    pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
+                      filter_type: "province",
+                      filter_value: val,
+                    });
+                  } catch (e) {}
                 }}
               >
                 <SelectTrigger className="h-12 py-[23px] w-full rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all">
@@ -693,7 +699,18 @@ export function SearchFilterBar({
             </div>
 
             <div className="col-span-2">
-              <Select value={type} onValueChange={setType}>
+              <Select 
+                value={type} 
+                onValueChange={(val) => {
+                  setType(val);
+                  try {
+                    pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
+                      filter_type: "property_type",
+                      filter_value: val,
+                    });
+                  } catch (e) {}
+                }}
+              >
                 <SelectTrigger className="h-12 py-[23px] w-full rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all">
                   <SelectValue placeholder={t("search.property_type")} />
                 </SelectTrigger>
@@ -730,7 +747,15 @@ export function SearchFilterBar({
             <div className="col-span-3">
               <div className="grid grid-cols-4 gap-1.5 h-12">
                 <button
-                  onClick={() => setListingType("ALL")}
+                  onClick={() => {
+                    setListingType("ALL");
+                    try {
+                      pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
+                        filter_type: "listing_type",
+                        filter_value: "ALL",
+                      });
+                    } catch (e) {}
+                  }}
                   className={`rounded-lg border-2 transition-colors duration-200 font-medium text-xs ${
                     listingType === "ALL"
                       ? "bg-slate-600 border-slate-600 text-white shadow-md"
@@ -825,7 +850,15 @@ export function SearchFilterBar({
               {["ALL", "1", "2", "3", "4+"].map((bed) => (
                 <button
                   key={bed}
-                  onClick={() => setBedrooms(bed)}
+                  onClick={() => {
+                    setBedrooms(bed);
+                    try {
+                      pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
+                        filter_type: "bedrooms",
+                        filter_value: bed,
+                      });
+                    } catch (e) {}
+                  }}
                   className={`h-9 px-3 rounded-lg transition-all font-medium text-sm ${
                     bedrooms === bed
                       ? "bg-indigo-600 text-white shadow-md"
@@ -843,7 +876,16 @@ export function SearchFilterBar({
                   ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/30"
                   : "bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-700"
               }`}
-              onClick={() => setNearTrain(!nearTrain)}
+              onClick={() => {
+                const nextVal = !nearTrain;
+                setNearTrain(nextVal);
+                try {
+                  pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
+                    filter_type: "near_train",
+                    filter_value: nextVal,
+                  });
+                } catch (e) {}
+              }}
             >
               <FaTrainSubway
                 className={`h-4 w-4 ${
@@ -861,7 +903,16 @@ export function SearchFilterBar({
                   ? "bg-orange-600 border-orange-600 text-white shadow-md shadow-orange-500/30"
                   : "bg-white border-slate-200 hover:border-orange-300 hover:bg-orange-50 text-slate-700 hover:text-orange-700"
               }`}
-              onClick={() => setPetFriendly(!petFriendly)}
+              onClick={() => {
+                const nextVal = !petFriendly;
+                setPetFriendly(nextVal);
+                try {
+                  pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
+                    filter_type: "pet_friendly",
+                    filter_value: nextVal,
+                  });
+                } catch (e) {}
+              }}
             >
               <MdOutlinePets
                 className={`h-5 w-5 ${
@@ -879,7 +930,16 @@ export function SearchFilterBar({
                   ? "bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-500/30"
                   : "bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700"
               }`}
-              onClick={() => setFullyFurnished(!fullyFurnished)}
+              onClick={() => {
+                const nextVal = !fullyFurnished;
+                setFullyFurnished(nextVal);
+                try {
+                  pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
+                    filter_type: "fully_furnished",
+                    filter_value: nextVal,
+                  });
+                } catch (e) {}
+              }}
             >
               <RiArmchairFill
                 className={`h-5 w-5 ${
@@ -891,7 +951,18 @@ export function SearchFilterBar({
               </span>
             </div>
 
-            <Select value={sort} onValueChange={setSort}>
+            <Select 
+              value={sort} 
+              onValueChange={(val) => {
+                setSort(val);
+                try {
+                  pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
+                    filter_type: "sort",
+                    filter_value: val,
+                  });
+                } catch (e) {}
+              }}
+            >
               <SelectTrigger className="w-[210px] h-12 py-[23px] rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all">
                 <ArrowUpDown className="h-4 w-4 mr-2 text-slate-400" />
                 <SelectValue placeholder={t("search.sort_by")} />

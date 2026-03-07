@@ -51,4 +51,11 @@ export const GTM_EVENTS = {
   CLICK_SIMILAR_PROPERTY: "click_similar_property", // คลิกดูทรัพย์ที่แนะนำ (Similar Properties)
   EXPAND_DESCRIPTION: "expand_description", // กด "อ่านเพิ่มเติม" ในส่วนรายละเอียด
   CLICK_MAP_EXTERNAL: "click_map_external", // คลิกปุ่มเปิด Google Maps ไปแอปภายนอก
+
+  // New Events (เหตุการณ์เพิ่มเติม)
+  CALCULATE_MORTGAGE: "calculate_mortgage", // คำนวณเงินกู้
+  SEARCH_RESULT_CLICK: "search_result_click", // คลิกทรัพย์จากรายการค้นหา
+  LEAD_FORM_START: "lead_form_start", // เริ่มกรอกฟอร์ม
+  LEAD_FORM_ERROR: "lead_form_error", // เกิดข้อผิดพลาดในการส่งฟอร์ม
+  VIEW_ITEM_LIST: "view_item_list", // ดูรายการทรัพย์ (Search Results)
 };

@@ -86,10 +86,29 @@ export function ContactForm() {
         
         setIsSuccess(true);
         setSelectedSubject(""); // Reset selection
+        sessionStorage.removeItem("form_started"); // Clear form start status
       } else {
         setErrorMsg(result.message);
+        try {
+          pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
+            error_message: result.message,
+            subject: selectedSubject,
+          });
+        } catch (e) {}
       }
     });
+  };
+
+  const handleFocus = () => {
+    const hasStarted = sessionStorage.getItem("form_started");
+    if (!hasStarted) {
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_START, {
+          subject: selectedSubject,
+        });
+        sessionStorage.setItem("form_started", "true");
+      } catch (e) {}
+    }
   };
 
   if (isSuccess) {
@@ -172,6 +191,7 @@ export function ContactForm() {
               id="name"
               name="name"
               required
+              onFocus={handleFocus}
               placeholder={t("contact.name_placeholder")}
               aria-label={t("contact.name_label")}
               className="h-11 pl-10 bg-slate-50 text-slate-600 border-slate-200 focus:bg-white transition-colors"
@@ -191,6 +211,7 @@ export function ContactForm() {
               type="tel"
               required
               value={phone}
+              onFocus={handleFocus}
               onChange={handlePhoneChange}
               placeholder="0XX-XXX-XXXX"
               aria-label={t("contact.phone_label")}
@@ -211,6 +232,7 @@ export function ContactForm() {
               id="email"
               name="email"
               type="email"
+              onFocus={handleFocus}
               placeholder={t("contact.email_placeholder")}
               aria-label={t("contact.email_label")}
               className="h-11 pl-10 bg-slate-50 text-slate-600 border-slate-200 focus:bg-white transition-colors"
@@ -227,6 +249,7 @@ export function ContactForm() {
             <Input
               id="lineId"
               name="lineId"
+              onFocus={handleFocus}
               placeholder={t("contact.line_id_placeholder")}
               aria-label={t("contact.line_id_label")}
               className="h-11 pl-10 bg-slate-50 text-slate-600 border-slate-200 focus:bg-white transition-colors"
@@ -244,6 +267,7 @@ export function ContactForm() {
           <Textarea
             id="message"
             name="message"
+            onFocus={handleFocus}
             placeholder={t("contact.more_details_placeholder")}
             rows={4}
             aria-label={t("contact.more_details_label")}

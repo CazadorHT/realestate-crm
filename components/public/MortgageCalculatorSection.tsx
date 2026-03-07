@@ -6,6 +6,9 @@ import { Slider } from "../ui/slider";
 import { Button } from "@/components/ui/button";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { useEffect, useRef } from "react";
+import { useDebounce } from "use-debounce";
 
 export function MortgageCalculatorSection() {
   const { t } = useLanguage();
@@ -26,6 +29,31 @@ export function MortgageCalculatorSection() {
   };
 
   const monthlyPayment = calculateMonthlyPayment();
+
+  // Track mortgage calculation (debounced to avoid flooding GTM)
+  const [debouncedPropertyPrice] = useDebounce(propertyPrice, 2000);
+  const [debouncedDownPayment] = useDebounce(downPaymentPercent, 2000);
+  const [debouncedInterest] = useDebounce(interestRate, 2000);
+  const [debouncedTerm] = useDebounce(termYears, 2000);
+
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    try {
+      pushToDataLayer(GTM_EVENTS.CALCULATE_MORTGAGE, {
+        property_price: debouncedPropertyPrice,
+        down_payment_percent: debouncedDownPayment,
+        interest_rate: debouncedInterest,
+        term_years: debouncedTerm,
+        monthly_payment: Math.round(monthlyPayment),
+      });
+    } catch (e) {}
+  }, [debouncedPropertyPrice, debouncedDownPayment, debouncedInterest, debouncedTerm]);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat(t("common.baht") === "฿" ? "th-TH" : "en-US", {
@@ -175,6 +203,14 @@ export function MortgageCalculatorSection() {
                   href="https://line.me/R/ti/p/@your-line-id"
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => {
+                    try {
+                      pushToDataLayer(GTM_EVENTS.CLICK_LINE, {
+                        source: "mortgage_calculator",
+                        monthly_payment: Math.round(monthlyPayment),
+                      });
+                    } catch (e) {}
+                  }}
                 >
                   <Button
                     variant="secondary"
