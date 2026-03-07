@@ -98,6 +98,11 @@
     "cancel": "取消",
     "close": "关闭",
     "step": "步骤",
+    "copy": "复制",
+    "copy_number": "复制电话号码",
+    "copied": "已复制",
+    "copy_success": "已复制到剪贴板",
+    "call_now": "立即拨打",
     "are_you_sure": "您确定要执行此操作吗？",
     "cookie_consent": {
       "title": "我们使用 Cookie",
@@ -816,6 +821,7 @@
       "closed": "已关闭"
     },
     "details": "房产详情",
+    "phone_number": "电话号码",
     "amenities": "配套设施",
     "no_description": "无更多详细说明。",
     "inquiry_rent": "咨询租金",

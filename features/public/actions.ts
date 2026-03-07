@@ -334,12 +334,16 @@ export async function submitInquiryAction(
     message: formData.get("message"),
     propertyId: formData.get("propertyId"),
     source: "WEBSITE",
+    marketing_attribution: formData.get("marketing_attribution")?.toString(),
+    ai_lead_score: formData.get("ai_lead_score")
+      ? Number(formData.get("ai_lead_score"))
+      : undefined,
   });
 
   if (!validatedFields.success) {
     return {
       error: "ข้อมูลไม่ถูกต้อง",
-      errors: validatedFields.error.flatten().fieldErrors,
+      errors: validatedFields.error.flatten().fieldErrors as any,
     };
   }
 
@@ -932,9 +936,21 @@ export async function submitInquiryAction(
       console.log("Inquiry notification skipped: Template is inactive");
     }
 
-    return { success: true };
+    // Final success return with GTM data
+    const isHotLead = (data.ai_lead_score || 0) >= 80;
+    const utmSource = data.marketing_attribution || "direct";
+
+    return {
+      success: true,
+      data: {
+        id: lead.id,
+        aiScore: data.ai_lead_score || 0,
+        isHotLead,
+        utmSource,
+      },
+    };
   } catch (err) {
-    console.error("Inquiry Error:", err);
-    return { error: "เกิดข้อผิดพลาดทางเทคนิค กรุณาลองใหม่ภายหลัง" };
+    console.error("Action Error:", err);
+    return { error: "เกิดข้อผิดพลาดในการส่งข้อมูล" };
   }
 }

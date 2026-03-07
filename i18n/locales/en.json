@@ -100,6 +100,11 @@
     "cancel": "Cancel",
     "close": "Close",
     "step": "Step",
+    "copy": "Copy",
+    "copy_number": "Copy Phone Number",
+    "copied": "Copied",
+    "copy_success": "Copied to clipboard",
+    "call_now": "Call Now",
     "are_you_sure": "Are you sure you want to perform this action?",
     "cookie_consent": {
       "title": "We use cookies",
@@ -807,6 +812,7 @@
       "closed": "Closed"
     },
     "details": "Property Details",
+    "phone_number": "Phone Number",
     "amenities": "Amenities",
     "no_description": "No additional details available.",
     "inquiry_rent": "Inquire for Rent",

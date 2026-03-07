@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Phone, Copy, Check, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { useLanguage } from "../providers/LanguageProvider";
+import { useLanguage, dictionaries, Language } from "../providers/LanguageProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
 interface AgentPhoneDialogProps {
@@ -20,6 +20,7 @@ interface AgentPhoneDialogProps {
   trigger: React.ReactNode;
   propertyId?: string;
   propertyTitle?: string;
+  language?: Language;
 }
 
 export function AgentPhoneDialog({
@@ -28,8 +29,17 @@ export function AgentPhoneDialog({
   trigger,
   propertyId,
   propertyTitle,
+  language: customLanguage,
 }: AgentPhoneDialogProps) {
-  const { t } = useLanguage();
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Custom t function for language override
+  const t = (key: string) => {
+    if (!customLanguage) return globalT(key);
+    const dict = dictionaries[language as keyof typeof dictionaries] as any;
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
   const [copied, setCopied] = useState(false);
 
   // Format phone number: xxx-xxx-xxxx

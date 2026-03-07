@@ -26,4 +26,7 @@ export const inquiryLeadSchema = z.object({
   source: z
     .enum(["PORTAL", "FACEBOOK", "LINE", "WEBSITE", "REFERRAL", "OTHER"])
     .default("WEBSITE"),
+  // Marketing & GTM Fields
+  marketing_attribution: z.string().optional(), // For UTM Source/Medium/Campaign
+  ai_lead_score: z.number().optional(), // Initial AI Score from client
 });

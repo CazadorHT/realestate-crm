@@ -33,7 +33,7 @@ export function MobilePropertyActions({
   propertyTitle,
   property,
 }: MobilePropertyActionsProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 p-4 pb-8 sm:pb-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] lg:hidden animate-in slide-in-from-bottom-full duration-500">
       <div className="flex items-center gap-3 max-w-lg mx-auto">
@@ -62,6 +62,7 @@ export function MobilePropertyActions({
             agentPhone={agentPhone || ""}
             propertyId={propertyId}
             propertyTitle={propertyTitle}
+            language={language}
             trigger={
               <Button
                 className="flex-1 h-11 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-semibold px-2 min-w-0"

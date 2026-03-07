@@ -18,6 +18,12 @@ export type LeadState = {
     phone?: string[];
     message?: string[];
   };
+  data?: {
+    id: string;
+    aiScore: number;
+    isHotLead: boolean;
+    utmSource: string;
+  };
 };
 
 export type PublicProperty =

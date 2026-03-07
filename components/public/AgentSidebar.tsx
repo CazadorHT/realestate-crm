@@ -15,7 +15,11 @@ import { ShareButtons } from "@/components/public/ShareButtons";
 import { AgentPhoneDialog } from "@/components/public/AgentPhoneDialog";
 import { FaLine } from "react-icons/fa";
 import { useState } from "react";
-import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
+import {
+  useLanguage,
+  dictionaries,
+  Language,
+} from "@/components/providers/LanguageProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
 
@@ -204,6 +208,7 @@ export function AgentSidebar({
               agentPhone={agentPhone || ""}
               propertyId={propertyId}
               propertyTitle={propertyTitle}
+              language={language as Language}
               trigger={
                 <Button
                   className="w-full h-12 rounded-xl text-base font-semibold bg-white text-slate-700 hover:text-blue-600 border border-blue-100 hover:bg-blue-100 hover:border-blue-100 shadow-sm transition-all hover:-translate-y-0.5"

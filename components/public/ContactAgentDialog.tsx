@@ -15,6 +15,13 @@ import { Label } from "@/components/ui/label";
 import { submitInquiryAction } from "@/features/public/actions";
 import { LeadState } from "@/features/public/types";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { 
+  getStoredMarketingData, 
+  getAIScore, 
+  updateAIScore 
+} from "@/lib/analytics-utils";
 import {
   FaUser,
   FaPhoneAlt,
@@ -145,7 +152,8 @@ export function ContactAgentDialog({
   const [internalOpen, setInternalOpen] = useState(false);
   const [state, setState] = useState<LeadState>({});
   const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState(defaultMessage);
+  const defaultQuickMessage = t("property.contact_dialog.quick_messages.viewing");
+  const [message, setMessage] = useState(defaultMessage || defaultQuickMessage);
 
   // Derive localized title
   const displayTitle = property
@@ -189,7 +197,7 @@ export function ContactAgentDialog({
         setFullName("");
         setPhone("");
         setLineId("");
-        setMessage(defaultMessage);
+        setMessage(defaultMessage || defaultQuickMessage);
         setState({});
       }, 300);
     }
@@ -242,7 +250,28 @@ export function ContactAgentDialog({
     }
 
     const result = await submitInquiryAction({}, formData);
-    if (result.success) {
+    if (result.success && result.data) {
+      // GTM Tracking for successful submission
+      try {
+        pushToDataLayer(GTM_EVENTS.SUBMIT_CONTACT_FORM, {
+          lead_id: result.data.id,
+          item_id: propertyId,
+          item_name: displayTitle,
+          utm_source: result.data.utmSource,
+        });
+
+        pushToDataLayer(GTM_EVENTS.AI_LEAD_SCORE, {
+          score: result.data.aiScore,
+          hot_lead: result.data.isHotLead,
+          utm_source: result.data.utmSource,
+        });
+
+        // Boost engagement score on successful inquiry
+        updateAIScore(30);
+      } catch (e) {
+        console.error("GTM Push Error:", e);
+      }
+
       toast.success(t("property.contact_dialog.success"));
       setOpen(false);
       setState({});
@@ -545,6 +574,16 @@ export function ContactAgentDialog({
           <div className="flex-1 p-7 overflow-y-auto bg-slate-50 sm:rounded-r-2xl">
             <form action={clientAction} className="space-y-5">
               <input type="hidden" name="propertyId" value={propertyId} />
+              <input 
+                type="hidden" 
+                name="marketing_attribution" 
+                value={JSON.stringify(getStoredMarketingData())} 
+              />
+              <input 
+                type="hidden" 
+                name="ai_lead_score" 
+                value={getAIScore()} 
+              />
 
               {/* Name */}
               {renderNameField(false)}
@@ -627,6 +666,16 @@ export function ContactAgentDialog({
             className="space-y-5 flex-1 flex flex-col relative"
           >
             <input type="hidden" name="propertyId" value={propertyId} />
+            <input 
+              type="hidden" 
+              name="marketing_attribution" 
+              value={JSON.stringify(getStoredMarketingData())} 
+            />
+            <input 
+              type="hidden" 
+              name="ai_lead_score" 
+              value={getAIScore()} 
+            />
 
             {/* Step Description */}
             <div className="text-center -mt-1">
