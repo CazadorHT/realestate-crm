@@ -26,6 +26,7 @@ import {
   useLanguage,
   dictionaries,
 } from "@/components/providers/LanguageProvider";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { PropertyImage } from "@/features/properties/types";
 
 interface PropertyGalleryProps {
@@ -297,6 +298,9 @@ export function PropertyGallery({
             onClick={() => {
               setCurrentIndex(0);
               setOpen(true);
+              try {
+                pushToDataLayer(GTM_EVENTS.VIEW_GALLERY_FULL, { title });
+              } catch (e) {}
             }}
           >
             {/* Blurred Background */}
@@ -331,6 +335,12 @@ export function PropertyGallery({
                 onClick={() => {
                   setCurrentIndex(idx + 1);
                   setOpen(true);
+                  try {
+                    pushToDataLayer(GTM_EVENTS.VIEW_GALLERY, { 
+                      title, 
+                      image_index: idx + 1 
+                    });
+                  } catch (e) {}
                 }}
               >
                 {/* Blurred Background */}

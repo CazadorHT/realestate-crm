@@ -58,10 +58,22 @@ export function ContactForm() {
         setIsSuccess(true);
         setSelectedSubject(""); // Reset selection
         
-        pushToDataLayer(GTM_EVENTS.SUBMIT_CONTACT_FORM, {
-          subject: selectedSubject,
-        });
-        // Reset form visually handled by hiding it, effectively
+        try {
+          pushToDataLayer(GTM_EVENTS.SUBMIT_CONTACT_FORM, {
+            subject: selectedSubject,
+          });
+
+          if (result.data) {
+            pushToDataLayer(GTM_EVENTS.AI_LEAD_SCORE, {
+              lead_id: result.data.id,
+              ai_score: result.data.aiScore,
+              is_hot_lead: result.data.isHotLead,
+              utm_source: result.data.utmSource,
+            });
+          }
+        } catch (e) {
+          console.error("GTM Error:", e);
+        }
       } else {
         setErrorMsg(result.message);
       }

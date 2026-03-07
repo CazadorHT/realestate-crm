@@ -67,11 +67,13 @@ export function AgentSidebar({
 
   // Handle phone button click
   const handlePhoneClick = () => {
-    pushToDataLayer(GTM_EVENTS.CLICK_PHONE, {
-      property_id: propertyId,
-      property_title: propertyTitle,
-      agent_name: agentName,
-    });
+    try {
+      pushToDataLayer(GTM_EVENTS.CLICK_PHONE, {
+        property_id: propertyId,
+        property_title: propertyTitle,
+        agent_name: agentName,
+      });
+    } catch (e) {}
     updateAIScore(15);
     if (!agentPhone) {
       // No agent phone - open contact dialog instead
@@ -170,11 +172,13 @@ export function AgentSidebar({
               asChild
               className="w-full h-12 rounded-xl text-base font-semibold bg-[#06C755] hover:bg-[#05B04C] text-white shadow-lg shadow-green-100 transition-all hover:-translate-y-0.5"
               onClick={() => {
-                pushToDataLayer(GTM_EVENTS.CLICK_LINE, {
-                  property_id: propertyId,
-                  property_title: propertyTitle,
-                  agent_name: agentName,
-                });
+                try {
+                  pushToDataLayer(GTM_EVENTS.CLICK_LINE, {
+                    property_id: propertyId,
+                    property_title: propertyTitle,
+                    agent_name: agentName,
+                  });
+                } catch (e) {}
                 updateAIScore(20);
               }}
             >

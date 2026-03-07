@@ -166,7 +166,18 @@ export function SearchFilterBar({
               placeholder={t("search.keyword_placeholder")}
               className="pl-12 h-12 text-base rounded-xl border-slate-200 bg-white shadow-sm"
               value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
+              onChange={(e) => {
+                setKeyword(e.target.value);
+                // We use a small timeout to avoid flooding GTM on every keystroke
+                const timeoutId = setTimeout(() => {
+                  try {
+                    pushToDataLayer(GTM_EVENTS.SEARCH_KEYWORD, { 
+                      keyword: e.target.value 
+                    });
+                  } catch (e) {}
+                }, 1000);
+                return () => clearTimeout(timeoutId);
+              }}
             />
           </div>
           <Sheet>
@@ -299,7 +310,15 @@ export function SearchFilterBar({
                             .map((a) => (
                               <button
                                 key={a.name}
-                                onClick={() => setArea(a.name)}
+                                onClick={() => {
+                                  setArea(a.name);
+                                  try {
+                                    pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
+                                      filter_type: "location",
+                                      filter_value: a.name,
+                                    });
+                                  } catch (e) {}
+                                }}
                                 className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
                                   area === a.name
                                     ? "bg-blue-600 text-white border-blue-600"

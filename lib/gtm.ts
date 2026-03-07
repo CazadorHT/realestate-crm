@@ -32,7 +32,10 @@ export const GTM_EVENTS = {
   ADD_FAVORITE: "add_favorite",
   ADD_COMPARE: "add_compare",
   VIEW_GALLERY: "view_gallery",
+  VIEW_GALLERY_FULL: "view_gallery_full",
   SHARE_PROPERTY: "share_property",
+  SCROLL_DEPTH: "scroll_depth",
+  AI_LEAD_SCORE: "ai_lead_score",
 
   // Search Events
   SEARCH_FILTER: "search_filter",

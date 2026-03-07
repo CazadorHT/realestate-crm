@@ -8,6 +8,7 @@ import { CookieConsent } from "@/components/common/CookieConsent";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { TenantProvider } from "@/components/providers/TenantProvider";
 import { SiteConfigProvider } from "@/components/providers/SiteConfigProvider";
+import { GTMScrollTracker } from "@/components/providers/GTMScrollTracker";
 import { NavigationProgressBar } from "@/components/common/NavigationProgressBar";
 import { getServerTranslations } from "@/lib/i18n";
 import { AnalyticsTracker } from "@/components/providers/AnalyticsTracker";
@@ -115,6 +116,7 @@ export default async function RootLayout({
             ></iframe>
           </noscript>
         )}
+        <GTMScrollTracker /> {/* Added GTMScrollTracker */}
 
         <LanguageProvider initialLanguage={lang as any}>
           <SiteConfigProvider initialSettings={settings}>

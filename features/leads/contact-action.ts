@@ -29,6 +29,12 @@ export type ContactFormState = {
   message: string;
   errors?: Record<string, string[]>;
   fields?: Record<string, string>;
+  data?: {
+    id: string;
+    aiScore: number;
+    isHotLead: boolean;
+    utmSource: string;
+  };
 };
 
 import { rateLimit } from "@/lib/rate-limit";
@@ -41,6 +47,7 @@ const limiter = rateLimit({
 
 import { siteConfig } from "@/lib/site-config";
 import { getSiteSettings } from "@/features/site-settings/actions";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
 export async function submitContactFormAction(
   prevState: ContactFormState,
@@ -420,6 +427,12 @@ export async function submitContactFormAction(
     return {
       success: true,
       message: "ขอบคุณที่สนใจครับ เราจะติดต่อกลับโดยเร็วที่สุด",
+      data: {
+        id: lead.id,
+        aiScore: aiScoreInt,
+        isHotLead: isHotLead,
+        utmSource: validatedFields.data.utm_source || "Direct",
+      },
     };
   } catch (error) {
     console.error("Server Error:", error);
