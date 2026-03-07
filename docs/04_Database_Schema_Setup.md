@@ -90,6 +90,22 @@ CREATE TYPE property_type AS ENUM (
 
 -- User Roles
 CREATE TYPE user_role AS ENUM ('ADMIN', 'USER', 'AGENT', 'MANAGER');
+
+-- บทบาทในการรับค่าคอมมิชชั่น
+CREATE TYPE public.commission_role AS ENUM (
+    'LISTING',
+    'CLOSING',
+    'AGENCY',
+    'CO_AGENT',
+    'TEAM_POOL'
+);
+
+-- สถานะการจ่ายคอมมิชชั่น
+CREATE TYPE public.commission_status AS ENUM (
+    'PENDING',
+    'PAID',
+    'CANCELLED'
+);
 ```
 
 ---
@@ -383,6 +399,22 @@ CREATE TABLE public.avm_contexts (
   selected_strategy text, -- e.g., 'QUICK_SALE', 'MARKET_PRICE', 'MAX_PROFIT'
   created_at timestamp with time zone DEFAULT now() NOT NULL,
   created_by uuid REFERENCES public.profiles(id)
+);
+
+-- Advanced Commission Splits 🆕
+CREATE TABLE IF NOT EXISTS public.deal_commissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    deal_id UUID NOT NULL REFERENCES public.deals(id) ON DELETE CASCADE,
+    agent_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    role public.commission_role NOT NULL,
+    percentage NUMERIC(5, 2) NOT NULL DEFAULT 0,
+    amount NUMERIC(15, 2) NOT NULL DEFAULT 0,
+    wht_amount NUMERIC(15, 2) NOT NULL DEFAULT 0, -- 3% WHT
+    net_amount NUMERIC(15, 2) NOT NULL DEFAULT 0, -- amount after WHT
+    status public.commission_status NOT NULL DEFAULT 'PENDING',
+    tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ```
 

@@ -100,4 +100,28 @@
 
 ---
 
+## 8. ระบบคำนวณคอมมิชชั่นขั้นสูง (Advanced Commission Logic) 🆕
+
+ตาราง `deal_commissions` จัดเก็บข้อมูลสัดส่วนรายได้แยกตามบทบาท:
+
+- **Calculation Formula:** (Price \* Commission Rate) - WHT (3%) = Net Amount
+- **Role Split:** รองรับสูตรแบ่ง % ระหว่าง Listing Agent, Closing Agent และ Agency Fee
+- **Smart Save Logic:** ป้องกันการบันทึกหากผลรวม % หรือจำนวนเงินไม่ตรงกับค่าคอมมิชชั่นรวมของดีล
+
+## 9. โครงสร้าง Google Tag Manager (GTM Tracking) 🆕
+
+ระบบติดตามพฤติกรรมใน `lib/gtm.ts` และ `components/providers/GTMPropertyPageView.tsx`:
+
+- **DataLayer Push:** ส่งเหตุการณ์ (Events) เข้าสู่ GTM แบบ Real-time
+- **Core Events:** `click_line`, `click_phone`, `submit_contact_form`, `view_item`, `ai_lead_score`
+- **Enhanced E-commerce Pattern:** การส่งข้อมูลราคาและทำเลทรัพย์ใน Event `view_item` เพื่อใช้ทำ Remarketing
+
+## 10. ระบบจัดการข้อผิดพลาด (Robust Error Handling) 🆕
+
+- **Global Error Boundaries:** ใช้ `components/SafeMode.tsx` ครอบส่วนแสดงผลสำคัญเพื่อป้องกันแอปพัง (White Screen)
+- **Atomic Loading States:** จัดการสถานะการรอ (Loading) รายคอมโพเนนต์ เพื่อประสบการณ์ผู้ใช้ที่ลื่นไหล
+- **Audit Trail Consistency:** ระบบบันทึก Log ลง Supabase อัตโนมัติเมื่อเกิด Critical Error ฝั่ง Server
+
+---
+
 _คู่มือฉบับนี้จัดทำขึ้นโดยระบบ Antigravity AI สำหรับทีมเทคนิค VC Connect Asset_

@@ -38,10 +38,10 @@
 
 > **เป้าหมาย:** เก็บข้อมูลให้ถูกต้อง ครบถ้วน และถูกกฎหมาย (PDPA)
 
-- [ ] **GTM Setup:** ติดตั้ง GTM Container ในระบบ Next.js (`app/layout.tsx`)
-- [ ] **Data Layer Implementation:** ฝัง Data Layer ตัวแปรข้อมูลอสังหาฯ ในหน้า Property Detail (เช่น ข้อมูลราคา, ทำเล, ชื่อโครงการ) ส่งเข้า GTM
-- [ ] **Micro-conversion Tracking:** จับอีเวนต์สำคัญ (กดดูเบอร์โทร, ทักแชท LINE, เลื่อนดูรูปภาพครบทุกรูป)
-- [ ] **Consent Mode V2:** เชื่อม Cookie Consent ของแอปเข้ากับ Google Consent Mode เพื่อให้การเก็บสถิติสอดคล้องกับ PDPA 100%
+- [x] **GTM Setup:** ติดตั้ง GTM Container ในระบบ Next.js (`app/layout.tsx`)
+- [x] **Data Layer Implementation:** ฝัง Data Layer ตัวแปรข้อมูลอสังหาฯ ในหน้า Property Detail (เช่น ข้อมูลราคา, ทำเล, ชื่อโครงการ) ส่งเข้า GTM
+- [x] **Micro-conversion Tracking:** จับอีเวนต์สำคัญ (กดดูเบอร์โทร, ทักแชท LINE, เลื่อนดูรูปภาพครบทุกรูป)
+- [x] **Consent Mode V2:** เชื่อม Cookie Consent ของแอปเข้ากับ Google Consent Mode เพื่อให้การเก็บสถิติสอดคล้องกับ PDPA 100%
 
 ### Phase 2: AI Intelligence (การวิเคราะห์ด้วย AI)
 

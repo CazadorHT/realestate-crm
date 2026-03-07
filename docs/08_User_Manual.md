@@ -2,7 +2,7 @@
 
 วิธีใช้งานฟีเจอร์ต่างๆ ในระบบ Real Estate CRM สำหรับ Agent และ Admin (Enterprise Edition)
 
-> **อัปเดตล่าสุด:** 4 มีนาคม 2026 (Enterprise v2.0 & Multi-Branch Ready)
+> **อัปเดตล่าสุด:** 8 มีนาคม 2026 (Enterprise v2.1 & Multi-Branch Ready)
 
 ---
 
@@ -28,6 +28,11 @@
   - **Create from Template:** Agent กดปุ่ม "สร้างเอกสาร" เพื่อให้ระบบดึงข้อมูลลูกค้าและทรัพย์มาสวมใส่ในตัวแปร และแปลงผลลัพธ์เป็น PDF ทันที
   - **In-App Preview:** กดดูตัวอย่างเอกสารได้ทันทีในหน้าเว็บ ก่อนส่งต่อ
   - **E-Signature:** ส่งลิงก์ให้ลูกค้าเซ็นชื่อออนไลน์ได้ทันทีผ่านระบบ NDID/Adobe Sign (Mock)
+
+- **Advanced Commission Split 🆕:**
+  - **การคำนวณสัดส่วน:** ในหน้าดีล (Deal) สามารถระบุผู้รับค่าคอมมิชชั่นได้หลายคน (Listing/Closing/Co-Agent) พร้อมระบบคำนวณ WHT 3% อัตโนมัติ
+  - **Visual Split Bar:** แถบสีแสดงสัดส่วนรายได้แบบเรียลไทม์ ช่วยให้ตรวจสอบความถูกต้องได้ในพริบตา
+  - **Smart Save:** ระบบจะไม่อนุญาตให้บันทึกหากยอดเงินรวมไม่ตรงกับค่าคอมมิชชั่นของดีล เพื่อป้องกันความผิดพลาดจากผู้ใช้ (User Error)
 
 ---
 
@@ -62,6 +67,7 @@
 ## 6. การตั้งค่าระบบและการเชื่อมต่อ (Settings & Integrations) 🆕
 
 - **System Integrations:** หน้า Status Center ที่ผู้ดูแลระบบสามารถดูสถานะการเชื่อมต่อ API แบบ Real-time (Supabase, TikTok)
+- **Marketing & Conversion Tracking (GTM) 🆕:** ระบบฝังตัวติดตามพฤติกรรมลูกค้าอัตโนมัติ ช่วยให้ทีมการตลาดวิเคราะห์แหล่งที่มาและประสิทธิภาพของแคมเปญได้แบบละเอียด (Event-driven analytics)
 - **Tenant Branding & Live Preview:** ระบบกำหนดหน้าตาสีสัน (Branding) และโลโก้แยกตามสาขา พร้อมปุ่ม Live Site Preview ดูผลลัพธ์บนเว็บจริงทันที
 
 ---

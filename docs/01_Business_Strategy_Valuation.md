@@ -10,20 +10,20 @@
 
 ### 🏗️ โครงสร้างราคาแบ่งตามโมดูล (อิงตามตลาดซอฟต์แวร์ Enterprise)
 
-| โมดูล (Module)                                                           | มูลค่าประเมิน (THB)   | สถานะ (Status)  |
-| :----------------------------------------------------------------------- | :-------------------- | :-------------- |
-| **1. Public Listing Portal** (Search, Filter, SEO, Premium UI/UX)        | 900,000 - 1,200,000   | ✅ เสร็จสมบูรณ์ |
-| **2. Professional CRM Backend** (Lead, Pipeline, Advanced Analytics)     | 1,000,000 - 1,500,000 | ✅ เสร็จสมบูรณ์ |
-| **3. AI-First Ecosystem** (Gemini 2.0, Social Generation, Insights)      | 1,200,000 - 1,600,000 | ✅ เสร็จสมบูรณ์ |
-| **4. Omni-channel Integration** (LINE, Meta, TikTok, Auto-Keyword)       | 850,000 - 1,100,000   | ✅ เสร็จสมบูรณ์ |
-| **5. Multi-Tenant & Branch Management** (Org Structure, Branding)        | 1,500,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ |
-| **6. Advanced Document & Contract Engine** (Dynamic Word-to-PDF, E-Sign) | 1,000,000 - 1,500,000 | ✅ เสร็จสมบูรณ์ |
-| **7. Core Architecture & System Health** (Monitoring, API Integration)   | 650,000 - 850,000     | ✅ เสร็จสมบูรณ์ |
-| **8. Automated Valuation Model (AVM)** (AI Market Comps, Pricing Alerts) | 1,500,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ |
-| **9. Advanced Financials & Reporting** (Commission Split, Exec PDF)      | 1,200,000 - 1,800,000 | ✅ เสร็จสมบูรณ์ |
-
-**รวมมูลค่าโปรเจค (Fair Market Value):** **9,800,000 – 14,550,000 บาท**
-_(มูลค่าสะท้อนฟีเจอร์ระดับ Enterprise ที่พร้อมใช้งานจริงในสเกลองค์กรขนาดใหญ่ระดับมหาชน - **ราคายังไม่รวมภาษีมูลค่าเพิ่ม 7%**)_
+| โมดูล (Module)                                                          | มูลค่าประเมิน (THB)   | สถานะ (Status)  |
+| :---------------------------------------------------------------------- | :-------------------- | :-------------- |
+| **1. Public Listing Portal** (Search, Filter, SEO, Premium UI/UX, i18n) | 1,200,000 - 1,800,000 | ✅ เสร็จสมบูรณ์ |
+| **2. Professional CRM Backend** (Lead, Pipeline, Activity, Stats)       | 1,500,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ |
+| **3. AI-First Ecosystem** (Gemini 2.0, Financial Costing, Insights)     | 2,000,000 - 3,500,000 | ✅ เสร็จสมบูรณ์ |
+| **4. Omni-channel & Social Studio** (LINE, Meta, TikTok, Auto-Reply)    | 1,800,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ |
+| **5. Multi-Tenant Branch Ops** (RLS, Org Structure, Live Branding)      | 2,000,000 - 3,000,000 | ✅ เสร็จสมบูรณ์ |
+| **6. AVM & Market Intel** (AI Market Comps, PDF Reports, Drop Alerts)   | 1,800,000 - 2,800,000 | ✅ เสร็จสมบูรณ์ |
+| **7. Advanced Financials & Split** (Comm Split, WHT 3%, Visual Bar)     | 1,500,000 - 2,200,000 | ✅ เสร็จสมบูรณ์ |
+| **8. Smart Contract Engine** (Dynamic Word-to-PDF, In-app Preview)      | 1,200,000 - 1,800,000 | ✅ เสร็จสมบูรณ์ |
+| **9. Core Architecture & System Health** (Monitoring, Robust Handling)  | 1,000,000 - 1,500,000 | ✅ เสร็จสมบูรณ์ |
+| **10. GTM & Conversion Tracking** (Marketing Data, Event Tracking)      | 800,000 - 1,200,000   | ✅ เสร็จสมบูรณ์ |
+## รวมมูลค่าโปรเจค (Fair Market Value):**.**14,800,000 – 22,800,000 บาท**
+_(มูลค่าสะท้อนฟีเจอร์ระดับ Enterprise ที่พร้อมใช้งานจริงในสเกลองค์กรขนาดใหญ่ระดับมหาชน - **ราคายังไม่รวมภาษีมูลฮค่าเพิ่ม 7%**)_
 
 ---
 
@@ -31,7 +31,7 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
 
 ระบบนี้ถูกออกแบบมาเพื่อเป็น **"Platform-as-a-Product"** ที่พร้อมให้บริษัทอสังหาฯ ขนาดใหญ่หรือบริษัทซอฟต์แวร์ซื้อไปเป็นของตัวเอง (White-label):
 
-### 👑 โมเดลขายสิทธิ์ขาด (Exclusive Rights) - 12,500,000 THB++
+### 👑 โมเดลขายสิทธิ์ขาด (Exclusive Rights) - 18,500,000 THB++
 
 การขาย Source Code ทั้งหมดพร้อมสิทธิ์ความเป็นเจ้าของ 100% เหมาะสำหรับ:
 
