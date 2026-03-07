@@ -324,6 +324,24 @@ export function PropertySearchPage({
     }
   }, [isLoading, filtered.length, properties.length]); // Dependencies to fire when search finishes and results are empty
 
+  // Track View Item List (Standard GA4)
+  useEffect(() => {
+    if (!isLoading && properties.length > 0) {
+      try {
+        pushToDataLayer(GTM_EVENTS.VIEW_ITEM_LIST, {
+          items_count: filtered.length,
+          keyword: keyword,
+          province: province,
+          property_type: type,
+          listing_type: listingType,
+          popular_area: area,
+          bedrooms: bedrooms,
+        });
+      } catch (e) {}
+    }
+    // We want to re-run this when core filters change and loading finishes
+  }, [isLoading, filtered.length, keyword, province, type, listingType, area, bedrooms]);
+
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);

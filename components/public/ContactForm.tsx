@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition, useState } from "react";
+import { useTransition, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -99,7 +99,7 @@ export function ContactForm() {
     });
   };
 
-  const handleFocus = () => {
+  const handleFormStart = () => {
     const hasStarted = sessionStorage.getItem("form_started");
     if (!hasStarted) {
       try {
@@ -110,6 +110,26 @@ export function ContactForm() {
       } catch (e) {}
     }
   };
+
+  // Capture browser-level validation errors
+  useEffect(() => {
+    const form = document.getElementById("contact-form") as HTMLFormElement;
+    if (!form) return;
+
+    const handleInvalid = (e: Event) => {
+      const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
+          error_message: `Browser Validation: ${target.validationMessage}`,
+          field: target.name,
+          subject: selectedSubject,
+        });
+      } catch (err) {}
+    };
+
+    form.addEventListener("invalid", handleInvalid, true);
+    return () => form.removeEventListener("invalid", handleInvalid, true);
+  }, [selectedSubject]);
 
   if (isSuccess) {
     return (
@@ -135,7 +155,7 @@ export function ContactForm() {
   }
 
   return (
-    <form action={clientAction} className="space-y-6">
+    <form id="contact-form" action={clientAction} className="space-y-6">
       <div className="space-y-4">
         <Label className="text-base font-semibold text-slate-900">
           {t("contact.subject_label")} <span className="text-red-500">*</span>
@@ -164,7 +184,10 @@ export function ContactForm() {
             <button
               key={option.value}
               type="button"
-              onClick={() => setSelectedSubject(option.value)}
+              onClick={() => {
+                setSelectedSubject(option.value);
+                handleFormStart();
+              }}
               className={`
                 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 border
                 ${
@@ -191,7 +214,7 @@ export function ContactForm() {
               id="name"
               name="name"
               required
-              onFocus={handleFocus}
+              onFocus={handleFormStart}
               placeholder={t("contact.name_placeholder")}
               aria-label={t("contact.name_label")}
               className="h-11 pl-10 bg-slate-50 text-slate-600 border-slate-200 focus:bg-white transition-colors"
@@ -211,7 +234,7 @@ export function ContactForm() {
               type="tel"
               required
               value={phone}
-              onFocus={handleFocus}
+              onFocus={handleFormStart}
               onChange={handlePhoneChange}
               placeholder="0XX-XXX-XXXX"
               aria-label={t("contact.phone_label")}
@@ -232,7 +255,7 @@ export function ContactForm() {
               id="email"
               name="email"
               type="email"
-              onFocus={handleFocus}
+              onFocus={handleFormStart}
               placeholder={t("contact.email_placeholder")}
               aria-label={t("contact.email_label")}
               className="h-11 pl-10 bg-slate-50 text-slate-600 border-slate-200 focus:bg-white transition-colors"
@@ -249,7 +272,7 @@ export function ContactForm() {
             <Input
               id="lineId"
               name="lineId"
-              onFocus={handleFocus}
+              onFocus={handleFormStart}
               placeholder={t("contact.line_id_placeholder")}
               aria-label={t("contact.line_id_label")}
               className="h-11 pl-10 bg-slate-50 text-slate-600 border-slate-200 focus:bg-white transition-colors"
@@ -267,7 +290,7 @@ export function ContactForm() {
           <Textarea
             id="message"
             name="message"
-            onFocus={handleFocus}
+            onFocus={handleFormStart}
             placeholder={t("contact.more_details_placeholder")}
             rows={4}
             aria-label={t("contact.more_details_label")}
