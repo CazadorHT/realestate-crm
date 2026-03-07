@@ -24,6 +24,8 @@ export function DepositMobileView({
   prevStep,
   onCancel,
   onSubmit,
+  onInvalid,
+  onFormStart,
 }: {
   form: UseFormReturn<DepositLeadInput>;
   currentStep: number;
@@ -33,6 +35,8 @@ export function DepositMobileView({
   prevStep: () => void;
   onCancel: () => void;
   onSubmit: (values: DepositLeadInput) => Promise<void>;
+  onInvalid?: (errors: any) => void;
+  onFormStart: () => void;
 }) {
   const { t } = useLanguage();
 
@@ -116,7 +120,7 @@ export function DepositMobileView({
       {/* ── Mobile Form Content Area ── */}
       <div className="sm:hidden p-6 flex flex-col overflow-y-auto">
         <form
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={form.handleSubmit(onSubmit, onInvalid)}
           className="space-y-5 flex-1 flex flex-col relative"
         >
           <div className="space-y-5 flex-1 relative min-h-[300px]">
@@ -129,17 +133,17 @@ export function DepositMobileView({
                 transition={{ duration: 0.3, ease: "easeOut" }}
                 className="absolute inset-0 pt-2"
               >
-                {currentStep === 1 && renderNameField(form, true)}
+                {currentStep === 1 && renderNameField(form, true, onFormStart)}
                 {currentStep === 2 && (
                   <div className="grid grid-cols-1 gap-5">
-                    {renderPhoneField(form, true)}
-                    {renderLineField(form, true)}
+                    {renderPhoneField(form, true, onFormStart)}
+                    {renderLineField(form, true, onFormStart)}
                   </div>
                 )}
                 {currentStep === 3 && (
                   <div className="space-y-6">
-                    {renderPropertyTypeField(form, true)}
-                    {renderMessageField(form, true)}
+                    {renderPropertyTypeField(form, true, onFormStart)}
+                    {renderMessageField(form, true, onFormStart)}
                   </div>
                 )}
               </motion.div>

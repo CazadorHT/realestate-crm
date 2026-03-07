@@ -1,15 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types"; // 👈 import type
-import { unstable_noStore as noStore } from 'next/cache';
-
-/**
- * Especially important if using Fluid compute: Don't put this client in a
- * global variable. Always create a new client within each function when using
- * it.
- */
 export async function createClient() {
-  noStore(); // Prevent caching to avoid Suspense boundary warnings
   const cookieStore = await cookies();
 
   return createServerClient<Database>(
@@ -29,7 +21,6 @@ export async function createClient() {
             // The `setAll` method was called from a Server Component.
             // This can be ignored if you have proxy refreshing
             // user sessions.
-            
           }
         },
       },

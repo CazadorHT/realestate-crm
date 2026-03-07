@@ -17,6 +17,8 @@ import { cookies } from "next/headers";
 import { siteConfig } from "@/lib/site-config";
 import { getSiteSettings } from "@/features/site-settings/actions";
 
+export const dynamic = "force-dynamic";
+
 const prompt = Prompt({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
   subsets: ["thai", "latin"],

@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition, useState, useEffect } from "react";
+import { useTransition, useState, useEffect, useRef } from "react";
+// ... (rest of imports)
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,9 +56,31 @@ export function ContactForm() {
   const clientAction = async (formData: FormData) => {
     setErrorMsg("");
 
-    // Ensure subject is set if user clicked a button (handled by hidden input, but double check validation if needed)
+    // Proactive User Error Prevention
     if (!selectedSubject) {
-      // Optional: Force selection or let backend handle simple optional
+      const msg = t("contact.error_subject_required") || "กรุณาเลือกหัวข้อที่สนใจ";
+      setErrorMsg(msg);
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
+          error_message: `Field Missing: Subject`,
+          field: "subject",
+        });
+      } catch (e) {}
+      return;
+    }
+
+    const phoneDigits = formData.get("phone")?.toString().replace(/\D/g, "") || "";
+    if (phoneDigits.length < 9) {
+      const msg = t("contact.error_phone_invalid") || "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (9-10 หลัก)";
+      setErrorMsg(msg);
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
+          error_message: `Invalid Format: Phone too short`,
+          field: "phone",
+          subject: selectedSubject,
+        });
+      } catch (e) {}
+      return;
     }
 
     startTransition(async () => {
@@ -99,25 +122,38 @@ export function ContactForm() {
     });
   };
 
+  const formElementRef = useRef<HTMLFormElement>(null);
+  const hasStartedRef = useRef(false);
+
   const handleFormStart = () => {
-    const hasStarted = sessionStorage.getItem("form_started");
-    if (!hasStarted) {
+    if (!hasStartedRef.current) {
+      console.log("GTM Debug: lead_form_start triggering", { subject: selectedSubject });
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_START, {
           subject: selectedSubject,
         });
+        hasStartedRef.current = true;
+        // Also set session storage for long-term consistency, but ref allows per-refresh test
         sessionStorage.setItem("form_started", "true");
-      } catch (e) {}
+      } catch (e) {
+        console.error("GTM Error:", e);
+      }
+    } else {
+      console.log("GTM Debug: lead_form_start blocked (already started in this session)");
     }
   };
 
   // Capture browser-level validation errors
   useEffect(() => {
-    const form = document.getElementById("contact-form") as HTMLFormElement;
+    const form = formElementRef.current;
     if (!form) return;
 
     const handleInvalid = (e: Event) => {
       const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+      console.log("GTM Debug: lead_form_error (Browser Validation)", { 
+        field: target.name, 
+        message: target.validationMessage 
+      });
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
           error_message: `Browser Validation: ${target.validationMessage}`,
@@ -155,7 +191,7 @@ export function ContactForm() {
   }
 
   return (
-    <form id="contact-form" action={clientAction} className="space-y-6">
+    <form ref={formElementRef} id="contact-form" action={clientAction} className="space-y-6">
       <div className="space-y-4">
         <Label className="text-base font-semibold text-slate-900">
           {t("contact.subject_label")} <span className="text-red-500">*</span>

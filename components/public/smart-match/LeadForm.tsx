@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Phone, Mail, ChevronLeft, MessageCircle, Loader2 } from "lucide-react";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { createLeadFromMatchAction } from "@/features/smart-match/actions";
 import { PropertyMatch } from "@/features/smart-match/types";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
 interface LeadFormProps {
   match: PropertyMatch;
@@ -19,11 +20,67 @@ interface LeadFormProps {
 export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
+  const hasStartedRef = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+ 
+  const handleFormStart = () => {
+    if (!hasStartedRef.current) {
+      console.log("GTM Debug: lead_form_start (Smart Match) triggering");
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_START, {
+          subject: `Smart Match - ${match.title}`,
+        });
+        hasStartedRef.current = true;
+      } catch (e) {
+        console.error("GTM Error:", e);
+      }
+    }
+  };
+ 
+  // Track Browser Validation Errors
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+ 
+    const handleInvalid = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      console.log("GTM Debug: lead_form_error (Smart Match Browser)", {
+        field: target.name,
+        message: target.validationMessage,
+      });
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
+          error_message: target.validationMessage,
+          field: target.name,
+          subject: `Smart Match - ${match.title}`,
+        });
+      } catch (err) {}
+    };
+ 
+    form.addEventListener("invalid", handleInvalid, true);
+    return () => form.removeEventListener("invalid", handleInvalid, true);
+  }, [match.title]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     const formData = new FormData(e.currentTarget);
+    const phone = formData.get("phone") as string;
+    const phoneDigits = phone.replace(/\D/g, "");
+
+    // Proactive Validation
+    if (phoneDigits.length < 9) {
+      toast.error(t("smart_match.lead_phone_invalid") || "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง");
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
+          error_message: `Invalid Format: Phone too short`,
+          field: "phone",
+          subject: `Smart Match - ${match.title}`,
+        });
+      } catch (e) {}
+      setLoading(false);
+      return;
+    }
 
     try {
       await createLeadFromMatchAction({
@@ -37,7 +94,14 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
       toast.success(t("smart_match.lead_success"));
       onBack();
     } catch (err) {
+      console.log("GTM Debug: lead_form_error (Smart Match Server Side)");
       toast.error(t("smart_match.lead_error"));
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
+          error_message: "Server Error",
+          subject: `Smart Match - ${match.title}`,
+        });
+      } catch (ge) {}
     } finally {
       setLoading(false);
     }
@@ -102,7 +166,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form ref={formRef} onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-slate-700">
               {t("smart_match.lead_name_label")}{" "}
@@ -111,6 +175,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
             <Input
               name="fullName"
               required
+              onFocus={handleFormStart}
               placeholder={t("smart_match.lead_name_placeholder")}
               className="rounded-xl border-slate-200"
             />
@@ -125,6 +190,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
               <Input
                 name="phone"
                 required
+                onFocus={handleFormStart}
                 placeholder={t("smart_match.lead_phone_placeholder")}
                 className="pl-9 rounded-xl border-slate-200"
               />

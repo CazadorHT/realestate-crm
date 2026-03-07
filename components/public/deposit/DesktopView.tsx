@@ -27,11 +27,15 @@ export function DepositDesktopView({
   currentStep,
   isLoading,
   onSubmit,
+  onInvalid,
+  onFormStart,
 }: {
   form: UseFormReturn<DepositLeadInput>;
   currentStep: number;
   isLoading: boolean;
   onSubmit: (values: DepositLeadInput) => Promise<void>;
+  onInvalid?: (errors: any) => void;
+  onFormStart: () => void;
 }) {
   const { t } = useLanguage();
   const settings = useSiteConfig();
@@ -140,17 +144,17 @@ export function DepositDesktopView({
 
       {/* ── Right Panel: Form ── */}
       <div className="flex-1 p-7 overflow-y-auto bg-slate-50 sm:rounded-r-2xl">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-6">
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-            {renderNameField(form, false)}
+            {renderNameField(form, false, onFormStart)}
 
             <div className="grid grid-cols-2 gap-4">
-              {renderPhoneField(form, false)}
-              {renderLineField(form, false)}
+              {renderPhoneField(form, false, onFormStart)}
+              {renderLineField(form, false, onFormStart)}
             </div>
 
-            {renderPropertyTypeField(form, false)}
-            {renderMessageField(form, false)}
+            {renderPropertyTypeField(form, false, onFormStart)}
+            {renderMessageField(form, false, onFormStart)}
           </div>
 
           <div className="pt-4">

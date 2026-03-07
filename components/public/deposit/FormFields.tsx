@@ -33,6 +33,7 @@ import { motion } from "framer-motion";
 export function renderNameField(
   form: UseFormReturn<DepositLeadInput>,
   isMobile: boolean,
+  onFocus?: () => void,
 ) {
   const { t } = useLanguage();
   return (
@@ -64,6 +65,7 @@ export function renderNameField(
                     ? "h-14 pl-11 bg-slate-50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
+                onFocus={onFocus}
                 {...field}
               />
             </div>
@@ -78,6 +80,7 @@ export function renderNameField(
 export function renderPhoneField(
   form: UseFormReturn<DepositLeadInput>,
   isMobile: boolean,
+  onFocus?: () => void,
 ) {
   const { t } = useLanguage();
   return (
@@ -114,6 +117,7 @@ export function renderPhoneField(
                     ? "h-14 pl-11 bg-slate-50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
+                onFocus={onFocus}
                 {...field}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, "").slice(0, 10);
@@ -132,6 +136,7 @@ export function renderPhoneField(
 export function renderLineField(
   form: UseFormReturn<DepositLeadInput>,
   isMobile: boolean,
+  onFocus?: () => void,
 ) {
   const { t } = useLanguage();
   return (
@@ -162,6 +167,7 @@ export function renderLineField(
                     ? "h-14 pl-11 bg-slate-50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
+                onFocus={onFocus}
                 {...field}
               />
             </div>
@@ -176,6 +182,7 @@ export function renderLineField(
 export function renderPropertyTypeField(
   form: UseFormReturn<DepositLeadInput>,
   isMobile: boolean,
+  onFocus?: () => void,
 ) {
   const { t } = useLanguage();
 
@@ -253,7 +260,10 @@ export function renderPropertyTypeField(
                 type="button"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => field.onChange(option.value)}
+                onClick={() => {
+                  field.onChange(option.value);
+                  onFocus?.();
+                }}
                 className={cn(
                   "relative flex flex-col items-center mr-2 justify-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[100px] sm:min-w-0 snap-center shrink-0",
                   field.value === option.value
@@ -301,6 +311,7 @@ export function renderPropertyTypeField(
 export function renderMessageField(
   form: UseFormReturn<DepositLeadInput>,
   isMobile: boolean,
+  onFocus?: () => void,
 ) {
   const { t } = useLanguage();
   return (

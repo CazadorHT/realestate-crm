@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { submitInquiryAction } from "@/features/public/actions";
 import { LeadState } from "@/features/public/types";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { 
   getStoredMarketingData, 
@@ -149,16 +149,64 @@ export function ContactAgentDialog({
     const dict = dictionaries[language as keyof typeof dictionaries] as any;
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
+
   const [internalOpen, setInternalOpen] = useState(false);
   const [state, setState] = useState<LeadState>({});
   const [phone, setPhone] = useState("");
   const defaultQuickMessage = t("property.contact_dialog.quick_messages.viewing");
   const [message, setMessage] = useState(defaultMessage || defaultQuickMessage);
+  const hasStartedRef = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const mobileFormRef = useRef<HTMLFormElement>(null);
 
   // Derive localized title
   const displayTitle = property
     ? getLocaleValue(property, "title", language)
     : propertyTitle;
+
+  const handleFormStart = () => {
+    if (!hasStartedRef.current) {
+      console.log("GTM Debug: lead_form_start (Agent Dialog) triggering");
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_START, {
+          subject: propertyTitle || displayTitle || "Agent Inquiry",
+          item_id: propertyId,
+        });
+        hasStartedRef.current = true;
+      } catch (e) {
+        console.error("GTM Error:", e);
+      }
+    }
+  };
+
+  // Track Browser Validation Errors
+  useEffect(() => {
+    const forms = [formRef.current, mobileFormRef.current];
+    const handlers: (() => void)[] = [];
+
+    forms.forEach((form) => {
+      if (!form) return;
+      const handleInvalid = (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        console.log("GTM Debug: lead_form_error (Agent Dialog Browser)", {
+          field: target.name,
+          message: target.validationMessage,
+        });
+        try {
+          pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
+            error_message: target.validationMessage,
+            field: target.name,
+            subject: propertyTitle || displayTitle || "Agent Inquiry",
+            item_id: propertyId,
+          });
+        } catch (err) {}
+      };
+      form.addEventListener("invalid", handleInvalid, true);
+      handlers.push(() => form.removeEventListener("invalid", handleInvalid, true));
+    });
+
+    return () => handlers.forEach((h) => h());
+  }, [propertyId, propertyTitle, displayTitle]);
 
   // Wizard State (mobile only)
   const [step, setStep] = useState(1);
@@ -199,6 +247,7 @@ export function ContactAgentDialog({
         setLineId("");
         setMessage(defaultMessage || defaultQuickMessage);
         setState({});
+        hasStartedRef.current = false;
       }, 300);
     }
   };
@@ -249,6 +298,22 @@ export function ContactAgentDialog({
       return;
     }
 
+    // Proactive Validation
+    const phoneDigits = formData.get("phone")?.toString().replace(/\D/g, "") || "";
+    if (phoneDigits.length < 9) {
+      const msg = t("property.contact_dialog.phone_invalid") || "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง";
+      toast.error(msg);
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
+          error_message: `Invalid Format: Phone too short`,
+          field: "phone",
+          subject: propertyTitle || displayTitle || "Agent Inquiry",
+          item_id: propertyId,
+        });
+      } catch (e) {}
+      return;
+    }
+
     const result = await submitInquiryAction({}, formData);
     if (result.success && result.data) {
       // GTM Tracking for successful submission
@@ -278,7 +343,15 @@ export function ContactAgentDialog({
       setPhone("");
       setMessage("");
     } else {
+      console.log("GTM Debug: lead_form_error (Agent Dialog Server Side)");
       toast.error(result.error || t("property.contact_dialog.error"));
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
+          error_message: result.error || "Server Error",
+          subject: propertyTitle || displayTitle || "Agent Inquiry",
+          item_id: propertyId,
+        });
+      } catch (ge) {}
       setState(result);
     }
   }
@@ -311,6 +384,7 @@ export function ContactAgentDialog({
           </div>
         )}
         <Input
+          onFocus={handleFormStart}
           id={isMobile ? "fullName-mobile" : "fullName"}
           name="fullName"
           value={fullName}
@@ -354,6 +428,7 @@ export function ContactAgentDialog({
         )}
         <input type="hidden" name="phone" value={phone.replace(/-/g, "")} />
         <Input
+          onFocus={handleFormStart}
           id={isMobile ? "phone-mobile" : "phone"}
           type="tel"
           placeholder="0xx-xxx-xxxx"
@@ -486,9 +561,9 @@ export function ContactAgentDialog({
         sm:[&>button]:text-white/60 sm:[&>button]:hover:text-white
       "
       >
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
             Desktop / Tablet: Split-Panel Layout
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â•  */}
         <div className="hidden sm:flex sm:flex-row h-full">
           {/* â”€â”€ Left Panel: Branding & Trust â”€â”€ */}
           <div className="w-[280px] shrink-0 bg-linear-to-b from-blue-800 via-blue-700 to-indigo-800 text-white p-7 flex flex-col justify-between relative overflow-hidden sm:rounded-l-2xl">
@@ -572,7 +647,7 @@ export function ContactAgentDialog({
 
           {/* â”€â”€ Right Panel: Form â”€â”€ */}
           <div className="flex-1 p-7 overflow-y-auto bg-slate-50 sm:rounded-r-2xl">
-            <form action={clientAction} className="space-y-5">
+            <form ref={formRef} action={clientAction} className="space-y-5">
               <input type="hidden" name="propertyId" value={propertyId} />
               <input 
                 type="hidden" 
@@ -605,9 +680,9 @@ export function ContactAgentDialog({
           </div>
         </div>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
             Mobile Header
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â•  */}
         <div className="sm:hidden bg-white rounded-t-[28px] flex flex-col items-center relative">
           {/* Pull Handle */}
           <div className="w-10 h-1 bg-slate-200/80 rounded-full mt-3 mb-4" />
@@ -657,11 +732,12 @@ export function ContactAgentDialog({
           <div className="w-full h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
         </div>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
             Mobile Form Content
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â•  */}
         <div className="sm:hidden p-6 flex flex-col overflow-y-auto">
           <form
+            ref={mobileFormRef}
             action={clientAction}
             className="space-y-5 flex-1 flex flex-col relative"
           >
