@@ -5,6 +5,10 @@ import { Phone, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ContactAgentDialog } from "@/components/public/ContactAgentDialog";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { AgentPhoneDialog } from "@/components/public/AgentPhoneDialog";
+
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { updateAIScore } from "@/lib/analytics-utils";
 
 interface MobilePropertyActionsProps {
   agentName?: string | null;
@@ -53,24 +57,39 @@ export function MobilePropertyActions({
 
         {/* Actions */}
         <div className="flex-1 flex gap-2">
-          <Button
-            className="flex-1 h-11 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-semibold px-2 min-w-0"
-            variant="outline"
-            onClick={() => window.open(`tel:${agentPhone}`)}
-          >
-            <Phone className="w-4 h-4 mr-1.5 shrink-0" />
-            <span className="truncate">{t("common.call")}</span>
-          </Button>
+          <AgentPhoneDialog
+            agentName={agentName}
+            agentPhone={agentPhone || ""}
+            propertyId={propertyId}
+            propertyTitle={propertyTitle}
+            trigger={
+              <Button
+                className="flex-1 h-11 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-semibold px-2 min-w-0"
+                variant="outline"
+              >
+                <Phone className="w-4 h-4 mr-1.5 shrink-0" />
+                <span className="truncate">{t("common.call")}</span>
+              </Button>
+            }
+          />
 
           <Button
             className="flex-1 h-11 bg-[#06C755] hover:bg-[#05b34c] text-white font-semibold px-2 border-none min-w-0"
-            onClick={() =>
+            onClick={() => {
+              try {
+                pushToDataLayer(GTM_EVENTS.CLICK_LINE, {
+                  item_id: propertyId,
+                  item_name: propertyTitle,
+                  agent_name: agentName,
+                });
+              } catch (e) {}
+              updateAIScore(20);
               window.open(
                 agentLine?.startsWith("http")
                   ? agentLine
                   : `https://line.me/ti/p/~${agentLine || ""}`,
-              )
-            }
+              );
+            }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -88,7 +107,18 @@ export function MobilePropertyActions({
             propertyTitle={propertyTitle}
             property={property}
             trigger={
-              <Button className="flex-1 h-11 bg-slate-900 hover:bg-slate-800 text-white font-semibold shadow-md px-2 min-w-0">
+              <Button 
+                className="flex-1 h-11 bg-slate-900 hover:bg-slate-800 text-white font-semibold shadow-md px-2 min-w-0"
+                onClick={() => {
+                  try {
+                    pushToDataLayer(GTM_EVENTS.VIEW_ITEM, { // Using view_item or a generic 'click_contact'
+                      action: "open_contact_dialog",
+                      item_id: propertyId,
+                      item_name: propertyTitle,
+                    });
+                  } catch (e) {}
+                }}
+              >
                 <MessageCircle className="w-4 h-4 mr-1.5 shrink-0" />
                 <span className="truncate">{t("common.contact")}</span>
               </Button>

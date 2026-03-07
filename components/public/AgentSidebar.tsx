@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ContactAgentDialog } from "@/components/public/ContactAgentDialog";
 import { FavoriteButton } from "@/components/public/FavoriteButton";
 import { ShareButtons } from "@/components/public/ShareButtons";
+import { AgentPhoneDialog } from "@/components/public/AgentPhoneDialog";
 import { FaLine } from "react-icons/fa";
 import { useState } from "react";
 import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
@@ -171,16 +172,6 @@ export function AgentSidebar({
             <Button
               asChild
               className="w-full h-12 rounded-xl text-base font-semibold bg-[#06C755] hover:bg-[#05B04C] text-white shadow-lg shadow-green-100 transition-all hover:-translate-y-0.5"
-              onClick={() => {
-                try {
-                  pushToDataLayer(GTM_EVENTS.CLICK_LINE, {
-                    item_id: propertyId,
-                    item_name: propertyTitle,
-                    agent_name: agentName,
-                  });
-                } catch (e) {}
-                updateAIScore(20);
-              }}
             >
               <a
                 href={
@@ -192,19 +183,36 @@ export function AgentSidebar({
                 }
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => {
+                  try {
+                    pushToDataLayer(GTM_EVENTS.CLICK_LINE, {
+                      item_id: propertyId,
+                      item_name: propertyTitle,
+                      agent_name: agentName,
+                    });
+                  } catch (e) {}
+                  updateAIScore(20);
+                }}
               >
                 <FaLine className="w-6 h-6 mr-2" />
                 {t("property.viewing_cta")}
               </a>
             </Button>
 
-            <Button
-              onClick={handlePhoneClick}
-              className="w-full h-12 rounded-xl text-base font-semibold bg-white text-slate-700 hover:text-blue-600 border border-blue-100 hover:bg-blue-100 hover:border-blue-100 shadow-sm transition-all hover:-translate-y-0.5"
-            >
-              <Phone className="w-6 h-6 mr-2 text-slate-400 " />
-              {getDisplayedPhone()}
-            </Button>
+            <AgentPhoneDialog
+              agentName={agentName}
+              agentPhone={agentPhone || ""}
+              propertyId={propertyId}
+              propertyTitle={propertyTitle}
+              trigger={
+                <Button
+                  className="w-full h-12 rounded-xl text-base font-semibold bg-white text-slate-700 hover:text-blue-600 border border-blue-100 hover:bg-blue-100 hover:border-blue-100 shadow-sm transition-all hover:-translate-y-0.5"
+                >
+                  <Phone className="w-6 h-6 mr-2 text-slate-400 " />
+                  {getDisplayedPhone()}
+                </Button>
+              }
+            />
 
             <div className="grid grid-cols-2 gap-2 pt-1">
               <ContactAgentDialog

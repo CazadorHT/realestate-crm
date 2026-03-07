@@ -6,12 +6,12 @@ export const pushToDataLayer = (
   params: Record<string, any> = {},
 ) => {
   if (typeof window !== "undefined") {
-    // Ensure dataLayer exists
-    const dataLayer = (window as any).dataLayer || [];
-    (window as any).dataLayer = dataLayer;
+    // Standard GTM dataLayer initialization
+    const win = window as any;
+    win.dataLayer = win.dataLayer || [];
 
-    // Push the event
-    dataLayer.push({
+    // Push the event with parameters
+    win.dataLayer.push({
       event,
       ...params,
       timestamp: new Date().toISOString(),

@@ -262,6 +262,9 @@ export function PropertyGallery({
                 onClick={() => {
                   setCurrentIndex(idx);
                   setOpen(true);
+                  try {
+                    pushToDataLayer(GTM_EVENTS.VIEW_GALLERY_FULL, { title });
+                  } catch (e) {}
                 }}
               >
                 {/* Blurred Background */}

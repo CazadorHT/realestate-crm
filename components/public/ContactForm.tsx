@@ -55,9 +55,6 @@ export function ContactForm() {
       );
 
       if (result.success) {
-        setIsSuccess(true);
-        setSelectedSubject(""); // Reset selection
-        
         try {
           pushToDataLayer(GTM_EVENTS.SUBMIT_CONTACT_FORM, {
             subject: selectedSubject,
@@ -74,6 +71,9 @@ export function ContactForm() {
         } catch (e) {
           console.error("GTM Error:", e);
         }
+        
+        setIsSuccess(true);
+        setSelectedSubject(""); // Reset selection
       } else {
         setErrorMsg(result.message);
       }
