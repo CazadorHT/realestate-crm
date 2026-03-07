@@ -28,7 +28,9 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
       console.log("GTM Debug: lead_form_start (Smart Match) triggering");
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_START, {
-          subject: `Smart Match - ${match.title}`,
+          subject: "Smart Match",
+          item_name: match.title,
+          item_id: match.id,
         });
         hasStartedRef.current = true;
       } catch (e) {
@@ -52,7 +54,9 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
           error_message: target.validationMessage,
           field: target.name,
-          subject: `Smart Match - ${match.title}`,
+          subject: "Smart Match",
+          item_name: match.title,
+          item_id: match.id,
         });
       } catch (err) {}
     };
@@ -75,7 +79,9 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
           error_message: `Invalid Format: Phone too short`,
           field: "phone",
-          subject: `Smart Match - ${match.title}`,
+          subject: "Smart Match",
+          item_name: match.title,
+          item_id: match.id,
         });
       } catch (e) {}
       setLoading(false);
@@ -99,7 +105,9 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
           error_message: "Server Error",
-          subject: `Smart Match - ${match.title}`,
+          subject: "Smart Match",
+          item_name: match.title,
+          item_id: match.id,
         });
       } catch (ge) {}
     } finally {

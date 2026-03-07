@@ -169,8 +169,9 @@ export function ContactAgentDialog({
       console.log("GTM Debug: lead_form_start (Agent Dialog) triggering");
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_START, {
-          subject: propertyTitle || displayTitle || "Agent Inquiry",
+          subject: "Contact Agent",
           item_id: propertyId,
+          item_name: propertyTitle || displayTitle,
         });
         hasStartedRef.current = true;
       } catch (e) {
@@ -196,8 +197,9 @@ export function ContactAgentDialog({
           pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
             error_message: target.validationMessage,
             field: target.name,
-            subject: propertyTitle || displayTitle || "Agent Inquiry",
+            subject: "Contact Agent",
             item_id: propertyId,
+            item_name: propertyTitle || displayTitle,
           });
         } catch (err) {}
       };
@@ -307,8 +309,9 @@ export function ContactAgentDialog({
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
           error_message: `Invalid Format: Phone too short`,
           field: "phone",
-          subject: propertyTitle || displayTitle || "Agent Inquiry",
+          subject: "Contact Agent",
           item_id: propertyId,
+          item_name: propertyTitle || displayTitle,
         });
       } catch (e) {}
       return;
@@ -348,8 +351,9 @@ export function ContactAgentDialog({
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
           error_message: result.error || "Server Error",
-          subject: propertyTitle || displayTitle || "Agent Inquiry",
+          subject: "Contact Agent",
           item_id: propertyId,
+          item_name: propertyTitle || displayTitle,
         });
       } catch (ge) {}
       setState(result);
@@ -430,6 +434,7 @@ export function ContactAgentDialog({
         <Input
           onFocus={handleFormStart}
           id={isMobile ? "phone-mobile" : "phone"}
+          name="phone"
           type="tel"
           placeholder="0xx-xxx-xxxx"
           value={phone}
