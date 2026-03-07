@@ -321,15 +321,37 @@ Details: ${data.details || "-"}`,
   return { success: true, leadId: lead.id };
 }
 
+import { rateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
+
+const limiter = rateLimit({
+  interval: 60 * 1000, // 60 seconds
+  uniqueTokenPerInterval: 500, // Max 500 users per second
+});
+
 export async function submitInquiryAction(
   prevState: LeadState,
   formData: FormData,
 ): Promise<LeadState> {
+  const ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
+
+  try {
+    // 3 requests per minute per IP
+    await limiter.check(3, ip);
+  } catch {
+    return {
+      error: "⏳ คุณส่งข้อความเร็วเกินไป กรุณารอสักครู่",
+    };
+  }
+
   const supabase = createAdminClient();
+
+  const rawPhone = formData.get("phone")?.toString() || "";
+  const sanitizedPhone = rawPhone.replace(/\D/g, "");
 
   const validatedFields = inquiryLeadSchema.safeParse({
     fullName: formData.get("fullName"),
-    phone: formData.get("phone"),
+    phone: sanitizedPhone,
     lineId: formData.get("lineId"),
     message: formData.get("message"),
     propertyId: formData.get("propertyId"),

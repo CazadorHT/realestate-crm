@@ -33,7 +33,19 @@ export function ContactForm() {
   const [isPending, startTransition] = useTransition();
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [phone, setPhone] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
+
+  const formatPhoneNumber = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 10);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(formatPhoneNumber(e.target.value));
+  };
 
   const INTEREST_OPTIONS = INTEREST_KEYS.map((key) => ({
     label: t(`contact.subjects.${key}`),
@@ -178,6 +190,8 @@ export function ContactForm() {
               name="phone"
               type="tel"
               required
+              value={phone}
+              onChange={handlePhoneChange}
               placeholder="0XX-XXX-XXXX"
               aria-label={t("contact.phone_label")}
               className="h-11 pl-10 bg-slate-50 text-slate-600 border-slate-200 focus:bg-white transition-colors"

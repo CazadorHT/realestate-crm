@@ -65,9 +65,12 @@ export async function submitContactFormAction(
     };
   }
 
+  const rawPhone = formData.get("phone")?.toString() || "";
+  const cleanPhone = rawPhone.replace(/\D/g, "");
+
   const validatedFields = contactSchema.safeParse({
     name: formData.get("name"),
-    phone: formData.get("phone"),
+    phone: cleanPhone,
     email: formData.get("email"),
     lineId: formData.get("lineId"),
     subject: formData.get("subject"),
