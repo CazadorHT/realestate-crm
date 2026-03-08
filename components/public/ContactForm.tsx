@@ -93,6 +93,10 @@ export function ContactForm() {
         try {
           pushToDataLayer(GTM_EVENTS.SUBMIT_CONTACT_FORM, {
             subject: selectedSubject,
+            // Meta Pixel (Lead)
+            content_category: "Contact inquiry",
+            content_name: selectedSubject,
+            currency: "THB",
           });
 
           if (result.data) {

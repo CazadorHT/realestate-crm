@@ -54,6 +54,11 @@ export function FavoriteButton({
       pushToDataLayer(GTM_EVENTS.ADD_FAVORITE, {
         item_id: propertyId,
         item_name: propertyTitle,
+        // Meta Pixel
+        content_ids: [propertyId],
+        content_name: propertyTitle,
+        content_type: "product",
+        currency: "THB",
       });
       updateAIScore(30);
     } else {

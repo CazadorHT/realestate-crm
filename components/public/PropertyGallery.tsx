@@ -268,6 +268,10 @@ export function PropertyGallery({
                     pushToDataLayer(GTM_EVENTS.VIEW_GALLERY_FULL, {
                       item_id: propertyId,
                       item_name: title,
+                      // Meta Pixel
+                      content_ids: [propertyId],
+                      content_name: title,
+                      content_type: "product",
                     });
                   } catch (e) {}
                 }}
@@ -310,6 +314,10 @@ export function PropertyGallery({
                 pushToDataLayer(GTM_EVENTS.VIEW_GALLERY_FULL, {
                   item_id: propertyId,
                   item_name: title,
+                  // Meta Pixel
+                  content_ids: [propertyId],
+                  content_name: title,
+                  content_type: "product",
                 });
               } catch (e) {}
             }}
@@ -351,6 +359,10 @@ export function PropertyGallery({
                       item_id: propertyId,
                       item_name: title,
                       image_index: idx + 1,
+                      // Meta Pixel
+                      content_ids: [propertyId],
+                      content_name: title,
+                      content_type: "product",
                     });
                   } catch (e) {}
                 }}

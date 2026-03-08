@@ -34,6 +34,13 @@ export function GTMPropertyPageView({ property }: GTMPropertyPageViewProps) {
         active_price: property.listing_type === "RENT" ? property.rental_price : property.price,
         location_id: property.province,
         popular_area: property.popular_area,
+        // Meta Pixel (Facebook) - Standard params
+        content_ids: [property.id],
+        content_name: property.title,
+        content_type: "product",
+        content_category: property.property_type,
+        value: property.listing_type === "RENT" ? property.rental_price : property.price,
+        currency: "THB",
       });
       
       // Viewing a property page gives a base engagement score

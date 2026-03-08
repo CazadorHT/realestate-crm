@@ -130,7 +130,9 @@ export function SearchFilterBar({
               province,
               popular_area: area,
               item_category: type,
-              listing_type: listingType
+              listing_type: listingType,
+              // Meta Pixel (Search)
+              search_string: keyword,
             });
           } catch (e) {}
         }

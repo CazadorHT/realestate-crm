@@ -121,6 +121,10 @@ export function PropertyCard({
       pushToDataLayer(GTM_EVENTS.ADD_COMPARE, {
         item_id: property.id,
         item_name: property.title,
+        // Meta Pixel
+        content_ids: [property.id],
+        content_name: property.title,
+        content_type: "product",
       });
       updateAIScore(10);
     }
@@ -140,6 +144,12 @@ export function PropertyCard({
       pushToDataLayer(GTM_EVENTS.ADD_FAVORITE, {
         item_id: property.id,
         item_name: property.title,
+        // Meta Pixel
+        content_ids: [property.id],
+        content_name: property.title,
+        content_type: "product",
+        value: property.listing_type === "RENT" ? property.rental_price : property.price,
+        currency: "THB",
       });
       updateAIScore(30);
     }
