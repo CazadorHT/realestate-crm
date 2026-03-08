@@ -10,6 +10,7 @@ export const CSP_DIRECTIVES = {
     "'unsafe-inline'",
     "https://www.googletagmanager.com",
     "https://www.google-analytics.com",
+    "https://connect.facebook.net",
   ],
   "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
   "img-src": [
@@ -21,6 +22,7 @@ export const CSP_DIRECTIVES = {
     "https://api.dicebear.com",
     "https://www.google-analytics.com",
     "https://www.googletagmanager.com",
+    "https://www.facebook.com",
   ],
   "font-src": ["'self'", "https://fonts.gstatic.com"],
   "connect-src": [
@@ -30,6 +32,7 @@ export const CSP_DIRECTIVES = {
     "https://analytics.google.com",
     "https://stats.g.doubleclick.net",
     "https://api.dicebear.com",
+    "https://www.facebook.com",
   ],
   "frame-src": ["'self'", "https://www.google.com"],
   "media-src": ["'self'"],
