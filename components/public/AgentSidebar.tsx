@@ -156,11 +156,17 @@ export function AgentSidebar({
             {propertyId && (
               <FavoriteButton
                 propertyId={propertyId}
+                propertyTitle={shareTitle}
                 showText={false}
                 className="w-12 h-12 rounded-full bg-slate-100 hover:bg-slate-200 border-none"
               />
             )}
-            <ShareButtons url={shareUrl} title={shareTitle} />
+            <ShareButtons 
+              url={shareUrl} 
+              title={shareTitle} 
+              propertyId={propertyId}
+              propertyTitle={propertyTitle}
+            />
           </div>
         </div>
       </div>
@@ -272,6 +278,7 @@ export function AgentSidebar({
               <div className="shrink-0">
                 <FavoriteButton
                   propertyId={propertyId}
+                  propertyTitle={shareTitle}
                   showText={false}
                   className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 border-none"
                 />
@@ -279,10 +286,21 @@ export function AgentSidebar({
             )}
 
             <div className="hidden lg:block flex-1">
-              <ShareButtons url={shareUrl} title={shareTitle} />
+              <ShareButtons 
+              url={shareUrl} 
+              title={shareTitle} 
+              propertyId={propertyId}
+              propertyTitle={propertyTitle}
+            />
             </div>
             <div className="lg:hidden flex-1 flex justify-end">
-              <ShareButtons url={shareUrl} title={shareTitle} variant="icon" />
+              <ShareButtons 
+                url={shareUrl} 
+                title={shareTitle} 
+                variant="icon" 
+                propertyId={propertyId}
+                propertyTitle={propertyTitle}
+              />
             </div>
           </div>
         </div>

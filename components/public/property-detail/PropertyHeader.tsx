@@ -444,7 +444,9 @@ export function PropertyHeader({
                       toast.success(t("common.id_copied") || "ID Copied");
                       try {
                         pushToDataLayer(GTM_EVENTS.COPY_PROPERTY_ID, {
-                          property_id: property.id,
+                          platform: "copy_ref_id",
+                          item_id: property.id,
+                          item_name: localizedTitle,
                         });
                         updateAIScore(10);
                       } catch (e) {}

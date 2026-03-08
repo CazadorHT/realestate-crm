@@ -12,12 +12,14 @@ import { updateAIScore } from "@/lib/analytics-utils";
 
 interface FavoriteButtonProps {
   propertyId: string;
+  propertyTitle?: string;
   className?: string;
   showText?: boolean;
 }
 
 export function FavoriteButton({
   propertyId,
+  propertyTitle,
   className,
   showText = false,
 }: FavoriteButtonProps) {
@@ -50,7 +52,8 @@ export function FavoriteButton({
     if (!favorited) {
       toast.success(t("property.favorite.added"));
       pushToDataLayer(GTM_EVENTS.ADD_FAVORITE, {
-        property_id: propertyId,
+        item_id: propertyId,
+        item_name: propertyTitle,
       });
       updateAIScore(30);
     } else {

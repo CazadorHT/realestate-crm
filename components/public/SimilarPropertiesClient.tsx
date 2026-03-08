@@ -82,8 +82,8 @@ export function SimilarPropertiesClient({
               onClick={() => {
                 try {
                   pushToDataLayer(GTM_EVENTS.CLICK_SIMILAR_PROPERTY, {
-                    property_id: property.id,
-                    property_title: property.title,
+                    item_id: property.id,
+                    item_name: property.title,
                   });
                   updateAIScore(15);
                 } catch (e) {}

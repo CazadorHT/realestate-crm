@@ -1,10 +1,24 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
 export function GTMScrollTracker() {
   const trackedDepths = useRef<Set<number>>(new Set());
+  const [propertyContext, setPropertyContext] = useState<{ id: string; title: string } | null>(null);
+
+  useEffect(() => {
+    const handleContext = (e: any) => {
+      if (e.detail) {
+        setPropertyContext(e.detail);
+        // Reset tracking when property changes
+        trackedDepths.current.clear();
+      }
+    };
+
+    window.addEventListener("property-context-ready", handleContext);
+    return () => window.removeEventListener("property-context-ready", handleContext);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,7 +36,9 @@ export function GTMScrollTracker() {
           try {
             pushToDataLayer(GTM_EVENTS.SCROLL_DEPTH, {
               percent: checkpoint,
-              url: window.location.href
+              url: window.location.href,
+              item_id: propertyContext?.id,
+              item_name: propertyContext?.title,
             });
           } catch (e) {}
         }
@@ -31,7 +47,7 @@ export function GTMScrollTracker() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [propertyContext]);
 
   return null;
 }

@@ -667,6 +667,7 @@ export function RecentlyViewedClient({
                   <div className="absolute top-3 right-3 z-10">
                     <FavoriteButton
                       propertyId={item.id}
+                      propertyTitle={item.title}
                       className="bg-white/70 backdrop-blur-sm rounded-full p-2 hover:bg-white/80"
                     />
                   </div>

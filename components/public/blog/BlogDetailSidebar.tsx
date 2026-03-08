@@ -36,6 +36,8 @@ export function BlogDetailSidebar({
                 : `${siteConfig.url}/blog/${slug}`
             }
             title={title}
+            propertyId={slug}
+            propertyTitle={title}
           />
         </div>
 

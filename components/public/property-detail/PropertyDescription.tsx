@@ -16,6 +16,8 @@ interface PropertyDescriptionProps {
     description: string | null;
     description_en?: string | null;
     description_cn?: string | null;
+    id?: string;
+    title?: string;
   };
   language?: "th" | "en" | "cn";
 }
@@ -86,7 +88,8 @@ export function PropertyDescription({
     if (!isExpanded) {
       try {
         pushToDataLayer(GTM_EVENTS.EXPAND_DESCRIPTION, {
-          property_id: property.description?.slice(0, 50), // Use first 50 chars of desc as identifier or similar
+          item_id: property.id,
+          item_name: property.title,
         });
         updateAIScore(3);
       } catch (e) {}

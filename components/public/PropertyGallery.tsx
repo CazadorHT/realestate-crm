@@ -35,6 +35,7 @@ interface PropertyGalleryProps {
   isHot?: boolean;
   verified?: boolean;
   petFriendly?: boolean;
+  propertyId?: string;
   language?: "th" | "en" | "cn";
 }
 
@@ -122,6 +123,7 @@ export function PropertyGallery({
   isHot,
   verified,
   petFriendly,
+  propertyId,
   language: customLanguage,
 }: PropertyGalleryProps) {
   const { language: globalLanguage, t: globalT } = useLanguage();
@@ -263,7 +265,10 @@ export function PropertyGallery({
                   setCurrentIndex(idx);
                   setOpen(true);
                   try {
-                    pushToDataLayer(GTM_EVENTS.VIEW_GALLERY_FULL, { title });
+                    pushToDataLayer(GTM_EVENTS.VIEW_GALLERY_FULL, {
+                      item_id: propertyId,
+                      item_name: title,
+                    });
                   } catch (e) {}
                 }}
               >
@@ -302,7 +307,10 @@ export function PropertyGallery({
               setCurrentIndex(0);
               setOpen(true);
               try {
-                pushToDataLayer(GTM_EVENTS.VIEW_GALLERY_FULL, { title });
+                pushToDataLayer(GTM_EVENTS.VIEW_GALLERY_FULL, {
+                  item_id: propertyId,
+                  item_name: title,
+                });
               } catch (e) {}
             }}
           >
@@ -339,9 +347,10 @@ export function PropertyGallery({
                   setCurrentIndex(idx + 1);
                   setOpen(true);
                   try {
-                    pushToDataLayer(GTM_EVENTS.VIEW_GALLERY, { 
-                      title, 
-                      image_index: idx + 1 
+                    pushToDataLayer(GTM_EVENTS.VIEW_GALLERY, {
+                      item_id: propertyId,
+                      item_name: title,
+                      image_index: idx + 1,
                     });
                   } catch (e) {}
                 }}

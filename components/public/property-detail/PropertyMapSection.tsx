@@ -9,11 +9,15 @@ import { updateAIScore } from "@/lib/analytics-utils";
 
 interface PropertyMapSectionProps {
   googleMapsLink: string | null;
+  propertyId?: string;
+  propertyTitle?: string;
   language?: "th" | "en" | "cn";
 }
 
 export function PropertyMapSection({
   googleMapsLink,
+  propertyId,
+  propertyTitle,
   language: customLanguage,
 }: PropertyMapSectionProps) {
   // Helper to extract location query from various Google Maps URL formats
@@ -67,7 +71,11 @@ export function PropertyMapSection({
 
   useEffect(() => {
     try {
-      pushToDataLayer(GTM_EVENTS.VIEW_MAP, { has_link: !!googleMapsLink });
+      pushToDataLayer(GTM_EVENTS.VIEW_MAP, { 
+        has_link: !!googleMapsLink,
+        item_id: propertyId,
+        item_name: propertyTitle,
+      });
     } catch (e) {}
   }, [googleMapsLink]);
 
@@ -112,7 +120,11 @@ export function PropertyMapSection({
               rel="noopener noreferrer"
               onClick={() => {
                 try {
-                  pushToDataLayer(GTM_EVENTS.CLICK_MAP_EXTERNAL, { url: googleMapsLink });
+                  pushToDataLayer(GTM_EVENTS.CLICK_MAP_EXTERNAL, { 
+                    url: googleMapsLink,
+                    item_id: propertyId,
+                    item_name: propertyTitle,
+                  });
                   updateAIScore(10);
                 } catch (e) {}
               }}

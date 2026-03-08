@@ -6,6 +6,8 @@ import { useEffect, useState, MouseEvent } from "react";
 import { toggleCompareId, readCompareIds } from "@/lib/compare-store";
 import { toggleFavoriteId, readFavoriteIds } from "@/lib/favorite-store";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { updateAIScore } from "@/lib/analytics-utils";
 
 // New Sub-components
 import { PropertyCardImage } from "./property-card/PropertyCardImage";
@@ -114,6 +116,15 @@ export function PropertyCard({
   const handleCompareClick = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!isInCompare) {
+      pushToDataLayer(GTM_EVENTS.ADD_COMPARE, {
+        item_id: property.id,
+        item_name: property.title,
+      });
+      updateAIScore(10);
+    }
+
     toggleCompareId(property.id);
   };
 
@@ -125,6 +136,13 @@ export function PropertyCard({
     setIsAnimating(true);
     setTimeout(() => setIsAnimating(false), 600);
 
+    if (!isFavorite) {
+      pushToDataLayer(GTM_EVENTS.ADD_FAVORITE, {
+        item_id: property.id,
+        item_name: property.title,
+      });
+      updateAIScore(30);
+    }
     toggleFavoriteId(property.id);
   };
 

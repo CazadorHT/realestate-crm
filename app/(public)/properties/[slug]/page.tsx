@@ -278,6 +278,7 @@ export default async function PublicPropertyDetailPage(props: {
             <PropertyGallery
               images={images as any[]}
               title={data.title}
+              propertyId={data.id}
               isHot={
                 (data.original_price !== null &&
                   data.price !== null &&
@@ -419,6 +420,8 @@ export default async function PublicPropertyDetailPage(props: {
               <PropertyDescription property={data} />
 
               <NearbyPlaces
+                propertyId={data.id}
+                propertyTitle={data.title}
                 location={data.popular_area || undefined}
                 data={(data.nearby_places as any[]) || []}
                 transits={(data.nearby_transits as any[]) || []}
@@ -433,6 +436,8 @@ export default async function PublicPropertyDetailPage(props: {
 
               {/* Map (Resolved Short Link) */}
               <PropertyMapSection
+                propertyId={data.id}
+                propertyTitle={data.title}
                 googleMapsLink={await resolveGoogleMapsLink(
                   data.google_maps_link,
                 )}

@@ -38,6 +38,8 @@ export interface TransitItem {
 
 interface NearbyPlacesProps {
   location?: string;
+  propertyId?: string;
+  propertyTitle?: string;
   data?: NearbyPlaceItem[];
   transits?: TransitItem[];
   language?: "th" | "en" | "cn";
@@ -65,6 +67,8 @@ const CATEGORY_LABEL_MAP: Record<string, string> = {
 
 export function NearbyPlaces({
   location,
+  propertyId,
+  propertyTitle,
   data = [],
   transits = [],
   language: customLanguage,
@@ -78,6 +82,8 @@ export function NearbyPlaces({
         pushToDataLayer(GTM_EVENTS.VIEW_NEARBY, {
           places_count: data.length,
           transits_count: transits.length,
+          item_id: propertyId,
+          item_name: propertyTitle,
         });
         updateAIScore(5);
       }

@@ -38,6 +38,13 @@ export function GTMPropertyPageView({ property }: GTMPropertyPageViewProps) {
       
       // Viewing a property page gives a base engagement score
       updateAIScore(5);
+
+      // Dispatch context for other trackers (like Scroll Depth)
+      window.dispatchEvent(
+        new CustomEvent("property-context-ready", {
+          detail: { id: property.id, title: property.title },
+        }),
+      );
     } catch (e) {
       console.error("GTM View Item Error:", e);
     }

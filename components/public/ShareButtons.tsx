@@ -13,12 +13,16 @@ interface ShareButtonsProps {
   url: string;
   title?: string;
   variant?: "default" | "icon";
+  propertyId?: string;
+  propertyTitle?: string;
 }
 
 export function ShareButtons({
   url,
   title: _title,
   variant = "default",
+  propertyId,
+  propertyTitle,
 }: ShareButtonsProps) {
   const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
@@ -40,6 +44,8 @@ export function ShareButtons({
       pushToDataLayer(GTM_EVENTS.SHARE_PROPERTY, {
         platform: "copy_link",
         url: url,
+        item_id: propertyId,
+        item_name: propertyTitle,
       });
       updateAIScore(10);
       setTimeout(() => setCopied(false), 2000);
@@ -107,6 +113,8 @@ export function ShareButtons({
           pushToDataLayer(GTM_EVENTS.SHARE_PROPERTY, {
             platform: "facebook",
             url: url,
+            item_id: propertyId,
+            item_name: propertyTitle,
           });
           updateAIScore(10);
         }}
@@ -123,6 +131,8 @@ export function ShareButtons({
           pushToDataLayer(GTM_EVENTS.SHARE_PROPERTY, {
             platform: "line",
             url: url,
+            item_id: propertyId,
+            item_name: propertyTitle,
           });
         }}
         className="flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-colors font-medium text-sm"
@@ -145,6 +155,8 @@ export function ShareButtons({
           pushToDataLayer(GTM_EVENTS.SHARE_PROPERTY, {
             platform: "instagram",
             url: url,
+            item_id: propertyId,
+            item_name: propertyTitle,
           });
         }}
         className="flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white rounded-xl transition-colors font-medium text-sm"

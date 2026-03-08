@@ -15,7 +15,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   SlidersHorizontal,
@@ -116,6 +116,28 @@ export function SearchFilterBar({
   const [showAreaSection, setShowAreaSection] = useState(true);
   const [showAllProvincesMobile, setShowAllProvincesMobile] = useState(false);
   const [showAllAreasMobile, setShowAllAreasMobile] = useState(false);
+  const [debouncedKeyword, setDebouncedKeyword] = useState(keyword);
+
+  // Debounce keyword GTM tracking
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (keyword !== debouncedKeyword) {
+        setDebouncedKeyword(keyword);
+        if (keyword.trim()) {
+          try {
+            pushToDataLayer(GTM_EVENTS.SEARCH_KEYWORD, { 
+              keyword,
+              province,
+              popular_area: area,
+              item_category: type,
+              listing_type: listingType
+            });
+          } catch (e) {}
+        }
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [keyword, debouncedKeyword]);
 
   const MOBILE_ITEMS_LIMIT = 9;
 
@@ -166,18 +188,7 @@ export function SearchFilterBar({
               placeholder={t("search.keyword_placeholder")}
               className="pl-12 h-12 text-base rounded-xl border-slate-200 bg-white shadow-sm"
               value={keyword}
-              onChange={(e) => {
-                setKeyword(e.target.value);
-                // We use a small timeout to avoid flooding GTM on every keystroke
-                const timeoutId = setTimeout(() => {
-                  try {
-                    pushToDataLayer(GTM_EVENTS.SEARCH_KEYWORD, { 
-                      keyword: e.target.value 
-                    });
-                  } catch (e) {}
-                }, 1000);
-                return () => clearTimeout(timeoutId);
-              }}
+              onChange={(e) => setKeyword(e.target.value)}
             />
           </div>
           <Sheet>
@@ -316,6 +327,10 @@ export function SearchFilterBar({
                                     pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
                                       filter_type: "location",
                                       filter_value: a.name,
+                                      province,
+                                      popular_area: a.name,
+                                      item_category: type,
+                                      listing_type: listingType
                                     });
                                   } catch (e) {}
                                 }}
@@ -450,6 +465,10 @@ export function SearchFilterBar({
                                   pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
                                     filter_type: "property_type",
                                     filter_value: pt.value,
+                                    province,
+                                    popular_area: area,
+                                    item_category: pt.value,
+                                    listing_type: listingType
                                   });
                                 }}
                                 className={`w-full flex items-center justify-between px-4 py-4 rounded-2xl text-sm font-medium border transition-all ${
@@ -505,6 +524,10 @@ export function SearchFilterBar({
                           pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
                             filter_type: "listing_type",
                             filter_value: opt.val,
+                            province,
+                            popular_area: area,
+                            item_category: type,
+                            listing_type: opt.val
                           });
                         }}
                         className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${

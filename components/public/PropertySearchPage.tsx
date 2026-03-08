@@ -316,6 +316,7 @@ export function PropertySearchPage({
         province,
         popular_area: area,
         property_type: type,
+        item_category: type,
         listing_type: listingType,
         min_price: minPrice,
         max_price: maxPrice,
