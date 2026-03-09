@@ -536,16 +536,6 @@ function PropertyListingContent() {
                     className="relative group"
                     suppressHydrationWarning
                   >
-                    {hasDiscount && (
-                      <div className="absolute -top-6 -left-6 z-30">
-                        <div className="relative">
-                          <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
-                          <div className="relative bg-linear-to-br from-red-500 to-orange-600 text-white p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0  group-hover:scale-110 transition-all duration-300 ">
-                            <Sparkles className="h-6 w-6 fill-yellow-200" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
                     <PropertyCard property={property} priority={index === 0} />
                   </div>
                 );

@@ -24,6 +24,11 @@ import {
   ChevronUp,
   Armchair,
   Flame,
+  Sparkles,
+  ArrowUpNarrowWide,
+  ArrowDownWideNarrow,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { MdOutlinePets,MdWork } from "react-icons/md";
 import { FaFire, FaTrainSubway } from "react-icons/fa6";
@@ -210,7 +215,7 @@ export function SearchFilterBar({
 
   return (
     <div className="bg-white border-b border-slate-100 sticky top-(--nav-offset,64px) z-30 shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-[top] duration-500 ease-in-out">
-      <div className="max-w-screen-2xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto p-4 sm:px-6 lg:px-8">
         {/* Mobile View: Search + Filter Sheet */}
         <div className="xl:hidden flex gap-3 mb-4">
           <div className="relative flex-1">
@@ -760,15 +765,39 @@ export function SearchFilterBar({
             <div className="ml-auto flex items-center gap-3">
               <Select value={sort} onValueChange={setSort}>
                 <SelectTrigger className="w-[180px] h-12! rounded-xl border-slate-200 bg-white ">
-                  <ArrowUpDown className="h-4 w-4 mr-2 text-slate-400" />
                   <SelectValue placeholder={t("search.sort_by")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="NEWEST">{t("search.sort_newest")}</SelectItem>
-                  <SelectItem value="PRICE_ASC">{t("search.sort_price_asc")}</SelectItem>
-                  <SelectItem value="PRICE_DESC">{t("search.sort_price_desc")}</SelectItem>
-                  <SelectItem value="AREA_ASC">{t("search.sort_area_asc")}</SelectItem>
-                  <SelectItem value="AREA_DESC">{t("search.sort_area_desc")}</SelectItem>
+                  <SelectItem value="NEWEST">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      <span>{t("search.sort_newest")}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="PRICE_ASC">
+                    <div className="flex items-center gap-2">
+                      <ArrowUpNarrowWide className="h-4 w-4 text-emerald-500" />
+                      <span>{t("search.sort_price_asc")}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="PRICE_DESC">
+                    <div className="flex items-center gap-2">
+                      <ArrowDownWideNarrow className="h-4 w-4 text-rose-500" />
+                      <span>{t("search.sort_price_desc")}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="AREA_ASC">
+                    <div className="flex items-center gap-2">
+                      <Minimize2 className="h-4 w-4 text-blue-500" />
+                      <span>{t("search.sort_area_asc")}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="AREA_DESC">
+                    <div className="flex items-center gap-2">
+                      <Maximize2 className="h-4 w-4 text-indigo-500" />
+                      <span>{t("search.sort_area_desc")}</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
 
@@ -785,7 +814,7 @@ export function SearchFilterBar({
 
           {/* Row 3: Popular Areas */}
           {availableAreas.length > 0 && (
-            <div className="flex items-center gap-3 py-3 border-t border-slate-100">
+            <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
                <button
                 onClick={() => setShowAreaSection(!showAreaSection)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-600 text-sm font-semibold hover:bg-slate-100 transition-all"

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PropertyCard, PropertyCardProps } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { FaFire, FaFireBurner } from "react-icons/fa6";
 
 type ApiProperty = PropertyCardProps;
 
@@ -195,16 +196,6 @@ export function HotDealsSection() {
                 data-aos="fade-up"
                 data-aos-delay={index * 100}
               >
-                {/* Floating Hot Badge Overlay - hidden on mobile */}
-                <div className="absolute -top-5 -left-3 md:-top-7 md:-left-5 z-30 hidden md:block ">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
-                    <div className="relative bg-linear-to-br from-red-500 to-orange-600 text-white p-2 md:p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.1)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-5 transition-all duration-300 scale-100 md:scale-110">
-                      <Sparkles className="h-5 w-5 md:h-6 md:w-6 fill-yellow-200" />
-                    </div>
-                  </div>
-                </div>
-
                 {/* Card Wrapper with Premium Glow Effect */}
                 <div className="rounded-2xl md:rounded-[1.5rem] p-1 md:p-0 lg:p-1 lg:bg-linear-to-b from-white/80 to-white/40 lg:shadow-xl lg:shadow-orange-900/5 group-hover:shadow-orange-600/20 transition-all duration-500 ">
                   <div className="md:group-hover:scale-[1.02] transition-all duration-500 ">
