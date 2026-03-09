@@ -28,6 +28,7 @@ import {
 } from "@/components/providers/LanguageProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { PropertyImage } from "@/features/properties/types";
+import { MdOutlinePets } from "react-icons/md";
 
 interface PropertyGalleryProps {
   images: PropertyImage[];
@@ -229,15 +230,24 @@ export function PropertyGallery({
             </span>
           </div>
         )}
-        <div className="absolute bottom-3 left-0 md:bottom-6 md:left-6 z-40 flex gap-2">
           {petFriendly && (
-            <Badge className="bg-white backdrop-blur-sm text-orange-600 border border-orange-200 rounded-full px-2 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-bold gap-1 md:gap-1.5 shadow-lg hover:bg-white/90 hover:text-orange-600 hover:border-orange-200">
-              <PawPrint className="w-3.5 h-3.5 md:w-5 md:h-5" />
-              <span className="hidden min-[360px]:inline">Pet Friendly</span>
-              <span className="inline min-[360px]:hidden">Pet</span>
-            </Badge>
+            <div className="group/pet absolute top-3 left-0 md:top-16 md:left-6 z-40 flex items-center bg-orange-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
+              <MdOutlinePets className="w-4 h-4 md:w-5 md:h-5 text-white rotate-25" />
+              <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 group-hover/pet:max-w-[100px] group-hover/pet:opacity-100 group-hover/pet:ml-2">
+                PET FRIENDLY
+              </span>
+            </div>
           )}
-        </div>
+        {/* <div className="absolute bottom-3 left-0 md:bottom-0 md:left-6 z-40 flex gap-2">
+          {petFriendly && (
+            <div className="group/pet absolute bottom-0 left-0 md:bottom-4 md:left-0 z-40 flex items-center bg-orange-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
+              <MdOutlinePets className="w-4 h-4 md:w-5 md:h-5 text-white rotate-25" />
+              <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 group-hover/pet:max-w-[100px] group-hover/pet:opacity-100 group-hover/pet:ml-2">
+                PET FRIENDLY
+              </span>
+            </div>
+          )}
+        </div> */}
 
         {/* Mobile Carousel (Visible on Mobile and Small Tablets Only) */}
         <div className="lg:hidden relative h-[320px] sm:h-[320px] md:h-[450px] lg:h-[450px] -mx-9 sm:mx-0 rounded-none sm:rounded-xl overflow-hidden">
@@ -327,7 +337,7 @@ export function PropertyGallery({
               img={mainImage}
               alt=""
               containerClassName="absolute inset-0"
-              className="object-cover blur-2xl opacity-40 scale-105 group-hover/main:scale-110 transition-transform duration-700"
+              className="object-cover blur-xl opacity-70 scale-105 group-hover/main:scale-105 transition-transform duration-700"
               onImageError={handleImageError}
               failedImages={failedImages}
               showFallback={false}
@@ -337,7 +347,7 @@ export function PropertyGallery({
               img={mainImage}
               alt={title}
               containerClassName="relative z-10"
-              className="object-cover group-hover/main:scale-105 transition-transform duration-700"
+              className="object-contain group-hover/main:scale-105 transition-transform duration-700"
               priority
               sizes="50vw"
               onImageError={handleImageError}
@@ -404,7 +414,7 @@ export function PropertyGallery({
           </div>
 
           {/* Desktop View All Button */}
-          <div className="absolute bottom-4 right-4 lg:bottom-6 lg:right-6">
+          <div className="absolute bottom-4 right-4 lg:bottom-6 lg:right-6 z-50">
             <Button
               variant="secondary"
               className="bg-white/90 hover:bg-white text-slate-900 shadow-lg backdrop-blur-sm h-9 lg:h-10 px-3 lg:px-4 rounded-xl text-sm font-semibold"

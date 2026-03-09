@@ -42,6 +42,7 @@
     "address": "123 Business Road, Bangkok, Thailand"
   },
   "common": {
+    "id_copied": "Property ID copied",
     "verified_100": "100% Verified",
     "safe_transaction": "Secure Transactions",
     "fast_response": "Fast Reply within 24h",
@@ -106,6 +107,9 @@
     "copy_success": "Copied to clipboard",
     "call_now": "Call Now",
     "are_you_sure": "Are you sure you want to perform this action?",
+    "no_images": "No images available",
+    "images": "Images",
+    "view_all_images": "View all images",
     "cookie_consent": {
       "title": "We use cookies",
       "description": "This website uses cookies to improve your experience and analyze website traffic. You can learn more in our",
@@ -477,6 +481,11 @@
     "min_budget": "Min Budget",
     "max_budget": "Max Budget",
     "bedrooms": "Bedrooms",
+    "quick_filters": "Quick Filters",
+    "property_details": "Property Details",
+    "foreigner": "Foreigner Quota",
+    "company_registered": "Company Registered",
+    "hot_deal": "Hot Deal",
     "location": "Location",
     "all_locations": "All Areas",
     "popular_locations": "Popular Areas",
@@ -888,6 +897,8 @@
       "unit_floor": "floor"
     },
     "special_features": "Special Features",
+    "special_features_description": "Special features of this property, total",
+    "special_features_count": "items",
     "highlights": {
       "great_location": "Great Location",
       "ready_to_move": "Ready to Move In",
@@ -936,7 +947,19 @@
       "grade_a": "Grade A Building",
       "tax_registered": "Tax Registered",
       "high_floor": "High Floor",
-      "pool_view": "Pool View"
+      "pool_view": "Pool View",
+      "facing_east": "East Facing",
+      "facing_north": "North Facing",
+      "facing_south": "South Facing",
+      "facing_west": "West Facing",
+      "grade_b": "Grade B Building",
+      "grade_c": "Grade C Building",
+      "raised_floor": "Raised Floor",
+      "central_air": "Central Air",
+      "split_air": "Split Air",
+      "access_247": "24/7 Access",
+      "fiber_optic": "Fiber Optic",
+      "multi_parking": "Parking > 1 Car"
     },
     "transit_types": {
       "BTS": "BTS",

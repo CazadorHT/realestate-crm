@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { PropertyCard, PropertyCardProps } from "./PropertyCard";
 import { Button } from "@/components/ui/button";
 import { MorphingLoader } from "@/components/ui/MorphingLoader";
@@ -22,6 +23,7 @@ export function PropertySearchPage({
 }: PropertySearchPageProps) {
   const { t } = useLanguage();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [properties, setProperties] = useState<ApiProperty[]>(
     initialProperties || [],
   );
@@ -51,6 +53,15 @@ export function PropertySearchPage({
   const [bedrooms, setBedrooms] = useState(
     searchParams.get("bedrooms") || "ALL",
   );
+  const [isForeigner, setIsForeigner] = useState(
+    searchParams.get("foreigner") === "true",
+  );
+  const [companyRegistered, setCompanyRegistered] = useState(
+    searchParams.get("company_registered") === "true",
+  );
+  const [isHotDeal, setIsHotDeal] = useState(
+    searchParams.get("hot_deal") === "true",
+  );
 
   const [province, setProvince] = useState(
     searchParams.get("province") || "ALL",
@@ -66,7 +77,12 @@ export function PropertySearchPage({
     setListingType(searchParams.get("listing_type") || "ALL");
     setArea(searchParams.get("popular_area") || "ALL");
     setProvince(searchParams.get("province") || "ALL");
-    // ... update others if needed, though mostly navigating to page sets them initially
+    setNearTrain(searchParams.get("near_train") === "true");
+    setPetFriendly(searchParams.get("pet_friendly") === "true");
+    setFullyFurnished(searchParams.get("fully_furnished") === "true");
+    setIsForeigner(searchParams.get("foreigner") === "true");
+    setCompanyRegistered(searchParams.get("company_registered") === "true");
+    setIsHotDeal(searchParams.get("hot_deal") === "true");
   }, [searchParams]);
 
   // Pagination
@@ -160,7 +176,7 @@ export function PropertySearchPage({
 
       // Pet Friendly
       if (!excludeFilters.includes("petFriendly") && petFriendly) {
-        if (!p.meta_keywords?.includes("Pet Friendly")) return false;
+        if (p.is_pet_friendly !== true) return false;
       }
 
       // Fully Furnished
@@ -169,6 +185,26 @@ export function PropertySearchPage({
           p.is_fully_furnished === true ||
           p.meta_keywords?.includes("Fully Furnished");
         if (!isFurnished) return false;
+      }
+
+      // Foreigner Quota
+      if (!excludeFilters.includes("isForeigner") && isForeigner) {
+        if (p.is_foreigner_quota !== true) return false;
+      }
+
+      // Company Registered
+      if (!excludeFilters.includes("companyRegistered") && companyRegistered) {
+        if (p.is_tax_registered !== true) return false;
+      }
+
+      // Hot Deal
+      if (!excludeFilters.includes("isHotDeal") && isHotDeal) {
+        const hasPriceDrop =
+          (p.original_price && p.price && p.original_price > p.price) ||
+          (p.original_rental_price &&
+            p.rental_price &&
+            p.original_rental_price > p.rental_price);
+        if (!hasPriceDrop) return false;
       }
 
       // Bedrooms
@@ -205,6 +241,9 @@ export function PropertySearchPage({
       petFriendly,
       fullyFurnished,
       bedrooms,
+      isForeigner,
+      companyRegistered,
+      isHotDeal,
       minPrice,
       maxPrice,
     ],
@@ -321,6 +360,12 @@ export function PropertySearchPage({
         min_price: minPrice,
         max_price: maxPrice,
         bedrooms,
+        near_train: nearTrain,
+        pet_friendly: petFriendly,
+        fully_furnished: fullyFurnished,
+        is_foreigner: isForeigner,
+        company_registered: companyRegistered,
+        is_hot_deal: isHotDeal,
       });
     }
   }, [isLoading, filtered.length, properties.length]); // Dependencies to fire when search finishes and results are empty
@@ -337,11 +382,17 @@ export function PropertySearchPage({
           listing_type: listingType,
           popular_area: area,
           bedrooms: bedrooms,
+          near_train: nearTrain,
+          pet_friendly: petFriendly,
+          fully_furnished: fullyFurnished,
+          is_foreigner: isForeigner,
+          company_registered: companyRegistered,
+          is_hot_deal: isHotDeal,
         });
       } catch (e) {}
     }
     // We want to re-run this when core filters change and loading finishes
-  }, [isLoading, filtered.length, keyword, province, type, listingType, area, bedrooms]);
+  }, [isLoading, filtered.length, keyword, province, type, listingType, area, bedrooms, nearTrain, petFriendly, fullyFurnished, isForeigner, companyRegistered, isHotDeal]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -355,7 +406,52 @@ export function PropertySearchPage({
     area,
     nearTrain,
     petFriendly,
+    fullyFurnished,
     bedrooms,
+    isForeigner,
+    companyRegistered,
+    isHotDeal,
+  ]);
+
+  // Sync state to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (keyword) params.set("keyword", keyword);
+    if (type !== "ALL") params.set("property_type", type);
+    if (listingType !== "ALL") params.set("listing_type", listingType);
+    if (minPrice) params.set("min_price", minPrice);
+    if (maxPrice) params.set("max_price", maxPrice);
+    if (area !== "ALL") params.set("popular_area", area);
+    if (province !== "ALL") params.set("province", province);
+    if (nearTrain) params.set("near_train", "true");
+    if (petFriendly) params.set("pet_friendly", "true");
+    if (fullyFurnished) params.set("fully_furnished", "true");
+    if (bedrooms !== "ALL") params.set("bedrooms", bedrooms);
+    if (isForeigner) params.set("foreigner", "true");
+    if (companyRegistered) params.set("company_registered", "true");
+    if (isHotDeal) params.set("hot_deal", "true");
+
+    const query = params.toString();
+    const url = `/properties${query ? `?${query}` : ""}`;
+    
+    // Use window.history.replaceState to avoid adding many history entries
+    // but keeping it synchronized with the URL.
+    window.history.replaceState({ ...window.history.state, as: url, url }, "", url);
+  }, [
+    keyword,
+    type,
+    listingType,
+    minPrice,
+    maxPrice,
+    area,
+    province,
+    nearTrain,
+    petFriendly,
+    fullyFurnished,
+    bedrooms,
+    isForeigner,
+    companyRegistered,
+    isHotDeal,
   ]);
 
   // Pagination calculations
@@ -393,6 +489,12 @@ export function PropertySearchPage({
         setPetFriendly={setPetFriendly}
         fullyFurnished={fullyFurnished}
         setFullyFurnished={setFullyFurnished}
+        isForeigner={isForeigner}
+        setIsForeigner={setIsForeigner}
+        companyRegistered={companyRegistered}
+        setCompanyRegistered={setCompanyRegistered}
+        isHotDeal={isHotDeal}
+        setIsHotDeal={setIsHotDeal}
         bedrooms={bedrooms}
         setBedrooms={setBedrooms}
         filteredLength={filtered.length}
@@ -436,15 +538,32 @@ export function PropertySearchPage({
           </div>
         ) : (
           <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
-              {paginatedProperties.map((item, i) => (
-                <PropertyCard
-                  key={item.id}
-                  property={item}
-                  priority={currentPage === 1 && i < 4}
-                />
-              ))}
-            </div>
+            <motion.div 
+              layout
+              className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-12"
+            >
+              <AnimatePresence mode="popLayout">
+                {paginatedProperties.map((item, i) => (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ 
+                      duration: 0.3, 
+                      delay: i * 0.05,
+                      ease: "easeOut" 
+                    }}
+                  >
+                    <PropertyCard
+                      property={item}
+                      priority={currentPage === 1 && i < 4}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
 
             <SearchPagination
               currentPage={currentPage}

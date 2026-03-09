@@ -58,6 +58,9 @@ export type PropertyCardProps = {
   meta_keywords?: string[] | null;
   near_transit?: boolean | null;
   is_fully_furnished?: boolean | null;
+  is_pet_friendly?: boolean | null;
+  is_foreigner_quota?: boolean | null;
+  is_tax_registered?: boolean | null;
   features?:
     | {
         id: string;

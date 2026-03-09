@@ -57,6 +57,27 @@ interface PropertyHeaderProps {
     is_selling_with_tenant?: boolean | null;
     is_foreigner_quota?: boolean | null;
     is_tax_registered?: boolean | null;
+    has_private_pool?: boolean | null;
+    near_transit?: boolean | null;
+    has_river_view?: boolean | null;
+    has_unblocked_view?: boolean | null;
+    allow_smoking?: boolean | null;
+    is_high_ceiling?: boolean | null;
+    is_column_free?: boolean | null;
+    is_exclusive?: boolean | null;
+    is_grade_a?: boolean | null;
+    is_grade_b?: boolean | null;
+    is_grade_c?: boolean | null;
+    has_raised_floor?: boolean | null;
+    is_central_air?: boolean | null;
+    is_split_air?: boolean | null;
+    has_247_access?: boolean | null;
+    has_fiber_optic?: boolean | null;
+    has_multi_parking?: boolean | null;
+    facing_east?: boolean | null;
+    facing_north?: boolean | null;
+    facing_south?: boolean | null;
+    facing_west?: boolean | null;
     // Localized fields
     title_en?: string | null;
     title_cn?: string | null;
@@ -151,10 +172,6 @@ export function PropertyHeader({
       name: t("property.specs.fully_furnished"),
       icon: "armchair",
     },
-    (property.floor || 0) > 15 && {
-      name: `${t("property.badges.high_floor")} (${t("property.specs.floor")} ${property.floor})`,
-      icon: "building-2",
-    },
     property.has_city_view && {
       name: t("property.badges.city_view"),
       icon: "building-2",
@@ -179,35 +196,97 @@ export function PropertyHeader({
       name: t("property.badges.tax_registered"),
       icon: "file-check",
     },
+    property.has_private_pool && {
+      name: t("property.badges.private_pool"),
+      icon: "waves",
+    },
+    property.near_transit && {
+      name: t("property.badges.near_transit"),
+      icon: "train-front",
+    },
+    property.has_river_view && {
+      name: t("property.badges.river_view"),
+      icon: "waves",
+    },
+    property.has_unblocked_view && {
+      name: t("property.badges.unblocked_view"),
+      icon: "eye",
+    },
+    property.allow_smoking && {
+      name: t("property.badges.allow_smoking"),
+      icon: "cigarette",
+    },
+    property.is_high_ceiling && {
+      name: t("property.badges.high_ceiling"),
+      icon: "move-up",
+    },
+    property.is_column_free && {
+      name: t("property.badges.column_free"),
+      icon: "maximize",
+    },
+    property.is_bare_shell && {
+      name: t("property.badges.bare_shell"),
+      icon: "box",
+    },
+    property.is_exclusive && {
+      name: t("property.badges.exclusive"),
+      icon: "shield-check",
+    },
+    property.is_grade_a && {
+      name: t("property.badges.grade_a"),
+      icon: "star",
+    },
+    property.is_grade_b && {
+      name: t("property.badges.grade_b"),
+      icon: "medal",
+    },
+    property.is_grade_c && {
+      name: t("property.badges.grade_c"),
+      icon: "medal",
+    },
+    property.has_raised_floor && {
+      name: t("property.badges.raised_floor"),
+      icon: "layers",
+    },
+    property.is_central_air && {
+      name: t("property.badges.central_air"),
+      icon: "wind",
+    },
+    property.is_split_air && {
+      name: t("property.badges.split_air"),
+      icon: "wind",
+    },
+    property.has_247_access && {
+      name: t("property.badges.access_247"),
+      icon: "check-circle",
+    },
+    property.has_fiber_optic && {
+      name: t("property.badges.fiber_optic"),
+      icon: "wifi",
+    },
+    property.has_multi_parking && {
+      name: t("property.badges.multi_parking"),
+      icon: "check-circle",
+    },
+    property.facing_east && {
+      name: t("property.badges.facing_east"),
+      icon: "compass",
+    },
+    property.facing_north && {
+      name: t("property.badges.facing_north"),
+      icon: "compass",
+    },
+    property.facing_south && {
+      name: t("property.badges.facing_south"),
+      icon: "wind",
+    },
+    property.facing_west && {
+      name: t("property.badges.facing_west"),
+      icon: "sunset",
+    },
   ].filter((f): f is { name: string; icon: string } => !!f);
 
-  const finalKeySellingPoints =
-    incomingKeySellingPoints ||
-    [
-      ...unitSpecialFeatures,
-      ...features
-        .filter(
-          (f) =>
-            f.category === "คุณสมบัติพิเศษ" ||
-            f.category === "Special Features",
-        )
-        .map((f) => ({
-          name: getLocaleValue(f, "name", language),
-          icon: f.icon_key,
-        })),
-      ...features
-        .filter(
-          (f) =>
-            f.category !== "คุณสมบัติพิเศษ" &&
-            f.category !== "Special Features",
-        )
-        .map((f) => ({
-          name: getLocaleValue(f, "name", language),
-          icon: f.icon_key,
-        })),
-    ]
-      .filter((v, i, a) => a.findIndex((t) => t.name === v.name) === i)
-      .slice(0, 6);
+  const finalKeySellingPoints = incomingKeySellingPoints || unitSpecialFeatures;
 
   // Office price override
   const officePrice = getOfficePrice(property);
@@ -301,7 +380,7 @@ export function PropertyHeader({
           {label && (
             <span className="text-sm text-slate-500 font-medium">{label}</span>
           )}
-          <span className="text-xl md:text-2xl font-semibold text-slate-900">
+          <span className="text-xl md:text-2xl font-bold text-slate-900">
             {formatPrice(displayPrice)}
             {isRent && (
               <span className="text-sm font-normal text-slate-500">

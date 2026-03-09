@@ -4,7 +4,7 @@ import { Home, Heart, Menu, X, Search, Key } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { readFavoriteIds } from "@/lib/favorite-store";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -29,6 +29,8 @@ export function PublicNav() {
   const [mounted, setMounted] = useState(false);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isDepositSuccess, setIsDepositSuccess] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollPos = useRef(typeof window !== "undefined" ? window.scrollY : 0);
 
   // Hook for translation
   const { language, setLanguage, t } = useLanguage();
@@ -47,8 +49,27 @@ export function PublicNav() {
 
     // Scroll listener
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 10);
+
+      // Only hide/show on scroll for /properties page
+      if (pathname === "/properties") {
+        if (currentScrollY > lastScrollPos.current && currentScrollY > 80) {
+          setIsVisible(false);
+          document.documentElement.style.setProperty("--nav-offset", "0px");
+        } else {
+          setIsVisible(true);
+          document.documentElement.style.setProperty("--nav-offset", "64px");
+        }
+      } else {
+        setIsVisible(true);
+        document.documentElement.style.setProperty("--nav-offset", "64px");
+      }
+      lastScrollPos.current = currentScrollY;
     };
+
+    // Initialize CSS variable
+    document.documentElement.style.setProperty("--nav-offset", "64px");
 
     window.addEventListener("favorite-updated", handleFavoriteUpdate);
     window.addEventListener("scroll", handleScroll);
@@ -56,8 +77,9 @@ export function PublicNav() {
     return () => {
       window.removeEventListener("favorite-updated", handleFavoriteUpdate);
       window.removeEventListener("scroll", handleScroll);
+      document.documentElement.style.removeProperty("--nav-offset");
     };
-  }, []);
+  }, [pathname]);
 
   function updateFavoriteCount() {
     const ids = readFavoriteIds();
@@ -129,7 +151,9 @@ export function PublicNav() {
       />
 
       <div
-        className={`border-b fixed border-b-slate-200 top-0 w-full z-100 transition-all duration-300 ${
+        className={`border-b fixed border-b-slate-200 top-0 w-full z-100 transition-all duration-500 ease-in-out ${
+          isVisible ? "translate-y-0" : "-translate-y-full"
+        } ${
           scrolled
             ? "bg-white shadow-lg border-slate-200"
             : "bg-white border-slate-200"

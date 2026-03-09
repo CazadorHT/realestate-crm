@@ -40,6 +40,7 @@
     "address": "123 Business Road, กรุงเทพฯ, ประเทศไทย"
   },
   "common": {
+    "id_copied": "คัดลอกรหัสทรัพย์แล้ว",
     "verified_100": "ตรวจสอบแล้ว 100%",
     "safe_transaction": "ปลอดภัยทุกธุรกรรม",
     "fast_response": "ตอบกลับไวใน 24 ชม.",
@@ -104,6 +105,9 @@
     "copy_success": "คัดลอกเบอร์โทรศัพท์แล้ว",
     "call_now": "โทรออกเลย",
     "are_you_sure": "คุณแน่ใจหรือไม่ที่จะทำรายการนี้?",
+    "no_images": "ไม่มีรูปภาพ",
+    "images": "รูปภาพ",
+    "view_all_images": "ดูรูปภาพทั้งหมด",
     "cookie_consent": {
       "title": "เราใช้คุกกี้ (Cookies)",
       "description": "เว็บไซต์นี้ใช้คุกกี้เพื่อวัตถุประสงค์ในการปรับปรุงประสบการณ์ของผู้ใช้ให้ดียิ่งขึ้น และเพื่อวิเคราะห์การเข้าใช้งานเว็บไซต์ คุณสามารถศึกษารายละเอียดเพิ่มเติมได้ที่",
@@ -475,6 +479,11 @@
     "min_budget": "งบต่ำสุด",
     "max_budget": "งบสูงสุด",
     "bedrooms": "ห้องนอน",
+    "quick_filters": "สิทธิพิเศษ",
+    "property_details": "รายละเอียดทรัพย์สิน",
+    "foreigner": "โควตาต่างชาติ",
+    "company_registered": "จดทะเบียนบริษัท",
+    "hot_deal": "ส่วนลดพิเศษ (Hot Deal)",
     "location": "ทำเล",
     "all_locations": "ทุกย่านทำเล",
     "popular_locations": "ทำเลยอดนิยม",
@@ -889,6 +898,8 @@
       "unit_floor": "ชั้น"
     },
     "special_features": "คุณสมบัติพิเศษ",
+    "special_features_description": "คุณสมบัติพิเศษของทรัพย์นี้ มีทั้งหมด",
+    "special_features_count": "รายการ",
     "highlights": {
       "great_location": "ทำเลดี เดินทางสะดวก",
       "ready_to_move": "พร้อมเข้าอยู่",
@@ -935,9 +946,21 @@
       "column_free": "ไม่มีเสากลาง",
       "bare_shell": "Bare Shell",
       "grade_a": "Grade A Building",
-      "tax_registered": "จดทะเบียนบริษัทได้",
+      "tax_registered": "จดทะเบียนภาษี/บริษัทได้",
       "high_floor": "วิวสวยชั้นสูง",
-      "pool_view": "วิวสระว่ายน้ำ"
+      "pool_view": "วิวสระว่ายน้ำ",
+      "facing_east": "ทิศตะวันออก",
+      "facing_north": "ทิศเหนือ",
+      "facing_south": "ทิศใต้",
+      "facing_west": "ทิศตะวันตก",
+      "grade_b": "Grade B Building",
+      "grade_c": "Grade C Building",
+      "raised_floor": "พื้นยก",
+      "central_air": "แอร์รวม",
+      "split_air": "แอร์แยก",
+      "access_247": "เข้า-ออก 24 ชม.",
+      "fiber_optic": "Fiber Optic",
+      "multi_parking": "จอดรถ > 1 คัน"
     },
     "transit_types": {
       "BTS": "BTS",

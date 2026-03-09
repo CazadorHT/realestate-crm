@@ -6,6 +6,7 @@ import { IoShieldCheckmark } from "react-icons/io5";
 import { getTypeLabel, getListingBadge } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { MdOutlinePets } from "react-icons/md";
 
 interface PropertyCardImageProps {
   property: PropertyCardProps;
@@ -93,7 +94,7 @@ export function PropertyCardImage({
 
       {property.meta_keywords?.includes("Pet Friendly") && (
         <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md text-orange-600 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm z-20">
-          <PawPrint className="w-5 h-5" />
+          <MdOutlinePets className="w-4 h-4 rotate-25" />
           <span>Pet Friendly</span>
         </div>
       )}

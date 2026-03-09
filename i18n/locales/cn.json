@@ -40,6 +40,7 @@
     "address": "123 Business Road, 曼谷, 泰国"
   },
   "common": {
+    "id_copied": "物业 ID 已复制",
     "verified_100": "100% 真实查验",
     "safe_transaction": "交易安全保障",
     "fast_response": "24小时内快速回复",
@@ -104,6 +105,9 @@
     "copy_success": "已复制到剪贴板",
     "call_now": "立即拨打",
     "are_you_sure": "您确定要执行此操作吗？",
+    "no_images": "暂无图片",
+    "images": "图片",
+    "view_all_images": "查看全部图片",
     "cookie_consent": {
       "title": "我们使用 Cookie",
       "description": "本网站使用 Cookie 以提升您的使用体验并分析网站流量。您可以在我们的",
@@ -482,6 +486,11 @@
     "min_budget": "最低预算",
     "max_budget": "最高预算",
     "bedrooms": "卧室",
+    "quick_filters": "快速筛选",
+    "property_details": "物业详情",
+    "foreigner": "外籍配额",
+    "company_registered": "公司注册注册",
+    "hot_deal": "特惠/特价房",
     "location": "地点",
     "all_locations": "所有区域",
     "popular_locations": "热门区域",
@@ -896,7 +905,9 @@
       "unit_car": "个位",
       "unit_floor": "层"
     },
-    "special_features": "特色亮点",
+    "special_features": "特色功能",
+    "special_features_description": "此物业的特色功能，共",
+    "special_features_count": "项",
     "highlights": {
       "great_location": "地段优越",
       "ready_to_move": "即可入住",
@@ -944,8 +955,20 @@
       "bare_shell": "毛坯房",
       "grade_a": "甲级写字楼",
       "tax_registered": "可注册公司",
-      "high_floor": "高楼层",
-      "pool_view": "泳池景观"
+      "high_floor": "高层美景",
+      "pool_view": "泳池景观",
+      "facing_east": "朝东",
+      "facing_north": "朝北",
+      "facing_south": "朝南",
+      "facing_west": "朝西",
+      "grade_b": "B级建筑",
+      "grade_c": "C级建筑",
+      "raised_floor": "架空地板",
+      "central_air": "中央空调",
+      "split_air": "分体空调",
+      "access_247": "24/7 出入",
+      "fiber_optic": "光纤网络",
+      "multi_parking": "多车位"
     },
     "transit_types": {
       "BTS": "曼谷轻轨 (BTS)",

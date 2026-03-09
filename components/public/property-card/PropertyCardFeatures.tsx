@@ -33,7 +33,7 @@ export function PropertyCardFeatures({
       {features.slice(0, 3).map((f) => (
         <span
           key={f.id}
-          className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-md border border-slate-200 group-hover:bg-slate-100 duration-300 group-hover:text-slate-700"
+          className="text-[10px] px-1.5 py-0.5 bg-slate-100 hover:bg-blue-100 hover:text-blue-700  text-slate-500 rounded-md border border-slate-200 group-hover:bg-slate-100 duration-300 group-hover:text-slate-700"
         >
           {getLocaleValue(f, "name", language)}
         </span>
@@ -48,16 +48,16 @@ export function PropertyCardFeatures({
             </TooltipTrigger>
             <TooltipContent
               side="top"
-              className="bg-slate-900/95 backdrop-blur-sm text-slate-50 border-slate-800 p-3 shadow-xl z-50"
+              className="bg-slate-900 border-slate-800 p-3 shadow-xl z-50 text-slate-50"
             >
               <div className="font-semibold text-[10px] mb-1.5 text-slate-400 uppercase tracking-wider">
                 {t("common.more")}
               </div>
-              <ul className="text-xs space-y-1 min-w-[120px]">
-                {features.slice(3, 8).map((f) => (
-                  <li key={f.id} className="flex items-center gap-2">
-                    <div className="w-1 h-1 rounded-full bg-blue-500 shrink-0"></div>
-                    <span className="truncate max-w-[150px]">
+              <ul className="text-xs space-y-1.5 min-w-[140px]">
+                {features.slice(3, 10).map((f) => (
+                  <li key={f.id} className="flex items-center gap-2.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+                    <span className="truncate max-w-[180px] font-medium text-slate-200">
                       {getLocaleValue(f, "name", language)}
                     </span>
                   </li>

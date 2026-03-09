@@ -20,13 +20,22 @@ import {
   Eye,
   MoveUp,
   Maximize,
+  Sunset,
   Box,
+  Medal,
+  Layers,
+  Wind,
+  Wifi,
+  Compass,
+  CheckCircle2,
+  Hammer,
   Star,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -63,6 +72,19 @@ export function PropertyBadgesSection({
   const [startX, setStartX] = useState(0);
   const [dragThresholdMet, setDragThresholdMet] = useState(false);
   const [initialScrollLeft, setInitialScrollLeft] = useState(0);
+  const [isHighlighted, setIsHighlighted] = useState(false);
+
+  // Listen for highlight trigger
+  useEffect(() => {
+    const handleHighlight = () => {
+      setIsHighlighted(true);
+      setTimeout(() => setIsHighlighted(false), 3000); // 3 seconds flash
+    };
+
+    window.addEventListener("trigger-badge-highlight", handleHighlight);
+    return () =>
+      window.removeEventListener("trigger-badge-highlight", handleHighlight);
+  }, []);
 
   // Ultra-Smooth Auto-scroll logic with sub-pixel precision
   useEffect(() => {
@@ -240,6 +262,84 @@ export function PropertyBadgesSection({
       icon: ShieldCheck,
       color: "bg-fuchsia-100 text-fuchsia-700",
     },
+    {
+      condition: property.has_pool_view,
+      label: t("property.badges.pool_view"),
+      icon: Waves,
+      color: "bg-cyan-50 text-cyan-700",
+    },
+    {
+      condition: property.facing_east,
+      label: t("property.badges.facing_east"),
+      icon: Compass,
+      color: "bg-amber-50 text-amber-700",
+    },
+    {
+      condition: property.facing_north,
+      label: t("property.badges.facing_north"),
+      icon: Compass,
+      color: "bg-blue-50 text-blue-700",
+    },
+    {
+      condition: property.facing_south,
+      label: t("property.badges.facing_south"),
+      icon: Wind,
+      color: "bg-teal-50 text-teal-700",
+    },
+    {
+      condition: property.facing_west,
+      label: t("property.badges.facing_west"),
+      icon: Sunset,
+      color: "bg-orange-50 text-orange-700",
+    },
+    {
+      condition: property.is_grade_b,
+      label: t("property.badges.grade_b"),
+      icon: Medal,
+      color: "bg-blue-50 text-blue-700",
+    },
+    {
+      condition: property.is_grade_c,
+      label: t("property.badges.grade_c"),
+      icon: Medal,
+      color: "bg-slate-50 text-slate-700",
+    },
+    {
+      condition: property.has_raised_floor,
+      label: t("property.badges.raised_floor"),
+      icon: Layers,
+      color: "bg-sky-50 text-sky-700",
+    },
+    {
+      condition: property.is_central_air,
+      label: t("property.badges.central_air"),
+      icon: Wind,
+      color: "bg-teal-50 text-teal-700",
+    },
+    {
+      condition: property.is_split_air,
+      label: t("property.badges.split_air"),
+      icon: Wind,
+      color: "bg-cyan-50 text-cyan-700",
+    },
+    {
+      condition: property.has_247_access,
+      label: t("property.badges.access_247"),
+      icon: CheckCircle2,
+      color: "bg-indigo-50 text-indigo-700",
+    },
+    {
+      condition: property.has_fiber_optic,
+      label: t("property.badges.fiber_optic"),
+      icon: Wifi,
+      color: "bg-sky-50 text-sky-700",
+    },
+    {
+      condition: property.has_multi_parking,
+      label: t("property.badges.multi_parking"),
+      icon: CheckCircle2,
+      color: "bg-blue-50 text-blue-700",
+    },
   ];
 
   const filteredBadges = badgeItems.filter((item) => item.condition);
@@ -310,7 +410,15 @@ export function PropertyBadgesSection({
   };
 
   return (
-    <section className={`space-y-4 ${isDragging ? "select-none" : ""}`}>
+    <section
+      id="property-badges-section"
+      className={cn(
+        "space-y-4 transition-all duration-500 rounded-md p-2 items-center border-b border-slate-100 " ,
+        isDragging ? "select-none" : "",
+        isHighlighted &&
+          "ring-4 ring-blue-500/40 border-blue-300 animate-highlight-slow overflow-hidden",
+      )}
+    >
       <style key="badges-style">{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -319,10 +427,25 @@ export function PropertyBadgesSection({
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
+        @keyframes highlight-pulse-slow {
+          0%, 100% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            background-color: transparent;
+            border-color: transparent;
+          }
+          50% {
+            box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2);
+            background-color: rgba(59, 130, 246, 0.05);
+            border-color: rgba(59, 130, 246, 0.4);
+          }
+        }
+        .animate-highlight-slow {
+          animation: highlight-pulse-slow 0.8s ease-in-out infinite;
+        }
       `}</style>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 ">
           <div className="flex items-center gap-3 flex-1 max-w-3xl overflow-hidden group/container relative">
             {/* Sale/Rent: Static */}
             <div className="shrink-0 z-20 bg-white">
@@ -378,27 +501,38 @@ export function PropertyBadgesSection({
           </div>
         </div>
 
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("property.amenities")}</DialogTitle>
+        <DialogContent className="max-h-[90vh] md:max-h-[80vh]  flex flex-col p-0 overflow-hidden border-none shadow-2xl">
+          <DialogHeader className="p-6 border-b border-slate-100 shrink-0">
+            <DialogTitle className="text-xl font-bold text-slate-900">
+              {t("property.special_features")}
+            </DialogTitle>
+            <DialogDescription className="text-slate-500 font-medium">
+              {t("property.special_features_description")}{" "}
+              <span className="text-blue-600 font-bold">
+                {filteredBadges.length}
+              </span>{" "}
+              {t("property.special_features_count")}
+            </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-3 py-4 ">
-            {filteredBadges.map((item, idx) => (
-              <div
-                key={idx}
-                className={cn(
-                  "flex items-center gap-2 p-3 rounded-xl border border-slate-100 bg-slate-50/50 transition-all hover:bg-white hover:shadow-sm",
-                  item.color,
-                )}
-              >
-                <div className="p-2 rounded-lg bg-white shadow-xs">
-                  <item.icon className="w-4 h-4" />
+          <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {filteredBadges.map((item, idx) => (
+                <div
+                  key={idx}
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/50 transition-all hover:bg-white hover:shadow-md group",
+                    item.color,
+                  )}
+                >
+                  <div className="p-2 rounded-lg bg-white shadow-sm ring-1 ring-slate-200/50 group-hover:ring-blue-200 transition-all">
+                    <item.icon className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-semibold leading-tight text-slate-700">
+                    {item.label}
+                  </span>
                 </div>
-                <span className="text-xs font-medium leading-tight">
-                  {item.label}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

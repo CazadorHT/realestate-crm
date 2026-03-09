@@ -45,6 +45,9 @@ export type PropertyRow = {
   google_maps_link: string | null;
   is_fully_furnished: boolean | null;
   is_bare_shell: boolean | null;
+  is_pet_friendly: boolean | null;
+  is_foreigner_quota: boolean | null;
+  is_tax_registered: boolean | null;
   nearby_places: any | null;
   nearby_transits: any | null;
 
@@ -175,7 +178,10 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       transit_distance_meters,
       google_maps_link,
       is_fully_furnished,
-      is_bare_shell
+      is_bare_shell,
+      is_pet_friendly,
+      is_foreigner_quota,
+      is_tax_registered
     `,
     )
     .eq("status", "ACTIVE");
@@ -350,6 +356,9 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       google_maps_link: typedRow.google_maps_link,
       is_fully_furnished: typedRow.is_fully_furnished,
       is_bare_shell: typedRow.is_bare_shell,
+      is_pet_friendly: typedRow.is_pet_friendly,
+      is_foreigner_quota: typedRow.is_foreigner_quota,
+      is_tax_registered: typedRow.is_tax_registered,
       nearby_places: typedRow.nearby_places,
       nearby_transits: typedRow.nearby_transits,
     };
