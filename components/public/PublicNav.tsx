@@ -346,7 +346,7 @@ export function PublicNav() {
                     <DialogContent
                       onOpenAutoFocus={(e) => e.preventDefault()}
                       overlayClassName="z-150 backdrop-blur-xs bg-black/10 transition-all duration-500"
-                      className="fixed z-150 w-full gap-0 p-0 border-0 duration-500
+                      className="flex flex-col fixed z-150 w-full gap-0 p-0 border-0 duration-500
                       data-[state=open]:animate-in data-[state=closed]:animate-out
                       data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
                       bg-white

@@ -250,7 +250,7 @@ export function renderPropertyTypeField(
             className={cn(
               "flex overflow-x-auto no-scrollbar py-2 px-1 ",
               isMobile
-                ? " snap-x gap-3 "
+                ? "snap-x gap-3"
                 : "grid grid-cols-2 md:grid-cols-3 gap-3",
             )}
           >

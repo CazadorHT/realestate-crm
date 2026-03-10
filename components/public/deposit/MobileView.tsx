@@ -88,7 +88,7 @@ export function DepositMobileView({
       </div>
 
       {/* ── Mobile Form Content Area ── */}
-      <div className="sm:hidden flex-1 flex flex-col min-h-0 bg-white overflow-hidden">
+      <div className="sm:hidden flex-1 flex flex-col min-h-0 bg-white overflow-hidden max-h-full">
         <form
           onSubmit={form.handleSubmit(onSubmit, onInvalid)}
           className="flex flex-col h-full overflow-hidden"
@@ -174,7 +174,7 @@ export function DepositMobileView({
                         </div>
                       )}
                       {currentStep === 3 && (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           {renderPropertyTypeField(form, true, t, onFormStart)}
                           {renderMessageField(form, true, t, onFormStart)}
                         </div>
@@ -188,7 +188,7 @@ export function DepositMobileView({
             {/* ── Fixed Mobile Footer (Outside Scrollable Area) ── */}
             <motion.div
               variants={itemVariants}
-              className="shrink-0 px-4 xs:px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,12px)+16px)] bg-white border-t border-slate-50 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] z-10"
+              className="shrink-0 px-4 xs:px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,20px)+24px)] bg-white border-t border-slate-50 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] z-10"
             >
               <div className="flex items-center justify-between mb-3 px-1">
                 <div className="flex gap-1">
@@ -231,7 +231,9 @@ export function DepositMobileView({
                 </Button>
 
                 <div className="flex-[1.5]">
-                  {currentStep < totalSteps ? (
+                  {currentStep === totalSteps ? (
+                    <SubmitButton isLoading={isLoading} />
+                  ) : (
                     <Button
                       type="button"
                       onClick={nextStep}
@@ -240,8 +242,6 @@ export function DepositMobileView({
                       {t("common.next") || "ถัดไป"}
                       <ChevronRight className="w-3.5 h-3.5 ml-1" />
                     </Button>
-                  ) : (
-                    <SubmitButton isLoading={isLoading} />
                   )}
                 </div>
               </div>
