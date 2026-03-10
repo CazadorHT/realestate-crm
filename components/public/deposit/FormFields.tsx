@@ -248,9 +248,9 @@ export function renderPropertyTypeField(
           </FormLabel>
           <div
             className={cn(
-              "flex overflow-x-auto no-scrollbar py-2 px-1",
+              "flex overflow-x-auto no-scrollbar py-2 px-1 ",
               isMobile
-                ? "-mx-6 px-6 snap-x gap-3"
+                ? " snap-x gap-3 "
                 : "grid grid-cols-2 md:grid-cols-3 gap-3",
             )}
           >
@@ -265,7 +265,7 @@ export function renderPropertyTypeField(
                   onFocus?.();
                 }}
                 className={cn(
-                  "relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[90px] sm:min-w-0 snap-center shrink-0",
+                  "relative  flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[90px] sm:min-w-0 snap-center shrink-0",
                   field.value === option.value
                     ? `border-transparent ${option.activeColor} shadow-[0_8px_20px_-4px_rgba(0,0,0,0.1)] ring-2`
                     : "border-slate-100 bg-slate-50/40 hover:border-slate-200 hover:bg-white text-slate-500",

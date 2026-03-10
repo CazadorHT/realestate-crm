@@ -517,7 +517,7 @@ function PropertyListingContent() {
             {t("property_listing.empty_state")}
           </div>
         ) : (
-          <div className="space-y-8 align-center px-4 :px-0">
+          <div className="space-y-8 align-center ">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 gap-y-6 md:gap-y-8">
               {visibleProperties.map((property, index) => {
                 const hasDiscount =
