@@ -7,7 +7,10 @@ import { getTypeLabel, getListingBadge } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { MdOutlinePets } from "react-icons/md";
-import { useState, useRef, useEffect } from "react";
+import { PiFireFill } from "react-icons/pi";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { updateAIScore } from "@/lib/analytics-utils";
 
 interface PropertyCardImageProps {
   property: PropertyCardProps;
@@ -15,7 +18,7 @@ interface PropertyCardImageProps {
   isFavorite: boolean;
   isAnimating: boolean;
   onFavoriteClick: (e: React.MouseEvent) => void;
-  comparisonBadges: { label: string; color: string }[];
+  comparisonBadges: { label: string; icon: any; color: string }[];
   areaProvince: string;
 }
 
@@ -32,6 +35,12 @@ export function PropertyCardImage({
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Tracking refs (prevent duplicate fires per card instance)
+  const hasTrackedSlide = useRef(false);
+  const hasTrackedDeep = useRef(false);
+  const hasTrackedAll = useRef(false);
+  const viewedImages = useRef(new Set<number>());
+
   const displayImages =
     property.images && property.images.length > 0
       ? property.images
@@ -39,13 +48,55 @@ export function PropertyCardImage({
 
   const badge = getListingBadge(property.listing_type);
 
-  // Handle scroll for pagination dots
+  const trackImageParams = useCallback(() => ({
+    item_id: property.id,
+    item_name: property.title,
+    content_ids: [property.id],
+    content_type: "product",
+  }), [property.id, property.title]);
+
+  // Handle scroll for pagination dots + tracking
   const handleScroll = () => {
     if (scrollRef.current) {
       const { scrollLeft, clientWidth } = scrollRef.current;
       const index = Math.round(scrollLeft / clientWidth);
       if (index !== activeImageIndex) {
         setActiveImageIndex(index);
+
+        // Track viewed images
+        viewedImages.current.add(index);
+        const uniqueCount = viewedImages.current.size;
+
+        // 1) First slide: image_slide
+        if (!hasTrackedSlide.current && index > 0) {
+          hasTrackedSlide.current = true;
+          pushToDataLayer(GTM_EVENTS.IMAGE_SLIDE, {
+            ...trackImageParams(),
+            total_images: displayImages.length,
+          });
+          updateAIScore(2);
+        }
+
+        // 2) Viewed 10+ unique images: image_slide_deep
+        if (!hasTrackedDeep.current && uniqueCount >= 10) {
+          hasTrackedDeep.current = true;
+          pushToDataLayer(GTM_EVENTS.IMAGE_SLIDE_DEEP, {
+            ...trackImageParams(),
+            images_viewed: uniqueCount,
+            total_images: displayImages.length,
+          });
+          updateAIScore(5);
+        }
+
+        // 3) Viewed ALL images: image_slide_all
+        if (!hasTrackedAll.current && uniqueCount >= displayImages.length && displayImages.length > 1) {
+          hasTrackedAll.current = true;
+          pushToDataLayer(GTM_EVENTS.IMAGE_SLIDE_ALL, {
+            ...trackImageParams(),
+            total_images: displayImages.length,
+          });
+          updateAIScore(8);
+        }
       }
     }
   };
@@ -59,6 +110,12 @@ export function PropertyCardImage({
         behavior: "smooth",
       });
     }
+    // Track image click (arrow navigation)
+    pushToDataLayer(GTM_EVENTS.IMAGE_CLICK, {
+      ...trackImageParams(),
+      direction: "prev",
+      current_index: activeImageIndex,
+    });
   };
 
   const scrollNext = (e: React.MouseEvent) => {
@@ -70,6 +127,12 @@ export function PropertyCardImage({
         behavior: "smooth",
       });
     }
+    // Track image click (arrow navigation)
+    pushToDataLayer(GTM_EVENTS.IMAGE_CLICK, {
+      ...trackImageParams(),
+      direction: "next",
+      current_index: activeImageIndex,
+    });
   };
 
   // Translate badge label if needed
@@ -126,17 +189,22 @@ export function PropertyCardImage({
 
       {/* Pagination Dots */}
       {displayImages.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-20 pointer-events-none opacity-100 md:opacity-0 md:group-hover/image:opacity-100 transition-opacity duration-300">
-          {displayImages.map((_, i) => (
-            <div
-              key={i}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                i === activeImageIndex
-                  ? "w-4 bg-white shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
-                  : "w-1 bg-white/60 shadow-sm"
-              }`}
-            />
-          ))}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-20 pointer-events-none opacity-100 xl:opacity-0 xl:group-hover/image:opacity-100 transition-opacity duration-300">
+          {displayImages
+            .slice(
+              Math.floor(activeImageIndex / 10) * 10,
+              Math.floor(activeImageIndex / 10) * 10 + 10
+            )
+            .map((_, i) => (
+              <div
+                key={i}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i === activeImageIndex % 10
+                    ? "w-4 bg-white shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
+                    : "w-1 bg-white/80 shadow-sm"
+                }`}
+              />
+            ))}
         </div>
       )}
 
@@ -145,14 +213,14 @@ export function PropertyCardImage({
         <>
           <button
             onClick={scrollPrev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 opacity-0 group-hover/image:opacity-100 transition-all duration-300 shadow-sm"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 opacity-0 group-hover/image:opacity-100 transition-all duration-300 shadow-sm"
             aria-label="Previous image"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             onClick={scrollNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 opacity-0 group-hover/image:opacity-100 transition-all duration-300 shadow-sm"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 opacity-0 group-hover/image:opacity-100 transition-all duration-300 shadow-sm"
             aria-label="Next image"
           >
             <ChevronRight className="w-5 h-5" />
@@ -163,34 +231,59 @@ export function PropertyCardImage({
       <div className="pointer-events-none absolute inset-0 rounded-t-2xl md:rounded-t-3xl bg-linear-to-t from-black/50 via-transparent to-transparent" />
 
       {/* Badge Overlay Container */}
-      <div className="absolute top-3 left-3 flex flex-wrap gap-2 z-20">
+      <div className="absolute top-3 left-3 flex flex-col items-start gap-2 z-20">
+        {/* Hot Deal Badge */}
+        {/* {((property.original_price && property.price && property.price < property.original_price) ||
+          (property.original_rental_price && property.rental_price && property.rental_price < property.original_rental_price) ||
+          property.meta_keywords?.includes("Hot Deal") || 
+          property.meta_keywords?.includes("HotDeal") || 
+          property.meta_keywords?.includes("hot deal")) && (
+          <div className={`flex items-center bg-linear-to-br from-red-500 to-orange-600 text-white p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
+            <PiFireFill className="w-5 h-5 fill-yellow-200" />
+            <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
+              HOT DEAL
+            </span>
+          </div>
+        )} */}
+
+
         {/* Verified Badge */}
         {property.verified && (
-          <div className="group/verified flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 rounded-full shadow-lg transition-all duration-300 hover:pr-3 cursor-default">
+          <div className={`flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
             <IoShieldCheckmark className="w-5 h-5" />
-            <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 group-hover/verified:max-w-[100px] group-hover/verified:opacity-100 group-hover/verified:ml-1.5">
+            <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
               VERIFIED
             </span>
           </div>
         )}
 
-        {/* Comparison Badges */}
-        {comparisonBadges.map((b, idx) => (
-          <div
-            key={idx}
-            className={`flex items-center px-2 py-1 rounded-md shadow-sm border border-white/20 text-[10px] font-bold ${b.color} backdrop-blur-md`}
-          >
-            {b.label}
+        {/* Pet Friendly Badge */}
+        {property.meta_keywords?.includes("Pet Friendly") && (
+          <div className={`flex items-center bg-white/90 backdrop-blur-md text-orange-600 p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
+            <MdOutlinePets className="w-5 h-5 rotate-25" />
+            <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
+              Pet Friendly
+            </span>
           </div>
-        ))}
+        )}
+
+        {/* Comparison Badges */}
+        {comparisonBadges.map((b, idx) => {
+          const Icon = b.icon;
+          return (
+            <div
+              key={idx}
+              className={`flex items-center ${b.color} backdrop-blur-md p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover/image:pr-3" : ""}`}
+            >
+              <Icon className="w-5 h-5 shrink-0" />
+              <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover/image:max-w-[120px] group-hover/image:opacity-100 group-hover/image:ml-1.5" : ""}`}>
+                {b.label}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
-      {property.meta_keywords?.includes("Pet Friendly") && (
-        <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md text-orange-600 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm z-20">
-          <MdOutlinePets className="w-4 h-4 rotate-25" />
-          <span>Pet Friendly</span>
-        </div>
-      )}
 
       {/* Favorite Button */}
       <button

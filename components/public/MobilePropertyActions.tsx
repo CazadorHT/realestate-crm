@@ -35,10 +35,10 @@ export function MobilePropertyActions({
 }: MobilePropertyActionsProps) {
   const { t, language } = useLanguage();
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 p-4 pb-8 sm:pb-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] lg:hidden animate-in slide-in-from-bottom-full duration-500">
-      <div className="flex items-center gap-3 max-w-lg mx-auto">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] xl:hidden animate-in slide-in-from-bottom-full duration-500">
+      <div className="flex items-center gap-4 max-w-lg md:max-w-2xl lg:max-w-4xl mx-auto">
         {/* Agent Info (Mini) */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 md:mr-12 lg:mr-20">
           <Avatar className="h-10 w-10 border border-slate-200">
             <AvatarImage src={agentImage || ""} alt={agentName || "Agent"} />
             <AvatarFallback className="bg-slate-100 text-slate-500 text-xs font-bold">
@@ -49,7 +49,7 @@ export function MobilePropertyActions({
             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
               {t("property.managed_by")}
             </div>
-            <div className="text-xs font-bold text-slate-900 truncate max-w-[80px]">
+            <div className="text-xs font-bold text-slate-900 truncate max-w-[80px] md:max-w-md">
               {agentName || "Admin"}
             </div>
           </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Cookie, Settings, ShieldCheck, BarChart3, Target, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { cn } from "@/lib/utils";
 
@@ -16,8 +17,42 @@ interface CookiePreferences {
 export function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { t } = useLanguage();
+  const pathname = usePathname();
+
+  // Detect open dialogs/sheets (Radix UI/Shadcn)
+  useEffect(() => {
+    const checkModal = () => {
+      const styles = window.getComputedStyle(document.body);
+      // Radix UI, Shadcn, and headless UI common indicators
+      const isLocked = styles.overflow === "hidden" || 
+                       styles.pointerEvents === "none" ||
+                       document.body.hasAttribute("data-radix-scroll-lock") ||
+                       document.body.getAttribute("data-state") === "open" ||
+                       document.querySelectorAll('[data-radix-portal], [role="dialog"]').length > 0;
+      setIsModalOpen(isLocked);
+    };
+
+    const observer = new MutationObserver(checkModal);
+    observer.observe(document.body, { 
+      attributes: true, 
+      childList: true, // Watch for portals being added to body
+      subtree: false,
+      attributeFilter: ["style", "data-radix-scroll-lock", "data-state", "class"] 
+    });
+
+    // Initial check
+    checkModal();
+
+    return () => observer.disconnect();
+  }, []);
   
+  // Decide bottom position based on page
+  const normalizedPath = pathname?.replace(/^\/(th|en|cn)/, "") || "/";
+  const isPropertyRelated = normalizedPath.startsWith("/properties/");
+  const bottomClass = isPropertyRelated ? "bottom-28 md:bottom-22 xl:bottom-6" : "bottom-6";
+
   const [preferences, setPreferences] = useState<CookiePreferences>({
     necessary: true,
     analytics: true,
@@ -77,22 +112,25 @@ export function CookieConsent() {
   return (
     <>
       {/* Floating Settings Button - Permanent way to withdraw/change consent */}
-      {!isVisible && (
+      {!isVisible && !isModalOpen && (
         <button
           onClick={handleOpenSettings}
-          className="fixed bottom-6 left-6 z-90 h-12 w-12 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md border border-slate-200 shadow-lg text-slate-600 hover:text-blue-600 hover:scale-110 transition-all duration-300 group"
+          className={cn(
+            "fixed left-4 z-90 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md border border-slate-200 shadow-lg text-slate-600 hover:text-blue-600 hover:scale-110 transition-all duration-300 group",
+            bottomClass
+          )}
           aria-label="Manage Cookie Settings"
         >
-          <Cookie className="h-6 w-6" />
-          <div className="absolute left-14 bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all whitespace-nowrap pointer-events-none uppercase tracking-wider">
+          <Cookie className="h-5 w-5" />
+          <div className="absolute left-12 bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all whitespace-nowrap pointer-events-none uppercase tracking-wider">
             {t("common.cookie_consent.settings")}
           </div>
         </button>
       )}
 
-      {isVisible && (
-        <div className="fixed bottom-0 left-0 right-0 z-100 p-4 md:p-6 lg:p-8 animate-in slide-in-from-bottom-full duration-700 ease-out">
-          <div className="max-w-7xl px-4 md:px-6 lg:px-8 mx-auto">
+      {isVisible && !isModalOpen && (
+        <div className="fixed bottom-0 left-0 right-0 z-100 p-4 md:p-6 lg:p-8 pb-[max(1rem,env(safe-area-inset-bottom))] animate-in slide-in-from-bottom-full duration-700 ease-out">
+          <div className="max-w-7xl px-0 md:px-6 lg:px-8 mx-auto">
             <div className={cn(
               "bg-white/90 backdrop-blur-xl border border-slate-200/50 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-2xl overflow-hidden transition-all duration-500",
               showSettings ? "max-h-[80vh] overflow-y-auto" : "max-h-96"

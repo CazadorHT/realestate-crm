@@ -52,6 +52,14 @@ export const GTM_EVENTS = {
   EXPAND_DESCRIPTION: "expand_description", // กด "อ่านเพิ่มเติม" ในส่วนรายละเอียด
   CLICK_MAP_EXTERNAL: "click_map_external", // คลิกปุ่มเปิด Google Maps ไปแอปภายนอก
 
+  // Image Engagement Events (เหตุการณ์การเลื่อนดูรูปภาพบนการ์ด)
+  IMAGE_SLIDE: "image_slide", // เลื่อนดูรูปภาพบนการ์ด (ครั้งแรกที่เริ่มสไลด์)
+  IMAGE_SLIDE_DEEP: "image_slide_deep", // เลื่อนดูรูปเกิน 10 รูป (สนใจมาก)
+  IMAGE_SLIDE_ALL: "image_slide_all", // เลื่อนดูรูปครบทุกรูป (สนใจสูงสุด)
+  IMAGE_CLICK: "image_click", // คลิกรูปบนการ์ด (เข้าดูรายละเอียด)
+  CARD_CLICK: "card_click", // คลิกการ์ดเพื่อเข้าดูรายละเอียดทรัพย์
+  CARD_IMPRESSION: "card_impression", // การ์ดปรากฏบนหน้าจอผู้ใช้ (Viewable Impression)
+
   // New Events (เหตุการณ์เพิ่มเติม)
   CALCULATE_MORTGAGE: "calculate_mortgage", // คำนวณเงินกู้
   SEARCH_RESULT_CLICK: "search_result_click", // คลิกทรัพย์จากรายการค้นหา

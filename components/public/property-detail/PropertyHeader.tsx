@@ -405,7 +405,7 @@ export function PropertyHeader({
         className,
       )}
     >
-      <div className="max-w-screen-2xl px-4 sm:px-6 lg:px-8  mx-auto">
+      <div className="max-w-screen-2xl   mx-auto">
         <div className="flex flex-col gap-3 md:gap-4">
           {!hideBreadcrumbs && (
             <div className="mb-2">

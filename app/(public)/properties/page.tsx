@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function PublicPropertiesPage() {
   return (
     <>
-      <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50 pt-(--nav-offset,64px) transition-[padding-top] duration-500 ease-in-out">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50 pt-(--nav-offset,64px) transition-[padding-top] duration-300 ease-in-out">
         <div className="max-w-screen-2xl mx-auto px-5 md:px-6 lg:px-8 py-4">
           <AppBreadcrumbs />
         </div>

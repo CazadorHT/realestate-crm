@@ -507,7 +507,7 @@ export function PropertySearchPage({
 
       {/* Results Grid */}
       <div className="max-w-screen-2xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 md:mb-10 flex items-center justify-between">
           <div className="text-slate-600 text-sm">
             {t("search.found_total")}{" "}
             <span className="font-bold text-blue-600">{filtered.length}</span>{" "}
@@ -540,7 +540,7 @@ export function PropertySearchPage({
           <>
             <motion.div 
               layout
-              className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-12"
+              className="grid gap-6  md:gap-y-8 lg:gap-x-4   md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-12"
             >
               <AnimatePresence mode="popLayout">
                 {paginatedProperties.map((item, i) => (

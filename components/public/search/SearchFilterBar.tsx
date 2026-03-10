@@ -214,10 +214,10 @@ export function SearchFilterBar({
   };
 
   return (
-    <div className="bg-white border-b border-slate-100 sticky top-(--nav-offset,64px) z-30 shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-[top] duration-500 ease-in-out">
+    <div className="bg-white border-b border-slate-100 sticky top-(--nav-offset,64px) z-30 shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-[top] duration-300 ease-in-out">
       <div className="max-w-screen-2xl mx-auto p-4 sm:px-6 lg:px-8">
         {/* Mobile View: Search + Filter Sheet */}
-        <div className="xl:hidden flex gap-3 mb-4">
+        <div className="xl:hidden flex gap-3 my-4">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <Input
@@ -238,7 +238,7 @@ export function SearchFilterBar({
             </SheetTrigger>
             <SheetContent
               side="bottom"
-              className="h-[80vh] rounded-t-2xl flex flex-col p-0 bg-slate-50 "
+              className="h-[60vh] rounded-t-2xl flex flex-col p-0 bg-slate-50 "
             >
            
               <SheetHeader className="px-6 py-4 border-b border-slate-100 bg-white text-slate-900 rounded-t-4xl">

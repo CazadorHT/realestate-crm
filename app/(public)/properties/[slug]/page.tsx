@@ -394,7 +394,7 @@ export default async function PublicPropertyDetailPage(props: {
           />
 
           {/* 3. Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] xl:grid-cols-[2fr_1fr] gap-6 md:gap-10 lg:gap-16 mb-6 md:mb-10">
+          <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-6 md:gap-10 lg:gap-16 mb-6 md:mb-10">
             {/* Left Content */}
             <div className="space-y-6 md:space-y-10">
               {/* Specs Grid */}
@@ -440,30 +440,34 @@ export default async function PublicPropertyDetailPage(props: {
             </div>
 
             {/* Right Sidebar (Sticky) */}
-            <aside className="relative space-y-6">
-              {/* [NEW] Suitability / Rent vs Buy */}
-              <PropertySuitability
-                listingType={data.listing_type || "SALE"}
-                price={data.price}
-                rentalPrice={data.rental_price}
-                propertyType={data.property_type}
-              />
+            <aside className="relative flex flex-col md:flex-row xl:flex-col gap-6 md:items-stretch w-full">
+              <div className="flex-1 min-w-0 w-full flex flex-col">
+                {/* [NEW] Suitability / Rent vs Buy */}
+                <PropertySuitability
+                  listingType={data.listing_type || "SALE"}
+                  price={data.price}
+                  rentalPrice={data.rental_price}
+                  propertyType={data.property_type}
+                />
+              </div>
 
-              <AgentSidebar
-                agentName={agent?.full_name}
-                agentImage={agent?.avatar_url}
-                agentPhone={agent?.phone}
-                agentLine={agent?.line_id}
-                isVerified={true}
-                propertyId={data.id}
-                propertyTitle={data.title}
-                property={{
-                  title: data.title,
-                  title_en: data.title_en,
-                  title_cn: data.title_cn,
-                }}
-                shareUrl={shareUrl}
-              />
+              <div className="flex-1 min-w-0 w-full flex flex-col">
+                <AgentSidebar
+                  agentName={agent?.full_name}
+                  agentImage={agent?.avatar_url}
+                  agentPhone={agent?.phone}
+                  agentLine={agent?.line_id}
+                  isVerified={true}
+                  propertyId={data.id}
+                  propertyTitle={data.title}
+                  property={{
+                    title: data.title,
+                    title_en: data.title_en,
+                    title_cn: data.title_cn,
+                  }}
+                  shareUrl={shareUrl}
+                />
+              </div>
             </aside>
           </div>
 

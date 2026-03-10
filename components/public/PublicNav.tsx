@@ -31,11 +31,35 @@ export function PublicNav() {
   const [isDepositSuccess, setIsDepositSuccess] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollPos = useRef(typeof window !== "undefined" ? window.scrollY : 0);
+  const currentOffset = useRef(64);
 
   // Hook for translation
   const { language, setLanguage, t } = useLanguage();
   const settings = useSiteConfig();
   const siteName = settings.site_name || siteConfig.name;
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [mobileMenuOpen]);
+
+  // Synchronize CSS variable with visibility state
+  useEffect(() => {
+    const updateNavOffset = (val: number) => {
+      if (currentOffset.current !== val) {
+        document.documentElement.style.setProperty("--nav-offset", `${val}px`);
+        currentOffset.current = val;
+      }
+    };
+    updateNavOffset(isVisible ? 64 : 0);
+  }, [isVisible]);
 
   useEffect(() => {
     // Initial load
@@ -50,34 +74,38 @@ export function PublicNav() {
     // Scroll listener
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      setScrolled(currentScrollY > 10);
+      const scrollDelta = currentScrollY - lastScrollPos.current;
+      
+      // Update scrolled state (shadow)
+      setScrolled((prev) => {
+        const isCurrentlyScrolled = currentScrollY > 20;
+        return prev === isCurrentlyScrolled ? prev : isCurrentlyScrolled;
+      });
 
       // Only hide/show on scroll for /properties page
-      if (pathname === "/properties") {
-        if (currentScrollY > lastScrollPos.current && currentScrollY > 80) {
-          setIsVisible(false);
-          document.documentElement.style.setProperty("--nav-offset", "0px");
-        } else {
-          setIsVisible(true);
-          document.documentElement.style.setProperty("--nav-offset", "64px");
+      if (pathname === "/properties" && !mobileMenuOpen) {
+        // Only trigger changes if scrolled more than a small threshold
+        if (Math.abs(scrollDelta) > 5) {
+          if (currentScrollY > 100 && scrollDelta > 0) {
+            // Scrolling down & passed header
+            setIsVisible(false);
+          } else if (scrollDelta < -10 || currentScrollY < 20) {
+            // Scrolling up significantly or back to top
+            setIsVisible(true);
+          }
         }
       } else {
         setIsVisible(true);
-        document.documentElement.style.setProperty("--nav-offset", "64px");
       }
       lastScrollPos.current = currentScrollY;
     };
 
-    // Initialize CSS variable
-    document.documentElement.style.setProperty("--nav-offset", "64px");
-
     window.addEventListener("favorite-updated", handleFavoriteUpdate);
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener("favorite-updated", handleFavoriteUpdate);
       window.removeEventListener("scroll", handleScroll);
-      document.documentElement.style.removeProperty("--nav-offset");
     };
   }, [pathname]);
 
@@ -150,16 +178,26 @@ export function PublicNav() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
+      {/* Mobile Menu Backdrop (Focus effect) */}
       <div
-        className={`border-b fixed border-b-slate-200 top-0 w-full z-100 transition-all duration-500 ease-in-out ${
+        className={`xl:hidden fixed inset-0 bg-black/30 backdrop-blur-lg z-90 transition-opacity duration-300 ease-in-out ${
+          mobileMenuOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMobileMenuOpen(false)}
+      />
+
+      <div
+        className={`fixed top-0 w-full z-100 transition-transform duration-300 ease-in-out will-change-transform ${
           isVisible ? "translate-y-0" : "-translate-y-full"
-        } ${
-          scrolled
-            ? "bg-white shadow-lg border-slate-200"
-            : "bg-white border-slate-200"
         }`}
       >
-        <nav>
+        <nav
+          className={`border-b border-b-slate-200 transition-all duration-300 ${
+            scrolled ? "bg-white/95 backdrop-blur-md shadow-lg" : "bg-white"
+          }`}
+        >
           <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               {/* Logo */}
@@ -446,15 +484,7 @@ export function PublicNav() {
             </div>
           </div>
 
-          {/* Mobile Menu Backdrop */}
-          <div
-            className={`xl:hidden fixed inset-0 top-16 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
-              mobileMenuOpen
-                ? "opacity-100 pointer-events-auto"
-                : "opacity-0 pointer-events-none"
-            }`}
-            onClick={() => setMobileMenuOpen(false)}
-          />
+          {/* Mobile Menu Backdrop moved to top-level for focus effect */}
 
           {/* Mobile Menu */}
           <div

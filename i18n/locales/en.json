@@ -796,19 +796,19 @@
     "pdpa_note": "Note: This agreement complies with the Personal Data Protection Act B.E. 2562 (PDPA)."
   },
   "property_types": {
-    "house": "🏠 House",
-    "condo": "🏢 Condo",
-    "townhome": "🏡 Townhome",
-    "land": "🌳 Land",
-    "commercial": "🏢 Commercial",
-    "office_building": "🏢 Office Building",
-    "office": "🏬 Office",
-    "villa": "🏝️ Villa",
-    "pool_villa": "🌊 Pool Villa",
-    "other": "🔍 Other",
-    "warehouse": "🏭 Warehouse",
-    "factory": "🏭 Factory",
-    "commercial_building": "🏦 Commercial Building"
+    "house": "House",
+    "condo": "Condo",
+    "townhome": "Townhome",
+    "land": "Land",
+    "commercial": "Commercial",
+    "office_building": "Office Building",
+    "office": "Office",
+    "villa": "Villa",
+    "pool_villa": "Pool Villa",
+    "other": "Other",
+    "warehouse": "Warehouse",
+    "factory": "Factory",
+    "commercial_building": "Commercial Building"
   },
   "property": {
     "status": {

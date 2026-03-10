@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { CheckSquare, Square, Sparkles } from "lucide-react";
 import { PiFireFill } from "react-icons/pi";
-import { useEffect, useState, MouseEvent } from "react";
+import { 
+  HiArrowTrendingDown, 
+  HiArrowsPointingOut, 
+  HiOutlineSparkles 
+} from "react-icons/hi2";
+import { useEffect, useState, useRef, useCallback, MouseEvent } from "react";
 import { toggleCompareId, readCompareIds } from "@/lib/compare-store";
 import { toggleFavoriteId, readFavoriteIds } from "@/lib/favorite-store";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -179,7 +184,8 @@ export function PropertyCard({
     if (currentPrice && comparePrice && currentPrice < comparePrice) {
       comparisonBadges.push({
         label: t("common.save_more"),
-        color: "bg-green-100 text-green-700",
+        icon: HiArrowTrendingDown,
+        color: "bg-green-600/90 text-white",
       });
     }
 
@@ -190,7 +196,8 @@ export function PropertyCard({
     ) {
       comparisonBadges.push({
         label: t("common.larger_area"),
-        color: "bg-blue-100 text-blue-700",
+        icon: HiArrowsPointingOut,
+        color: "bg-[#4285F4]/90 text-white", // Matches verified blue
       });
     }
 
@@ -201,7 +208,8 @@ export function PropertyCard({
     ) {
       comparisonBadges.push({
         label: t("common.newer"),
-        color: "bg-purple-100 text-purple-700",
+        icon: HiOutlineSparkles,
+        color: "bg-purple-600/90 text-white",
       });
     }
   }
@@ -211,8 +219,52 @@ export function PropertyCard({
     (property.original_rental_price && property.rental_price && property.rental_price < property.original_rental_price) ||
     property.meta_keywords?.includes("Hot Deal") || property.meta_keywords?.includes("HotDeal") || property.meta_keywords?.includes("hot deal");
 
+  const cardRef = useRef<HTMLDivElement>(null);
+  const hasTrackedImpression = useRef(false);
+
+  // Card Impression tracking via IntersectionObserver
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasTrackedImpression.current) {
+          hasTrackedImpression.current = true;
+          pushToDataLayer(GTM_EVENTS.CARD_IMPRESSION, {
+            item_id: property.id,
+            item_name: property.title,
+            content_ids: [property.id],
+            content_type: "product",
+            property_type: property.property_type,
+            listing_type: property.listing_type,
+            price: property.listing_type === "RENT" ? property.rental_price : property.price,
+          });
+        }
+      },
+      { threshold: 0.5 }, // 50% ของการ์ดต้องเห็นบนหน้าจอ
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [property.id, property.title, property.property_type, property.listing_type, property.price, property.rental_price]);
+
+  // Card Click tracking
+  const handleCardClick = useCallback(() => {
+    pushToDataLayer(GTM_EVENTS.CARD_CLICK, {
+      item_id: property.id,
+      item_name: property.title,
+      content_ids: [property.id],
+      content_type: "product",
+      property_type: property.property_type,
+      listing_type: property.listing_type,
+      price: property.listing_type === "RENT" ? property.rental_price : property.price,
+    });
+    updateAIScore(5);
+  }, [property.id, property.title, property.property_type, property.listing_type, property.price, property.rental_price]);
+
   return (
-    <div className="group relative isolate rounded-2xl sm:rounded-2xl md:rounded-3xl w-full max-w-[350px] mx-auto bg-white shadow-md h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 before:content-[''] before:absolute before:inset-0 before:rounded-2xl sm:before:rounded-2xl md:before:rounded-3xl before:ring-inset before:pointer-events-none before:z-10">
+    <div ref={cardRef} className="group relative isolate rounded-2xl sm:rounded-2xl md:rounded-3xl w-full max-w-[360px] md:max-w-none mx-auto bg-white shadow-md h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 before:content-[''] before:absolute before:inset-0 before:rounded-2xl sm:before:rounded-2xl md:before:rounded-3xl before:ring-inset before:pointer-events-none before:z-10 cursor-pointer">
       <style jsx global>{`
         @keyframes fire-flicker {
           0% { transform: scale(1) rotate(-12deg) translateZ(0); }
@@ -226,14 +278,14 @@ export function PropertyCard({
         }
       `}</style>
       {isHotDeal && (
-        <div className="absolute -top-5 -left-3 md:-top-7 md:-left-5 z-40 hidden md:block select-none pointer-events-none transform-gpu will-change-[transform,opacity]">
+        <div className="absolute -top-5 -left-3 md:-top-7 md:-left-5 z-40 block select-none pointer-events-none transform-gpu will-change-[transform,opacity]">
           <div className="relative">
             {/* Pulsing Glow Background */}
             <div className="absolute inset-0 bg-red-500 rounded-full blur-md animate-[glow-pulse_3s_infinite_ease-in-out] will-change-[transform,opacity]"></div>
             
             {/* The Badge Itself */}
             <div className="relative bg-linear-to-br from-red-500 to-orange-600 text-white p-2 md:p-2.5 rounded-full shadow-[0_4px_16px_rgba(239,68,68,0.4)] border border-white/20 transform animate-[fire-flicker_4s_infinite_ease-in-out] group-hover:animate-none group-hover:rotate-0 group-hover:scale-110 transition-all duration-700 ease-out will-change-transform">
-              <PiFireFill className="h-5 w-5 md:h-6 md:w-6 fill-yellow-200 drop-shadow-[0_0_8px_rgba(254,240,138,0.6)]" />
+              <PiFireFill className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 fill-yellow-200 drop-shadow-[0_0_8px_rgba(254,240,138,0.6)]" />
             </div>
           </div>
         </div>
@@ -242,6 +294,7 @@ export function PropertyCard({
         href={`/properties/${property.slug || property.id}`}
         className="flex flex-col h-full focus:outline-none overflow-hidden rounded-2xl sm:rounded-2xl md:rounded-3xl"
         aria-label={`${t("common.view_all")} ${property.title}`}
+        onClick={handleCardClick}
       >
         <PropertyCardImage
           property={property}

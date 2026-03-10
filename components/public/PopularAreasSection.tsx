@@ -110,7 +110,7 @@ export function PopularAreasSection() {
     <section className="pt-8 bg-white">
       <div className="max-w-screen-2xl mx-auto sm:px-4 md:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 md:gap-12 py-6 mb-4">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 md:gap-12 py-6 mb-4 px-4">
           <div
             className="space-y-4 px-4 md:px-0 flex-1 md:max-w-2xl lg:max-w-6xl"
             data-aos="fade-right"
@@ -128,7 +128,7 @@ export function PopularAreasSection() {
             </div>
 
             {/* SEO-Optimized Gradient Heading */}
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
               {t("home.popular_areas.subtitle")
                 .split("|")
                 .map((part, i) =>
@@ -146,7 +146,7 @@ export function PopularAreasSection() {
             </h2>
 
             {/* SEO-Enhanced Description with Keywords */}
-            <p className="text-slate-600 text-base md:text-lg leading-relaxed">
+            <p className="text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed">
               {t("home.popular_areas.description")}
             </p>
           </div>
@@ -174,13 +174,13 @@ export function PopularAreasSection() {
         </div>
 
         {/* Content Area - Fixed height to prevent layout shift */}
-        <div className="min-h-[250px] px-4 md:px-0">
+        <div className="min-h-[250px] relative mx-4">
           {isLoading ? (
-            <div className="flex gap-4 overflow-hidden py-4 ">
+            <div className="flex gap-4 overflow-hidden py-4 px-4 md:px-0">
               {LOADING.map((_, i) => (
                 <div
                   key={i}
-                  className="h-[180px] w-[260px] shrink-0 rounded-4xl overflow-hidden"
+                  className="h-[160px] sm:h-[180px] w-[220px] sm:w-[260px] shrink-0 rounded-4xl overflow-hidden"
                 >
                   <div className="h-full w-full animate-shimmer bg-slate-100" />
                 </div>
@@ -205,7 +205,7 @@ export function PopularAreasSection() {
               onMouseLeave={handleMouseLeave}
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}
-              className={`flex w-full gap-5 overflow-x-auto pb-8   py-4 snap-x snap-mandatory scrollbar-none transition-all! ${
+              className={`flex w-full gap-4 sm:gap-5 overflow-x-auto pb-8 pt-4 px-4 md:px-0  snap-x snap-mandatory scrollbar-none transition-all!  ${
                 isDragging ? "cursor-grabbing scale-[0.99]" : "cursor-grab"
               }`}
             >
@@ -222,7 +222,7 @@ export function PopularAreasSection() {
                   }}
                   data-aos="fade-up"
                   data-aos-delay={index * 100}
-                  className="group w-[260px] relative isolate shrink-0 rounded-4xl overflow-hidden bg-slate-900 shadow-sm hover:shadow-xl  hover:-translate-y-2 transition-all! duration-500 text-left snap-start"
+                  className="group w-[220px] sm:w-[260px] relative isolate shrink-0 rounded-xl sm:rounded-4xl overflow-hidden bg-slate-900 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all! duration-500 text-left snap-start "
                 >
                   {/* Image & Overlays */}
                   <div className="absolute inset-0 -z-10">
@@ -238,10 +238,10 @@ export function PopularAreasSection() {
                     <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/10 to-transparent opacity-90" />
                   </div>
 
-                  <div className="relative p-6 h-[180px] flex flex-col justify-end">
-                    {/* ชื่อทำเล: ขยับขึ้นเล็กน้อยเมื่อ Hover เพื่อเปิดทางให้ Badge */}
-                    <div className="transform transition-transform! duration-500! group-hover:-translate-y-10 ">
-                      <h3 className="text-white text-2xl font-semibold tracking-tight drop-shadow-lg">
+                  <div className="relative p-5 sm:p-6 h-[160px] sm:h-[180px] flex flex-col justify-end">
+                    {/* ชื่อทำเล: ขยับขึ้นเสมอในมือถือ และขยับเมื่อ Hover ใน Desktop */}
+                    <div className="transform transition-transform! duration-500! -translate-y-10 lg:translate-y-0 lg:group-hover:-translate-y-10">
+                      <h3 className="text-white text-xl sm:text-2xl font-semibold tracking-tight drop-shadow-lg">
                         {getLocaleValue(
                           {
                             name: it.popular_area,
@@ -253,15 +253,15 @@ export function PopularAreasSection() {
                         )}
                       </h3>
                     </div>
-                    {/* แถวข้อมูล: ปรับให้ดูแพงด้วย Glassmorphism */}
-                    <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all! duration-300! ">
-                      <p className="bg-white/30 backdrop-blur-md border border-white/30 text-white/80 text-[11px] font-medium px-3 py-1.5 rounded-full shadow-xl">
+                    {/* แถวข้อมูล: แสดงเลยในมือถือ และแสดงเมื่อ Hover ใน Desktop */}
+                    <div className="absolute bottom-5 sm:bottom-6 left-5 sm:left-6 right-5 sm:right-6 flex items-center justify-between opacity-100 lg:opacity-0 lg:group-hover:opacity-100 translate-y-0 lg:translate-y-2 lg:group-hover:translate-y-0 transition-all! duration-300! gap-4">
+                      <p className="bg-white/30 backdrop-blur-md border border-white/30 text-white/90 text-[10px] sm:text-[11px] font-medium px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-xl truncate max-w-[60%]">
                         {it.count.toLocaleString()}{" "}
                         {t("property_listing.found_suffix")}
                       </p>
-                      <div className="flex items-center gap-1 text-white text-xs font-semibold uppercase tracking-wider">
-                        {t("home.popular_areas.explore")}
-                        <ArrowRight className="h-3 w-3 transition-transform! group-hover:translate-x-1" />
+                      <div className="flex items-center gap-1 text-white text-[10px] sm:text-xs font-semibold uppercase tracking-wider shrink-0">
+                        <span className="hidden sm:inline truncate max-w-[80px]">{t("home.popular_areas.explore")}</span>
+                        <ArrowRight className="h-3 w-3 shrink-0 transition-transform! lg:group-hover:translate-x-1" />
                       </div>
                     </div>
                   </div>

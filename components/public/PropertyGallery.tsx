@@ -21,6 +21,7 @@ import {
   PawPrint,
 } from "lucide-react";
 import { IoShieldCheckmark } from "react-icons/io5";
+import { PiFireFill } from "react-icons/pi";
 import { cn } from "@/lib/utils";
 import {
   useLanguage,
@@ -139,6 +140,7 @@ export function PropertyGallery({
 
   const [open, setOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [inlineActiveIndex, setInlineActiveIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   // Sort: Cover first
@@ -205,66 +207,79 @@ export function PropertyGallery({
 
   return (
     <>
-      <div className="relative group">
-        {/* Floating Hot Badge Overlay */}
-        {isHot && (
-          <div className="absolute -top-3 -left-6 md:-top-5 md:-left-5 z-30 pointer-events-none">
-            <div className="relative">
-              <div className="absolute inset-0 bg-red-500 blur-md opacity-50 rounded-full animate-pulse"></div>
-              <div className="relative bg-linear-to-br from-red-500 to-orange-600 text-white p-1.5 md:p-2.5 rounded-full shadow-[0_4px_12px_rgba(239,68,68,0.4)] transform -rotate-12 group-hover:rotate-0 group-hover:-translate-y-1 transition-all duration-300 scale-100 md:scale-110">
-                <Sparkles className="h-4 w-4 md:h-6 md:w-6 fill-yellow-200" />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Verified Badge - Icon only with hover text */}
-        {verified && (
-          <div className="group/verified absolute top-3 left-0 md:top-4 md:left-6 z-40 flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
-            {/* Icon stays visible */}
-            <IoShieldCheckmark className="w-4 h-4 md:w-5 md:h-5" />
-
-            {/* Text expands from 0 width on hover */}
-            <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 group-hover/verified:max-w-[100px] group-hover/verified:opacity-100 group-hover/verified:ml-2">
-              VERIFIED
-            </span>
-          </div>
-        )}
-          {petFriendly && (
-            <div className="group/pet absolute top-3 left-0 md:top-16 md:left-6 z-40 flex items-center bg-orange-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
-              <MdOutlinePets className="w-4 h-4 md:w-5 md:h-5 text-white rotate-25" />
-              <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 group-hover/pet:max-w-[100px] group-hover/pet:opacity-100 group-hover/pet:ml-2">
-                PET FRIENDLY
+      <div className="relative group/gallery">
+        {/* Badge Overlay Container */}
+        <div className="absolute top-3 left-0 md:top-6 md:left-6 flex flex-col gap-2 z-40">
+          {/* Hot Deal Badge */}
+          {isHot && (
+            <div className={`flex items-center bg-linear-to-br from-red-500 to-orange-600 text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 pr-4 xl:pr-1.5  xl:group-hover/gallery:pr-4 cursor-default ${inlineActiveIndex !== 0 ? "pr-1.5!" : ""}`}>
+              <PiFireFill className="w-4 h-4 md:w-5 md:h-5 fill-yellow-200" />
+              <span className={`opacity-100 max-w-[150px] ml-2 xl:max-w-0 xl:opacity-0 overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 ${inlineActiveIndex !== 0 ? "max-w-0! opacity-0! ml-0!" : ""}`}>
+                HOT DEAL
               </span>
             </div>
           )}
-        {/* <div className="absolute bottom-3 left-0 md:bottom-0 md:left-6 z-40 flex gap-2">
-          {petFriendly && (
-            <div className="group/pet absolute bottom-0 left-0 md:bottom-4 md:left-0 z-40 flex items-center bg-orange-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 hover:pr-4 cursor-default">
-              <MdOutlinePets className="w-4 h-4 md:w-5 md:h-5 text-white rotate-25" />
-              <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 group-hover/pet:max-w-[100px] group-hover/pet:opacity-100 group-hover/pet:ml-2">
-                PET FRIENDLY
+
+          {/* Verified Badge */}
+          {verified && (
+            <div className={`flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 pr-4 xl:pr-1.5 xl:group-hover/gallery:pr-4 cursor-default ${inlineActiveIndex !== 0 ? "pr-1.5!" : ""}`}>
+              <IoShieldCheckmark className="w-4 h-4 md:w-5 md:h-5" />
+              <span className={`opacity-100 max-w-[150px] ml-2 xl:max-w-0 xl:opacity-0 overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 ${inlineActiveIndex !== 0 ? "max-w-0! opacity-0! ml-0!" : ""}`}>
+                VERIFIED
               </span>
             </div>
           )}
-        </div> */}
+
+          {/* Pet Friendly Badge */}
+          {petFriendly && (
+            <div className={`flex items-center bg-white/90 backdrop-blur-md text-orange-600 p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 pr-4 xl:pr-1.5 xl:group-hover/gallery:pr-4  cursor-default ${inlineActiveIndex !== 0 ? "pr-1.5!" : ""}`}>
+              <MdOutlinePets className="w-4 h-4 md:w-5 md:h-5 rotate-25" />
+              <span className={`opacity-100 max-w-[150px] ml-2 xl:max-w-0 xl:opacity-0  overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase ${inlineActiveIndex !== 0 ? "max-w-0! opacity-0! ml-0!" : ""}`}>
+                Pet Friendly
+              </span>
+            </div>
+          )}
+        </div>
 
         {/* Mobile Carousel (Visible on Mobile and Small Tablets Only) */}
         <div className="lg:hidden relative h-[320px] sm:h-[320px] md:h-[450px] lg:h-[450px] -mx-9 sm:mx-0 rounded-none sm:rounded-xl overflow-hidden">
-          <div className="absolute top-3 right-3 z-20">
-            <Badge className="bg-black/60 text-white hover:bg-black/70 border-none backdrop-blur-md text-[10px] px-2 py-1">
+          <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
+            <Badge className="bg-black/40 text-white hover:bg-black/70 border-none backdrop-blur-md text-[10px] px-2 py-1">
               <ImageIcon className="w-3 h-3 mr-1" />
               {sortedImages.length} {t("common.images")}
             </Badge>
           </div>
 
+          {/* Pagination Dots */}
+          {sortedImages.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-20 pointer-events-none opacity-100 xl:opacity-0 xl:group-hover/gallery:opacity-100 transition-opacity duration-300">
+              {sortedImages
+                .slice(
+                  Math.floor(inlineActiveIndex / 10) * 10,
+                  Math.floor(inlineActiveIndex / 10) * 10 + 10
+                )
+                .map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1 rounded-full transition-all duration-300 ${
+                      i === inlineActiveIndex % 10
+                        ? "w-4 bg-white shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
+                        : "w-1 bg-white/80 shadow-sm"
+                    }`}
+                  />
+                ))}
+            </div>
+          )}
+
           <div
             className="flex overflow-x-auto snap-x snap-mandatory h-full w-full no-scrollbar  "
             onScroll={(e) => {
-              // Optional: Update current index for a dot indicator if we added one
-              // const scrollLeft = e.currentTarget.scrollLeft;
-              // const width = e.currentTarget.offsetWidth;
-              // const newIndex = Math.round(scrollLeft / width);
+              const scrollLeft = e.currentTarget.scrollLeft;
+              const width = e.currentTarget.offsetWidth;
+              const newIndex = Math.round(scrollLeft / width);
+              if (newIndex !== inlineActiveIndex) {
+                setInlineActiveIndex(newIndex);
+              }
             }}
           >
             {sortedImages.map((img, idx) => (

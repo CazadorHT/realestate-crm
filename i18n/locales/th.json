@@ -798,19 +798,19 @@
     "pdpa_note": "หมายเหตุ: ข้อตกลงนี้เป็นไปตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)"
   },
   "property_types": {
-    "house": "🏠 บ้าน",
-    "condo": "🏢 คอนโด",
-    "townhome": "🏡 ทาวน์โฮม",
-    "land": "🌳 ที่ดิน",
-    "commercial": "🏢 อาคารพาณิชย์",
-    "office_building": "🏢 สำนักงานออฟฟิศ",
-    "office": "🏬 สำนักงานออฟฟิศ",
-    "villa": "🏝️ บ้านวิลล่า",
-    "pool_villa": "🌊 พูลวิลล่า",
-    "other": "🔍 อื่นๆ",
-    "warehouse": "🏭 โกดัง",
-    "factory": "🏭 โรงงาน",
-    "commercial_building": "🏦 อาคารพาณิชย์"
+    "house": "บ้าน",
+    "condo": "คอนโด",
+    "townhome": "ทาวน์โฮม",
+    "land": "ที่ดิน",
+    "commercial": "อาคารพาณิชย์",
+    "office_building": "สำนักงานออฟฟิศ",
+    "office": "สำนักงานออฟฟิศ",
+    "villa": "บ้านวิลล่า",
+    "pool_villa": "พูลวิลล่า",
+    "other": "อื่นๆ",
+    "warehouse": "โกดัง",
+    "factory": "โรงงาน",
+    "commercial_building": "อาคารพาณิชย์"
   },
   "property": {
     "status": {

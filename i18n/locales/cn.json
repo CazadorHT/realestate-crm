@@ -805,19 +805,19 @@
     "pdpa_note": "注意：本协议符合《个人数据保护法》B.E. 2562 (PDPA)。"
   },
   "property_types": {
-    "house": "🏠 别墅/住宅",
-    "condo": "🏢 公寓",
-    "townhome": "🏡 联排别墅",
-    "land": "🌳 土地",
-    "commercial": "🏢 商业地产",
-    "office_building": "🏢 写字楼",
-    "office": "🏬 办公室",
-    "villa": "🏝️ 别墅",
-    "pool_villa": "🌊 泳池别墅",
-    "other": "🔍 其他",
-    "warehouse": "🏭 仓库",
-    "factory": "🏭 工厂",
-    "commercial_building": "🏦 商业建筑"
+    "house": "别墅/住宅",
+    "condo": "公寓",
+    "townhome": "联排别墅",
+    "land": "土地",
+    "commercial": "商业地产",
+    "office_building": "写字楼",
+    "office": "办公室",
+    "villa": "别墅",
+    "pool_villa": "泳池别墅",
+    "other": "其他",
+    "warehouse": "仓库",
+    "factory": "工厂",
+    "commercial_building": "商业建筑"
   },
   "property": {
     "status": {

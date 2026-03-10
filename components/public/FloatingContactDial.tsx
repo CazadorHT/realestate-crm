@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { cn } from "@/lib/utils";
 
 export function FloatingContactDial() {
   const { t } = useLanguage();
@@ -116,11 +117,12 @@ export function FloatingContactDial() {
 
   return (
     <div
-      className={`hidden md:flex fixed bottom-44 right-4 md:right-6 z-40 flex-col items-end gap-4 transition-all duration-500 transform ${
+      className={cn(
+        "hidden md:flex flex-col items-end gap-4 transition-all duration-500 transform",
         isVisible
           ? "translate-y-0 opacity-100"
           : "translate-y-10 opacity-0 pointer-events-none"
-      }`}
+      )}
     >
       {/* Menu Items (Stacking upwards) */}
       <div
@@ -181,12 +183,12 @@ export function FloatingContactDial() {
           {/* Static Phone Icon Indicator */}
           <button
             onClick={() => setIsPhoneListOpen(!isPhoneListOpen)}
-            className="w-12 h-12 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white shrink-0 hover:bg-green-600 hover:scale-110 transition-all duration-200"
+            className="w-10 h-10 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white shrink-0 hover:bg-green-600 hover:scale-110 transition-all duration-200"
           >
             {isPhoneListOpen ? (
               <FaTimes className="w-5 h-5" />
             ) : (
-              <FaPhone className="w-5 h-5 " />
+              <FaPhone className="w-4 h-4 " />
             )}
           </button>
         </div>
@@ -202,8 +204,8 @@ export function FloatingContactDial() {
           <span className="bg-white px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             {t("common.floating.messenger")}
           </span>
-          <div className="w-12 h-12 bg-[#0084FF] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#0074e0] hover:scale-110 transition-all duration-200">
-            <FaFacebook className="w-6 h-6" />
+          <div className="w-10 h-10 bg-[#0084FF] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#0074e0] hover:scale-110 transition-all duration-200">
+            <FaFacebook className="w-5 h-5" />
           </div>
         </a>
 
@@ -218,8 +220,8 @@ export function FloatingContactDial() {
           <span className="bg-white px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             {t("common.floating.line_chat")}
           </span>
-          <div className="w-12 h-12 bg-[#06C755] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#05b34c] hover:scale-110 transition-all duration-200">
-            <FaLine className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 bg-[#06C755] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#05b34c] hover:scale-110 transition-all duration-200">
+            <FaLine className="w-5 h-5 text-white" />
           </div>
         </a>
       </div>
@@ -227,7 +229,7 @@ export function FloatingContactDial() {
       {/* Main Toggle Button */}
       <button
         onClick={toggleMenu}
-        className={`group relative flex items-center justify-center h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg transition-all duration-300 focus:outline-none ${
+        className={`group relative flex items-center justify-center h-10 w-10 rounded-full shadow-lg transition-all duration-300 focus:outline-none ${
           isOpen ? "bg-slate-800 rotate-90" : "bg-blue-600 hover:scale-110"
         }`}
         aria-label="Contact Options"
@@ -239,14 +241,14 @@ export function FloatingContactDial() {
 
         <div className="relative z-10">
           {isOpen ? (
-            <FaTimes className="w-6 h-6 text-white" />
+            <FaTimes className="w-5 h-5 text-white" />
           ) : (
             <div className="relative">
-              <FaCommentDots className="w-6 h-6 text-white" />
+              <FaCommentDots className="w-5 h-5 text-white" />
               {/* Notification dot to encourage click */}
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
               </span>
             </div>
           )}

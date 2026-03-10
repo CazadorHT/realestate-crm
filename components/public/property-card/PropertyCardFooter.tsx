@@ -91,9 +91,9 @@ export function PropertyCardFooter({
     <div className="h-auto sm:h-auto md:h-28 px-3 sm:px-3.5 md:px-4 py-2 sm:py-2.5 md:py-3 border-t border-slate-200 bg-white/60 flex flex-col justify-between gap-1 sm:gap-1.5 md:gap-2">
       <div className="min-w-0">
         {property.listing_type === "SALE_AND_RENT" ? (
-          <div className="flex items-center divide-x divide-slate-200">
+          <div className="flex w-full items-start divide-x divide-slate-200">
             {/* SALE PRICE BLOCK */}
-            <div className="flex flex-col pr-3">
+            <div className="flex-1 flex flex-col pr-2 md:pr-3 min-w-0">
               <span className="text-[10px] sm:text-[11px] md:text-xs font-bold uppercase tracking-tight mb-0.5">
                 {t("common.sale")}
               </span>
@@ -117,12 +117,12 @@ export function PropertyCardFooter({
                     </span>
                   </div>
                   {/* Current Price */}
-                  <div className="order-1 text-base sm:text-lg md:text-xl font-bold text-rose-600">
+                  <div className="order-1 text-sm sm:text-base lg:text-sm xl:text-lg font-bold text-rose-600 truncate">
                     {formatPrice(property.price, language)}
                   </div>
                 </div>
               ) : (
-                <div className="text-base sm:text-lg md:text-xl font-bold text-slate-900">
+                <div className="text-sm sm:text-base lg:text-sm xl:text-lg font-bold text-slate-900 truncate">
                   {property.price || property.original_price
                     ? formatPrice(
                         property.price || property.original_price!,
@@ -134,7 +134,7 @@ export function PropertyCardFooter({
             </div>
 
             {/* RENT PRICE BLOCK */}
-            <div className="flex flex-col pl-2 md:pl-3">
+            <div className="flex-1 flex flex-col pl-2 md:pl-3 min-w-0">
               <span className="text-[10px] md:text-xs font-bold uppercase tracking-tight mb-0.5">
                 {t("common.rent")}
               </span>
@@ -159,25 +159,27 @@ export function PropertyCardFooter({
                     </span>
                   </div>
                   {/* Current Price */}
-                  <div className="order-1 text-base md:text-xl font-bold text-rose-600">
+                  <div className="order-1 text-sm sm:text-base lg:text-sm xl:text-lg font-bold text-rose-600 truncate">
                     {formatPrice(property.rental_price, language)}
-                    <span className="text-[10px] md:text-xs text-slate-500 font-normal ml-0.5">
+                    <span className="text-[10px] text-slate-500 font-normal ml-0.5">
                       {t("common.per_month_short")}
                     </span>
                   </div>
                 </div>
               ) : (
-                <div className="text-base md:text-xl font-bold text-slate-900">
-                  {property.rental_price || property.original_rental_price
-                    ? formatPrice(
-                        property.rental_price ||
-                          property.original_rental_price!,
-                        language,
-                      )
-                    : t("common.contact_for_price")}
-                  <span className="text-[10px] md:text-xs text-slate-400 font-normal ml-0.5">
-                    {t("common.per_month_short")}
-                  </span>
+                <div className="flex flex-wrap items-baseline">
+                  <div className="text-sm sm:text-base lg:text-sm xl:text-lg font-bold text-slate-900 truncate">
+                    {property.rental_price || property.original_rental_price
+                      ? formatPrice(
+                          property.rental_price ||
+                            property.original_rental_price!,
+                          language,
+                        )
+                      : t("common.contact_for_price")}
+                    <span className="text-[10px] text-slate-400 font-normal ml-0.5">
+                      {t("common.per_month_short")}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>

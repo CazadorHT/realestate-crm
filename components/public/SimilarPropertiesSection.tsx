@@ -18,7 +18,16 @@ type PropertyImage = {
 };
 type PropertyWithImages = PropertyRow & {
   property_images: PropertyImage[] | null;
-  property_features: unknown[] | null;
+  property_features: {
+    features: {
+      id: string;
+      name: string;
+      name_en?: string | null;
+      name_cn?: string | null;
+      icon_key: string;
+      category: string | null;
+    } | null;
+  }[] | null;
 };
 
 interface SimilarPropertiesSectionProps {
@@ -61,6 +70,8 @@ export async function SimilarPropertiesSection({
         features (
           id,
           name,
+          name_en,
+          name_cn,
           icon_key,
           category
         )

@@ -121,7 +121,7 @@ function PropertyListingContent() {
     WAREHOUSE: `🏭 ${t("home.property_types.warehouse")}`,
     COMMERCIAL: t("property_types.commercial_building"),
     LAND: `🌳 ${t("home.property_types.land")}`,
-    OTHER: `🔹 ${t("common.all")}`,
+    OTHER: `🔹 ${t("property_types.other")}`,
   };
 
   // -- Drag to Scroll Logic --
@@ -303,7 +303,7 @@ function PropertyListingContent() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
-      <div className="max-w-screen-2xl px-4 md:px-6 lg:px-8 mx-auto">
+      <div className="max-w-screen-2xl px-6 lg:px-8 mx-auto">
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 md:gap-6 mb-8 md:mb-10 ">
           {/* SEO-Optimized Header */}
           <div
@@ -389,11 +389,11 @@ function PropertyListingContent() {
                 </div>
               )}
 
-              <div className="relative group w-full sm:max-w-[400px] lg:max-w-[400px] select-none">
+              <div className="relative group w-full lg:w-auto lg:max-w-[400px] xl:max-w-[550px] select-none">
                 <div
                   id="filter-scroll-container"
                   ref={scrollContainerRef}
-                  className={`flex gap-2 overflow-x-auto whitespace-nowrap py-1 scroll-smooth snap-x snap-mandatory px-8 sm:px-12 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing ${
+                  className={`flex mx-10 gap-2 overflow-x-auto whitespace-nowrap py-1 scroll-smooth snap-x snap-mandatory px-8 sm:px-10 md:px-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing ${
                     isDragging ? "snap-none scroll-auto" : ""
                   }`}
                   role="tablist"
@@ -419,7 +419,7 @@ function PropertyListingContent() {
                         }}
                         role="tab"
                         aria-selected={active}
-                        className={`shrink-0 snap-start px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-300 pointer-events-auto ${
+                        className={`shrink-0 snap-start px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border text-xs sm:text-sm font-semibold transition-all duration-300 pointer-events-auto ${
                           active
                             ? "bg-blue-600 text-white border-blue-600 shadow-md"
                             : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600"
@@ -439,7 +439,7 @@ function PropertyListingContent() {
                     );
                     if (el) el.scrollBy({ left: -200, behavior: "smooth" });
                   }}
-                  className="absolute -left-2 sm:-left-12 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur border border-slate-200 rounded-full p-1.5 sm:p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity disabled:opacity-0"
+                  className="absolute left-0 md:-left-4 xl:-left-12 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1.5 md:p-2 text-slate-600 shadow-md hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
                   aria-label="Previous filters"
                 >
                   <svg
@@ -465,7 +465,7 @@ function PropertyListingContent() {
                     );
                     if (el) el.scrollBy({ left: 200, behavior: "smooth" });
                   }}
-                  className="absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur border border-slate-200 rounded-full p-1.5 sm:p-2 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                  className="absolute right-0 md:-right-4 xl:-right-12 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1.5 md:p-2 text-slate-600 shadow-md hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
                   aria-label="Next filters"
                 >
                   <svg
@@ -502,7 +502,7 @@ function PropertyListingContent() {
           </div>
         ) : isLoading ? (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 min-h-[400px] md:min-h-[600px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-4 min-h-[400px] md:min-h-[600px]">
               {Array.from({ length: 8 }).map((_, index) => (
                 <PropertyCardSkeleton key={index} />
               ))}
@@ -517,7 +517,7 @@ function PropertyListingContent() {
             {t("property_listing.empty_state")}
           </div>
         ) : (
-          <div className="space-y-8 align-center">
+          <div className="space-y-8 align-center px-4 :px-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 gap-y-6 md:gap-y-8">
               {visibleProperties.map((property, index) => {
                 const hasDiscount =

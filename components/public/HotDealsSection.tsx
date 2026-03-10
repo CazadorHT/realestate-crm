@@ -45,7 +45,7 @@ export function HotDealsSection() {
   if (isEmpty && !isLoading) return null;
 
   return (
-    <section className="py-8 relative overflow-hidden bg-slate-800 max-h-[1052px] h-full ">
+    <section className="py-10 md:py-16 relative overflow-hidden bg-slate-800">
       {/* === ANIMATED PREMIUM BACKGROUND === */}
 
       {/* Moving Gradient Blobs */}
@@ -90,13 +90,13 @@ export function HotDealsSection() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-size-[32px_32px] z-2"></div>
 
       {/* Decorative Elements */}
-      <div className="absolute top-20 left-10 opacity-30 animate-pulse-slow z-3 hidden md:block">
+      <div className="absolute top-20 left-10 opacity-30 animate-pulse-slow z-3 hidden xl:block">
         <Sparkles className="h-12 w-12 text-white" />
       </div>
 
-      <div className="max-w-screen-2xl mx-auto px-4 relative z-10 md:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto px-4 md:px-6 relative z-10 lg:px-8">
         {/* === HEADER SECTION === */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-12 mb-8 md:mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2 md:px-4 md:gap-12 mb-8 md:mb-12">
           <div className="space-y-4 max-w-screen-2xl">
             {/* Badge ที่ดู Modern ขึ้น */}
             <div
@@ -111,7 +111,7 @@ export function HotDealsSection() {
 
             {/* SEO-Optimized Heading */}
             <h2
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.1]"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.1]"
               data-aos="fade-up"
               data-aos-delay="100"
             >
@@ -130,7 +130,7 @@ export function HotDealsSection() {
                     {i === 0 ? "!" : ""}
                   </span>
                 ))}
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-red-400 via-orange-400 to-amber-400 drop-shadow-sm mt-1 block">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-red-400 via-orange-400 to-amber-400 drop-shadow-sm mt-1 sm:mt-2 block">
                 {language === "th"
                   ? t("home.hot_deals.description")
                       .split(" ")
@@ -187,12 +187,12 @@ export function HotDealsSection() {
           /* Horizontal Scroll on Mobile / Grid on Desktop */
           <div
             ref={scrollRef}
-            className="flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible scrollbar-hide snap-x pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0"
+            className="flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4  overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory scroll-pl-4 sm:scroll-pl-6 md:scroll-pl-0 py-4 px-4 sm:px-6 md:px-6 lg:px-8 md:py-0 after:content-[''] after:w-px after:shrink-0 md:after:hidden"
           >
             {properties.slice(0, 4).map((property, index) => (
               <div
                 key={property.id}
-                className="min-w-[260px] sm:min-w-[280px] md:min-w-0 snap-start shrink-0 relative group"
+                className="w-[85vw] max-w-[340px] sm:max-w-[360px] md:w-auto md:max-w-none snap-start shrink-0 relative group"
                 data-aos="fade-up"
                 data-aos-delay={index * 100}
               >

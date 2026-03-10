@@ -85,27 +85,19 @@ export function FloatingActionMenu() {
     });
   };
 
-  return (
-    <div className="fixed bottom-6 right-4 md:right-6 z-30 flex flex-col gap-3 items-end">
-      {/* Scroll To Top Button */}
-      <div
-        className={`transition-all duration-300 transform ${
-          showScrollTop
-            ? "translate-y-0 opacity-100"
-            : "translate-y-10 opacity-0 pointer-events-none"
-        }`}
-      >
-        <Button
-          size="icon"
-          className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
-          onClick={scrollToTop}
-          aria-label="Scroll to top"
-        >
-          <ArrowUp className="h-6 w-6" />
-        </Button>
-      </div>
+  if (!showScrollTop) return null;
 
-      {/* Main Menu Button */}
+  return (
+    <div className="flex flex-col gap-3 items-end">
+      {/* Scroll To Top Button */}
+      <Button
+        size="icon"
+        className="h-10 w-10 rounded-full shadow-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2"
+        onClick={scrollToTop}
+        aria-label="Scroll to top"
+      >
+        <ArrowUp className="h-5 w-5" />
+      </Button>
     </div>
   );
 }

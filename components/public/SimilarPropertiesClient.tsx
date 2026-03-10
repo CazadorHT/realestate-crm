@@ -21,7 +21,16 @@ type PropertyImage = {
 };
 type PropertyWithImages = PropertyRow & {
   property_images: PropertyImage[] | null;
-  property_features: unknown[] | null;
+  property_features: {
+    features: {
+      id: string;
+      name: string;
+      name_en?: string | null;
+      name_cn?: string | null;
+      icon_key: string;
+      category: string | null;
+    } | null;
+  }[] | null;
 };
 
 interface SimilarPropertiesClientProps {
@@ -93,7 +102,12 @@ export function SimilarPropertiesClient({
                 property={{
                   ...property,
                   image_url: imageUrl,
+                  images: property.property_images?.map((img) => img.image_url) || [],
                   verified: property.verified ?? undefined,
+                  listing_type: property.listing_type as "SALE" | "RENT" | "SALE_AND_RENT" | null,
+                  features: property.property_features
+                    ?.map((pf) => pf.features)
+                    .filter((f): f is NonNullable<typeof f> => !!f) || [],
                 }}
                 compareWith={compareData}
                 footerVariant="minimal"
