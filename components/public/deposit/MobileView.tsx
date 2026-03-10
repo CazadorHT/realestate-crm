@@ -153,7 +153,7 @@ export function DepositMobileView({
           </div>
 
           {/* ── Mobile Footer ── */}
-          <div className="shrink-0 sticky bottom-0 px-8 pt-4 pb-[calc(env(safe-area-inset-bottom,20px)+24px)] bg-white/95 backdrop-blur-xl z-20 border-t border-slate-50 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]">
+          <div className="shrink-0 sticky bottom-0 px-8 pt-4 pb-[calc(env(safe-area-inset-bottom,20px)+40px)] bg-white/95 backdrop-blur-xl z-20 border-t border-slate-50 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]">
             <div className="flex items-center justify-between mb-5 px-1">
               <div className="flex gap-1">
                 {[1, 2, 3].map((s) => (
