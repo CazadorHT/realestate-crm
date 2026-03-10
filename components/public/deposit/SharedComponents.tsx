@@ -23,18 +23,18 @@ export function SubmitButton({
     <Button
       type="submit"
       disabled={isLoading}
-      className={`w-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] transition-all hover:shadow-[0_12px_25px_-8px_rgba(37,99,235,0.5)] active:opacity-90 font-semibold h-14 rounded-2xl text-base ${
+      className={`w-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-[0_6px_15px_-4px_rgba(37,99,235,0.4)] transition-all hover:shadow-[0_10px_20px_-6px_rgba(37,99,235,0.5)] active:opacity-90 font-semibold h-10 rounded-xl text-xs ${
         compact ? "" : ""
       }`}
     >
       {isLoading ? (
         <>
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
           {t("property.contact_dialog.sending") || "กำลังส่ง..."}
         </>
       ) : (
         <>
-          <AnimatedSend size={20} className="mr-2" />
+          <AnimatedSend size={15} className="mr-1.5" />
           {title || t("property.contact_dialog.submit") || "ส่งข้อมูล"}
         </>
       )}
@@ -55,23 +55,23 @@ export function StepIcon({
 
   if (isCompleted) {
     return (
-      <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shadow-[0_4px_12px_rgba(37,99,235,0.3)] transition-all duration-500">
-        <Check className="w-5 h-5 text-white" strokeWidth={3} />
+      <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center shadow-[0_4px_10px_rgba(37,99,235,0.2)] transition-all duration-500">
+        <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
       </div>
     );
   }
 
   if (isActive) {
     return (
-      <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-[0_8px_16px_rgba(37,99,235,0.3)] ring-4 ring-blue-50 transition-all duration-500 relative">
-        <span className="text-sm font-semibold text-white z-10">{stepNum}</span>
+      <div className="w-7 h-7 rounded-full bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-[0_6px_12px_rgba(37,99,235,0.2)] ring-4 ring-blue-50 transition-all duration-500 relative">
+        <span className="text-[10px] font-semibold text-white z-10">{stepNum}</span>
       </div>
     );
   }
 
   return (
-    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center transition-all duration-500 border border-slate-200/50">
-      <span className="text-sm font-semibold text-slate-400">{stepNum}</span>
+    <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center transition-all duration-500 border border-slate-200/50">
+      <span className="text-[10px] font-semibold text-slate-400">{stepNum}</span>
     </div>
   );
 }

@@ -41,11 +41,11 @@ export function renderNameField(
       control={form.control}
       name="fullName"
       render={({ field }) => (
-        <FormItem className={isMobile ? "space-y-3" : "space-y-2"}>
+        <FormItem className={isMobile ? "space-y-1" : "space-y-2"}>
           <FormLabel
             className={cn(
               "text-slate-800 font-semibold flex items-center gap-2",
-              isMobile ? "text-[15px] xs:text-base" : "text-sm",
+              isMobile ? "text-xs" : "text-sm",
             )}
           >
             {!isMobile && <AnimatedUser size={14} className="text-blue-500" />}
@@ -54,15 +54,15 @@ export function renderNameField(
           </FormLabel>
           <FormControl>
             <div className="relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 group-focus-within:text-blue-600 transition-colors">
-                <AnimatedUser size={18} />
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 group-focus-within:text-blue-600 transition-colors">
+                <AnimatedUser size={15} />
               </div>
               <Input
                 placeholder={t("deposit.form.name_placeholder")}
                 className={cn(
                   "border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all",
                   isMobile
-                    ? "h-15 pl-12 bg-slate-50/50 text-base"
+                    ? "h-10 pl-11 bg-slate-50/50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
                 onFocus={onFocus}
@@ -88,7 +88,7 @@ export function renderPhoneField(
       control={form.control}
       name="phone"
       render={({ field }) => (
-        <FormItem className={isMobile ? "space-y-3" : "space-y-2"}>
+        <FormItem className={isMobile ? "space-y-1" : "space-y-2"}>
           <FormLabel
             className={cn(
               "text-slate-800 font-bold flex items-center gap-2",
@@ -101,8 +101,8 @@ export function renderPhoneField(
           </FormLabel>
           <FormControl>
             <div className="relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 group-focus-within:text-blue-600 transition-colors">
-                <AnimatedPhone size={18} />
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 group-focus-within:text-blue-600 transition-colors">
+                <AnimatedPhone size={15} />
               </div>
               <Input
                 type="tel"
@@ -114,7 +114,7 @@ export function renderPhoneField(
                 className={cn(
                   "border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all",
                   isMobile
-                    ? "h-15 pl-12 bg-slate-50/50 text-base"
+                    ? "h-12 pl-12 bg-slate-50/50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
                 onFocus={onFocus}
@@ -144,7 +144,7 @@ export function renderLineField(
       control={form.control}
       name="lineId"
       render={({ field }) => (
-        <FormItem className={isMobile ? "space-y-3" : "space-y-2"}>
+        <FormItem className={isMobile ? "space-y-1" : "space-y-2"}>
           <FormLabel
             className={cn(
               "text-slate-800 font-bold flex items-center gap-2",
@@ -156,15 +156,15 @@ export function renderLineField(
           </FormLabel>
           <FormControl>
             <div className="relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00B900] transition-colors">
-                <FaLine className="w-5 h-5" />
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00B900] transition-colors">
+                <FaLine className="w-3.5 h-3.5" />
               </div>
               <Input
                 placeholder={t("deposit.form.line_placeholder")}
                 className={cn(
                   "border-slate-200 focus:border-[#00B900] focus:ring-4 focus:ring-[#00B900]/10 rounded-2xl transition-all",
                   isMobile
-                    ? "h-15 pl-12 bg-slate-50/50 text-base"
+                    ? "h-12 pl-12 bg-slate-50/50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
                 onFocus={onFocus}
@@ -265,7 +265,7 @@ export function renderPropertyTypeField(
                   onFocus?.();
                 }}
                 className={cn(
-                  "relative flex flex-col items-center justify-center p-5 rounded-[28px] border-2 transition-all duration-300 min-w-[110px] sm:min-w-0 snap-center shrink-0",
+                  "relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[90px] sm:min-w-0 snap-center shrink-0",
                   field.value === option.value
                     ? `border-transparent ${option.activeColor} shadow-[0_8px_20px_-4px_rgba(0,0,0,0.1)] ring-2`
                     : "border-slate-100 bg-slate-50/40 hover:border-slate-200 hover:bg-white text-slate-500",
@@ -274,14 +274,14 @@ export function renderPropertyTypeField(
               >
                 <div
                   className={cn(
-                    "mb-3 p-3 rounded-2xl transition-all duration-300",
+                    "mb-2 p-2 rounded-xl transition-all duration-300",
                     field.value === option.value
                       ? `${option.iconColor} text-white shadow-lg scale-110`
                       : "bg-white text-slate-400 border border-slate-100 shadow-sm",
                   )}
                 >
                   <option.icon
-                    size={24}
+                    size={20}
                     strokeWidth={field.value === option.value ? 2.5 : 2}
                   />
                 </div>
@@ -309,7 +309,7 @@ export function renderMessageField(
       control={form.control}
       name="details"
       render={({ field }) => (
-        <FormItem className={isMobile ? "space-y-3" : "space-y-2"}>
+        <FormItem className={isMobile ? "space-y-1" : "space-y-2"}>
           <FormLabel
             className={cn(
               "text-slate-800 font-bold flex items-center gap-2",
@@ -324,7 +324,7 @@ export function renderMessageField(
               className={cn(
                 "border-slate-100 rounded-2xl transition-all focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500",
                 isMobile
-                  ? "min-h-[100px] p-5 text-base bg-slate-50/50"
+                  ? "min-h-[60px] p-3 text-base bg-slate-50/50"
                   : "min-h-[80px] p-3 text-sm bg-white",
               )}
               {...field}

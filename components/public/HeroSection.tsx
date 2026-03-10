@@ -140,7 +140,7 @@ export function HeroSection() {
                     bg-white
                     bottom-0 top-auto left-0 right-0 translate-x-0 translate-y-0
                     rounded-t-[28px] rounded-b-none
-                    h-auto max-h-[85dvh] max-w-none
+                    h-auto max-h-[60dvh] max-w-none
                     data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
                     shadow-xl
 

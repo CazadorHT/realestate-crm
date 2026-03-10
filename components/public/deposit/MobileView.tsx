@@ -73,24 +73,24 @@ export function DepositMobileView({
           <motion.div
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="flex flex-col items-center pt-4"
+            className="flex flex-col items-center pt-2"
           >
             {/* Title */}
-            <div className="px-8 text-center mb-8">
+            <div className="px-6 text-center mb-1">
               <motion.h2
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-2xl xs:text-[28px] sm:text-3xl font-semibold bg-linear-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent tracking-tight leading-tight"
+                className="text-base xs:text-lg font-semibold bg-linear-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent tracking-tight leading-tight"
               >
                 {t("deposit.dialog.title")}
               </motion.h2>
-              <p className="text-[10px] xs:text-xs text-slate-400 mt-2 font-semibold uppercase tracking-[0.15em] opacity-80">
+              <p className="text-[8px] text-slate-400 mt-1 font-semibold uppercase tracking-[0.12em] opacity-80">
                 {t("deposit.dialog.subtitle")}
               </p>
             </div>
 
             {/* Step Indicator */}
-            <div className="w-full px-10 pb-8">
+            <div className="w-full px-8 pb-3">
               <div className="flex items-center justify-between relative px-2">
                 <div className="absolute top-5 left-[10%] right-[10%] h-px bg-slate-100 z-0" />
                 <motion.div
@@ -125,7 +125,7 @@ export function DepositMobileView({
             <div className="w-full h-px bg-slate-50" />
           </motion.div>
 
-          <div className="p-8 space-y-8 flex-1">
+          <div className="p-4 space-y-4 flex-1">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
@@ -138,13 +138,13 @@ export function DepositMobileView({
                 {currentStep === 1 &&
                   renderNameField(form, true, t, onFormStart)}
                 {currentStep === 2 && (
-                  <div className="grid grid-cols-1 gap-7">
+                  <div className="grid grid-cols-1 gap-4">
                     {renderPhoneField(form, true, t, onFormStart)}
                     {renderLineField(form, true, t, onFormStart)}
                   </div>
                 )}
                 {currentStep === 3 && (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {renderPropertyTypeField(form, true, t, onFormStart)}
                     {renderMessageField(form, true, t, onFormStart)}
                   </div>
@@ -154,8 +154,8 @@ export function DepositMobileView({
           </div>
 
           {/* ── Mobile Footer ── */}
-          <div className="shrink-0 sticky bottom-0 px-8 pt-4 pb-[calc(env(safe-area-inset-bottom,20px)+40px)] bg-white/95 backdrop-blur-xl z-20 border-t border-slate-50 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center justify-between mb-5 px-1">
+          <div className="shrink-0 sticky bottom-0 px-5 pt-2 pb-[calc(env(safe-area-inset-bottom,20px)+24px)] bg-white/95 backdrop-blur-xl z-20 border-t border-slate-50 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center justify-between mb-2 px-1">
               <div className="flex gap-1">
                 {[1, 2, 3].map((s) => (
                   <div
@@ -180,16 +180,16 @@ export function DepositMobileView({
                 type="button"
                 variant="ghost"
                 onClick={() => (currentStep === 1 ? onCancel() : prevStep())}
-                className="h-14 flex-1 rounded-2xl bg-slate-50 border border-slate-100 text-slate-500 font-semibold text-base transition-all active:bg-slate-100"
+                className="h-10 flex-1 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 font-semibold text-xs transition-all active:bg-slate-100"
               >
                 {currentStep === 1 ? (
                   <>
-                    <X className="w-5 h-5 mr-2" />{" "}
+                    <X className="w-3.5 h-3.5 mr-1.5" />{" "}
                     {t("common.cancel") || "ยกเลิก"}
                   </>
                 ) : (
                   <>
-                    <ChevronLeft className="w-5 h-5" />{" "}
+                    <ChevronLeft className="w-3.5 h-3.5" />{" "}
                     {t("common.back") || "ย้อนกลับ"}
                   </>
                 )}
@@ -200,10 +200,10 @@ export function DepositMobileView({
                   <Button
                     type="button"
                     onClick={nextStep}
-                    className="w-full h-14 rounded-2xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-base shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] active:opacity-90 transition-all"
+                    className="w-full h-10 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs shadow-[0_6px_15px_-4px_rgba(37,99,235,0.4)] active:opacity-90 transition-all"
                   >
                     {t("common.next") || "ถัดไป"}
-                    <ChevronRight className="w-5 h-5 ml-1.5" />
+                    <ChevronRight className="w-3.5 h-3.5 ml-1" />
                   </Button>
                 ) : (
                   <SubmitButton isLoading={isLoading} />
