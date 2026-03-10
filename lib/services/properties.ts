@@ -98,6 +98,29 @@ function pickCoverImage(
   return cover.image_url ?? null;
 }
 
+function processAllImages(
+  images: PropertyRow["property_images"] | undefined | null,
+) {
+  if (!images || images.length === 0) return [];
+
+  // Sort by sort_order if available
+  const sorted = [...images].sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+  );
+
+  return sorted
+    .map((img) => {
+      if (img.image_url && img.image_url.startsWith("http")) {
+        return img.image_url;
+      }
+      if (img.storage_path) {
+        return getPublicImageUrl(img.storage_path);
+      }
+      return img.image_url ?? null;
+    })
+    .filter(Boolean) as string[];
+}
+
 export interface GetPropertiesOptions {
   ids?: string[];
   filter?: "hot_deals" | "all";
@@ -343,6 +366,7 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
       address_line1_en: typedRow.address_line1_en,
       address_line1_cn: typedRow.address_line1_cn,
       image_url: pickCoverImage(typedRow.property_images),
+      images: processAllImages(typedRow.property_images),
       location: buildLocation(typedRow),
       features: (typedRow.property_features || [])
         .map((pf) => pf.features)

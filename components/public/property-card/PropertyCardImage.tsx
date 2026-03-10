@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { Heart, PawPrint } from "lucide-react";
+import { Heart, PawPrint, ChevronLeft, ChevronRight } from "lucide-react";
 import { IoShieldCheckmark } from "react-icons/io5";
 import { getTypeLabel, getListingBadge } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { MdOutlinePets } from "react-icons/md";
+import { useState, useRef, useEffect } from "react";
 
 interface PropertyCardImageProps {
   property: PropertyCardProps;
@@ -28,7 +29,48 @@ export function PropertyCardImage({
   areaProvince,
 }: PropertyCardImageProps) {
   const { t } = useLanguage();
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const displayImages =
+    property.images && property.images.length > 0
+      ? property.images
+      : ([property.image_url].filter(Boolean) as string[]);
+
   const badge = getListingBadge(property.listing_type);
+
+  // Handle scroll for pagination dots
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const index = Math.round(scrollLeft / clientWidth);
+      if (index !== activeImageIndex) {
+        setActiveImageIndex(index);
+      }
+    }
+  };
+
+  const scrollPrev = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({
+        left: -scrollRef.current.clientWidth,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const scrollNext = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({
+        left: scrollRef.current.clientWidth,
+        behavior: "smooth",
+      });
+    }
+  };
 
   // Translate badge label if needed
   const displayBadgeLabel = badge
@@ -42,29 +84,80 @@ export function PropertyCardImage({
     : null;
 
   return (
-    <div className="relative aspect-square sm:aspect-4/3 md:aspect-square h-auto sm:h-auto md:h-[300px] w-full overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5">
-      {property.image_url ? (
-        <Image
-          src={property.image_url}
-          alt={`${
-            property.listing_type === "RENT"
-              ? t("common.rent")
-              : property.listing_type === "SALE"
-                ? t("common.sale")
-                : `${t("common.sale")}/${t("common.rent")}`
-          } ${t(`property_types.${property.property_type?.toLowerCase() || "other"}`)} - ${property.title}${
-            areaProvince ? ` ${t("nav.properties")} ${areaProvince}` : ""
-          }`}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-          className="object-cover object-top transform-gpu will-change-transform group-hover:scale-125 group:hover:object-contain transition-transform duration-1000"
-          priority={priority}
-          loading={priority ? "eager" : "lazy"}
-        />
+    <div className="group/image relative aspect-square sm:aspect-4/3 md:aspect-square h-auto sm:h-auto md:h-[300px] w-full overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5">
+      {displayImages.length > 0 ? (
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none touch-pan-x"
+        >
+          {displayImages.map((img, index) => (
+            <div
+              key={index}
+              className="relative h-full w-full shrink-0 snap-start"
+            >
+              <Image
+                src={img}
+                alt={`${
+                  property.listing_type === "RENT"
+                    ? t("common.rent")
+                    : property.listing_type === "SALE"
+                      ? t("common.sale")
+                      : `${t("common.sale")}/${t("common.rent")}`
+                } ${t(
+                  `property_types.${property.property_type?.toLowerCase() || "other"}`,
+                )} - ${property.title}${
+                  areaProvince ? ` ${t("nav.properties")} ${areaProvince}` : ""
+                } - Image ${index + 1}`}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                className="object-cover object-top transform-gpu will-change-transform"
+                priority={priority && index === 0}
+                loading={priority && index === 0 ? "eager" : "lazy"}
+              />
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
           {t("recently_viewed.no_image")}
         </div>
+      )}
+
+      {/* Pagination Dots */}
+      {displayImages.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-20 pointer-events-none opacity-100 md:opacity-0 md:group-hover/image:opacity-100 transition-opacity duration-300">
+          {displayImages.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1 rounded-full transition-all duration-300 ${
+                i === activeImageIndex
+                  ? "w-4 bg-white shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
+                  : "w-1 bg-white/60 shadow-sm"
+              }`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Navigation Arrows (Desktop Only) */}
+      {displayImages.length > 1 && (
+        <>
+          <button
+            onClick={scrollPrev}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 opacity-0 group-hover/image:opacity-100 transition-all duration-300 shadow-sm"
+            aria-label="Previous image"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={scrollNext}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 opacity-0 group-hover/image:opacity-100 transition-all duration-300 shadow-sm"
+            aria-label="Next image"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </>
       )}
 
       <div className="pointer-events-none absolute inset-0 rounded-t-2xl md:rounded-t-3xl bg-linear-to-t from-black/50 via-transparent to-transparent" />
