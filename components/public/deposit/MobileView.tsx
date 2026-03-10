@@ -80,11 +80,11 @@ export function DepositMobileView({
               <motion.h2
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-base xs:text-lg font-semibold bg-linear-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent tracking-tight leading-tight"
+                className="text-xl font-semibold bg-linear-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent tracking-tight leading-tight"
               >
                 {t("deposit.dialog.title")}
               </motion.h2>
-              <p className="text-[8px] text-slate-400 mt-1 font-semibold uppercase tracking-[0.12em] opacity-80">
+              <p className="text-[9px] text-slate-400 mt-1 font-semibold uppercase tracking-[0.12em] opacity-80">
                 {t("deposit.dialog.subtitle")}
               </p>
             </div>

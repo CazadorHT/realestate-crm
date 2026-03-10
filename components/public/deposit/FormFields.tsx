@@ -62,7 +62,7 @@ export function renderNameField(
                 className={cn(
                   "border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all",
                   isMobile
-                    ? "h-10 pl-11 bg-slate-50/50 text-base"
+                    ? "h-12 pl-11 bg-slate-50/50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
                 onFocus={onFocus}

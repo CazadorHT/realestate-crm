@@ -174,6 +174,7 @@ export function DepositPropertySection({ className }: { className?: string }) {
                 </Button>
               </DialogTrigger>
               <DialogContent
+                onOpenAutoFocus={(e) => e.preventDefault()}
                 overlayClassName="z-150"
                 className="fixed z-150 w-full gap-0 p-0 border-0 duration-300
                 data-[state=open]:animate-in data-[state=closed]:animate-out
@@ -183,7 +184,7 @@ export function DepositPropertySection({ className }: { className?: string }) {
                 bg-white
                 bottom-0 top-auto left-0 right-0 translate-x-0 translate-y-0
                 rounded-t-[28px] rounded-b-none
-                h-auto max-h-[60dvh] max-w-none
+                h-auto max-h-[70dvh] max-w-none
                 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
                 shadow-xl
 
