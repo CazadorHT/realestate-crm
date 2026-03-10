@@ -146,15 +146,15 @@ export function DepositDesktopView({
       <div className="flex-1 p-7 overflow-y-auto bg-slate-50 sm:rounded-r-2xl">
         <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-6">
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-            {renderNameField(form, false, onFormStart)}
+            {renderNameField(form, false, t, onFormStart)}
 
             <div className="grid grid-cols-2 gap-4">
-              {renderPhoneField(form, false, onFormStart)}
-              {renderLineField(form, false, onFormStart)}
+              {renderPhoneField(form, false, t, onFormStart)}
+              {renderLineField(form, false, t, onFormStart)}
             </div>
 
-            {renderPropertyTypeField(form, false, onFormStart)}
-            {renderMessageField(form, false, onFormStart)}
+            {renderPropertyTypeField(form, false, t, onFormStart)}
+            {renderMessageField(form, false, t, onFormStart)}
           </div>
 
           <div className="pt-4">

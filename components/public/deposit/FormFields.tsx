@@ -33,9 +33,9 @@ import { motion } from "framer-motion";
 export function renderNameField(
   form: UseFormReturn<DepositLeadInput>,
   isMobile: boolean,
+  t: (key: string) => string,
   onFocus?: () => void,
 ) {
-  const { t } = useLanguage();
   return (
     <FormField
       control={form.control}
@@ -60,9 +60,9 @@ export function renderNameField(
               <Input
                 placeholder={t("deposit.form.name_placeholder")}
                 className={cn(
-                  "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all",
+                  "border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all",
                   isMobile
-                    ? "h-14 pl-11 bg-slate-50 text-base"
+                    ? "h-15 pl-12 bg-slate-50/50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
                 onFocus={onFocus}
@@ -80,9 +80,9 @@ export function renderNameField(
 export function renderPhoneField(
   form: UseFormReturn<DepositLeadInput>,
   isMobile: boolean,
+  t: (key: string, params?: any) => string,
   onFocus?: () => void,
 ) {
-  const { t } = useLanguage();
   return (
     <FormField
       control={form.control}
@@ -112,9 +112,9 @@ export function renderPhoneField(
                   t("deposit.form.phone_placeholder") || "08x-xxx-xxxx"
                 }
                 className={cn(
-                  "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all",
+                  "border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all",
                   isMobile
-                    ? "h-14 pl-11 bg-slate-50 text-base"
+                    ? "h-15 pl-12 bg-slate-50/50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
                 onFocus={onFocus}
@@ -136,9 +136,9 @@ export function renderPhoneField(
 export function renderLineField(
   form: UseFormReturn<DepositLeadInput>,
   isMobile: boolean,
+  t: (key: string) => string,
   onFocus?: () => void,
 ) {
-  const { t } = useLanguage();
   return (
     <FormField
       control={form.control}
@@ -162,9 +162,9 @@ export function renderLineField(
               <Input
                 placeholder={t("deposit.form.line_placeholder")}
                 className={cn(
-                  "border-slate-200 focus:border-[#00B900] focus:ring-2 focus:ring-[#00B900]/15 rounded-xl transition-all",
+                  "border-slate-200 focus:border-[#00B900] focus:ring-4 focus:ring-[#00B900]/10 rounded-2xl transition-all",
                   isMobile
-                    ? "h-14 pl-11 bg-slate-50 text-base"
+                    ? "h-15 pl-12 bg-slate-50/50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
                 onFocus={onFocus}
@@ -182,9 +182,9 @@ export function renderLineField(
 export function renderPropertyTypeField(
   form: UseFormReturn<DepositLeadInput>,
   isMobile: boolean,
+  t: (key: string) => string,
   onFocus?: () => void,
 ) {
-  const { t } = useLanguage();
 
   const propertyOptions = [
     {
@@ -248,9 +248,9 @@ export function renderPropertyTypeField(
           </FormLabel>
           <div
             className={cn(
-              "flex overflow-x-auto no-scrollbar px-4 py-4",
+              "flex overflow-x-auto no-scrollbar py-4 px-1",
               isMobile
-                ? "-mx-6 px-6 snap-x"
+                ? "-mx-6 px-6 snap-x gap-4"
                 : "grid grid-cols-2 md:grid-cols-3 gap-3",
             )}
           >
@@ -265,39 +265,29 @@ export function renderPropertyTypeField(
                   onFocus?.();
                 }}
                 className={cn(
-                  "relative flex flex-col items-center mr-2 justify-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[100px] sm:min-w-0 snap-center shrink-0",
+                  "relative flex flex-col items-center justify-center p-5 rounded-[28px] border-2 transition-all duration-300 min-w-[110px] sm:min-w-0 snap-center shrink-0",
                   field.value === option.value
-                    ? `border-transparent ${option.activeColor} shadow-md ring-2`
-                    : "border-slate-100 bg-slate-50/30 hover:border-slate-300 hover:bg-white text-slate-500",
+                    ? `border-transparent ${option.activeColor} shadow-[0_8px_20px_-4px_rgba(0,0,0,0.1)] ring-2`
+                    : "border-slate-100 bg-slate-50/40 hover:border-slate-200 hover:bg-white text-slate-500",
                   !isMobile && "h-full",
                 )}
               >
                 <div
                   className={cn(
-                    "mb-2 p-2 rounded-xl transition-colors",
+                    "mb-3 p-3 rounded-2xl transition-all duration-300",
                     field.value === option.value
-                      ? `${option.iconColor} text-white shadow-lg`
-                      : "bg-white text-slate-400 border border-slate-100",
+                      ? `${option.iconColor} text-white shadow-lg scale-110`
+                      : "bg-white text-slate-400 border border-slate-100 shadow-sm",
                   )}
                 >
                   <option.icon
-                    size={20}
-                    strokeWidth={field.value === option.value ? 3 : 2}
+                    size={24}
+                    strokeWidth={field.value === option.value ? 2.5 : 2}
                   />
                 </div>
-                <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider">
+                <span className="text-[11px] font-bold uppercase tracking-widest">
                   {option.label}
                 </span>
-                {field.value === option.value && (
-                  <motion.div
-                    layoutId="active-indicator"
-                    className="absolute -top-1 -right-1 w-4 h-4 bg-white border-2 border-current rounded-full flex items-center justify-center"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                  >
-                    <div className="w-1.5 h-1.5 bg-current rounded-full" />
-                  </motion.div>
-                )}
               </motion.button>
             ))}
           </div>
@@ -311,9 +301,9 @@ export function renderPropertyTypeField(
 export function renderMessageField(
   form: UseFormReturn<DepositLeadInput>,
   isMobile: boolean,
+  t: (key: string) => string,
   onFocus?: () => void,
 ) {
-  const { t } = useLanguage();
   return (
     <FormField
       control={form.control}
@@ -332,9 +322,9 @@ export function renderMessageField(
             <Textarea
               placeholder={t("deposit.form.details_more_placeholder")}
               className={cn(
-                "border-slate-100 rounded-xl transition-all",
+                "border-slate-100 rounded-2xl transition-all focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500",
                 isMobile
-                  ? "min-h-[80px] p-4 text-base bg-slate-50"
+                  ? "min-h-[100px] p-5 text-base bg-slate-50/50"
                   : "min-h-[80px] p-3 text-sm bg-white",
               )}
               {...field}
