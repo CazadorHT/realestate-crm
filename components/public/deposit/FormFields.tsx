@@ -44,8 +44,8 @@ export function renderNameField(
         <FormItem className={isMobile ? "space-y-3" : "space-y-2"}>
           <FormLabel
             className={cn(
-              "text-slate-700 font-semibold flex items-center gap-2",
-              isMobile ? "text-base" : "text-sm",
+              "text-slate-800 font-semibold flex items-center gap-2",
+              isMobile ? "text-[15px] xs:text-base" : "text-sm",
             )}
           >
             {!isMobile && <AnimatedUser size={14} className="text-blue-500" />}
@@ -91,8 +91,8 @@ export function renderPhoneField(
         <FormItem className={isMobile ? "space-y-3" : "space-y-2"}>
           <FormLabel
             className={cn(
-              "text-slate-700 font-semibold flex items-center gap-2",
-              isMobile ? "text-base" : "text-sm",
+              "text-slate-800 font-bold flex items-center gap-2",
+              isMobile ? "text-[15px] xs:text-base" : "text-sm",
             )}
           >
             {!isMobile && <AnimatedPhone size={14} className="text-blue-500" />}
@@ -147,8 +147,8 @@ export function renderLineField(
         <FormItem className={isMobile ? "space-y-3" : "space-y-2"}>
           <FormLabel
             className={cn(
-              "text-slate-700 font-semibold flex items-center gap-2",
-              isMobile ? "text-base" : "text-sm",
+              "text-slate-800 font-bold flex items-center gap-2",
+              isMobile ? "text-[15px] xs:text-base" : "text-sm",
             )}
           >
             {!isMobile && <FaLine className="w-3.5 h-3.5 text-[#00B900]" />}
@@ -239,8 +239,8 @@ export function renderPropertyTypeField(
         <FormItem className="space-y-4">
           <FormLabel
             className={cn(
-              "text-slate-800 font-bold flex items-center gap-1.5",
-              isMobile ? "text-base" : "text-sm",
+              "text-slate-800 font-bold flex items-center gap-2",
+              isMobile ? "text-[15px] xs:text-base" : "text-sm",
             )}
           >
             {t("deposit.form.type_label")}{" "}
@@ -285,7 +285,7 @@ export function renderPropertyTypeField(
                     strokeWidth={field.value === option.value ? 2.5 : 2}
                   />
                 </div>
-                <span className="text-[11px] font-bold uppercase tracking-widest">
+                <span className="text-[10px] xs:text-[11px] font-semibold uppercase tracking-widest text-center px-1">
                   {option.label}
                 </span>
               </motion.button>
@@ -312,8 +312,8 @@ export function renderMessageField(
         <FormItem className={isMobile ? "space-y-3" : "space-y-2"}>
           <FormLabel
             className={cn(
-              "text-slate-800 font-semibold",
-              isMobile ? "text-base" : "text-sm",
+              "text-slate-800 font-bold flex items-center gap-2",
+              isMobile ? "text-[15px] xs:text-base" : "text-sm",
             )}
           >
             {t("deposit.form.details_more_label")}

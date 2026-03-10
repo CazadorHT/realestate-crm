@@ -70,13 +70,13 @@ export function DepositMobileView({
         {/* Title */}
         <div className="px-8 text-center mb-8">
           <motion.h2
-            initial={{ scale: 0.95 }}
-            animate={{ scale: 1 }}
-            className="text-3xl font-extrabold bg-linear-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent tracking-tight leading-tight"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-2xl xs:text-[28px] sm:text-3xl font-semibold bg-linear-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent tracking-tight leading-tight"
           >
             {t("deposit.dialog.title")}
           </motion.h2>
-          <p className="text-xs text-slate-400 mt-2 font-bold uppercase tracking-widest opacity-80">
+          <p className="text-[10px] xs:text-xs text-slate-400 mt-2 font-semibold uppercase tracking-[0.15em] opacity-80">
             {t("deposit.dialog.subtitle")}
           </p>
         </div>
@@ -106,7 +106,7 @@ export function DepositMobileView({
                     opacity: currentStep === step.id ? 1 : 0.6,
                     color: currentStep === step.id ? "#2563eb" : "#94a3b8",
                   }}
-                  className="text-[9px] mt-3 font-black uppercase tracking-widest transition-colors duration-300 text-center"
+                  className="text-[8.5px] xs:text-[10px] mt-3 font-black uppercase tracking-wider transition-colors duration-300 text-center leading-tight px-1"
                 >
                   {step.label}
                 </motion.span>
@@ -166,7 +166,7 @@ export function DepositMobileView({
                   />
                 ))}
               </div>
-              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">
+              <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-widest">
                 {t("property.contact_dialog.step_of", {
                   current: currentStep,
                   total: totalSteps,
@@ -179,7 +179,7 @@ export function DepositMobileView({
                 type="button"
                 variant="ghost"
                 onClick={() => (currentStep === 1 ? onCancel() : prevStep())}
-                className="h-14 flex-1 rounded-2xl bg-slate-50 border border-slate-100 text-slate-500 font-bold text-base transition-all active:scale-[0.97]"
+                className="h-14 flex-1 rounded-2xl bg-slate-50 border border-slate-100 text-slate-500 font-semibold text-base transition-all active:bg-slate-100"
               >
                 {currentStep === 1 ? (
                   <>
@@ -199,7 +199,7 @@ export function DepositMobileView({
                   <Button
                     type="button"
                     onClick={nextStep}
-                    className="w-full h-14 rounded-2xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-base shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] active:scale-[0.97] transition-all"
+                    className="w-full h-14 rounded-2xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-base shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] active:opacity-90 transition-all"
                   >
                     {t("common.next") || "ถัดไป"}
                     <ChevronRight className="w-5 h-5 ml-1.5" />
