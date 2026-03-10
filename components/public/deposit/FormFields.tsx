@@ -248,9 +248,9 @@ export function renderPropertyTypeField(
           </FormLabel>
           <div
             className={cn(
-              "flex overflow-x-auto no-scrollbar py-4 px-1",
+              "flex overflow-x-auto no-scrollbar py-2 px-1",
               isMobile
-                ? "-mx-6 px-6 snap-x gap-4"
+                ? "-mx-6 px-6 snap-x gap-3"
                 : "grid grid-cols-2 md:grid-cols-3 gap-3",
             )}
           >

@@ -344,16 +344,18 @@ export function PublicNav() {
                       </Button>
                     </DialogTrigger>
                     <DialogContent
-                      overlayClassName="z-150"
-                      className="fixed z-150 w-full gap-0 p-0 border-0 duration-300
+                      onOpenAutoFocus={(e) => e.preventDefault()}
+                      overlayClassName="z-150 backdrop-blur-xs bg-black/10 transition-all duration-500"
+                      className="fixed z-150 w-full gap-0 p-0 border-0 duration-500
                       data-[state=open]:animate-in data-[state=closed]:animate-out
                       data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
                       bg-white
                       bottom-0 top-auto left-0 right-0 translate-x-0 translate-y-0
                       rounded-t-[28px] rounded-b-none
-                      h-auto max-h-[85dvh] max-w-none
+                      h-auto max-h-[70dvh] max-w-none
                       data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
-                      shadow-xl
+                      data-[state=open]:cubic-bezier(0.32,0.72,0,1)
+                      shadow-2xl
                       sm:bottom-auto sm:top-[40%] lg:top-[50%] sm:left-[50%]
                       sm:translate-x-[-50%] sm:translate-y-[-50%]
                       sm:h-auto sm:max-h-[80vh] lg:max-h-[90vh]
@@ -361,7 +363,7 @@ export function PublicNav() {
                       sm:max-w-[680px] lg:max-w-[800px]
                       sm:data-[state=closed]:slide-out-to-bottom-4 sm:data-[state=open]:slide-in-from-bottom-4
                       sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:zoom-out-95
-                      [&>button]:top-4 [&>button]:right-4 [&>button]:z-20
+                      [&>button]:top-4 [&>button]:right-4 [&>button]:z-50
                       [&>button]:text-slate-400 [&>button]:hover:text-slate-600
                       sm:[&>button]:text-white/60 sm:[&>button]:hover:text-white"
                     >

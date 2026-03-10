@@ -132,8 +132,8 @@ export function HeroSection() {
                   </DialogTrigger>
                   <DialogContent
                     onOpenAutoFocus={(e) => e.preventDefault()}
-                    overlayClassName="z-150"
-                    className="fixed z-150 w-full gap-0 p-0 border-0 duration-300
+                    overlayClassName="z-150 backdrop-blur-xs bg-black/10 transition-all duration-500"
+                    className="fixed z-150 w-full gap-0 p-0 border-0 duration-500
                     data-[state=open]:animate-in data-[state=closed]:animate-out
                     data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
 
@@ -143,7 +143,8 @@ export function HeroSection() {
                     rounded-t-[28px] rounded-b-none
                     h-auto max-h-[70dvh] max-w-none
                     data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
-                    shadow-xl
+                    data-[state=open]:cubic-bezier(0.32,0.72,0,1)
+                    shadow-2xl
 
                     // ── Desktop/Tablet: Centered Dialog ──
                     sm:bottom-auto sm:top-[50%] sm:left-[50%]
@@ -155,7 +156,7 @@ export function HeroSection() {
                     sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:zoom-out-95
 
                     // ── Close Button ──
-                    [&>button]:top-4 [&>button]:right-4 [&>button]:z-20
+                    [&>button]:top-4 [&>button]:right-4 [&>button]:z-50
                     [&>button]:text-slate-400 [&>button]:hover:text-slate-600
                     sm:[&>button]:text-white/60 sm:[&>button]:hover:text-white"
                   >
