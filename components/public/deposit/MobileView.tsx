@@ -58,65 +58,10 @@ export function DepositMobileView({
 
   return (
     <>
-      {/* ── Mobile Header ── */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="sm:hidden bg-white rounded-t-[32px] flex flex-col items-center relative"
-      >
-        {/* Pull Handle */}
-        <div className="w-10 h-1.5 bg-slate-100 rounded-full mt-3 mb-6" />
-
-        {/* Title */}
-        <div className="px-8 text-center mb-8">
-          <motion.h2
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-2xl xs:text-[28px] sm:text-3xl font-semibold bg-linear-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent tracking-tight leading-tight"
-          >
-            {t("deposit.dialog.title")}
-          </motion.h2>
-          <p className="text-[10px] xs:text-xs text-slate-400 mt-2 font-semibold uppercase tracking-[0.15em] opacity-80">
-            {t("deposit.dialog.subtitle")}
-          </p>
-        </div>
-
-        {/* Step Indicator */}
-        <div className="w-full px-10 pb-8">
-          <div className="flex items-center justify-between relative px-2">
-            <div className="absolute top-5 left-[10%] right-[10%] h-px bg-slate-100 z-0" />
-            <motion.div
-              className="absolute top-5 left-[10%] h-1.5px bg-linear-to-r from-blue-500 to-indigo-500 z-0 shadow-[0_0_8px_rgba(59,130,246,0.3)]"
-              initial={{ width: "0%" }}
-              animate={{
-                width:
-                  currentStep === 1 ? "0%" : currentStep === 2 ? "40%" : "80%",
-              }}
-              transition={{ type: "spring", stiffness: 100, damping: 20 }}
-            />
-
-            {STEPS.map((step) => (
-              <div
-                key={step.id}
-                className="flex flex-col items-center z-10 w-24 relative"
-              >
-                <StepIcon stepNum={step.id} currentStep={currentStep} />
-                <motion.span
-                  animate={{
-                    opacity: currentStep === step.id ? 1 : 0.6,
-                    color: currentStep === step.id ? "#2563eb" : "#94a3b8",
-                  }}
-                  className="text-[8.5px] xs:text-[10px] mt-3 font-black uppercase tracking-wider transition-colors duration-300 text-center leading-tight px-1"
-                >
-                  {step.label}
-                </motion.span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-full h-px bg-slate-50" />
-      </motion.div>
+      {/* ── Mobile Header (Fixed Pull Handle) ── */}
+      <div className="sm:hidden bg-white rounded-t-[32px] flex flex-col items-center sticky top-0 z-30">
+        <div className="w-10 h-1.5 bg-slate-100 rounded-full mt-3 mb-2" />
+      </div>
 
       {/* ── Mobile Form Content Area ── */}
       <div className="sm:hidden flex-1 overflow-y-auto min-h-0 bg-white">
@@ -124,6 +69,62 @@ export function DepositMobileView({
           onSubmit={form.handleSubmit(onSubmit, onInvalid)}
           className="flex flex-col min-h-full"
         >
+          {/* Scrollable Header Section */}
+          <motion.div
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="flex flex-col items-center pt-4"
+          >
+            {/* Title */}
+            <div className="px-8 text-center mb-8">
+              <motion.h2
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-2xl xs:text-[28px] sm:text-3xl font-semibold bg-linear-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent tracking-tight leading-tight"
+              >
+                {t("deposit.dialog.title")}
+              </motion.h2>
+              <p className="text-[10px] xs:text-xs text-slate-400 mt-2 font-semibold uppercase tracking-[0.15em] opacity-80">
+                {t("deposit.dialog.subtitle")}
+              </p>
+            </div>
+
+            {/* Step Indicator */}
+            <div className="w-full px-10 pb-8">
+              <div className="flex items-center justify-between relative px-2">
+                <div className="absolute top-5 left-[10%] right-[10%] h-px bg-slate-100 z-0" />
+                <motion.div
+                  className="absolute top-5 left-[10%] h-1.5px bg-linear-to-r from-blue-500 to-indigo-500 z-0 shadow-[0_0_8px_rgba(59,130,246,0.3)]"
+                  initial={{ width: "0%" }}
+                  animate={{
+                    width:
+                      currentStep === 1 ? "0%" : currentStep === 2 ? "40%" : "80%",
+                  }}
+                  transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                />
+
+                {STEPS.map((step) => (
+                  <div
+                    key={step.id}
+                    className="flex flex-col items-center z-10 w-24 relative"
+                  >
+                    <StepIcon stepNum={step.id} currentStep={currentStep} />
+                    <motion.span
+                      animate={{
+                        opacity: currentStep === step.id ? 1 : 0.6,
+                        color: currentStep === step.id ? "#2563eb" : "#94a3b8",
+                      }}
+                      className="text-[8.5px] xs:text-[10px] mt-3 font-semibold uppercase tracking-wider transition-colors duration-300 text-center leading-tight px-1"
+                    >
+                      {step.label}
+                    </motion.span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="w-full h-px bg-slate-50" />
+          </motion.div>
+
           <div className="p-8 space-y-8 flex-1">
             <AnimatePresence mode="wait">
               <motion.div
