@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -142,6 +142,44 @@ export function PropertyGallery({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [inlineActiveIndex, setInlineActiveIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Touch handling refs for directional swipe detection
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isHorizontalSwipe = useRef<boolean | null>(null);
+
+  // Touch handlers: detect horizontal vs vertical swipe direction
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isHorizontalSwipe.current = null; // reset direction
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!scrollRef.current) return;
+
+    const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
+    const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
+
+    // Determine direction on first significant move (threshold: 5px)
+    if (isHorizontalSwipe.current === null && (dx > 5 || dy > 5)) {
+      isHorizontalSwipe.current = dx > dy;
+    }
+
+    // If vertical swipe: let browser handle scrolling naturally
+    if (isHorizontalSwipe.current === false) {
+      scrollRef.current.style.overflowX = "hidden";
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    // Re-enable horizontal scroll after touch ends
+    if (scrollRef.current) {
+      scrollRef.current.style.overflowX = "auto";
+    }
+    isHorizontalSwipe.current = null;
+  }, []);
 
   // Sort: Cover first
   const sortedImages = [...(images || [])].sort((a, b) => {
@@ -272,7 +310,11 @@ export function PropertyGallery({
           )}
 
           <div
-            className="flex overflow-x-auto snap-x snap-mandatory h-full w-full no-scrollbar  "
+            ref={scrollRef}
+            className="flex overflow-x-auto snap-x snap-mandatory h-full w-full no-scrollbar"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             onScroll={(e) => {
               const scrollLeft = e.currentTarget.scrollLeft;
               const width = e.currentTarget.offsetWidth;

@@ -39,6 +39,43 @@ export function PopularAreasSection() {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
+  // Touch handling refs for directional swipe detection
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isHorizontalSwipe = useRef<boolean | null>(null);
+
+  // Touch handlers: detect horizontal vs vertical swipe direction
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isHorizontalSwipe.current = null; // reset direction
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!scrollContainerRef.current) return;
+
+    const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
+    const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
+
+    // Determine direction on first significant move (threshold: 5px)
+    if (isHorizontalSwipe.current === null && (dx > 5 || dy > 5)) {
+      isHorizontalSwipe.current = dx > dy;
+    }
+
+    // If vertical swipe: let browser handle scrolling naturally
+    if (isHorizontalSwipe.current === false) {
+      scrollContainerRef.current.style.overflowX = "hidden";
+    }
+  };
+
+  const handleTouchEnd = () => {
+    // Re-enable horizontal scroll after touch ends
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.style.overflowX = "auto";
+    }
+    isHorizontalSwipe.current = null;
+  };
+
   // Initialize AOS
   useEffect(() => {
     // Delay AOS init to prevent hydration mismatch
@@ -205,6 +242,9 @@ export function PopularAreasSection() {
               onMouseLeave={handleMouseLeave}
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
               className={`flex w-full gap-4 sm:gap-5 overflow-x-auto pb-8 pt-4 px-4 md:px-0  snap-x snap-mandatory scrollbar-none transition-all!  ${
                 isDragging ? "cursor-grabbing scale-[0.99]" : "cursor-grab"
               }`}

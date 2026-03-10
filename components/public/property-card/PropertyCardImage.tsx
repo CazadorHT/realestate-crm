@@ -41,6 +41,11 @@ export function PropertyCardImage({
   const hasTrackedAll = useRef(false);
   const viewedImages = useRef(new Set<number>());
 
+  // Touch handling refs for directional swipe detection
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isHorizontalSwipe = useRef<boolean | null>(null);
+
   const displayImages =
     property.images && property.images.length > 0
       ? property.images
@@ -54,6 +59,38 @@ export function PropertyCardImage({
     content_ids: [property.id],
     content_type: "product",
   }), [property.id, property.title]);
+
+  // Touch handlers: detect horizontal vs vertical swipe direction
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isHorizontalSwipe.current = null; // reset direction
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!scrollRef.current) return;
+
+    const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
+    const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
+
+    // Determine direction on first significant move (threshold: 5px)
+    if (isHorizontalSwipe.current === null && (dx > 5 || dy > 5)) {
+      isHorizontalSwipe.current = dx > dy;
+    }
+
+    // If vertical swipe: let browser handle scrolling naturally
+    if (isHorizontalSwipe.current === false) {
+      scrollRef.current.style.overflowX = "hidden";
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    // Re-enable horizontal scroll after touch ends
+    if (scrollRef.current) {
+      scrollRef.current.style.overflowX = "auto";
+    }
+    isHorizontalSwipe.current = null;
+  }, []);
 
   // Handle scroll for pagination dots + tracking
   const handleScroll = () => {
@@ -152,7 +189,10 @@ export function PropertyCardImage({
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none touch-pan-x"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none"
         >
           {displayImages.map((img, index) => (
             <div
