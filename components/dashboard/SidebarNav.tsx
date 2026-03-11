@@ -493,7 +493,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
           )}
         </div>
 
-        <nav className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto scrollbar-hide">
+        <nav className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto max-h-[calc(90vh-200px)] custom-scrollbar pr-2 pb-12">
           {/* Grouped Menus */}
           {filteredGroups.map((group) => {
             const isOpen = openGroups.includes(group.id);
