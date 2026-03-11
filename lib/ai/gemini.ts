@@ -74,25 +74,36 @@ export type AiGenerationResult = {
     completionTokens: number;
     totalTokens: number;
   };
+  groundingMetadata?: any;
 };
 
 export async function generateText(
   prompt: string,
   modelName: string = DEFAULT_MODEL,
   retryCount: number = 0,
+  options?: {
+    useSearch?: boolean;
+  },
 ): Promise<AiGenerationResult> {
-  const model = getModel(modelName);
-
-  if (!model) {
+  const genAI = getClient();
+  if (!genAI) {
     throw new Error("No GEMINI_API_KEY configured in environment");
   }
+
+  // Configure model with tools if needed
+  const modelOptions: any = { model: modelName };
+  if (options?.useSearch) {
+    modelOptions.tools = [{ googleSearchRetrieval: {} }];
+  }
+
+  const model = genAI.getGenerativeModel(modelOptions);
 
   try {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    // Capture token usage if available in the SDK response
+    // Capture token usage
     const usage = result.response.usageMetadata
       ? {
           promptTokens: result.response.usageMetadata.promptTokenCount || 0,
@@ -102,7 +113,11 @@ export async function generateText(
         }
       : undefined;
 
-    return { text, usage };
+    return { 
+      text, 
+      usage,
+      groundingMetadata: (response as any).groundingMetadata 
+    };
   } catch (error: any) {
     console.error("Gemini generation error detail:", {
       message: error.message,
@@ -114,7 +129,7 @@ export async function generateText(
     if (error.status === 429) {
       if (rotateApiKey() && retryCount < API_KEYS.length) {
         console.log("🚀 Retrying with rotated key...");
-        return generateText(prompt, modelName, retryCount + 1);
+        return generateText(prompt, modelName, retryCount + 1, options);
       }
       throw new Error(
         "[RATE_LIMIT] โควต้า AI เต็มแล้ว (All Keys Exhausted) กรุณารอสักครู่แล้วลองใหม่ครับ",
@@ -129,7 +144,7 @@ export async function generateText(
       if (retryCount < 2) {
         console.log(`Retrying due to 503 (Attempt ${retryCount + 1})...`);
         await new Promise((resolve) => setTimeout(resolve, 2000));
-        return generateText(prompt, modelName, retryCount + 1);
+        return generateText(prompt, modelName, retryCount + 1, options);
       }
     }
 

@@ -123,22 +123,11 @@ export async function getComparableDeals(params: AVMInputParams) {
 }
 
 /**
- * จำลองการดึง API ภายนอก (เมื่อดีลในระบบมีน้อยกว่ากำหนด)
+ * Note: External market data fetching is now handled directly by Gemini via Grounding (Google Search tool).
+ * This function is kept as a placeholder or can be removed if not needed.
  */
 export async function fetchExternalMarketData(params: AVMInputParams) {
-  // TODO: Implement actual Search API (e.g. Serper.dev, Google Custom Search)
-  // for now, returning mock string to inform AI about general market sentiment if needed.
-  console.log(
-    "Mocking external search API for: ",
-    params.popularArea || params.district,
-  );
-
-  return `
-    [External Search Simulation]
-    Based on recent listings in ${params.popularArea || params.district || params.province}, 
-    the average asking price for a ${params.bedrooms || 1} bedroom ${params.propertyType} 
-    around ${params.sizeSqm || 30} sqm is approximately moderately competitive.
-  `;
+  return "Grounding enabled. Gemini will search the web for latest competitor pricing.";
 }
 
 /**
@@ -150,15 +139,9 @@ export async function generatePropertyValuation(
   const activeComps = await getComparableProperties(params);
   const closedDeals = await getComparableDeals(params);
 
-  let externalData = "";
-
-  // [Hybrid Logic] - If closed deals are less than 5, pull external data
-  if (closedDeals.length < 5) {
-    externalData = await fetchExternalMarketData(params);
-  }
 
   const aiConfig = await getAiModelConfig();
-  const modelName = aiConfig.blog_generator_model || "gemini-2.5-flash"; // default fallback
+  const modelName = aiConfig.blog_generator_model || "gemini-1.5-flash"; // default fallback
 
   const prompt = `
     You are an expert, highly analytical real estate appraiser in Thailand.
@@ -175,8 +158,15 @@ export async function generatePropertyValuation(
     - Active Properties (Competitors): ${JSON.stringify(activeComps)}
     - Closed Deals (Actual Market Value): ${JSON.stringify(closedDeals)}
 
-    External Market Search Data (Use if Internal Deals are lacking):
-    ${externalData ? externalData : "No external data needed. Sufficient internal deals."}
+    CRITICAL INSTRUCTION:
+    If internal CRM data is insufficient (especially if there are few or no closed deals), you MUST use Google Search to find real-time market data for ${params.propertyType} in ${params.subdistrict || params.district || params.province}. 
+    Focus on finding:
+    - Current "Asking Price" from major portals like DDProperty, Livinginsider, or DotProperty.
+    - Calculate the average price per sq.m. from at least 3 recent web listings you found.
+    
+    In your "analysisSummary", you MUST explicitly mention if the data comes from internal CRM records or specific external web sources found via search (e.g., "จากการค้นหาข้อมูลบน DDProperty...").
+
+    Output Language: The "analysisSummary" must be in THAI (ภาษาไทย).
 
     Task:
     Provide an estimated valuation for this subject property across 3 strategies.
@@ -188,17 +178,23 @@ export async function generatePropertyValuation(
       "quickSalePrice": number, // Discounted for fast liquidity
       "estimatedYieldPercent": number, // e.g. 5.5 (if missing rental data, estimate based on Thailand averages 4-6%)
       "confidenceScore": "HIGH" | "MEDIUM" | "LOW", // HIGH if >5 closed deals, MEDIUM if 1-4, LOW if 0
-      "analysisSummary": "Short 2-3 sentences explaining the reasoning in Thai (ภาษาไทย)"
+      "analysisSummary": "Short 2-3 sentences explaining the reasoning in Thai (ภาษาไทย) and citing sources."
     }
 
-    Note: The prices should correspond to the 'Listing Type' (${params.listingType}). So if it is 'RENT', output rental prices.
+    Note: All prices MUST be in Thai Baht (THB). The prices should correspond to the 'Listing Type' (${params.listingType}). So if it is 'RENT', output rental prices.
   `;
 
   try {
-    const response = await generateText(prompt, modelName);
+    const response = await generateText(prompt, modelName, 0, {
+      useSearch: closedDeals.length < 5,
+    });
 
-    // Extract JSON securely in case AI adds conversational text
-    const jsonMatch = response.text.match(/\{[\s\S]*\}/);
+    // Extract JSON securely and handle control characters
+    const cleanText = response.text
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, "") // Remove control characters
+      .trim();
+
+    const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error("AI did not return a valid JSON object.");
     }
