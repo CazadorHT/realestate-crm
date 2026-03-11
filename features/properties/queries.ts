@@ -342,7 +342,7 @@ export async function getPropertiesTableData(params: {
   // 1. Build Query
   let query = supabase
     .from("properties")
-    .select("*", { count: "exact" }) // Get count for pagination
+    .select("*, assigned_to_user:profiles(full_name)", { count: "exact" }) // Get count for pagination
     .eq("tenant_id", tenantId!)
     .is("deleted_at", null)
     .range(from, to);
@@ -561,6 +561,7 @@ export async function getPropertiesTableData(params: {
       posted_to_instagram_at: p.posted_to_instagram_at ?? null,
       posted_to_line_at: p.posted_to_line_at ?? null,
       posted_to_tiktok_at: p.posted_to_tiktok_at ?? null,
+      agent_name: (p as any).assigned_to_user?.full_name || null,
     };
   });
 
