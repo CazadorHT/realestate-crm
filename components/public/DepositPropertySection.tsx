@@ -9,7 +9,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import { DepositWizard } from "./deposit/DepositWizard";
-
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 export function DepositPropertySection({ className }: { className?: string }) {
   const { t } = useLanguage();
   const settings = useSiteConfig();
@@ -168,6 +168,12 @@ export function DepositPropertySection({ className }: { className?: string }) {
                 <Button
                   size="lg"
                   className="w-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-7 text-lg font-bold rounded-2xl shadow-lg shadow-blue-200/50 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all group"
+                  onClick={() => {
+                    pushToDataLayer(GTM_EVENTS.LEAD_FORM_VIEW, {
+                      subject: "Deposit Property",
+                      location: "Deposit Section",
+                    });
+                  }}
                 >
                   {t("deposit.form.submit_btn")}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

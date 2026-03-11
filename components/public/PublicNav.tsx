@@ -19,6 +19,7 @@ import {
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { DepositWizard } from "./deposit/DepositWizard";
 import { CheckCircle } from "lucide-react";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
 export function PublicNav() {
   const pathname = usePathname();
@@ -338,6 +339,12 @@ export function PublicNav() {
                       <Button
                         size="lg"
                         className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md font-medium outline-none ring-0 border-0 text-white"
+                        onClick={() => {
+                          pushToDataLayer(GTM_EVENTS.LEAD_FORM_VIEW, {
+                            subject: "Deposit Property",
+                            location: "Navbar",
+                          });
+                        }}
                       >
                         <Key className="h-4 w-4 mr-1" />
                         {t("nav.deposit")}

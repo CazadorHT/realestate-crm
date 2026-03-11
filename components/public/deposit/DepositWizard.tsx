@@ -100,6 +100,15 @@ export function DepositWizard({
 
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
+      const next = currentStep + 1;
+      console.log(`GTM Debug: lead_form_step (Deposit) Step ${currentStep} -> ${next}`);
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_STEP, {
+          step: currentStep,
+          next_step: next,
+          subject: "Deposit Property",
+        });
+      } catch (e) {}
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
     }
   };
@@ -116,6 +125,13 @@ export function DepositWizard({
         toast.success(
           t("deposit.success.message") || "ข้อมูลของคุณถูกส่งเรียบร้อยแล้ว",
         );
+        console.log("GTM Debug: lead_form_success (Deposit)");
+        try {
+          pushToDataLayer(GTM_EVENTS.LEAD_FORM_SUCCESS, {
+            subject: "Deposit Property",
+            ...values,
+          });
+        } catch (e) {}
         form.reset();
         onSuccess();
       } else {

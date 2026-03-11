@@ -54,6 +54,8 @@ export const GTM_EVENTS = {
 
   // Image Engagement Events (เหตุการณ์การเลื่อนดูรูปภาพบนการ์ด)
   IMAGE_SLIDE: "image_slide", // เลื่อนดูรูปภาพบนการ์ด (ครั้งแรกที่เริ่มสไลด์)
+  IMAGE_SLIDE_MID: "image_slide_mid", // เลื่อนดูรูป 3-9 รูป (สนใจปานกลาง)
+  IMAGE_SLIDE_HALF: "image_slide_half", // เลื่อนดูเกินครึ่งของจำนวนรูปทั้งหมด
   IMAGE_SLIDE_DEEP: "image_slide_deep", // เลื่อนดูรูปเกิน 10 รูป (สนใจมาก)
   IMAGE_SLIDE_ALL: "image_slide_all", // เลื่อนดูรูปครบทุกรูป (สนใจสูงสุด)
   IMAGE_CLICK: "image_click", // คลิกรูปบนการ์ด (เข้าดูรายละเอียด)
@@ -63,7 +65,10 @@ export const GTM_EVENTS = {
   // New Events (เหตุการณ์เพิ่มเติม)
   CALCULATE_MORTGAGE: "calculate_mortgage", // คำนวณเงินกู้
   SEARCH_RESULT_CLICK: "search_result_click", // คลิกทรัพย์จากรายการค้นหา
+  LEAD_FORM_VIEW: "lead_form_view", // เปิดดูฟอร์ม
   LEAD_FORM_START: "lead_form_start", // เริ่มกรอกฟอร์ม
+  LEAD_FORM_STEP: "lead_form_step", // ผ่านแต่ละขั้นตอน
+  LEAD_FORM_SUCCESS: "lead_form_success", // ส่งฟอร์มสำเร็จ
   LEAD_FORM_ERROR: "lead_form_error", // เกิดข้อผิดพลาดในการส่งฟอร์ม
   VIEW_ITEM_LIST: "view_item_list", // ดูรายการทรัพย์ (Search Results)
 };

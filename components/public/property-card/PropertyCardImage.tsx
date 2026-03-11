@@ -37,6 +37,8 @@ export function PropertyCardImage({
 
   // Tracking refs (prevent duplicate fires per card instance)
   const hasTrackedSlide = useRef(false);
+  const hasTrackedMid = useRef(false);
+  const hasTrackedHalf = useRef(false);
   const hasTrackedDeep = useRef(false);
   const hasTrackedAll = useRef(false);
   const viewedImages = useRef(new Set<number>());
@@ -112,6 +114,28 @@ export function PropertyCardImage({
             total_images: displayImages.length,
           });
           updateAIScore(2);
+        }
+
+        // 1.5) Viewed 3+ unique images: image_slide_mid (but less than 10)
+        if (!hasTrackedMid.current && uniqueCount >= 3 && uniqueCount < 10) {
+          hasTrackedMid.current = true;
+          pushToDataLayer(GTM_EVENTS.IMAGE_SLIDE_MID, {
+            ...trackImageParams(),
+            images_viewed: uniqueCount,
+            total_images: displayImages.length,
+          });
+          updateAIScore(3);
+        }
+
+        // 1.8) Viewed > 50% of images: image_slide_half
+        if (!hasTrackedHalf.current && uniqueCount > displayImages.length / 2 && displayImages.length > 2) {
+          hasTrackedHalf.current = true;
+          pushToDataLayer(GTM_EVENTS.IMAGE_SLIDE_HALF, {
+            ...trackImageParams(),
+            images_viewed: uniqueCount,
+            total_images: displayImages.length,
+          });
+          updateAIScore(4);
         }
 
         // 2) Viewed 10+ unique images: image_slide_deep

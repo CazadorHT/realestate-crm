@@ -18,6 +18,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { DepositWizard } from "@/components/public/deposit/DepositWizard";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
 export function HeroSection() {
   const { t } = useLanguage();
@@ -126,6 +127,12 @@ export function HeroSection() {
                       size="lg"
                       variant="outline"
                       className="w-full sm:w-auto md:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl bg-white/90 hover:bg-white! border-slate-200 text-slate-700 hover:text-blue-600! shadow-sm transition-all animate-in fade-in-0 duration-300 slide-in-from-bottom-4"
+                      onClick={() => {
+                        pushToDataLayer(GTM_EVENTS.LEAD_FORM_VIEW, {
+                          subject: "Deposit Property",
+                          location: "Hero Section",
+                        });
+                      }}
                     >
                       {t("home.hero.cta_deposit")}
                     </Button>
