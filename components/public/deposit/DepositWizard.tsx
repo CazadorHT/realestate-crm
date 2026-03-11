@@ -16,9 +16,11 @@ import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 export function DepositWizard({
   onSuccess,
   onCancel,
+  location = "Unknown",
 }: {
   onSuccess: () => void;
   onCancel: () => void;
+  location?: string;
 }) {
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
@@ -37,6 +39,19 @@ export function DepositWizard({
   });
   const hasStartedRef = useRef(false);
   const wizardRef = useRef<HTMLDivElement>(null);
+
+  // Track Form View on Mount
+  useEffect(() => {
+    console.log(`GTM Debug: lead_form_view (Deposit) from ${location}`);
+    try {
+      pushToDataLayer(GTM_EVENTS.LEAD_FORM_VIEW, {
+        subject: "Deposit Property",
+        location: location,
+      });
+    } catch (e) {
+      console.error("GTM Error:", e);
+    }
+  }, [location]);
  
   // Capture Browser-level validation errors
   useEffect(() => {

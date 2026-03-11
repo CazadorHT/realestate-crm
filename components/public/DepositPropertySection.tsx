@@ -238,6 +238,7 @@ export function DepositPropertySection({ className }: { className?: string }) {
                   <DepositWizard
                     onSuccess={() => setIsSuccess(true)}
                     onCancel={() => setIsOpen(false)}
+                    location="Deposit Section"
                   />
                 )}
               </DialogContent>

@@ -195,6 +195,7 @@ export function HeroSection() {
                       <DepositWizard
                         onSuccess={() => setIsDepositSuccess(true)}
                         onCancel={() => setIsDepositOpen(false)}
+                        location="Hero Section"
                       />
                     )}
                   </DialogContent>

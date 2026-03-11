@@ -402,6 +402,7 @@ export function PublicNav() {
                         <DepositWizard
                           onSuccess={() => setIsDepositSuccess(true)}
                           onCancel={() => setIsDepositOpen(false)}
+                          location="Navbar"
                         />
                       )}
                     </DialogContent>
@@ -531,14 +532,14 @@ export function PublicNav() {
                       {t("home.search_btn")}
                     </Button>
                   </Link>
-                  <Button
-                    size="lg"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      setIsDepositOpen(true);
-                    }}
-                    className="flex-1 cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base outline-none ring-0 border-0 text-white"
-                  >
+                    <Button
+                      size="lg"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setIsDepositOpen(true);
+                      }}
+                      className="flex-1 cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base outline-none ring-0 border-0 text-white"
+                    >
                     <Key className="h-5 w-5 mr-2" />
                     {t("nav.deposit")}
                   </Button>
