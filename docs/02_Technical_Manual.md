@@ -17,7 +17,7 @@
 
 ### ภาษาและเครื่องมือหลัก (Core Stack)
 
-- **Frontend:** Next.js 16 (App Router), React 19, Tailwind CSS 4
+- **Frontend:** Next.js 16 (App Router), React 19, Tailwind CSS 4, Mobile-First Compact UI
 - **Backend:** Next.js Server Actions, Edge Functions
 - **Database:** Supabase (PostgreSQL) + **RLS (Multi-Tenancy)**
 - **AI Engine:** Google Gemini 2.0 (Flash/Pro)
@@ -112,8 +112,10 @@
 
 ระบบติดตามพฤติกรรมใน `lib/gtm.ts` และ `components/providers/GTMPropertyPageView.tsx`:
 
-- **DataLayer Push:** ส่งเหตุการณ์ (Events) เข้าสู่ GTM แบบ Real-time
-- **Core Events:** `click_line`, `click_phone`, `submit_contact_form`, `view_item`, `ai_lead_score`
+- **DataLayer Push:** ส่งเหตุการณ์ (Events) เข้าสู่ GTM แบบ Real-time ครอบคลุมตั้งแต่อนุภาคเล็กๆ ไปจนถึงระดับ Conversion
+- **Centralized Lead Form Tracking:** ดักจับ `lead_form_view` ทันทีที่ Component (DepositWizard) แสดงผล เพื่อหลีกเลี่ยงการเบิ้ล Event และแก้ปัญหาหน้าจอขนาดต่างๆ (Cross-Device Consistency)
+- **Granular Image Engagement:** ใช้ Regex `^image_slide.*` ดักจับการสไลด์รูปภาพ 5 ระดับ (Start, Mid, Half, Deep, All) พร้อมส่งค่าตัวแปรภาพเชิงลึกเช่น `images_viewed`, `total_images`, และ `direction`
+- **Funnel & Micro-conversions:** ติดตามทุกขั้นตอนตั้งแต่มองเห็น (`view_item`), กดทักแชท (`click_line`), เริ่มกรอกฟอร์มทีละขั้นตอน (`lead_form_step`), จนจบโฟลว์ (`lead_form_success`)
 - **Enhanced E-commerce Pattern:** การส่งข้อมูลราคาและทำเลทรัพย์ใน Event `view_item` เพื่อใช้ทำ Remarketing
 
 ## 10. ระบบจัดการข้อผิดพลาด (Robust Error Handling) 🆕

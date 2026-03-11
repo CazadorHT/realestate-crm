@@ -15,6 +15,7 @@
 | **Meta (Facebook)**   | App ID, App Secret, Page Access Token | 🔴 สูงสุด  |
 | **TikTok Developers** | Client Key, Client Secret, App Review | 🟡 ปานกลาง |
 | **Google Cloud**      | Gemini API Key & Billing Account      | 🟡 ปานกลาง |
+| **Google Analytics**  | GA4 Property & GTM Container Admin    | 🔴 สูงสุด  |
 | **Vercel / Netlify**  | Production Deployment & Domain        | 🟡 ปานกลาง |
 | **GitHub / Git**      | Full Source Code History              | 🔴 สูงสุด  |
 

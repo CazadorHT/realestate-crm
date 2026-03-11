@@ -10,19 +10,21 @@
 
 ### 🏗️ โครงสร้างราคาแบ่งตามโมดูล (อิงตามตลาดซอฟต์แวร์ Enterprise)
 
-| โมดูล (Module)                                                          | มูลค่าประเมิน (THB)   | สถานะ (Status)  |
-| :---------------------------------------------------------------------- | :-------------------- | :-------------- |
-| **1. Public Listing Portal** (Search, Filter, SEO, Premium UI/UX, i18n) | 1,200,000 - 1,800,000 | ✅ เสร็จสมบูรณ์ |
-| **2. Professional CRM Backend** (Lead, Pipeline, Activity, Stats)       | 1,500,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ |
-| **3. AI-First Ecosystem** (Gemini 2.0, Financial Costing, Insights)     | 2,000,000 - 3,500,000 | ✅ เสร็จสมบูรณ์ |
-| **4. Omni-channel & Social Studio** (LINE, Meta, TikTok, Auto-Reply)    | 1,800,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ |
-| **5. Multi-Tenant Branch Ops** (RLS, Org Structure, Live Branding)      | 2,000,000 - 3,000,000 | ✅ เสร็จสมบูรณ์ |
-| **6. AVM & Market Intel** (AI Market Comps, PDF Reports, Drop Alerts)   | 1,800,000 - 2,800,000 | ✅ เสร็จสมบูรณ์ |
-| **7. Advanced Financials & Split** (Comm Split, WHT 3%, Visual Bar)     | 1,500,000 - 2,200,000 | ✅ เสร็จสมบูรณ์ |
-| **8. Smart Contract Engine** (Dynamic Word-to-PDF, In-app Preview)      | 1,200,000 - 1,800,000 | ✅ เสร็จสมบูรณ์ |
-| **9. Core Architecture & System Health** (Monitoring, Robust Handling)  | 1,000,000 - 1,500,000 | ✅ เสร็จสมบูรณ์ |
-| **10. GTM & Conversion Tracking** (Marketing Data, Event Tracking)      | 800,000 - 1,200,000   | ✅ เสร็จสมบูรณ์ |
-## รวมมูลค่าโปรเจค (Fair Market Value):**.**14,800,000 – 22,800,000 บาท**
+| โมดูล (Module)                                                                 | มูลค่าประเมิน (THB)   | สถานะ (Status)  |
+| :----------------------------------------------------------------------------- | :-------------------- | :-------------- |
+| **1. Public Listing Portal** (Mobile-First UI, Search, Premium UX, i18n)       | 1,200,000 - 1,800,000 | ✅ เสร็จสมบูรณ์ |
+| **2. Professional CRM Backend** (Lead, Pipeline, Activity, Stats)              | 1,500,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ |
+| **3. AI-First Ecosystem** (Gemini 2.0, Financial Costing, Insights)            | 2,000,000 - 3,500,000 | ✅ เสร็จสมบูรณ์ |
+| **4. Omni-channel & Social Studio** (LINE, Meta, TikTok, Auto-Reply)           | 1,800,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ |
+| **5. Multi-Tenant Branch Ops** (RLS, Org Structure, Live Branding)             | 2,000,000 - 3,000,000 | ✅ เสร็จสมบูรณ์ |
+| **6. AVM & Market Intel** (AI Market Comps, PDF Reports, Drop Alerts)          | 1,800,000 - 2,800,000 | ✅ เสร็จสมบูรณ์ |
+| **7. Advanced Financials & Split** (Comm Split, WHT 3%, Visual Bar)            | 1,500,000 - 2,200,000 | ✅ เสร็จสมบูรณ์ |
+| **8. Smart Contract Engine** (Dynamic Word-to-PDF, In-app Preview)             | 1,200,000 - 1,800,000 | ✅ เสร็จสมบูรณ์ |
+| **9. Core Architecture & System Health** (Monitoring, Robust Handling)         | 1,000,000 - 1,500,000 | ✅ เสร็จสมบูรณ์ |
+| **10. GTM & Conversion Tracking** (Granular Event, Lead Funnel, Form tracking) | 1,200,000 - 1,800,000 | ✅ เสร็จสมบูรณ์ |
+
+## รวมมูลค่าโปรเจค (Fair Market Value):**.**15,200,000 – 23,400,000 บาท\*\*
+
 _(มูลค่าสะท้อนฟีเจอร์ระดับ Enterprise ที่พร้อมใช้งานจริงในสเกลองค์กรขนาดใหญ่ระดับมหาชน - **ราคายังไม่รวมภาษีมูลฮค่าเพิ่ม 7%**)_
 
 ---
@@ -31,7 +33,7 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
 
 ระบบนี้ถูกออกแบบมาเพื่อเป็น **"Platform-as-a-Product"** ที่พร้อมให้บริษัทอสังหาฯ ขนาดใหญ่หรือบริษัทซอฟต์แวร์ซื้อไปเป็นของตัวเอง (White-label):
 
-### 👑 โมเดลขายสิทธิ์ขาด (Exclusive Rights) - 18,500,000 THB++
+### 👑 โมเดลขายสิทธิ์ขาด (Exclusive Rights) - 20,000,000 THB++
 
 การขาย Source Code ทั้งหมดพร้อมสิทธิ์ความเป็นเจ้าของ 100% เหมาะสำหรับ:
 
@@ -59,6 +61,8 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
 - **📈 Advanced Analytics, Commission & Integrations:**
   - **Advanced Commission Splitting:** ระบบตารางคำนวณและตัดยอดคอมมิชชั่นอัตโนมัติ (Listing Agent %, Closing Agent %, Agency กองกลาง %)
   - **Executive Dashboard & PDF Report:** สรุปยอดขายรายเดือน ไตรมาส พร้อมพ่น Export เป็นรายงาน PDF (Chart & Graph) ส่งผู้บริหารได้ทันที
+  - **Granular Property Engagement:** จับขีดความสนใจลูกค้าจากการสไลด์รูปภาพทรัพย์ 5 ระดับแยก "คนแค่ผ่านไป" กับ "คนสนใจจริง" พร้อมบันทึกพิกัดตำแหน่งชัดเจน
+  - **Cross-Device Lead Funnel:** ติดตามพฤติกรรมการกรอกฟอร์มฝากทรัพย์ครบทุกขั้นตอน (View -> Step -> Success) ผ่านระบบ Centralized Tracking ที่แม่นยำ 100% ทั้ง Desktop และ Mobile
   - **System Health Monitor:** ตรวจสอบสถานะการเชื่อมต่อ API ของระบบ (เช่น Supabase, TikTok, Meta) รวมในหน้าเดียว
   - **Time-based Analytics:** กรองข้อมูลและสรุปผล Dashboard ตามช่วงเวลา พร้อมปุ่มรีเซ็ต View Count
   - **Social Media Studio:** สร้างเทมเพลตและส่งคำสั่งโพสต์ไปยัง Facebook, Instagram, TikTok แบบ One-stop
@@ -91,7 +95,7 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
 | :-------------------- | :----------------------- | :---------------------------------------------- |
 | **SaaS Per Branch**   | 150,000 - 450,000        | เก็บค่าบริการแยกตามสาขา (5,000 - 15,000 / สาขา) |
 | **AI Usage Plan**     | 20,000 - 50,000++        | รายได้เสริมจากการบวกกำไรค่า Token AI            |
-| **Enterprise Buyout** | 12,500,000 - 15,000,000+ | ขายขาดระบบให้องค์กรใหญ่ครั้งเดียวจบ             |
+| **Enterprise Buyout** | 13,500,000 - 16,500,000+ | ขายขาดระบบให้องค์กรใหญ่ครั้งเดียวจบ             |
 
 ### 💰 การวิเคราะห์จุดคุ้มทุน (Break-even Analysis)
 

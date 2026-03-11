@@ -1,6 +1,6 @@
 # 📊 Pitch Deck Outline: VC Connect Asset CRM (Enterprise Edition)
 
-> สไลด์นำเสนอ 16 หน้า สำหรับ Pitching นำเสนอขายขาด (Exclusive Buyout) มูลค่า 12.5M - 15M บาท
+> สไลด์นำเสนอ 16 หน้า สำหรับ Pitching นำเสนอขายขาด (Exclusive Buyout) มูลค่า 13.5M - 16.5M บาท
 > กลุ่มเป้าหมาย: Top 10 Real Estate Developers & International Agencies
 
 ---
@@ -59,7 +59,9 @@
 - **Header:** เปลี่ยน Data ให้เป็นกำไรด้วย AI Tracking
 - **Concept:** ผสาน Google Analytics 4 (GA4) และ GTM เข้ากับ AI ของระบบ CRM
 - **Bullet 1:** AI Lead Scoring - ประเมินโอกาสปิดการขาย (1-100) ทันทีที่ลูกค้าทักมาจากพฤติกรรมการดูเว็บ
-- **Bullet 2:** AI Executive Briefing - วิเคราะห์ข้อมูลคนเข้าเว็บและสรุปเทรนด์ตลาดรายสัปดาห์ (เช่น "สัปดาห์นี้คนหาคอนโดสุขุมวิทเพิ่ม 45% ควรยิง Ads เพิ่ม")
+- **Bullet 2:** Granular Intent Tracking - ตรวจจับพฤติกรรมคนดูรูปภาพทรัพย์ลึกถึง 5 ระดับ เพื่อแยก "คนเล่นๆ" กับ "คนจะซื้อ" ออกจากกัน
+- **Bullet 3:** Cross-Device Lead Funnel - เกาะติดลูกค้าตั้งแต่เปิดฟอร์มฝากทรัพย์ยันกดส่งครบทุกสเต็ปบนทุกหน้าจอ
+- **Bullet 4:** AI Executive Briefing - วิเคราะห์ข้อมูลคนเข้าเว็บและสรุปเทรนด์ตลาดรายสัปดาห์ (เช่น "สัปดาห์นี้คนหาคอนโดสุขุมวิทเพิ่ม 45% ควรยิง Ads เพิ่ม")
 - **Bullet 3:** Smart Retargeting - จัดกลุ่มพฤติกรรมลูกค้าที่ "กำลังตัดสินใจ" เพื่อนำไปทำ Lookalike โฆษณาต่อบน Meta หรือ TikTok
 - **Visual:** ภาพจำลอง AI วิเคราะห์กราฟแท่ง GA4 พ่นออกมาเป็นคำแนะนำภาษาไทย
 
@@ -127,7 +129,7 @@
 
 - **Header:** The Investment
 - **Title:** Platinum Exclusive Buyout
-- **Price:** $350,000 USD (≈ 12.5M THB)
+- **Price:** $390,000 USD (≈ 13.5M THB)
 - **Call to Action:** พิเศษสำหรับ Developer ที่ต้องการ Lead ตลาดในปี 2026 รับมอบ Source Code ทันที และเราจะทำงานร่วมกับทีม IT ของคุณจนกว่าทุกอย่างจะ On-board 100%
 
 ## Slide 16: Q&A / Contact
