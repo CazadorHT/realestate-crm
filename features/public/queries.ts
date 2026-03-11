@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PublicProperty, PublicPropertyFilter } from "./types";
 
 export async function getPublicProperties(
-  filter: PublicPropertyFilter
+  filter: PublicPropertyFilter,
 ): Promise<PublicProperty[]> {
   const supabase = await createClient();
 
@@ -12,19 +12,43 @@ export async function getPublicProperties(
     .eq("status", "ACTIVE")
     .order("updated_at", { ascending: false });
 
-  if (filter.type) {
-    query = query.eq("listing_type", filter.type);
+  if (filter.listingType) {
+    query = query.eq("listing_type", filter.listingType);
   }
 
   if (filter.q) {
     query = query.ilike("title", `%${filter.q}%`);
   }
 
+  const effectivePriceType = filter.priceType || filter.listingType || "SALE";
+
+  if (filter.minPrice || filter.maxPrice) {
+    const min = filter.minPrice || 0;
+    const max = filter.maxPrice || 2147483647; // Default max for INT
+
+    if (effectivePriceType === "RENT") {
+      query = query.or(
+        `and(rental_price.gte.${min},rental_price.lte.${max}),and(original_rental_price.gte.${min},original_rental_price.lte.${max})`,
+      );
+    } else {
+      query = query.or(
+        `and(price.gte.${min},price.lte.${max}),and(original_price.gte.${min},original_price.lte.${max})`,
+      );
+    }
+  }
+
+  // Size filtering
+  if (filter.minSize) {
+    query = query.gte("size_sqm", filter.minSize);
+  }
+
+  if (filter.maxSize) {
+    query = query.lte("size_sqm", filter.maxSize);
+  }
+
   if (filter.limit) {
     query = query.limit(filter.limit);
   }
-
-  // TODO: Add more filters (price, area) as needed
 
   const { data, error } = await query;
 
@@ -37,7 +61,7 @@ export async function getPublicProperties(
 }
 
 export async function getPublicPropertyBySlug(
-  slug: string
+  slug: string,
 ): Promise<PublicProperty | null> {
   const supabase = await createClient();
   const { data, error } = await supabase

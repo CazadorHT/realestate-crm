@@ -121,21 +121,11 @@ function processAllImages(
     .filter(Boolean) as string[];
 }
 
-export interface GetPropertiesOptions {
+import { PublicPropertyFilter } from "@/features/public/types";
+
+export interface GetPropertiesOptions extends PublicPropertyFilter {
   ids?: string[];
   filter?: "hot_deals" | "all";
-  limit?: number;
-  province?: string;
-  district?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  propertyType?: string;
-  listingType?: "SALE" | "RENT"; // Abstract intent: Buy or Rent
-  q?: string; // General keyword search
-  bedrooms?: number;
-  bathrooms?: number;
-  minSize?: number;
-  maxSize?: number;
 }
 
 export async function getPublicProperties(options: GetPropertiesOptions = {}) {
@@ -241,23 +231,20 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
   }
 
   // Filter by Price
-  if (options.minPrice) {
-    // If listingType is RENT, check rental_price. Else check price.
-    // Or check both if ambiguous?
-    // Chatbot usually implies intent.
-    if (options.listingType === "RENT") {
-      query = query.gte("rental_price", options.minPrice);
-    } else {
-      // Default to Sale Price if unspecified or explicitly SALE
-      query = query.gte("price", options.minPrice);
-    }
-  }
+  const effectivePriceType = options.priceType || options.listingType;
 
-  if (options.maxPrice) {
-    if (options.listingType === "RENT") {
-      query = query.lte("rental_price", options.maxPrice);
+  if (options.minPrice || options.maxPrice) {
+    const min = options.minPrice || 0;
+    const max = options.maxPrice || 2147483647; // Default max for INT
+
+    if (effectivePriceType === "RENT") {
+      query = query.or(
+        `and(rental_price.gte.${min},rental_price.lte.${max}),and(original_rental_price.gte.${min},original_rental_price.lte.${max})`,
+      );
     } else {
-      query = query.lte("price", options.maxPrice);
+      query = query.or(
+        `and(price.gte.${min},price.lte.${max}),and(original_price.gte.${min},original_price.lte.${max})`,
+      );
     }
   }
 

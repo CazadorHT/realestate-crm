@@ -10,11 +10,22 @@ export const depositLeadSchema = z.object({
 
 export const publicPropertyFilterSchema = z.object({
   q: z.string().optional(),
-  type: z.enum(["SALE", "RENT"]).optional(),
-  priceMin: z.number().optional(),
-  priceMax: z.number().optional(),
+  listingType: z.enum(["SALE", "RENT"]).optional(),
+  propertyType: z.string().optional(),
+  minPrice: z.coerce.number().optional(),
+  maxPrice: z.coerce.number().optional(),
+  priceType: z.enum(["SALE-RENT", "SALE", "RENT"]).optional(),
+  minSize: z.coerce.number().optional(),
+  maxSize: z.coerce.number().optional(),
   area: z.string().optional(),
-  limit: z.number().default(10).optional(),
+  province: z.string().optional(),
+  district: z.string().optional(),
+  popular_area: z.string().optional(),
+  bedrooms: z.coerce.number().optional(),
+  bathrooms: z.coerce.number().optional(),
+  ids: z.array(z.string()).optional(),
+  filter: z.enum(["hot_deals", "all"]).default("all").optional(),
+  limit: z.coerce.number().default(60).optional(),
 });
 
 export const inquiryLeadSchema = z.object({
