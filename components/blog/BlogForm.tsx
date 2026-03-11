@@ -172,10 +172,8 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     try {
       const data = JSON.parse(jsonInput);
       Object.keys(data).forEach((key) => {
-        // @ts-ignore
-        if (defaultValues[key] !== undefined) {
-          // @ts-ignore
-          setValue(key, data[key]);
+        if (key in defaultValues) {
+          setValue(key as keyof BlogPostInput, data[key]);
         }
       });
 
