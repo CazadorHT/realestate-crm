@@ -18,6 +18,22 @@ import path from "path";
 import PizZip from "pizzip";
 // @ts-ignore
 import Docxtemplater from "docxtemplater";
+import { z } from "zod";
+import { mapDbError } from "@/lib/db-error";
+
+// Schema for document additional data (shared overrides)
+const additionalDataSchema = z.object({
+  language: z.enum(["th", "en", "cn"]).optional().default("th"),
+  client_name_override: z.string().optional(),
+  client_email_override: z.string().email().optional().or(z.literal("")),
+  client_line_override: z.string().optional(),
+  payment_period: z.string().optional(),
+  payment_method: z.string().optional(),
+  account_name: z.string().optional(),
+  slip_url: z.string().optional(),
+  reservation_fee: z.string().optional(),
+  booking_amount: z.string().optional(),
+}).passthrough();
 
 /**
  * Convert an image URL or Storage path to a Base64 Data URL.
@@ -85,6 +101,10 @@ export async function generateDocumentFromTemplateAction(
   additionalData: any = {},
 ) {
   try {
+    // Validate UUIDs
+    if (!z.string().uuid().safeParse(templateId).success) throw new Error("ID เทมเพลตไม่ถูกต้อง");
+    if (!z.string().uuid().safeParse(ownerId).success) throw new Error("ID ข้อมูลเจ้าของไม่ถูกต้อง");
+
     const { supabase, role } = await requireAuthContext();
     assertStaff(role);
 
@@ -95,14 +115,15 @@ export async function generateDocumentFromTemplateAction(
       .eq("id", templateId)
       .single();
 
-    if (tError || !template) throw new Error("Template not found");
+    if (tError) throw new Error(mapDbError(tError));
+    if (!template) throw new Error("ไม่พบข้อมูลเทมเพลต");
 
     // 2. Fetch Owner Data (Lead, Property, Deal)
-    const lang = (additionalData.language as "th" | "en" | "cn") || "th";
+    const validData = additionalDataSchema.parse(additionalData);
+    const lang = validData.language;
     const translations = await getTranslations(lang);
 
     // Base64 process for config images (Logo, Signature, Stamp)
-    // We convert them to Base64 so documents are self-contained and don't require public bucket access.
     const config = { ...siteConfig };
 
     // Process config images in parallel
@@ -133,7 +154,8 @@ export async function generateDocumentFromTemplateAction(
         .select("*")
         .eq("id", ownerId)
         .single();
-      if (lError || !lead) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
+      if (lError) throw new Error(mapDbError(lError));
+      if (!lead) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
       contextData.lead = localizeObject(lead, lang);
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
@@ -141,7 +163,8 @@ export async function generateDocumentFromTemplateAction(
         .select("*")
         .eq("id", ownerId)
         .single();
-      if (pError || !property) throw new Error("ไม่พบข้อมูลทรัพย์สินที่ระบุ");
+      if (pError) throw new Error(mapDbError(pError));
+      if (!property) throw new Error("ไม่พบข้อมูลทรัพย์สินที่ระบุ");
       contextData.property = localizeObject(property, lang);
     } else if (ownerType === "DEAL") {
       const { data: deal, error: dError } = await supabase
@@ -149,7 +172,8 @@ export async function generateDocumentFromTemplateAction(
         .select("*, lead:leads(*), property:properties(*)")
         .eq("id", ownerId)
         .single();
-      if (dError || !deal) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
+      if (dError) throw new Error(mapDbError(dError));
+      if (!deal) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
       contextData.deal = localizeObject(deal, lang);
       contextData.lead = localizeObject((deal as any)?.lead, lang);
       contextData.property = localizeObject((deal as any)?.property, lang);
@@ -172,7 +196,7 @@ export async function generateDocumentFromTemplateAction(
 
         // Ensure payment_period has a fallback (e.g. from transaction date)
         contextData.deal.payment_period =
-          contextData.deal.payment_period ||
+          validData.payment_period ||
           formatDate(deal.transaction_date, lang);
 
         // Try to fetch rental contract if it exists for more details
@@ -198,17 +222,15 @@ export async function generateDocumentFromTemplateAction(
       }
 
       // Allow templates to use deal.reservation_fee or deal.booking_amount
-      // Since it's not in DB yet, fallback to empty string if not in additionalData
-      contextData.deal.reservation_fee = contextData.deal.reservation_fee || "";
-      contextData.deal.booking_amount = contextData.deal.booking_amount || "";
+      contextData.deal.reservation_fee = validData.reservation_fee || "";
+      contextData.deal.booking_amount = validData.booking_amount || "";
     }
 
-    // Merge additional data
-    contextData = { ...contextData, ...additionalData };
+    // Merge additional data (properly sanitized by Zod)
+    contextData = { ...contextData, ...validData };
 
     // Final Image Processing (e.g. Slip) - Convert to Base64
     if (contextData.slip_url) {
-      // If it's a URL, convert it. If it's a storage path, convert it.
       contextData.slip_url = await getImageBase64(
         contextData.slip_url,
         supabase,
@@ -216,31 +238,25 @@ export async function generateDocumentFromTemplateAction(
     }
 
     // Fix: Ensure slip_url is available consistently across all owner types
-    // and make sure many templates that use {{deal.slip_url}} have a fallback
-    if (!contextData.deal) {
-      contextData.deal = {};
-    }
-
-    if (contextData.slip_url) {
-      contextData.deal.slip_url = contextData.slip_url;
-    }
+    if (!contextData.deal) contextData.deal = {};
+    if (contextData.slip_url) contextData.deal.slip_url = contextData.slip_url;
 
     // Apply Overrides
-    if (contextData.client_name_override && contextData.lead) {
-      contextData.lead.full_name = contextData.client_name_override;
+    if (validData.client_name_override && contextData.lead) {
+      contextData.lead.full_name = validData.client_name_override;
     }
-    if (contextData.client_email_override && contextData.lead) {
-      contextData.lead.email = contextData.client_email_override;
+    if (validData.client_email_override && contextData.lead) {
+      contextData.lead.email = validData.client_email_override;
     }
-    if (contextData.client_line_override && contextData.lead) {
-      contextData.lead.line_id = contextData.client_line_override;
+    if (validData.client_line_override && contextData.lead) {
+      contextData.lead.line_id = validData.client_line_override;
     }
 
     // Ensure common fields are at top level context for easier template access
     contextData.payment_period =
-      contextData.payment_period || contextData.deal?.payment_period || "";
-    contextData.payment_method = contextData.payment_method || "Transfer";
-    contextData.account_name = contextData.account_name || "";
+      validData.payment_period || contextData.deal?.payment_period || "";
+    contextData.payment_method = validData.payment_method || "Transfer";
+    contextData.account_name = validData.account_name || "";
 
     // Check for critical missing data
     if (ownerType === "DEAL" && (!contextData.lead || !contextData.property)) {
@@ -364,11 +380,10 @@ export async function generateDocumentFromTemplateAction(
 </html>
     `.trim();
 
-    // Convert string to UTF-8 Uint8Array
+    // Upload generated HTML to storage
     const encoder = new TextEncoder();
     const uint8Array = encoder.encode(finalHtmlContent);
 
-    // Upload generated HTML to storage
     const { error: uploadError } = await supabase.storage
       .from("documents")
       .upload(storagePath, uint8Array, {
@@ -377,12 +392,7 @@ export async function generateDocumentFromTemplateAction(
         upsert: false,
       });
 
-    if (uploadError) {
-      console.error("Upload Error:", uploadError);
-      throw new Error(
-        `ไม่สามารถอัปโหลดไฟล์เอกสารไปยัง Storage ได้: ${uploadError.message === "Payload too large" ? "ไฟล์ใหญ่เกินไป" : "เซิร์ฟเวอร์ขัดข้อง"}`,
-      );
-    }
+    if (uploadError) throw new Error(`ไม่สามารถอัปโหลดไฟล์ได้: ${mapDbError(uploadError)} `);
 
     // 5. Create Document Metadata
     const docRes = await createDocumentRecordAction({
@@ -395,17 +405,14 @@ export async function generateDocumentFromTemplateAction(
       version: 1,
     });
 
-    if (!docRes.success) {
-      console.error("DB Record Error:", docRes.message);
-      throw new Error("บันทึกข้อมูลลงฐานข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
-    }
+    if (!docRes.success) throw new Error(docRes.message || "บันทึกข้อมูลเข้าฐานข้อมูลไม่สำเร็จ");
 
     revalidatePath("/protected/documents");
     return { success: true, data: docRes.data };
   } catch (error: unknown) {
+    if (error instanceof z.ZodError) return { success: false, message: "ข้อมูลนำเข้าไม่ถูกต้อง: " + error.issues[0].message };
     console.error("Document Generation Error:", error);
-    const msg =
-      error instanceof Error ? error.message : "เกิดข้อผิดพลาดที่ไม่รู้จัก";
+    const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างเอกสาร";
     return { success: false, message: msg };
   }
 }
@@ -418,24 +425,25 @@ export async function generateDocxDocumentFromTemplateAction(
   options?: { templateName?: string },
 ) {
   try {
+    // Validate Input
+    if (!z.string().uuid().safeParse(ownerId).success) throw new Error("ID ข้อมูลเจ้าของไม่ถูกต้อง");
+    const validData = additionalDataSchema.parse(additionalData);
+
     const { supabase, role } = await requireAuthContext();
     assertStaff(role);
 
     // 1. Fetch the DOCX template from storage
     const { data: fileData, error: fileError } = await supabase.storage
-      .from("documents") // assuming the template is uploaded to 'documents' bucket
+      .from("documents")
       .download(docxStoragePath);
 
-    if (fileError || !fileData) {
-      throw new Error(
-        `ไม่สามารถโหลดไฟล์เทมเพลต DOCX ได้: ${fileError?.message || "File not found"}`,
-      );
-    }
+    if (fileError) throw new Error(`ไม่สามารถโหลดเทมเพลตได้: ${mapDbError(fileError)}`);
+    if (!fileData) throw new Error("ไม่พบไฟล์เทมเพลต");
 
     const templateBuffer = Buffer.from(await fileData.arrayBuffer());
 
     // 2. Prepare Context (similar to generateDocumentFromTemplateAction)
-    const lang = (additionalData.language as "th" | "en" | "cn") || "th";
+    const lang = validData.language;
     const translations = await getTranslations(lang);
 
     let contextData: any = {
@@ -451,7 +459,8 @@ export async function generateDocxDocumentFromTemplateAction(
         .select("*")
         .eq("id", ownerId)
         .single();
-      if (lError || !lead) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
+      if (lError) throw new Error(mapDbError(lError));
+      if (!lead) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
       contextData.lead = localizeObject(lead, lang);
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
@@ -459,7 +468,8 @@ export async function generateDocxDocumentFromTemplateAction(
         .select("*")
         .eq("id", ownerId)
         .single();
-      if (pError || !property) throw new Error("ไม่พบข้อมูลทรัพย์สินที่ระบุ");
+      if (pError) throw new Error(mapDbError(pError));
+      if (!property) throw new Error("ไม่พบข้อมูลทรัพย์สินที่ระบุ");
       contextData.property = localizeObject(property, lang);
     } else if (ownerType === "DEAL") {
       const { data: deal, error: dError } = await supabase
@@ -467,7 +477,8 @@ export async function generateDocxDocumentFromTemplateAction(
         .select("*, lead:leads(*), property:properties(*)")
         .eq("id", ownerId)
         .single();
-      if (dError || !deal) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
+      if (dError) throw new Error(mapDbError(dError));
+      if (!deal) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
       contextData.deal = localizeObject(deal, lang);
       contextData.lead = localizeObject((deal as any)?.lead, lang);
       contextData.property = localizeObject((deal as any)?.property, lang);
@@ -484,7 +495,7 @@ export async function generateDocxDocumentFromTemplateAction(
             ? amountToThaiWords(price)
             : amountToEnglishWords(price);
         contextData.deal.payment_period =
-          contextData.deal.payment_period ||
+          validData.payment_period ||
           formatDate(deal.transaction_date, lang);
 
         if (isRent) {
@@ -506,75 +517,55 @@ export async function generateDocxDocumentFromTemplateAction(
           }
         }
       }
-      contextData.deal.reservation_fee = contextData.deal.reservation_fee || "";
-      contextData.deal.booking_amount = contextData.deal.booking_amount || "";
+      contextData.deal.reservation_fee = validData.reservation_fee || "";
+      contextData.deal.booking_amount = validData.booking_amount || "";
     }
 
-    // Merge additional overrides
-    contextData = { ...contextData, ...additionalData };
+    // Merge additional data (properly sanitized)
+    contextData = { ...contextData, ...validData };
 
-    if (contextData.client_name_override && contextData.lead) {
-      contextData.lead.full_name = contextData.client_name_override;
+    if (validData.client_name_override && contextData.lead) {
+      contextData.lead.full_name = validData.client_name_override;
     }
-    if (contextData.client_email_override && contextData.lead) {
-      contextData.lead.email = contextData.client_email_override;
+    if (validData.client_email_override && contextData.lead) {
+      contextData.lead.email = validData.client_email_override;
     }
-    if (contextData.client_line_override && contextData.lead) {
-      contextData.lead.line_id = contextData.client_line_override;
+    if (validData.client_line_override && contextData.lead) {
+      contextData.lead.line_id = validData.client_line_override;
     }
 
     contextData.payment_period =
-      contextData.payment_period || contextData.deal?.payment_period || "";
-    contextData.payment_method = contextData.payment_method || "Transfer";
-    contextData.account_name = contextData.account_name || "";
+      validData.payment_period || contextData.deal?.payment_period || "";
+    contextData.payment_method = validData.payment_method || "Transfer";
+    contextData.account_name = validData.account_name || "";
 
     // 3. Process the DOCX with docxtemplater
     let zip;
     try {
       zip = new PizZip(templateBuffer);
     } catch (e) {
-      throw new Error(
-        "ไฟล์ DOCX ไม่ถูกต้อง หรืออาจจะเสียหาย โปรดตรวจสอบไฟล์อีกครั้ง",
-      );
+      throw new Error("ไฟล์ DOCX ไม่ถูกต้อง หรืออาจจะเสียหาย");
     }
 
     let doc;
     try {
-      doc = new Docxtemplater(zip, {
-        paragraphLoop: true,
-        linebreaks: true,
-      });
-
-      // Render the document
-      // It will replace e.g. {{lead.full_name}} with contextData.lead.full_name
+      doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
       doc.render(contextData);
     } catch (error: any) {
       console.error("Docxtemplater parsing error:", error);
       let errorMsg = "รูปแบบตัวแปร(Tag) ในไฟล์ DOCX ไม่ถูกต้อง";
-
-      // Attempt to extract specific docxtemplater errors
       if (error.properties && error.properties.errors instanceof Array) {
-        const errorDetails = error.properties.errors
-          .map((e: any) => e.properties.explanation || e.message)
-          .join(", ");
+        const errorDetails = error.properties.errors.map((e: any) => e.properties.explanation || e.message).join(", ");
         errorMsg += ` รายละเอียด: ${errorDetails}`;
-      } else if (error.message) {
-        errorMsg += ` (${error.message})`;
       }
-
       throw new Error(errorMsg);
     }
 
-    const buf = doc.getZip().generate({
-      type: "nodebuffer",
-      compression: "DEFLATE",
-    });
+    const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" });
 
     // 4. Save to Storage
     const timestamp = new Date().getTime();
-    const safeTemplateName = (
-      options?.templateName || "custom_contract"
-    ).replace(/[^a-zA-Z0-9ก-๙]/g, "_");
+    const safeTemplateName = (options?.templateName || "custom_contract").replace(/[^a-zA-Z0-9ก-๙]/g, "_");
     const displayFileName = `${safeTemplateName}_${timestamp}.docx`;
     const storageFileName = `generated_${timestamp}.docx`;
     const finalStoragePath = `generated/${ownerType}/${ownerId}/${storageFileName}`;
@@ -582,40 +573,32 @@ export async function generateDocxDocumentFromTemplateAction(
     const { error: uploadError } = await supabase.storage
       .from("documents")
       .upload(finalStoragePath, buf, {
-        contentType:
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         cacheControl: "3600",
         upsert: false,
       });
 
-    if (uploadError) {
-      throw new Error(`อัปโหลดไฟล์ไม่สำเร็จ: ${uploadError.message}`);
-    }
+    if (uploadError) throw new Error(`อัปโหลดไฟล์ไม่สำเร็จ: ${mapDbError(uploadError)}`);
 
     // 5. Create DB Record
     const docRes = await createDocumentRecordAction({
       owner_id: ownerId,
       owner_type: ownerType,
-      document_type: "OTHER", // Can be mapped if needed
+      document_type: "OTHER",
       file_name: displayFileName,
       storage_path: finalStoragePath,
-      mime_type:
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      mime_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       version: 1,
     });
 
-    if (!docRes.success) {
-      throw new Error("บันทึกข้อมูลเอกสารลงระบบไม่สำเร็จ");
-    }
+    if (!docRes.success) throw new Error(docRes.message || "บันทึกข้อมูลเข้าฐานข้อมูลไม่สำเร็จ");
 
     revalidatePath("/protected/documents");
     return { success: true, data: docRes.data };
   } catch (error: unknown) {
+    if (error instanceof z.ZodError) return { success: false, message: "ข้อมูลนำเข้าไม่ถูกต้อง: " + error.issues[0].message };
     console.error("DOCX Generation Error:", error);
-    const msg =
-      error instanceof Error
-        ? error.message
-        : "เกิดข้อผิดพลาดในการสร้างไฟล์ DOCX";
+    const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างไฟล์ DOCX";
     return { success: false, message: msg };
   }
 }

@@ -382,7 +382,13 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                               />
                             </div>
                           </TooltipTrigger>
-                          <TooltipContent>ส่งเซ็น E-Signature</TooltipContent>
+                          <TooltipContent>
+                            {doc.document_type === "LEASE_CONTRACT" ||
+                            doc.document_type === "SALE_CONTRACT" ||
+                            doc.document_type === "RESERVATION_DOCUMENT"
+                              ? "จัดการการเซ็นสัญญา (จะอัปเดตสถานะดีลให้อัตโนมัติ)"
+                              : "จัดการการเซ็น E-Signature"}
+                          </TooltipContent>
                         </Tooltip>
 
                         <Tooltip>

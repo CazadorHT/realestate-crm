@@ -44,10 +44,22 @@ export function ESignDialog({
     try {
       const res = await markAsSignedAction(documentId);
       if (res.success) {
-        toast.success("อัปเดตสถานะเป็นเซ็นชื่อเรียบร้อยแล้ว");
+        if (res.warning) {
+          toast.warning("บันทึกสำเร็จแต่มีคำเตือน", {
+            description: res.warning,
+            duration: 8000,
+          });
+        } else {
+          toast.success("อัปเดตสถานะเป็นเซ็นชื่อเรียบร้อยแล้ว");
+        }
         setStatus(res.status);
+        // We might want to close the dialog on success, but since it has a 'Signed' state, 
+        // maybe it stays open to show the new status. 
+        // Based on current code, it just updates local status.
       } else {
-        toast.error(res.message || "ไม่สามารถอัปเดตสถานะได้");
+        toast.error("ไม่สามารถอัปเดตสถานะได้", {
+          description: res.message,
+        });
       }
     } catch (err) {
       toast.error("เกิดข้อผิดพลาดในการบันทึก");
@@ -130,7 +142,14 @@ export function ESignDialog({
                 </div>
                 <ConfirmDialog
                   title="ยืนยันการเซ็นสัญญา"
-                  description="คุณแน่ใจหรือไม่ว่าลูกค้าได้เซ็นสัญญานี้เรียบร้อยแล้ว? ระบบจะบันทึกสถานะว่า 'เซ็นแล้ว' และไม่สามารถย้อนกลับได้"
+                  description={
+                    documentName.toLowerCase().includes("contract") ||
+                    documentName.toLowerCase().includes("lease") ||
+                    documentName.toLowerCase().includes("sale") ||
+                    documentName.toLowerCase().includes("reservation")
+                      ? "คุณแน่ใจหรือไม่ว่าลูกค้าได้เซ็นสัญญานี้เรียบร้อยแล้ว? ระบบจะบันทึกสถานะว่า 'เซ็นแล้ว' และจะปรับสถานะดีลนี้เป็น 'สำเร็จ' พร้อมตัดสต็อกทรัพย์สินให้โดยอัตโนมัติ"
+                      : "คุณแน่ใจหรือไม่ว่าลูกค้าได้เซ็นเอกสารนี้เรียบร้อยแล้ว? ระบบจะบันทึกสถานะว่า 'เซ็นแล้ว' และไม่สามารถย้อนกลับได้"
+                  }
                   onConfirm={handleManualSign}
                   trigger={
                     <Button

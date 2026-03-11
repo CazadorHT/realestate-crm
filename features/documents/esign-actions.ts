@@ -1,162 +1,95 @@
 "use server";
 
 import { requireAuthContext, assertStaff } from "@/lib/authz";
-import { getESignService, ESignStatus } from "./esign-service";
-import { getDocumentSignedUrl } from "./actions";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { mapDbError } from "@/lib/db-error";
+import { updateDealAction } from "@/features/deals/actions";
 
 /**
- * Initiate e-Signature for a document
+ * E-Signature Statuses
  */
-export async function initiateESignAction(documentId: string) {
-  try {
-    const { supabase, role } = await requireAuthContext();
-    assertStaff(role);
+export type ESignStatus = "DRAFT" | "SENT" | "SIGNED" | "DECLINED" | "EXPIRED";
 
-    // 1. Fetch document and owner info
-    const { data: doc, error: dError } = await supabase
-      .from("documents")
-      .select("*, lead:leads(*)")
-      .eq("id", documentId)
-      .single();
-
-    if (dError || !doc) throw new Error("ไม่พบเอกสารที่ระบุ");
-
-    // Check if already signed
-    if (doc.esign_status === "SIGNED") {
-      throw new Error(
-        "เอกสารนี้ได้รับการลงนามเรียบร้อยแล้ว ไม่สามารถส่งซ้ำได้",
-      );
-    }
-
-    // Check if already sent and waiting
-    if (doc.esign_status === "SENT") {
-      // Allow resending if needed? Usually we should sync first.
-      // For now, let's just warn or allow it to overwrite if the user really wants.
-      // But a safer bridge is to sync status first.
-    }
-
-    // We only support e-signature for LEAD owner types for now
-    const recipientEmail = (doc.lead as any)?.email;
-    const recipientName = (doc.lead as any)?.full_name || "Recipient";
-
-    if (!recipientEmail) {
-      throw new Error(
-        `ลีด "${recipientName}" ไม่มีอีเมลสำหรับส่งสัญญาเซ็นออนไลน์ กรุณาเพิ่มอีเมลที่ข้อมูลลีดก่อน`,
-      );
-    }
-
-    // Email format validation simple check
-    if (!recipientEmail.includes("@")) {
-      throw new Error("อีเมลของลีดไม่ถูกต้อง (Invalid Email Format)");
-    }
-
-    // 2. Get Signed URL for the document (to pass to Adobe Sign)
-    const documentUrl = await getDocumentSignedUrl(doc.storage_path);
-    if (!documentUrl) throw new Error("ไม่สามารถสร้างลิงก์สำหรับส่งเอกสารได้");
-
-    // 3. Call e-Signature Service
-    const esignService = getESignService();
-    const result = await esignService.createEnvelope({
-      documentUrl,
-      recipientEmail,
-      recipientName,
-      subject: `สัญญา ${doc.file_name}`,
-      message: "กรุณาตรวจสอบและลงนามในสัญญาอิเล็กทรอนิกส์นี้",
-    });
-
-    // 4. Update Document Record
-    const { error: uError } = await supabase
-      .from("documents")
-      .update({
-        esign_status: result.status,
-        esign_provider: process.env.ESIGN_PROVIDER || "MOCK",
-        esign_envelope_id: result.envelopeId,
-      })
-      .eq("id", documentId);
-
-    if (uError)
-      throw new Error(
-        "บันทึกข้อมูล e-Sign ลงฐานข้อมูลไม่สำเร็จ: " + uError.message,
-      );
-
-    revalidatePath("/protected/documents");
-    return { success: true, status: result.status };
-  } catch (error: unknown) {
-    console.error("Initiate ESign Error:", error);
-    const msg =
-      error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการส่งสัญญา";
-    return { success: false, message: msg };
-  }
-}
-
-/**
- * Sync status from e-Signature provider
- */
-export async function syncESignStatusAction(documentId: string) {
-  try {
-    const { supabase, role } = await requireAuthContext();
-    assertStaff(role);
-
-    const { data: doc, error: dError } = await supabase
-      .from("documents")
-      .select("esign_envelope_id, esign_status")
-      .eq("id", documentId)
-      .single();
-
-    if (dError || !doc || !doc.esign_envelope_id) {
-      throw new Error("ไม่มีข้อมูลการส่งเซ็นสำหรับเอกสารนี้");
-    }
-
-    const esignService = getESignService();
-    const newStatus = await esignService.getEnvelopeStatus(
-      doc.esign_envelope_id,
-    );
-
-    if (newStatus !== doc.esign_status) {
-      const { error: uError } = await supabase
-        .from("documents")
-        .update({
-          esign_status: newStatus,
-          esign_signed_at:
-            newStatus === "SIGNED" ? new Date().toISOString() : null,
-        })
-        .eq("id", documentId);
-
-      if (uError) throw new Error(uError.message);
-    }
-
-    revalidatePath("/protected/documents");
-    return { success: true, status: newStatus };
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "Sync error";
-    return { success: false, message: msg };
-  }
-}
+// Input Validation Schema
+const markAsSignedSchema = z.object({
+  documentId: z.string().uuid("ID เอกสารไม่ถูกต้อง"),
+});
 
 /**
  * Manually mark a document as signed (Simple mode)
+ * This is used when the signature is collected manually or outside the automated system.
+ * Now integrated: If the document is a contract related to a DEAL, it updates the deal to CLOSED_WIN.
  */
 export async function markAsSignedAction(documentId: string) {
   try {
-    const { supabase, role, user } = await requireAuthContext();
+    const { supabase, role } = await requireAuthContext();
     assertStaff(role);
 
-    const { error } = await supabase
+    // 1. Validate Input
+    const validated = markAsSignedSchema.parse({ documentId });
+
+    // 2. Fetch document metadata to check owner and type
+    const { data: doc, error: fetchErr } = await supabase
+      .from("documents")
+      .select("id, owner_id, owner_type, document_type, esign_status")
+      .eq("id", validated.documentId)
+      .single();
+
+    if (fetchErr) throw new Error(mapDbError(fetchErr));
+    if (!doc) throw new Error("หาเอกสารไม่พบ");
+
+    // 3. Prevent redundant marking
+    if (doc.esign_status === "SIGNED") {
+      return { success: true, status: "SIGNED" as const };
+    }
+
+    // 4. Update document status
+    const { error: updateErr } = await supabase
       .from("documents")
       .update({
         esign_status: "SIGNED",
         esign_signed_at: new Date().toISOString(),
       })
-      .eq("id", documentId);
+      .eq("id", validated.documentId);
 
-    if (error)
-      throw new Error("ไม่สามารถอัปเดตสถานะเอกสารได้: " + error.message);
+    if (updateErr) throw new Error(mapDbError(updateErr));
+
+    let warning: string | undefined;
+
+    // 5. Automation: If it's a LEASE_CONTRACT/SALE_CONTRACT for a DEAL, mark deal as WON
+    if (
+      doc.owner_type === "DEAL" &&
+      (doc.document_type === "LEASE_CONTRACT" ||
+        doc.document_type === "SALE_CONTRACT")
+    ) {
+      try {
+        const dealRes = await updateDealAction({
+          id: doc.owner_id,
+          status: "CLOSED_WIN",
+        });
+
+        if (!dealRes.success) {
+          warning = `บันทึกการเซ็นสำเร็จ แต่ไม่สามารถอัปเดตสถานะดีลได้โดยอัตโนมัติ: ${dealRes.message}`;
+        }
+      } catch (dealErr) {
+        console.error("Deal Auto-update unexpected error:", dealErr);
+        warning = "บันทึกการเซ็นสำเร็จ แต่เกิดข้อผิดพลาดในการอัปเดตสถานะดีล";
+      }
+    }
 
     revalidatePath("/protected/documents");
-    return { success: true, status: "SIGNED" as const };
+    revalidatePath("/protected/deals");
+    if (doc.owner_type === "DEAL") {
+      revalidatePath(`/protected/deals/${doc.owner_id}`);
+    }
+
+    return { success: true, status: "SIGNED" as const, warning };
   } catch (error: unknown) {
     console.error("Manual Sign Error:", error);
+    if (error instanceof z.ZodError) {
+      return { success: false, message: error.issues[0].message };
+    }
     const msg =
       error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการบันทึก";
     return { success: false, message: msg };
