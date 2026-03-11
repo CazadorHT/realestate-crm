@@ -30,7 +30,7 @@ export function PropertyCardFeatures({
 
   return (
     <div className="hidden sm:flex flex-wrap gap-1 mt-2 h-6 overflow-hidden">
-      {features.slice(0, 3).map((f) => (
+      {features.slice(0, 4).map((f) => (
         <span
           key={f.id}
           className="text-[10px] px-1.5 py-0.5 bg-slate-100 hover:bg-blue-100 hover:text-blue-700  text-slate-500 rounded-md border border-slate-200 group-hover:bg-slate-100 duration-300 group-hover:text-slate-700"

@@ -117,12 +117,12 @@ export function PropertyCardFooter({
                     </span>
                   </div>
                   {/* Current Price */}
-                  <div className="order-1 text-sm sm:text-base lg:text-sm xl:text-lg font-bold text-rose-600 truncate">
+                  <div className="order-1 text-base lg:text-md xl:text-lg font-bold text-rose-600 truncate">
                     {formatPrice(property.price, language)}
                   </div>
                 </div>
               ) : (
-                <div className="text-sm sm:text-base lg:text-sm xl:text-lg font-bold text-slate-900 truncate">
+                <div className="text-base lg:text-md xl:text-lg font-bold text-slate-900 truncate">
                   {property.price || property.original_price
                     ? formatPrice(
                         property.price || property.original_price!,
@@ -159,7 +159,7 @@ export function PropertyCardFooter({
                     </span>
                   </div>
                   {/* Current Price */}
-                  <div className="order-1 text-sm sm:text-base lg:text-sm xl:text-lg font-bold text-rose-600 truncate">
+                  <div className="order-1 text-base lg:text-md xl:text-lg font-bold text-rose-600 truncate">
                     {formatPrice(property.rental_price, language)}
                     <span className="text-[10px] text-slate-500 font-normal ml-0.5">
                       {t("common.per_month_short")}
@@ -168,7 +168,7 @@ export function PropertyCardFooter({
                 </div>
               ) : (
                 <div className="flex flex-wrap items-baseline">
-                  <div className="text-sm sm:text-base lg:text-sm xl:text-lg font-bold text-slate-900 truncate">
+                  <div className="text-base lg:text-md xl:text-lg font-bold text-slate-900 truncate">
                     {property.rental_price || property.original_rental_price
                       ? formatPrice(
                           property.rental_price ||
@@ -191,7 +191,7 @@ export function PropertyCardFooter({
                 ? t("common.rent_price")
                 : t("common.sale_price")}
             </div>
-            <div className="text-base md:text-xl font-bold text-[#1B263B] truncate flex items-baseline gap-1 md:gap-2">
+            <div className="text-base lg:text-md xl:text-lg font-bold text-[#1B263B] truncate flex items-baseline gap-1 md:gap-2">
               {/* SALE or RENT Discount Logic */}
               {(property.listing_type === "SALE"
                 ? property.original_price

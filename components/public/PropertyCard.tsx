@@ -307,7 +307,7 @@ export function PropertyCard({
         />
 
         {/* Content Section */}
-        <div className="pt-2 pb-4 sm:pb-5 md:pb-6 px-4 sm:px-5 md:px-6 mt-2 sm:mt-2 md:mt-3 gap-y-2 sm:gap-y-2 md:gap-y-3 grow min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col">
+        <div className="pt-2 pb-4 sm:pb-5 md:pb-6 px-4 mt-2 sm:mt-2 md:mt-3 gap-y-2 sm:gap-y-2 md:gap-y-3 grow min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col">
           <PropertyCardInfo property={property} areaProvince={areaProvince} />
 
           <PropertyCardSpecs property={property} />
