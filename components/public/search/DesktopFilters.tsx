@@ -324,7 +324,7 @@ export function DesktopFilters({
           <Button
             variant="outline"
             onClick={clearFilters}
-            className="h-12 px-5 rounded-xl border-2 border-slate-100 hover:border-rose-200 hover:text-rose-600 hover:bg-rose-50 font-medium transition-all"
+            className="h-12 px-5 rounded-xl border-2 border-slate-100 text-slate-500 hover:border-rose-200 hover:text-rose-600 hover:bg-rose-50 font-medium transition-all"
           >
             <SlidersHorizontal className="h-4 w-4 mr-2 text-rose-500" />
             {t("search.clear_filters")}

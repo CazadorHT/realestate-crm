@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import {
   Home,
-  Building,
   Building2,
   Warehouse,
   MapPin,
@@ -12,21 +11,23 @@ import {
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function MorphingLoader({ className }: { className?: string }) {
   const [index, setIndex] = useState(0);
 
   const icons = [
-    { icon: Home, color: "text-blue-500" },
-    { icon: Building, color: "text-indigo-500" },
-    { icon: Key, color: "text-violet-500" },
-    { icon: MapPin, color: "text-emerald-500" },
+    { icon: Home, color: "text-blue-600" },
+    { icon: Building2, color: "text-indigo-600" },
+    { icon: Key, color: "text-violet-600" },
+    { icon: Warehouse, color: "text-emerald-600" },
+    { icon: MapPin, color: "text-rose-600" },
   ];
 
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % icons.length);
-    }, 300);
+    }, 500); // Premium, smooth pace
     return () => clearInterval(interval);
   }, [icons.length]);
 
@@ -38,35 +39,50 @@ export function MorphingLoader({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center min-h-[400px] w-full",
+        "flex flex-col items-center justify-center min-h-[350px] md:min-h-[500px] w-full transition-all duration-1000",
         className,
       )}
     >
-      <div className="relative flex items-center justify-center h-24 w-24">
-        {/* Pulsing Rings */}
-        <div className="absolute inset-0 rounded-full border-4 border-slate-100 opacity-20 animate-ping" />
-        <div className="absolute inset-0 rounded-full border-4 border-slate-100" />
-
-        {/* Gradient Background */}
-        <div className="absolute inset-2 rounded-full bg-linear-to-tr from-slate-50 to-white shadow-sm flex items-center justify-center overflow-hidden">
-          <CurrentIcon
-            className={cn(
-              "h-10 w-10 transition-all duration-500 transform",
-              currentColor,
-              "animate-in zoom-in-50 fade-in-0 slide-in-from-bottom-2",
-            )}
-            key={index} // Force re-render for animation
-          />
+      <div className="relative flex items-center justify-center h-28 w-28 md:h-32 md:w-32">
+        {/* Soft Background Rings */}
+        <div className="absolute inset-[-12px] rounded-full border border-slate-100/50 animate-pulse duration-3000" />
+        <div className="absolute inset-0 rounded-full bg-white shadow-2xl shadow-slate-200/60 border border-slate-50 flex items-center justify-center overflow-hidden">
+          {/* Subtle Ambient Light */}
+          <div className="absolute inset-0 bg-linear-to-tr from-slate-50 to-white opacity-50" />
+          
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.1 }}
+              transition={{ duration: 0.3, ease: "easeOut" }} // Faster for 500ms interval
+              className={cn("relative z-10", currentColor)}
+            >
+              <CurrentIcon className="h-11 w-11 md:h-12 md:w-12" />
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
-      <div className="mt-8 text-center space-y-2">
-        <h3 className="text-lg font-semibold text-slate-900 animate-pulse">
-          {t("loading.search_dream_home")}
-        </h3>
-        <p className="text-slate-400 text-sm">
-          {t("loading.subtitle", { siteName: siteConfig.name })}
-        </p>
+      <div className="mt-10 text-center space-y-3 px-6">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-3"
+          >
+            <h3 className="text-xl font-medium text-slate-900 tracking-tight">
+              {t("loading.search_dream_home")}
+            </h3>
+            <p className="text-slate-400 text-sm max-w-[300px] mx-auto leading-relaxed">
+              {t("loading.subtitle", { siteName: siteConfig.name })}
+            </p>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
