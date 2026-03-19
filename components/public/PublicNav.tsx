@@ -16,10 +16,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { DepositWizard } from "./deposit/DepositWizard";
 import { CheckCircle } from "lucide-react";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { cn } from "@/lib/utils";
 
 export function PublicNav() {
   const pathname = usePathname();
@@ -249,7 +258,7 @@ export function PublicNav() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
-                      className="w-[150px] z-101"
+                      className="w-[150px] z-200"
                     >
                       <DropdownMenuItem
                         onClick={() => setLanguage("th")}
@@ -408,47 +417,73 @@ export function PublicNav() {
               <div className="xl:hidden flex items-center gap-3">
                 {/* Mobile Language Switcher (Compact) */}
                 {mounted ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                  <Sheet>
+                    <SheetTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="text-slate-600 hover:bg-slate-100"
                       >
-                        {/* Mobile: Just the flag */}
                         {currentLangFlag[language]}
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => setLanguage("th")}
-                        className="gap-3"
-                      >
-                        <span className="fi fi-th mr-3 rounded-sm shadow-sm" />{" "}
-                        TH
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setLanguage("en")}
-                        className="gap-3"
-                      >
-                        <span className="fi fi-us mr-3 rounded-sm shadow-sm" />{" "}
-                        EN
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setLanguage("cn")}
-                        className="gap-3"
-                      >
-                        <span className="fi fi-cn mr-3 rounded-sm shadow-sm" />{" "}
-                        CN
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </SheetTrigger>
+                    <SheetContent
+                      side="bottom"
+                      className="h-auto rounded-t-2xl flex flex-col p-4 pb-8 bg-white"
+                    >
+                      <SheetHeader className="pb-4 border-b border-slate-100">
+                        <SheetTitle className="text-slate-900">
+                          {t("nav.select_language")}
+                        </SheetTitle>
+                      </SheetHeader>
+                      <div className="py-4 space-y-3">
+                        <SheetClose asChild>
+                          <button
+                            onClick={() => setLanguage("th")}
+                            className={cn(
+                              "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
+                              language === "th"
+                                ? "bg-blue-600 text-white border-blue-600"
+                                : "bg-slate-50 text-slate-700 border-slate-100"
+                            )}
+                          >
+                            <span className="fi fi-th h-5 w-7 rounded-sm shadow-sm" />
+                            <span className="font-bold">Thai (ภาษาไทย)</span>
+                          </button>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <button
+                            onClick={() => setLanguage("en")}
+                            className={cn(
+                              "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
+                              language === "en"
+                                ? "bg-blue-600 text-white border-blue-600"
+                                : "bg-slate-50 text-slate-700 border-slate-100"
+                            )}
+                          >
+                            <span className="fi fi-us h-5 w-7 rounded-sm shadow-sm" />
+                            <span className="font-bold">English</span>
+                          </button>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <button
+                            onClick={() => setLanguage("cn")}
+                            className={cn(
+                              "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
+                              language === "cn"
+                                ? "bg-blue-600 text-white border-blue-600"
+                                : "bg-slate-50 text-slate-700 border-slate-100"
+                            )}
+                          >
+                            <span className="fi fi-cn h-5 w-7 rounded-sm shadow-sm" />
+                            <span className="font-bold">Chinese (中文)</span>
+                          </button>
+                        </SheetClose>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
                 ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-slate-600"
-                  >
+                  <Button variant="ghost" size="icon" className="text-slate-600">
                     <span className="fi fi-th h-3 w-4 rounded-sm shadow-sm" />
                   </Button>
                 )}

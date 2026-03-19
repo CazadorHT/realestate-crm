@@ -11,6 +11,11 @@ import {
 import {
   Search,
   SlidersHorizontal,
+  Sparkles,
+  ArrowUpNarrowWide,
+  ArrowDownWideNarrow,
+  Minimize2,
+  Maximize2,
 } from "lucide-react";
 import {
   Sheet,
@@ -76,6 +81,8 @@ interface MobileFiltersProps {
   setShowAllProvincesMobile: (v: boolean) => void;
   showAllAreasMobile: boolean;
   setShowAllAreasMobile: (v: boolean) => void;
+  sort: string;
+  setSort: (v: string) => void;
   t: (key: string) => string;
   language: string;
   PROPERTY_TYPES: { value: string; label: string }[];
@@ -132,6 +139,8 @@ export function MobileFilters({
   setShowAllProvincesMobile,
   showAllAreasMobile,
   setShowAllAreasMobile,
+  sort,
+  setSort,
   t,
   language,
   PROPERTY_TYPES,
@@ -152,6 +161,86 @@ export function MobileFilters({
           onChange={(e) => setKeyword(e.target.value)}
         />
       </div>
+      {/* Sort by */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-12 w-12 p-0 rounded-xl border-slate-200 bg-white shadow-sm shrink-0"
+          >
+            <ArrowUpNarrowWide className="h-5 w-5 text-slate-600" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="h-auto rounded-t-2xl flex flex-col p-0 bg-slate-50 overflow-hidden"
+        >
+          <SheetHeader className="px-6 py-4 border-b border-slate-100 bg-white text-slate-900">
+            <SheetTitle>{t("search.sort_by")}</SheetTitle>
+          </SheetHeader>
+          <div className="p-4 pb-12 space-y-2">
+            {[
+              {
+                value: "NEWEST",
+                label: t("search.sort_newest"),
+                icon: Sparkles,
+                color: "text-amber-500",
+              },
+              {
+                value: "PRICE_ASC",
+                label: t("search.sort_price_asc"),
+                icon: ArrowUpNarrowWide,
+                color: "text-emerald-500",
+              },
+              {
+                value: "PRICE_DESC",
+                label: t("search.sort_price_desc"),
+                icon: ArrowDownWideNarrow,
+                color: "text-rose-500",
+              },
+              {
+                value: "AREA_ASC",
+                label: t("search.sort_area_asc"),
+                icon: Minimize2,
+                color: "text-blue-500",
+              },
+              {
+                value: "AREA_DESC",
+                label: t("search.sort_area_desc"),
+                icon: Maximize2,
+                color: "text-indigo-500",
+              },
+            ].map((opt) => (
+              <SheetClose asChild key={opt.value}>
+                <button
+                  onClick={() => setSort(opt.value)}
+                  className={cn(
+                    "w-full flex items-center justify-between p-4 rounded-xl border transition-all",
+                    sort === opt.value
+                      ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                      : "bg-white text-slate-700 border-slate-200 hover:border-blue-300"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <opt.icon
+                      className={cn(
+                        "h-5 w-5",
+                        sort === opt.value ? "text-white" : opt.color
+                      )}
+                    />
+                    <span className="font-medium text-sm">{opt.label}</span>
+                  </div>
+                  {sort === opt.value && (
+                    <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_white]" />
+                  )}
+                </button>
+              </SheetClose>
+            ))}
+          </div>
+          <div className="h-4 bg-slate-50" />
+        </SheetContent>
+      </Sheet>
+      {/* Filter */}
       <Sheet>
         <SheetTrigger asChild>
           <Button
@@ -428,7 +517,7 @@ export function MobileFilters({
             </div>
           </div>
 
-          <SheetFooter className="p-6 border-t border-slate-100 bg-white pb-8">
+          <SheetFooter className="p-6 border-t border-slate-100 bg-white pb-10">
             <SheetClose asChild>
               <Button className="w-full h-12 text-lg rounded-xl bg-linear-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-200/50">
                 {t("search.view_results")} ({filteredLength} {t("search.items")})
@@ -436,6 +525,7 @@ export function MobileFilters({
             </SheetClose>
           </SheetFooter>
         </SheetContent>
+
       </Sheet>
     </div>
   );

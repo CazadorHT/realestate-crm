@@ -11,7 +11,9 @@
     "deposit": "委托出租/出售",
     "favorites": "我的收藏",
     "privacy_policy": "隐私政策",
-    "support": "帮助与支持"
+    "support": "帮助与支持",
+    "select_language": "选择语言"
+
   },
   "breadcrumb": {
     "home": "首页",
@@ -511,6 +513,7 @@
     "sort_price_desc": "价格：从高到低",
     "sort_area_asc": "面积：从小到大",
     "sort_area_desc": "面积：从大到小",
+    "area_size": "建筑面积",
     "clear_filters": "清除过滤器",
     "no_results": "未找到搜索结果，请尝试其他过滤器。",
     "found_total": "共找到",

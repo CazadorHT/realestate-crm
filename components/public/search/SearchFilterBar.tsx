@@ -372,6 +372,8 @@ export function SearchFilterBar({
           setShowAllProvincesMobile={setShowAllProvincesMobile}
           showAllAreasMobile={showAllAreasMobile}
           setShowAllAreasMobile={setShowAllAreasMobile}
+          sort={sort}
+          setSort={setSort}
           t={t}
           language={language}
           PROPERTY_TYPES={PROPERTY_TYPES}
