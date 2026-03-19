@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { ArrowLeft, BadgeHelp, CalendarDays, MapPin } from "lucide-react";
@@ -501,7 +501,7 @@ export function PropertyHeader({
                       variant="outline"
                       className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
                     >
-                     🏗️ {t("property.specs.bare_shell")}
+                      🏗️ {t("property.specs.bare_shell")}
                     </Badge>
                   )}
                 </div>
@@ -534,7 +534,9 @@ export function PropertyHeader({
                     title="Copy Property ID"
                   >
                     <Copy className="w-3.5 h-3.5 group-hover/copy:scale-110 transition-transform" />
-                    <span className="text-xs font-mono lowercase">ref: {property.id.slice(0, 8)}</span>
+                    <span className="text-xs font-mono lowercase">
+                      ref: {property.id.slice(0, 8)}
+                    </span>
                   </button>
                 </div>
                 <KeySellingPoints

@@ -470,8 +470,6 @@ export default async function PublicPropertyDetailPage(props: {
               </div>
             </aside>
           </div>
-
-
           {/* Similar Properties Section */}
           <SimilarPropertiesSection
             currentPropertyId={data.id}
