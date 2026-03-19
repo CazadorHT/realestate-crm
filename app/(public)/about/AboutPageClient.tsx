@@ -39,17 +39,17 @@ export default function AboutPageClient() {
 
   const values = [
     {
-      icon: <ShieldCheck className="w-8 h-8 text-blue-600" />,
+      icon: <ShieldCheck className="w-8 h-8 text-blue-600 group-hover:text-white" />,
       title: t("about.value1_title"),
       desc: t("about.value1_desc"),
     },
     {
-      icon: <Target className="w-8 h-8 text-indigo-600" />,
+      icon: <Target className="w-8 h-8 text-indigo-600 group-hover:text-white" />,
       title: t("about.value2_title"),
       desc: t("about.value2_desc"),
     },
     {
-      icon: <Cpu className="w-8 h-8 text-purple-600" />,
+      icon: <Cpu className="w-8 h-8 text-purple-600 group-hover:text-white" />,
       title: t("about.value3_title"),
       desc: t("about.value3_desc"),
     },
