@@ -83,20 +83,33 @@ export default function Loading() {
                 </div>
               </section>
 
-              {/* Badges Section */}
-              <section className="flex flex-wrap gap-2 animate-pulse border-b border-slate-100 pb-4">
-                <div className="h-8 w-24 bg-slate-100 rounded-full" />
-                <div className="h-8 w-32 bg-slate-50 rounded-full" />
-                <div className="h-8 w-28 bg-slate-50 rounded-full" />
+              {/* Badges Section (Ticker style) */}
+              <section className="animate-pulse border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="h-9 w-24 bg-emerald-100/50 rounded-full shrink-0" />
+                  <div className="h-9 w-32 bg-slate-100 rounded-full shrink-0" />
+                  <div className="h-9 w-28 bg-slate-50 rounded-full shrink-0" />
+                  <div className="h-9 w-36 bg-slate-50 rounded-full shrink-0" />
+                  <div className="h-9 w-24 bg-slate-50 rounded-full shrink-0" />
+                </div>
               </section>
 
               {/* Description */}
               <section className="space-y-4 animate-pulse">
-                <div className="h-12 w-48 bg-blue-50 border-l-4 border-blue-200 rounded-r-xl" />
+                <div className="h-12 w-48 bg-blue-50 border-l-4 border-blue-600 rounded-r-xl" />
                 <div className="space-y-3">
                   <div className="h-4 w-full bg-slate-50 rounded" />
                   <div className="h-4 w-full bg-slate-50 rounded" />
                   <div className="h-4 w-[90%] bg-slate-50 rounded" />
+                </div>
+              </section>
+
+              {/* Nearby Places [NEW] */}
+              <section className="space-y-6 animate-pulse mt-10">
+                <div className="h-12 w-56 bg-blue-50 border-l-4 border-blue-600 rounded-r-xl" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 h-[120px]" />
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 h-[120px]" />
                 </div>
               </section>
 
@@ -125,13 +138,15 @@ export default function Loading() {
             </div>
 
             {/* Right Sidebar */}
-            <aside className="relative space-y-6">
-              <div className="animate-pulse space-y-6 lg:top-24 lg:sticky">
+            <aside className="relative space-y-6 flex flex-col md:flex-row xl:flex-col gap-6 w-full">
+              <div className="animate-pulse space-y-6 w-full flex-1">
                 {/* Suitability */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 h-[200px]" />
+              </div>
 
+              <div className="animate-pulse w-full flex-1">
                 {/* Agent Sidebar */}
-                <div className="rounded-3xl border border-slate-100 bg-white p-6 md:p-8 shadow-sm">
+                <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="h-16 w-16 md:h-20 md:w-20 lg:h-16 lg:w-16 bg-slate-100 rounded-full shrink-0" />
                     <div className="flex-1 space-y-2">
