@@ -245,8 +245,22 @@ export function usePropertyFiltering(
         );
       }
       if (sort === "PRICE_ASC" || sort === "PRICE_DESC") {
-        const pA = a.price || a.rental_price || 0;
-        const pB = b.price || b.rental_price || 0;
+        const getEffectivePrice = (p: ApiProperty) => {
+          const pSale = p.price || p.original_price || 0;
+          const pRent = p.rental_price || p.original_rental_price || 0;
+
+          // If user specifically filtered for SALE or RENT, prioritize that
+          if (listingType === "RENT" || priceType === "RENT")
+            return pRent || pSale;
+          if (listingType === "SALE" || priceType === "SALE")
+            return pSale || pRent;
+
+          // Default: prefer sale price if both exist, or whichever is available
+          return pSale || pRent;
+        };
+
+        const pA = getEffectivePrice(a);
+        const pB = getEffectivePrice(b);
         return sort === "PRICE_ASC" ? pA - pB : pB - pA;
       }
       if (sort === "AREA_ASC" || sort === "AREA_DESC") {

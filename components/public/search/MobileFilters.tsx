@@ -163,7 +163,7 @@ export function MobileFilters({
         </SheetTrigger>
         <SheetContent
           side="bottom"
-          className="h-[60vh] rounded-t-2xl flex flex-col p-0 bg-slate-50 "
+          className="h-[70vh] rounded-t-2xl flex flex-col p-0 bg-slate-50 "
         >
           <SheetHeader className="px-6 py-4 border-b border-slate-100 bg-white text-slate-900 rounded-t-4xl">
             <SheetTitle>{t("search.filter_title")}</SheetTitle>
