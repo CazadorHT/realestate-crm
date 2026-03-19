@@ -545,32 +545,32 @@ export function PublicNav() {
                 </a>
               ))}
 
-              <div className="pt-4 border-t border-slate-200 flex flex-col gap-3">
-                <div className="flex gap-3">
+              <div className="pt-4 border-t border-slate-200 flex flex-col gap-3" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+                <div className="flex gap-2 sm:gap-3">
                   <Link
                     href="/properties"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1"
+                    className="flex-1 min-w-0"
                   >
                     <Button
                       variant="outline"
                       size="lg"
-                      className="w-full cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-base"
+                      className="w-full cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50 py-6  text-sm sm:text-base"
                     >
-                      <Search className="h-5 w-5 mr-2" />
-                      {t("home.search_btn")}
+                      <Search className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 shrink-0" />
+                      <span className="truncate">{t("home.search_btn")}</span>
                     </Button>
                   </Link>
-                    <Button
-                      size="lg"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        setIsDepositOpen(true);
-                      }}
-                      className="flex-1 cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base outline-none ring-0 border-0 text-white"
-                    >
-                    <Key className="h-5 w-5 mr-2" />
-                    {t("nav.deposit")}
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setIsDepositOpen(true);
+                    }}
+                    className="flex-1 min-w-0 cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6  text-sm sm:text-base outline-none ring-0 border-0 text-white"
+                  >
+                    <Key className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 shrink-0" />
+                    <span className="truncate">{t("nav.deposit")}</span>
                   </Button>
                 </div>
               </div>

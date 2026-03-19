@@ -10,6 +10,7 @@ import { ContactHero } from "@/components/public/contact/ContactHero";
 import { ContactInfoCards } from "@/components/public/contact/ContactInfoCards";
 import { ContactSidebar } from "@/components/public/contact/ContactSidebar";
 import { ContactFAQ } from "@/components/public/contact/ContactFAQ";
+import { motion } from "framer-motion";
 
 export default function ContactPageClient() {
   const { t } = useLanguage();
@@ -20,37 +21,54 @@ export default function ContactPageClient() {
       <div className="absolute top-20 right-0 w-96 h-96 bg-blue-100/40 rounded-full blur-3xl -z-10 translate-x-1/2" />
       <div className="absolute top-40 left-0 w-72 h-72 bg-purple-100/40 rounded-full blur-3xl -z-10 -translate-x-1/2" />
 
-      <ContactHero />
+      <ContactHero 
+        body={
+          <div className="w-full">
+            {/* Desktop Version: Premium Glassmorphism Card */}
+            <div className="hidden lg:block">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.6, ease: "circOut" }}
+              >
+                <Card className="relative shadow-2xl shadow-black/20 border-white/10 bg-white/[0.07] backdrop-blur-xl overflow-hidden ring-1 ring-white/10 rounded-3xl">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-60" />
+                  <CardContent className="p-6 sm:p-8">
+                    <div className="mb-6 flex items-center gap-4 text-left">
+                      <div className="shrink-0 w-10 h-10 bg-blue-500/15 rounded-xl flex items-center justify-center text-blue-400">
+                        <Mail className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-semibold text-white leading-tight">
+                          {t("contact.form_title")}
+                        </h2>
+                        <p className="text-white/40 text-xs font-medium leading-relaxed">
+                          {t("contact.form_subtitle")}
+                        </p>
+                      </div>
+                    </div>
+                    <ContactForm />
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 pb-24 relative z-10">
-        <ContactInfoCards />
+            {/* Mobile/Tablet Version: Simple Trigger within Hero */}
+            <div className="lg:hidden mt-8">
+              <ContactForm />
+            </div>
+          </div>
+        }
+        footer={<ContactInfoCards />}
+      />
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Contact Form */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 lg:mt-24 pb-24 relative z-10 w-full">
+        {/* Info Content Grid - Sidebar & FAQ */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
           <div className="lg:col-span-2">
-            <Card className="shadow-xl border-slate-100/60 bg-white/80 backdrop-blur-sm overflow-hidden">
-              <div className="h-2 bg-linear-to-r from-blue-500 to-purple-500" />
-              <CardContent className="p-8 sm:p-10">
-                <div className="mb-8 flex items-start gap-4">
-                  <div className="shrink-0 w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
-                    <Mail className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-                      {t("contact.form_title")}
-                    </h2>
-                    <p className="text-slate-600 text-lg">
-                      {t("contact.form_subtitle")}
-                    </p>
-                  </div>
-                </div>
-                <ContactForm />
-              </CardContent>
-            </Card>
+            <ContactFAQ />
           </div>
 
-          {/* Sidebar */}
           <div className="lg:col-span-1 sticky top-24">
             <ContactSidebar />
           </div>

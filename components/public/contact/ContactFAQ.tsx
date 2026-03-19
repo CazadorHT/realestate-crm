@@ -40,7 +40,7 @@ export function ContactFAQ() {
   return (
     <section className="mt-16 mb-8">
       <div className="text-center mb-10">
-        <h2 className="text-3xl font-bold text-slate-900 mb-4">
+        <h2 className="text-3xl font-semibold text-slate-900 mb-4">
           {t("contact.faq_title")}
         </h2>
         <p className="text-slate-600 max-w-2xl mx-auto">

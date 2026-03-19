@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Prompt, Noto_Sans_Thai } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -32,6 +32,12 @@ const notoThai = Noto_Sans_Thai({
   display: "swap",
   variable: "--font-noto-thai",
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();

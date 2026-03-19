@@ -1,9 +1,12 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Phone, Mail, MessageCircle } from "lucide-react";
+import { Phone, Mail } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { FaLine } from "react-icons/fa6";
 
 export function ContactInfoCards() {
   const { t } = useLanguage();
@@ -15,8 +18,9 @@ export function ContactInfoCards() {
       value: siteConfig.contact.phone,
       subtitle: t("contact.info_phone_sub"),
       href: `tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, "")}`,
-      color: "bg-blue-100 text-blue-600",
-      borderColor: "group-hover:border-blue-200",
+      iconColor: "text-blue-400",
+      iconBg: "bg-blue-500/15",
+      glowBorder: "group-hover:border-blue-500/30",
     },
     {
       icon: Mail,
@@ -24,52 +28,84 @@ export function ContactInfoCards() {
       value: siteConfig.contact.email,
       subtitle: t("contact.info_email_sub"),
       href: `mailto:${siteConfig.contact.email}`,
-      color: "bg-purple-100 text-purple-600",
-      borderColor: "group-hover:border-purple-200",
+      iconColor: "text-purple-400",
+      iconBg: "bg-purple-500/15",
+      glowBorder: "group-hover:border-purple-500/30",
     },
     {
-      icon: MessageCircle,
+      icon: FaLine,
       title: t("contact.info_line"),
       value: siteConfig.contact.lineId,
       subtitle: t("contact.info_line_sub"),
       href: siteConfig.links.line,
-      color: "bg-green-100 text-green-600",
-      borderColor: "group-hover:border-green-200",
+      iconColor: "text-green-400",
+      iconBg: "bg-green-500/15",
+      glowBorder: "group-hover:border-green-500/30",
     },
   ];
 
+  const container: any = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.12 }
+    }
+  };
+
+  const item: any = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "circOut" } }
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+    <motion.div 
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="grid grid-cols-2 sm:grid-cols-3 gap-4 lg:gap-6 pt-10 lg:mt-14"
+    >
       {contactInfo.map((info, index) => (
-        <a
+        <motion.a
           key={index}
+          variants={item}
           href={info.href}
           target={info.href.startsWith("http") ? "_blank" : undefined}
           rel={info.href.startsWith("http") ? "noopener noreferrer" : undefined}
-          className="block group"
+          className={cn(
+            "block group h-full",
+            index === 2 ? "col-span-2 sm:col-span-1" : "col-span-1"
+          )}
         >
-          <Card className="h-full border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white/60 backdrop-blur-md">
-            <CardContent className="p-8">
-              <div className="flex flex-col items-center text-center">
-                <div
-                  className={`w-16 h-16 ${info.color} rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform duration-300`}
-                >
-                  <info.icon className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-primary transition-colors">
+          <div className={cn(
+            "h-full rounded-2xl lg:rounded-3xl p-6 lg:p-8",
+            "bg-white/[0.07] backdrop-blur-md border border-white/10",
+            "transition-all duration-500 group-hover:-translate-y-1 group-hover:bg-white/20",
+            
+            info.glowBorder
+          )}>
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className={cn(
+                "w-14 h-14 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110",
+                info.iconBg
+              )}>
+                <info.icon className={cn("h-7 w-7 lg:h-8 lg:w-8", info.iconColor)} />
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-white/40 uppercase tracking-[0.2em]">
                   {info.title}
-                </h3>
-                <p className="text-primary font-medium text-lg mb-2">
+                </p>
+                <p className="text-sm lg:text-xl font-medium text-white tracking-tight break-all">
                   {info.value}
                 </p>
-                <p className="text-sm text-slate-500 font-light tracking-wide">
+                <p className="text-xs text-white/30">
                   {info.subtitle}
                 </p>
               </div>
-            </CardContent>
-          </Card>
-        </a>
+            </div>
+          </div>
+        </motion.a>
       ))}
-    </div>
+    </motion.div>
   );
 }

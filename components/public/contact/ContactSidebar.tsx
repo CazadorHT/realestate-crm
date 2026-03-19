@@ -54,7 +54,7 @@ export function ContactSidebar() {
             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
               <Clock className="h-5 w-5 text-blue-600" />
             </div>
-            <h3 className="font-bold text-slate-800 text-lg">
+            <h3 className="font-semibold text-slate-800 text-lg">
               {t("contact.sidebar_hours")}
             </h3>
           </div>
@@ -79,7 +79,7 @@ export function ContactSidebar() {
       {/* Social Media */}
       <Card className="border-slate-100 bg-white shadow-lg shadow-slate-100/50">
         <CardContent className="p-6">
-          <h3 className="font-bold text-slate-800 text-lg mb-6">
+          <h3 className="font-semibold text-slate-800 text-lg mb-6">
             {t("contact.sidebar_follow")}
           </h3>
           <div className="grid grid-cols-4 gap-3">
@@ -108,7 +108,7 @@ export function ContactSidebar() {
           <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 border border-white/30 shadow-inner">
             <FaLine className="h-6 w-6 text-white" />
           </div>
-          <h3 className="font-bold text-xl mb-2">
+          <h3 className="font-semibold text-xl mb-2">
             {t("contact.sidebar_quick_title")}
           </h3>
           <p className="text-white/90 text-sm mb-6 leading-relaxed">
@@ -122,7 +122,7 @@ export function ContactSidebar() {
             rel="noopener noreferrer"
             className="block"
           >
-            <Button className="w-full bg-white text-[#06C755] hover:bg-white/90 font-bold h-12 rounded-xl shadow-lg border-2 border-transparent hover:border-white/50 transition-all">
+            <Button className="w-full bg-white text-[#06C755] hover:bg-white/90 font-semibold h-12 rounded-xl shadow-lg border-2 border-transparent hover:border-white/50 transition-all">
               <FaLine className="mr-2 h-5 w-5" />
               {t("contact.sidebar_line_button")}
             </Button>
