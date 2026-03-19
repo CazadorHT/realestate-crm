@@ -264,22 +264,43 @@ export function PublicNav() {
                         onClick={() => setLanguage("th")}
                         className={`cursor-pointer ${language === "th" ? "bg-slate-50" : ""}`}
                       >
-                        <span className="fi fi-th mr-3 rounded-sm shadow-sm" />
-                        <span className="font-medium">Thai</span>
+                        <div className="flex justify-between items-center w-full">
+                          <div className="flex items-center">
+                            <span className="fi fi-th mr-3 rounded-sm shadow-sm" />
+                            <span className="font-medium">Thai</span>
+                          </div>
+                          {language === "th" && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                          )}
+                        </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setLanguage("en")}
                         className={`cursor-pointer ${language === "en" ? "bg-slate-50" : ""}`}
                       >
-                        <span className="fi fi-us mr-3 rounded-sm shadow-sm" />
-                        <span className="font-medium">English</span>
+                        <div className="flex justify-between items-center w-full">
+                          <div className="flex items-center">
+                            <span className="fi fi-us mr-3 rounded-sm shadow-sm" />
+                            <span className="font-medium">English</span>
+                          </div>
+                          {language === "en" && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                          )}
+                        </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setLanguage("cn")}
                         className={`cursor-pointer ${language === "cn" ? "bg-slate-50" : ""}`}
                       >
-                        <span className="fi fi-cn mr-3 rounded-sm shadow-sm" />
-                        <span className="font-medium">Chinese</span>
+                        <div className="flex justify-between items-center w-full">
+                          <div className="flex items-center">
+                            <span className="fi fi-cn mr-3 rounded-sm shadow-sm" />
+                            <span className="font-medium">Chinese</span>
+                          </div>
+                          {language === "cn" && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                          )}
+                        </div>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -441,42 +462,57 @@ export function PublicNav() {
                           <button
                             onClick={() => setLanguage("th")}
                             className={cn(
-                              "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
+                              "w-full flex items-center justify-between p-4 rounded-xl border transition-all",
                               language === "th"
                                 ? "bg-blue-600 text-white border-blue-600"
                                 : "bg-slate-50 text-slate-700 border-slate-100"
                             )}
                           >
-                            <span className="fi fi-th h-5 w-7 rounded-sm shadow-sm" />
-                            <span className="font-bold">Thai (ภาษาไทย)</span>
+                            <div className="flex items-center gap-4">
+                              <span className="fi fi-th h-5 w-7 rounded-sm shadow-sm" />
+                              <span className="font-bold">Thai (ภาษาไทย)</span>
+                            </div>
+                            {language === "th" && (
+                              <div className="w-2 h-2 rounded-full bg-white shadow-sm" />
+                            )}
                           </button>
                         </SheetClose>
                         <SheetClose asChild>
                           <button
                             onClick={() => setLanguage("en")}
                             className={cn(
-                              "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
+                              "w-full flex items-center justify-between p-4 rounded-xl border transition-all",
                               language === "en"
                                 ? "bg-blue-600 text-white border-blue-600"
                                 : "bg-slate-50 text-slate-700 border-slate-100"
                             )}
                           >
-                            <span className="fi fi-us h-5 w-7 rounded-sm shadow-sm" />
-                            <span className="font-bold">English</span>
+                            <div className="flex items-center gap-4">
+                              <span className="fi fi-us h-5 w-7 rounded-sm shadow-sm" />
+                              <span className="font-bold">English</span>
+                            </div>
+                            {language === "en" && (
+                              <div className="w-2 h-2 rounded-full bg-white shadow-sm" />
+                            )}
                           </button>
                         </SheetClose>
                         <SheetClose asChild>
                           <button
                             onClick={() => setLanguage("cn")}
                             className={cn(
-                              "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
+                              "w-full flex items-center justify-between p-4 rounded-xl border transition-all",
                               language === "cn"
                                 ? "bg-blue-600 text-white border-blue-600"
                                 : "bg-slate-50 text-slate-700 border-slate-100"
                             )}
                           >
-                            <span className="fi fi-cn h-5 w-7 rounded-sm shadow-sm" />
-                            <span className="font-bold">Chinese (中文)</span>
+                            <div className="flex items-center gap-4">
+                              <span className="fi fi-cn h-5 w-7 rounded-sm shadow-sm" />
+                              <span className="font-bold">Chinese (中文)</span>
+                            </div>
+                            {language === "cn" && (
+                              <div className="w-2 h-2 rounded-full bg-white shadow-sm" />
+                            )}
                           </button>
                         </SheetClose>
                       </div>

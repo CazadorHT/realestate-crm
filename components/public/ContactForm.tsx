@@ -274,19 +274,21 @@ export function ContactForm() {
                       ${
                         selectedSubject === option.value
                           ? "bg-blue-600/20 text-white border-blue-500/50 shadow-lg shadow-blue-500/10"
-                          : "bg-white/20 text-white/70 border-white/10 hover:border-white/20 hover:bg-white/10"
+                          : "bg-white/20 text-white/80 border-white/10 hover:border-white/20 hover:bg-white/10"
                       }
                     `}
                   >
                     <div className="flex items-center gap-2">
-                      <option.icon className={cn("w-4 h-4 shrink-0", selectedSubject === option.value ? "text-white" : option.color)} />
-                      <span>{option.label}</span>
+                      <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                        <option.icon className={cn("w-4 h-4", selectedSubject === option.value ? "text-white" : option.color)} />
+                      </div>
+                      <span className="break-all line-clamp-1">{option.label}</span>
                     </div>
                     <div className={cn(
                       "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
-                      selectedSubject === option.value ? "hidden sm:block  border-blue-400 bg-blue-500/30" : "hidden sm:block border-white/20"
+                      selectedSubject === option.value ? "border-blue-400 bg-blue-500/30" : "border-white/20"
                     )}>
-                      {selectedSubject === option.value && <div className="hidden sm:block w-2 h-2 bg-blue-400 rounded-full animate-in zoom-in" />}
+                      {selectedSubject === option.value && <div className="w-2.5 h-2.5 bg-blue-400 rounded-full animate-in zoom-in" />}
                     </div>
                   </button>
                 ))}
@@ -550,7 +552,7 @@ export function ContactForm() {
                   <SheetTitle className="text-base font-semibold text-white text-left">
                     {t("contact.form_title")}
                   </SheetTitle>
-                  <p className="text-white/40 text-xs text-left font-medium">
+                  <p className="text-white/40 text-xs text-left font-light">
                     {t("contact.form_subtitle")}
                   </p>
                 </div>

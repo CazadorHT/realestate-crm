@@ -15,16 +15,9 @@ export function ContactHero({
   const { t } = useLanguage();
 
   return (
-    <section className="relative min-h-dvh lg:h-screen flex items-center text-white py-12 pb-12 lg:py-20 overflow-hidden bg-slate-950">
+    <section className="relative min-h-[80vh] lg:min-h-screen pt-24 lg:pt-32 pb-24 lg:pb-40 flex flex-col items-center text-white bg-slate-950">
       {/* Background Image with Premium Overlays */}
       <div className="absolute inset-0 z-0">
-        <Image
-          src="/brain/8079a756-3a86-4a5e-8179-b6c4f505601c/contact_hero_bg_1773902192691.png"
-          alt="Contact Background"
-          fill
-          priority
-          className="object-cover opacity-60 scale-105"
-        />
         <div className="absolute inset-0 bg-linear-to-b from-slate-950/95 via-slate-950/40 to-slate-950" />
         <div className="absolute inset-0 bg-linear-to-r from-blue-900/40 via-transparent to-purple-900/40" />
       </div>
@@ -47,14 +40,14 @@ export function ContactHero({
             opacity: [0.2, 0.4, 0.2]
           }}
           transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-1/4 right-10 w-64 lg:w-[500px] h-64 lg:h-[500px] bg-purple-500/10 rounded-full blur-3xl opacity-50"
+          className="absolute bottom-1/4 right-10 w-64 lg:w-[500px] h-64 lg:h-[500px] bg-purple-500/10 rounded-full blur-3xl opacity-60"
         />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-30 w-full">
         <div className="flex flex-col gap-8 lg:gap-16">
           {/* Main Content Grid: Text + Form */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-16 items-center mt-6 lg:mt-14">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-16 items-center mt-6 lg:mt-0">
             {/* Left Side: Messaging */}
             <div className="lg:col-span-7 text-center lg:text-left">
               <motion.div
@@ -83,7 +76,7 @@ export function ContactHero({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4, ease: "circOut" }}
-                className="text-sm sm:text-base lg:text-2xl text-blue-100/90 leading-relaxed font-medium"
+                className="text-sm text-blue-100/90 leading-relaxed font-medium"
               >
                 {t("contact.hero_desc")}
               </motion.p>

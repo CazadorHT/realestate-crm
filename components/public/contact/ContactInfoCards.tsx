@@ -62,7 +62,7 @@ export function ContactInfoCards() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-2 sm:grid-cols-3 gap-4 lg:gap-6 pt-10 lg:mt-14"
+      className="grid grid-cols-2 sm:grid-cols-3 gap-4 lg:gap-6"
     >
       {contactInfo.map((info, index) => (
         <motion.a
@@ -78,7 +78,7 @@ export function ContactInfoCards() {
         >
           <div className={cn(
             "h-full rounded-2xl lg:rounded-3xl p-6 lg:p-8",
-            "bg-white/[0.07] backdrop-blur-md border border-white/10",
+            "bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl",
             "transition-all duration-500 group-hover:-translate-y-1 group-hover:bg-white/20",
             
             info.glowBorder

@@ -295,7 +295,7 @@ export function MobileFilters({
         >
           <SheetHeader className="px-6 py-5 border-b border-slate-100 bg-white text-slate-900 rounded-t-4xl">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-blue-50 rounded-2xl">
+              <div className="p-1.5 bg-blue-50 rounded-2xl">
                 <MdManageSearch className="h-6 w-6 text-blue-600" />
               </div>
               <SheetTitle className="text-xl font-medium text-slate-900">
