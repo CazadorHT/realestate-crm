@@ -47,6 +47,9 @@ export function PropertySearchPage({
     availableProvinces,
     availableAreas,
     availableTypes,
+    availableListingTypes,
+    availableQuickFilters,
+    availableBedrooms,
     matchesFilters,
   } = usePropertyFiltering(properties, filters);
 
@@ -109,6 +112,9 @@ export function PropertySearchPage({
         availableAreas={availableAreas}
         availableProvinces={availableProvinces}
         availableTypes={availableTypes}
+        availableListingTypes={availableListingTypes}
+        availableQuickFilters={availableQuickFilters}
+        availableBedrooms={availableBedrooms}
         properties={properties}
         matchesFilters={matchesFilters}
       />

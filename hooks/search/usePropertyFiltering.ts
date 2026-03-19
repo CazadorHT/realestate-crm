@@ -32,10 +32,24 @@ export function usePropertyFiltering(
   options: FilteringOptions,
 ) {
   const {
-    keyword, province, type, listingType, priceType, area,
-    nearTrain, petFriendly, fullyFurnished, bedrooms,
-    isForeigner, companyRegistered, isHotDeal,
-    minPrice, maxPrice, minSize, maxSize, sort,
+    keyword,
+    province,
+    type,
+    listingType,
+    priceType,
+    area,
+    nearTrain,
+    petFriendly,
+    fullyFurnished,
+    bedrooms,
+    isForeigner,
+    companyRegistered,
+    isHotDeal,
+    minPrice,
+    maxPrice,
+    minSize,
+    maxSize,
+    sort,
   } = options;
 
   const matchesFilters = useCallback(
@@ -150,8 +164,10 @@ export function usePropertyFiltering(
           } else if (effectiveIntent === "SALE") {
             if (price > 0 && price >= min && price <= max) matchesPrice = true;
           } else {
-            if ((price > 0 && price >= min && price <= max) || 
-                (rent > 0 && rent >= min && rent <= max)) {
+            if (
+              (price > 0 && price >= min && price <= max) ||
+              (rent > 0 && rent >= min && rent <= max)
+            ) {
               matchesPrice = true;
             }
           }
@@ -172,9 +188,23 @@ export function usePropertyFiltering(
       return true;
     },
     [
-      keyword, province, type, listingType, priceType, area, nearTrain,
-      petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered,
-      isHotDeal, minPrice, maxPrice, minSize, maxSize,
+      keyword,
+      province,
+      type,
+      listingType,
+      priceType,
+      area,
+      nearTrain,
+      petFriendly,
+      fullyFurnished,
+      bedrooms,
+      isForeigner,
+      companyRegistered,
+      isHotDeal,
+      minPrice,
+      maxPrice,
+      minSize,
+      maxSize,
     ],
   );
 
@@ -234,6 +264,92 @@ export function usePropertyFiltering(
     return counts;
   }, [properties, matchesFilters]);
 
+  const availableListingTypes = useMemo(() => {
+    const counts: Record<string, number> = {
+      ALL: 0,
+      SALE: 0,
+      RENT: 0,
+      SALE_AND_RENT: 0,
+    };
+    properties.forEach((p) => {
+      // Apply all filters EXCEPT listingType to see potential counts
+      if (!matchesFilters(p, ["listingType"])) return;
+
+      const lt = p.listing_type;
+      counts.ALL++;
+      if (lt === "SALE") {
+        counts.SALE++;
+      } else if (lt === "RENT") {
+        counts.RENT++;
+      } else if (lt === "SALE_AND_RENT") {
+        counts.SALE++;
+        counts.RENT++;
+        counts.SALE_AND_RENT++;
+      }
+    });
+    return counts;
+  }, [properties, matchesFilters]);
+
+  const availableQuickFilters = useMemo(() => {
+    const counts = {
+      nearTrain: 0,
+      petFriendly: 0,
+      fullyFurnished: 0,
+      isForeigner: 0,
+      companyRegistered: 0,
+      isHotDeal: 0,
+    };
+
+    properties.forEach((p) => {
+      // Near Train
+      if (matchesFilters(p, ["nearTrain"])) {
+        const txt = (p.title + " " + (p.description || "")).toLowerCase();
+        const isNearTrain =
+          p.near_transit === true ||
+          txt.includes("bts") ||
+          txt.includes("mrt") ||
+          txt.includes("รถไฟฟ้า") ||
+          txt.includes("ใกล้สถานี");
+        if (isNearTrain) counts.nearTrain++;
+      }
+
+      // Pet Friendly
+      if (matchesFilters(p, ["petFriendly"])) {
+        if (p.is_pet_friendly === true) counts.petFriendly++;
+      }
+
+      // Fully Furnished
+      if (matchesFilters(p, ["fullyFurnished"])) {
+        const isFurnished =
+          p.is_fully_furnished === true ||
+          p.meta_keywords?.includes("Fully Furnished");
+        if (isFurnished) counts.fullyFurnished++;
+      }
+
+      // Foreigner Quota
+      if (matchesFilters(p, ["isForeigner"])) {
+        if (p.is_foreigner_quota === true) counts.isForeigner++;
+      }
+
+      // Company Registered
+      if (matchesFilters(p, ["companyRegistered"])) {
+        if (p.is_tax_registered === true) counts.companyRegistered++;
+      }
+
+      // Hot Deal
+      if (matchesFilters(p, ["isHotDeal"])) {
+        const hasPriceDrop =
+          (p.original_price && p.price && p.original_price > p.price) ||
+          (p.original_rental_price &&
+            p.rental_price &&
+            p.original_rental_price > p.rental_price);
+        if (hasPriceDrop) counts.isHotDeal++;
+      }
+    });
+
+    return counts;
+  }, [properties, matchesFilters]);
+
   const filtered = useMemo(() => {
     let result = properties.filter((p) => matchesFilters(p));
 
@@ -274,11 +390,36 @@ export function usePropertyFiltering(
     return result;
   }, [properties, matchesFilters, sort]);
 
+  const availableBedrooms = useMemo(() => {
+    const counts: Record<string, number> = {
+      ALL: 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4+": 0,
+    };
+
+    properties.forEach((p) => {
+      if (!matchesFilters(p, ["bedrooms"])) return;
+      counts.ALL++;
+      const beds = p.bedrooms || 0;
+      if (beds >= 4) {
+        counts["4+"]++;
+      } else if (beds >= 1 && beds <= 3) {
+        counts[beds.toString()]++;
+      }
+    });
+    return counts;
+  }, [properties, matchesFilters]);
+
   return {
     filtered,
     availableProvinces,
     availableAreas,
     availableTypes,
+    availableListingTypes,
+    availableQuickFilters,
+    availableBedrooms,
     matchesFilters,
   };
 }

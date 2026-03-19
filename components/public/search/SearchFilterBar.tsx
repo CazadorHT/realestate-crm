@@ -59,6 +59,9 @@ interface SearchFilterBarProps {
   setProvince: (v: string) => void;
   availableProvinces: { name: string; count: number }[];
   availableTypes: Record<string, number>;
+  availableListingTypes: Record<string, number>;
+  availableQuickFilters: Record<string, number>;
+  availableBedrooms: Record<string, number>;
   properties?: any[];
   matchesFilters?: (p: any, excludeFilters?: string[]) => boolean;
 }
@@ -105,6 +108,9 @@ export function SearchFilterBar({
   setProvince,
   availableProvinces,
   availableTypes,
+  availableListingTypes,
+  availableQuickFilters,
+  availableBedrooms,
   properties,
   matchesFilters,
 }: SearchFilterBarProps) {
@@ -367,6 +373,9 @@ export function SearchFilterBar({
           availableProvinces={availableProvinces}
           availableAreas={availableAreas}
           availableTypes={availableTypes}
+          availableListingTypes={availableListingTypes}
+          availableQuickFilters={availableQuickFilters}
+          availableBedrooms={availableBedrooms}
           filteredLength={filteredLength}
           showAllProvincesMobile={showAllProvincesMobile}
           setShowAllProvincesMobile={setShowAllProvincesMobile}

@@ -16,6 +16,7 @@ import {
   ArrowDownWideNarrow,
   Minimize2,
   Maximize2,
+  CircleDollarSign,
 } from "lucide-react";
 import {
   Sheet,
@@ -27,13 +28,28 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { MobileFilterSheet } from "./MobileFilterSheet";
 import { PriceRangeSelect } from "./PriceRangeSelect";
 import { AreaSizeSelect } from "./AreaSizeSelect";
 
-import { MdOutlinePets as PetIcon, MdWork as WorkIcon } from "react-icons/md";
+import { MdManageSearch, MdOutlinePets as PetIcon, MdWork as WorkIcon } from "react-icons/md";
 import { FaFire as FireIcon, FaTrainSubway as TrainIcon } from "react-icons/fa6";
 import { GiEarthAmerica as EarthIcon } from "react-icons/gi";
 import { RiArmchairFill as ArmchairIcon } from "react-icons/ri";
+import { 
+  MdOutlineApartment, 
+  MdOutlineHouse, 
+  MdOutlineWarehouse, 
+  MdOutlineStorefront, 
+  MdOutlinePool,
+  MdOutlineLandscape,
+  MdOutlineHolidayVillage
+} from "react-icons/md";
+import { 
+  HiOutlineBuildingOffice2, 
+  HiOutlineHomeModern,
+  HiOutlineSquares2X2
+} from "react-icons/hi2";
 
 interface MobileFiltersProps {
   keyword: string;
@@ -76,6 +92,7 @@ interface MobileFiltersProps {
   availableProvinces: { name: string; count: number }[];
   availableAreas: any[];
   availableTypes: Record<string, number>;
+  availableListingTypes: Record<string, number>;
   filteredLength: number;
   showAllProvincesMobile: boolean;
   setShowAllProvincesMobile: (v: boolean) => void;
@@ -86,6 +103,8 @@ interface MobileFiltersProps {
   t: (key: string) => string;
   language: string;
   PROPERTY_TYPES: { value: string; label: string }[];
+  availableQuickFilters: Record<string, number>;
+  availableBedrooms: Record<string, number>;
   getProvinceName: (name: string, lang: string) => string;
   getLocaleValue: (item: any, field: string, lang: string) => string;
   MOBILE_ITEMS_LIMIT: number;
@@ -134,6 +153,9 @@ export function MobileFilters({
   availableProvinces,
   availableAreas,
   availableTypes,
+  availableListingTypes,
+  availableQuickFilters,
+  availableBedrooms,
   filteredLength,
   showAllProvincesMobile,
   setShowAllProvincesMobile,
@@ -150,6 +172,23 @@ export function MobileFilters({
   pushToDataLayer,
   GTM_EVENTS,
 }: MobileFiltersProps) {
+  const getPropertyIcon = (val: string, isActive: boolean) => {
+    const iconClass = "w-4 h-4 transition-colors";
+    switch (val) {
+      case "ALL": return <HiOutlineSquares2X2 className={cn(iconClass, isActive ? "text-white" : "text-slate-400")} />;
+      case "HOUSE": return <MdOutlineHouse className={cn(iconClass, isActive ? "text-white" : "text-orange-500")} />;
+      case "CONDO": return <MdOutlineApartment className={cn(iconClass, isActive ? "text-white" : "text-blue-500")} />;
+      case "OFFICE_BUILDING": return <HiOutlineBuildingOffice2 className={cn(iconClass, isActive ? "text-white" : "text-slate-600")} />;
+      case "VILLA": return <HiOutlineHomeModern className={cn(iconClass, isActive ? "text-white" : "text-amber-600")} />;
+      case "POOL_VILLA": return <MdOutlinePool className={cn(iconClass, isActive ? "text-white" : "text-cyan-500")} />;
+      case "TOWNHOME": return <MdOutlineHolidayVillage className={cn(iconClass, isActive ? "text-white" : "text-emerald-600")} />;
+      case "LAND": return <MdOutlineLandscape className={cn(iconClass, isActive ? "text-white" : "text-stone-500")} />;
+      case "COMMERCIAL_BUILDING": return <MdOutlineStorefront className={cn(iconClass, isActive ? "text-white" : "text-rose-500")} />;
+      case "WAREHOUSE": return <MdOutlineWarehouse className={cn(iconClass, isActive ? "text-white" : "text-indigo-600")} />;
+      default: return null;
+    }
+  };
+
   return (
     <div className="xl:hidden flex gap-3 my-4">
       <div className="relative flex-1">
@@ -252,10 +291,17 @@ export function MobileFilters({
         </SheetTrigger>
         <SheetContent
           side="bottom"
-          className="h-[70vh] rounded-t-2xl flex flex-col p-0 bg-slate-50 "
+          className="h-[75vh] rounded-t-2xl flex flex-col p-0 bg-slate-50 "
         >
-          <SheetHeader className="px-6 py-4 border-b border-slate-100 bg-white text-slate-900 rounded-t-4xl">
-            <SheetTitle>{t("search.filter_title")}</SheetTitle>
+          <SheetHeader className="px-6 py-5 border-b border-slate-100 bg-white text-slate-900 rounded-t-4xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-blue-50 rounded-2xl">
+                <MdManageSearch className="h-6 w-6 text-blue-600" />
+              </div>
+              <SheetTitle className="text-xl font-medium text-slate-900">
+                {t("search.filter_title")}
+              </SheetTitle>
+            </div>
           </SheetHeader>
           <div className="p-4 flex-1 overflow-y-auto space-y-4">
             {/* Location Zone */}
@@ -263,10 +309,17 @@ export function MobileFilters({
               <Accordion type="single" collapsible defaultValue="location" className="w-full">
                 <AccordionItem value="location" className="border-0">
                   <AccordionTrigger className="hover:no-underline py-0">
-                    <span className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                      <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
-                      {t("search.province")} & {t("search.location")}
-                    </span>
+                    <div className="flex items-center justify-between w-full pr-6">
+                      <span className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                        <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
+                        {t("search.province")} & {t("search.location")}
+                      </span>
+                      <span className="text-[11px] font-bold text-blue-600 bg-blue-50/50 px-2.5 py-1 rounded-xl border border-blue-100/50 truncate max-w-[150px]">
+                        {province === "ALL" && area === "ALL"
+                          ? t("common.all")
+                          : `${province !== "ALL" ? getProvinceName(province, language) : ""}${area !== "ALL" && province !== "ALL" ? `, ${area}` : area !== "ALL" ? area : ""}`}
+                      </span>
+                    </div>
                   </AccordionTrigger>
                   <AccordionContent className="space-y-6 pt-6 px-1">
                     <div className="space-y-3">
@@ -279,11 +332,12 @@ export function MobileFilters({
                             setProvince("ALL");
                             setArea("ALL");
                           }}
-                          className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+                          className={cn(
+                            "px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex items-center gap-2",
                             province === "ALL"
                               ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                               : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300"
-                          }`}
+                          )}
                         >
                           {t("search.all_provinces")}
                         </button>
@@ -296,14 +350,18 @@ export function MobileFilters({
                                 setProvince(p.name);
                                 setArea("ALL");
                               }}
-                              className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex items-center justify-between gap-3 ${
+                              className={cn(
+                                "px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex items-center gap-2",
                                 province === p.name
                                   ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                                   : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300"
-                              }`}
+                              )}
                             >
                               <span>{getProvinceName(p.name, language)}</span>
-                              <span className={`text-[10px] opacity-70 ${province === p.name ? "text-white" : "text-slate-400"}`}>
+                              <span className={cn(
+                                "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
+                                province === p.name ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600"
+                              )}>
                                 {p.count}
                               </span>
                             </button>
@@ -318,11 +376,12 @@ export function MobileFilters({
                       <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                         <button
                           onClick={() => setArea("ALL")}
-                          className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+                          className={cn(
+                            "px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex items-center gap-2",
                             area === "ALL"
                               ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                               : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300"
-                          }`}
+                          )}
                         >
                           {t("search.all_locations")}
                         </button>
@@ -332,13 +391,20 @@ export function MobileFilters({
                             <button
                               key={a.name}
                               onClick={() => setArea(a.name)}
-                              className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+                              className={cn(
+                                "px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex items-center gap-2",
                                 area === a.name
                                   ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                                   : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300"
-                              }`}
+                              )}
                             >
-                              {getLocaleValue({ name: a.name, name_en: a.name_en, name_cn: a.name_cn }, "name", language)}
+                              <span>{getLocaleValue({ name: a.name, name_en: a.name_en, name_cn: a.name_cn }, "name", language)}</span>
+                              <span className={cn(
+                                "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
+                                area === a.name ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600"
+                              )}>
+                                {a.count}
+                              </span>
                             </button>
                           ))}
                       </div>
@@ -356,38 +422,65 @@ export function MobileFilters({
               </span>
               <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                 {[
-                  { state: nearTrain, setState: setNearTrain, icon: TrainIcon, label: "near_train", color: "blue", size: "h-5 w-5" },
-                  { state: petFriendly, setState: setPetFriendly, icon: PetIcon, label: "pet_allowed", color: "orange", size: "h-6 w-6" },
-                  { state: fullyFurnished, setState: setFullyFurnished, icon: ArmchairIcon, label: "fully_furnished", color: "emerald", size: "h-6 w-6" },
-                  { state: isForeigner, setState: setIsForeigner, icon: EarthIcon, label: "foreigner", color: "purple", size: "h-6 w-6" },
-                  { state: companyRegistered, setState: setCompanyRegistered, icon: WorkIcon, label: "company_registered", color: "indigo", size: "h-6 w-6" },
-                  { state: isHotDeal, setState: setIsHotDeal, icon: FireIcon, label: "hot_deal", color: "rose", size: "h-[22px] w-[22px]" },
-                ].map((f) => (
-                  <div
-                    key={f.label}
-                    className={cn(
-                      "flex flex-col items-center justify-center gap-2 px-2 py-4 rounded-2xl border-2 transition-colors duration-200 cursor-pointer",
-                      f.state
-                        ? `bg-${f.color}-600 border-${f.color}-600 text-white shadow-md shadow-${f.color}-500/20`
-                        : "bg-slate-50 border-transparent text-slate-600 hover:border-slate-200"
-                    )}
-                    onClick={() => f.setState(!f.state)}
-                  >
-                    <f.icon className={cn(f.size, f.state ? "text-white" : `text-${f.color}-500`)} />
-                    <span className="text-[10px] font-medium text-center leading-tight">
-                      {t(`search.${f.label}`)}
-                    </span>
-                  </div>
-                ))}
+                  { key: "nearTrain", state: nearTrain, setState: setNearTrain, icon: TrainIcon, label: "near_train", color: "blue", size: "h-5 w-5" },
+                  { key: "petFriendly", state: petFriendly, setState: setPetFriendly, icon: PetIcon, label: "pet_allowed", color: "orange", size: "h-6 w-6" },
+                  { key: "fullyFurnished", state: fullyFurnished, setState: setFullyFurnished, icon: ArmchairIcon, label: "fully_furnished", color: "emerald", size: "h-6 w-6" },
+                  { key: "isForeigner", state: isForeigner, setState: setIsForeigner, icon: EarthIcon, label: "foreigner", color: "purple", size: "h-6 w-6" },
+                  { key: "companyRegistered", state: companyRegistered, setState: setCompanyRegistered, icon: WorkIcon, label: "company_registered", color: "indigo", size: "h-6 w-6" },
+                  { key: "isHotDeal", state: isHotDeal, setState: setIsHotDeal, icon: FireIcon, label: "hot_deal", color: "rose", size: "h-[22px] w-[22px]" },
+                ].map((f) => {
+                  const qCount = availableQuickFilters[f.key] || 0;
+                  const hasItems = qCount > 0;
+                  
+                  return (
+                    <div
+                      key={f.label}
+                      className={cn(
+                        "flex flex-col items-center justify-center gap-2 px-2 py-4 rounded-2xl border-2 transition-colors duration-200 cursor-pointer relative",
+                        f.state
+                          ? `bg-${f.color}-600 border-${f.color}-600 text-white shadow-md shadow-${f.color}-500/20`
+                          : hasItems 
+                            ? "bg-slate-50 border-transparent text-slate-600 hover:border-slate-200"
+                            : "bg-slate-50 border-transparent text-slate-300 opacity-50 cursor-not-allowed"
+                      )}
+                      onClick={() => hasItems && f.setState(!f.state)}
+                    >
+                      {hasItems && qCount > 0 && (
+                        <span className={cn(
+                          "absolute -top-1 -right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm z-10",
+                          f.state ? "bg-white text-blue-600" : "bg-emerald-500 text-white"
+                        )}>
+                          {qCount}
+                        </span>
+                      )}
+                      <f.icon className={cn(f.size, f.state ? "text-white" : `text-${f.color}-500`)} />
+                      <span className="text-[10px] font-medium text-center leading-tight">
+                        {t(`search.${f.label}`)}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
             {/* Property Detail Zone */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-5">
-              <span className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                <span className="w-1.5 h-6 bg-purple-500 rounded-full" />
-                {t("search.property_details")}
-              </span>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+              <Accordion type="single" collapsible defaultValue="details" className="w-full">
+                <AccordionItem value="details" className="border-0">
+                  <AccordionTrigger className="hover:no-underline py-0">
+                    <div className="flex items-center justify-between w-full pr-6 uppercase tracking-wider">
+                      <span className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                        <span className="w-1.5 h-6 bg-purple-500 rounded-full" />
+                        {t("search.property_details")}
+                      </span>
+                      <span className="text-[11px] font-bold text-purple-600 bg-purple-50/50 px-2.5 py-1 rounded-xl border border-purple-100/50 truncate max-w-[140px]">
+                        {type === "ALL" && listingType === "ALL"
+                          ? t("common.all")
+                          : `${type !== "ALL" ? PROPERTY_TYPES.find(pt => pt.value === type)?.label : ""}${listingType !== "ALL" && type !== "ALL" ? ` • ${t(`common.${listingType.toLowerCase()}`)}` : listingType !== "ALL" ? t(`common.${listingType.toLowerCase()}`) : ""}`}
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-6 pt-6 px-1">
               
               <div className="space-y-3">
                 <label className="text-[10px] text-slate-400 font-medium uppercase tracking-wider block ml-1">
@@ -422,9 +515,13 @@ export function MobileFilters({
                               : "bg-slate-50 text-slate-300 border-transparent opacity-50 cursor-not-allowed"
                         }`}
                       >
+                        {getPropertyIcon(pt.value, isActive)}
                         <span>{pt.label}</span>
                         {count > 0 && pt.value !== "ALL" && (
-                          <span className={`text-[10px] opacity-70 ${isActive ? "text-white" : "text-emerald-500"}`}>
+                          <span className={cn(
+                            "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
+                            isActive ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600"
+                          )}>
                             {count}
                           </span>
                         )}
@@ -433,7 +530,7 @@ export function MobileFilters({
                   })}
                 </div>
               </div>
-
+                  {/* Needs Zone */}
               <div className="space-y-3">
                 <label className="text-sm font-medium text-slate-900">{t("search.needs")}</label>
                 <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
@@ -456,77 +553,137 @@ export function MobileFilters({
                           listing_type: opt.val
                         });
                       }}
-                      className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                      className={cn(
+                        "py-1 h-11 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-2",
+                        opt.val === "SALE_AND_RENT" ? "flex-[1.4]" : "flex-1",
                         listingType === opt.val
-                          ? "bg-slate-900 text-white shadow-md"
+                          ? "bg-blue-600 text-white shadow-md shadow-blue-50/50"
                           : "text-slate-500 hover:text-slate-900"
-                      }`}
+                      )}
                     >
-                      {opt.label}
+                      <span>{opt.label}</span>
+                      {availableListingTypes[opt.val] > 0 && (
+                        <span className={cn(
+                          "mtext-[11px] font-semibold px-1 py-0.5 rounded-full transition-all",
+                          listingType === opt.val ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600"
+                        )}>
+                          {availableListingTypes[opt.val]}
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="space-y-3">
-                <label className="text-sm font-medium text-slate-900">{t("search.price_range")}</label>
-                <PriceRangeSelect
-                  currentPriceOption={currentPriceOption}
-                  flatPriceOptions={flatPriceOptions}
-                  priceOptions={priceOptions}
-                  priceCounts={priceCounts}
-                  setMinPrice={setMinPrice}
-                  setMaxPrice={setMaxPrice}
-                  setPriceType={setPriceType}
+                <label className="text-sm font-medium text-slate-900 ">{t("search.price_range")}</label>
+                <MobileFilterSheet
+                  title={t("search.price_range")}
                   placeholder={t("search.price_range")}
+                  icon={CircleDollarSign}
+                  iconColor="text-emerald-500"
+                  value={`${currentPriceOption.min}-${currentPriceOption.max}-${currentPriceOption.type || "ALL"}`}
+                  options={priceOptions.map(opt => {
+                    if (opt.isGroup) {
+                      return {
+                        label: opt.label,
+                        isGroup: true,
+                        options: opt.options.map((subOpt: any) => ({
+                          id: `${subOpt.min}-${subOpt.max}-${subOpt.type || "ALL"}`,
+                          label: subOpt.label,
+                          count: priceCounts.get(`${subOpt.min}-${subOpt.max}-${subOpt.type || "ALL"}`) || 0
+                        }))
+                      };
+                    }
+                    const id = `${opt.min}-${opt.max}-${opt.type || "ALL"}`;
+                    return { id, label: opt.label, count: (opt.min || opt.max) ? (priceCounts.get(id) || 0) : null };
+                  })}
+                  selectedLabel={currentPriceOption.label}
+                  onSelect={(val) => {
+                    const [min, max, type] = val.split("-");
+                    setMinPrice(min);
+                    setMaxPrice(max);
+                    if (setPriceType) setPriceType(type && type !== "ALL" ? type : "");
+                  }}
                   className="w-full"
                 />
               </div>
 
               <div className="space-y-3">
                 <label className="text-sm font-medium text-slate-900">{t("search.area_size")}</label>
-                <AreaSizeSelect
-                  currentSizeOption={currentSizeOption}
-                  sizeOptions={sizeOptions}
-                  sizeCounts={sizeCounts}
-                  setMinSize={setMinSize}
-                  setMaxSize={setMaxSize}
+                <MobileFilterSheet
+                  title={t("search.area_size")}
                   placeholder={t("search.area_size") || "ขนาดพื้นที่"}
+                  icon={Maximize2}
+                  iconColor="text-blue-500"
+                  value={`${currentSizeOption.min}-${currentSizeOption.max}`}
+                  options={sizeOptions.map(opt => {
+                    const id = `${opt.min}-${opt.max}`;
+                    return { id, label: opt.label, count: (opt.min || opt.max) ? (sizeCounts.get(id) || 0) : null };
+                  })}
+                  selectedLabel={currentSizeOption.label}
+                  onSelect={(val) => {
+                    const [min, max] = val.split("-");
+                    setMinSize(min);
+                    setMaxSize(max);
+                  }}
                   className="w-full"
                 />
               </div>
 
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-slate-900">{t("search.bedrooms")}</label>
-                <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                  {["ALL", "1", "2", "3", "4+"].map((bed) => (
-                    <button
-                      key={bed}
-                      onClick={() => setBedrooms(bed)}
-                      className={`h-10 min-w-12 px-3 rounded-xl border transition-all font-medium text-sm shrink-0 ${
-                        bedrooms === bed
-                          ? "bg-indigo-600 text-white border-indigo-600 shadow-md"
-                          : "bg-white text-slate-700 border-slate-200"
-                      }`}
-                    >
-                      {bed === "ALL" ? t("common.all") : bed}
-                    </button>
-                  ))}
+              <div className="space-y-3 ">
+                <label className="text-sm font-medium text-slate-900 ">{t("search.bedrooms")}</label>
+                <div className="flex gap-2 overflow-x-auto pt-2 no-scrollbar ">
+                  {["ALL", "1", "2", "3", "4+"].map((bed) => {
+                    const count = availableBedrooms[bed] || 0;
+                    const isSelected = bedrooms === bed;
+                    const isDisabled = !isSelected && count === 0;
+
+                    return (
+                      <button
+                        key={bed}
+                        disabled={isDisabled}
+                        onClick={() => setBedrooms(bed)}
+                        className={cn(
+                          "h-11 min-w-14 px-4 rounded-xl border transition-all font-medium text-xs shrink-0 flex items-center justify-center relative",
+                          isSelected
+                            ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100"
+                            : isDisabled
+                              ? "bg-slate-50 text-slate-300 border-slate-100 opacity-60 cursor-not-allowed"
+                              : "bg-white text-slate-700 border-slate-200"
+                        )}
+                      >
+                        <span>{bed === "ALL" ? t("common.all") : bed}</span>
+                        {count > 0 && (
+                          <span className={cn(
+                            "absolute -top-1.5 -right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm border",
+                            isSelected 
+                              ? "bg-white text-indigo-600 border-white" 
+                              : "bg-emerald-50 text-emerald-600 border-emerald-100"
+                          )}>
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
-          </div>
-
-          <SheetFooter className="p-6 border-t border-slate-100 bg-white pb-10">
-            <SheetClose asChild>
-              <Button className="w-full h-12 text-lg rounded-xl bg-linear-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-200/50">
-                {t("search.view_results")} ({filteredLength} {t("search.items")})
-              </Button>
-            </SheetClose>
-          </SheetFooter>
-        </SheetContent>
-
-      </Sheet>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
     </div>
-  );
+
+      <SheetFooter className="p-6 border-t border-slate-100 bg-white pb-10">
+        <SheetClose asChild>
+          <Button className="w-full h-12 text-lg rounded-xl bg-linear-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-200/50">
+            {t("search.view_results")} ({filteredLength} {t("search.items")})
+          </Button>
+        </SheetClose>
+      </SheetFooter>
+    </SheetContent>
+  </Sheet>
+</div>
+);
 }
