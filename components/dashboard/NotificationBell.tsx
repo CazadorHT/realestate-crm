@@ -29,10 +29,9 @@ export function NotificationBell() {
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="relative h-9 w-9 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-100 transition-all"
+          className="relative h-10 w-10 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center p-0"
         >
-          <Bell className="h-4 w-4 text-slate-600" />
+          <Bell className="h-5 w-5 text-slate-600" />
           <span className="sr-only">Toggle notifications</span>
           {unreadCount > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">

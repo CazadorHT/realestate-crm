@@ -51,8 +51,16 @@ export type MarketingPerformanceData = {
   hotLeadCount: number;
 };
 
-export async function getDashboardStats(): Promise<DashboardStats> {
+export async function getDashboardStats(tenantId?: string | null): Promise<DashboardStats> {
   const supabase = await createClient();
+  
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
   const now = new Date();
   const startOfMonth = new Date(
     now.getFullYear(),
@@ -72,27 +80,31 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   // 1. Revenue (Sold/Rented Properties)
   // Current Month
-  const { data: revenueCurrent } = await supabase
-    .from("properties")
-    .select("price, rental_price, status, updated_at")
-    .in("status", ["SOLD", "RENTED"])
-    .is("deleted_at", null)
-    .gte("updated_at", startOfMonth);
+  const { data: revenueCurrent } = await applyTenantFilter(
+    supabase
+      .from("properties")
+      .select("price, rental_price, status, updated_at")
+      .in("status", ["SOLD", "RENTED"])
+      .is("deleted_at", null)
+      .gte("updated_at", startOfMonth),
+  );
 
-  const totalRevenueCurrent = (revenueCurrent || []).reduce((sum, p) => {
+  const totalRevenueCurrent = (revenueCurrent || []).reduce((sum: number, p: any) => {
     return sum + (p.status === "SOLD" ? p.price || 0 : p.rental_price || 0);
   }, 0);
 
   // Last Month
-  const { data: revenueLast } = await supabase
-    .from("properties")
-    .select("price, rental_price, status, updated_at")
-    .in("status", ["SOLD", "RENTED"])
-    .is("deleted_at", null)
-    .gte("updated_at", startOfLastMonth)
-    .lte("updated_at", endOfLastMonth);
+  const { data: revenueLast } = await applyTenantFilter(
+    supabase
+      .from("properties")
+      .select("price, rental_price, status, updated_at")
+      .in("status", ["SOLD", "RENTED"])
+      .is("deleted_at", null)
+      .gte("updated_at", startOfLastMonth)
+      .lte("updated_at", endOfLastMonth),
+  );
 
-  const totalRevenueLast = (revenueLast || []).reduce((sum, p) => {
+  const totalRevenueLast = (revenueLast || []).reduce((sum: number, p: any) => {
     return sum + (p.status === "SOLD" ? p.price || 0 : p.rental_price || 0);
   }, 0);
 
@@ -103,22 +115,28 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   // 2. Leads
   // Current Month
-  const { count: leadsCurrent } = await supabase
-    .from("leads")
-    .select("*", { count: "exact", head: true })
-    .gte("created_at", startOfMonth);
+  const { count: leadsCurrent } = await applyTenantFilter(
+    supabase
+      .from("leads")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", startOfMonth),
+  );
 
   // Last Month
-  const { count: leadsLast } = await supabase
-    .from("leads")
-    .select("*", { count: "exact", head: true })
-    .gte("created_at", startOfLastMonth)
-    .lte("created_at", endOfLastMonth);
+  const { count: leadsLast } = await applyTenantFilter(
+    supabase
+      .from("leads")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", startOfLastMonth)
+      .lte("created_at", endOfLastMonth),
+  );
 
   // Total Leads (for context)
-  const { count: leadsTotal } = await supabase
-    .from("leads")
-    .select("*", { count: "exact", head: true });
+  const { count: leadsTotal } = await applyTenantFilter(
+    supabase
+      .from("leads")
+      .select("*", { count: "exact", head: true }),
+  );
 
   const leadsChangePercent =
     leadsLast === 0
@@ -127,11 +145,13 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   // 3. Conversion Rate (Roughly: Sold / Total Leads * 100)
   // This is a simplified metric.
-  const { count: totalSold } = await supabase
-    .from("properties")
-    .select("*", { count: "exact", head: true })
-    .is("deleted_at", null)
-    .eq("status", "SOLD");
+  const { count: totalSold } = await applyTenantFilter(
+    supabase
+      .from("properties")
+      .select("*", { count: "exact", head: true })
+      .is("deleted_at", null)
+      .eq("status", "SOLD"),
+  );
 
   const conversionRate =
     leadsTotal && leadsTotal > 0 ? ((totalSold || 0) / leadsTotal) * 100 : 0;
@@ -139,26 +159,31 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   // 4. Closed Won (Sold this month)
   // 4. Closed Won (Sold this month)
   // Re-using commissionDeals query below which fetches CLOSED_WIN deals for this month
-  const { data: commissionDeals } = await supabase
+  const { data: commissionDeals } = await applyTenantFilter(supabase
     .from("deals")
     .select("commission_amount")
     .eq("status", "CLOSED_WIN")
-    .gte("created_at", startOfMonth);
+    .gte("created_at", startOfMonth));
 
   const dealsWon = (commissionDeals || []).length;
 
-  const { count: dealsWonLast } = await supabase
-    .from("deals")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "CLOSED_WIN")
-    .gte("created_at", startOfLastMonth)
-    .lte("created_at", endOfLastMonth);
+  // 5. Deals Won Change (Previous month vs Current month)
+  const { count: dealsWonLast } = await applyTenantFilter(
+    supabase
+      .from("properties")
+      .select("*", { count: "exact", head: true })
+      .in("status", ["SOLD", "RENTED"])
+      .is("deleted_at", null)
+      .gte("updated_at", startOfLastMonth)
+      .lte("updated_at", endOfLastMonth),
+  );
+
 
   const dealsChange = dealsWon - (dealsWonLast || 0);
 
   // 5. Total Commission (This Month)
   const totalCommission = (commissionDeals || []).reduce(
-    (sum, d) => sum + (d.commission_amount || 0),
+    (sum: number, d: any) => sum + (d.commission_amount || 0),
     0,
   );
 
@@ -183,19 +208,30 @@ function formatPercent(val: number) {
   return `${sign}${val.toFixed(1)}%`;
 }
 
-export async function getRevenueChartData(): Promise<RevenueChartData[]> {
+export async function getRevenueChartData(tenantId?: string | null): Promise<RevenueChartData[]> {
   const supabase = await createClient();
+  
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
   // Get last 6 months data
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
   sixMonthsAgo.setDate(1); // Start of that month
 
-  const { data } = await supabase
-    .from("properties")
-    .select("price, rental_price, status, updated_at")
-    .in("status", ["SOLD", "RENTED"])
-    .is("deleted_at", null)
-    .gte("updated_at", sixMonthsAgo.toISOString());
+  const { data } = await applyTenantFilter(
+    supabase
+      .from("properties")
+      .select("price, rental_price, status, updated_at")
+      .in("status", ["SOLD", "RENTED"])
+      .is("deleted_at", null)
+      .gte("updated_at", sixMonthsAgo.toISOString()),
+  );
+
 
   // Group by Month
   const grouped = new Map<string, number>();
@@ -208,7 +244,7 @@ export async function getRevenueChartData(): Promise<RevenueChartData[]> {
     grouped.set(key, 0);
   }
 
-  data?.forEach((p) => {
+  data?.forEach((p: any) => {
     const date = new Date(p.updated_at);
     const key = date.toLocaleDateString("th-TH", { month: "short" });
     const val = p.status === "SOLD" ? p.price || 0 : p.rental_price || 0;
@@ -223,13 +259,18 @@ export async function getRevenueChartData(): Promise<RevenueChartData[]> {
   }));
 }
 
-export async function getFunnelStats(): Promise<FunnelData[]> {
+export async function getFunnelStats(tenantId?: string | null): Promise<FunnelData[]> {
   const supabase = await createClient();
 
-  // Using Lead Stages for Funnel
-  // Lead -> Contacted -> Viewed -> Negotiating (Deal) -> Closed (Property Sold)
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
 
-  const { data: leads } = await supabase.from("leads").select("stage");
+  const { data: leads } = await applyTenantFilter(supabase.from("leads").select("stage").is("deleted_at", null));
+
 
   const counts = {
     NEW: 0,
@@ -239,7 +280,7 @@ export async function getFunnelStats(): Promise<FunnelData[]> {
     CLOSED: 0,
   };
 
-  leads?.forEach((l) => {
+  leads?.forEach((l: any) => {
     if (l.stage === "NEW") counts.NEW++;
     else if (l.stage === "CONTACTED") counts.CONTACTED++;
     else if (l.stage === "VIEWED") counts.VIEWED++;
@@ -248,16 +289,20 @@ export async function getFunnelStats(): Promise<FunnelData[]> {
   });
 
   // Also count Deals and Properties as "Closed"
-  const { count: dealClosedCount } = await supabase
-    .from("deals")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "CLOSED_WIN");
+  const { count: dealClosedCount } = await applyTenantFilter(
+    supabase
+      .from("deals")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "CLOSED_WIN"),
+  );
 
-  const { count: propertySoldOrRentedCount } = await supabase
-    .from("properties")
-    .select("*", { count: "exact", head: true })
-    .is("deleted_at", null)
-    .in("status", ["SOLD", "RENTED"]);
+  const { count: propertySoldOrRentedCount } = await applyTenantFilter(
+    supabase
+      .from("properties")
+      .select("*", { count: "exact", head: true })
+      .is("deleted_at", null)
+      .in("status", ["SOLD", "RENTED"]),
+  );
 
   // Deduplicate roughly by taking the max or summing specific types
   // For simplicity, let's use the CLOSED stage from leads + any SOLD properties not linked to leads
@@ -308,14 +353,23 @@ export async function getFunnelStats(): Promise<FunnelData[]> {
   ];
 }
 
-export async function getPipelineStats(): Promise<PipelineData[]> {
+export async function getPipelineStats(tenantId?: string | null): Promise<PipelineData[]> {
   const supabase = await createClient();
 
-  // Active Properties by Status
-  const { data: properties } = await supabase
-    .from("properties")
-    .select("status")
-    .is("deleted_at", null);
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
+  const { data: properties } = await applyTenantFilter(
+    supabase
+      .from("properties")
+      .select("status")
+      .is("deleted_at", null),
+  );
+
 
   const counts = {
     ACTIVE: 0,
@@ -324,7 +378,7 @@ export async function getPipelineStats(): Promise<PipelineData[]> {
     SOLD: 0,
   };
 
-  properties?.forEach((p) => {
+  properties?.forEach((p: any) => {
     if (p.status === "ACTIVE") counts.ACTIVE++;
     if (p.status === "UNDER_OFFER") counts.UNDER_OFFER++;
     if (p.status === "RESERVED") counts.RESERVED++;
@@ -359,14 +413,21 @@ export async function getPipelineStats(): Promise<PipelineData[]> {
   ];
 }
 
-export async function getTopAgents(): Promise<TopAgent[]> {
+export async function getTopAgents(tenantId?: string | null): Promise<TopAgent[]> {
   const supabase = await createClient();
 
-  // Fetch closed deals
-  const { data: deals } = await supabase
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
+  const { data: deals } = await applyTenantFilter(supabase
     .from("deals")
     .select("created_by, commission_amount")
-    .eq("status", "CLOSED_WIN");
+    .eq("status", "CLOSED_WIN"));
+
 
   // Fetch profiles for names
   const { data: profiles } = await supabase
@@ -385,7 +446,7 @@ export async function getTopAgents(): Promise<TopAgent[]> {
     }
   >();
 
-  deals.forEach((d) => {
+  deals.forEach((d: any) => {
     if (!d.created_by) return;
     const current = agentStats.get(d.created_by) || {
       count: 0,
@@ -404,7 +465,7 @@ export async function getTopAgents(): Promise<TopAgent[]> {
   });
 
   // Convert to array and sort
-  return Array.from(agentStats.entries())
+  const result = Array.from(agentStats.entries())
     .map(([id, stats]) => ({
       id,
       name: stats.profile.full_name || "Unknown Agent",
@@ -414,6 +475,8 @@ export async function getTopAgents(): Promise<TopAgent[]> {
     }))
     .sort((a, b) => b.total_commission - a.total_commission)
     .slice(0, 5);
+
+  return result;
 }
 
 export async function getAdvancedTopAgents(): Promise<TopAgent[]> {
@@ -503,9 +566,18 @@ export type Notification = {
 
 export async function getRecentNotifications(
   preferences: Record<string, boolean> | null = null,
+  tenantId?: string | null,
 ): Promise<Notification[]> {
   const supabase = await createClient();
   const notifications: Notification[] = [];
+  
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
 
   // Default true for legacy or unset preferences
   const checkPref = (id: string) => {
@@ -528,12 +600,14 @@ export async function getRecentNotifications(
   ] = await Promise.all([
     // Website Leads
     checkPref("new_lead")
-      ? supabase
-          .from("leads")
-          .select("id, full_name, created_at, source")
-          .eq("source", "WEBSITE")
-          .gte("created_at", isoLimit)
-          .order("created_at", { ascending: false })
+      ? applyTenantFilter(
+          supabase
+            .from("leads")
+            .select("id, full_name, created_at, source")
+            .eq("source", "WEBSITE")
+            .gte("created_at", isoLimit)
+            .order("created_at", { ascending: false }),
+        )
       : Promise.resolve({ data: [] }),
 
     // New Profiles (Admin use case)
@@ -544,21 +618,25 @@ export async function getRecentNotifications(
       .order("created_at", { ascending: false }),
 
     // Audit Logs (Status Updates, Price Drops, Logic Alerts)
-    supabase
-      .from("audit_logs")
-      .select("id, action, created_at, metadata, user_id, entity, entity_id")
-      .gte("created_at", isoLimit)
-      .order("created_at", { ascending: false }),
+    applyTenantFilter(
+      supabase
+        .from("audit_logs")
+        .select("id, action, created_at, metadata, user_id, entity, entity_id")
+        .gte("created_at", isoLimit)
+        .order("created_at", { ascending: false }),
+    ),
 
     // Activities (New Activities)
     checkPref("activity")
-      ? supabase
-          .from("lead_activities")
-          .select(
-            "id, created_at, lead_id, activity_type, note, leads(full_name)",
-          )
-          .gte("created_at", isoLimit)
-          .order("created_at", { ascending: false })
+      ? applyTenantFilter(
+          supabase
+            .from("lead_activities")
+            .select(
+              "id, created_at, lead_id, activity_type, note, leads(full_name)",
+            )
+            .gte("created_at", isoLimit)
+            .order("created_at", { ascending: false }),
+        )
       : Promise.resolve({ data: [] }),
 
     // Assignments logic usually is in audit_logs, but let's check specifically for property_agents or similar
@@ -567,15 +645,17 @@ export async function getRecentNotifications(
 
     // Contract Expiry - Check rental contracts expiring in next 30 days
     checkPref("contract_expiry")
-      ? supabase
-          .from("rental_contracts")
-          .select(
-            "id, deal_id, end_date, start_date, rent_price, deals(property_id, properties(title))",
-          )
-          .eq("status", "ACTIVE")
-          .not("end_date", "is", null)
-          .gte("end_date", new Date().toISOString())
-          .order("end_date", { ascending: true })
+      ? applyTenantFilter(
+          supabase
+            .from("rental_contracts")
+            .select(
+              "id, deal_id, end_date, start_date, rent_price, deals(property_id, properties(title))",
+            )
+            .eq("status", "ACTIVE")
+            .not("end_date", "is", null)
+            .gte("end_date", new Date().toISOString())
+            .order("end_date", { ascending: true }),
+        )
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -585,7 +665,7 @@ export async function getRecentNotifications(
   const recentActivities = activitiesResult.data || [];
 
   // 1. New Leads
-  recentLeads.forEach((lead) => {
+  recentLeads.forEach((lead: any) => {
     notifications.push({
       id: `lead-${lead.id}`,
       message: `Lead ใหม่จากหน้าเว็บ: ${lead.full_name}`,
@@ -599,7 +679,7 @@ export async function getRecentNotifications(
   });
 
   // 2. Audit Logs
-  recentLogs.forEach((log) => {
+  recentLogs.forEach((log: any) => {
     const meta = log.metadata as any;
     const timeStr = formatTimeAgo(log.created_at);
     const createdAt = new Date(log.created_at).getTime();
@@ -668,7 +748,7 @@ export async function getRecentNotifications(
   });
 
   // 4. New Registrations (Profiles)
-  recentProfiles.forEach((profile) => {
+  recentProfiles.forEach((profile: any) => {
     notifications.push({
       id: `user-${profile.id}`,
       message: `สมาชิกใหม่: ${profile.full_name || profile.email}`,
@@ -713,16 +793,23 @@ export async function getRecentNotifications(
   return notifications.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 }
 
-export async function getMarketingPerformanceData(): Promise<
+export async function getMarketingPerformanceData(tenantId?: string | null): Promise<
   MarketingPerformanceData[]
 > {
   try {
     const supabase = await createClient();
 
-    const { data: leads } = await supabase
+    let query = supabase
       .from("leads")
       .select("utm_source, ai_score")
       .is("deleted_at", null);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data: leads } = await query;
+
 
     if (!leads) return [];
 
@@ -731,7 +818,7 @@ export async function getMarketingPerformanceData(): Promise<
       { count: number; totalScore: number; hotLeads: number }
     >();
 
-    leads.forEach((l) => {
+    leads.forEach((l: any) => {
       const source = l.utm_source || "Direct / Unknown";
       const score = l.ai_score || 0;
       const isHot = score >= 80;
@@ -762,44 +849,52 @@ export async function getMarketingPerformanceData(): Promise<
   }
 }
 
-export async function getExecutiveWeeklyAISummaryAction() {
+export async function getExecutiveWeeklyAISummaryAction(tenantId?: string | null) {
   try {
     const supabase = await createClient();
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     const weekAgoStr = weekAgo.toISOString();
 
+    const applyTenantFilter = (q: any) => {
+      if (tenantId && tenantId !== "ALL") {
+        return q.eq("tenant_id", tenantId);
+      }
+      return q;
+    };
+
     // 1. Fetch Stats
     const [leadsRes, dealsRes, propertiesRes] = await Promise.all([
-      supabase
+      applyTenantFilter(supabase
         .from("leads")
         .select("utm_source, ai_score, created_at")
         .gte("created_at", weekAgoStr)
-        .is("deleted_at", null),
-      supabase
+        .is("deleted_at", null)),
+      applyTenantFilter(supabase
         .from("deals")
         .select("status, deal_type, commission_amount, created_at")
         .gte("created_at", weekAgoStr)
-        .is("deleted_at", null),
-      supabase
+        .is("deleted_at", null)),
+      applyTenantFilter(supabase
         .from("properties")
         .select("view_count, property_type")
-        .is("deleted_at", null),
+        .is("deleted_at", null)),
     ]);
+
 
     const leads = leadsRes.data || [];
     const deals = dealsRes.data || [];
     const props = propertiesRes.data || [];
 
     const totalLeads = leads.length;
-    const hotLeads = leads.filter((l) => (l.ai_score || 0) >= 80).length;
+    const hotLeads = leads.filter((l: any) => (l.ai_score || 0) >= 80).length;
     const dealsWon = deals.filter(
-      (d) => d.status === "CLOSED_WIN" || d.status === "SIGNED",
+      (d: any) => d.status === "CLOSED_WIN" || d.status === "SIGNED",
     ).length;
 
     // Aggregate UTMs
     const utmMap = new Map();
-    leads.forEach((l) => {
+    leads.forEach((l: any) => {
       const s = l.utm_source || "Direct";
       utmMap.set(s, (utmMap.get(s) || 0) + 1);
     });

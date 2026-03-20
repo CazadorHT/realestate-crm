@@ -20,19 +20,35 @@ import { CreateOwnerDialog } from "@/components/owners/CreateOwnerDialog";
 import type { Owner } from "@/features/owners/types";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
-import { bulkDeleteOwnersAction } from "@/features/owners/bulk-actions";
+import { 
+  bulkDeleteOwnersAction,
+  bulkMoveOwnersToTenantAction 
+} from "@/features/owners/bulk-actions";
 import { exportOwnersAction } from "@/features/owners/export-action";
 import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 
 interface OwnersTableProps {
   owners: (Owner & {
     property_count?: number;
     tenants?: { name: string } | null;
+    tenant_id?: string | null;
   })[];
   showBranch?: boolean;
+  isAdmin?: boolean;
+  isMultiTenant?: boolean;
+  currentTenantId?: string | null;
+  currentTenantName?: string | null;
 }
 
-export function OwnersTable({ owners, showBranch }: OwnersTableProps) {
+export function OwnersTable({
+  owners,
+  showBranch,
+  isAdmin,
+  isMultiTenant,
+  currentTenantId,
+  currentTenantName,
+}: OwnersTableProps) {
   const allIds = useMemo(() => owners.map((o) => o.id), [owners]);
   const {
     toggleSelect,
@@ -48,6 +64,80 @@ export function OwnersTable({ owners, showBranch }: OwnersTableProps) {
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
     const result = await bulkDeleteOwnersAction(ids);
+    if (result.success) {
+      toast.success(result.message);
+      clearSelection();
+    } else {
+      toast.error(result.message || "เกิดข้อผิดพลาด");
+    }
+  };
+
+  const pullableCount = useMemo(() => {
+    return Array.from(selectedIds).filter((id) => {
+      const o = owners.find((item) => item.id === id);
+      return o?.tenant_id === null || o?.tenant_id === undefined;
+    }).length;
+  }, [selectedIds, owners]);
+
+  const pullConfirmMessage = useMemo(() => {
+    const total = selectedCount;
+    const canPull = pullableCount;
+
+    if (total === 0) return null;
+
+    const skippedOwners = Array.from(selectedIds)
+      .map((id) => owners.find((o) => o.id === id))
+      .filter((o) => o && o.tenant_id !== null);
+
+    const skippedBranches = Array.from(
+      new Set(
+        skippedOwners.map((o) => {
+          const name = o?.tenants?.name || "ไม่ทราบสาขา";
+          if (o?.tenant_id === currentTenantId && currentTenantName) {
+            return `${currentTenantName} (สาขาคุณ)`;
+          }
+          return name;
+        }),
+      ),
+    );
+
+    return (
+      <span className="space-y-2 block text-left">
+        <span>
+          คุณกำลังจะดึง <strong className="text-foreground">{canPull}</strong>{" "}
+          รายชื่อเจ้าของที่ยังไม่มีสาขา มายังสาขาของคุณ
+        </span>
+        {total > canPull && (
+          <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 mt-2">
+            <p className="font-medium mb-1 flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              ⚠️ ระบบจะข้าม {total - canPull} รายการที่มีสาขาอยู่แล้ว
+            </p>
+            {skippedBranches.length > 0 && (
+              <div className="mt-1 pl-4 border-l border-amber-200">
+                {skippedBranches.map((branch, idx) => (
+                  <div key={idx} className="opacity-80">
+                    • {branch}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </span>
+    );
+  }, [
+    selectedCount,
+    pullableCount,
+    selectedIds,
+    owners,
+    currentTenantId,
+    currentTenantName,
+  ]);
+
+  const handleBulkPull = async () => {
+    const ids = Array.from(selectedIds);
+    const result = await bulkMoveOwnersToTenantAction(ids);
     if (result.success) {
       toast.success(result.message);
       clearSelection();
@@ -74,6 +164,9 @@ export function OwnersTable({ owners, showBranch }: OwnersTableProps) {
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
+        onPull={handleBulkPull}
+        onPullLabel="ดึงมาสาขาตัวเอง"
+        onPullConfirmMessage={pullConfirmMessage}
         onExport={() => exportOwnersAction(Array.from(selectedIds))}
         entityName="เจ้าของ"
       />
@@ -135,7 +228,7 @@ export function OwnersTable({ owners, showBranch }: OwnersTableProps) {
                           new Date(owner.created_at),
                         ) < 24 && (
                           <div className="w-fit">
-                            <div className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">
+                            <div className="bg-amber-500 text-white text-[11px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">
                               NEW
                             </div>
                           </div>
@@ -198,7 +291,13 @@ export function OwnersTable({ owners, showBranch }: OwnersTableProps) {
                   </TableCell>
                   {/* จัดการ */}
                   <TableCell className="text-right">
-                    <OwnerRowActions id={owner.id} fullName={owner.full_name} />
+                    <OwnerRowActions
+                      id={owner.id}
+                      fullName={owner.full_name}
+                      tenantId={owner.tenant_id}
+                      isAdmin={isAdmin}
+                      isMultiTenant={isMultiTenant}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
@@ -241,26 +340,32 @@ export function OwnersTable({ owners, showBranch }: OwnersTableProps) {
                             new Date(),
                             new Date(owner.created_at),
                           ) < 24 && (
-                            <Badge className="h-4 px-1.5 text-[9px] bg-amber-500 hover:bg-amber-600 border-0">
+                            <Badge className="h-4 px-1.5 text-[11px] bg-amber-500 hover:bg-amber-600 border-0">
                               NEW
                             </Badge>
                           )}
                       </div>
-                      <div className="bg-slate-100 text-[10px] font-bold text-slate-500 px-2 py-0.5 rounded-full w-fit mt-1">
+                      <div className="bg-slate-100 text-[11px] font-bold text-slate-500 px-2 py-0.5 rounded-full w-fit mt-1">
                         {owner.property_count || 0} ทรัพย์
                       </div>
                       {showBranch && owner.tenants?.name && (
-                        <div className="bg-blue-100 text-[10px] font-bold text-blue-600 px-2 py-0.5 rounded-full w-fit mt-1">
+                        <div className="bg-blue-100 text-[11px] font-bold text-blue-600 px-2 py-0.5 rounded-full w-fit mt-1">
                           สาขา: {owner.tenants.name}
                         </div>
                       )}
                     </div>
-                    <OwnerRowActions id={owner.id} fullName={owner.full_name} />
+                    <OwnerRowActions
+                      id={owner.id}
+                      fullName={owner.full_name}
+                      tenantId={owner.tenant_id}
+                      isAdmin={isAdmin}
+                      isMultiTenant={isMultiTenant}
+                    />
                   </div>
 
                   <div className="mt-3 space-y-2">
                     {owner.phone && (
-                      <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <div className="flex items-center gap-2 text-[11px] text-slate-600">
                         <span className="text-slate-400 w-16">เบอร์โทร:</span>
                         <a
                           href={`tel:${owner.phone}`}
@@ -271,7 +376,7 @@ export function OwnersTable({ owners, showBranch }: OwnersTableProps) {
                       </div>
                     )}
                     {owner.line_id && (
-                      <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <div className="flex items-center gap-2 text-[11px] text-slate-600">
                         <span className="text-slate-400 w-16">LINE ID:</span>
                         <span className="font-medium text-emerald-600">
                           {owner.line_id}
@@ -279,7 +384,7 @@ export function OwnersTable({ owners, showBranch }: OwnersTableProps) {
                       </div>
                     )}
                     {owner.facebook_url && (
-                      <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <div className="flex items-center gap-2 text-[11px] text-slate-600">
                         <span className="text-slate-400 w-16">Facebook:</span>
                         <a
                           href={owner.facebook_url}

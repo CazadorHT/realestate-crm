@@ -21,6 +21,19 @@ export function usePropertyFormData(
     }[]
   >([]);
   const [popularAreas, setPopularAreas] = React.useState<string[]>([]);
+  const [allBranches, setAllBranches] = React.useState(false);
+
+  const fetchOwners = async (showAll: boolean) => {
+    try {
+      const { getOwnersAction } = await import("@/features/owners/actions");
+      const ownersData = await getOwnersAction(showAll);
+      setOwners(ownersData);
+      return ownersData;
+    } catch (error) {
+      console.error("Error fetching owners:", error);
+      return [];
+    }
+  };
 
   const fetchPopularAreas = async () => {
     try {
@@ -43,9 +56,7 @@ export function usePropertyFormData(
     async function loadData() {
       try {
         // Load owners
-        const { getOwnersAction } = await import("@/features/owners/actions");
-        const ownersData = await getOwnersAction();
-        setOwners(ownersData);
+        await fetchOwners(allBranches);
 
         // Load agents
         const { createClient } = await import("@/lib/supabase/client");
@@ -80,7 +91,7 @@ export function usePropertyFormData(
     }
 
     loadData();
-  }, [mode, defaultValuesId, form]); // Added form to deps, be careful of loops if form is unstable
+  }, [mode, defaultValuesId, form, allBranches]); // Added form and allBranches to deps
 
   // Fetch Features on Edit Mode
   React.useEffect(() => {
@@ -110,12 +121,11 @@ export function usePropertyFormData(
     owners,
     agents,
     popularAreas,
+    allBranches,
+    setAllBranches,
     refreshPopularAreas: fetchPopularAreas,
     refreshOwners: async () => {
-      const { getOwnersAction } = await import("@/features/owners/actions");
-      const ownersData = await getOwnersAction();
-      setOwners(ownersData);
-      return ownersData;
+      return fetchOwners(allBranches);
     },
   };
 }

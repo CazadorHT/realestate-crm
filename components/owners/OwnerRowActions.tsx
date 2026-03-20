@@ -6,18 +6,32 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { deleteOwnerAction } from "@/features/owners/actions";
-import { Edit, Trash2, Eye } from "lucide-react";
+import { transferOwnerBranchAction } from "@/lib/actions/transfer-branch-action";
+import { TransferBranchDialog } from "@/components/shared/TransferBranchDialog";
+import { Edit, Trash2, Eye, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
 
 type OwnerRowActionsProps = {
   id: string;
   fullName?: string | null;
+  tenantId?: string | null;
+  isAdmin?: boolean;
+  isMultiTenant?: boolean;
 };
 
-export function OwnerRowActions({ id, fullName }: OwnerRowActionsProps) {
+export function OwnerRowActions({
+  id,
+  fullName,
+  tenantId,
+  isAdmin,
+  isMultiTenant,
+}: OwnerRowActionsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showTransferDialog, setShowTransferDialog] = useState(false);
+
+  const showTransferButton = isAdmin && isMultiTenant;
 
   const onDelete = () =>
     startTransition(async () => {
@@ -37,10 +51,6 @@ export function OwnerRowActions({ id, fullName }: OwnerRowActionsProps) {
     <>
       <div className="flex justify-end gap-2">
         {/* View */}
-        {/* Note: If the view page doesn't exist yet, this link might 404, but user requested 'Eye' */}
-        {/* We assume /protected/owners/[id] might be implemented or desired. */}
-        {/* If it doesn't exist, we might point to edit or keep it as placeholder? */}
-        {/* Let's point to /protected/owners/[id] for consistency with Leads. */}
         <Button
           variant="ghost"
           size="icon"
@@ -65,6 +75,19 @@ export function OwnerRowActions({ id, fullName }: OwnerRowActionsProps) {
             <Edit className="h-4 w-4" />
           </Link>
         </Button>
+
+        {/* Transfer Branch — Admin + Multi-tenant only */}
+        {showTransferButton && (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Transfer branch"
+            title="ย้ายสาขา"
+            onClick={() => setShowTransferDialog(true)}
+          >
+            <ArrowRightLeft className="h-4 w-4 text-blue-600" />
+          </Button>
+        )}
 
         {/* Delete */}
         <Button
@@ -96,6 +119,17 @@ export function OwnerRowActions({ id, fullName }: OwnerRowActionsProps) {
         variant="destructive"
         onConfirm={onDelete}
       />
+
+      {showTransferButton && (
+        <TransferBranchDialog
+          open={showTransferDialog}
+          onOpenChange={setShowTransferDialog}
+          entityId={id}
+          entityName={fullName || "เจ้าของทรัพย์"}
+          currentTenantId={tenantId}
+          onTransfer={transferOwnerBranchAction}
+        />
+      )}
     </>
   );
 }

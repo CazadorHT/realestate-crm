@@ -51,6 +51,8 @@ import { TopAgents } from "@/components/dashboard/TopAgents";
 import { SetupChecklist } from "@/components/dashboard/SetupChecklist";
 import { ProactiveSetupTrigger } from "@/components/dashboard/ProactiveSetupTrigger";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
+import { siteConfig } from "@/lib/site-config";
+import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
 import { isStaff } from "@/lib/authz";
 import { getCalendarEvents } from "@/features/calendar/queries";
 import { UpcomingEvents } from "@/features/dashboard/components/UpcomingEvents";
@@ -76,6 +78,8 @@ export default async function DashboardPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const tenantId = await getActiveTenantCookie();
 
   const profile = await getCurrentProfile();
   const staff = profile ? isStaff(profile.role) : false;
@@ -111,7 +115,6 @@ export default async function DashboardPage() {
       riskPromise,
       upcomingPromise,
     ]);
-
   const setupProgress = await getSetupProgress();
 
   return (
@@ -132,7 +135,7 @@ export default async function DashboardPage() {
         {/* 2. SMART SUMMARY (AI GATED) */}
         {showSmartSummary ? (
           <Suspense fallback={<Skeleton className="h-14 w-full rounded-2xl" />}>
-            <SmartSummaryWrapper />
+            <SmartSummaryWrapper tenantId={tenantId} />
           </Suspense>
         ) : (
           <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-500 text-sm italic">
@@ -140,68 +143,75 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* 3. KPI CARDS (ANALYTICS GATED) */}
-        {showAnalytics && <StatsSectionSuspense />}
+        {/* 3. KPI CARDS & QUICK ACTIONS */}
+        <div className="flex flex-col gap-6">
+          {showAnalytics && <StatsSectionSuspense tenantId={tenantId} />}
+          <QuickActions />
+        </div>
 
         {/* 4. MAIN ANALYTICS & OPERATIONS GRID */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* LEFT COLUMN (2/3 width on large screens) */}
+          {/* CORE ANALYTICS (2/3 width) */}
           <div className="xl:col-span-2 flex flex-col gap-6">
             {showAnalytics ? (
               <>
+                {/* REVENUE CHART (Priority 1) */}
+                <div className="min-h-[400px]">
+                  <Suspense fallback={<ChartSkeleton />}>
+                    <RevenueWrapper tenantId={tenantId} />
+                  </Suspense>
+                </div>
+
                 {/* PIPELINE & FUNNEL ROW */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Suspense fallback={<ChartSkeleton />}>
-                    <PipelineWrapper />
+                    <PipelineWrapper tenantId={tenantId} />
                   </Suspense>
                   <Suspense fallback={<ChartSkeleton />}>
-                    <FunnelWrapper />
+                    <FunnelWrapper tenantId={tenantId} />
                   </Suspense>
                 </div>
 
-                {/* REVENUE CHART */}
-                <div className="min-h-[400px]">
-                  <Suspense fallback={<ChartSkeleton />}>
-                    <RevenueWrapper />
-                  </Suspense>
-                </div>
-
-                {/* TOP AGENTS & INSIGHTS */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2">
-                    <Suspense fallback={<ListSkeleton />}>
-                      <TopAgentsWrapper />
-                    </Suspense>
-                  </div>
-                  <div className="flex flex-col gap-6">
-                    <Suspense fallback={<ChartSkeleton />}>
-                      <MarketingROIWrapper />
-                    </Suspense>
-                    <FollowUpInsights leads={followUpLeads} />
-                    <RiskAlerts deals={riskDeals} />
-                  </div>
-                </div>
+                {/* TOP AGENTS */}
+                <Suspense fallback={<ListSkeleton />}>
+                  <TopAgentsWrapper tenantId={tenantId} />
+                </Suspense>
               </>
             ) : (
-              <div className="flex flex-col gap-4">
-                <FollowUpInsights leads={followUpLeads} />
-                <RiskAlerts deals={riskDeals} />
+              <div className="p-8 bg-slate-50 border border-slate-100 rounded-3xl flex flex-col items-center justify-center text-center">
+                <div className="text-slate-400 mb-2">Analytics not enabled</div>
+                <p className="text-xs text-slate-500 max-w-xs">
+                  Upgrade your plan to unlock real-time revenue tracking and performance insights.
+                </p>
               </div>
             )}
           </div>
 
-          {/* RIGHT COLUMN (1/3 width) */}
-          <div className="flex flex-col gap-6 ">
-            <QuickActions />
+          {/* SIDEBAR: INSIGHTS & OPS (1/3 width) */}
+          <div className="flex flex-col gap-6">
+            {/* AI Insights & Alerts */}
+            <ExecutiveAISummary tenantId={tenantId} />
+            
+            <Suspense fallback={<ChartSkeleton />}>
+              <MarketingROIWrapper tenantId={tenantId} />
+            </Suspense>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-6">
+               <FollowUpInsights leads={followUpLeads} />
+               <RiskAlerts deals={riskDeals} />
+            </div>
+
+            {/* Daily Management */}
             <UpcomingEvents events={upcomingEvents} />
-            <ExecutiveAISummary />
-            <NotificationCenter notifications={notifications} />
             <AgendaList agenda={agendaData} />
+            <NotificationCenter notifications={notifications} />
           </div>
         </div>
 
-        {/* 5. RECENT PROPERTIES TABLE */}
-        <RecentPropertiesSectionSuspense />
+        {/* 5. RECENT PROPERTIES TABLE (Full Width) */}
+        <div className="mt-2">
+           <RecentPropertiesSectionSuspense tenantId={tenantId} />
+        </div>
       </>
     </div>
   );
@@ -210,8 +220,8 @@ export default async function DashboardPage() {
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Inline Wrappers for simpler refactoring
-async function SmartSummaryWrapper() {
-  const stats = await getDashboardStats();
+async function SmartSummaryWrapper({ tenantId }: { tenantId?: string | null }) {
+  const stats = await getDashboardStats(tenantId);
   return (
     <SmartSummary
       text={
@@ -225,27 +235,27 @@ async function SmartSummaryWrapper() {
   );
 }
 
-async function PipelineWrapper() {
-  const data = await getPipelineStats();
+async function PipelineWrapper({ tenantId }: { tenantId?: string | null }) {
+  const data = await getPipelineStats(tenantId);
   return <PipelineSummary data={data || []} />;
 }
 
-async function FunnelWrapper() {
-  const data = await getFunnelStats();
+async function FunnelWrapper({ tenantId }: { tenantId?: string | null }) {
+  const data = await getFunnelStats(tenantId);
   return <FunnelChart data={data} />;
 }
 
-async function RevenueWrapper() {
-  const data = await getRevenueChartData();
+async function RevenueWrapper({ tenantId }: { tenantId?: string | null }) {
+  const data = await getRevenueChartData(tenantId);
   return <RevenueChart initialData={data} />;
 }
 
-async function TopAgentsWrapper() {
-  const data = await getTopAgents();
+async function TopAgentsWrapper({ tenantId }: { tenantId?: string | null }) {
+  const data = await getTopAgents(tenantId);
   return <TopAgents data={data} />;
 }
 
-async function MarketingROIWrapper() {
-  const data = await getMarketingPerformanceData();
+async function MarketingROIWrapper({ tenantId }: { tenantId?: string | null }) {
+  const data = await getMarketingPerformanceData(tenantId);
   return <MarketingROISummary data={data} />;
 }

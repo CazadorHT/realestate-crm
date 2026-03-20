@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -13,6 +16,13 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Settings, Building2, ChevronRight } from "lucide-react";
 import type { Profile } from "@/lib/supabase/getCurrentProfile";
@@ -38,6 +48,8 @@ export function UserNav({ profile }: UserNavProps) {
     router.refresh();
   };
 
+  const [open, setOpen] = useState(false);
+
   // สร้างตัวย่อจากชื่อ (เช่น "Somchai Jaiudee" -> "SJ") กรณีไม่มีรูป Avatar
   const initials = profile?.full_name
     ? profile.full_name
@@ -49,107 +61,203 @@ export function UserNav({ profile }: UserNavProps) {
     : "??";
 
   return (
-    <DropdownMenu>
-      {/* ปุ่ม Trigger รูป Avatar: กดแล้วจะเปิด Menu */}
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-10 w-10 border border-border/50">
-            <AvatarImage
-              src={profile?.avatar_url || ""}
-              alt={profile?.full_name || ""}
-            />
-            <AvatarFallback className="bg-primary/5 font-bold text-primary">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
+    <>
+      {/* Desktop Dropdown */}
+      <div className="hidden lg:flex items-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="relative h-10 w-10 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center p-0 overflow-hidden"
+            >
+              <Avatar className="h-full w-full border-none">
+                <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || ""} />
+                <AvatarFallback className="bg-primary/5 font-bold text-primary">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
 
-      {/* รายละเอียดใน Dropdown Menu */}
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              {profile?.full_name || "ไม่ระบุชื่อ"}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {profile?.email}
-            </p>
-            {profile?.role && (
-              <span className="mt-1 inline-flex w-fit items-center rounded-sm bg-primary/10 px-1 py-0.5 text-[10px] font-medium text-primary uppercase">
-                {profile.role}
-              </span>
-            )}
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem className="cursor-pointer" asChild>
-            <Link href="/protected/profile">
-              <User className="mr-2 h-4 w-4" />
-              <span>โปรไฟล์</span>
-            </Link>
-          </DropdownMenuItem>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {profile?.full_name || "ไม่ระบุชื่อ"}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {profile?.email}
+                </p>
+                {profile?.role && (
+                  <span className="mt-1 inline-flex w-fit items-center rounded-sm bg-primary/10 px-1 py-0.5 text-[10px] font-medium text-primary uppercase">
+                    {profile.role}
+                  </span>
+                )}
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem className="cursor-pointer" asChild>
+                <Link href="/protected/profile">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>โปรไฟล์</span>
+                </Link>
+              </DropdownMenuItem>
 
-          {/* สลับสาขา - แสดงเฉพาะเมื่อเปิด Multi-Branch Mode */}
-          {isMultiTenantEnabled && (
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="cursor-pointer">
-                <Building2 className="mr-2 h-4 w-4" />
-                <span>สลับสาขา</span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-56">
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
-                  สาขาทั้งหมด ({tenants.length})
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {tenants.map((t) => {
-                  const isActive = activeTenant?.id === t.id;
-                  return (
-                    <DropdownMenuItem
-                      key={t.id}
-                      disabled={isActive}
-                      className="flex items-center justify-between"
-                      onClick={() => !isActive && setTenantId(t.id)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Building2
-                          className={`h-3.5 w-3.5 ${isActive ? "text-primary" : "text-slate-400"}`}
-                        />
-                        <span
-                          className={isActive ? "font-medium text-primary" : ""}
+              {isMultiTenantEnabled && (
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="cursor-pointer">
+                    <Building2 className="mr-2 h-4 w-4" />
+                    <span>สลับสาขา</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-56">
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">
+                      สาขาทั้งหมด ({tenants.length})
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {tenants.map((t) => {
+                      const isActive = activeTenant?.id === t.id;
+                      return (
+                        <DropdownMenuItem
+                          key={t.id}
+                          disabled={isActive}
+                          className="flex items-center justify-between"
+                          onClick={() => !isActive && setTenantId(t.id)}
                         >
-                          {t.name}
-                        </span>
-                      </div>
-                      {isActive && (
-                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
-                          ปัจจุบัน
-                        </span>
-                      )}
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          )}
+                          <div className="flex items-center gap-2">
+                            <Building2 className={`h-3.5 w-3.5 ${isActive ? "text-primary" : "text-slate-400"}`} />
+                            <span className={isActive ? "font-medium text-primary" : ""}>
+                              {t.name}
+                            </span>
+                          </div>
+                          {isActive && (
+                            <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                              ปัจจุบัน
+                            </span>
+                          )}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              )}
 
-          <DropdownMenuItem className="cursor-pointer" asChild>
-            <Link href="/protected/settings">
-              <Settings className="mr-2 h-4 w-4" />
-              <span>ตั้งค่า</span>
-            </Link>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="cursor-pointer text-red-600 focus:text-red-600"
-          onClick={handleSignOut}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+              <DropdownMenuItem className="cursor-pointer" asChild>
+                <Link href="/protected/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>ตั้งค่า</span>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Mobile Sheet */}
+      <div className="flex items-center lg:hidden">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              className="relative h-10 w-10 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center p-0 overflow-hidden"
+            >
+              <Avatar className="h-full w-full border-none">
+                <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || ""} />
+                <AvatarFallback className="bg-primary/5 font-bold text-primary">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-auto max-h-[90vh] p-0 overflow-y-auto rounded-t-[2.5rem] border-t-0 shadow-2xl">
+            <SheetHeader className="p-6 text-left border-b border-slate-200 bg-slate-50/50">
+              <SheetTitle className="text-lg font-bold">ข้อมูลผู้ใช้งาน</SheetTitle>
+              <div className="flex items-center gap-4 mt-4">
+                <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
+                  <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || ""} />
+                  <AvatarFallback>{initials}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col min-w-0">
+                  <p className="text-sm font-bold truncate text-slate-900">{profile?.full_name || "ไม่ระบุชื่อ"}</p>
+                  <p className="text-xs text-slate-500 truncate">{profile?.email}</p>
+                  {profile?.role && (
+                    <span className="mt-1 inline-flex w-fit items-center rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600 uppercase border border-blue-100">
+                      {profile.role}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </SheetHeader>
+
+            <div className="p-4 space-y-6 pb-12 mb-4">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">บัญชีของฉัน</p>
+                <Link
+                  href="/protected/profile"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
+                >
+                  <User className="h-5 w-5 text-slate-400" />
+                  โปรไฟล์
+                </Link>
+                <Link
+                  href="/protected/settings"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
+                >
+                  <Settings className="h-5 w-5 text-slate-400" />
+                  ตั้งค่า
+                </Link>
+              </div>
+
+              {isMultiTenantEnabled && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">สลับสาขา</p>
+                  <div className="grid gap-2">
+                    {tenants.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => {
+                          setTenantId(t.id);
+                          setOpen(false);
+                        }}
+                        className={cn(
+                          "flex items-center justify-between px-3 py-3 rounded-xl border text-left transition-all",
+                          activeTenant?.id === t.id
+                            ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
+                            : "bg-white border-slate-100 text-slate-600 hover:bg-slate-50"
+                        )}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Building2 className={cn("h-4 w-4 shrink-0", activeTenant?.id === t.id ? "text-blue-600" : "text-slate-400")} />
+                          <span className="text-sm font-medium truncate">{t.name}</span>
+                        </div>
+                        {activeTenant?.id === t.id && <ChevronRight className="h-4 w-4 text-blue-600" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-slate-200">
+                <Button
+                  variant="ghost"
+                  onClick={handleSignOut}
+                  className="w-full flex items-center justify-start gap-3 px-3 py-6 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors"
+                >
+                  <LogOut className="h-5 w-5" />
+                  ออกจากระบบ
+                </Button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </>
   );
 }

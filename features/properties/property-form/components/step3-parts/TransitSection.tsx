@@ -150,7 +150,7 @@ export function TransitSection({ form }: TransitSectionProps) {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1.5 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 font-bold px-3 shadow-xs transition-all active:scale-95"
+                className="h-8 gap-1.5 text-blue-600! border-blue-200! bg-blue-50! hover:bg-blue-100! font-bold px-3 shadow-xs transition-all active:scale-95"
                 disabled={isTranslating}
                 onClick={() => translateTransits()}
               >
@@ -159,7 +159,7 @@ export function TransitSection({ form }: TransitSectionProps) {
                 ) : (
                   <Sparkles className="h-3.5 w-3.5" />
                 )}
-                AI {isTranslating ? "กำลังแปล..." : "Fix All"}
+                AI {isTranslating ? "กำลังแปล..." : "แปลทั้งหมดของการเดินทาง"}
               </Button>
             )
           }
@@ -205,7 +205,7 @@ export function TransitSection({ form }: TransitSectionProps) {
           }`}
         >
           {/* Transit List - Scrollable container for max 3 visible */}
-          <div className="max-h-[220px] overflow-y-auto space-y-4 pr-1">
+          <div className="max-h-[350px] overflow-y-auto space-y-4 pr-1 custom-scrollbar">
             {fields.map((item, index) => (
               <div
                 key={item.id}

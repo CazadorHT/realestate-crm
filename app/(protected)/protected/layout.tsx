@@ -46,18 +46,18 @@ export default async function ProtectedLayout({
       <SidebarNav role={profile.role} />
 
       <div className="flex flex-1 flex-col min-w-0">
-        <header className="sticky top-0 z-50 flex h-16 items-center gap-4 bg-white px-4 md:px-6 backdrop-blur-md border-b border-slate-100 shadow-sm">
-          <div className="flex items-center gap-2 sm:gap-4">
+        <header className="sticky top-0 z-50 flex h-16 items-center gap-1 sm:gap-4 bg-white px-4 md:px-6 backdrop-blur-md border-b border-slate-100 shadow-sm">
+          <div className="flex items-center gap-1 sm:gap-4">
             <MobileNav role={profile.role} />
 
-            <h1 className="text-lg font-bold text-slate-800 tracking-tight sm:hidden truncate max-w-[120px] uppercase">
+            <h1 className="text-sm sm:text-lg font-bold text-slate-800 tracking-tight sm:hidden truncate max-w-[40px] min-[360px]:max-w-[70px] min-[400px]:max-w-[120px] uppercase">
               {siteConfig.name}
             </h1>
           </div>
           <div className="ml-auto flex items-center gap-2 sm:gap-4">
             <TenantSwitcher />
             <NotificationBell />
-            <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
+            <div className="h-6 w-px bg-slate-200 mx-0.5 hidden sm:block" />
             <UserNav profile={profile} />
           </div>
         </header>

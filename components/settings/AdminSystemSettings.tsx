@@ -121,6 +121,7 @@ export function AdminSystemSettings() {
               <Badge
                 className={cn(
                   "rounded-full border-transparent px-2.5 py-0.5 text-[10px] font-semibold uppercase transition-all",
+                  "hover:text-white",
                   isEnabled
                     ? "bg-indigo-100 text-indigo-700"
                     : "bg-slate-100 text-slate-500",

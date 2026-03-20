@@ -5,10 +5,12 @@ import {
   getPropertiesDashboardStatsQuery,
   getPropertiesTableData,
 } from "@/features/properties/queries";
+import { getSystemConfig } from "@/lib/actions/system-config";
 import { PropertiesHeader } from "./_components/PropertiesHeader";
 import { PropertiesEmptyState } from "./_components/PropertiesEmptyState";
 import { PropertyFilters } from "@/components/properties/PropertyFilters";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { requireAuthContext } from "@/lib/authz";
 
 export const metadata: Metadata = {
   title: "จัดการทรัพย์",
@@ -59,6 +61,7 @@ export default async function PropertiesPage({
     nearTransit?: string;
     petFriendly?: string;
     fullyFurnished?: string;
+    allBranches?: string;
     page?: string;
   }>;
 }) {
@@ -67,9 +70,24 @@ export default async function PropertiesPage({
   const currentPage = Number(params.page) || 1;
 
   // 1. Fetch Data via Refactored Query
+  const config = await getSystemConfig();
+  const { role, tenantId, supabase } = await requireAuthContext();
+  const isAdminUser = role === "ADMIN";
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  let currentTenantName = null;
+  if (tenantId) {
+    const { data: tenantData } = await supabase
+      .from("tenants")
+      .select("name")
+      .eq("id", tenantId)
+      .single();
+    currentTenantName = tenantData?.name;
+  }
+
   const { tableData, count, filterMetadata } =
     await getPropertiesTableData(params);
-  const stats = await getPropertiesDashboardStatsQuery();
+  const stats = await getPropertiesDashboardStatsQuery(params.allBranches);
 
   // Redirect if page is empty and not on first page
   if (tableData.length === 0 && currentPage > 1) {
@@ -99,15 +117,27 @@ export default async function PropertiesPage({
               คลิกที่แถวเพื่อดูรายละเอียดหรือแก้ไข
             </p>
           </div>
+          
         </div>
 
-        <PropertyFilters totalCount={count} filterMetadata={filterMetadata} />
+        <PropertyFilters
+          totalCount={count}
+          filterMetadata={filterMetadata}
+          isMultiTenant={config.multi_tenant_enabled}
+        />
 
         {isEmptyState ? (
           <PropertiesEmptyState />
         ) : (
           <>
-            <PropertiesTable data={tableData} />
+            <PropertiesTable
+              data={tableData}
+              isAdmin={isAdminUser}
+              isMultiTenant={isMultiTenant}
+              currentTenantId={tenantId}
+              currentTenantName={currentTenantName}
+              showBranch={isAdminUser && params.allBranches === "true" && isMultiTenant}
+            />
             <PaginationControls
               totalCount={count}
               pageSize={PAGE_SIZE}

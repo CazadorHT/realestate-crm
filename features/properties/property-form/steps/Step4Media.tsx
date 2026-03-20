@@ -21,6 +21,10 @@ function Step4MediaComponent({
   uploadSessionId,
   persistImages,
   refreshOwners,
+  allBranches,
+  setAllBranches,
+  isMultiTenant,
+  userRole,
 }: Step4Props) {
   return (
     <div className="animate-in fade-in slide-in-from-right-8 duration-500">
@@ -42,6 +46,10 @@ function Step4MediaComponent({
             owners={owners}
             agents={agents}
             refreshOwners={refreshOwners}
+            allBranches={allBranches}
+            setAllBranches={setAllBranches}
+            isMultiTenant={isMultiTenant}
+            userRole={userRole}
           />
 
           {/* Card 2: Source & Co-Agent */}

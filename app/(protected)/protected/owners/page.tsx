@@ -32,8 +32,21 @@ export default async function OwnersPage({ searchParams }: PageProps) {
   const q = sp.q || "";
   const allBranches = sp.all_branches === "true";
 
-  const { role } = await requireAuthContext();
+  const { role, tenantId, supabase } = await requireAuthContext();
   const isAdminUser = role === "ADMIN";
+  const { getSystemConfig } = await import("@/lib/actions/system-config");
+  const config = await getSystemConfig();
+  const isMultiTenant = config?.multi_tenant_enabled ?? false;
+
+  let currentTenantName = null;
+  if (tenantId) {
+    const { data: tenantData } = await supabase
+      .from("tenants")
+      .select("name")
+      .eq("id", tenantId)
+      .single();
+    currentTenantName = tenantData?.name;
+  }
 
   const {
     data: owners,
@@ -43,17 +56,19 @@ export default async function OwnersPage({ searchParams }: PageProps) {
     q,
     page,
     pageSize: 10,
-    allBranches: isAdminUser && allBranches,
+    allBranches: isAdminUser && allBranches && isMultiTenant,
   });
 
-  const stats = await getOwnersDashboardStatsQuery();
+  const stats = await getOwnersDashboardStatsQuery(
+    isAdminUser && allBranches && isMultiTenant,
+  );
 
   const makeHref = (newPage: number) => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (allBranches) params.set("all_branches", "true");
     params.set("page", newPage.toString());
-    return `/protected/owners?${params.toString()}`;
+    return `/protected/owners?${params.toString()}#table`;
   };
 
   const isEmptyState = owners.length === 0 && page === 1 && !q;
@@ -69,7 +84,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
         actionSlot={<CreateOwnerDialog />}
         gradient="purple"
       >
-        {isAdminUser && (
+        {isAdminUser && isMultiTenant && (
           <div className="flex justify-end">
             <GlobalLookupToggle />
           </div>
@@ -78,7 +93,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
 
       <OwnersStats stats={stats} />
 
-      <div className="space-y-4">
+      <div id="table" className="space-y-4 scroll-mt-4">
         <SectionTitle
           title="รายการเจ้าของทั้งหมด"
           subtitle="คลิกที่แถวเพื่อดูรายละเอียด"
@@ -97,6 +112,10 @@ export default async function OwnersPage({ searchParams }: PageProps) {
             <OwnersTable
               owners={owners}
               showBranch={isAdminUser && allBranches}
+              isAdmin={isAdminUser}
+              isMultiTenant={isMultiTenant}
+              currentTenantId={tenantId}
+              currentTenantName={currentTenantName}
             />
 
             <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-sm bg-slate-50 rounded-xl p-4 border border-gray-200 shadow-xs">
@@ -112,6 +131,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
                   }`}
                   href={makeHref(page - 1)}
                   aria-disabled={page <= 1}
+                  scroll={false}
                 >
                   ← ก่อนหน้า
                 </Link>
@@ -121,6 +141,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
                   }`}
                   href={makeHref(page + 1)}
                   aria-disabled={page >= totalPages}
+                  scroll={false}
                 >
                   ถัดไป →
                 </Link>

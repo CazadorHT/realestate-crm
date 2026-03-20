@@ -163,7 +163,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
-            <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
+            <CardTitle className="text-[11px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
               ทรัพย์ทั้งหมด
             </CardTitle>
             <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg shrink-0">
@@ -172,7 +172,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0 sm:pt-0">
             <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
-            <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+            <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
               รายการในระบบ
             </p>
           </CardContent>
@@ -180,7 +180,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
 
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
-            <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
+            <CardTitle className="text-[11px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
               ประกาศ Active
             </CardTitle>
             <div className="p-1.5 sm:p-2 bg-emerald-100 rounded-lg shrink-0">
@@ -191,7 +191,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
             <div className="text-xl sm:text-2xl font-bold text-emerald-600">
               {stats.available}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+            <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
               กำลังประกาศขาย/เช่า
             </p>
           </CardContent>
@@ -199,7 +199,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
 
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
-            <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
+            <CardTitle className="text-[11px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
               คอมมิชชั่นปิดได้
             </CardTitle>
             <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg shrink-0">
@@ -213,7 +213,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
                 maximumFractionDigits: 1,
               }).format(stats.totalRealizedCommission || 0)}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+            <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
               บาท (Sold & Rented)
             </p>
           </CardContent>
@@ -221,7 +221,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
 
         <Card className="hover:shadow-md transition-shadow cursor-default">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
-            <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
+            <CardTitle className="text-[11px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
               คาดการณ์คอมฯ
             </CardTitle>
             <div className="p-1.5 sm:p-2 bg-amber-100 rounded-lg shrink-0">
@@ -231,7 +231,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
           <CardContent className="p-3 sm:p-4 pt-0 sm:pt-0">
             <div className="flex flex-col gap-1 mt-1">
               <div className="flex justify-between items-baseline gap-2">
-                <span className="text-[9px] text-muted-foreground uppercase font-bold shrink-0">
+                <span className="text-[11px] text-muted-foreground uppercase font-bold shrink-0">
                   ขาย
                 </span>
                 <span className="text-sm sm:text-lg font-bold text-amber-600 truncate">
@@ -242,7 +242,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
                 </span>
               </div>
               <div className="flex justify-between items-baseline gap-2">
-                <span className="text-[9px] text-muted-foreground uppercase font-bold shrink-0">
+                <span className="text-[11px] text-muted-foreground uppercase font-bold shrink-0">
                   เช่า
                 </span>
                 <span className="text-sm sm:text-lg font-bold text-blue-600 truncate">

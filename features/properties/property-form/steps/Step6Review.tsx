@@ -260,7 +260,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Review Header Alert */}
-      <div className="sticky top-36 z-10 bg-blue-50 border border-blue-100 p-4 sm:p-5 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6 shadow-sm">
+      <div className="sticky top-38 z-101 bg-blue-50 border border-blue-100 p-4 sm:p-5 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6 shadow-sm">
         <div className="flex items-start gap-3 sm:gap-4">
           <div className="p-2 sm:p-2.5 bg-blue-100/50 rounded-xl text-blue-600 shrink-0">
             <FileCheck className="h-6 w-6 sm:h-7 sm:w-7" />
@@ -486,6 +486,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                                   shouldDirty: true,
                                 })
                               }
+                              height={600}
                               onAiGenerate={async () => {
                                 const newDesc = generatePropertyDescription(
                                   form.getValues(),
@@ -509,7 +510,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                                   shouldDirty: true,
                                 })
                               }
-                              height={300}
+                              height={600}
                             />
                           </div>
                         </TabsContent>
@@ -525,7 +526,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                                   shouldDirty: true,
                                 })
                               }
-                              height={300}
+                              height={600}
                             />
                           </div>
                         </TabsContent>

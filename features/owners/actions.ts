@@ -11,19 +11,27 @@ import {
 } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
+import { getSystemConfig } from "@/lib/actions/system-config";
 
 import type { OwnerFormValues } from "./types";
 
-export async function getOwnersAction() {
+export async function getOwnersAction(allBranches = false) {
   try {
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
 
-    let query = ctx.supabase
-      .from("owners")
-      .select("*")
-      .eq("tenant_id", ctx.tenantId!)
-      .order("full_name");
+    let query = ctx.supabase.from("owners").select("*").order("full_name");
+
+    const config = await getSystemConfig();
+    const isMultiTenant = config.multi_tenant_enabled;
+
+    if (!isMultiTenant) {
+      // Single-tenant: show all
+    } else if (allBranches && ctx.role === "ADMIN") {
+      // Admin + allBranches: show all
+    } else if (ctx.tenantId) {
+      query = query.or(`tenant_id.eq.${ctx.tenantId},tenant_id.is.null`);
+    }
 
     // Allow all authenticated users (Agents/Admins) to see all owners
     // if (ctx.role !== "ADMIN") {
@@ -49,12 +57,19 @@ export async function getOwnerByIdAction(id: string) {
   const ctx = await requireAuthContext();
   assertStaff(ctx.role);
 
-  const { data: owner, error } = await ctx.supabase
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  let query = ctx.supabase
     .from("owners")
     .select("*")
-    .eq("id", id)
-    .eq("tenant_id", ctx.tenantId!)
-    .single();
+    .eq("id", id);
+
+  if (isMultiTenant && ctx.tenantId) {
+    query = query.or(`tenant_id.eq.${ctx.tenantId},tenant_id.is.null`);
+  }
+
+  const { data: owner, error } = await query.single();
 
   if (error || !owner) {
     console.error("Error fetching owner:", error);
@@ -145,8 +160,7 @@ export async function updateOwnerAction(id: string, values: OwnerFormValues) {
         company_name: values.company_name || null,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id)
-      .eq("tenant_id", ctx.tenantId!);
+      .eq("id", id);
 
     if (error) return { success: false, message: mapDbError(error) };
 
@@ -189,8 +203,7 @@ export async function deleteOwnerAction(id: string) {
     const { error } = await ctx.supabase
       .from("owners")
       .delete()
-      .eq("id", id)
-      .eq("tenant_id", ctx.tenantId!);
+      .eq("id", id);
     if (error) return { success: false, message: mapDbError(error) };
 
     await logAudit(ctx, {
@@ -212,11 +225,17 @@ export async function getOwnersWithPropertyCountAction() {
   const ctx = await requireAuthContext();
   assertStaff(ctx.role);
 
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
   let query = ctx.supabase
     .from("owners")
     .select("*")
-    .eq("tenant_id", ctx.tenantId!)
     .order("full_name");
+
+  if (isMultiTenant && ctx.tenantId) {
+    query = query.or(`tenant_id.eq.${ctx.tenantId},tenant_id.is.null`);
+  }
 
   // Allow all authenticated users (Agents/Admins) to see all owners
   // if (ctx.role !== "ADMIN") {
@@ -232,8 +251,7 @@ export async function getOwnersWithPropertyCountAction() {
 
   const { data: propertyCounts, error: countsError } = await ctx.supabase
     .from("properties")
-    .select("owner_id")
-    .eq("tenant_id", ctx.tenantId!);
+    .select("owner_id");
 
   if (countsError) {
     console.error("Error fetching property counts:", countsError);

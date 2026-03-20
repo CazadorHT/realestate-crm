@@ -3,9 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { RecentPropertiesTable } from "@/components/dashboard/RecentPropertiesTable";
 import { ListSkeleton } from "./skeletons/ListSkeleton";
 
-export async function RecentPropertiesSection() {
+export async function RecentPropertiesSection({ tenantId }: { tenantId?: string | null }) {
   const supabase = await createClient();
-  const { data: propertiesResult } = await supabase
+  let query = supabase
     .from("properties")
     .select(
       `
@@ -22,6 +22,13 @@ export async function RecentPropertiesSection() {
     .order("created_at", { ascending: false })
     .limit(5);
 
+  if (tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  const { data: propertiesResult } = await query;
+
+
   const properties = (propertiesResult ?? []).map((p: any) => ({
     ...p,
     property_images: p.property_images?.sort(
@@ -32,10 +39,10 @@ export async function RecentPropertiesSection() {
   return <RecentPropertiesTable properties={properties} />;
 }
 
-export function RecentPropertiesSectionSuspense() {
+export function RecentPropertiesSectionSuspense({ tenantId }: { tenantId?: string | null }) {
   return (
     <Suspense fallback={<ListSkeleton />}>
-      <RecentPropertiesSection />
+      <RecentPropertiesSection tenantId={tenantId} />
     </Suspense>
   );
 }

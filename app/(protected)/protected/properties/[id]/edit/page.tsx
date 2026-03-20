@@ -1,6 +1,8 @@
 import { PropertyForm } from "@/features/properties/PropertyForm";
 import { getPropertyWithImages } from "@/features/properties/actions";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { getSystemConfig } from "@/lib/actions/system-config";
+import { requireAuthContext } from "@/lib/authz";
 
 export default async function EditPropertyPage({
   params,
@@ -10,6 +12,8 @@ export default async function EditPropertyPage({
   const { id } = await params;
 
   const property = await getPropertyWithImages(id);
+  const config = await getSystemConfig();
+  const { role } = await requireAuthContext();
 
   // Extract images for initialImages prop
   let initialImages = property.property_images.map((img) => ({

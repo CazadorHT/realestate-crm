@@ -1,15 +1,21 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext } from "@/lib/authz";
+import { getSystemConfig } from "@/lib/actions/system-config";
 import type { Owner } from "./types";
 
 export async function getOwnerById(id: string): Promise<Owner | null> {
   const { supabase, tenantId } = await requireAuthContext();
-  const { data, error } = await supabase
-    .from("owners")
-    .select("*")
-    .eq("id", id)
-    .eq("tenant_id", tenantId!)
-    .single();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  let query = supabase.from("owners").select("*").eq("id", id);
+
+  if (isMultiTenant && tenantId) {
+    query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  }
+  // Single-tenant: no filter (show all)
+
+  const { data, error } = await query.single();
 
   if (error) {
     console.error("Error fetching owner:", error);
@@ -21,18 +27,25 @@ export async function getOwnerById(id: string): Promise<Owner | null> {
 
 export async function getOwners() {
   const { supabase, tenantId } = await requireAuthContext();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
 
   // Fetch owners with property count
-  const { data, error } = await supabase
+  let query = supabase
     .from("owners")
     .select(
       `
       *,
       properties:properties(count)
     `,
-    )
-    .eq("tenant_id", tenantId!)
-    .order("created_at", { ascending: false });
+    );
+
+  if (isMultiTenant && tenantId) {
+    query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  }
+  // Single-tenant: no filter (show all)
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching owners:", error);
@@ -50,12 +63,20 @@ export async function getOwners() {
 
 export async function getOwnerProperties(ownerId: string) {
   const { supabase, tenantId } = await requireAuthContext();
-  const { data, error } = await supabase
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  let query = supabase
     .from("properties")
     .select("*")
-    .eq("owner_id", ownerId)
-    .eq("tenant_id", tenantId!)
-    .order("created_at", { ascending: false });
+    .eq("owner_id", ownerId);
+
+  if (isMultiTenant && tenantId) {
+    query = query.eq("tenant_id", tenantId);
+  }
+  // Single-tenant: no filter
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching owner properties:", error);
@@ -79,6 +100,8 @@ export async function getOwnersQuery({
   allBranches = false,
 }: GetOwnersParams) {
   const { supabase, tenantId, role } = await requireAuthContext();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
   const start = (page - 1) * pageSize;
   const end = start + pageSize - 1;
 
@@ -88,11 +111,17 @@ export async function getOwnersQuery({
       count: "exact",
     });
 
-  // Only Admin can see across branches
-  if (allBranches && role === "ADMIN") {
-    // No tenant_id filter
+  // Visibility Logic:
+  if (!isMultiTenant) {
+    // Single-tenant: show all owners (no filter)
+  } else if (allBranches || (tenantId === undefined)) {
+    // Multi-tenant + ALL Branches (global cookie or toggle): show everything
+  } else if (tenantId) {
+    // Multi-tenant: show branch owners + unassigned
+    query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
   } else {
-    query = query.eq("tenant_id", tenantId!);
+    // Edge case: no tenant context, show only unassigned
+    query = query.is("tenant_id", null);
   }
 
   if (q) {
@@ -127,14 +156,27 @@ export async function getOwnersQuery({
   };
 }
 
-export async function getOwnersDashboardStatsQuery() {
+export async function getOwnersDashboardStatsQuery(allBranches = false) {
   const { supabase, tenantId } = await requireAuthContext();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
 
   // 1. Total Owners
-  const { count: totalOwners } = await supabase
+  let ownersQuery = supabase
     .from("owners")
-    .select("*", { count: "exact", head: true })
-    .eq("tenant_id", tenantId!);
+    .select("*", { count: "exact", head: true });
+
+  if (!isMultiTenant) {
+    // Single-tenant: show all (no filter)
+  } else if (allBranches || (tenantId === undefined)) {
+    // ALL Branches: no filter
+  } else if (tenantId) {
+    ownersQuery = ownersQuery.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  } else {
+    // Fallback: only unassigned
+    ownersQuery = ownersQuery.is("tenant_id", null);
+  }
+  const { count: totalOwners } = await ownersQuery;
 
   // 2. New this month
   const now = new Date();
@@ -143,28 +185,41 @@ export async function getOwnersDashboardStatsQuery() {
     now.getMonth(),
     1,
   ).toISOString();
-  const { count: newOwnersMonth } = await supabase
+
+  let newOwnersQuery = supabase
     .from("owners")
     .select("*", { count: "exact", head: true })
-    .eq("tenant_id", tenantId!)
     .gte("created_at", startOfMonth);
 
-  // 3. Owners with properties (Active)
-  // This is a bit tricky with simple query, but we can check distinct owner_id in properties
-  const { count: activeOwners } = await supabase
-    .from("properties")
-    .select("owner_id", { count: "exact", head: true });
-  // This is property count, not unique owner count.
-  // Better approximation: fetch all distinct owner_ids from properties?
-  // Or just "Total Properties" owned by these owners?
-  // User probably cares about "How many owners have at least 1 property".
-  // For now, let's just show "Total Properties" linked to owners.
+  if (isMultiTenant) {
+    if (allBranches || (tenantId === undefined)) {
+      // ALL: no filter
+    } else if (tenantId) {
+      newOwnersQuery = newOwnersQuery.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+    } else {
+      newOwnersQuery = newOwnersQuery.is("tenant_id", null);
+    }
+  }
+  const { count: newOwnersMonth } = await newOwnersQuery;
 
-  const { count: totalPropertiesLinked } = await supabase
+  // 3. Linked Properties
+  let propQuery = supabase
     .from("properties")
-    .select("*", { count: "exact", head: true })
-    .eq("tenant_id", tenantId!)
+    .select("id", { count: "exact", head: true })
+    .is("deleted_at", null)
     .not("owner_id", "is", null);
+
+  if (!isMultiTenant) {
+    // Single-tenant: show all linked properties
+  } else if (allBranches || (tenantId === undefined)) {
+    // ALL: no filter
+  } else if (tenantId) {
+    propQuery = propQuery.eq("tenant_id", tenantId);
+  } else {
+    propQuery = propQuery.is("tenant_id", null);
+  }
+
+  const { count: totalPropertiesLinked } = await propQuery;
 
   return {
     totalOwners: totalOwners || 0,

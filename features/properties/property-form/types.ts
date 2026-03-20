@@ -57,6 +57,10 @@ export interface Step4Props extends BaseStepProps {
   uploadSessionId: string;
   persistImages: boolean;
   refreshOwners?: () => Promise<any>;
+  allBranches?: boolean;
+  setAllBranches?: (val: boolean) => void;
+  isMultiTenant?: boolean;
+  userRole?: string;
 }
 
 /**

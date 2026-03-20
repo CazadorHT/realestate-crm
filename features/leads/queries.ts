@@ -1,4 +1,5 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { getSystemConfig } from "@/lib/actions/system-config";
 import type { LeadRow, LeadWithActivities } from "./types";
 import type { Database } from "@/lib/database.types";
 
@@ -31,7 +32,8 @@ type ListArgs = {
 export async function getLeadsQuery(args: ListArgs = {}) {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
-  if (!tenantId) throw new Error("Tenant ID is required but missing");
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
 
   const q = (args.q ?? "").trim();
   const stage = (args.stage ?? "").trim();
@@ -40,9 +42,13 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   let query = supabase
     .from("leads")
-    .select("*, property:properties(id, title)", { count: "exact" })
-    .eq("tenant_id", tenantId!) // Tenant isolation
-    .order("created_at", { ascending: false });
+    .select("*, property:properties(id, title)", { count: "exact" });
+
+  if (isMultiTenant) {
+    query = query.eq("tenant_id", tenantId!); // Tenant isolation
+  }
+
+  query = query.order("created_at", { ascending: false });
 
   if (q) {
     // ค้นชื่อ/เบอร์/อีเมล (ปรับ field ได้)
@@ -99,12 +105,18 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 export async function getLeadsForKanbanQuery() {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
-  if (!tenantId) throw new Error("Tenant ID is required but missing");
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("leads")
-    .select("*")
-    .eq("tenant_id", tenantId!)
+    .select("*");
+
+  if (isMultiTenant) {
+    query = query.eq("tenant_id", tenantId!);
+  }
+
+  const { data, error } = await query
     .order("updated_at", { ascending: false })
     .limit(200);
 
@@ -116,13 +128,19 @@ export async function getLeadsForKanbanQuery() {
 export async function getLeadByIdQuery(id: string): Promise<LeadRow | null> {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
-  if (!tenantId) throw new Error("Tenant ID is required but missing");
-  const { data, error } = await supabase
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  let query = supabase
     .from("leads")
     .select("*")
-    .eq("id", id)
-    .eq("tenant_id", tenantId!)
-    .single();
+    .eq("id", id);
+
+  if (isMultiTenant) {
+    query = query.eq("tenant_id", tenantId!);
+  }
+
+  const { data, error } = await query.single();
 
   if (error) {
     if (error && "code" in error && error.code === "PGRST116") return null;
@@ -137,8 +155,10 @@ export async function getLeadWithActivitiesQuery(
   try {
     const { supabase, role, tenantId } = await requireAuthContext();
     assertStaff(role);
+    const config = await getSystemConfig();
+    const isMultiTenant = config.multi_tenant_enabled;
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("leads")
       .select(
         `
@@ -149,9 +169,13 @@ export async function getLeadWithActivitiesQuery(
                 )
             `,
       )
-      .eq("id", id)
-      .eq("tenant_id", tenantId!)
-      .single();
+      .eq("id", id);
+
+    if (isMultiTenant) {
+      query = query.eq("tenant_id", tenantId!);
+    }
+
+    const { data, error } = await query.single();
 
     if (error) {
       if (error && "code" in error && error.code === "PGRST116") return null;
@@ -174,18 +198,25 @@ export async function getLeadWithActivitiesQuery(
 export async function getPropertySummariesByIdsQuery(ids: string[]) {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
-  if (!tenantId) throw new Error("Tenant ID is required but missing");
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
   const uniq = Array.from(new Set(ids)).filter(Boolean);
   if (uniq.length === 0) return {} as Record<string, PropertySummary>;
 
-  const { data: props, error: propsErr } = await supabase
+  let query = supabase
     .from("properties")
     .select(
       "id,title,property_type,listing_type,status,price,original_price,rental_price,original_rental_price,currency",
     )
-    .eq("tenant_id", tenantId!)
     .is("deleted_at", null)
     .in("id", uniq);
+
+  if (isMultiTenant) {
+    query = query.eq("tenant_id", tenantId!);
+  }
+
+  const { data: props, error: propsErr } = await query;
 
   if (propsErr) throw new Error(propsErr.message);
 
@@ -218,20 +249,29 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
 export async function getLeadsDashboardStatsQuery() {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
-  if (!tenantId) throw new Error("Tenant ID is required but missing");
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
 
   // 1. Total Count
-  const { count: totalLeads } = await supabase
+  let totalQuery = supabase
     .from("leads")
-    .select("*", { count: "exact", head: true })
-    .eq("tenant_id", tenantId!);
+    .select("*", { count: "exact", head: true });
+
+  if (isMultiTenant) {
+    totalQuery = totalQuery.eq("tenant_id", tenantId!);
+  }
+  const { count: totalLeads } = await totalQuery;
 
   // 2. Active Count (Not closed)
-  const { count: activeLeads } = await supabase
+  let activeQuery = supabase
     .from("leads")
     .select("*", { count: "exact", head: true })
-    .eq("tenant_id", tenantId!)
     .neq("stage", "CLOSED");
+
+  if (isMultiTenant) {
+    activeQuery = activeQuery.eq("tenant_id", tenantId!);
+  }
+  const { count: activeLeads } = await activeQuery;
 
   // 3. New this month
   const now = new Date();
@@ -240,17 +280,26 @@ export async function getLeadsDashboardStatsQuery() {
     now.getMonth(),
     1,
   ).toISOString();
-  const { count: newLeadsMonth } = await supabase
+
+  let newQuery = supabase
     .from("leads")
     .select("*", { count: "exact", head: true })
-    .eq("tenant_id", tenantId!)
     .gte("created_at", startOfMonth);
 
+  if (isMultiTenant) {
+    newQuery = newQuery.eq("tenant_id", tenantId!);
+  }
+  const { count: newLeadsMonth } = await newQuery;
+
   // 4. Source distribution (for Chart/Cards)
-  const { data: leads } = await supabase
+  let distributionQuery = supabase
     .from("leads")
-    .select("stage, source")
-    .eq("tenant_id", tenantId);
+    .select("stage, source");
+
+  if (isMultiTenant) {
+    distributionQuery = distributionQuery.eq("tenant_id", tenantId!);
+  }
+  const { data: leads } = await distributionQuery;
 
   const byStage: Record<string, number> = {};
   const bySource: Record<string, number> = {};

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
+import CharacterCount from "@tiptap/extension-character-count";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import {
   Bold,
@@ -126,6 +127,7 @@ export function SmartEditor({
         autolink: true,
         defaultProtocol: "https",
       }),
+      CharacterCount,
     ],
     content: value,
     immediatelyRender: false,
@@ -134,7 +136,7 @@ export function SmartEditor({
     },
     editorProps: {
       attributes: {
-        class: `prose prose-sm max-w-none p-4 focus:outline-none focus:ring-0 min-h-[800px] ${lineHeight}`,
+        class: `prose prose-sm max-w-none p-4 focus:outline-none focus:ring-0 min-h-[400px] ${lineHeight}`,
       },
     },
     editable: !disabled,
@@ -153,7 +155,7 @@ export function SmartEditor({
       editor.setOptions({
         editorProps: {
           attributes: {
-            class: `prose prose-sm max-w-none p-4 focus:outline-none focus:ring-0 min-h-[800px] ${lineHeight}`,
+            class: `prose prose-sm max-w-none p-4 focus:outline-none focus:ring-0 min-h-[400px] ${lineHeight}`,
           },
         },
       });
@@ -538,7 +540,7 @@ export function SmartEditor({
       </div>
 
       {/* Editor Content Scroll Container */}
-      <div className="overflow-y-auto flex-1 bg-slate-50/20">
+      <div className="overflow-y-auto flex-1 bg-slate-50/20 custom-scrollbar">
         <EditorContent editor={editor} className="min-h-full" />
       </div>
 

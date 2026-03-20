@@ -85,4 +85,6 @@ export interface PropertyTableData {
   posted_to_instagram_at?: string | null;
   posted_to_line_at?: string | null;
   posted_to_tiktok_at?: string | null;
+  tenant_id?: string | null;
+  tenant_name?: string | null;
 }

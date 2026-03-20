@@ -27,6 +27,9 @@ interface BulkActionToolbarProps {
     message?: string;
   }>;
   onTransfer?: () => void;
+  onPull?: () => Promise<void>;
+  onPullLabel?: string;
+  onPullConfirmMessage?: React.ReactNode;
   entityName?: string; // เช่น "ทรัพย์", "ลีด", "ดีล"
   className?: string;
   confirmMessage?: React.ReactNode;
@@ -39,6 +42,9 @@ export function BulkActionToolbar({
   onDelete,
   onExport,
   onTransfer,
+  onPull,
+  onPullLabel = "ดึงมาที่นี่",
+  onPullConfirmMessage,
   entityName = "รายการ",
   className,
   confirmMessage,
@@ -47,6 +53,8 @@ export function BulkActionToolbar({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isPulling, setIsPulling] = useState(false);
+  const [showPullDialog, setShowPullDialog] = useState(false);
 
   // Use actionableCount if provided, otherwise fallback to selectedCount
   const countToDelete = actionableCount ?? selectedCount;
@@ -104,7 +112,7 @@ export function BulkActionToolbar({
     <>
       <div
         className={cn(
-          "inline-flex items-center justify-between gap-4 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg animate-in slide-in-from-top-2 duration-200 shadow-sm",
+          "inline-flex w-full items-center justify-between gap-4 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg animate-in slide-in-from-top-2 duration-200 shadow-sm",
           className,
         )}
       >
@@ -121,7 +129,7 @@ export function BulkActionToolbar({
               size="sm"
               onClick={handleExport}
               disabled={isExporting}
-              className="h-8 text-xs bg-white hover:bg-green-50 border-green-200 text-green-700"
+              className="h-8 text-xs bg-white hover:bg-green-50! border-green-200! text-green-700!"
             >
               {isExporting ? (
                 <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
@@ -129,6 +137,22 @@ export function BulkActionToolbar({
                 <Download className="h-3.5 w-3.5 mr-1" />
               )}
               Export Excel
+            </Button>
+          )}
+          {onPull && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPullDialog(true)}
+              disabled={isPulling}
+              className="h-8 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium"
+            >
+              {isPulling ? (
+                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5 mr-1 rotate-180" />
+              )}
+              {onPullLabel}
             </Button>
           )}
           {onTransfer && (
@@ -166,6 +190,56 @@ export function BulkActionToolbar({
           </Button>
         </div>
       </div>
+
+      <AlertDialog open={showPullDialog} onOpenChange={setShowPullDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการดึงข้อมูล</AlertDialogTitle>
+            <AlertDialogDescription>
+              {onPullConfirmMessage ? (
+                onPullConfirmMessage
+              ) : (
+                <>
+                  คุณกำลังจะดึง{" "}
+                  <strong className="text-foreground">
+                    {selectedCount} {entityName}
+                  </strong>{" "}
+                  มายังสาขาของคุณ
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPulling}>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async (e) => {
+                e.preventDefault();
+                setIsPulling(true);
+                try {
+                  await onPull?.();
+                  setShowPullDialog(false);
+                } finally {
+                  setIsPulling(false);
+                }
+              }}
+              disabled={isPulling}
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {isPulling ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  กำลังดึงข้อมูล...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2 rotate-180" />
+                  ดึง {selectedCount} {entityName}
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

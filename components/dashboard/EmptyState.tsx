@@ -91,7 +91,7 @@ export function EmptyState({
 
         {/* Text Section */}
         <div className="space-y-3 max-w-lg">
-          <h3 className="text-3xl font-black text-slate-800 tracking-tight leading-tight">
+          <h3 className="text-3xl font-semibold text-slate-800 tracking-tight leading-tight">
             {title}
           </h3>
           <p className="text-slate-500 text-lg leading-relaxed font-medium">

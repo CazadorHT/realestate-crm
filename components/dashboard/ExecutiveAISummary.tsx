@@ -7,15 +7,16 @@ import { Sparkles, BarChart3, ChevronRight, Loader2, Award } from "lucide-react"
 import { getExecutiveWeeklyAISummaryAction } from "@/features/dashboard/queries";
 import { toast } from "sonner";
 
-export function ExecutiveAISummary() {
+export function ExecutiveAISummary({ tenantId }: { tenantId?: string | null }) {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<{ summary: string; stats: any } | null>(null);
 
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const result = await getExecutiveWeeklyAISummaryAction();
+      const result = await getExecutiveWeeklyAISummaryAction(tenantId);
       setData(result);
+
       toast.success("AI สรุปข้อมูลรายสัปดาห์เรียบร้อยแล้ว");
     } catch (error) {
       toast.error("ไม่สามารถสรุปข้อมูลได้ในขณะนี้");

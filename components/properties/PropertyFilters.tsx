@@ -1,13 +1,18 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useTransition } from "react";
 import { QuickSearch } from "./filters/QuickSearch";
 import { QuickSort } from "./filters/QuickSort";
 import { QuickStatus } from "./filters/QuickStatus";
 import { QuickType } from "./filters/QuickType";
 import { AdvancedFilters } from "./filters/AdvancedFilters";
 import { TrashButton } from "./filters/TrashButton";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 type Filters = {
   q: string;
@@ -26,6 +31,7 @@ type Filters = {
   nearTransit: string;
   petFriendly: string;
   fullyFurnished: string;
+  allBranches: string;
 };
 
 const DEFAULT_FILTERS: Filters = {
@@ -45,20 +51,24 @@ const DEFAULT_FILTERS: Filters = {
   nearTransit: "",
   petFriendly: "",
   fullyFurnished: "",
+  allBranches: "",
 };
 
 interface PropertyFiltersProps {
   totalCount: number;
   filterMetadata?: any[];
+  isMultiTenant?: boolean;
 }
 
 export function PropertyFilters({
   totalCount,
-  filterMetadata,
+  filterMetadata = [],
+  isMultiTenant = false,
 }: PropertyFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const [filters, setFilters] = useState<Filters>({
     q: searchParams.get("q") || "",
@@ -77,6 +87,7 @@ export function PropertyFilters({
     nearTransit: searchParams.get("nearTransit") || "",
     petFriendly: searchParams.get("petFriendly") || "",
     fullyFurnished: searchParams.get("fullyFurnished") || "",
+    allBranches: searchParams.get("allBranches") || "",
   });
 
   const applyFilters = () => {
@@ -95,27 +106,32 @@ export function PropertyFilters({
     const url = qs
       ? `/protected/properties?${qs}#table`
       : "/protected/properties#table";
-    router.push(url, { scroll: false });
+    startTransition(() => {
+      router.push(url, { scroll: false });
+    });
     setOpen(false);
   };
 
   const clearFilters = () => {
     setFilters(DEFAULT_FILTERS);
-    router.push("/protected/properties#table", { scroll: false });
+    startTransition(() => {
+      router.push("/protected/properties#table", { scroll: false });
+    });
     setOpen(false);
   };
 
-  const hasActiveFilters = useMemo(() => {
-    return Object.entries(filters).some(([k, v]) => {
+  const activeFilterCount = useMemo(() => {
+    return Object.entries(filters).filter(([k, v]) => {
       const val = String(v ?? "").trim();
       if (!val) return false;
 
       if (k === "sortBy" && val === DEFAULT_FILTERS.sortBy) return false;
       if (k === "sortOrder" && val === DEFAULT_FILTERS.sortOrder) return false;
+      if (k === "allBranches") return false; // Exclude allBranches as it is separate UI
       if (val === "ALL") return false;
 
       return true;
-    });
+    }).length;
   }, [filters]);
 
   useEffect(() => {
@@ -139,6 +155,8 @@ export function PropertyFilters({
         searchParams.get("petFriendly") || DEFAULT_FILTERS.petFriendly,
       fullyFurnished:
         searchParams.get("fullyFurnished") || DEFAULT_FILTERS.fullyFurnished,
+      allBranches:
+        searchParams.get("allBranches") || DEFAULT_FILTERS.allBranches,
     }));
   }, [searchParams]);
 
@@ -160,12 +178,13 @@ export function PropertyFilters({
             setFilters={setFilters}
             applyFilters={applyFilters}
             clearFilters={clearFilters}
-            hasActiveFilters={hasActiveFilters}
+            activeFilterCount={activeFilterCount}
             totalCount={totalCount}
             filterMetadata={filterMetadata}
           />
           <TrashButton />
         </div>
+        
       </div>
 
       <div className="hidden lg:flex items-center gap-2">
@@ -178,7 +197,11 @@ export function PropertyFilters({
             const params = new URLSearchParams(searchParams.toString());
             params.set("sortBy", sortBy);
             params.set("sortOrder", sortOrder);
-            router.push(`/protected/properties?${params.toString()}`);
+            startTransition(() => {
+              router.push(`/protected/properties?${params.toString()}#table`, {
+                scroll: false,
+              });
+            });
           }}
         />
 
@@ -190,7 +213,11 @@ export function PropertyFilters({
             if (status === "ALL") params.delete("status");
             else params.set("status", status);
             params.delete("page");
-            router.push(`/protected/properties?${params.toString()}`);
+            startTransition(() => {
+              router.push(`/protected/properties?${params.toString()}#table`, {
+                scroll: false,
+              });
+            });
           }}
         />
 
@@ -202,7 +229,11 @@ export function PropertyFilters({
             if (type === "ALL") params.delete("type");
             else params.set("type", type);
             params.delete("page");
-            router.push(`/protected/properties?${params.toString()}`);
+            startTransition(() => {
+              router.push(`/protected/properties?${params.toString()}#table`, {
+                scroll: false,
+              });
+            });
           }}
         />
 
@@ -213,11 +244,44 @@ export function PropertyFilters({
           setFilters={setFilters}
           applyFilters={applyFilters}
           clearFilters={clearFilters}
-          hasActiveFilters={hasActiveFilters}
+          activeFilterCount={activeFilterCount}
           totalCount={totalCount}
           filterMetadata={filterMetadata}
         />
+        {isMultiTenant && (
+          <div className={cn(
+            "flex items-center gap-2 px-3 h-9 py-1.5 bg-blue-50/50 border border-blue-200 rounded-lg transition-all duration-200 shadow-xs select-none",
+            isPending ? "opacity-70 pointer-events-none" : "hover:bg-blue-50 cursor-pointer"
+          )}>
+            {isPending && <Loader2 className="h-3.5 w-3.5 text-blue-700 animate-spin" />}
+            <Switch
+              id="all-branches-switch"
+              checked={filters.allBranches === "true"}
+              disabled={isPending}
+              onCheckedChange={(checked) => {
+                const nextVal = checked ? "true" : "";
+                setFilters({ ...filters, allBranches: nextVal });
 
+                const params = new URLSearchParams(searchParams.toString());
+                if (nextVal === "true") params.set("allBranches", "true");
+                else params.delete("allBranches");
+                params.delete("page");
+                
+                startTransition(() => {
+                  router.push(`/protected/properties?${params.toString()}#table`, {
+                    scroll: false,
+                  });
+                });
+              }}
+            />
+            <Label
+              htmlFor="all-branches-switch"
+              className="text-xs font-semibold text-blue-700 cursor-pointer"
+            >
+              ค้นหาทุกสาขา
+            </Label>
+          </div>
+        )}
         <TrashButton />
       </div>
     </div>

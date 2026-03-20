@@ -55,7 +55,7 @@ export function OwnersStats({ stats }: OwnersStatsProps) {
             <div className={`text-2xl font-bold ${item.color}`}>
               {item.value}
             </div>
-            <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
+            <p className="text-[11px] text-slate-500 mt-1">{item.desc}</p>
           </CardContent>
         </Card>
       ))}

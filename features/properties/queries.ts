@@ -12,6 +12,7 @@
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { getSystemConfig } from "@/lib/actions/system-config";
 import type { PropertyTableData } from "./types";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 
@@ -85,7 +86,10 @@ export async function getProtectedPropertyWithImagesById(
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
-  const { data, error } = await supabase
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  let query = supabase
     .from("properties")
     .select(
       `
@@ -101,9 +105,18 @@ export async function getProtectedPropertyWithImagesById(
       )
     `,
     )
-    .eq("id", id)
-    .eq("tenant_id", tenantId!)
-    .single();
+    .eq("id", id);
+
+  if (isMultiTenant) {
+    if (tenantId === undefined) {
+      // ALL Branches: allow viewing from any branch or unassigned
+      query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+    } else {
+      query = query.eq("tenant_id", tenantId!);
+    }
+  }
+
+  const { data, error } = await query.single();
 
   if (error || !data) throw error;
 
@@ -125,14 +138,25 @@ export async function getPropertiesForSelect() {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
-  const { data, error } = await supabase
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  let query = supabase
     .from("properties")
     .select(
       `id, title, price, original_price, rental_price, original_rental_price, commission_sale_percentage, commission_rent_months, popular_area, province, property_images(image_url, is_cover)`,
     )
-    .eq("tenant_id", tenantId!)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+    .is("deleted_at", null);
+
+  if (isMultiTenant) {
+    if (tenantId === undefined) {
+      // ALL: no additional filter needed to see all available in select
+    } else {
+      query = query.eq("tenant_id", tenantId!);
+    }
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) throw error;
 
@@ -158,17 +182,35 @@ export type PropertyStats = {
   byStatus: { name: string; value: number }[];
 };
 
-export async function getPropertiesDashboardStatsQuery(): Promise<PropertyStats> {
+export async function getPropertiesDashboardStatsQuery(
+  allBranches?: string,
+): Promise<PropertyStats> {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
-  const { data, error } = await supabase
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  // Build Query
+  let query = supabase
     .from("properties")
     .select(
       "id, status, price, rental_price, original_price, original_rental_price, property_type, listing_type, commission_sale_percentage, commission_rent_months",
     )
-    .eq("tenant_id", tenantId!)
     .is("deleted_at", null);
+
+  if (isMultiTenant) {
+    if (allBranches === "true" || tenantId === undefined) {
+      // ALL Branches: include unassigned or any branch
+      query = query.or(`tenant_id.eq.${tenantId!},tenant_id.is.null`);
+    } else {
+      // Specific branch
+      query = query.eq("tenant_id", tenantId!);
+    }
+  }
+  // Single-tenant mode: show everything (permissive)
+
+  const { data, error } = await query;
 
   if (error || !data) {
     return {
@@ -304,6 +346,7 @@ export async function getPropertiesTableData(params: {
   nearTransit?: string;
   petFriendly?: string;
   fullyFurnished?: string;
+  allBranches?: string;
   page?: string;
 }): Promise<{
   tableData: PropertyTableData[];
@@ -312,6 +355,9 @@ export async function getPropertiesTableData(params: {
 }> {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
+
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
 
   const {
     q,
@@ -330,6 +376,7 @@ export async function getPropertiesTableData(params: {
     nearTransit,
     petFriendly,
     fullyFurnished,
+    allBranches,
     page,
   } = params;
 
@@ -342,10 +389,24 @@ export async function getPropertiesTableData(params: {
   // 1. Build Query
   let query = supabase
     .from("properties")
-    .select("*, assigned_to_user:profiles(full_name)", { count: "exact" }) // Get count for pagination
-    .eq("tenant_id", tenantId!)
-    .is("deleted_at", null)
-    .range(from, to);
+    .select(
+      "id, title, description, status, property_type, listing_type, price, rental_price, original_price, original_rental_price, updated_at, created_at, bedrooms, bathrooms, province, district, popular_area, view_count, address_line1, images, total_units, sold_units, posted_to_facebook_at, posted_to_instagram_at, posted_to_line_at, posted_to_tiktok_at, assigned_to, tenant_id, tenants(name)",
+      {
+        count: "exact",
+      },
+    )
+    .is("deleted_at", null);
+
+  if (isMultiTenant) {
+    if (allBranches === "true" || tenantId === undefined) {
+      // ALL Branches: include unassigned or any branch
+      query = query.or(`tenant_id.eq.${tenantId!},tenant_id.is.null`);
+    } else {
+      // Specific branch
+      query = query.eq("tenant_id", tenantId!);
+    }
+  }
+  // Single-tenant mode: show everything (permissive)
 
   // Search
   if (q) {
@@ -355,13 +416,13 @@ export async function getPropertiesTableData(params: {
   }
 
   // Filters
-  if (status) {
+  if (status && status !== "ALL") {
     query = query.eq("status", status as any);
   }
-  if (type) {
+  if (type && type !== "ALL") {
     query = query.eq("property_type", type as any);
   }
-  if (listing) {
+  if (listing && listing !== "ALL") {
     if (listing === "SALE") {
       query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
     } else if (listing === "RENT") {
@@ -433,7 +494,7 @@ export async function getPropertiesTableData(params: {
   const sortField = validSortFields.includes(sortBy) ? sortBy : "created_at";
   const ascending = sortOrder === "asc";
 
-  query = query.order(sortField, { ascending });
+  query = query.order(sortField, { ascending }).range(from, to);
 
   const { data: properties, error, count } = await query;
 
@@ -478,13 +539,27 @@ export async function getPropertiesTableData(params: {
             .order("updated_at", { ascending: false })
         : Promise.resolve({ data: [] }),
 
-      supabase
-        .from("properties")
-        .select(
-          "status, property_type, province, popular_area, listing_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, near_transit, is_pet_friendly, is_fully_furnished",
-        )
-        .eq("tenant_id", tenantId!)
-        .is("deleted_at", null),
+      (async () => {
+        const config = await getSystemConfig();
+        const isMultiTenant = config.multi_tenant_enabled;
+
+        let q = supabase
+          .from("properties")
+          .select(
+            "status, property_type, province, popular_area, listing_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, near_transit, is_pet_friendly, is_fully_furnished",
+          )
+          .is("deleted_at", null);
+
+        if (isMultiTenant) {
+          if (allBranches === "true" || tenantId === undefined) {
+            q = q.or(`tenant_id.eq.${tenantId!},tenant_id.is.null`);
+          } else {
+            q = q.eq("tenant_id", tenantId!);
+          }
+        }
+        // Single-tenant mode: show everything (permissive)
+        return q;
+      })(),
     ]);
 
   const bestImageMap = new Map<string, string>();
@@ -524,8 +599,8 @@ export async function getPropertiesTableData(params: {
       "";
 
     let rawImageUrl = bestImageMap.get(p.id) || null;
-    if (!rawImageUrl && p.images) {
-      const legacyImages = p.images as any;
+    if (!rawImageUrl && (p as any).images) {
+      const legacyImages = (p as any).images as any;
       if (Array.isArray(legacyImages) && legacyImages.length > 0) {
         rawImageUrl =
           typeof legacyImages[0] === "string"
@@ -555,13 +630,15 @@ export async function getPropertiesTableData(params: {
       original_rental_price: p.original_rental_price,
       is_new: isNew,
       view_count: p.view_count || 0,
-      total_units: p.total_units || undefined,
-      sold_units: p.sold_units || undefined,
-      posted_to_facebook_at: p.posted_to_facebook_at ?? null,
-      posted_to_instagram_at: p.posted_to_instagram_at ?? null,
-      posted_to_line_at: p.posted_to_line_at ?? null,
-      posted_to_tiktok_at: p.posted_to_tiktok_at ?? null,
-      agent_name: (p as any).assigned_to_user?.full_name || null,
+      total_units: (p as any).total_units || undefined,
+      sold_units: (p as any).sold_units || undefined,
+      posted_to_facebook_at: (p as any).posted_to_facebook_at ?? null,
+      posted_to_instagram_at: (p as any).posted_to_instagram_at ?? null,
+      posted_to_line_at: (p as any).posted_to_line_at ?? null,
+      posted_to_tiktok_at: (p as any).posted_to_tiktok_at ?? null,
+      agent_name: null,
+      tenant_id: p.tenant_id,
+      tenant_name: (p as any).tenants?.name || null,
     };
   });
 
@@ -579,9 +656,11 @@ export async function getRecommendedProperties(
   category: string,
   limit: number = 4,
 ) {
-  const supabase = await createClient();
+  const { supabase, role, tenantId } = await requireAuthContext();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("properties")
     .select(
       `
@@ -592,7 +671,13 @@ export async function getRecommendedProperties(
     )
     .eq("status", "ACTIVE")
     .eq("property_type", category as any)
-    .is("deleted_at", null)
+    .is("deleted_at", null);
+
+  if (isMultiTenant) {
+    query = query.eq("tenant_id", tenantId!);
+  }
+
+  const { data, error } = await query
     .order("view_count", { ascending: false })
     .limit(limit);
 

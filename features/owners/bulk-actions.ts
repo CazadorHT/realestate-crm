@@ -64,3 +64,59 @@ export async function bulkDeleteOwnersAction(
     };
   }
 }
+
+/**
+ * Bulk move owners to current tenant - ดึงเจ้าของทรัพย์มายังสาขาตัวเอง
+ */
+export async function bulkMoveOwnersToTenantAction(
+  ids: string[],
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+
+    if (!ctx.tenantId) {
+      return { success: false, message: "ไม่พบข้อมูลสาขาของคุณ" };
+    }
+
+    if (!ids || ids.length === 0) {
+      return { success: false, message: "ไม่มีรายการที่เลือก" };
+    }
+
+    // Only move owners that don't have a tenant_id yet
+    const { data: updated, error } = await ctx.supabase
+      .from("owners")
+      .update({
+        tenant_id: ctx.tenantId,
+        updated_at: new Date().toISOString(),
+      })
+      .in("id", ids)
+      .is("tenant_id", null)
+      .select();
+
+    if (error) throw error;
+
+    const count = updated?.length || 0;
+
+    // Audit log
+    await logAudit(ctx, {
+      action: "owner.bulk_move",
+      entity: "owners",
+      entityId: ids.join(","),
+      metadata: { movedCount: count, targetTenantId: ctx.tenantId },
+    });
+
+    revalidatePath("/protected/owners");
+
+    return {
+      success: true,
+      message: `ดึงข้อมูลสำเร็จ ${count} รายการ`,
+    };
+  } catch (error) {
+    console.error("bulkMoveOwnersToTenantAction error:", error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+    };
+  }
+}

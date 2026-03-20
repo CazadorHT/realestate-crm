@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import Image from "next/image";
 import {
   Table,
@@ -28,6 +28,8 @@ import {
   Clock,
   Users,
   ImageIcon,
+  AlertTriangle,
+  Building2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -56,7 +58,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
-import { bulkDeletePropertiesAction } from "@/features/properties/bulk-actions";
+import {
+  bulkDeletePropertiesAction,
+  bulkMovePropertiesToTenantAction,
+} from "@/features/properties/bulk-actions";
 import { exportPropertiesAction } from "@/features/properties/export-action";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -72,6 +77,11 @@ import { FaLine, FaTiktok } from "react-icons/fa";
 
 interface PropertiesTableProps {
   data: PropertyTableData[];
+  isAdmin?: boolean;
+  isMultiTenant?: boolean;
+  currentTenantId?: string | null;
+  currentTenantName?: string | null;
+  showBranch?: boolean;
 }
 // ... (SortableHead code omitted for brevity as it is unchanged) ...
 
@@ -153,24 +163,24 @@ function SocialStatusBadges({
   className?: string;
 }) {
   return (
-    <div className={cn("grid grid-cols-2 items-center gap-1.5", className)}>
+    <div className={cn("flex flex-row items-center gap-1 ", className)}>
       {/* Facebook */}
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <div
               className={cn(
-                "p-1.5 rounded-lg border transition-all duration-200",
+                "p-1 rounded-md border transition-all duration-200",
                 facebookAt
-                  ? "bg-blue-50 border-blue-200 text-blue-600 shadow-sm"
-                  : "bg-slate-50 border-slate-100 text-slate-300",
+                  ? "bg-blue-50 border-blue-200 text-blue-600"
+                  : "bg-slate-50 border-slate-100 text-slate-200",
               )}
             >
-              <Facebook className="h-3.5 w-3.5" />
+              <Facebook className="h-3 w-3" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p className="text-[10px] font-medium">
+            <p className="text-[11px] font-medium">
               {facebookAt
                 ? `โพสต์บน Facebook เมื่อ ${format(new Date(facebookAt), "d MMM yyyy HH:mm", { locale: th })}`
                 : "ยังไม่ได้โพสต์บน Facebook"}
@@ -185,17 +195,17 @@ function SocialStatusBadges({
           <TooltipTrigger asChild>
             <div
               className={cn(
-                "p-1.5 rounded-lg border transition-all duration-200",
+                "p-1 rounded-md border transition-all duration-200",
                 instagramAt
-                  ? "bg-pink-50 border-pink-200 text-pink-600 shadow-sm"
-                  : "bg-slate-50 border-slate-100 text-slate-300",
+                  ? "bg-pink-50 border-pink-200 text-pink-600"
+                  : "bg-slate-50 border-slate-100 text-slate-200",
               )}
             >
-              <Instagram className="h-3.5 w-3.5" />
+              <Instagram className="h-3 w-3" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p className="text-[10px] font-medium">
+            <p className="text-[11px] font-medium">
               {instagramAt
                 ? `โพสต์บน Instagram เมื่อ ${format(new Date(instagramAt), "d MMM yyyy HH:mm", { locale: th })}`
                 : "ยังไม่ได้โพสต์บน Instagram"}
@@ -210,17 +220,17 @@ function SocialStatusBadges({
           <TooltipTrigger asChild>
             <div
               className={cn(
-                "p-1.5 rounded-lg border transition-all duration-200",
+                "p-1 rounded-md border transition-all duration-200",
                 lineAt
-                  ? "bg-green-50 border-green-200 text-green-600 shadow-sm"
-                  : "bg-slate-50 border-slate-100 text-slate-300",
+                  ? "bg-green-50 border-green-200 text-green-600"
+                  : "bg-slate-50 border-slate-100 text-slate-200",
               )}
             >
-              <FaLine className="h-3.5 w-3.5" />
+              <FaLine className="h-3 w-3" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p className="text-[10px] font-medium">
+            <p className="text-[11px] font-medium">
               {lineAt
                 ? `แชร์บน Line เมื่อ ${format(new Date(lineAt), "d MMM yyyy HH:mm", { locale: th })}`
                 : "ยังไม่ได้แชร์บน Line"}
@@ -235,17 +245,17 @@ function SocialStatusBadges({
           <TooltipTrigger asChild>
             <div
               className={cn(
-                "p-1.5 rounded-lg border transition-all duration-200",
+                "p-1 rounded-md border transition-all duration-200",
                 tiktokAt
-                  ? "bg-slate-900 border-slate-700 text-white shadow-sm"
-                  : "bg-slate-50 border-slate-100 text-slate-300",
+                  ? "bg-slate-900 border-slate-700 text-white"
+                  : "bg-slate-50 border-slate-100 text-slate-200",
               )}
             >
-              <FaTiktok className="h-3.5 w-3.5" />
+              <FaTiktok className="h-3 w-3" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p className="text-[10px] font-medium">
+            <p className="text-[11px] font-medium">
               {tiktokAt
                 ? `โพสต์บน TikTok เมื่อ ${format(new Date(tiktokAt), "d MMM yyyy HH:mm", { locale: th })}`
                 : "ยังไม่ได้โพสต์บน TikTok"}
@@ -257,7 +267,14 @@ function SocialStatusBadges({
   );
 }
 
-export function PropertiesTable({ data }: PropertiesTableProps) {
+export function PropertiesTable({
+  data,
+  isAdmin,
+  isMultiTenant,
+  currentTenantId,
+  currentTenantName,
+  showBranch,
+}: PropertiesTableProps): React.ReactElement {
   const allIds = useMemo(() => data.map((p) => p.id), [data]);
   const {
     selectedIds,
@@ -274,6 +291,13 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
     return Array.from(selectedIds).filter((id) => {
       const p = data.find((item) => item.id === id);
       return p?.status === "SOLD" || p?.status === "RENTED";
+    }).length;
+  }, [selectedIds, data]);
+
+  const pullableCount = useMemo(() => {
+    return Array.from(selectedIds).filter((id) => {
+      const p = data.find((item) => item.id === id);
+      return p?.tenant_id === null || p?.tenant_id === undefined;
     }).length;
   }, [selectedIds, data]);
 
@@ -303,6 +327,59 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
     return null;
   }, [selectedCount, blockedCount]);
 
+  const pullConfirmMessage = useMemo(() => {
+    const selectedProperties = Array.from(selectedIds)
+      .map((id) => data.find((p) => p.id === id))
+      .filter((p): p is PropertyTableData => !!p);
+
+    const pullable = selectedProperties.filter(
+      (p) => p.tenant_id === null || p.tenant_id === undefined,
+    );
+    const skipped = selectedProperties.filter(
+      (p) => p.tenant_id !== null && p.tenant_id !== undefined,
+    );
+
+    const total = selectedCount;
+    const canPull = pullable.length;
+
+    if (total === 0) return null;
+
+    // Get unique branch names from skipped properties
+    const skippedBranches = Array.from(
+      new Set(
+        skipped.map((p) => {
+          const name = p.tenant_name || "ไม่ระบุสาขา";
+          if (currentTenantId && p.tenant_id === currentTenantId) {
+            return `${name} (สาขาคุณ)`;
+          }
+          return name;
+        }),
+      ),
+    );
+
+    return (
+      <span className="space-y-2 block text-left">
+        <span>
+          คุณกำลังจะดึง <strong className="text-foreground">{canPull}</strong>{" "}
+          ทรัพย์สินที่ยังไม่มีสาขา มายังสาขาของคุณ
+        </span>
+        {skipped.length > 0 && (
+          <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 mt-2">
+            <p className="font-medium mb-1 flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              ⚠️ ระบบจะข้าม {skipped.length} รายการที่มีสาขาอยู่แล้ว:
+            </p>
+            <ul className="list-disc list-inside pl-1 space-y-0.5 opacity-80 decoration-amber-300">
+              {skippedBranches.map((name, i) => (
+                <li key={i}>{name}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </span>
+    );
+  }, [selectedIds, data, selectedCount]);
+
   if (data.length === 0) {
     return <PropertiesEmptyState />;
   }
@@ -310,6 +387,17 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
     const result = await bulkDeletePropertiesAction(ids);
+    if (result.success) {
+      toast.success(result.message);
+      clearSelection();
+    } else {
+      toast.error(result.message || "เกิดข้อผิดพลาด");
+    }
+  };
+
+  const handleBulkMove = async () => {
+    const ids = Array.from(selectedIds);
+    const result = await bulkMovePropertiesToTenantAction(ids);
     if (result.success) {
       toast.success(result.message);
       clearSelection();
@@ -326,6 +414,9 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
         onClear={clearSelection}
         onDelete={handleBulkDelete}
         onExport={() => exportPropertiesAction(Array.from(selectedIds))}
+        onPull={handleBulkMove}
+        onPullLabel="ดึงมาสาขาตัวเอง"
+        onPullConfirmMessage={pullConfirmMessage}
         entityName="ทรัพย์"
         confirmMessage={confirmMessage}
         actionableCount={selectedCount - blockedCount}
@@ -333,12 +424,12 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
 
       <div className="rounded-md border border-gray-200 shadow-sm bg-card overflow-hidden">
         {/* Desktop Table View */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block overflow-x-auto">
           <Table>
             <TableHeader>
               {/* Rest of the table header content ... */}
               <TableRow className="bg-muted/50 hover:bg-muted/50 ">
-                <TableHead className="w-[50px]">
+                <TableHead className="w-[40px] px-2">
                   <Checkbox
                     checked={isAllSelected}
                     onCheckedChange={() => toggleSelectAll(allIds)}
@@ -350,28 +441,28 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                     }
                   />
                 </TableHead>
-                <TableHead className="w-[320px]">
-                  <SortableHead label="ทรัพย์สิน" sortKey="created_at" />
+                <TableHead className="w-[280px] px-2">
+                  <SortableHead label="ทรัพย์" sortKey="created_at" />
                 </TableHead>
-                <TableHead className="w-[120px]">
-                  <SortableHead label="ประเภท" sortKey="property_type" />
+                <TableHead className="w-[90px] px-2 text-[11px]">
+                  <SortableHead label="ชนิด" sortKey="property_type" />
                 </TableHead>
-                <TableHead className="w-[180px]">ทำเล/ขนาด</TableHead>
-                <TableHead className="w-[140px]">
+                <TableHead className="w-[140px] px-2 text-[11px]">ทำเล</TableHead>
+                <TableHead className="w-[111px] px-2 text-[11px]">
                   <SortableHead label="ราคา" sortKey="price" />
                 </TableHead>
-                <TableHead className="w-[120px]">ความสนใจ</TableHead>
-                <TableHead className="w-[140px]">
-                  <SortableHead label="อัปเดต" sortKey="updated_at" />
+                <TableHead className="w-[85px] px-2 text-[11px]">Leads</TableHead>
+                <TableHead className="w-[100px] px-2 text-[11px]">
+                  <SortableHead label="Update" sortKey="updated_at" />
                 </TableHead>
-                <TableHead className="w-[200px]">
-                  ผู้ซื้อ/ผู้เช่า/ผู้ดูแล
+                <TableHead className="w-[150px] px-2 text-[11px]">
+                  ดูแล
                 </TableHead>
-                <TableHead className="w-[140px]">
+                <TableHead className="w-[90px] px-2 text-[11px]">
                   <SortableHead label="สถานะ" sortKey="status" />
                 </TableHead>
-                <TableHead className="w-[200px]">Social</TableHead>
-                <TableHead className="w-[100px] text-right pr-4">
+                <TableHead className="w-[90px] px-2 text-[11px]">Social</TableHead>
+                <TableHead className="w-[80px] px-2 text-right pr-4 text-[11px]">
                   จัดการ
                 </TableHead>
               </TableRow>
@@ -385,7 +476,7 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                   }`}
                 >
                   {/* CHECKBOX */}
-                  <TableCell className="w-[50px]">
+                  <TableCell className="w-[40px] px-2">
                     <Checkbox
                       checked={isSelected(property.id)}
                       onCheckedChange={() => toggleSelect(property.id)}
@@ -393,9 +484,9 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                     />
                   </TableCell>
                   {/* PROPERTY NAME & COVER */}
-                  <TableCell>
-                    <div className="flex items-start gap-4">
-                      <div className="relative h-[80px] w-[100px] shrink-0 overflow-hidden rounded-lg  bg-slate-100 group/image cursor-zoom-in">
+                  <TableCell className="px-2 whitespace-normal">
+                    <div className="flex items-start gap-3">
+                      <div className="relative h-[60px] w-[80px] shrink-0 overflow-hidden rounded-lg bg-slate-100 group/image cursor-zoom-in">
                         {property.image_url ? (
                           <Dialog>
                             <DialogTrigger asChild>
@@ -404,18 +495,18 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                                   src={property.image_url}
                                   alt={property.title || "Property"}
                                   fill
-                                  sizes="100px"
+                                  sizes="80px"
                                   className="object-cover transition-transform duration-300 group-hover/image:scale-110"
                                 />
                               </div>
                             </DialogTrigger>
-                            <DialogContent className="max-w-3xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
+                            <DialogContent className="max-w-2xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
                               <VisuallyHidden>
                                 <DialogTitle>
                                   {property.title || "Property Image"}
                                 </DialogTitle>
                               </VisuallyHidden>
-                              <div className="relative w-full h-[80vh] flex items-center justify-center bg-transparent">
+                              <div className="relative w-full h-[70vh] flex items-center justify-center bg-transparent">
                                 <Image
                                   src={property.image_url}
                                   alt={property.title || "Property Image"}
@@ -428,53 +519,51 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                           </Dialog>
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-slate-100">
-                            <ImageIcon className="h-6 w-6 text-slate-300" />
+                            <ImageIcon className="h-5 w-5 text-slate-300" />
                           </div>
                         )}
                         {property.is_new && (
-                          <Badge className="absolute top-1 left-1 h-5 px-1.5 text-[10px] bg-blue-500 hover:bg-blue-600 border-0 pointer-events-none shadow-sm">
+                          <Badge className="absolute top-0.5 left-0.5 h-4 px-1 text-[11px] bg-blue-500 hover:bg-blue-600 border-0 pointer-events-none shadow-sm">
                             NEW
                           </Badge>
                         )}
                       </div>
-                      <div className="flex flex-col gap-1 w-72">
+                      <div className="flex flex-col gap-1 min-w-0 ">
                         <Link
                           href={`/protected/properties/${property.id}`}
-                          style={{
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                          className="font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm"
+                          className="block font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm leading-snug "
                         >
-                          {property.title || "ไม่ระบุชื่อ"}
+                          <span className="line-clamp-2 overflow-hidden w-[320px] ">
+                            {property.title || "ไม่ระบุชื่อ"}
+                          </span>
                         </Link>
-                        <span className="text-xs text-slate-500 line-clamp-1">
+                        <span className="text-[11px] text-slate-500 line-clamp-1 opacity-90 leading-tight">
                           {property.popular_area || property.description || "-"}
                         </span>
-                        <div className="flex items-center gap-2 mt-auto">
-                          <span className="text-[10px] text-slate-400 flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-100">
-                            <Clock className="h-3 w-3" />
-                            {formatDistanceToNow(
-                              new Date(property.created_at),
-                              {
-                                addSuffix: true,
-                                locale: th,
-                              },
-                            )}
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          <span className="text-[11px] text-slate-400 flex items-center gap-1 bg-slate-50 px-1 py-0.5 rounded border border-slate-100 shrink-0">
+                            <Clock className="h-2.5 w-2.5" />
+                            {formatDistanceToNow(new Date(property.created_at), {
+                              addSuffix: true,
+                              locale: th,
+                            })}
                           </span>
+                          {showBranch && property.tenant_name && (
+                            <span className="text-[11px] text-blue-600 font-bold flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 max-w-[100px] truncate shrink-0" title={property.tenant_name}>
+                              <Building2 className="h-2.5 w-2.5 shrink-0" />
+                              <span className="truncate">{property.tenant_name}</span>
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
                   </TableCell>
 
                   {/* TYPE */}
-                  <TableCell>
-                    <div className="flex flex-col items-start gap-1.5">
-                      <PropertyTypeBadge type={property.property_type} />
-                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                  <TableCell className="px-2">
+                    <div className="flex flex-col items-start gap-1">
+                      <PropertyTypeBadge type={property.property_type} className="py-1 text-[11px] px-3" />
+                      <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
                         {property.listing_type === "SALE"
                           ? "ขาย"
                           : property.listing_type === "RENT"
@@ -485,35 +574,28 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                   </TableCell>
 
                   {/* LOCATION & ASSET INFO */}
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <div className="font-medium text-xs text-slate-700">
-                        {property.popular_area ||
-                          property.subdistrict ||
-                          property.district ||
-                          "-"}
+                  <TableCell className="px-2">
+                    <div className="flex flex-col gap-0.5">
+                      <div className="font-medium text-[11px] text-slate-700 line-clamp-1">
+                        {property.popular_area || property.subdistrict || property.district || "-"}
                       </div>
-                      <div className="text-xs text-slate-500 flex items-center gap-2">
+                      <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
                         {property.size_sqm ? (
-                          <span>{property.size_sqm} ตร.ม.</span>
+                          <span className="shrink-0">{property.size_sqm} m²</span>
                         ) : null}
                         {property.land_size_sqwah ? (
-                          <span>{property.land_size_sqwah} ตร.ว.</span>
+                          <span className="shrink-0">{property.land_size_sqwah} w²</span>
                         ) : null}
                       </div>
-                      <div className="text-[10px] text-slate-400 flex gap-2">
-                        {property.bedrooms ? (
-                          <span>{property.bedrooms} นอน</span>
-                        ) : null}
-                        {property.bathrooms ? (
-                          <span>{property.bathrooms} น้ำ</span>
-                        ) : null}
+                      <div className="text-[11px] text-slate-400 flex gap-1.5">
+                        {property.bedrooms ? <span>{property.bedrooms}น</span> : null}
+                        {property.bathrooms ? <span>{property.bathrooms}น้ำ</span> : null}
                       </div>
                     </div>
                   </TableCell>
 
                   {/* PRICE */}
-                  <TableCell>
+                  <TableCell className="px-2">
                     <PropertyPrice
                       variant="table"
                       listingType={property.listing_type}
@@ -525,41 +607,20 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                   </TableCell>
 
                   {/* INTEREST & STOCK */}
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <div
-                        className="flex items-center gap-1.5 text-xs font-medium text-slate-700"
-                        title="จำนวนผู้สนใจ (Leads)"
-                      >
-                        <Users className="h-3.5 w-3.5 text-blue-500" />
-                        <span>{property.leads_count} คน</span>
+                  <TableCell className="px-2">
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1 text-[11px] font-medium text-slate-700">
+                        <Users className="h-2.5 w-2.5 text-blue-500" />
+                        <span>{property.leads_count}</span>
                       </div>
-                      <div
-                        className="flex items-center gap-1.5 text-[10px] text-slate-400"
-                        title="ยอดเข้าชม (Views)"
-                      >
-                        <Eye className="h-3 w-3" />
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                        <Eye className="h-2.5 w-2.5" />
                         <span>{property.view_count || 0}</span>
                       </div>
-                      {/* Stock Display */}
                       {(property.total_units || 0) > 1 && (
-                        <div className="flex items-center gap-1.5 text-[10px] bg-slate-100 px-1.5 py-0.5 rounded-full w-fit border border-slate-200">
-                          <span
-                            className={cn(
-                              "font-medium",
-                              (property.total_units || 0) -
-                                (property.sold_units || 0) >
-                                0
-                                ? "text-emerald-600"
-                                : "text-red-500",
-                            )}
-                          >
-                            ยูนิตเหลือ{" "}
-                            {(property.total_units || 0) -
-                              (property.sold_units || 0)}
-                          </span>
-                          <span className="text-slate-400">
-                            / {property.total_units}
+                        <div className="text-[8px] bg-slate-50 px-1 py-0.5 rounded border border-slate-100 w-fit">
+                          <span className={(property.total_units || 0) - (property.sold_units || 0) > 0 ? "text-emerald-600" : "text-red-500"}>
+                            {(property.total_units || 0) - (property.sold_units || 0)}/{property.total_units}
                           </span>
                         </div>
                       )}
@@ -567,63 +628,40 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                   </TableCell>
 
                   {/* UPDATED */}
-                  <TableCell className="items-center ">
-                    <div
-                      className="text-xs text-slate-500 line-clamp-1 max-w-[100px] text-ellipsis"
-                      title={new Date(property.updated_at).toLocaleString(
-                        "th-TH",
-                      )}
-                    >
-                      {formatDistanceToNow(new Date(property.updated_at), {
-                        addSuffix: true,
-                        locale: th,
-                      })}
+                  <TableCell className="px-2">
+                    <div className="text-[11px] text-slate-500 line-clamp-1 opacity-80" title={new Date(property.updated_at).toLocaleString("th-TH")}>
+                      {formatDistanceToNow(new Date(property.updated_at), { addSuffix: true, locale: th })}
                     </div>
                   </TableCell>
 
                   {/* BUYER / TENANT / AGENT */}
-                  <TableCell className="items-center ">
-                    {property.status === "SOLD" ||
-                    property.status === "RENTED" ? (
+                  <TableCell className="px-2">
+                    {property.status === "SOLD" || property.status === "RENTED" ? (
                       property.closed_lead_name ? (
-                        <Link
-                          href={`/protected/leads?stage=CLOSED`}
-                          className="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-800 px-3 py-1 text-xs font-bold hover:bg-emerald-100 transition-colors border border-emerald-100"
-                          title="ดู Leads ที่ปิดดีล"
-                        >
-                          {property.status === "SOLD" ? "ผู้ซื้อ:" : "ผู้เช่า:"}
-                          <span className="max-w-[80px] truncate">
-                            {property.closed_lead_name}
-                          </span>
+                        <Link href={`/protected/leads?stage=CLOSED`} className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 max-w-[80px] truncate">
+                          <span className="truncate">คุณ {property.closed_lead_name}</span>
                         </Link>
                       ) : (
-                        <span className="text-xs text-slate-400 italic">
-                          (ปิดดีลแล้ว)
-                        </span>
+                        <span className="text-[11px] text-slate-400 italic">ปิดดีล</span>
                       )
                     ) : (
-                      /* Show Assigned Agent if available (mock/placeholder) */
-                      <div className="text-xs text-slate-500">
-                        <span className="text-[10px] text-slate-400 block mb-0.5">
-                          ผู้ดูแล:
-                        </span>
-                        <span className="font-medium text-blue-600">
-                          {property.agent_name || "คุณ (Me)"}
-                        </span>
+                      <div className="text-[11px] text-slate-500 truncate max-w-[80px]">
+                        <span className="font-medium text-blue-600">{property.agent_name || "Me"}</span>
                       </div>
                     )}
                   </TableCell>
 
                   {/* STATUS */}
-                  <TableCell>
+                  <TableCell className="px-2">
                     <PropertyStatusSelect
                       id={property.id}
                       value={property.status as PropertyStatus}
+                      className="h-7 w-[90px] text-[11px] px-2"
                     />
                   </TableCell>
 
                   {/* SOCIAL */}
-                  <TableCell>
+                  <TableCell className="px-2">
                     <SocialStatusBadges
                       facebookAt={property.posted_to_facebook_at}
                       instagramAt={property.posted_to_instagram_at}
@@ -633,46 +671,20 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                   </TableCell>
 
                   {/* ACTIONS */}
-                  <TableCell className="text-right">
-                    <div className="flex justify-end items-center gap-1">
-                      <Button
-                        asChild
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 cursor-pointer  hover:text-blue-700 hover:bg-blue-50"
-                        title="ดู"
-                        aria-label="ดู"
-                      >
+                  <TableCell className="text-right px-2 pr-4">
+                    <div className="flex justify-end items-center gap-0.5">
+                      <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-blue-700 hover:bg-blue-50">
                         <Link href={`/protected/properties/${property.id}`}>
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5" />
                         </Link>
                       </Button>
-
-                      <Button
-                        asChild
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 cursor-pointer  hover:text-amber-700 hover:bg-amber-50"
-                        title="แก้ไข"
-                        aria-label="แก้ไข"
-                      >
-                        <Link
-                          href={`/protected/properties/${property.id}/edit`}
-                        >
-                          <Edit3 className="h-4 w-4" />
+                      <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-amber-700 hover:bg-amber-50">
+                        <Link href={`/protected/properties/${property.id}/edit`}>
+                          <Edit3 className="h-3.5 w-3.5" />
                         </Link>
                       </Button>
-
-                      <DuplicatePropertyButton
-                        id={property.id}
-                        className="cursor-pointer hover:text-purple-600 hover:bg-purple-50"
-                      />
-
-                      {/* delete อยู่ในนี้ */}
-                      <PropertyRowActions
-                        id={property.id}
-                        title={property.title}
-                      />
+                      <DuplicatePropertyButton id={property.id} className="h-7 w-7 text-slate-400 hover:text-purple-600 hover:bg-purple-50" />
+                      <PropertyRowActions id={property.id} title={property.title} tenantId={property.tenant_id} isAdmin={isAdmin} isMultiTenant={isMultiTenant} className="h-7 w-7" />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -709,6 +721,9 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                     <PropertyRowActions
                       id={property.id}
                       title={property.title}
+                      tenantId={property.tenant_id}
+                      isAdmin={isAdmin}
+                      isMultiTenant={isMultiTenant}
                     />
                   </div>
                 </div>
@@ -734,10 +749,10 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                     <div className="flex items-center gap-2">
                       <PropertyTypeBadge
                         type={property.property_type}
-                        className="h-5 text-[10px] px-2 bg-white/90 backdrop-blur-sm shadow-sm border-none font-medium text-white"
+                        className="h-5 text-[11px] px-2 bg-white/90 backdrop-blur-sm shadow-sm border-none font-medium text-white"
                       />
                       {property.is_new && (
-                        <Badge className="h-5 text-[10px] px-2 bg-blue-600 text-white border-none shadow-sm font-bold">
+                        <Badge className="h-5 text-[11px] px-2 bg-blue-600 text-white border-none shadow-sm font-bold">
                           NEW
                         </Badge>
                       )}
@@ -797,18 +812,29 @@ export function PropertiesTable({ data }: PropertiesTableProps) {
                       />
                     </div>
 
+                    {showBranch && (
+                      <div className="flex items-center gap-1.5 w-full">
+                        <Badge
+                          variant="secondary"
+                          className="w-full justify-center bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100 text-[11px] font-bold h-7"
+                        >
+                          สาขา: {property.tenant_name || "ไม่มีสาขา"}
+                        </Badge>
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-1.5 w-full">
                       <PropertyStatusSelect
                         id={property.id}
                         value={property.status as PropertyStatus}
-                        className="h-7 w-full text-[10px] font-bold shadow-xs transition-shadow hover:shadow-md"
+                        className="h-7 w-full text-[11px] font-bold shadow-xs transition-shadow hover:shadow-md border-slate-200"
                       />
                     </div>
                   </div>
 
                   {/* Card Actions Footer */}
                   <div className="flex items-center justify-between gap-2 pt-2">
-                    <span className="text-[10px] text-slate-400 font-medium">
+                    <span className="text-[11px] text-slate-400 font-medium">
                       อัปเดต{" "}
                       {formatDistanceToNow(new Date(property.updated_at), {
                         addSuffix: true,

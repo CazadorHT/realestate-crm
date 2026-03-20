@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { OwnerForm } from "@/features/owners/OwnerForm";
 import React, { useState } from "react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   FormField,
   FormItem,
@@ -38,6 +40,10 @@ interface ManagementSectionProps {
   owners: any[];
   agents: any[];
   refreshOwners?: () => Promise<any>;
+  allBranches?: boolean;
+  setAllBranches?: (val: boolean) => void;
+  isMultiTenant?: boolean;
+  userRole?: string;
 }
 
 export const ManagementSection = ({
@@ -45,6 +51,10 @@ export const ManagementSection = ({
   owners,
   agents,
   refreshOwners,
+  allBranches,
+  setAllBranches,
+  isMultiTenant,
+  userRole,
 }: ManagementSectionProps) => {
   const [isAddingOwner, setIsAddingOwner] = useState(false);
   const totalUnits = useWatch({ control: form.control, name: "total_units" });
@@ -135,13 +145,31 @@ export const ManagementSection = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-slate-900 font-medium text-[10px] sm:text-xs uppercase tracking-wide flex items-center justify-between">
-                  <span className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <User className="w-3 h-3 text-emerald-600" />
                     เจ้าของทรัพย์
-                  </span>
-                  <span className="text-[10px] text-slate-500 font-normal">
-                    ส่วนตัว 🔒
-                  </span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {setAllBranches && isMultiTenant && userRole === "ADMIN" && (
+                      <div className="flex items-center gap-1.5 bg-blue-50/50 px-2 py-0.5 rounded-full border border-blue-100/50">
+                        <Label
+                          htmlFor="owner-all-branches"
+                          className="text-[9px] text-blue-600 font-medium cursor-pointer"
+                        >
+                          ทุกสาขา
+                        </Label>
+                        <Switch
+                          id="owner-all-branches"
+                          checked={allBranches}
+                          onCheckedChange={setAllBranches}
+                          className="scale-75 origin-right translate-x-1"
+                        />
+                      </div>
+                    )}
+                    <span className="text-[10px] text-slate-500 font-normal">
+                      ส่วนตัว 🔒
+                    </span>
+                  </div>
                 </FormLabel>
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                   <Select
@@ -155,7 +183,7 @@ export const ManagementSection = ({
                         <SelectValue placeholder="เลือกเจ้าของ" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-white rounded-xl shadow-lg border-none max-h-[300px] overflow-y-auto">
+                    <SelectContent className="bg-white rounded-xl shadow-lg border-none max-h-[300px] overflow-y-auto custom-scrollbar">
                       <SelectItem
                         value="NONE"
                         className="font-normal text-slate-400 text-sm"
@@ -186,7 +214,7 @@ export const ManagementSection = ({
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-none bg-transparent shadow-none">
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-none bg-transparent shadow-none custom-scrollbar">
                       <div className="bg-white rounded-2xl overflow-hidden shadow-2xl">
                         <DialogHeader className="p-6 bg-slate-50/50 border-b border-slate-100">
                           <DialogTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">

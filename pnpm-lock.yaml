@@ -92,6 +92,9 @@ importers:
       '@supabase/supabase-js':
         specifier: latest
         version: 2.98.0
+      '@tiptap/extension-character-count':
+        specifier: ^3.20.4
+        version: 3.20.4(@tiptap/extensions@3.20.0(@tiptap/core@3.20.0(@tiptap/pm@3.20.0))(@tiptap/pm@3.20.0))
       '@tiptap/extension-link':
         specifier: ^3.17.1
         version: 3.20.0(@tiptap/core@3.20.0(@tiptap/pm@3.20.0))(@tiptap/pm@3.20.0)
@@ -1685,6 +1688,11 @@ packages:
     resolution: {integrity: sha512-OcKMeopBbqWzhSi6o8nNz0aayogg1sfOAhto3NxJu3Ya32dwBFqmHXSYM6uW4jOphNvVPyjiq9aNRh3qTdd1dw==}
     peerDependencies:
       '@tiptap/extension-list': ^3.20.0
+
+  '@tiptap/extension-character-count@3.20.4':
+    resolution: {integrity: sha512-RaC5dSSimVHJWhF3MH/7vahhcqMChQJrfxWPLWuYzotVHJdu6gIlxcqJog/tboFGTGWJTkv3M+z4/EEfLTZYZA==}
+    peerDependencies:
+      '@tiptap/extensions': ^3.20.4
 
   '@tiptap/extension-code-block@3.20.0':
     resolution: {integrity: sha512-lBbmNek14aCjrHcBcq3PRqWfNLvC6bcRa2Osc6e/LtmXlcpype4f6n+Yx+WZ+f2uUh0UmDRCz7BEyUETEsDmlQ==}
@@ -5367,6 +5375,10 @@ snapshots:
   '@tiptap/extension-bullet-list@3.20.0(@tiptap/extension-list@3.20.0(@tiptap/core@3.20.0(@tiptap/pm@3.20.0))(@tiptap/pm@3.20.0))':
     dependencies:
       '@tiptap/extension-list': 3.20.0(@tiptap/core@3.20.0(@tiptap/pm@3.20.0))(@tiptap/pm@3.20.0)
+
+  '@tiptap/extension-character-count@3.20.4(@tiptap/extensions@3.20.0(@tiptap/core@3.20.0(@tiptap/pm@3.20.0))(@tiptap/pm@3.20.0))':
+    dependencies:
+      '@tiptap/extensions': 3.20.0(@tiptap/core@3.20.0(@tiptap/pm@3.20.0))(@tiptap/pm@3.20.0)
 
   '@tiptap/extension-code-block@3.20.0(@tiptap/core@3.20.0(@tiptap/pm@3.20.0))(@tiptap/pm@3.20.0)':
     dependencies:

@@ -415,7 +415,7 @@ export function RecentPropertiesTable({
                         <Building className="h-10 w-10 text-slate-300" />
                       </div>
                       <div className="space-y-1">
-                        <p className="font-bold text-slate-900">
+                        <p className="font-semibold text-slate-900">
                           ยังไม่มีทรัพย์ในระบบ
                         </p>
                         <p className="text-sm text-slate-500">
@@ -652,7 +652,7 @@ export function RecentPropertiesTable({
                   <Building className="h-10 w-10 text-slate-300" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-bold text-slate-900">
+                  <p className="font-semibold text-slate-900">
                     ยังไม่มีทรัพย์ในระบบ
                   </p>
                   <p className="text-xs text-slate-400">

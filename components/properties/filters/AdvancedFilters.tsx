@@ -62,7 +62,7 @@ interface AdvancedFiltersProps {
   setFilters: (filters: any) => void;
   applyFilters: () => void;
   clearFilters: () => void;
-  hasActiveFilters: boolean;
+  activeFilterCount: number;
   totalCount: number;
   filterMetadata?: any[];
 }
@@ -74,7 +74,7 @@ export function AdvancedFilters({
   setFilters,
   applyFilters,
   clearFilters,
-  hasActiveFilters,
+  activeFilterCount,
   totalCount,
   filterMetadata = [],
 }: AdvancedFiltersProps) {
@@ -296,12 +296,13 @@ export function AdvancedFilters({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant={hasActiveFilters ? "default" : "outline"}>
+        <Button variant={activeFilterCount > 0 ? "default" : "outline"}
+          className="hover:bg-blue-500! hover:text-white">
           <SlidersHorizontal className="h-4 w-4 mr-2" />
           ตัวกรอง
-          {hasActiveFilters && (
-            <span className="ml-2 px-1.5 py-0.5 bg-primary-foreground text-primary rounded-full text-xs font-bold leading-none min-w-5 h-5 flex items-center justify-center">
-              •
+          {activeFilterCount > 0 && (
+            <span className="ml-2 px-1.5 py-0.5 bg-primary-foreground text-primary rounded-full text-[10px] font-bold leading-none min-w-[18px] h-[18px] flex items-center justify-center">
+              {activeFilterCount}
             </span>
           )}
         </Button>

@@ -222,3 +222,74 @@ export async function bulkDeletePropertiesAction(
     };
   }
 }
+
+/**
+ * Bulk move properties to current tenant - ดึงทรัพย์มาสาขาตัวเอง
+ */
+export async function bulkMovePropertiesToTenantAction(ids: string[]): Promise<{
+  success: boolean;
+  count: number;
+  message: string;
+}> {
+  try {
+    const { supabase, role, tenantId, user } = await requireAuthContext();
+    assertStaff(role);
+
+    if (!tenantId) {
+      return {
+        success: false,
+        count: 0,
+        message: "ไม่พบข้อมูลสาขาของคุณ กรุณาติดต่อผู้ดูแลระบบ",
+      };
+    }
+
+    if (!ids || ids.length === 0) {
+      return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
+    }
+
+    // Update tenant_id only if it's currently null or undefined
+    const { error, count } = await supabase
+      .from("properties")
+      .update({
+        tenant_id: tenantId,
+        updated_at: new Date().toISOString(),
+      })
+      .in("id", ids)
+      .is("tenant_id", null);
+
+    if (error) {
+      console.error("Move properties error:", error);
+      throw new Error(`เกิดข้อผิดพลาดในการย้ายข้อมูล: ${error.message}`);
+    }
+
+    // Audit log
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "property.bulk_move",
+        entity: "properties",
+        entityId: ids.join(","),
+        metadata: {
+          moveCount: count,
+          targetTenantId: tenantId,
+          requestedIds: ids,
+        },
+      },
+    );
+
+    revalidatePath("/protected/properties");
+
+    return {
+      success: true,
+      count: count ?? 0,
+      message: `ดึงข้อมูลมายังสาขาของคุณสำเร็จ ${count ?? 0} รายการ`,
+    };
+  } catch (error) {
+    console.error("bulkMovePropertiesToTenantAction error:", error);
+    return {
+      success: false,
+      count: 0,
+      message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+    };
+  }
+}

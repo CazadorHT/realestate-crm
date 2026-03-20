@@ -4,6 +4,7 @@ import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 import { type UserRole, isAdmin, isStaff } from "./auth-shared";
+import { cookies } from "next/headers";
 export { type UserRole, isAdmin, isStaff };
 
 export type AuthContext = {
@@ -65,9 +66,25 @@ export async function requireAuthContext(
     return { ...ctx, tenantId: config.default_tenant_id ?? undefined };
   }
 
-  // Rule 2: If multi-tenant is enabled, use requested or throw if missing members
-  const finalTenantId = requestedTenantId;
+  // Rule 2: If multi-tenant is enabled, use requested or default to cookie
+  let finalTenantId = requestedTenantId;
 
+  // 2.1 If no explicit tenant requested, look at the cookie
+  if (!finalTenantId) {
+    const cookieStore = await cookies();
+    const cookieTenantId = cookieStore.get("active_tenant_id")?.value;
+    
+    // If cookie is "ALL", we explicitly want cross-branch (tenantId: undefined)
+    if (cookieTenantId === "ALL") {
+      return ctx; // Return with undefined tenantId
+    }
+
+    if (cookieTenantId) {
+      finalTenantId = cookieTenantId;
+    }
+  }
+
+  // 2.2 If we have a tenant ID (from param or cookie), verify membership
   if (finalTenantId) {
     const { data: member, error } = await ctx.supabase
       .from("tenant_members")
@@ -77,13 +94,24 @@ export async function requireAuthContext(
       .single();
 
     if (error || !member) {
-      throw new AuthzError(
-        "FORBIDDEN",
-        "Forbidden: You are not a member of this tenant",
-      );
+      // Fallback: If they requested a branch they don't belong to (or it's stale), 
+      // we'll proceed to the default "first available" logic below
+      finalTenantId = undefined;
+    } else {
+      return { ...ctx, tenantId: finalTenantId };
     }
+  }
 
-    return { ...ctx, tenantId: finalTenantId };
+  // Rule 3: If still no tenant (or switch failed), pick the first one from their membership
+  const { data: firstMember } = await ctx.supabase
+    .from("tenant_members")
+    .select("tenant_id")
+    .eq("profile_id", ctx.user.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (firstMember) {
+    return { ...ctx, tenantId: firstMember.tenant_id };
   }
 
   return ctx;

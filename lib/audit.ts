@@ -8,6 +8,7 @@ export type AuditAction =
   | "property.status.update"
   | "property.delete"
   | "property.bulk_delete"
+  | "property.bulk_move"
   | "lead.create"
   | "lead.update"
   | "lead.delete"
@@ -20,6 +21,7 @@ export type AuditAction =
   | "owner.update"
   | "owner.delete"
   | "owner.bulk_delete"
+  | "owner.bulk_move"
   | "profile.update"
   | "profile.avatar.upload"
   | "user.delete"
@@ -49,7 +51,9 @@ export type AuditAction =
   | "tenant.delete"
   | "member.add"
   | "member.remove"
-  | "member.transfer";
+  | "member.transfer"
+  | "property.transfer_branch"
+  | "owner.transfer_branch";
 
 type AuditInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];
 

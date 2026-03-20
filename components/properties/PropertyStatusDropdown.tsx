@@ -107,7 +107,7 @@ export function PropertyStatusSelect(props: {
         <SelectTrigger
           size="sm"
           className={cn(
-            "h-8 w-[150px] rounded-full px-3 shadow-none",
+            "h-8 w-[120px] rounded-full px-3 shadow-none",
             "transition-colors",
             statusTone(value),
             props.className,

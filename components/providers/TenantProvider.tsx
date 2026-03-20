@@ -10,6 +10,7 @@ import React, {
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { setActiveTenantCookieAction } from "@/lib/actions/tenant-context";
 
 type Tenant = {
   id: string;
@@ -134,8 +135,9 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     const selected = tenants.find((t) => t.id === id);
     if (selected) {
       setActiveTenant(selected);
-      localStorage.setItem("active_tenant_id", id);
-
+      // Update cookie for server-side state
+      setActiveTenantCookieAction(id);
+      
       // Optionally refresh valid data or redirect
       startTransition(() => {
         router.refresh();

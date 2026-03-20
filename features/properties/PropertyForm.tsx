@@ -62,12 +62,16 @@ type Props = {
     storage_path: string;
     is_cover?: boolean;
   }[];
+  isMultiTenant?: boolean;
+  userRole?: string;
 };
 
 export function PropertyForm({
   mode,
   defaultValues,
   initialImages = [],
+  isMultiTenant = false,
+  userRole,
 }: Props) {
   const router = useRouter();
 
@@ -116,8 +120,15 @@ export function PropertyForm({
   });
 
   // === DATA LOADING ===
-  const { owners, agents, popularAreas, refreshPopularAreas, refreshOwners } =
-    usePropertyFormData(mode, defaultValues?.id, form);
+  const {
+    owners,
+    agents,
+    popularAreas,
+    refreshPopularAreas,
+    refreshOwners,
+    allBranches,
+    setAllBranches,
+  } = usePropertyFormData(mode, defaultValues?.id, form);
 
   // === DRAFT MANAGEMENT ===
   const { checkAndRestoreDraft, clearDraft } = usePropertyFormDraft(
@@ -495,6 +506,10 @@ export function PropertyForm({
               uploadSessionId={uploadSessionId}
               persistImages={persistImages}
               refreshOwners={refreshOwners}
+              allBranches={allBranches}
+              setAllBranches={setAllBranches}
+              isMultiTenant={isMultiTenant}
+              userRole={userRole}
             />
           )}
 

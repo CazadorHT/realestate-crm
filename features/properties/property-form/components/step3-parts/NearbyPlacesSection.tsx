@@ -90,7 +90,7 @@ export function NearbyPlacesSection({ form }: NearbyPlacesSectionProps) {
 
       <CardContent className="pt-6 space-y-4 px-4 sm:px-6">
         {/* Places List - Scrollable container for max 3 visible */}
-        <div className="max-h-[280px] overflow-y-auto space-y-4 pr-1">
+        <div className="max-h-[400px] overflow-y-auto space-y-4 pr-1 custom-scrollbar">
           {fields.map((item, index) => (
             <div
               key={item.id}
