@@ -197,7 +197,7 @@ export function DealFormDialog({
 
     setIsSubmitting(true);
     try {
-      const result =
+      const result: any =
         isEditing && deal
           ? await updateDealAction({ ...pendingData, id: deal.id })
           : await createDealAction(pendingData);
@@ -214,8 +214,8 @@ export function DealFormDialog({
         toast.error(result.message || "เกิดข้อผิดพลาด");
         setIsConfirmOpen(false);
       }
-    } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการบันทึก");
+    } catch (err: any) {
+      toast.error(err.message || "เกิดข้อผิดพลาดในการบันทึก");
       setIsConfirmOpen(false);
     } finally {
       setIsSubmitting(false);

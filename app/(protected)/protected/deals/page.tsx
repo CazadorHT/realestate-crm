@@ -21,7 +21,7 @@ export const metadata = {
 };
 
 export default async function DealsPage() {
-  await requireAuthContext();
+  const { tenantId } = await requireAuthContext();
 
   const { data, count } = await getDeals({ page: 1, pageSize: 100 }); // Get more for stats
   const properties = await getPropertiesForSelect();

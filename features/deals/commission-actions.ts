@@ -8,9 +8,17 @@ import {
 import { buildCommissionStatementFlex } from "@/lib/line-flex-builders";
 import { sendLineNotification } from "@/lib/line";
 import { format } from "date-fns";
+import { requireAuthContext } from "@/lib/authz";
+import { mapDbError } from "@/lib/db-error";
+
+export type LineSendResult = {
+  success: boolean;
+  message: string;
+};
 
 export async function exportCommissionPdfAction(commissionId: string) {
-  const supabase = await createClient();
+  const { supabase, tenantId, role } = await requireAuthContext();
+  if (!tenantId) return { success: false, message: "Unauthorized branch" };
 
   const { data: comm, error } = await (supabase as any)
     .from("deal_commissions")
@@ -22,6 +30,7 @@ export async function exportCommissionPdfAction(commissionId: string) {
     `,
     )
     .eq("id", commissionId)
+    .eq("tenant_id", tenantId) // HARD LOCK
     .single();
 
   if (error || !comm) {
@@ -57,7 +66,8 @@ export async function exportCommissionPdfAction(commissionId: string) {
 }
 
 export async function sendCommissionToLineAction(commissionId: string) {
-  const supabase = await createClient();
+  const { supabase, tenantId } = await requireAuthContext();
+  if (!tenantId) return { success: false, message: "Unauthorized branch" };
 
   const { data: comm, error } = await (supabase as any)
     .from("deal_commissions")
@@ -69,6 +79,7 @@ export async function sendCommissionToLineAction(commissionId: string) {
     `,
     )
     .eq("id", commissionId)
+    .eq("tenant_id", tenantId)
     .single();
 
   if (error || !comm) {

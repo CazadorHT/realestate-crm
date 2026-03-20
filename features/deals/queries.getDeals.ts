@@ -42,6 +42,10 @@ type RawDealWithJoin = Deal & {
     full_name: string;
     phone: string | null;
   } | null;
+  tenants: {
+    id: string;
+    name: string;
+  } | null;
 };
 
 export async function getDeals({
@@ -56,8 +60,6 @@ export async function getDeals({
 }: ListArgs = {}) {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
-  if (!tenantId) throw new Error("Tenant ID is required but missing");
-
   const trimmed = q.trim();
   const pageSafe = Math.max(1, page);
   const size = Math.min(100, Math.max(5, pageSize));
@@ -67,12 +69,20 @@ export async function getDeals({
     .select(
       `
       *,
+      tenants(id, name),
       property:properties!inner ( id, title, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
       lead:leads ( id, full_name, phone )
     `,
       { count: "exact" },
-    )
-    .eq("tenant_id", tenantId)
+    );
+
+  // Branch isolation: Only filter if tenantId exists.
+  // If tenantId is undefined, it means "ALL Branches" view.
+  if (tenantId) {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  query = query
     .is("property.deleted_at", null)
     .order(order, { ascending });
 
@@ -104,16 +114,21 @@ export async function getDeals({
 
   if (trimmed && (finalData.length === 0 || finalCount === 0)) {
     try {
-      const propRes = await supabase
+      const propQuery = supabase
         .from("properties")
         .select("id")
-        .eq("tenant_id", tenantId)
         .ilike("title", `%${trimmed}%`);
-      const leadRes = await supabase
+      
+      if (tenantId) propQuery.eq("tenant_id", tenantId);
+      const propRes = await propQuery;
+
+      const leadQuery = supabase
         .from("leads")
         .select("id")
-        .eq("tenant_id", tenantId)
         .ilike("full_name", `%${trimmed}%`);
+      
+      if (tenantId) leadQuery.eq("tenant_id", tenantId);
+      const leadRes = await leadQuery;
 
       const propIds = (propRes.data ?? []).map((p) => p.id);
       const leadIds = (leadRes.data ?? []).map((l) => l.id);
@@ -124,20 +139,21 @@ export async function getDeals({
         leadIds.length > 0 ||
         /^[0-9a-fA-F-]{36}$/.test(trimmed)
       ) {
-        let q2 = supabase
+      let q2 = supabase
           .from("deals")
           .select(
             `
       *,
+      tenants(id, name),
       property:properties!inner ( id, title, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
       lead:leads ( id, full_name, phone )
     `,
             { count: "exact" },
           )
-          .eq("tenant_id", tenantId)
           .is("property.deleted_at", null)
           .order(order, { ascending });
 
+        if (tenantId) q2 = q2.eq("tenant_id", tenantId);
         if (propIds.length > 0) q2 = q2.in("property_id", propIds);
         if (leadIds.length > 0) q2 = q2.in("lead_id", leadIds);
         if (/^[0-9a-fA-F-]{36}$/.test(trimmed)) q2 = q2.eq("id", trimmed);

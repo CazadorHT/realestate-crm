@@ -114,7 +114,7 @@ export function DealsTable({
             <Table>
               <TableHeader className="bg-slate-50">
                 <TableRow>
-                  <TableHead className="w-[50px]">
+                  <TableHead className="w-[50px] text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     <Checkbox
                       checked={isAllSelected}
                       onCheckedChange={() => toggleSelectAll(allIds)}
@@ -126,34 +126,34 @@ export function DealsTable({
                       }
                     />
                   </TableHead>
-                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     ประเภท
                   </TableHead>
-                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     ทรัพย์
                   </TableHead>
-                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     ลีด
                   </TableHead>
-                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     ราคา{" "}
-                    <span className="text-xs font-normal text-slate-400">
+                    <span className="text-[9px] font-normal text-slate-400">
                       (เดิม)
                     </span>
                   </TableHead>
-                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     ค่าคอม
                   </TableHead>
-                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     ระยะสัญญา
                   </TableHead>
-                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     วันที่
                   </TableHead>
-                  <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     สถานะ
                   </TableHead>
-                  <TableHead className="text-right font-semibold text-slate-700 whitespace-nowrap">
+                  <TableHead className="text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     Actions
                   </TableHead>
                 </TableRow>

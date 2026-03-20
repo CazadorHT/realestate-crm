@@ -31,12 +31,17 @@ export function DealsFilters({
   return (
     <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
       <div className="flex items-center gap-2 mb-3">
-        <Filter className="h-4 w-4 text-slate-600" />
-        <h3 className="text-sm font-semibold text-slate-700">ตัวกรอง</h3>
+        <Filter className="h-4 w-4 text-slate-500" />
+        <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+          ตัวกรอง
+        </h3>
         {hasActiveFilters && (
-          <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-700">
+          <Badge
+            variant="secondary"
+            className="ml-2 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase"
+          >
             {[selectedPropertyId, selectedLeadId, q].filter(Boolean).length}{" "}
-            active
+            Active
           </Badge>
         )}
       </div>

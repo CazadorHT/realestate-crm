@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { mapDbError } from "@/lib/db-error";
 
 export type BulkDeleteResult = {
   success: boolean;
@@ -15,10 +16,11 @@ export type BulkDeleteResult = {
  * Bulk delete deals - ลบหลายดีลพร้อมกัน
  */
 export async function bulkDeleteDealsAction(
-  ids: string[]
+  ids: string[],
 ): Promise<BulkDeleteResult> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
+    if (!tenantId) throw new Error("Tenant context required");
     assertStaff(role);
 
     if (!ids || ids.length === 0) {
@@ -30,9 +32,11 @@ export async function bulkDeleteDealsAction(
     }
 
     // Delete deals (cascade will handle related records)
+    // CRITICAL: Must check tenant_id for security
     const { error, count } = await supabase
       .from("deals")
       .delete({ count: "exact" })
+      .eq("tenant_id", tenantId)
       .in("id", ids);
 
     if (error) throw error;
@@ -45,7 +49,7 @@ export async function bulkDeleteDealsAction(
         entity: "deals",
         entityId: ids.join(","),
         metadata: { deletedCount: count },
-      }
+      },
     );
 
     revalidatePath("/protected/deals");
@@ -55,12 +59,15 @@ export async function bulkDeleteDealsAction(
       deletedCount: count ?? ids.length,
       message: `ลบดีลสำเร็จ ${count ?? ids.length} รายการ`,
     };
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === "AUTHZ_ERROR") {
+      return { success: false, deletedCount: 0, message: "ไม่ได้รับอนุญาต" };
+    }
     console.error("bulkDeleteDealsAction error:", error);
     return {
       success: false,
       deletedCount: 0,
-      message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+      message: mapDbError(error),
     };
   }
 }

@@ -21,16 +21,16 @@ export function DealsPagination({
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 px-4 bg-white border border-slate-200 rounded-lg shadow-xs">
-      <div className="text-sm text-slate-600 text-center sm:text-left">
+      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-tight text-center sm:text-left">
         แสดง{" "}
-        <span className="font-medium text-slate-900">
+        <span className="text-slate-900">
           {Math.min(count, (page - 1) * pageSize + 1)}
         </span>{" "}
         -{" "}
-        <span className="font-medium text-slate-900">
+        <span className="text-slate-900">
           {Math.min(count, page * pageSize)}
         </span>{" "}
-        จาก <span className="font-medium text-slate-900">{count}</span> รายการ
+        จาก <span className="text-slate-900">{count}</span> ดีล
       </div>
       <div className="flex items-center gap-2">
         <Button
@@ -38,11 +38,11 @@ export function DealsPagination({
           size="sm"
           disabled={page <= 1}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          className="h-9 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
+          className="h-8 text-[11px] font-bold uppercase tracking-tight hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
         >
           ก่อนหน้า
         </Button>
-        <div className="h-9 px-4 flex items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-sm font-medium text-slate-700">
+        <div className="h-8 px-3 flex items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-700">
           {page} / {totalPages}
         </div>
         <Button
@@ -50,7 +50,7 @@ export function DealsPagination({
           size="sm"
           disabled={page >= totalPages}
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          className="h-9 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
+          className="h-8 text-[11px] font-bold uppercase tracking-tight hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
         >
           ถัดไป
         </Button>

@@ -6,7 +6,9 @@ import {
   requireAuthContext,
   assertAuthenticated,
   assertStaff,
+  authzFail,
 } from "@/lib/authz";
+import { mapDbError } from "@/lib/db-error";
 import {
   createDealSchema,
   updateDealSchema,
@@ -165,11 +167,10 @@ export async function createDealAction(input: CreateDealInput) {
     revalidatePath(`/protected/leads/${validated.lead_id}`);
     revalidatePath("/protected/deals");
     return { success: true, data };
-  } catch (error: unknown) {
+  } catch (error: any) {
+    if (error.code === "AUTHZ_ERROR") return authzFail;
     console.error("Create Deal Error:", error);
-    const msg =
-      error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างดีล";
-    return { success: false, message: msg };
+    return { success: false, message: mapDbError(error) };
   }
 }
 
@@ -316,7 +317,9 @@ export async function updateDealAction(input: UpdateDealInput) {
     revalidatePath("/protected/deals");
     return { success: true };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    if (error.code === "AUTHZ_ERROR") return authzFail;
+    console.error("Update Deal Error:", error);
+    return { success: false, message: mapDbError(error) };
   }
 }
 

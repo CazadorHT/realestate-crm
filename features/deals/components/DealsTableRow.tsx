@@ -51,29 +51,36 @@ export function DealsTableRow({
         </Badge>
       </TableCell>
       <TableCell>
-        <div className="flex gap-2 max-w-[300px]">
+        <div className="flex flex-col gap-1 max-w-[300px]">
           <Link
             href={`/protected/properties/${deal.property_id}`}
-            className="font-medium text-blue-600 hover:text-blue-500 hover:underline transition-colors line-clamp-2"
+            className="font-medium text-[13px] text-blue-600 hover:text-blue-500 hover:underline transition-colors line-clamp-1 uppercase tracking-tight"
           >
             {deal.property?.title || "-"}
           </Link>
-          {isNew && (
-            <Badge className="h-4 px-1 text-[9px] bg-amber-500 hover:bg-amber-600 font-bold border-0">
-              NEW
-            </Badge>
-          )}
+          <div className="flex items-center gap-1.5">
+            {isNew && (
+              <Badge className="h-4 px-1 text-[9px] bg-amber-500 hover:bg-amber-600 font-bold border-0 rounded-sm">
+                NEW
+              </Badge>
+            )}
+            {deal.tenants?.name && (
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter bg-slate-100 px-1 rounded-sm border border-slate-200/50">
+                {deal.tenants.name}
+              </span>
+            )}
+          </div>
         </div>
       </TableCell>
       <TableCell>
         <Link
           href={`/protected/leads/${deal.lead_id}`}
-          className="text-sm text-slate-600 hover:text-blue-600 hover:underline transition-colors line-clamp-1"
+          className="text-[11px] font-bold text-slate-600 hover:text-blue-600 hover:underline transition-colors line-clamp-1 uppercase tracking-tight"
         >
           {deal.lead?.full_name || "-"}
         </Link>
       </TableCell>
-      <TableCell className="font-medium text-slate-700">
+      <TableCell className="font-bold text-slate-700 text-[11px]">
         <div className="flex flex-col items-start gap-0.5">
           {(() => {
             const isRent = deal.deal_type === "RENT";
@@ -91,11 +98,11 @@ export function DealsTableRow({
             if (displayPrice === 0) return "-";
             return (
               <>
-                <span className="whitespace-nowrap">
+                <span className="whitespace-nowrap font-bold">
                   {displayPrice.toLocaleString()} ฿
                 </span>
                 {showOriginal && (
-                  <span className="text-[10px] text-slate-400 line-through">
+                  <span className="text-[10px] text-slate-400 line-through font-medium">
                     {original.toLocaleString()}
                   </span>
                 )}
@@ -106,23 +113,23 @@ export function DealsTableRow({
       </TableCell>
       <TableCell>
         {deal.commission_amount ? (
-          <span className="text-green-600 font-semibold whitespace-nowrap">
+          <span className="text-green-600 font-bold text-[11px] whitespace-nowrap">
             {deal.commission_amount.toLocaleString()} ฿
           </span>
         ) : (
-          "-"
+          <span className="text-slate-300">-</span>
         )}
       </TableCell>
-      <TableCell className="text-slate-600">
+      <TableCell className="text-slate-500 text-[11px] font-bold">
         {deal.deal_type === "RENT" && deal.duration_months ? (
-          <span className="text-sm whitespace-nowrap">
+          <span className="whitespace-nowrap uppercase">
             {deal.duration_months} เดือน
           </span>
         ) : (
-          <span className="text-slate-400">-</span>
+          <span className="text-slate-300">-</span>
         )}
       </TableCell>
-      <TableCell className="text-slate-600">
+      <TableCell className="text-slate-500 text-[11px] font-bold">
         <span className="whitespace-nowrap">
           {deal.transaction_date ? formatDate(deal.transaction_date) : "-"}
         </span>

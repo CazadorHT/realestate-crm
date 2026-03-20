@@ -515,7 +515,8 @@ async function handleIncomingChannelMessage(
         source: "LINE",
         stage: "NEW",
         note: `Auto-captured from LINE. Profile: ${JSON.stringify(profile)}`,
-      })
+        tenant_id: (lead as any)?.tenant_id, // Keep same tenant if exists
+      } as any)
       .select("id")
       .single();
 

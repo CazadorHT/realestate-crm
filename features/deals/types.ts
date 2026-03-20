@@ -30,6 +30,10 @@ export type DealWithProperty = Deal & {
     phone: string | null;
     stage: string | null;
   } | null;
+  tenants?: {
+    id: string;
+    name: string;
+  } | null;
   co_agent_online?: string | null;
   duration_months?: number | null;
 };
