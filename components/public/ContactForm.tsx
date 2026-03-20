@@ -19,6 +19,7 @@ import {
   Key,
   TrendingUp,
   Banknote,
+  Sparkles,
 } from "lucide-react";
 import { FaLine } from "react-icons/fa";
 import { submitContactFormAction } from "@/features/leads/contact-action";
@@ -536,10 +537,12 @@ export function ContactForm() {
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button
-              className="w-full h-12 text-sm font-semibold shadow-xl shadow-blue-500/25 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl transition-all active:scale-[0.97]"
+              className="w-full h-14 text-base font-bold shadow-2xl shadow-blue-500/40 bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 rounded-2xl transition-all active:scale-[0.96] border border-white/20 animate-pulse-subtle group"
             >
-              <MessageSquare className="mr-2 h-5 w-5" />
-              {t("contact.send_message") || "Send us a message"}
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
+              <MessageSquare className="mr-3 h-6 w-6 relative z-10" />
+              <span className="relative z-10">{t("contact.send_message") || "Send us a message"}</span>
+              <Sparkles className="ml-2 h-4 w-4 text-blue-200 animate-bounce relative z-10" />
             </Button>
           </SheetTrigger>
           <SheetContent side="bottom" className="max-h-[85dvh] rounded-t-[32px] p-0 flex flex-col bg-slate-950 border-t border-white/10 shadow-2xl">

@@ -5,16 +5,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Mail } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
-// Modular components
 import { ContactHero } from "@/components/public/contact/ContactHero";
 import { ContactInfoCards } from "@/components/public/contact/ContactInfoCards";
 import { ContactSidebar } from "@/components/public/contact/ContactSidebar";
 import { ContactFAQ } from "@/components/public/contact/ContactFAQ";
 import { ContactMap } from "@/components/public/contact/ContactMap";
 import { motion } from "framer-motion";
+import AOS from "aos";
+import "aos/dist/aos.css";
+import { useEffect } from "react";
 
 export default function ContactPageClient() {
   const { t } = useLanguage();
+
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      easing: "ease-out-cubic",
+      once: true,
+    });
+  }, []);
+
   return (
     <main className="min-h-screen bg-slate-50 relative overflow-hidden">
       {/* Background Decorations */}
@@ -34,10 +45,9 @@ export default function ContactPageClient() {
           <div className="w-full">
             {/* Desktop Version: Premium Glassmorphism Card */}
             <div className="hidden lg:block">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.6, ease: "circOut" }}
+              <div
+                data-aos="fade-up"
+                data-aos-delay="600"
               >
                 <Card className="relative shadow-2xl shadow-black/20 border-white/10 bg-white/[0.07] backdrop-blur-xl overflow-hidden ring-1 ring-white/10 rounded-3xl">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-60" />
@@ -58,12 +68,18 @@ export default function ContactPageClient() {
                     <ContactForm />
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             </div>
 
             {/* Mobile/Tablet Version: Simple Trigger within Hero */}
-            <div className="lg:hidden mt-10">
-              <ContactForm />
+            <div className="lg:hidden mt-8 md:mt-12">
+              <div
+                data-aos="fade-up"
+                data-aos-delay="600"
+                className="w-full max-w-sm mx-auto"
+              >
+                <ContactForm />
+              </div>
             </div>
           </div>
         }
