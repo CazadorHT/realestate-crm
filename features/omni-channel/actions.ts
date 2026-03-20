@@ -1,25 +1,30 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuthContext, authzFail } from "@/lib/authz";
 import { LINE_MESSAGING_API, lineConfig } from "@/lib/line-config";
 import { saveOmniMessage } from "@/lib/line";
 import { revalidatePath } from "next/cache";
 import { sendMetaMessage, sendWhatsAppMessage } from "@/lib/meta";
+import { mapDbError } from "@/lib/db-error";
 
 export async function sendDirectReplyAction(leadId: string, content: string) {
-  const supabase = createAdminClient();
-
   try {
+    const { supabase: userSupabase, tenantId } = await requireAuthContext();
+    const supabase = createAdminClient(); // We need admin to send via internal APIs if needed
+
     // 1. Get Lead details (to know where to send)
-    const { data: lead, error: leadError } = await supabase
+    // We use userSupabase to ensure they only see their own leads
+    const { data: lead, error: leadError } = await userSupabase
       .from("leads")
       .select("source, line_id, facebook_psid, instagram_sid, phone")
       .eq("id", leadId)
+      .eq("tenant_id", tenantId!)
       .single();
 
-    if (leadError || !lead) throw new Error("Lead not found");
+    if (leadError || !lead) throw new Error("Lead not found or no permission");
 
-    // 2. Platform specific sending
+    // 2. Platform specific sending (Keep using admin for API calls if necessary)
     if (lead.source === "LINE" && lead.line_id) {
       const res = await fetch(`${LINE_MESSAGING_API}/push`, {
         method: "POST",
@@ -74,20 +79,22 @@ export async function sendDirectReplyAction(leadId: string, content: string) {
     revalidatePath("/protected/inbox");
     return { success: true };
   } catch (err: any) {
-    console.error("Direct reply failed:", err);
-    return { success: false, error: err.message };
+    return authzFail(err);
   }
 }
 
 export async function replyToCommentAction(messageId: string, content: string) {
-  const supabase = createAdminClient();
-
   try {
+    const { supabase: userSupabase, tenantId } = await requireAuthContext();
+    const supabase = createAdminClient();
+
     // 1. Get original comment details
-    const { data: msg, error: msgError } = await supabase
+    // Verify it belongs to the tenant's leads
+    const { data: msg, error: msgError } = await userSupabase
       .from("omni_messages")
-      .select("external_message_id, lead_id, source")
+      .select("external_message_id, lead_id, source, leads!inner(tenant_id)")
       .eq("id", messageId)
+      .eq("leads.tenant_id", tenantId!)
       .single();
 
     if (msgError || !msg || !msg.external_message_id || !msg.lead_id) {
@@ -112,7 +119,6 @@ export async function replyToCommentAction(messageId: string, content: string) {
     revalidatePath("/protected/inbox");
     return { success: true };
   } catch (err: any) {
-    console.error("Comment reply failed:", err);
-    return { success: false, error: err.message };
+    return authzFail(err);
   }
 }

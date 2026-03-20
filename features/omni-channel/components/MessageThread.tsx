@@ -52,7 +52,7 @@ export function MessageThread({ lead }: { lead: any }) {
       ]);
       setReplyTo(null);
     } else {
-      toast.error("ส่งข้อความไม่สำเร็จ: " + result.error);
+      toast.error("ส่งข้อความไม่สำเร็จ: " + (result as any).error);
       setInput(textToSend);
     }
 
@@ -64,30 +64,50 @@ export function MessageThread({ lead }: { lead: any }) {
       {/* Header */}
       <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white shadow-sm z-10">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
-            <User className="h-6 w-6 text-slate-500" />
+          <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shadow-inner text-slate-400">
+            {messages?.[0]?.payload?.profile?.pictureUrl ? (
+              <img
+                src={messages[0].payload.profile.pictureUrl}
+                className="h-full w-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : messages?.[0]?.payload?.pictureUrl ? (
+              <img
+                src={messages[0].payload.pictureUrl}
+                className="h-full w-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : lead.note?.includes("Photo: http") ? (
+              <img
+                src={lead.note.match(/Photo: (https?:\/\/[^\s\n]+)/)?.[1]}
+                className="h-full w-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <User className="h-6 w-6" />
+            )}
           </div>
           <div>
             <h2 className="font-bold text-sm uppercase tracking-tight text-slate-800">
               {lead.full_name}
             </h2>
-            <div className="flex items-center gap-1.5">
-              <span
-                className={cn(
-                  "w-2 h-2 rounded-full",
-                  lead.source === "LINE"
-                    ? "bg-green-500"
-                    : lead.source === "FACEBOOK"
-                      ? "bg-blue-500"
-                      : lead.source === "INSTAGRAM"
-                        ? "bg-pink-500"
-                        : "bg-slate-400",
-                )}
-              />
-              <p className="text-[11px] font-semibold text-slate-500 uppercase">
-                {lead.source}
-              </p>
-            </div>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100">
+                <span
+                  className={cn(
+                    "w-1.5 h-1.5 rounded-full",
+                    lead.source === "LINE"
+                      ? "bg-green-500 animate-pulse"
+                      : lead.source === "FACEBOOK"
+                        ? "bg-blue-500"
+                        : lead.source === "INSTAGRAM"
+                          ? "bg-pink-500"
+                          : "bg-slate-400",
+                  )}
+                />
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  {lead.source} CHANNEL
+                </p>
+              </div>
           </div>
         </div>
       </div>
@@ -116,7 +136,7 @@ export function MessageThread({ lead }: { lead: any }) {
               {isComment && msg.direction === "INCOMING" && (
                 <div className="flex items-center gap-1.5 mb-1 px-1">
                   <MessageCircle className="h-3 w-3 text-blue-500" />
-                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">
+                  <span className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">
                     คอมเมนต์
                   </span>
                 </div>
@@ -133,7 +153,7 @@ export function MessageThread({ lead }: { lead: any }) {
                   )}
                 >
                   {isReply && (
-                    <div className="text-[10px] text-slate-400 border-b border-slate-700 pb-1 mb-1 not-italic flex items-center gap-1">
+                    <div className="text-[11px] text-slate-400 border-b border-slate-700 pb-1 mb-1 not-italic flex items-center gap-1">
                       <MessageCircle className="h-2.5 w-2.5" /> ตอบกลับคอมเมนต์
                     </div>
                   )}
@@ -151,7 +171,7 @@ export function MessageThread({ lead }: { lead: any }) {
                 )}
               </div>
 
-              <span className="text-[10px] text-slate-400 mt-1.5 font-medium px-1">
+              <span className="text-[11px] text-slate-400 mt-1.5 font-bold px-1">
                 {format(new Date(msg.created_at), "HH:mm", { locale: th })}
               </span>
             </div>

@@ -501,7 +501,7 @@ async function handleIncomingChannelMessage(
   // Find or Create Lead
   let { data: lead } = await supabase
     .from("leads")
-    .select("id")
+    .select("id, note, tenant_id")
     .eq("line_id", userId)
     .single();
 
@@ -523,17 +523,29 @@ async function handleIncomingChannelMessage(
       console.error("Error creating auto-lead:", createError);
       return;
     }
-    lead = newLead;
+    lead = newLead as any;
   }
 
   // Log Message
   if (lead) {
+    let profile = null;
+    try {
+      profile = await getLineProfile(userId);
+      // 🔥 Update Lead Photo correctly
+      if (profile?.pictureUrl) {
+        await supabase
+          .from("leads")
+          .update({ note: `Photo: ${profile.pictureUrl}\n\n${lead.note || ""}` })
+          .eq("id", lead.id);
+      }
+    } catch (e) {}
+
     await saveOmniMessage({
       lead_id: lead.id,
       source: "LINE",
       external_message_id: event.message?.id,
       content: text,
-      payload: event,
+      payload: { ...event, profile },
       direction: "INCOMING",
     });
   }

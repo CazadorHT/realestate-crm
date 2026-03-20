@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { getInboxConversationsQuery } from "@/features/omni-channel/queries";
 import { InboxContainer } from "@/features/omni-channel/components/InboxContainer";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export const metadata = {
   title: "กล่องข้อความรวม (Omni-channel Inbox)",
@@ -7,42 +8,18 @@ export const metadata = {
 };
 
 export default async function InboxPage() {
-  const supabase = await createClient();
-
-  // Fetch initial conversations (leads with latest omni messages)
-  const { data: conversations } = await supabase
-    .from("leads")
-    .select(
-      `
-      id,
-      full_name,
-      source,
-      line_id,
-      omni_messages (
-        id,
-        content,
-        created_at,
-        direction,
-        is_read
-      )
-    `,
-    )
-    .not("omni_messages", "is", null)
-    .order("created_at", { referencedTable: "omni_messages", ascending: false })
-    .limit(1, { referencedTable: "omni_messages" });
+  const conversations = await getInboxConversationsQuery();
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">
-          กล่องข้อความรวม
-        </h1>
-        <p className="text-slate-500">
-          จัดการการแชทจาก LINE, Facebook, และช่องทางอื่นๆ
-        </p>
-      </div>
+    <div className="flex flex-col h-[calc(100vh-8rem)] space-y-6">
+      <PageHeader
+        title="กล่องข้อความรวม"
+        subtitle="จัดการการแชทจาก LINE, Facebook, และช่องทางอื่นๆ"
+        icon="messageSquare"
+        gradient="blue"
+      />
 
-      <InboxContainer initialConversations={conversations || []} />
+      <InboxContainer initialConversations={conversations} />
     </div>
   );
 }
