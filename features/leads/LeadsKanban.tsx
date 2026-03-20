@@ -264,7 +264,7 @@ const LeadCard = React.memo(function LeadCard({
             {(lead as any).ai_score > 0 && (
               <Badge 
                 variant="secondary" 
-                className={`text-[9px] h-4 px-1 ${(lead as any).ai_score >= 50 ? 'bg-orange-100 text-orange-600 border-orange-200' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
+                className={`text-[11px] h-5 px-1.5 ${(lead as any).ai_score >= 50 ? 'bg-orange-100 text-orange-600 border-orange-200' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
               >
                 🔥 {(lead as any).ai_score}
               </Badge>
@@ -306,12 +306,19 @@ const LeadCard = React.memo(function LeadCard({
           )}
         </div>
 
-        <div className="pt-2 border-t border-slate-200 flex justify-between items-center text-[10px] text-muted-foreground">
-          <span>{new Date(lead.created_at).toLocaleDateString("th-TH")}</span>
+        <div className="pt-2 border-t border-slate-100 flex flex-wrap gap-2 justify-between items-center text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span>{new Date(lead.created_at).toLocaleDateString("th-TH")}</span>
+            {(lead as any).tenants?.name && (
+              <Badge variant="outline" className="text-[11px] h-5 px-1.5 bg-slate-50 text-slate-500 border-slate-200">
+                {(lead as any).tenants.name}
+              </Badge>
+            )}
+          </div>
           {lead.lead_type && (
             <Badge
               variant="secondary"
-              className="text-[9px] uppercase font-bold py-0 h-4"
+              className="text-[11px] uppercase font-bold py-0 h-5"
             >
               {lead.lead_type}
             </Badge>

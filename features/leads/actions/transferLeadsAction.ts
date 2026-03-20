@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAuthContext } from "@/lib/authz";
+import { requireAuthContext, authzFail } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
+import { mapDbError } from "@/lib/db-error";
 
 /**
  * โอนย้าย Leads ไปให้ Agent คนใหม่
@@ -45,7 +46,7 @@ export async function transferLeadsAction(
 
     if (error) {
       console.error("Transfer leads error:", error);
-      return { success: false, message: "เกิดข้อผิดพลาดในการโอนย้าย" };
+      return { success: false, message: mapDbError(error) };
     }
 
     // 3) บันทึก Audit Log (อาจจะบันทึกแบบรวมหรือแยก ขึ้นอยู่กับความละเอียดที่ต้องการ)
@@ -64,6 +65,6 @@ export async function transferLeadsAction(
     revalidatePath("/protected/leads");
     return { success: true };
   } catch (error) {
-    return { success: false, message: "Unauthorized" };
+    return authzFail(error);
   }
 }

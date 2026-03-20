@@ -1,13 +1,14 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { requireAuthContext, assertStaff, authzFail } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { mapDbError } from "@/lib/db-error";
 
 export type BulkDeleteResult = {
   success: boolean;
-  deletedCount: number;
+  deletedCount?: number;
   message?: string;
 };
 
@@ -35,7 +36,7 @@ export async function bulkDeleteLeadsAction(
       .delete({ count: "exact" })
       .in("id", ids);
 
-    if (error) throw error;
+    if (error) throw new Error(mapDbError(error));
 
     // Audit log
     await logAudit(
@@ -56,11 +57,6 @@ export async function bulkDeleteLeadsAction(
       message: `ลบลีดสำเร็จ ${count ?? ids.length} รายการ`,
     };
   } catch (error) {
-    console.error("bulkDeleteLeadsAction error:", error);
-    return {
-      success: false,
-      deletedCount: 0,
-      message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
-    };
+    return authzFail(error);
   }
 }

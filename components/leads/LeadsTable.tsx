@@ -111,6 +111,7 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                 <TableHead>สถานะ</TableHead>
                 <TableHead>AI Score</TableHead>
                 <TableHead>ที่มา / UTM</TableHead>
+                <TableHead>สาขา</TableHead>
                 <TableHead className="text-center">ดีลที่เกี่ยวข้อง</TableHead>
                 <TableHead className="text-right">จัดการ</TableHead>
               </TableRow>
@@ -142,7 +143,7 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                         differenceInHours(new Date(), new Date(l.created_at)) <
                           24 && (
                           <div className="w-fit">
-                            <div className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">
+                            <div className="bg-amber-500 text-white text-[11px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">
                               NEW
                             </div>
                           </div>
@@ -150,11 +151,11 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                     </div>
                   </TableCell>
                   {/* เบอร์โทร */}
-                  <TableCell className="text-sm text-muted-foreground">
-                    <div>{l.phone ?? "-"}</div>
+                  <TableCell className="text-[11px] text-muted-foreground">
+                    <div className="font-medium text-slate-700">{l.phone ?? "-"}</div>
                     {l.email && <div>{l.email}</div>}
                     {(l as any).line_id && (
-                      <div className="text-green-600">
+                      <div className="text-green-600 font-medium">
                         Line: {(l as any).line_id}
                       </div>
                     )}
@@ -176,14 +177,14 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                   {/* Message/Note */}
                   <TableCell>
                     <div
-                      className="max-w-[200px] truncate text-sm text-muted-foreground"
+                      className="max-w-[200px] truncate text-[11px] text-muted-foreground"
                       title={l.note || ""}
                     >
                       {l.note || "-"}
                     </div>
                   </TableCell>
                   {/* Stage */}
-                  <TableCell>
+                  <TableCell className="text-[11px] font-medium">
                     {safeEnumLabel(LEAD_STAGE_LABELS as any, l.stage)}
                   </TableCell>
                   {/* AI Score */}
@@ -203,15 +204,19 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                   {/* Source / UTM */}
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-medium">{safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}</span>
+                      <span className="font-medium text-[11px]">{safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}</span>
                       {(l as any).utm_source && (
                         <div className="flex items-center gap-1">
-                          <Badge variant="outline" className="text-[9px] h-4 px-1 border-emerald-100 bg-emerald-50 text-emerald-700">
+                          <Badge variant="outline" className="text-[11px] h-5 px-1.5 border-emerald-100 bg-emerald-50 text-emerald-700">
                             {(l as any).utm_source}
                           </Badge>
                         </div>
                       )}
                     </div>
+                  </TableCell>
+                  {/* Branch */}
+                  <TableCell className="text-[11px] font-medium text-slate-500">
+                    {(l as any).tenants?.name || "-"}
                   </TableCell>
                   {/* Action */}
                   <TableCell className="text-center">
@@ -265,7 +270,7 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                       <div className="flex items-center gap-2">
                         <Link
                           href={`/protected/leads/${l.id}`}
-                          className="font-bold text-slate-900 text-sm hover:underline"
+                          className="font-bold text-slate-900 text-[11px] hover:underline"
                         >
                           {l.full_name}
                         </Link>
@@ -274,7 +279,7 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                             new Date(),
                             new Date(l.created_at),
                           ) < 24 && (
-                            <Badge className="h-4 px-1.5 text-[9px] bg-amber-500 hover:bg-amber-600 border-0">
+                            <Badge className="h-5 px-1.5 text-[11px] bg-amber-500 hover:bg-amber-600 border-0">
                               NEW
                             </Badge>
                           )}
@@ -282,18 +287,23 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                       <div className="flex items-center gap-3 mt-1">
                         <Badge
                           variant="outline"
-                          className="h-4 text-[9px] px-1.5 font-bold border-slate-200 text-slate-600"
+                          className="h-5 text-[11px] px-1.5 font-bold border-slate-200 text-slate-600"
                         >
                           {safeEnumLabel(LEAD_STAGE_LABELS as any, l.stage)}
                         </Badge>
-                        <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                          <Calendar className="h-2.5 w-2.5" />
+                        <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
                           {l.created_at
                             ? format(new Date(l.created_at), "d MMM yy", {
                                 locale: th,
                               })
                             : "-"}
                         </span>
+                        {(l as any).tenants?.name && (
+                          <Badge variant="secondary" className="h-5 text-[11px] px-1.5 bg-slate-100 text-slate-600 border-0">
+                            {(l as any).tenants.name}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <LeadRowActions id={l.id} fullName={l.full_name} />
