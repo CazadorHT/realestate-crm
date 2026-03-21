@@ -15,9 +15,15 @@ import {
   CreateDealInput,
   UpdateDealInput,
 } from "./schema";
+import { DealCommission } from "./types";
+import { Database } from "@/lib/database.types";
 import { logAudit } from "@/lib/audit";
 import { getCommissionRulesAction } from "../dashboard/actions/commission-actions";
-import { calculateAdvancedSplit } from "@/lib/finance/commissions";
+import {
+  calculateAdvancedSplit,
+  CommissionRole,
+  CommissionSplitResult,
+} from "@/lib/finance/commissions";
 
 // Helper: Adjust property stock and auto-update status
 async function adjustPropertyStock(
@@ -115,19 +121,16 @@ export async function createDealAction(input: CreateDealInput) {
     ] as const;
     _cleanKeys.forEach((k) => {
       const key = k as keyof typeof insertData;
-      if (
-        (insertData as any)[key] === "" ||
-        (insertData as any)[key] === null
-      ) {
-        delete (insertData as any)[key];
+      if (insertData[key] === "" || insertData[key] === null) {
+        delete insertData[key];
       }
     });
 
     // Remove any keys that are explicitly `undefined` (helpful for partial updates to preserve DB values)
     Object.keys(insertData).forEach((k) => {
       const key = k as keyof typeof insertData;
-      if ((insertData as any)[key] === undefined) {
-        delete (insertData as any)[key];
+      if (insertData[key] === undefined) {
+        delete insertData[key];
       }
     });
 
@@ -376,7 +379,7 @@ export async function deleteDealAction(dealId: string, leadId: string) {
 
     return { success: true };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    return { success: false, message: mapDbError(error) };
   }
 }
 
@@ -415,7 +418,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
     const rules = rulesRes.data;
 
     // 3. Simple or Advanced Split
-    let splits: any[] = [];
+    let splits: CommissionSplitResult[] = [];
 
     if (rules.enableAdvancedSplit) {
       splits = calculateAdvancedSplit(
@@ -428,7 +431,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
           enableTeamPool: rules.enableTeamPoolByDefault ?? false,
         },
         {
-          listingAgentId: (deal.property as any)?.assigned_to || undefined,
+          listingAgentId: deal.property?.assigned_to || undefined,
           closingAgentId: deal.created_by || undefined,
         },
       );
@@ -436,7 +439,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
       // Simple Split: 100% to AGENCY if advanced split is disabled
       splits = [
         {
-          role: "AGENCY",
+          role: "AGENCY" as CommissionRole,
           percentage: 100,
           amount: deal.commission_amount || 0,
           whtAmount: 0,
@@ -447,7 +450,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     // 4. Save to deal_commissions
     // First clear existing
-    await (supabase as any)
+    await supabase
       .from("deal_commissions")
       .delete()
       .eq("deal_id", dealId)
@@ -456,16 +459,16 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
     const insertData = splits.map((s) => ({
       deal_id: dealId,
       agent_id: s.agentId ?? null,
-      role: s.role,
+      role: s.role as Database["public"]["Enums"]["commission_role"],
       percentage: s.percentage,
       amount: s.amount,
       wht_amount: s.whtAmount,
       net_amount: s.netAmount,
       tenant_id: tenantId,
-      status: "PENDING",
+      status: "PENDING" as Database["public"]["Enums"]["commission_status"],
     }));
 
-    const { error: insertErr } = await (supabase as any)
+    const { error: insertErr } = await supabase
       .from("deal_commissions")
       .insert(insertData);
 
@@ -475,6 +478,6 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
     return { success: true };
   } catch (error: any) {
     console.error("Calculate Commissions Error:", error);
-    return { success: false, message: error.message };
+    return { success: false, message: mapDbError(error) };
   }
 }

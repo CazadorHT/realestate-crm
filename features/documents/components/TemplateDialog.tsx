@@ -278,7 +278,7 @@ export function TemplateDialog({
           finalOwnerId as string,
           finalOwnerType as any,
           {
-            language,
+            language: language as "th" | "en" | "cn",
             slip_url: slipUrl,
             bank_name: bankName,
             bank_account_no: bankAccountNo,
@@ -307,7 +307,7 @@ export function TemplateDialog({
           finalOwnerType as any,
           filePath,
           {
-            language,
+            language: language as "th" | "en" | "cn",
             slip_url: slipUrl,
             bank_name: bankName,
             bank_account_no: bankAccountNo,

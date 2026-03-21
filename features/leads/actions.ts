@@ -15,6 +15,7 @@ import { z } from "zod";
 import { logAudit } from "@/lib/audit";
 import { UserRole } from "@/lib/authz";
 import { Database } from "@/lib/database.types";
+import { mapDbError } from "@/lib/db-error";
 
 export const createLeadAction = createSafeAction(
   leadFormSchema,
@@ -39,7 +40,7 @@ export const createLeadAction = createSafeAction(
 
     if (error) {
       console.error("Create lead error:", error);
-      throw new Error(error.message);
+      throw new Error(mapDbError(error));
     }
 
     revalidatePath("/protected/leads");
@@ -70,7 +71,7 @@ export const updateLeadAction = createSafeAction(
 
     if (error) {
       console.error("Update lead error:", error);
-      throw new Error(error.message);
+      throw new Error(mapDbError(error));
     }
 
     revalidatePath("/protected/leads");
@@ -88,7 +89,7 @@ export const deleteLeadAction = createSafeAction(
       .eq("id", id)
       .eq("tenant_id", tenantId);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error));
 
     revalidatePath("/protected/leads");
     return { success: true };
@@ -121,7 +122,7 @@ export const createLeadActivityAction = createSafeAction(
     };
 
     const { error } = await supabase.from("lead_activities").insert(payload);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error));
 
     revalidatePath(`/protected/leads/${leadId}`);
     return { success: true };
@@ -155,7 +156,7 @@ export const updateLeadActivityAction = createSafeAction(
       })
       .eq("id", activityId);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error));
 
     revalidatePath(`/protected/leads/${leadId}`);
     return { success: true };
@@ -184,7 +185,7 @@ export const deleteLeadActivityAction = createSafeAction(
       .delete()
       .eq("id", activityId);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error));
 
     revalidatePath(`/protected/leads/${leadId}`);
     return { success: true };
@@ -206,7 +207,7 @@ export const updateLeadStageAction = createSafeAction(
       .eq("id", id)
       .eq("tenant_id", tenantId);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error));
 
     revalidatePath("/protected/leads");
     return { success: true };
@@ -231,7 +232,7 @@ export const searchPropertiesAction = createSafeAction(
     if (queryTerm) sb = sb.ilike("title", `%${queryTerm}%`);
 
     const { data, error } = await sb;
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error));
 
     interface PropertyWithImages {
       id: string;
@@ -295,7 +296,7 @@ export const updateLeadPDPAAction = createSafeAction(
       .eq("id", id)
       .eq("tenant_id", tenantId);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error));
 
     revalidatePath(`/protected/leads/${id}`);
     return { success: true };
@@ -329,7 +330,7 @@ export const transferLeadAction = createSafeAction(
       })
       .eq("id", id);
 
-    if (updateErr) throw new Error(updateErr.message);
+    if (updateErr) throw new Error(mapDbError(updateErr));
 
     // 3. Log Audit
     await logAudit(

@@ -98,7 +98,7 @@ export async function generateDocumentFromTemplateAction(
   templateId: string,
   ownerId: string,
   ownerType: "LEAD" | "PROPERTY" | "DEAL" | "RENTAL_CONTRACT",
-  additionalData: any = {},
+  additionalData: z.infer<typeof additionalDataSchema> = { language: "th" },
 ) {
   try {
     // Validate UUIDs
@@ -421,7 +421,7 @@ export async function generateDocxDocumentFromTemplateAction(
   ownerId: string,
   ownerType: "LEAD" | "PROPERTY" | "DEAL" | "RENTAL_CONTRACT",
   docxStoragePath: string,
-  additionalData: any = {},
+  additionalData: z.infer<typeof additionalDataSchema> = { language: "th" },
   options?: { templateName?: string },
 ) {
   try {

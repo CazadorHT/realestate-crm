@@ -17,7 +17,7 @@ const nullableNumber = z.preprocess((val) => {
 }, z.number().nullable().optional());
 
 export const leadFormSchema = z.object({
-  full_name: z.string().min(1, "กรุณากรอกชื่อ"),
+  full_name: z.string().trim().min(1, "กรุณากรอกชื่อ"),
   phone: z
     .string()
     .refine(
@@ -29,6 +29,7 @@ export const leadFormSchema = z.object({
   email: z
     .string()
     .email("อีเมลไม่ถูกต้อง")
+    .trim()
     .optional()
     .or(z.literal(""))
     .nullable(),
@@ -48,7 +49,7 @@ export const leadFormSchema = z.object({
   budget_min: nullableNumber.optional(),
   budget_max: nullableNumber.optional(),
 
-  note: z.string().optional().nullable(),
+  note: z.string().trim().optional().nullable(),
 
   // ฟิลด์ใหม่ที่คุณเพิ่ม (ถ้าลงแล้ว)
   lead_type: z

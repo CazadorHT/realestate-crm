@@ -9,6 +9,7 @@ import {
 } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { PROPERTY_IMAGES_BUCKET } from "../logic/images";
+import { mapDbError } from "@/lib/db-error";
 
 /**
  * Delete property and cleanup storage
@@ -139,6 +140,6 @@ export async function deletePropertyAction(formData: FormData) {
     revalidatePath("/protected/properties");
   } catch (error) {
     console.error("deletePropertyAction → error:", error);
-    throw error;
+    throw new Error(mapDbError(error));
   }
 }

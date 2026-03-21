@@ -73,7 +73,7 @@ export async function getOwnerByIdAction(id: string) {
 
   if (error || !owner) {
     console.error("Error fetching owner:", error);
-    throw new Error("ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ");
+    throw new Error(mapDbError(error) || "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ");
   }
 
   assertAuthenticated({

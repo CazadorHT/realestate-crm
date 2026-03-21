@@ -17,12 +17,12 @@ export const FormSchema = z
   .object({
     id: z.string().uuid().optional(),
     title: z.string().trim().min(1, "คุณยังไม่ได้กรอกชื่อทรัพย์"),
-    title_en: z.string().optional(),
-    title_cn: z.string().optional(),
+    title_en: z.string().trim().optional(),
+    title_cn: z.string().trim().optional(),
 
-    description: z.string().optional(),
-    description_en: z.string().optional(),
-    description_cn: z.string().optional(),
+    description: z.string().trim().optional(),
+    description_en: z.string().trim().optional(),
+    description_cn: z.string().trim().optional(),
 
     property_type: z.enum(PROPERTY_TYPE_ENUM, {
       message: "คุณยังไม่ได้เลือกประเภททรัพย์",
@@ -74,8 +74,8 @@ export const FormSchema = z
     currency: z.string().default("THB"),
 
     address_line1: z.string().trim().min(1, "กรุณากรอกที่อยู่ หรือชื่อโครงการ"),
-    address_line1_en: z.string().optional(),
-    address_line1_cn: z.string().optional(),
+    address_line1_en: z.string().trim().optional(),
+    address_line1_cn: z.string().trim().optional(),
     province: z.string().min(1, "กรุณาเลือกจังหวัด"),
     district: z.string().min(1, "กรุณาเลือกจังหวัดเขต / อำเภอ"),
     subdistrict: z.string().min(1, "กรุณาเลือกจังหวัดแขวง / ตำบล"),
@@ -118,10 +118,10 @@ export const FormSchema = z
 
     // Co-Agent Logic
     is_co_agent: z.boolean().default(false),
-    co_agent_name: z.string().optional().nullable(),
-    co_agent_phone: z.string().optional().nullable(),
-    co_agent_contact_channel: z.string().optional().nullable(),
-    co_agent_contact_id: z.string().optional().nullable(),
+    co_agent_name: z.string().trim().optional().nullable(),
+    co_agent_phone: z.string().trim().optional().nullable(),
+    co_agent_contact_channel: z.string().trim().optional().nullable(),
+    co_agent_contact_id: z.string().trim().optional().nullable(),
     co_agent_sale_commission_percent: z.coerce.number().optional().nullable(),
     co_agent_rent_commission_months: z.coerce.number().optional().nullable(),
 

@@ -1,17 +1,23 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { type Database } from "@/lib/database.types";
 import { randomUUID } from "crypto";
 import { requireAuthContext, assertStaff, authzFail } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { getPublicImageUrl } from "../image-utils";
 import { PropertyFormValues } from "../schema";
-import { CreatePropertyResult, DuplicatePropertyResult } from "../types";
+import {
+  CreatePropertyResult,
+  DuplicatePropertyResult,
+  PropertyRow,
+} from "../types";
 import {
   finalizeUploadSession,
   validatePropertyImagePaths,
 } from "../logic/images";
 import { generateKeywords, prepareSEOData } from "../logic/seo";
 import { FormSchema } from "../schema";
+import { mapDbError } from "@/lib/db-error";
 
 /**
  * Create property with images
@@ -88,13 +94,13 @@ export async function createPropertyAction(
         meta_title: seoData.metaTitle,
         meta_description: seoData.metaDescription,
         meta_keywords: mergedKeywords,
-        structured_data: seoData.structuredData as any,
+        structured_data: seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
       })
       .select()
       .single();
 
     if (error) {
-      return { success: false, message: error.message };
+      return { success: false, message: mapDbError(error) };
     }
 
     if (images && images.length > 0) {
@@ -233,7 +239,6 @@ export async function duplicatePropertyAction(
 
     const uniqueSlug = `${seoData.slug}-${randomUUID().slice(0, 8)}`;
 
-    // omit fields ที่ไม่ควรถูก copy ตรง ๆ
     const {
       id: _id,
       tenant_id: _tenant_id,
@@ -246,7 +251,7 @@ export async function duplicatePropertyAction(
       meta_keywords: _meta_keywords,
       structured_data: _structured_data,
       ...rest
-    } = src as any;
+    } = src as PropertyRow;
 
     const { data: inserted, error: insErr } = await supabase
       .from("properties")
@@ -268,7 +273,7 @@ export async function duplicatePropertyAction(
     if (insErr || !inserted) {
       return {
         success: false,
-        message: insErr?.message || "Duplicate ไม่สำเร็จ",
+        message: mapDbError(insErr) ?? "Duplicate ไม่สำเร็จ",
       };
     }
     // Explicitly re-affirm inserted is not null for TS (though the if above should handle it, sometimes block scoping is tricky)

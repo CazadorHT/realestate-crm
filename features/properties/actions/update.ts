@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { type Database } from "@/lib/database.types";
 import {
   requireAuthContext,
   assertAuthenticated,
@@ -26,6 +27,7 @@ import {
   sendStatusUpdateNotification,
   sendPriceDropNotification,
 } from "../logic/notifications";
+import { mapDbError } from "@/lib/db-error";
 
 /**
  * Update property with images
@@ -131,14 +133,14 @@ export async function updatePropertyAction(
         meta_title: seoData.metaTitle,
         meta_description: seoData.metaDescription,
         meta_keywords: mergedKeywords,
-        structured_data: seoData.structuredData as any,
+        structured_data: seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
       .eq("tenant_id", tenantId);
 
     if (updateErr) {
-      return { success: false, message: updateErr.message };
+      return { success: false, message: mapDbError(updateErr) };
     }
 
     // --- Step 3: Images update with rollback ---
@@ -163,7 +165,7 @@ export async function updatePropertyAction(
         // Skip verification for images that already exist in property_images
         // (they were already verified when first uploaded)
         const existingPaths = new Set(
-          (oldImages || []).map((img: any) => img.storage_path),
+          (oldImages || []).map((img) => img.storage_path),
         );
       }
 
@@ -389,7 +391,7 @@ export async function updatePropertyStatusAction(input: {
       .eq("tenant_id", tenantId);
 
     if (error) {
-      return { success: false, message: error.message };
+      return { success: false, message: mapDbError(error) };
     }
 
     await logAudit(
@@ -408,7 +410,10 @@ export async function updatePropertyStatusAction(input: {
       (input.status === "SOLD" || input.status === "RENTED") &&
       existing.status !== input.status
     ) {
-      await sendStatusUpdateNotification(existing, input.status);
+      await sendStatusUpdateNotification(
+        { id: existing.id, title: existing.title },
+        input.status as "SOLD" | "RENTED",
+      );
     }
 
     // protected pages
@@ -421,7 +426,6 @@ export async function updatePropertyStatusAction(input: {
 
     return { success: true };
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "อัปเดตสถานะไม่สำเร็จ";
-    return { success: false, message: msg };
+    return { success: false, message: mapDbError(e) };
   }
 }
