@@ -25,9 +25,9 @@ export async function generateExecutiveAiInsightsAction(year?: number) {
 
     // Fetch context data
     const [stats, monthlyData, pipeline] = await Promise.all([
-      getExecutiveStats(targetYear),
-      getMonthlyRevenueData(targetYear),
-      getPipelineStats(),
+      getExecutiveStats(null, targetYear),
+      getMonthlyRevenueData(null, targetYear),
+      getPipelineStats(null),
     ]);
 
     const prompt = `

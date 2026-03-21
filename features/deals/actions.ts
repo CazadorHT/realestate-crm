@@ -168,7 +168,7 @@ export async function createDealAction(input: CreateDealInput) {
     revalidatePath("/protected/deals");
     return { success: true, data };
   } catch (error: any) {
-    if (error.code === "AUTHZ_ERROR") return authzFail;
+    if (error.code === "AUTHZ_ERROR") return authzFail(error);
     console.error("Create Deal Error:", error);
     return { success: false, message: mapDbError(error) };
   }
@@ -317,7 +317,7 @@ export async function updateDealAction(input: UpdateDealInput) {
     revalidatePath("/protected/deals");
     return { success: true };
   } catch (error: any) {
-    if (error.code === "AUTHZ_ERROR") return authzFail;
+    if (error.code === "AUTHZ_ERROR") return authzFail(error);
     console.error("Update Deal Error:", error);
     return { success: false, message: mapDbError(error) };
   }

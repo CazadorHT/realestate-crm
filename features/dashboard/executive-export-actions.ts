@@ -46,15 +46,15 @@ export async function exportExecutiveExcelAction(
   year?: number,
 ): Promise<ExportActionResponse> {
   try {
-    const { role } = await requireAuthContext();
+    const { role, tenantId } = await requireAuthContext();
     assertAdminOrManager(role);
 
     const targetYear = year || new Date().getFullYear();
 
     const [stats, monthlyData, quarterlyData] = await Promise.all([
-      getExecutiveStats(targetYear),
-      getMonthlyRevenueData(targetYear),
-      getQuarterlyRevenueData(targetYear),
+      getExecutiveStats(tenantId, targetYear),
+      getMonthlyRevenueData(tenantId, targetYear),
+      getQuarterlyRevenueData(tenantId, targetYear),
     ]);
 
     const buffer = await generateExcelBuffer(
@@ -80,15 +80,15 @@ export async function exportExecutivePdfAction(
   aiInsights?: ExecutiveAiInsights | null,
 ): Promise<ExportActionResponse> {
   try {
-    const { role } = await requireAuthContext();
+    const { role, tenantId } = await requireAuthContext();
     assertAdminOrManager(role);
 
     const targetYear = year || new Date().getFullYear();
 
     const [stats, monthlyData, quarterlyData] = await Promise.all([
-      getExecutiveStats(targetYear),
-      getMonthlyRevenueData(targetYear),
-      getQuarterlyRevenueData(targetYear),
+      getExecutiveStats(tenantId, targetYear),
+      getMonthlyRevenueData(tenantId, targetYear),
+      getQuarterlyRevenueData(tenantId, targetYear),
     ]);
 
     const { generateExecutivePdf } = await import("@/lib/pdf-export");
