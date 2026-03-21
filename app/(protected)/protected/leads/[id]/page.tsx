@@ -28,6 +28,8 @@ import { LeadTransferButton } from "@/features/leads/components/LeadTransferButt
 
 type LeadActivity = Database["public"]["Tables"]["lead_activities"]["Row"];
 
+import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
+
 export default async function LeadDetailPage({
   params,
 }: {
@@ -88,6 +90,7 @@ export default async function LeadDetailPage({
 
   return (
     <div className="space-y-6 max-w-full mx-auto">
+      <SuccessAnimation />
       {/* Breadcrumb Navigation */}
       <Breadcrumb
         backHref="/protected/leads"

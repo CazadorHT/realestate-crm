@@ -25,6 +25,9 @@ export function LeadRowActions({ id, fullName }: LeadRowActionsProps) {
         const res = await deleteLeadAction({ id });
         if (!res?.success) throw new Error(res?.error || "Delete failed");
         toast.success("ลบ Lead เรียบร้อยแล้ว");
+        const url = new URL(window.location.href);
+        url.searchParams.set("success", "true");
+        router.push(url.pathname + url.search);
         router.refresh();
       } catch (e: any) {
         toast.error(e.message || "เกิดข้อผิดพลาดในการลบ Lead");

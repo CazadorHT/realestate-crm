@@ -23,7 +23,7 @@ export default async function LeadEditPage({
     "use server";
     const res = await updateLeadAction({ id, ...values });
     if (!res.success) throw new Error(res.error);
-    redirect(`/protected/leads/${id}`);
+    redirect(`/protected/leads/${id}?success=true`);
   }
 
   return (

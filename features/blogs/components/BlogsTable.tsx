@@ -21,6 +21,8 @@ import { bulkDeleteBlogsAction } from "@/features/blogs/bulk-actions";
 import { toast } from "sonner";
 import { DeleteBlogPostButton } from "@/app/(protected)/protected/blogs/_components/DeleteBlogPostButton";
 
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+
 interface BlogPost {
   id: string;
   title: string;
@@ -36,6 +38,9 @@ interface BlogsTableProps {
 }
 
 export function BlogsTable({ posts }: BlogsTableProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const now = new Date();
   const allIds = useMemo(() => posts.map((p) => p.id), [posts]);
   const {
@@ -49,13 +54,20 @@ export function BlogsTable({ posts }: BlogsTableProps) {
     selectedIds,
   } = useTableSelection(allIds);
 
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
+
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
     const result = await bulkDeleteBlogsAction(ids);
     if (result.success) {
       toast.success(result.message);
       clearSelection();
-      window.location.reload();
+      handleSuccessFeedback();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
     }

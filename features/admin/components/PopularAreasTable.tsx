@@ -144,6 +144,13 @@ export function PopularAreasTable({
   const router = useRouter();
   const pathname = usePathname();
 
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
+
   // Reset page to 1 when searching
   useEffect(() => {
     if (searchQuery) {
@@ -216,7 +223,7 @@ export function PopularAreasTable({
         setIsTranslating(false);
         if (res.success) {
           // Re-fetch or reload
-          window.location.reload();
+          handleSuccessFeedback();
           return res.message || "แปลภาษาสำเร็จ";
         }
         throw new Error(res.message);
@@ -252,7 +259,7 @@ export function PopularAreasTable({
         res?.message || (editingItem ? "แก้ไขสำเร็จ" : "เพิ่มสำเร็จ"),
       );
       setIsDialogOpen(false);
-      window.location.reload();
+      handleSuccessFeedback();
     }
   };
 

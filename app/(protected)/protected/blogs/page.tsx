@@ -6,6 +6,7 @@ import { BlogsTable } from "@/features/blogs/components/BlogsTable";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { BlogStats } from "@/features/blogs/components/BlogStats";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
+import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
 export default async function BlogListPage() {
   const posts = await getAllBlogPosts();
@@ -17,6 +18,7 @@ export default async function BlogListPage() {
 
   return (
     <div className="space-y-6">
+      <SuccessAnimation />
       {/* Premium Header */}
       <PageHeader
         title="บทความ (Blogs)"

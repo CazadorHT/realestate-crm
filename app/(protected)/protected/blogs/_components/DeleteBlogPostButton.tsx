@@ -17,8 +17,20 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+
 export function DeleteBlogPostButton({ id }: { id: string }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -26,6 +38,7 @@ export function DeleteBlogPostButton({ id }: { id: string }) {
       const res = await deleteBlogPostAction(id);
       if (res.success) {
         toast.success(res.message);
+        handleSuccessFeedback();
       } else {
         toast.error(res.message);
       }

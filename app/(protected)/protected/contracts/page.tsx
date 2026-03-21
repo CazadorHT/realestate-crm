@@ -1,3 +1,4 @@
+import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { ContractsTable } from "@/features/contracts/components/ContractsTable";
 import { CreateContractDialog } from "@/features/contracts/components/CreateContractDialog";
@@ -46,6 +47,7 @@ export default async function RentalContractsPage({
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <SuccessAnimation />
       {/* Premium Header */}
       <PageHeader
         title="สัญญาเช่า (Contracts)"

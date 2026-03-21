@@ -10,7 +10,7 @@ export default function LeadNewPage() {
     "use server";
     const res = await createLeadAction(values);
     if (!res.success) throw new Error(res.error);
-    redirect(`/protected/leads/${res.data.leadId}`);
+    redirect(`/protected/leads/${res.data.leadId}?success=true`);
   }
 
   return (

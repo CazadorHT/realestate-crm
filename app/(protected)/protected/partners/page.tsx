@@ -16,14 +16,16 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PartnerForm } from "@/features/admin/components/PartnerForm";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
 function PartnersContent() {
   const [partners, setPartners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
 
+  const router = useRouter();
   const searchParams = useSearchParams();
   const currentPage = parseInt(searchParams.get("page") || "1");
   const pageSize = 10;
@@ -46,6 +48,11 @@ function PartnersContent() {
   const handleSuccess = () => {
     setOpen(false);
     fetchPartners();
+    
+    // Trigger animation
+    const params = new URLSearchParams(window.location.search);
+    params.set("success", "true");
+    router.push(`?${params.toString()}`);
   };
 
   const totalCount = partners.length;
@@ -56,6 +63,7 @@ function PartnersContent() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      <SuccessAnimation />
       <PageHeader
         title="พาร์ทเนอร์ (Partners)"
         subtitle="จัดการพาร์ทเนอร์และบริษัทที่ร่วมงาน"

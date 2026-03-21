@@ -89,7 +89,7 @@ export function PartnerForm({
       if (onSuccess) {
         onSuccess();
       } else {
-        router.push("/protected/partners");
+        router.push("/protected/partners?success=true");
         router.refresh();
       }
     } catch (error: any) {

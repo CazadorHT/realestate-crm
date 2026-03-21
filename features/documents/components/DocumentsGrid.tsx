@@ -55,7 +55,13 @@ function formatSize(bytes: number) {
   return `${bytes} B`;
 }
 
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+
 export function DocumentsGrid({ documents, tenantId }: DocumentsGridProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const allIds = useMemo(() => documents?.map((d) => d.id) || [], [documents]);
   const {
     toggleSelect,
@@ -98,11 +104,18 @@ export function DocumentsGrid({ documents, tenantId }: DocumentsGridProps) {
     [filteredDocuments],
   );
 
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
+
   const handleDelete = async (id: string, storagePath: string) => {
     const result = await bulkDeleteDocumentsAction([id]);
     if (result.success) {
       toast.success("ลบเอกสารสำเร็จ");
-      window.location.reload();
+      handleSuccessFeedback();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
     }
@@ -114,7 +127,7 @@ export function DocumentsGrid({ documents, tenantId }: DocumentsGridProps) {
     if (result.success) {
       toast.success(result.message);
       clearSelection();
-      window.location.reload();
+      handleSuccessFeedback();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
     }

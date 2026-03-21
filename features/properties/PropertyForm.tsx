@@ -550,7 +550,7 @@ export function PropertyForm({
           onOpenChange={(open) => {
             if (!open) {
               // If closed without choice, default to list
-              router.push("/protected/properties");
+              router.push("/protected/properties?success=true");
             }
           }}
         >
@@ -573,7 +573,7 @@ export function PropertyForm({
                 onClick={() => {
                   if (successData?.slug) {
                     window.open(`/properties/${successData.slug}`, "_blank");
-                    router.push("/protected/properties"); // Go back to list in current tab logic
+                    router.push("/protected/properties?success=true"); // Go back to list in current tab logic
                   } else {
                     toast.error("ไม่พบข้อมูล Slug สำหรับเปิดหน้าเว็บ");
                   }
@@ -590,7 +590,7 @@ export function PropertyForm({
 
               <Button
                 className="w-full justify-start gap-3 h-14 text-base font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-xl"
-                onClick={() => router.push("/protected/properties")}
+                onClick={() => router.push("/protected/properties?success=true")}
               >
                 <List className="w-5 h-5" />
                 <div className="flex flex-col items-start">

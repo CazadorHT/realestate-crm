@@ -34,6 +34,8 @@ import { Loader2 } from "lucide-react";
 import { EditFAQDialog } from "./EditFAQDialog";
 import { cn } from "@/lib/utils";
 
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+
 interface FAQ {
   id: string;
   question: string;
@@ -48,10 +50,14 @@ interface FAQsTableProps {
 }
 
 export function FAQsTable({ faqs }: FAQsTableProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [deleteConfirmFaq, setDeleteConfirmFaq] = useState<FAQ | null>(null);
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const allIds = useMemo(() => faqs?.map((f) => f.id) || [], [faqs]);
+  
   const {
     toggleSelect,
     toggleSelectAll,
@@ -63,13 +69,20 @@ export function FAQsTable({ faqs }: FAQsTableProps) {
     selectedIds,
   } = useTableSelection(allIds);
 
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
+
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
     const result = await bulkDeleteFaqsAction(ids);
     if (result.success) {
       toast.success(result.message);
       clearSelection();
-      window.location.reload();
+      handleSuccessFeedback();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
     }
@@ -81,7 +94,7 @@ export function FAQsTable({ faqs }: FAQsTableProps) {
       const res = await deleteFaq(faq.id);
       if (res.success) {
         toast.success(res.message);
-        window.location.reload();
+        handleSuccessFeedback();
       } else {
         toast.error(res.message || "เกิดข้อผิดพลาดในการลบคำถาม");
       }
@@ -372,8 +385,7 @@ export function FAQsTable({ faqs }: FAQsTableProps) {
         open={!!editingFaq}
         onOpenChange={(open) => !open && setEditingFaq(null)}
         onSuccess={() => {
-          // You might already have a refresh mechanism, but reload is safe here
-          window.location.reload();
+          handleSuccessFeedback();
         }}
       />
     </div>

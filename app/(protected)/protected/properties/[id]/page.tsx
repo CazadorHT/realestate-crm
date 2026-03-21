@@ -222,7 +222,7 @@ export default async function PropertyDetailsPage({
             variant="outline"
             size="sm"
             asChild
-            className="flex-1 lg:flex-none rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+            className="flex-1 lg:flex-none rounded-full bg-white text-slate-600 hover:bg-blue-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
           >
             <Link
               href={`/properties/${property.slug || property.id}`}
@@ -237,7 +237,7 @@ export default async function PropertyDetailsPage({
             variant="outline"
             size="sm"
             asChild
-            className="flex-1 lg:flex-none rounded-full bg-white text-slate-600 hover:bg-sky-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+            className="flex-1 lg:flex-none rounded-full bg-white text-slate-600 hover:bg-blue-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
           >
             <Link href={`/protected/properties/${property.id}/edit`}>
               <Edit className="h-4 w-4 mr-2" />

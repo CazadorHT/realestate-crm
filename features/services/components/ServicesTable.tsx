@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { deleteService, type ServiceRow } from "@/features/services/actions";
 import { toast } from "sonner";
 import {
@@ -40,6 +41,16 @@ interface ServicesTableProps {
 export function ServicesTable({ services }: ServicesTableProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingService, setEditingService] = useState<ServiceRow | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
 
   const handleDelete = async () => {
     if (!deletingId) return;
@@ -47,7 +58,7 @@ export function ServicesTable({ services }: ServicesTableProps) {
       const res = await deleteService(deletingId);
       if (res.success) {
         toast.success("Deleted successfully");
-        window.location.reload(); // Simple reload to refresh data
+        handleSuccessFeedback();
       } else {
         toast.error("Failed to delete: " + res.message);
       }
@@ -60,7 +71,7 @@ export function ServicesTable({ services }: ServicesTableProps) {
 
   const handleEditSuccess = () => {
     setEditingService(null);
-    window.location.reload();
+    handleSuccessFeedback();
   };
 
   return (

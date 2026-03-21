@@ -209,7 +209,12 @@ export function DealFormDialog({
         if (!isEditing) form.reset();
 
         if (onSuccess) onSuccess();
-        if (refreshOnSuccess) router.refresh();
+        if (refreshOnSuccess) {
+          const url = new URL(window.location.href);
+          url.searchParams.set("success", "true");
+          router.push(url.pathname + url.search);
+          router.refresh();
+        }
       } else {
         toast.error(result.message || "เกิดข้อผิดพลาด");
         setIsConfirmOpen(false);

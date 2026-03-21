@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { format, differenceInMonths } from "date-fns";
 import { th } from "date-fns/locale";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   BadgeCent,
   Calendar,
@@ -49,6 +50,16 @@ export function DealFinancials({
 }: DealFinancialsProps) {
   const [commissions, setCommissions] = useState(initialCommissions);
   const [calculating, setCalculating] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
 
   const handleCalculate = async () => {
     if ((deal.commission_amount || 0) <= 0) {
@@ -60,10 +71,7 @@ export function DealFinancials({
       const res = await calculateAndSaveCommissionsAction(deal.id);
       if (res.success) {
         toast.success("คำนวณสัดส่วนคอมมิชชั่นเรียบร้อยแล้ว");
-        // In a real app, we'd probably re-fetch or use the returned data
-        // For now, let's suggest a refresh or assume the user will see it on next load
-        // Actually, since this is a client component, we should ideally fetch again
-        window.location.reload();
+        handleSuccessFeedback();
       } else {
         toast.error(res.message || "เกิดข้อผิดพลาดในการคำนวณ");
       }

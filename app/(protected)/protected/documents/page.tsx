@@ -9,6 +9,7 @@ import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 import { TemplateDialog } from "@/features/documents/components/TemplateDialog";
 
 import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
+import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
 export default async function DocumentsPage() {
   const { role } = await requireAuthContext();
@@ -37,6 +38,7 @@ export default async function DocumentsPage() {
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
+      <SuccessAnimation />
       {/* Premium Header */}
       <PageHeader
         title="เอกสาร (Documents)"

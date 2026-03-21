@@ -26,6 +26,8 @@ type PageProps = {
   }>;
 };
 
+import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
+
 export default async function OwnersPage({ searchParams }: PageProps) {
   const sp = await searchParams;
   const page = Number(sp.page) || 1;
@@ -75,6 +77,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <SuccessAnimation />
       {/* Premium Header */}
       <PageHeader
         title="เจ้าของทรัพย์"

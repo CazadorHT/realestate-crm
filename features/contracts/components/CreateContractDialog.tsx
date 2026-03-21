@@ -712,6 +712,9 @@ export function CreateContractDialog() {
                 onClick={() => {
                   handleClose();
                   setShowSuccessDialog(false);
+                  const url = new URL(window.location.href);
+                  url.searchParams.set("success", "true");
+                  router.push(url.pathname + url.search);
                 }}
               >
                 อยู่ในหน้านี้ต่อ

@@ -56,6 +56,9 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
         setNewCategoryNameEn("");
         setNewCategoryNameCn("");
         toast.success("สร้างหมวดหมู่สำเร็จ");
+        const url = new URL(window.location.href);
+        url.searchParams.set("success", "true");
+        router.push(url.pathname + url.search);
         router.refresh();
       } else {
         toast.error(result.error || "สร้างหมวดหมู่ไม่สำเร็จ");
@@ -71,6 +74,9 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
       if (result.success) {
         setCategories((prev) => prev.filter((c) => c.id !== id));
         toast.success("ลบหมวดหมู่สำเร็จ");
+        const url = new URL(window.location.href);
+        url.searchParams.set("success", "true");
+        router.push(url.pathname + url.search);
         router.refresh();
       } else {
         toast.error(result.error || "ลบหมวดหมู่ไม่สำเร็จ");

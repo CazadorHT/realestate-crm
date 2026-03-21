@@ -54,7 +54,7 @@ import Link from "next/link";
 import { PropertyPrice } from "./PropertyPrice";
 import { PropertiesEmptyState } from "./PropertiesEmptyState";
 import { PropertyStatusSelect } from "./PropertyStatusDropdown";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
@@ -282,6 +282,9 @@ export function PropertiesTable({
   totalCount,
   filters = {},
 }: PropertiesTableProps): React.ReactElement {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const allIds = useMemo(() => data.map((p) => p.id), [data]);
   const {
     selectedIds,
@@ -408,12 +411,20 @@ export function PropertiesTable({
     return <PropertiesEmptyState />;
   }
 
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
+
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
     const result = await bulkDeletePropertiesAction(ids);
     if (result.success) {
       toast.success(result.message);
       clearSelection();
+      handleSuccessFeedback();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
     }
@@ -425,6 +436,7 @@ export function PropertiesTable({
     if (result.success) {
       toast.success(result.message);
       clearSelection();
+      handleSuccessFeedback();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
     }

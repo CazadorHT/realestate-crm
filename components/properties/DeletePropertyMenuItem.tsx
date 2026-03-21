@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { softDeleteProperty } from "@/features/properties/actions/property-trash";
@@ -24,8 +24,17 @@ import {
 
 export function DeletePropertyMenuItem({ id }: { id: string }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
 
   const onConfirm = () =>
     startTransition(async () => {
@@ -34,7 +43,7 @@ export function DeletePropertyMenuItem({ id }: { id: string }) {
         if (res.success) {
           toast.success("ย้ายทรัพย์ลงถังขยะเรียบร้อยแล้ว");
           setOpen(false);
-          router.refresh();
+          handleSuccessFeedback();
         } else {
           toast.error(res.error || "เกิดข้อผิดพลาดในการลบ");
         }

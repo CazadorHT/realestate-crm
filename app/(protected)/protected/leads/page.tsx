@@ -19,6 +19,7 @@ import { SectionTitle } from "@/components/dashboard/SectionTitle";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { requireAuthContext } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
 export default async function LeadsPage({
   searchParams,
@@ -85,6 +86,7 @@ export default async function LeadsPage({
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <SuccessAnimation />
       {/* Premium Header */}
       <PageHeader
         title="ลูกค้า (Leads)"

@@ -11,6 +11,7 @@ import { PropertiesEmptyState } from "./_components/PropertiesEmptyState";
 import { PropertyFilters } from "@/components/properties/PropertyFilters";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { requireAuthContext } from "@/lib/authz";
+import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
 export const metadata: Metadata = {
   title: "จัดการทรัพย์",
@@ -98,6 +99,7 @@ export default async function PropertiesPage({
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
+      <SuccessAnimation />
       <PropertiesHeader count={count} />
 
       <PropertiesDashboard stats={stats} />

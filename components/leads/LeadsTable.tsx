@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { differenceInHours } from "date-fns";
 import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -87,12 +88,24 @@ export function LeadsTable({
     }
   };
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
+
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
     const result = await bulkDeleteLeadsAction(ids);
     if (result.success) {
       toast.success(result.message);
       clearSelection();
+      handleSuccessFeedback();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,6 +22,17 @@ export function CreatePopularAreaButton() {
   const [itemNameCn, setItemNameCn] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
+
   const handleSave = async () => {
     if (!itemName.trim()) return toast.error("ชื่อทำเลห้ามว่าง");
 
@@ -36,7 +48,7 @@ export function CreatePopularAreaButton() {
       setItemName("");
       setItemNameEn("");
       setItemNameCn("");
-      window.location.reload();
+      handleSuccessFeedback();
     }
   };
 

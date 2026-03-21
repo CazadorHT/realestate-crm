@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -80,7 +81,17 @@ export function ContractsTable({
     selectedIds,
   } = useTableSelection(allIds);
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
 
   const handleSelectAllGlobal = async () => {
     setIsGlobalLoading(true);
@@ -105,7 +116,7 @@ export function ContractsTable({
     if (result.success) {
       toast.success(result.message);
       clearSelection();
-      window.location.reload();
+      handleSuccessFeedback();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
     }

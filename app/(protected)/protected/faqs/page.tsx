@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { FAQStats } from "@/features/admin/components/FAQStats";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 import { CreateFAQDialog } from "@/features/admin/components/CreateFAQDialog";
+import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
 export default async function FAQsPage() {
   const faqs = await getFaqs();
@@ -13,6 +14,7 @@ export default async function FAQsPage() {
 
   return (
     <div className=" space-y-6 animate-fade-in">
+      <SuccessAnimation />
       {/* Premium Header */}
       <PageHeader
         title="คำถามที่พบบ่อย (FAQs)"

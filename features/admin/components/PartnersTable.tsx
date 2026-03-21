@@ -40,6 +40,8 @@ import { Loader2 } from "lucide-react";
 import { PartnerForm } from "./PartnerForm";
 import { cn } from "@/lib/utils";
 
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+
 interface Partner {
   id: string;
   name: string;
@@ -54,11 +56,15 @@ interface PartnersTableProps {
 }
 
 export function PartnersTable({ partners }: PartnersTableProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
   const [deleteConfirmPartner, setDeleteConfirmPartner] =
     useState<Partner | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const allIds = useMemo(() => partners?.map((p) => p.id) || [], [partners]);
+  
   const {
     toggleSelect,
     toggleSelectAll,
@@ -70,13 +76,20 @@ export function PartnersTable({ partners }: PartnersTableProps) {
     selectedIds,
   } = useTableSelection(allIds);
 
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
+
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
     const result = await bulkDeletePartnersAction(ids);
     if (result.success) {
       toast.success(result.message);
       clearSelection();
-      window.location.reload();
+      handleSuccessFeedback();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
     }
@@ -88,7 +101,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
       const res = await deletePartner(partner.id);
       if (res.success) {
         toast.success(res.message);
-        window.location.reload();
+        handleSuccessFeedback();
       } else {
         toast.error(res.message || "เกิดข้อผิดพลาดในการลบ");
       }
@@ -102,7 +115,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
 
   const handleEditSuccess = () => {
     setEditingPartner(null);
-    window.location.reload();
+    handleSuccessFeedback();
   };
 
   return (

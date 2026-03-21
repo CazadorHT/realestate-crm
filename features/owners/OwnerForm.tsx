@@ -127,7 +127,7 @@ export function OwnerForm(props: Props) {
         if (props.onSuccess) {
           props.onSuccess();
         } else {
-          router.push("/protected/owners");
+          router.push("/protected/owners?success=true");
         }
       } catch (e: unknown) {
         const message = e instanceof Error ? e.message : "เกิดข้อผิดพลาด";

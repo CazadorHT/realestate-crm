@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import Link from "next/link";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import {
@@ -49,12 +50,15 @@ export default async function DealDetailPage({ params }: PageProps) {
     CLOSED_LOSS: "bg-linear-to-r from-red-500 via-rose-600 to-pink-600",
     CANCELLED: "bg-linear-to-r from-slate-500 via-slate-600 to-gray-600",
   };
+
   const headerGradient =
     statusGradientMap[deal.status] || statusGradientMap.NEGOTIATING;
 
   return (
     <div className="flex-1 space-y-6 mx-auto">
+      <SuccessAnimation />
       {/* Breadcrumb */}
+
       <Breadcrumb
         backHref={`/protected/leads/${deal.lead_id}`}
         items={[

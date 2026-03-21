@@ -121,7 +121,7 @@ export function FAQForm({
       if (onSuccess) {
         onSuccess();
       } else {
-        router.push("/protected/faqs");
+        router.push("/protected/faqs?success=true");
       }
       router.refresh();
     } catch (error: any) {
