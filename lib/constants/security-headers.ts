@@ -11,6 +11,8 @@ export const CSP_DIRECTIVES = {
     "https://www.googletagmanager.com",
     "https://www.google-analytics.com",
     "https://connect.facebook.net",
+    "https://maps.googleapis.com",
+    "https://maps.gstatic.com",
   ],
   "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
   "img-src": [
@@ -23,8 +25,10 @@ export const CSP_DIRECTIVES = {
     "https://www.google-analytics.com",
     "https://www.googletagmanager.com",
     "https://www.facebook.com",
+    "https://*.google.com",
+    "https://*.gstatic.com",
   ],
-  "font-src": ["'self'", "https://fonts.gstatic.com"],
+  "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
   "connect-src": [
     "'self'",
     "https://*.supabase.co",
@@ -33,11 +37,22 @@ export const CSP_DIRECTIVES = {
     "https://stats.g.doubleclick.net",
     "https://api.dicebear.com",
     "https://www.facebook.com",
+    "https://maps.googleapis.com",
+    "wss://*.supabase.co",
   ],
-  "frame-src": ["'self'", "https://www.google.com"],
+  "frame-src": [
+    "'self'",
+    "https://www.google.com",
+    "https://maps.google.com",
+    "https://www.facebook.com",
+  ],
   "media-src": ["'self'"],
   "worker-src": ["'self'", "blob:"],
   "object-src": ["'none'"],
+  "base-uri": ["'self'"],
+  "form-action": ["'self'", "https://www.facebook.com"],
+  "frame-ancestors": ["'none'"],
+  "upgrade-insecure-requests": [],
 } as const;
 
 /**
