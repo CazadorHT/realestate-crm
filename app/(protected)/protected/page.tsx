@@ -116,7 +116,7 @@ export default async function DashboardPage() {
       riskPromise,
       upcomingPromise,
     ]);
-  const setupProgress = await getSetupProgress();
+  const setupProgress = await getSetupProgress(tenantId);
 
   return (
     <div className="flex flex-col gap-6 p-2 pb-20">

@@ -1277,7 +1277,7 @@ export async function getAnalyticsStats(
   }
 }
 
-export async function getSetupProgress(): Promise<{
+export async function getSetupProgress(tenantId?: string | null): Promise<{
   hasBranchProfile: boolean;
   hasStaff: boolean;
   hasProperty: boolean;
@@ -1288,18 +1288,35 @@ export async function getSetupProgress(): Promise<{
 }> {
   try {
     const supabase = await createClient();
+
+    const applyTenantFilter = (query: any) => {
+      if (tenantId && tenantId !== "ALL") {
+        return query.eq("tenant_id", tenantId);
+      }
+      return query;
+    };
+
   const { getSiteSettings } = await import("@/features/site-settings/actions");
 
   const [staffRes, propRes, tenantRes, settings, profilesWithLine] =
     await Promise.all([
-      supabase
-        .from("tenant_members")
-        .select("*", { count: "exact", head: true }),
-      supabase
-        .from("properties")
-        .select("*", { count: "exact", head: true })
-        .is("deleted_at", null),
-      supabase.from("tenants").select("logo_url", { count: "exact" }),
+      applyTenantFilter(
+        supabase
+          .from("tenant_members")
+          .select("*", { count: "exact", head: true }),
+      ),
+      applyTenantFilter(
+        supabase
+          .from("properties")
+          .select("*", { count: "exact", head: true })
+          .is("deleted_at", null),
+      ),
+      tenantId && tenantId !== "ALL"
+        ? supabase
+            .from("tenants")
+            .select("logo_url", { count: "exact" })
+            .eq("id", tenantId)
+        : supabase.from("tenants").select("logo_url", { count: "exact" }),
       getSiteSettings(),
       supabase
         .from("profiles")
