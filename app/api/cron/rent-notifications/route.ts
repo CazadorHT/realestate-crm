@@ -23,9 +23,8 @@ export async function GET(req: NextRequest) {
     // Edge case: if currentDay is 28, 29, 30, we might want to include rules for 31 etc if it's end of month?
     // For MVP: Strict match
 
-    // Using 'any' cast because types are not yet generated
     // 2. Fetch Rules that match today's day
-    const { data: rules, error } = await (supabase as any)
+    const { data: rules, error } = await supabase
       .from("rent_notification_rules")
       .select(
         `
@@ -53,9 +52,7 @@ export async function GET(req: NextRequest) {
     for (const rule of rules) {
       try {
         // ... (Contract check logic remains the same) ...
-        const { data: activeContract, error: contractError } = await (
-          supabase as any
-        )
+        const { data: activeContract, error: contractError } = await supabase
           .from("rental_contracts")
           .select("*, deal:deals!inner(property_id)")
           .eq("deal.property_id", rule.property_id)
@@ -344,7 +341,7 @@ export async function GET(req: NextRequest) {
         const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
         if (!token) throw new Error("Missing LINE Token");
 
-        await fetch("https://api.line.me/v2/bot/message/push", {
+        const response = await fetch("https://api.line.me/v2/bot/message/push", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -356,8 +353,22 @@ export async function GET(req: NextRequest) {
           }),
         });
 
+        if (!response.ok) {
+          const errorBody = await response.text();
+          throw new Error(`LINE API Error: ${response.status} - ${errorBody}`);
+        }
+
+        // Log Success to History
+        await supabase.from("rent_notification_history").insert({
+          rule_id: rule.id,
+          tenant_id: rule.tenant_id,
+          property_id: rule.property_id,
+          line_group_id: rule.line_group_id,
+          status: "SUCCESS",
+        });
+
         // Update last_sent_at
-        await (supabase as any)
+        await supabase
           .from("rent_notification_rules")
           .update({ last_sent_at: new Date().toISOString() })
           .eq("id", rule.id);
@@ -369,6 +380,21 @@ export async function GET(req: NextRequest) {
         });
       } catch (err: any) {
         console.error(`Error processing rule ${rule.id}:`, err);
+
+        // Log Error to History
+        try {
+          await supabase.from("rent_notification_history").insert({
+            rule_id: rule.id,
+            tenant_id: rule.tenant_id,
+            property_id: rule.property_id,
+            line_group_id: rule.line_group_id,
+            status: "ERROR",
+            error_message: err.message,
+          });
+        } catch (logErr) {
+          console.error("Failed to log error to history:", logErr);
+        }
+
         results.push({ ruleId: rule.id, status: "error", error: err.message });
       }
     }

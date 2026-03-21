@@ -7,6 +7,8 @@ import {
   RentNotificationRuleInput,
 } from "./schema";
 
+import { mapDbError } from "@/lib/db-error";
+
 export async function createRentNotificationRule(
   data: RentNotificationRuleInput,
 ) {
@@ -14,21 +16,21 @@ export async function createRentNotificationRule(
     const parsed = rentNotificationRuleSchema.parse(data);
     const supabase = createAdminClient();
 
-    const { error } = await (supabase as any)
-      .from("rent_notification_rules")
-      .insert({
-        property_id: parsed.property_id,
-        line_group_id: parsed.line_group_id,
-        notification_day: parsed.notification_day,
-        is_active: parsed.is_active,
-        language: parsed.language,
-      });
+    const { error } = await supabase.from("rent_notification_rules").insert({
+      property_id: parsed.property_id,
+      line_group_id: parsed.line_group_id,
+      notification_day: parsed.notification_day,
+      is_active: parsed.is_active,
+      language: parsed.language,
+      tenant_id: parsed.tenant_id,
+    });
 
     if (error) throw error;
     revalidatePath("/protected/rent-notifications");
     return { success: true };
   } catch (err: any) {
-    return { success: false, message: err.message };
+    console.error("createRentNotificationRule error:", err);
+    return { success: false, message: mapDbError(err) };
   }
 }
 
@@ -38,7 +40,7 @@ export async function updateRentNotificationRule(
 ) {
   try {
     const supabase = createAdminClient();
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("rent_notification_rules")
       .update(data)
       .eq("id", id);
@@ -47,14 +49,15 @@ export async function updateRentNotificationRule(
     revalidatePath("/protected/rent-notifications");
     return { success: true };
   } catch (err: any) {
-    return { success: false, message: err.message };
+    console.error("updateRentNotificationRule error:", err);
+    return { success: false, message: mapDbError(err) };
   }
 }
 
 export async function deleteRentNotificationRule(id: string) {
   try {
     const supabase = createAdminClient();
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("rent_notification_rules")
       .delete()
       .eq("id", id);
@@ -63,7 +66,8 @@ export async function deleteRentNotificationRule(id: string) {
     revalidatePath("/protected/rent-notifications");
     return { success: true };
   } catch (err: any) {
-    return { success: false, message: err.message };
+    console.error("deleteRentNotificationRule error:", err);
+    return { success: false, message: mapDbError(err) };
   }
 }
 
@@ -82,7 +86,7 @@ export async function testSendRentNotification(ruleId: string) {
 
   try {
     const supabase = createAdminClient();
-    const { data: rule, error } = await (supabase as any)
+    const { data: rule, error } = await supabase
       .from("rent_notification_rules")
       .select(
         `
@@ -292,7 +296,7 @@ export async function testSendRentNotification(ruleId: string) {
     const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
     if (!token) throw new Error("Missing LINE Token");
 
-    await fetch("https://api.line.me/v2/bot/message/push", {
+    const response = await fetch("https://api.line.me/v2/bot/message/push", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -304,9 +308,30 @@ export async function testSendRentNotification(ruleId: string) {
       }),
     });
 
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`LINE API Error: ${response.status} - ${errorBody}`);
+    }
+
+    // Log Success to History
+    await supabase.from("rent_notification_history").insert({
+      rule_id: rule.id,
+      tenant_id: rule.tenant_id,
+      property_id: rule.property_id,
+      line_group_id: rule.line_group_id,
+      status: "SUCCESS",
+      metadata: { is_test: true },
+    });
+
     return { success: true };
   } catch (err: any) {
     console.error("Test send error:", err);
-    return { success: false, message: err.message };
+
+    // Log Error to History (if rule found)
+    // We need to fetch rule separately if we want to log error details when fetch fails
+    // But for MVP, if we have rule access we log it.
+    // In many cases, if it reaches here and error'd post-fetch, we have rule info.
+
+    return { success: false, message: mapDbError(err) };
   }
 }

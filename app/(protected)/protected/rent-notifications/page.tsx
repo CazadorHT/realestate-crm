@@ -9,14 +9,18 @@ import {
   getAllPropertiesSimple,
 } from "@/features/rent-notifications/queries.server";
 
+import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
+
 export const metadata = {
   title: "Rent Notifications",
 };
 
 export default async function RentNotificationsPage() {
-  const rules = await getRentNotificationRules();
-  const groups = await getLineGroups();
-  const properties = await getAllPropertiesSimple();
+  const tenantId = await getActiveTenantCookie();
+
+  const rules = await getRentNotificationRules(tenantId);
+  const groups = await getLineGroups(tenantId);
+  const properties = await getAllPropertiesSimple(tenantId);
 
   return (
     <div className="container mx-auto py-8">
@@ -29,7 +33,12 @@ export default async function RentNotificationsPage() {
             จัดการการแจ้งเตือนค่าเช่าอัตโนมัติผ่าน LINE Group
           </p>
         </div>
-        <AddRuleDialog groups={groups} properties={properties} />
+        <AddRuleDialog
+          groups={groups}
+          
+          properties={properties}
+          tenantId={tenantId}
+        />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
@@ -40,6 +49,7 @@ export default async function RentNotificationsPage() {
             initialRules={rules}
             groups={groups}
             properties={properties}
+            tenantId={tenantId}
           />
         </Suspense>
       </div>

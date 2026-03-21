@@ -867,6 +867,7 @@ export type Database = {
           is_active: boolean | null
           joined_at: string | null
           picture_url: string | null
+          tenant_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -875,6 +876,7 @@ export type Database = {
           is_active?: boolean | null
           joined_at?: string | null
           picture_url?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -883,9 +885,25 @@ export type Database = {
           is_active?: boolean | null
           joined_at?: string | null
           picture_url?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "line_groups_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "line_groups_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       line_templates: {
         Row: {
@@ -1870,6 +1888,71 @@ export type Database = {
           },
         ]
       }
+      rent_notification_history: {
+        Row: {
+          error_message: string | null
+          id: string
+          line_group_id: string | null
+          metadata: Json | null
+          property_id: string | null
+          rule_id: string | null
+          sent_at: string
+          status: string
+          tenant_id: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          line_group_id?: string | null
+          metadata?: Json | null
+          property_id?: string | null
+          rule_id?: string | null
+          sent_at?: string
+          status: string
+          tenant_id?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          line_group_id?: string | null
+          metadata?: Json | null
+          property_id?: string | null
+          rule_id?: string | null
+          sent_at?: string
+          status?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rent_notification_history_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rent_notification_history_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "rent_notification_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rent_notification_history_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rent_notification_history_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rent_notification_rules: {
         Row: {
           created_at: string | null
@@ -1880,6 +1963,7 @@ export type Database = {
           line_group_id: string
           notification_day: number
           property_id: string
+          tenant_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1891,6 +1975,7 @@ export type Database = {
           line_group_id: string
           notification_day: number
           property_id: string
+          tenant_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1902,6 +1987,7 @@ export type Database = {
           line_group_id?: string
           notification_day?: number
           property_id?: string
+          tenant_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -1917,6 +2003,20 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rent_notification_rules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rent_notification_rules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]

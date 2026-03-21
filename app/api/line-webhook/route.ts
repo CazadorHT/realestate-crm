@@ -178,8 +178,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ status: "ok" });
   } catch (error: any) {
-    console.error("Webhook error:", error);
-    return NextResponse.json({ error: error.message }, { status: 200 });
+    console.error("[BOT] Webhook Global Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 200 }); // Always 200 for LINE
   }
 }
 
@@ -212,13 +212,14 @@ async function handleJoinEvent(event: LineEvent) {
     console.error("Error fetching group summary:", e);
   }
 
-  const supabase = createAdminClient();
+  const supabase = await createAdminClient();
   const { error } = await supabase.from("line_groups").upsert({
     group_id: groupId,
     group_name: groupName,
     picture_url: pictureUrl,
     is_active: true,
     updated_at: new Date().toISOString(),
+    // tenant_id: null, // Initially null, can be assigned later
   });
 
   if (error) {
@@ -237,7 +238,7 @@ async function handleLeaveEvent(event: LineEvent) {
   const groupId = event.source.groupId || event.source.roomId;
   if (!groupId) return;
 
-  const supabase = createAdminClient();
+  const supabase = await createAdminClient();
   await supabase
     .from("line_groups")
     .update({ is_active: false })
@@ -448,7 +449,7 @@ async function handleIncomingChannelMessage(
     }
     const newName = text.replace("/setname ", "").trim();
     if (newName) {
-      const supabase = createAdminClient();
+      const supabase = await createAdminClient();
       await supabase
         .from("line_groups")
         .update({ group_name: newName })
@@ -499,11 +500,13 @@ async function handleIncomingChannelMessage(
   const supabase = createAdminClient();
 
   // Find or Create Lead
-  let { data: lead } = await supabase
+  const { data: lead } = await supabase
     .from("leads")
     .select("id, note, tenant_id")
     .eq("line_id", userId)
-    .single();
+    .maybeSingle();
+
+  let activeLeadId = lead?.id;
 
   if (!lead) {
     const profile = await getLineProfile(userId);
@@ -515,8 +518,7 @@ async function handleIncomingChannelMessage(
         source: "LINE",
         stage: "NEW",
         note: `Auto-captured from LINE. Profile: ${JSON.stringify(profile)}`,
-        tenant_id: (lead as any)?.tenant_id, // Keep same tenant if exists
-      } as any)
+      })
       .select("id")
       .single();
 
@@ -524,11 +526,11 @@ async function handleIncomingChannelMessage(
       console.error("Error creating auto-lead:", createError);
       return;
     }
-    lead = newLead as any;
+    activeLeadId = newLead.id;
   }
 
   // Log Message
-  if (lead) {
+  if (activeLeadId) {
     let profile = null;
     try {
       profile = await getLineProfile(userId);
@@ -536,13 +538,13 @@ async function handleIncomingChannelMessage(
       if (profile?.pictureUrl) {
         await supabase
           .from("leads")
-          .update({ note: `Photo: ${profile.pictureUrl}\n\n${lead.note || ""}` })
-          .eq("id", lead.id);
+          .update({ note: `Photo: ${profile.pictureUrl}\n\n${lead?.note || ""}` })
+          .eq("id", activeLeadId);
       }
     } catch (e) {}
 
     await saveOmniMessage({
-      lead_id: lead.id,
+      lead_id: activeLeadId,
       source: "LINE",
       external_message_id: event.message?.id,
       content: text,

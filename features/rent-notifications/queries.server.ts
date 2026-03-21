@@ -1,25 +1,30 @@
-export async function getRentNotificationRules() {
+export async function getRentNotificationRules(tenantId?: string | null) {
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("rent_notification_rules")
-    .select(
-      `
+  let query = supabase.from("rent_notification_rules").select(
+    `
       *,
       properties (
         id, 
         title,
+        property_images(image_url),
         deals (
           rental_contracts (
             end_date
           )
         )
       ),
-      line_groups (group_id, group_name, picture_url)
+      line_groups (group_id, group_name, picture_url),
+      tenants (name)
     `,
-    )
-    .order("created_at", { ascending: false });
+  );
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching rules:", error);
@@ -28,16 +33,22 @@ export async function getRentNotificationRules() {
   return data;
 }
 
-export async function getLineGroups() {
+export async function getLineGroups(tenantId?: string | null) {
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
 
-  // Fetch only active groups or all? Let's fetch all for now or active.
-  const { data, error } = await supabase
+  let query = supabase
     .from("line_groups")
     .select("*")
-    .eq("is_active", true)
-    .order("updated_at", { ascending: false });
+    .eq("is_active", true);
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  }
+
+  const { data, error } = await query.order("updated_at", {
+    ascending: false,
+  });
 
   if (error) {
     console.error("Error fetching line groups:", error);
@@ -46,15 +57,13 @@ export async function getLineGroups() {
   return data;
 }
 
-export async function getAllPropertiesSimple() {
+export async function getAllPropertiesSimple(tenantId?: string | null) {
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
 
   // 1. Fetch properties with active contracts
-  const { data: properties, error: propError } = await supabase
-    .from("properties")
-    .select(
-      `
+  let query = supabase.from("properties").select(
+    `
       id,
       title,
       image_url:property_images(image_url),
@@ -65,7 +74,13 @@ export async function getAllPropertiesSimple() {
         )
       )
     `,
-    )
+  );
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  }
+
+  const { data: properties, error: propError } = await query
     .eq("deals.status", "CLOSED_WIN")
     .eq("deals.rental_contracts.status", "ACTIVE")
     .neq("status", "ARCHIVED")
@@ -77,9 +92,15 @@ export async function getAllPropertiesSimple() {
   }
 
   // 2. Fetch existing rules to filter them out
-  const { data: rules, error: rulesError } = await supabase
+  let rulesQuery = supabase
     .from("rent_notification_rules")
     .select("property_id");
+
+  if (tenantId && tenantId !== "ALL") {
+    rulesQuery = rulesQuery.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  }
+
+  const { data: rules, error: rulesError } = await rulesQuery;
 
   if (rulesError) {
     console.error("Error fetching existing rules:", rulesError);

@@ -61,6 +61,7 @@ import { useRouter } from "next/navigation";
 interface AddRuleDialogProps {
   groups: any[];
   properties: any[];
+  tenantId?: string | null;
   existingRule?: any;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -69,6 +70,7 @@ interface AddRuleDialogProps {
 export function AddRuleDialog({
   groups,
   properties,
+  tenantId,
   existingRule,
   open,
   onOpenChange,
@@ -101,6 +103,7 @@ export function AddRuleDialog({
       notification_day: existingRule?.notification_day || 15,
       is_active: existingRule?.is_active ?? true,
       language: existingRule?.language || "th",
+      tenant_id: existingRule?.tenant_id || tenantId || null,
     },
   });
 
@@ -112,9 +115,10 @@ export function AddRuleDialog({
         notification_day: existingRule.notification_day,
         is_active: existingRule.is_active,
         language: existingRule.language || "th",
+        tenant_id: existingRule.tenant_id || tenantId || null,
       });
     }
-  }, [existingRule, form]);
+  }, [existingRule, form, tenantId]);
 
   const executeSubmit = async (values: RentNotificationRuleInput) => {
     try {

@@ -37,7 +37,12 @@ import {
 import { toast } from "sonner";
 import { AddRuleDialog } from "./AddRuleDialog";
 
-export function RuleList({ initialRules, groups, properties }: any) {
+export function RuleList({
+  initialRules,
+  groups,
+  properties,
+  tenantId,
+}: any) {
   const [rules, setRules] = useState(initialRules);
   const [editingRule, setEditingRule] = useState<any>(null);
 
@@ -107,6 +112,7 @@ export function RuleList({ initialRules, groups, properties }: any) {
       <Table>
         <TableHeader>
           <TableRow>
+            {tenantId === "ALL" && <TableHead>สาขา (Branch)</TableHead>}
             <TableHead>ทรัพย์ (Property)</TableHead>
             <TableHead>กลุ่มไลน์ (LINE Group)</TableHead>
             <TableHead>วันแจ้งเตือน</TableHead>
@@ -119,14 +125,31 @@ export function RuleList({ initialRules, groups, properties }: any) {
         <TableBody>
           {rules.map((rule: any) => (
             <TableRow key={rule.id}>
+              {tenantId === "ALL" && (
+                <TableCell>
+                  <Badge
+                    variant="secondary"
+                    className="bg-slate-100 text-slate-700 border-slate-200 whitespace-nowrap"
+                  >
+                    {rule.tenants?.name || "Global"}
+                  </Badge>
+                </TableCell>
+              )}
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
-                    {/* Use property image if available or icon */}
-                    <Home className="w-5 h-5 text-slate-400" />
+                  <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 overflow-hidden border border-slate-200">
+                    {rule.properties?.property_images?.[0]?.image_url ? (
+                      <img
+                        src={rule.properties.property_images[0].image_url}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Home className="w-5 h-5 text-slate-400" />
+                    )} 
                   </div>
                   <div>
-                    <div className="font-medium text-slate-900 line-clamp-1">
+                    <div className="font-medium text-slate-900 line-clamp-2 leading-tight">
                       {rule.properties?.title || "Unknown Property"}
                     </div>
                   </div>
@@ -134,22 +157,35 @@ export function RuleList({ initialRules, groups, properties }: any) {
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
-                    {rule.line_groups?.picture_url ? (
-                      <img
-                        src={rule.line_groups.picture_url}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Users className="w-4 h-4 text-slate-400" />
-                    )}
+                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 shrink-0">
+                    {(() => {
+                      const group = Array.isArray(rule.line_groups)
+                        ? rule.line_groups[0]
+                        : rule.line_groups;
+                      return group?.picture_url ? (
+                        <img
+                          src={group.picture_url}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Users className="w-4 h-4 text-slate-400" />
+                      );
+                    })()}
                   </div>
                   <span
-                    className="text-sm truncate max-w-[150px]"
-                    title={rule.line_groups?.group_name}
+                    className="text-sm truncate max-w-[150px] font-medium"
+                    title={
+                      (Array.isArray(rule.line_groups)
+                        ? rule.line_groups[0]
+                        : rule.line_groups
+                      )?.group_name
+                    }
                   >
-                    {rule.line_groups?.group_name || "Unknown Group"}
+                    {(Array.isArray(rule.line_groups)
+                      ? rule.line_groups[0]
+                      : rule.line_groups
+                    )?.group_name || "Unknown Group"}
                   </span>
                 </div>
               </TableCell>
@@ -244,6 +280,7 @@ export function RuleList({ initialRules, groups, properties }: any) {
           groups={groups}
           properties={properties}
           existingRule={editingRule}
+          tenantId={tenantId}
           open={!!editingRule}
           onOpenChange={(open: boolean) => !open && setEditingRule(null)}
         />
