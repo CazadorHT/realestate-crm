@@ -240,4 +240,4 @@ export const MOCK_SERVICES: ServiceRow[] = [
  * Use this to toggle between mock and real data
  * Set to true to use mock data, false to use real database
  */
-export const USE_MOCK_SERVICES = true;
+export const USE_MOCK_SERVICES = false;

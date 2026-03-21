@@ -31,25 +31,26 @@ function getClient() {
 const DEFAULT_MODEL = "gemini-flash-latest";
 
 /**
+ * Normalizes model names to handle common mistakes or project-specific fallbacks
+ */
+function normalizeModelName(modelName: string): string {
+  const unstableModels: Record<string, string> = {
+    "gemini-2-flash": "gemini-2.0-flash",
+    "gemini-1.5-pro": "gemini-flash-latest",
+    "gemini-1.5-flash": "gemini-flash-latest",
+  };
+
+  return unstableModels[modelName] || modelName;
+}
+
+/**
  * Get a specific generative model by name
  */
 export function getModel(modelName: string = DEFAULT_MODEL) {
   const genAI = getClient();
   if (!genAI) return null;
 
-  // Alias common naming mistakes or currently unstable models for this project
-  let normalizedModelName = modelName;
-  const unstableModels = [
-    "gemini-2-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
-  ];
-
-  if (unstableModels.includes(modelName)) {
-    normalizedModelName = "gemini-flash-latest";
-  }
-
+  const normalizedModelName = normalizeModelName(modelName);
   return genAI.getGenerativeModel({ model: normalizedModelName });
 }
 
@@ -91,7 +92,8 @@ export async function generateText(
   }
 
   // Configure model with tools if needed
-  const modelOptions: any = { model: modelName };
+  const normalizedModelName = normalizeModelName(modelName);
+  const modelOptions: any = { model: normalizedModelName };
   if (options?.useSearch) {
     modelOptions.tools = [{ googleSearchRetrieval: {} }];
   }

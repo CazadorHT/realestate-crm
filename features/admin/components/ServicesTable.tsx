@@ -33,13 +33,25 @@ import {
 } from "@/components/ui/dialog";
 import { ServiceForm } from "./ServiceForm";
 
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+
 interface ServicesTableProps {
   services: ServiceRow[];
 }
 
 export function ServicesTable({ services }: ServicesTableProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingService, setEditingService] = useState<ServiceRow | null>(null);
+
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
 
   const handleDelete = async () => {
     if (!deletingId) return;
@@ -47,7 +59,7 @@ export function ServicesTable({ services }: ServicesTableProps) {
       const res = await deleteService(deletingId);
       if (res.success) {
         toast.success("ลบข้อมูลสำเร็จ");
-        window.location.reload();
+        handleSuccessFeedback();
       } else {
         toast.error("ลบข้อมูลไม่สำเร็จ: " + res.message);
       }
@@ -60,7 +72,7 @@ export function ServicesTable({ services }: ServicesTableProps) {
 
   const handleEditSuccess = () => {
     setEditingService(null);
-    window.location.reload();
+    handleSuccessFeedback();
   };
 
   return (

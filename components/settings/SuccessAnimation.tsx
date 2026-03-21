@@ -52,7 +52,7 @@ export function SuccessAnimation() {
               transition={{ delay: 0.2 }}
               className="text-xl font-bold text-slate-900"
             >
-              เชื่อมต่อสำเร็จ!
+              {success === "true" ? "บันทึกข้อมูลสำเร็จ!" : success}
             </motion.p>
           </div>
 
