@@ -5,6 +5,7 @@ import { SearchCriteria, PropertyMatch } from "./types";
 import { calculateMatchScore } from "./matching";
 import { v4 as uuidv4 } from "uuid";
 import { Database } from "@/lib/database.types";
+import { mapDbError } from "@/lib/db-error";
 import { getOfficePrice } from "@/lib/property-utils";
 
 type PropertyWithImages = Database["public"]["Tables"]["properties"]["Row"] & {
@@ -78,7 +79,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
   const { data: properties, error: propertiesError } = await query.limit(100); // Increased limit since we'll filter after
 
   if (propertiesError) {
-    throw new Error("Failed to fetch properties for matching");
+    throw new Error(mapDbError(propertiesError) || "Failed to fetch properties for matching");
   }
 
   // Filter by budget range (post-query to handle complex OR logic correctly)
@@ -257,7 +258,7 @@ export async function createLeadFromMatchAction(data: {
     .single();
 
   if (leadError) {
-    throw new Error(`Failed to create lead: ${leadError.message}`);
+    throw new Error(mapDbError(leadError));
   }
 
   // 2. Link with search session

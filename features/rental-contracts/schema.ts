@@ -3,6 +3,8 @@ import { Database } from "@/lib/database.types";
 
 export type RentalContract =
   Database["public"]["Tables"]["rental_contracts"]["Row"];
+export type RentalContractInsert =
+  Database["public"]["Tables"]["rental_contracts"]["Insert"];
 
 export const contractFormSchema = z.object({
   deal_id: z.string("กรุณาเลือกดีล เพื่อสร้างสัญญา").uuid("รหัสดีลไม่ถูกต้อง"),
@@ -11,8 +13,7 @@ export const contractFormSchema = z.object({
     .refine((val) => !isNaN(Date.parse(val)), "Invalid Date"),
   end_date: z
     .string()
-    .refine((val) => !isNaN(Date.parse(val)), "Invalid Date")
-    .optional(),
+    .refine((val) => !isNaN(Date.parse(val)), "Invalid Date"),
   rent_price: z.coerce.number().min(0, "ราคาค่าเช่าต้องไม่ต่ำกว่า 0"),
   deposit_amount: z.coerce
     .number()

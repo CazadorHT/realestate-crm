@@ -1,5 +1,6 @@
 "use server";
 
+import { PostgrestError } from "@supabase/supabase-js";
 import {
   requireAuthContext,
   assertAuthenticated,
@@ -11,6 +12,7 @@ import {
   ContractFormInput,
   UpdateContractInput,
   RentalContract,
+  RentalContractInsert,
 } from "./schema";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
@@ -58,7 +60,7 @@ export async function upsertContractAction(
 
     // 3) Create or update
     let data: RentalContract | null = null;
-    let error: any = null;
+    let error: PostgrestError | null = null;
     let dealIdForAudit = "";
 
     if (id) {
@@ -135,10 +137,13 @@ export async function upsertContractAction(
         };
 
       // Create -> auto-generate contract number if not provided
-      const toInsert: any = { 
-        ...validatedCreate, 
-        tenant_id: deal.tenant_id // Always use the deal's tenant_id for consistency
-      };
+      const toInsert: RentalContractInsert = { 
+        ...validatedCreate,
+        tenant_id: deal.tenant_id,
+        // Ensure start_date and end_date are and remain strings as required by DB
+        start_date: validatedCreate.start_date,
+        end_date: validatedCreate.end_date,
+      } as RentalContractInsert;
       if (!toInsert.contract_number) {
         toInsert.contract_number = `RC-${new Date().getFullYear()}-${Math.random()
           .toString(36)
@@ -170,7 +175,7 @@ export async function upsertContractAction(
 
     // Log audit
     try {
-      await logAudit({ supabase, user, role } as any, {
+      await logAudit({ supabase, user, role }, {
         action: id ? "rental_contract.update" : "rental_contract.create",
         entity: "rental_contracts",
         entityId: data.id,
@@ -229,7 +234,7 @@ export async function deleteContractAction(id: string) {
     const { error } = await deleteQuery;
     if (error) return { success: false, message: mapDbError(error) };
 
-    await logAudit({ supabase, user, role } as any, {
+    await logAudit({ supabase, user, role }, {
       action: "rental_contract.delete",
       entity: "rental_contracts",
       entityId: id,

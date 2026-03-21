@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
 import { requireAuthContext } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
+import { mapDbError } from "@/lib/db-error";
 
 export type UpdateProfileResult = {
   success: boolean;
@@ -69,7 +70,7 @@ export async function updateProfileAction(
 
     if (error) {
       console.error("Profile update error:", error);
-      return { success: false, message: "เกิดข้อผิดพลาดในการอัปเดตข้อมูล" };
+      return { success: false, message: mapDbError(error) || "เกิดข้อผิดพลาดในการอัปเดตข้อมูล" };
     }
 
     await logAudit(ctx, {
@@ -84,7 +85,7 @@ export async function updateProfileAction(
 
     return { success: true };
   } catch (err) {
-    return { success: false, message: "Unauthorized" };
+    return { success: false, message: mapDbError(err) || "Unauthorized" };
   }
 }
 
@@ -151,7 +152,7 @@ export async function uploadAvatarAction(
   if (uploadError) {
     console.error("Avatar upload error details:", uploadError);
     // แจ้ง Error ละเอียดขึ้นใน Console ของ Server
-    throw new Error(`อัปโหลดไม่สำเร็จ: ${uploadError.message}`);
+    throw new Error(mapDbError(uploadError) || `อัปโหลดไม่สำเร็จ: ${uploadError.message}`);
   }
 
   // 4. สร้าง public URL
@@ -204,7 +205,7 @@ export async function updateNotificationSettings(
 
     if (error) {
       console.error("Error updating notification settings:", error);
-      return { success: false, message: "Failed to update settings" };
+      return { success: false, message: mapDbError(error) || "Failed to update settings" };
     }
 
     /* 
@@ -221,6 +222,6 @@ export async function updateNotificationSettings(
     return { success: true };
   } catch (error) {
     console.error("updateNotificationSettings error:", error);
-    return { success: false, message: "Unauthorized or Error" };
+    return { success: false, message: mapDbError(error) || "Unauthorized or Error" };
   }
 }

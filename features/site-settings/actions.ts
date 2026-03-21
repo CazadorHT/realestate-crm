@@ -334,7 +334,7 @@ export async function generateSocialAutomationTemplatesAction(
     console.error("AI Generation Error:", error);
     return {
       success: false,
-      message: "ไม่สามารถสร้างข้อความด้วย AI ได้ในขณะนี้",
+      message: mapDbError(error) || "ไม่สามารถสร้างข้อความด้วย AI ได้ในขณะนี้",
     };
   }
 }
@@ -368,6 +368,6 @@ export async function uploadSiteAssetAction(
     return result;
   } catch (error) {
     console.error("Error in uploadSiteAssetAction:", error);
-    return { success: false, message: "Internal server error" };
+    return { success: false, message: mapDbError(error) };
   }
 }

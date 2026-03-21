@@ -284,11 +284,11 @@ export async function deleteDocumentAction(id: string, storagePath: string) {
       .delete()
       .eq("id", id);
 
-    if (dbError) throw new Error(dbError.message);
+    if (dbError) throw new Error(mapDbError(dbError));
 
     return { success: true };
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "An error occurred";
+    const msg = error instanceof Error ? mapDbError(error) : "เกิดข้อผิดพลาดในการลบเอกสาร";
     return { success: false, message: msg };
   }
 }
@@ -312,7 +312,7 @@ export async function downloadDocumentAction(storagePath: string) {
     return { success: true, data: text };
   } catch (error: any) {
     console.error("Download Document Error:", error);
-    return { success: false, message: error.message };
+    return { success: false, message: mapDbError(error) };
   }
 }
 // 6. Search Owner records
