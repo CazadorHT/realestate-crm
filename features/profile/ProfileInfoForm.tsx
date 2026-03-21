@@ -22,6 +22,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -126,6 +127,7 @@ export function ProfileInfoForm({
               <FormControl>
                 <Input placeholder="กรอกชื่อ-นามสกุล" {...field} />
               </FormControl>
+              <FormDescription className="text-[11px]">ชื่อที่จะแสดงในระบบและใช้ในฐานข้อมูลเอกสาร</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -140,6 +142,7 @@ export function ProfileInfoForm({
               <FormControl>
                 <Input placeholder="0xx-xxx-xxxx" {...field} />
               </FormControl>
+              <FormDescription className="text-[11px]">เบอร์โทรศัพท์หลักสำหรับใช้ในการติดต่อลูกค้าและทีมงาน</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -160,6 +163,7 @@ export function ProfileInfoForm({
                     {...field}
                   />
                 </FormControl>
+                <FormDescription className="text-[11px]">ไอดี LINE (แบบ ID ลำลอง) สำหรับแชร์ให้ลูกค้า</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -189,6 +193,7 @@ export function ProfileInfoForm({
                     {...field}
                   />
                 </FormControl>
+                <FormDescription className="text-[11px]">รหัส LINE ภายใน (ใช้รับการแจ้งเตือนจากระบบ)</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -206,6 +211,7 @@ export function ProfileInfoForm({
                     {...field}
                   />
                 </FormControl>
+                <FormDescription className="text-[11px]">ลิงก์ URL ไปยังหน้าโปรไฟล์ Facebook ของคุณ</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -220,6 +226,7 @@ export function ProfileInfoForm({
                 <FormControl>
                   <Input placeholder="66xxxxxxxxx" {...field} />
                 </FormControl>
+                <FormDescription className="text-[11px]">เบอร์โทรศัพท์ที่ใช้ผูกกับ WhatsApp โดยเริ่มด้วยรหัสประเทศ (เช่น 66...)</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -234,6 +241,7 @@ export function ProfileInfoForm({
                 <FormControl>
                   <Input placeholder="WeChatID" {...field} />
                 </FormControl>
+                <FormDescription className="text-[11px]">ไอดี WeChat สำหรับการติดต่อลูกค้าชาวจีน</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
