@@ -15,7 +15,11 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { useEffect } from "react";
 
-export default function ContactPageClient() {
+export default function ContactPageClient({
+  googleMapsUrl,
+}: {
+  googleMapsUrl?: string;
+}) {
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -97,9 +101,12 @@ export default function ContactPageClient() {
             className="lg:col-span-1 space-y-8"
           >
             <ContactSidebar />
-            {/* <div className="pt-4 border-t border-slate-100">
-               <ContactMap />
-            </div> */}
+            
+            {googleMapsUrl && googleMapsUrl !== "https://maps.app.goo.gl/xxxx" && (
+              <div className="pt-4 border-t border-slate-100">
+                <ContactMap googleMapsUrl={googleMapsUrl} />
+              </div>
+            )}
           </motion.div>
 
           <motion.div

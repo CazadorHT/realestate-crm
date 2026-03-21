@@ -3,6 +3,7 @@ import ContactPageClient from "./ContactPageClient";
 
 import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations } from "@/lib/i18n";
+import { getSiteSettings } from "@/features/site-settings/actions";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
@@ -12,6 +13,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function ContactPage() {
-  return <ContactPageClient />;
+export default async function ContactPage() {
+  const settings = await getSiteSettings();
+  const googleMapsUrl = settings.google_maps_url || siteConfig.googleMapsUrl;
+
+  return <ContactPageClient googleMapsUrl={googleMapsUrl} />;
 }
