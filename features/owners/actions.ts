@@ -132,15 +132,20 @@ export async function updateOwnerAction(id: string, values: OwnerFormValues) {
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
 
-    // 1) Verify ownership
+    // 1) Verify ownership and branch isolation
     const { data: existing, error: findError } = await ctx.supabase
       .from("owners")
-      .select("created_by")
+      .select("created_by, tenant_id")
       .eq("id", id)
       .single();
 
     if (findError || !existing) {
       return { success: false, message: "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ" };
+    }
+
+    const config = await getSystemConfig();
+    if (config.multi_tenant_enabled && existing.tenant_id && existing.tenant_id !== ctx.tenantId && ctx.role !== "ADMIN") {
+      return { success: false, message: "คุณไม่มีสิทธิ์แก้ไขข้อมูลของสาขาอื่น" };
     }
 
     assertAuthenticated({
@@ -184,15 +189,20 @@ export async function deleteOwnerAction(id: string) {
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
 
-    // 1) Verify ownership
+    // 1) Verify ownership and branch isolation
     const { data: existing, error: findError } = await ctx.supabase
       .from("owners")
-      .select("created_by")
+      .select("created_by, tenant_id")
       .eq("id", id)
       .single();
 
     if (findError || !existing) {
       return { success: false, message: "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ" };
+    }
+
+    const config = await getSystemConfig();
+    if (config.multi_tenant_enabled && existing.tenant_id && existing.tenant_id !== ctx.tenantId && ctx.role !== "ADMIN") {
+      return { success: false, message: "คุณไม่มีสิทธิ์ลบข้อมูลของสาขาอื่น" };
     }
 
     assertAuthenticated({

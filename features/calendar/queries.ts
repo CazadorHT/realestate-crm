@@ -1,9 +1,12 @@
-import { createClient } from "@/lib/supabase/server";
-import { unstable_noStore as noStore } from "next/cache";
 import { addDays, formatISO } from "date-fns";
+import { requireAuthContext } from "@/lib/authz";
+import { getSystemConfig } from "@/lib/actions/system-config";
 
 export type EventType =
   | "viewing"
+  | "follow_up"
+  | "call"
+  | "line_chat"
   | "contract_start"
   | "contract_end"
   | "early_termination"
@@ -36,8 +39,10 @@ export async function getCalendarEvents(
   endDate: Date,
   propertyId?: string,
 ): Promise<CalendarEvent[]> {
-  noStore();
-  const supabase = await createClient();
+  const { supabase, tenantId, role } = await requireAuthContext();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+  const isAdmin = role === "ADMIN";
 
   const startIso = formatISO(startDate);
   const endIso = formatISO(endDate); // Ensure we cover the full range
@@ -53,14 +58,17 @@ export async function getCalendarEvents(
       created_at,
       lead_id,
       note,
-      leads ( full_name ),
+      leads!inner ( full_name, tenant_id ),
       property_id,
       properties ( title, images:property_images(image_url) )
     `,
     )
-    .eq("activity_type", "VIEWING")
     .gte("created_at", startIso)
     .lte("created_at", endIso);
+  
+  if (isMultiTenant && tenantId && tenantId !== "ALL" && !isAdmin) {
+    viewingsQuery = viewingsQuery.eq("leads.tenant_id", tenantId);
+  }
 
   if (propertyId && propertyId !== "ALL") {
     viewingsQuery = viewingsQuery.eq("property_id", propertyId);
@@ -70,12 +78,30 @@ export async function getCalendarEvents(
 
   if (viewings) {
     viewings.forEach((v: any) => {
+      let type: EventType = "viewing";
+      let titlePrefix = "นัดชม";
+      let color = "bg-blue-500";
+
+      if (v.activity_type === "FOLLOW_UP") {
+        type = "follow_up";
+        titlePrefix = "ติดตามผล";
+        color = "bg-amber-500";
+      } else if (v.activity_type === "CALL") {
+        type = "call";
+        titlePrefix = "โทรหา";
+        color = "bg-green-500";
+      } else if (v.activity_type === "LINE_CHAT") {
+        type = "line_chat";
+        titlePrefix = "ไลน์หา";
+        color = "bg-green-600";
+      }
+
       events.push({
         id: v.id,
-        title: `นัดชม: ${v.leads?.full_name || "Unknown Lead"}`,
+        title: `${titlePrefix}: ${v.leads?.full_name || "Unknown Lead"}`,
         start: v.created_at,
-        type: "viewing",
-        color: "bg-blue-500",
+        type: type,
+        color: color,
         meta: {
           leadId: v.lead_id,
           note: v.note,
@@ -110,6 +136,10 @@ export async function getCalendarEvents(
     .gte("start_date", startIso)
     .lte("start_date", endIso)
     .neq("status", "TERMINATED");
+
+  if (isMultiTenant && tenantId && tenantId !== "ALL" && !isAdmin) {
+    contractStartQuery = contractStartQuery.eq("deals.tenant_id", tenantId);
+  }
 
   if (propertyId && propertyId !== "ALL") {
     contractStartQuery = contractStartQuery.eq("deals.property_id", propertyId);
@@ -164,6 +194,10 @@ export async function getCalendarEvents(
     .gte("end_date", startIso)
     .lte("end_date", endIso)
     .neq("status", "TERMINATED");
+
+  if (isMultiTenant && tenantId && tenantId !== "ALL" && !isAdmin) {
+    contractsQuery = contractsQuery.eq("deals.tenant_id", tenantId);
+  }
 
   if (propertyId && propertyId !== "ALL") {
     contractsQuery = contractsQuery.eq("deals.property_id", propertyId);
@@ -221,6 +255,10 @@ export async function getCalendarEvents(
     .gte("check_out_date", startIso)
     .lte("check_out_date", endIso);
 
+  if (isMultiTenant && tenantId && tenantId !== "ALL" && !isAdmin) {
+    terminatedQuery = terminatedQuery.eq("deals.tenant_id", tenantId);
+  }
+
   if (propertyId && propertyId !== "ALL") {
     terminatedQuery = terminatedQuery.eq("deals.property_id", propertyId);
   }
@@ -269,6 +307,10 @@ export async function getCalendarEvents(
     .gte("transaction_date", startIso)
     .lte("transaction_date", endIso);
 
+  if (isMultiTenant && tenantId && tenantId !== "ALL" && !isAdmin) {
+    dealsQuery = dealsQuery.eq("tenant_id", tenantId);
+  }
+
   if (propertyId && propertyId !== "ALL") {
     dealsQuery = dealsQuery.eq("property_id", propertyId);
   }
@@ -299,30 +341,40 @@ export async function getCalendarEvents(
 }
 
 export async function getCompactProperties() {
-  noStore();
-  const supabase = await createClient();
-  const { data } = await supabase
+  const { supabase, tenantId, role } = await requireAuthContext();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+  const isAdmin = role === "ADMIN";
+
+  let query = supabase
     .from("properties")
     .select("id, title")
-    .eq("status", "ACTIVE")
-    .order("title");
+    .eq("status", "ACTIVE");
+  
+  if (isMultiTenant && tenantId && tenantId !== "ALL" && !isAdmin) {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  const { data } = await query.order("title");
   return data || [];
 }
 
 export async function getCompactLeads() {
-  noStore();
-  const supabase = await createClient();
-  const { data } = await supabase
+  const { supabase, tenantId, role } = await requireAuthContext();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+  const isAdmin = role === "ADMIN";
+
+  let query = supabase
     .from("leads")
     .select("id, full_name")
-    .neq("stage", "CLOSED")
-    .order("full_name");
+    .neq("stage", "CLOSED");
 
-  // If full_name is not a column (it might be a computed view or just separate fields), construct it.
-  // Based on schema, 'leads' usually has first/last. Checking schema again?
-  // Wait, let's assume loose types for now or check 'leads' schema briefly or just use first_name + last_name.
-  // Schema in database.types.ts might show it.
-  // `leads ( full_name )` was used in `getCalendarEvents` so it likely exists or is a view.
+  if (isMultiTenant && tenantId && tenantId !== "ALL" && !isAdmin) {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  const { data } = await query.order("full_name");
 
   return data || [];
 }

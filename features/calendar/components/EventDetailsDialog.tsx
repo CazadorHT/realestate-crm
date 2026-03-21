@@ -20,6 +20,9 @@ import {
   StopCircle,
   AlertTriangle,
   Banknote,
+  Phone,
+  MessageCircle,
+  Briefcase,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
@@ -53,6 +56,12 @@ export function EventDetailsDialog({
     switch (type) {
       case "viewing":
         return "นัดหมายชมทรัพย์";
+      case "follow_up":
+        return "ติดตามผล / เจรจา";
+      case "call":
+        return "โทรศัพท์ประสานงาน";
+      case "line_chat":
+        return "แชทผ่าน LINE";
       case "contract_start":
         return "เริ่มต้นสัญญา";
       case "contract_end":
@@ -60,7 +69,7 @@ export function EventDetailsDialog({
       case "early_termination":
         return "ยุติสัญญาก่อนกำหนด";
       case "deal_closing":
-        return "ปิดดีล";
+        return "ปิดดีลสำเร็จ";
       default:
         return "กิจกรรม";
     }
@@ -70,6 +79,12 @@ export function EventDetailsDialog({
     switch (type) {
       case "viewing":
         return "text-blue-600 bg-blue-50 border-blue-200";
+      case "follow_up":
+        return "text-amber-600 bg-amber-50 border-amber-200";
+      case "call":
+        return "text-green-600 bg-green-50 border-green-200";
+      case "line_chat":
+        return "text-green-700 bg-emerald-50 border-emerald-200";
       case "contract_start":
         return "text-emerald-600 bg-emerald-50 border-emerald-200";
       case "contract_end":
@@ -87,6 +102,12 @@ export function EventDetailsDialog({
     switch (type) {
       case "viewing":
         return <User className="h-5 w-5 text-blue-600" />;
+      case "follow_up":
+        return <Briefcase className="h-5 w-5 text-amber-600" />;
+      case "call":
+        return <Phone className="h-5 w-5 text-green-600" />;
+      case "line_chat":
+        return <MessageCircle className="h-5 w-5 text-emerald-600" />;
       case "contract_start":
         return <PlayCircle className="h-5 w-5 text-emerald-600" />;
       case "contract_end":
@@ -99,6 +120,12 @@ export function EventDetailsDialog({
         return <Calendar className="h-5 w-5 text-slate-600" />;
     }
   };
+
+  const isLeadActivity =
+    event.type === "viewing" ||
+    event.type === "follow_up" ||
+    event.type === "call" ||
+    event.type === "line_chat";
 
   const isContractEvent =
     event.type === "contract_start" ||
@@ -287,7 +314,7 @@ export function EventDetailsDialog({
         </div>
 
         <DialogFooter className="gap-2 sm:gap-2 border-t border-slate-100 pt-4 mt-2">
-          {event.type === "viewing" && event.meta?.leadId ? (
+          {isLeadActivity && event.meta?.leadId ? (
             <EventActions
               eventId={event.id}
               leadId={event.meta.leadId}

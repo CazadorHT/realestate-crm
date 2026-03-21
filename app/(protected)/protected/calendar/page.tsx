@@ -14,7 +14,9 @@ import {
   startOfYear,
   endOfYear,
 } from "date-fns";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Building2 } from "lucide-react";
+import { getSystemConfig } from "@/lib/actions/system-config";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = {
   title: "Calendar | CRM",
@@ -26,7 +28,19 @@ export default async function CalendarPage({
   searchParams: Promise<{ month?: string; propertyId?: string; mode?: string }>;
 }) {
   // 1. Auth Check (Protect Route)
-  await requireAuthContext();
+  const { supabase, tenantId } = await requireAuthContext();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  let currentTenantName = null;
+  if (isMultiTenant && tenantId && tenantId !== "ALL") {
+    const { data: tenantData } = await supabase
+      .from("tenants")
+      .select("name")
+      .eq("id", tenantId)
+      .single();
+    currentTenantName = tenantData?.name;
+  }
 
   // 2. Parse Date & Params
   const params = await searchParams;
@@ -62,7 +76,15 @@ export default async function CalendarPage({
             <CalendarDays className="h-6 w-6 text-indigo-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
+              {isMultiTenant && (
+                <Badge variant="outline" className="gap-1.5 py-1 px-3 border-indigo-200 bg-indigo-50/50 text-indigo-700">
+                  <Building2 className="h-3.5 w-3.5" />
+                  {currentTenantName || "ทุกสาขา"}
+                </Badge>
+              )}
+            </div>
             <p className="text-muted-foreground text-sm">
               ตารางนัดหมาย สัญญาเช่า และดีลสำคัญ
             </p>

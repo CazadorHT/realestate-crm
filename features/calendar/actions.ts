@@ -1,11 +1,10 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthContext } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-
+import {redirect} from "next/navigation";
 export async function createAppointment(formData: FormData) {
-  const supabase = await createClient();
+  const { supabase, tenantId, role } = await requireAuthContext();
 
   const leadId = formData.get("leadId") as string;
   const propertyId = formData.get("propertyId") as string;
@@ -20,9 +19,24 @@ export async function createAppointment(formData: FormData) {
   }
 
   // Combine Date and Time
-  // date is YYYY-MM-DD, time is HH:mm
   const dateTime = new Date(`${date}T${time}:00`);
   const isoString = dateTime.toISOString();
+
+  const config = await (await import("@/lib/actions/system-config")).getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  // Security Check: Verify lead belongs to the same tenant if multi-tenant is enabled
+  if (isMultiTenant && tenantId && tenantId !== "ALL" && role !== "ADMIN") {
+    const { data: lead, error: leadError } = await supabase
+      .from("leads")
+      .select("tenant_id")
+      .eq("id", leadId)
+      .single();
+
+    if (leadError || !lead || lead.tenant_id !== tenantId) {
+      throw new Error("Unauthorized: Lead does not belong to your branch");
+    }
+  }
 
   const { error } = await supabase.from("lead_activities").insert({
     lead_id: leadId,

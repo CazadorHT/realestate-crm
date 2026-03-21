@@ -227,3 +227,38 @@ export async function getOwnersDashboardStatsQuery(allBranches = false) {
     totalPropertiesLinked: totalPropertiesLinked || 0,
   };
 }
+
+/**
+ * Fetch ONLY IDs of all owners matching the filters (no pagination)
+ * Used for "Select All across pages" feature.
+ */
+export async function getAllOwnerIdsQuery(args: { q?: string; allBranches?: boolean } = {}) {
+  const { supabase, role, tenantId } = await requireAuthContext();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  const q = (args.q ?? "").trim();
+  const allBranches = args.allBranches ?? false;
+
+  let query = supabase.from("owners").select("id");
+
+  // Visibility Logic:
+  if (!isMultiTenant) {
+    // Single-tenant: show all owners (no filter)
+  } else if (allBranches || (tenantId === "ALL") || !tenantId) {
+    // Multi-tenant + ALL Branches: show everything
+  } else {
+    // Multi-tenant: show branch owners + unassigned
+    query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  }
+
+  if (q) {
+    query = query.or(
+      `full_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`,
+    );
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []).map((o) => o.id);
+}

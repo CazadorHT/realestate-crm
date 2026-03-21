@@ -116,6 +116,8 @@ export default async function OwnersPage({ searchParams }: PageProps) {
               isMultiTenant={isMultiTenant}
               currentTenantId={tenantId}
               currentTenantName={currentTenantName}
+              count={count}
+              q={q}
             />
 
             <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-sm bg-slate-50 rounded-xl p-4 border border-gray-200 shadow-xs">

@@ -120,3 +120,23 @@ export async function bulkMoveOwnersToTenantAction(
     };
   }
 }
+
+/**
+ * Fetch all owner IDs matching filters (for global selection)
+ */
+export async function getAllOwnerIdsAction(args: {
+  q?: string;
+  allBranches?: boolean;
+}) {
+  try {
+    const { getAllOwnerIdsQuery } = await import("./queries");
+    const ids = await getAllOwnerIdsQuery(args);
+    return { success: true, ids };
+  } catch (error) {
+    return {
+      success: false,
+      ids: [],
+      message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+    };
+  }
+}

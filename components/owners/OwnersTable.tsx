@@ -22,11 +22,13 @@ import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { 
   bulkDeleteOwnersAction,
-  bulkMoveOwnersToTenantAction 
+  bulkMoveOwnersToTenantAction,
+  getAllOwnerIdsAction
 } from "@/features/owners/bulk-actions";
 import { exportOwnersAction } from "@/features/owners/export-action";
 import { toast } from "sonner";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
 
 interface OwnersTableProps {
   owners: (Owner & {
@@ -39,6 +41,8 @@ interface OwnersTableProps {
   isMultiTenant?: boolean;
   currentTenantId?: string | null;
   currentTenantName?: string | null;
+  count?: number;
+  q?: string;
 }
 
 export function OwnersTable({
@@ -48,6 +52,8 @@ export function OwnersTable({
   isMultiTenant,
   currentTenantId,
   currentTenantName,
+  count = 0,
+  q = "",
 }: OwnersTableProps) {
   const allIds = useMemo(() => owners.map((o) => o.id), [owners]);
   const {
@@ -60,6 +66,26 @@ export function OwnersTable({
     selectedCount,
     selectedIds,
   } = useTableSelection(allIds);
+
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+
+  const handleSelectAllGlobal = async () => {
+    setIsGlobalLoading(true);
+    try {
+      const result = await getAllOwnerIdsAction({
+        q,
+        allBranches: showBranch,
+      });
+      if (result.success && result.ids) {
+        toggleSelectAll(result.ids);
+        toast.info(`เลือกทั้งหมด ${result.ids.length} รายการแล้ว`);
+      }
+    } catch (err) {
+      toast.error("ไม่สามารถเลือกทั้งหมดได้");
+    } finally {
+      setIsGlobalLoading(false);
+    }
+  };
 
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
@@ -177,6 +203,41 @@ export function OwnersTable({
         onExport={() => exportOwnersAction(Array.from(selectedIds))}
         entityName="เจ้าของ"
       />
+
+      {/* Global Selection Indicator */}
+      {isAllSelected && selectedCount < count && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-300 shadow-sm">
+          <div className="flex items-center gap-3 text-sm text-blue-800">
+            <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
+            <span>เลือกทั้งหมด {selectedCount} รายชื่อในหน้านี้แล้ว</span>
+          </div>
+          <button
+            onClick={handleSelectAllGlobal}
+            disabled={isGlobalLoading}
+            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2"
+          >
+            {isGlobalLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : null}
+            เลือกทั้งหมด {count} รายชื่อในระบบ
+          </button>
+        </div>
+      )}
+
+      {selectedCount === count && count > owners.length && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in duration-300">
+          <div className="flex items-center gap-3 text-sm text-emerald-800">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <span>คุณได้เลือกทั้งหมด <strong>{count}</strong> รายชื่อในระบบแล้ว (ทุกหน้า)</span>
+          </div>
+          <button
+            onClick={clearSelection}
+            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all"
+          >
+            ยกเลิกการเลือก
+          </button>
+        </div>
+      )}
 
       <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
         {/* Desktop Table View */}
