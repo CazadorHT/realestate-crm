@@ -4,7 +4,7 @@ import { Home, Mail, Phone, MapPin } from "lucide-react";
 import { FaFacebook, FaInstagram, FaLine, FaTiktok } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useTransition, Suspense } from "react";
+import { useState, useTransition, Suspense, useEffect } from "react";
 import { subscribeToLineAction } from "@/features/leads/public-actions";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
@@ -13,7 +13,12 @@ import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 export function PublicFooter() {
   const { t } = useLanguage();
   const settings = useSiteConfig();
-  const currentYear = new Date().getFullYear();
+  const [mounted, setMounted] = useState(false);
+  const currentYear = mounted ? new Date().getFullYear() : 2026;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const siteName = settings.site_name || siteConfig.name;
   const companyName = settings.company_name || siteConfig.company;
@@ -119,10 +124,12 @@ export function PublicFooter() {
         </div>
 
         {/* Schema.org Structured Data */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-        />
+        {mounted && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+          />
+        )}
 
         <div className="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-16 relative z-10">
           {/* Main Footer Content */}

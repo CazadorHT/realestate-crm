@@ -32,6 +32,16 @@ export type PipelineStats = {
   stageBreakdown: Record<string, number>;
 };
 
+export type SetupProgress = {
+  profileCompleted: boolean;
+  firstAgentAdded: boolean;
+  firstPropertyAdded: boolean;
+  lineConnected: boolean;
+  isAllCompleted: boolean;
+  completedCount: number;
+  totalSteps: number;
+};
+
 export async function getExecutiveStats(
   tenantId?: string | null,
   year?: number,
@@ -274,5 +284,84 @@ export async function getPipelineStats(
   } catch (error) {
     console.error("getPipelineStats Error:", error);
     return { totalOpenDeals: 0, expectedValue: 0, stageBreakdown: {} };
+  }
+}
+
+export async function getSetupProgress(
+  tenantId: string,
+): Promise<SetupProgress> {
+  try {
+    const supabase = await createClient();
+
+    if (!tenantId || tenantId === "ALL") {
+      return {
+        profileCompleted: true,
+        firstAgentAdded: true,
+        firstPropertyAdded: true,
+        lineConnected: true,
+        isAllCompleted: true,
+        completedCount: 4,
+        totalSteps: 4,
+      };
+    }
+
+    // 1. Check Profile (Tenant info)
+    const { data: tenant } = await supabase
+      .from("tenants")
+      .select("logo_url, name")
+      .eq("id", tenantId)
+      .single();
+
+    // 2. Check Employees
+    const { count: memberCount } = await supabase
+      .from("tenant_members")
+      .select("*", { count: "exact", head: true })
+      .eq("tenant_id", tenantId);
+
+    // 3. Check Properties
+    const { count: propertyCount } = await supabase
+      .from("properties")
+      .select("*", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .is("deleted_at", null);
+
+    // 4. Check LINE connection
+    const { count: lineCount } = await supabase
+      .from("line_groups")
+      .select("*", { count: "exact", head: true })
+      .eq("tenant_id", tenantId);
+
+    const profileCompleted = !!(tenant?.logo_url && tenant?.name);
+    const firstAgentAdded = (memberCount || 0) > 1;
+    const firstPropertyAdded = (propertyCount || 0) > 0;
+    const lineConnected = (lineCount || 0) > 0;
+
+    const completedCount = [
+      profileCompleted,
+      firstAgentAdded,
+      firstPropertyAdded,
+      lineConnected,
+    ].filter(Boolean).length;
+
+    return {
+      profileCompleted,
+      firstAgentAdded,
+      firstPropertyAdded,
+      lineConnected,
+      completedCount,
+      totalSteps: 4,
+      isAllCompleted: completedCount === 4,
+    };
+  } catch (error) {
+    console.error("getSetupProgress Error:", error);
+    return {
+      profileCompleted: false,
+      firstAgentAdded: false,
+      firstPropertyAdded: false,
+      lineConnected: false,
+      isAllCompleted: false,
+      completedCount: 0,
+      totalSteps: 4,
+    };
   }
 }

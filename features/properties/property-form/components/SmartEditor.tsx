@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 interface SmartEditorProps {
   value: string;
@@ -191,6 +192,7 @@ export function SmartEditor({
 
   const handleAiGenerate = async () => {
     setIsAiLoading(true);
+    const toastId = toast.loading("AI กำลังเรียบเรียงคำบรรยายให้คุณ... กรุณารอสักครู่ครับ");
 
     try {
       if (onAiGenerate) {
@@ -198,6 +200,9 @@ export function SmartEditor({
         const content = await onAiGenerate(editor.getHTML());
         if (content) {
           editor.commands.setContent(content);
+          toast.success("เขียนคำบรรยายสำเร็จ! ✨", { id: toastId });
+        } else {
+          toast.dismiss(toastId);
         }
       } else {
         setTimeout(() => {
@@ -209,10 +214,12 @@ export function SmartEditor({
                 <li>ราคาคุ้มค่า เหมาะสำหรับอยู่อาศัยเองหรือลงทุนปล่อยเช่า</li>
             </ul>
           `);
+          toast.success("ร่างเนื้อหาสำเร็จ! ✨", { id: toastId });
         }, 1000);
       }
     } catch (error) {
       console.error("AI Generation failed:", error);
+      toast.error("ไม่สามารถสร้างเนื้อหาได้ในขณะนี้", { id: toastId });
     } finally {
       setIsAiLoading(false);
     }

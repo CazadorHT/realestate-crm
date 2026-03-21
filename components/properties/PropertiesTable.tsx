@@ -610,7 +610,7 @@ export function PropertiesTable({
                           href={`/protected/properties/${property.id}`}
                           className="block font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm leading-snug "
                         >
-                          <span className="line-clamp-2 overflow-hidden w-[320px] ">
+                          <span className="line-clamp-2 overflow-hidden w-[310px] ">
                             {property.title || "ไม่ระบุชื่อ"}
                           </span>
                         </Link>
@@ -706,7 +706,7 @@ export function PropertiesTable({
 
                   {/* UPDATED */}
                   <TableCell className="px-2">
-                    <div className="text-[11px] text-slate-500 line-clamp-1 opacity-80" title={new Date(property.updated_at).toLocaleString("th-TH")}>
+                    <div className="text-[11px] text-slate-500 line-clamp-1 opacity-80 max-w-[80px] truncate" title={new Date(property.updated_at).toLocaleString("th-TH")}>
                       {formatDistanceToNow(new Date(property.updated_at), { addSuffix: true, locale: th })}
                     </div>
                   </TableCell>
@@ -834,6 +834,10 @@ export function PropertiesTable({
                         </Badge>
                       )}
                     </div>
+                    <PropertyStatusBadge
+                      status={property.status}
+                      className="h-5 text-[10px] px-2 font-bold shadow-md backdrop-blur-sm"
+                    />
                   </div>
                 </Link>
 

@@ -15,6 +15,7 @@ import {
 import {
   PROPERTY_STATUS_LABELS,
   PROPERTY_STATUS_ORDER,
+  PROPERTY_STATUS_STYLES,
 } from "@/features/properties/labels";
 
 import type { PropertyStatus } from "@/features/properties/types";
@@ -31,24 +32,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 function statusTone(status: PropertyStatus) {
-  switch (status) {
-    case "ACTIVE":
-      return "bg-green-50 text-green-700 border-green-200";
-    case "DRAFT":
-      return "bg-slate-50 text-slate-700 border-slate-200";
-    case "UNDER_OFFER":
-      return "bg-amber-50 text-amber-700 border-amber-200";
-    case "RESERVED":
-      return "bg-purple-50 text-purple-700 border-purple-200";
-    case "SOLD":
-      return "bg-rose-50 text-rose-700 border-rose-200";
-    case "RENTED":
-      return "bg-sky-50 text-sky-700 border-sky-200";
-    case "ARCHIVED":
-      return "bg-indigo-50 text-indigo-700 border-indigo-200";
-    default:
-      return "bg-slate-50 text-slate-700 border-slate-200";
-  }
+  const style = PROPERTY_STATUS_STYLES[status] || PROPERTY_STATUS_STYLES.DRAFT;
+  return cn(style.bg, style.border);
 }
 
 export function PropertyStatusSelect(props: {
@@ -117,10 +102,20 @@ export function PropertyStatusSelect(props: {
           <SelectValue>{label}</SelectValue>
         </SelectTrigger>
 
-        <SelectContent align="end">
+        <SelectContent align="end" className="min-w-[160px]">
           {PROPERTY_STATUS_ORDER.map((s) => (
-            <SelectItem key={s} value={s}>
-              {PROPERTY_STATUS_LABELS[s]}
+            <SelectItem key={s} value={s} className="cursor-pointer">
+              <div className="flex items-center gap-2">
+                <div
+                  className={cn(
+                    "h-2 w-2 rounded-full shrink-0",
+                    PROPERTY_STATUS_STYLES[s].dot,
+                  )}
+                />
+                <span className="text-xs font-medium">
+                  {PROPERTY_STATUS_LABELS[s]}
+                </span>
+              </div>
             </SelectItem>
           ))}
         </SelectContent>

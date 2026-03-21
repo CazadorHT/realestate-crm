@@ -29,7 +29,8 @@ export function NumberInput({
   className,
   disabled,
   maxLength,
-}: NumberInputProps) {
+  name,
+}: NumberInputProps & { name?: string }) {
   const formatNumber = (val: number | undefined, decimals = 0) =>
     val == null
       ? ""
@@ -80,6 +81,7 @@ export function NumberInput({
     <Input
       ref={inputRef}
       type="text"
+      name={name}
       inputMode="numeric"
       value={display}
       aria-invalid={ariaInvalid}

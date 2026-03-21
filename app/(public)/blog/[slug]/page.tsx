@@ -45,6 +45,11 @@ export async function generateMetadata({
     };
   }
 
+  let COVER_IMAGE = post.cover_image || `${siteConfig.url}${siteConfig.ogImage}`;
+  if (COVER_IMAGE.startsWith("/")) {
+    COVER_IMAGE = `${siteConfig.url}${COVER_IMAGE}`;
+  }
+
   return {
     title: `${getLocalizedField(post, "title", language)} | ${t("blog.article_label")}`,
     description:
@@ -56,13 +61,19 @@ export async function generateMetadata({
     openGraph: {
       title: getLocalizedField(post, "title", language),
       description: getLocalizedField(post, "excerpt", language) || "",
-      images: post.cover_image ? [post.cover_image] : [],
+      images: [COVER_IMAGE],
       type: "article",
       publishedTime: post.published_at || undefined,
       authors:
         typeof post.author === "object" && post.author && "name" in post.author
           ? [(post.author as any).name]
           : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: getLocalizedField(post, "title", language),
+      description: getLocalizedField(post, "excerpt", language) || "",
+      images: [COVER_IMAGE],
     },
   };
 }
@@ -120,15 +131,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     },
     publisher: {
       "@type": "Organization",
-      name: "Your Real Estate Company",
+      name: siteConfig.company,
       logo: {
         "@type": "ImageObject",
-        url: `${siteConfig.url}/logo.png`,
+        url: `${siteConfig.url}${siteConfig.logo}`,
       },
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `${siteConfig.url}/blog/${slug}`,
+      "@id": `${siteConfig.url}/blog/${decodedSlug}`,
     },
     keywords: post.tags?.join(", ") || "",
   };

@@ -69,6 +69,21 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t("metadata.home_title", { siteName: siteConfig.name }),
     description: t("metadata.home_description"),
+    openGraph: {
+      type: "website",
+      locale: "th_TH",
+      url: siteConfig.url,
+      title: t("metadata.home_title", { siteName: siteConfig.name }),
+      description: t("metadata.home_description"),
+      siteName: siteConfig.name,
+      images: [`${siteConfig.url}${siteConfig.ogImage}`],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("metadata.home_title", { siteName: siteConfig.name }),
+      description: t("metadata.home_description"),
+      images: [`${siteConfig.url}${siteConfig.ogImage}`],
+    },
     other: {
       "tiktok-developers-site-verification":
         siteConfig.verificationTokens.tiktok,

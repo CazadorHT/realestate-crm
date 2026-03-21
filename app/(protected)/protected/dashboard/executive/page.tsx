@@ -2,6 +2,7 @@ import {
   getExecutiveStats,
   getMonthlyRevenueData,
   getQuarterlyRevenueData,
+  getSetupProgress,
 } from "@/features/dashboard/executive-queries";
 import { getAdvancedTopAgents } from "@/features/dashboard/queries";
 import { getAgentKpiStats } from "@/features/analytics/agent-kpis";
@@ -28,13 +29,14 @@ export default async function ExecutiveDashboardPage({
   const allBranches = branchesResult.data || [];
 
   // Fetch primary data in parallel
-  const [stats, monthlyData, quarterlyData, agentStats, topAgents] =
+  const [stats, monthlyData, quarterlyData, agentStats, topAgents, setupProgress] =
     await Promise.all([
       getExecutiveStats(selectedTenantId, year),
       getMonthlyRevenueData(selectedTenantId, year),
       getQuarterlyRevenueData(selectedTenantId, year),
       getAgentKpiStats(selectedTenantId),
       getAdvancedTopAgents(selectedTenantId),
+      getSetupProgress(selectedTenantId === "ALL" ? "" : selectedTenantId),
     ]);
 
   // Fetch comparison data if compareId is present
@@ -60,9 +62,11 @@ export default async function ExecutiveDashboardPage({
         topAgents={topAgents}
         allBranches={allBranches}
         selectedTenantId={selectedTenantId}
+        role={role}
         compareStats={compareStats}
         compareMonthlyData={compareMonthlyData}
         compareTenantId={compareId}
+        setupProgress={setupProgress}
       />
     </div>
   );

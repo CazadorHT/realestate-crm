@@ -71,6 +71,55 @@ export const PROPERTY_TYPE_ENUM = PROPERTY_TYPE_ORDER;
 export const LISTING_TYPE_ENUM = LISTING_TYPE_ORDER;
 export const PROPERTY_STATUS_ENUM = PROPERTY_STATUS_ORDER;
 
+/** === STATUS STYLES === */
+export const PROPERTY_STATUS_STYLES: Record<
+  PropertyStatus,
+  { dot: string; bg: string; border: string; text: string }
+> = {
+  DRAFT: {
+    dot: "bg-slate-400",
+    bg: "bg-slate-50",
+    border: "border-slate-200",
+    text: "text-slate-600",
+  },
+  ACTIVE: {
+    dot: "bg-emerald-500",
+    bg: "bg-emerald-50 text-emerald-700",
+    border: "border-emerald-200",
+    text: "text-emerald-700",
+  },
+  UNDER_OFFER: {
+    dot: "bg-amber-500",
+    bg: "bg-amber-50 text-amber-700",
+    border: "border-amber-200",
+    text: "text-amber-700",
+  },
+  RESERVED: {
+    dot: "bg-purple-500",
+    bg: "bg-purple-50 text-purple-700",
+    border: "border-purple-200",
+    text: "text-purple-700",
+  },
+  SOLD: {
+    dot: "bg-rose-500",
+    bg: "bg-rose-50 text-rose-700",
+    border: "border-rose-200",
+    text: "text-rose-700",
+  },
+  RENTED: {
+    dot: "bg-sky-500",
+    bg: "bg-sky-50 text-sky-700",
+    border: "border-sky-200",
+    text: "text-sky-700",
+  },
+  ARCHIVED: {
+    dot: "bg-slate-600",
+    bg: "bg-slate-100 text-slate-700",
+    border: "border-slate-300",
+    text: "text-slate-700",
+  },
+};
+
 /** helpers */
 export function propertyTypeLabel(v: PropertyType) {
   return PROPERTY_TYPE_LABELS[v];

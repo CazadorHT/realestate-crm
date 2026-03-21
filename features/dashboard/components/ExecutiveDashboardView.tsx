@@ -6,7 +6,9 @@ import {
   ExecutiveStats,
   MonthlyRevenue,
   QuarterlyRevenue,
+  SetupProgress,
 } from "../executive-queries";
+import { SetupChecklist } from "./SetupChecklist";
 import {
   Card,
   CardContent,
@@ -77,6 +79,7 @@ import { CommissionLeaderboard } from "./CommissionLeaderboard";
 import { TopAgent } from "../queries";
 import { AgentKpiStats } from "@/features/analytics/agent-kpis";
 import { calculateCommission } from "@/lib/finance/commissions";
+import { BranchOnboardingDialog } from "./BranchOnboardingDialog";
 
 import {
   Select,
@@ -98,6 +101,8 @@ interface ExecutiveDashboardViewProps {
   compareStats?: ExecutiveStats | null;
   compareMonthlyData?: MonthlyRevenue[] | null;
   compareTenantId?: string | null;
+  setupProgress: SetupProgress;
+  role: string;
 }
 
 export function ExecutiveDashboardView({
@@ -111,6 +116,8 @@ export function ExecutiveDashboardView({
   compareStats,
   compareMonthlyData,
   compareTenantId,
+  setupProgress,
+  role,
 }: ExecutiveDashboardViewProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -121,6 +128,9 @@ export function ExecutiveDashboardView({
   );
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(
+    role === "ADMIN" && allBranches.length === 0,
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -178,6 +188,11 @@ export function ExecutiveDashboardView({
 
   return (
     <div className="space-y-8 p-1">
+      <BranchOnboardingDialog 
+        isOpen={showOnboarding} 
+        onClose={() => setShowOnboarding(false)} 
+      />
+
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -325,7 +340,10 @@ export function ExecutiveDashboardView({
           value="overview"
           className="space-y-8 animate-in fade-in-50 duration-500"
         >
-          {/* Stats Grid */}
+          {/* Onboarding Checklist - Only shows if not 100% complete */}
+      <SetupChecklist progress={setupProgress} />
+
+      {/* Stats Grid */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatsCard
               title="ยอดขายรวม (Revenue)"

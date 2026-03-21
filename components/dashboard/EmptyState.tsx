@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { motion } from "framer-motion";
+
 // Icon map - add icons as needed
 const ICON_MAP: Record<string, LucideIcon> = {
   plusCircle: PlusCircle,
@@ -64,7 +66,10 @@ export function EmptyState({
   const ActionIcon = ICON_MAP[actionIcon] || PlusCircle;
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
       className={cn(
         "relative overflow-hidden rounded-3xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50/50 via-white to-indigo-50/30 p-12 transition-all duration-500",
         className,
@@ -81,10 +86,23 @@ export function EmptyState({
       <div className="relative flex flex-col items-center justify-center text-center space-y-8">
         {/* Animated Icon Container */}
         <div className="relative group">
-          <div className="absolute inset-0 bg-indigo-500/20 rounded-full blur-2xl scale-150 animate-pulse" />
-          <div className="relative p-8 bg-linear-to-br from-indigo-600 to-violet-600 rounded-xl shadow-2xl shadow-indigo-500/40 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
-            <Icon className="h-14 w-14 text-white animate-in zoom-in duration-700" />
-          </div>
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.05, 1],
+            }}
+            transition={{ 
+              duration: 4, 
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute inset-0 bg-indigo-500/20 rounded-full blur-2xl scale-150" 
+          />
+          <motion.div 
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            className="relative p-8 bg-linear-to-br from-indigo-600 to-violet-600 rounded-xl shadow-2xl shadow-indigo-500/40 transition-transform duration-500"
+          >
+            <Icon className="h-14 w-14 text-white" />
+          </motion.div>
           {/* Subtle ring */}
           <div className="absolute -inset-2 border-2 border-indigo-100 rounded-[2.5rem] opacity-50 group-hover:scale-110 transition-transform duration-500" />
         </div>
@@ -130,6 +148,6 @@ export function EmptyState({
 
       {/* Glossy overlay */}
       <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-white/10 pointer-events-none" />
-    </div>
+    </motion.div>
   );
 }

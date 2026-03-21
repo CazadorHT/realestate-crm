@@ -1,6 +1,10 @@
 "use client";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import {
+  PROPERTY_STATUS_LABELS,
+  PROPERTY_STATUS_STYLES,
+} from "@/features/properties/labels";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -27,14 +31,34 @@ export function PropertyStatusBadge({
   };
 
   const styles: Record<string, string> = {
-    ACTIVE:
-      "bg-green-100 text-green-700 hover:bg-green-100/80 border-green-200",
-    DRAFT: "bg-gray-100 text-gray-700 hover:bg-gray-100/80 border-gray-200",
-    ARCHIVED:
-      "bg-slate-100 text-slate-700 hover:bg-slate-100/80 border-slate-200",
-    SOLD: "bg-red-100 text-red-700 hover:bg-red-100/80 border-red-200",
-    RENTED:
-      "bg-orange-100 text-orange-700 hover:bg-orange-100/80 border-orange-200",
+    ACTIVE: cn(
+      PROPERTY_STATUS_STYLES.ACTIVE.bg,
+      PROPERTY_STATUS_STYLES.ACTIVE.border,
+    ),
+    DRAFT: cn(
+      PROPERTY_STATUS_STYLES.DRAFT.bg,
+      PROPERTY_STATUS_STYLES.DRAFT.border,
+    ),
+    ARCHIVED: cn(
+      PROPERTY_STATUS_STYLES.ARCHIVED.bg,
+      PROPERTY_STATUS_STYLES.ARCHIVED.border,
+    ),
+    SOLD: cn(
+      PROPERTY_STATUS_STYLES.SOLD.bg,
+      PROPERTY_STATUS_STYLES.SOLD.border,
+    ),
+    RENTED: cn(
+      PROPERTY_STATUS_STYLES.RENTED.bg,
+      PROPERTY_STATUS_STYLES.RENTED.border,
+    ),
+    UNDER_OFFER: cn(
+      PROPERTY_STATUS_STYLES.UNDER_OFFER.bg,
+      PROPERTY_STATUS_STYLES.UNDER_OFFER.border,
+    ),
+    RESERVED: cn(
+      PROPERTY_STATUS_STYLES.RESERVED.bg,
+      PROPERTY_STATUS_STYLES.RESERVED.border,
+    ),
   };
 
   const labels: Record<string, string> = {
@@ -43,6 +67,8 @@ export function PropertyStatusBadge({
     ARCHIVED: t("property.status.archived"),
     SOLD: t("property.status.sold"),
     RENTED: t("property.status.rented"),
+    UNDER_OFFER: PROPERTY_STATUS_LABELS.UNDER_OFFER,
+    RESERVED: PROPERTY_STATUS_LABELS.RESERVED,
   };
 
   const normalizedStatus = status.toUpperCase();
