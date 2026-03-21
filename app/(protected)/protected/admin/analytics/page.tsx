@@ -27,6 +27,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { AnalyticsFilters } from "./components/AnalyticsFilters";
 import { ResetViewsButton } from "./components/ResetViewsButton";
+import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
 
 export default async function AnalyticsPage(props: {
   searchParams: Promise<{ range?: string }>;
@@ -37,9 +38,10 @@ export default async function AnalyticsPage(props: {
     return redirect("/protected");
   }
 
+  const tenantId = await getActiveTenantCookie();
   const range = searchParams.range;
   const days = range && range !== "all" ? parseInt(range) : undefined;
-  const { topProperties, topAreas, totalViews } = await getAnalyticsStats(days);
+  const { topProperties, topAreas, totalViews } = await getAnalyticsStats(tenantId, days);
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
