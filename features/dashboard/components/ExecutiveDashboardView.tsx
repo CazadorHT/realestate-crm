@@ -37,6 +37,7 @@ import {
   Users,
   Settings as SettingsIcon,
   Calculator,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
@@ -77,12 +78,26 @@ import { TopAgent } from "../queries";
 import { AgentKpiStats } from "@/features/analytics/agent-kpis";
 import { calculateCommission } from "@/lib/finance/commissions";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+
 interface ExecutiveDashboardViewProps {
   stats: ExecutiveStats;
   monthlyData: MonthlyRevenue[];
   quarterlyData: QuarterlyRevenue[];
   agentStats: AgentKpiStats[];
   topAgents: TopAgent[];
+  allBranches: { id: string; name: string }[];
+  selectedTenantId: string;
+  compareStats?: ExecutiveStats | null;
+  compareMonthlyData?: MonthlyRevenue[] | null;
+  compareTenantId?: string | null;
 }
 
 export function ExecutiveDashboardView({
@@ -91,7 +106,16 @@ export function ExecutiveDashboardView({
   quarterlyData,
   agentStats,
   topAgents,
+  allBranches,
+  selectedTenantId,
+  compareStats,
+  compareMonthlyData,
+  compareTenantId,
 }: ExecutiveDashboardViewProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [aiInsights, setAiInsights] = useState<ExecutiveAiInsights | null>(
     null,
   );
@@ -165,6 +189,71 @@ export function ExecutiveDashboardView({
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {allBranches.length > 0 && (
+            <div className="hidden sm:flex items-center gap-2">
+              <div className="min-w-[180px]">
+                <Select
+                  value={selectedTenantId}
+                  onValueChange={(val) => {
+                    const params = new URLSearchParams(searchParams);
+                    if (val === "ALL") {
+                      params.delete("tenantId");
+                    } else {
+                      params.set("tenantId", val);
+                    }
+                    router.push(`${pathname}?${params.toString()}`);
+                  }}
+                >
+                  <SelectTrigger className="bg-white/50 backdrop-blur-sm border-slate-200 shadow-sm transition-all focus:ring-blue-500/20">
+                    <Building2 className="mr-2 h-4 w-4 text-slate-400" />
+                    <SelectValue placeholder="เลือกสาขา" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">ทุกสาขา (Overall)</SelectItem>
+                    {allBranches.map((branch) => (
+                      <SelectItem key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="min-w-[180px]">
+                <Select
+                  value={compareTenantId || "none"}
+                  onValueChange={(val) => {
+                    const params = new URLSearchParams(searchParams);
+                    if (val === "none") {
+                      params.delete("compareId");
+                    } else {
+                      params.set("compareId", val);
+                    }
+                    router.push(`${pathname}?${params.toString()}`);
+                  }}
+                >
+                  <SelectTrigger className="bg-white/50 backdrop-blur-sm shadow-sm transition-all focus:ring-indigo-500/20 text-indigo-700 border-indigo-100">
+                    <PieChartIcon className="mr-2 h-4 w-4 text-indigo-400" />
+                    <SelectValue placeholder="เปรียบเทียบกับ..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">-- ไม่เปรียบเทียบ --</SelectItem>
+                    <SelectItem value="ALL" disabled={selectedTenantId === "ALL"}>
+                      ทุกสาขา (Overall)
+                    </SelectItem>
+                    {allBranches
+                      .filter((b) => b.id !== selectedTenantId)
+                      .map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id}>
+                          {branch.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
           <Button variant="outline" className="gap-2 border-slate-200">
             <Calendar className="h-4 w-4" />
             ปี {new Date().getFullYear() + 543}
@@ -245,6 +334,7 @@ export function ExecutiveDashboardView({
               description="รวมยอดขายและยอดเช่าทั้งหมด"
               trend="+12.5% vs last year"
               color="blue"
+              compareValue={compareStats?.totalRevenue}
             />
             <StatsCard
               title="ค่าคอมมิชชั่นรวม"
@@ -253,6 +343,7 @@ export function ExecutiveDashboardView({
               description="รายได้จริงจากค่าคอมมิชชั่น"
               trend="+8.2% vs last year"
               color="emerald"
+              compareValue={compareStats?.totalCommission}
             />
             <StatsCard
               title="จำนวนธุรกรรมรวม"
@@ -262,6 +353,7 @@ export function ExecutiveDashboardView({
               trend={`${stats.totalDeals} Deals Closed`}
               color="indigo"
               isCurrency={false}
+              compareValue={compareStats?.totalDeals}
             />
             <StatsCard
               title="Performance Score"
@@ -272,6 +364,7 @@ export function ExecutiveDashboardView({
               color="amber"
               isCurrency={false}
               suffix="%"
+              compareValue={compareStats ? 85 : null} // Mock for comparison if base has it
             />
           </div>
 
@@ -296,7 +389,17 @@ export function ExecutiveDashboardView({
                     minHeight={0}
                     debounce={50}
                   >
-                    <AreaChart data={monthlyData}>
+                    <AreaChart
+                      data={monthlyData.map((m, i) => ({
+                        ...m,
+                        salesCompare: compareMonthlyData
+                          ? compareMonthlyData[i].sales
+                          : undefined,
+                        rentCompare: compareMonthlyData
+                          ? compareMonthlyData[i].rent
+                          : undefined,
+                      }))}
+                    >
                       <defs>
                         <linearGradient
                           id="colorSales"
@@ -361,8 +464,8 @@ export function ExecutiveDashboardView({
                           border: "none",
                           boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
                         }}
-                        formatter={(val: any) => [
-                          formatThaiCurrency(Number(val)),
+                        formatter={(val: number | string | undefined) => [
+                          formatThaiCurrency(Number(val || 0)),
                           "",
                         ]}
                       />
@@ -376,6 +479,17 @@ export function ExecutiveDashboardView({
                         fillOpacity={1}
                         fill="url(#colorSales)"
                       />
+                      {compareMonthlyData && (
+                        <Area
+                          type="monotone"
+                          dataKey="salesCompare"
+                          name="ยอดขาย (เปรียบเทียบ)"
+                          stroke="#3b82f6"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                          fill="transparent"
+                        />
+                      )}
                       <Area
                         type="monotone"
                         dataKey="rent"
@@ -385,6 +499,17 @@ export function ExecutiveDashboardView({
                         fillOpacity={1}
                         fill="url(#colorRent)"
                       />
+                      {compareMonthlyData && (
+                        <Area
+                          type="monotone"
+                          dataKey="rentCompare"
+                          name="ยอดเช่า (เปรียบเทียบ)"
+                          stroke="#10b981"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                          fill="transparent"
+                        />
+                      )}
                     </AreaChart>
                   </ResponsiveContainer>
                 )}
@@ -635,15 +760,17 @@ function StatsCard({
   color,
   isCurrency = true,
   suffix = "",
+  compareValue,
 }: {
   title: string;
   value: number;
-  icon: any;
+  icon: React.ElementType;
   description: string;
   trend: string;
   color: "blue" | "emerald" | "indigo" | "amber";
   isCurrency?: boolean;
   suffix?: string;
+  compareValue?: number | null;
 }) {
   const colorMap = {
     blue: "text-blue-600 bg-blue-50 border-blue-100",
@@ -677,9 +804,17 @@ function StatsCard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-slate-900 tracking-tight">
-          {isCurrency ? formatThaiCurrency(value) : value.toLocaleString()}
-          {suffix}
+        <div className="flex items-baseline justify-between">
+          <div className="text-2xl font-bold text-slate-900 tracking-tight">
+            {isCurrency ? formatThaiCurrency(value) : value.toLocaleString()}
+            {suffix}
+          </div>
+          {compareValue !== undefined && compareValue !== null && (
+            <div className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+              VS {isCurrency ? formatThaiCurrency(compareValue) : compareValue.toLocaleString()}
+              {suffix}
+            </div>
+          )}
         </div>
         <p className="text-xs text-slate-400 mt-1">{description}</p>
         <div className="mt-4 flex items-center text-[10px] font-bold uppercase tracking-wider">

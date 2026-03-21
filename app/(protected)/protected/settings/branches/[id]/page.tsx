@@ -11,6 +11,7 @@ import {
   getTenantInvitationsAction,
   cancelTenantInvitationAction,
 } from "@/lib/actions/tenant-management";
+import { Database } from "@/lib/database.types";
 import {
   Card,
   CardHeader,
@@ -61,22 +62,41 @@ export default function BranchDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  type BranchRole = "OWNER" | "ADMIN" | "MANAGER" | "AGENT" | "VIEWER";
+
   const { id } = use(params);
-  const [branch, setBranch] = useState<any>(null);
-  const [branches, setBranches] = useState<any[]>([]);
-  const [members, setMembers] = useState<any[]>([]);
-  const [invitations, setInvitations] = useState<any[]>([]);
+  
+  type Tenant = Database["public"]["Tables"]["tenants"]["Row"] & { memberCount?: number };
+  type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+  type TenantMember = Database["public"]["Tables"]["tenant_members"]["Row"] & {
+    profiles: {
+      id: string;
+      full_name: string | null;
+      email: string | null;
+      avatar_url: string | null;
+    } | null;
+  };
+  type TenantInvitation = Database["public"]["Tables"]["tenant_invitations"]["Row"];
+
+  const [branch, setBranch] = useState<Tenant | null>(null);
+  const [branches, setBranches] = useState<Tenant[]>([]);
+  const [members, setMembers] = useState<TenantMember[]>([]);
+  const [invitations, setInvitations] = useState<TenantInvitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [open, setOpen] = useState(false);
   const [newMember, setNewMember] = useState({ email: "", role: "AGENT" });
-  const [allProfiles, setAllProfiles] = useState<any[]>([]);
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProfileRole, setSelectedProfileRole] = useState<string | null>(
+    null,
+  );
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferData, setTransferData] = useState<{
     profileId: string;
     role: string;
     name: string;
+    avatarUrl?: string | null;
   } | null>(null);
   const [targetTenantId, setTargetTenantId] = useState("");
   const [isTransferring, setIsTransferring] = useState(false);
@@ -85,30 +105,41 @@ export default function BranchDetailPage({
 
   const fetchData = async () => {
     setIsLoading(true);
+    try {
+      // 1. Fetch all tenants to find this specific one
+      const bRes = await getTenantsAction();
+      if (bRes.error) throw new Error(bRes.error);
+      
+      const current = bRes.data?.find((t) => t.id === id);
+      setBranch(current || null);
+      setBranches((bRes.data as Tenant[]) || []);
 
-    // 1. Fetch all tenants to find this specific one
-    const bRes = await getTenantsAction();
-    const current = bRes.data?.find((t: any) => t.id === id);
-    setBranch(current);
-    setBranches(bRes.data || []);
+      // 2. Fetch members
+      const mRes = await getTenantMembersAction(id);
+      if (mRes.data) {
+        setMembers(mRes.data as TenantMember[]);
+      } else if (mRes.error) {
+        toast.error(mRes.error);
+      }
 
-    // 2. Fetch members
-    const mRes = await getTenantMembersAction(id);
-    if (mRes.data) {
-      setMembers(mRes.data);
-    } else {
-      toast.error(mRes.error || "ไม่สามารถโหลดรายชื่อสมาชิกได้");
+      // 3. Fetch all profiles for the selection list
+      const pRes = await getAllProfilesAction();
+      if (pRes.data) {
+        setAllProfiles(pRes.data as Profile[]);
+      }
+
+      // 4. Fetch pending invitations
+      const iRes = await getTenantInvitationsAction(id);
+      if (iRes.data) {
+        setInvitations(iRes.data as TenantInvitation[]);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "ข้อผิดพลาดที่ไม่รู้จัก";
+      console.error("[BranchDetail] Error fetching data:", err);
+      toast.error("ไม่สามารถโหลดข้อมูลได้: " + errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-
-    // 3. Fetch all profiles for the selection list
-    const pRes = await getAllProfilesAction();
-    setAllProfiles(pRes.data || []);
-
-    // 4. Fetch pending invitations
-    const iRes = await getTenantInvitationsAction(id);
-    setInvitations(iRes.data || []);
-
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -121,13 +152,14 @@ export default function BranchDetailPage({
     const res = await addTenantMemberAction({
       tenantId: id,
       email: newMember.email,
-      role: newMember.role as any,
+      role: newMember.role as BranchRole,
     });
 
     if (res.success) {
       toast.success("เพิ่มสมาชิกเรียบร้อย");
       setOpen(false);
       setNewMember({ email: "", role: "AGENT" });
+      setSelectedProfileRole(null);
       await fetchData();
       await refreshTenants();
     } else {
@@ -169,7 +201,7 @@ export default function BranchDetailPage({
       profileId: transferData.profileId,
       fromTenantId: id,
       toTenantId: targetTenantId,
-      role: transferData.role as any,
+      role: transferData.role as BranchRole,
     });
 
     if (res.success) {
@@ -278,7 +310,12 @@ export default function BranchDetailPage({
                         </Label>
                         <Select
                           onValueChange={(email) => {
-                            setNewMember({ ...newMember, email });
+                            const profile = allProfiles.find(
+                              (p) => p.email === email,
+                            );
+                            const role = profile?.role || "AGENT";
+                            setNewMember({ ...newMember, email, role });
+                            setSelectedProfileRole(role);
                             setSearchQuery("");
                           }}
                         >
@@ -298,12 +335,12 @@ export default function BranchDetailPage({
                                 .map((p) => (
                                   <SelectItem
                                     key={p.id}
-                                    value={p.email}
+                                    value={p.email || ""}
                                     className="w-full"
                                   >
                                     <div className="flex items-center gap-3 w-full py-1">
                                       <Avatar className="h-10 w-10 border border-slate-200 shrink-0">
-                                        <AvatarImage src={p.avatar_url} />
+                                        <AvatarImage src={p.avatar_url || undefined} />
                                         <AvatarFallback className="text-xs bg-blue-50">
                                           {p.full_name?.[0]}
                                         </AvatarFallback>
@@ -328,7 +365,7 @@ export default function BranchDetailPage({
                                           </span>
                                         </div>
                                         <span className="text-[10px] text-slate-400 truncate">
-                                          {p.email}
+                                          {p.email || ""}
                                         </span>
                                       </div>
                                     </div>
@@ -394,16 +431,18 @@ export default function BranchDetailPage({
                                   key={p.id}
                                   type="button"
                                   onClick={() => {
-                                    setNewMember({
-                                      ...newMember,
-                                      email: p.email,
-                                    });
+                                     setNewMember({
+                                       ...newMember,
+                                       email: p.email || "",
+                                       role: p.role || "AGENT",
+                                     });
+                                    setSelectedProfileRole(p.role || "AGENT");
                                     setSearchQuery("");
                                   }}
                                   className="w-full flex items-center gap-3 p-2 hover:bg-white text-left transition-colors border-b border-slate-100 last:border-0"
                                 >
                                   <Avatar className="h-6 w-6">
-                                    <AvatarImage src={p.avatar_url} />
+                                    <AvatarImage src={p.avatar_url || undefined} />
                                     <AvatarFallback className="text-[10px] bg-blue-100">
                                       {p.full_name?.[0]}
                                     </AvatarFallback>
@@ -413,7 +452,7 @@ export default function BranchDetailPage({
                                       {p.full_name}
                                     </p>
                                     <p className="text-[10px] text-slate-500">
-                                      {p.email}
+                                      {p.email || ""}
                                     </p>
                                   </div>
                                 </button>
@@ -436,12 +475,17 @@ export default function BranchDetailPage({
                             <SelectItem value="AGENT">
                               พนักงานขาย (AGENT)
                             </SelectItem>
-                            <SelectItem value="MANAGER">
-                              ผู้จัดการสาขา (MANAGER)
-                            </SelectItem>
-                            <SelectItem value="ADMIN">
-                              ผู้ดูแลระบบ (ADMIN)
-                            </SelectItem>
+                            {(selectedProfileRole === "MANAGER" ||
+                              selectedProfileRole === "ADMIN") && (
+                              <SelectItem value="MANAGER">
+                                ผู้จัดการสาขา (MANAGER)
+                              </SelectItem>
+                            )}
+                            {selectedProfileRole === "ADMIN" && (
+                              <SelectItem value="ADMIN">
+                                ผู้ดูแลระบบ (ADMIN)
+                              </SelectItem>
+                            )}
                             <SelectItem value="VIEWER">
                               ผู้เข้าชม (VIEWER)
                             </SelectItem>
@@ -453,7 +497,10 @@ export default function BranchDetailPage({
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setOpen(false)}
+                        onClick={() => {
+                          setOpen(false);
+                          setSelectedProfileRole(null);
+                        }}
                       >
                         ยกเลิก
                       </Button>
@@ -478,7 +525,7 @@ export default function BranchDetailPage({
                 >
                   <div className="flex items-center gap-4">
                     <Avatar className="h-10 w-10 border">
-                      <AvatarImage src={member.profiles?.avatar_url} />
+                      <AvatarImage src={member.profiles?.avatar_url || undefined} />
                       <AvatarFallback className="bg-blue-50 text-blue-600 font-bold">
                         {member.profiles?.full_name?.[0]?.toUpperCase() || "?"}
                       </AvatarFallback>
@@ -513,11 +560,12 @@ export default function BranchDetailPage({
                           className="text-blue-400 hover:text-blue-600 hover:bg-blue-50"
                           title="ย้ายสาขา"
                           onClick={() => {
-                            setTransferData({
-                              profileId: member.profile_id,
-                              role: member.role,
-                              name: member.profiles?.full_name,
-                            });
+                             setTransferData({
+                               profileId: member.profile_id,
+                               role: member.role,
+                               name: member.profiles?.full_name || "Unknown",
+                               avatarUrl: member.profiles?.avatar_url,
+                             });
                             setTransferOpen(true);
                           }}
                         >
@@ -630,6 +678,7 @@ export default function BranchDetailPage({
               </p>
               <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8">
+                  <AvatarImage src={transferData?.avatarUrl || undefined} />
                   <AvatarFallback className="bg-blue-100 text-blue-600 text-[10px] font-bold">
                     {transferData?.name?.[0]}
                   </AvatarFallback>

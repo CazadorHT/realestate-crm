@@ -26,23 +26,43 @@ export async function getAgentKpiStats(
   try {
     const supabase = await createClient();
 
-    const applyTenantFilter = (query: any) => {
+    const applyTenantFilter = <T extends any>(
+      query: any,
+    ) => {
       if (tenantId && tenantId !== "ALL") {
         return query.eq("tenant_id", tenantId);
       }
       return query;
     };
 
-    // Basic query for profiles with AGENT role
-    let profileQuery = applyTenantFilter(
-      supabase
-        .from("profiles")
-        .select("id, full_name, email, avatar_url")
-        .eq("role", "AGENT"),
-    );
+    // Step 1: Get profile IDs for this tenant if filtering
+    let profileIds: string[] | null = null;
+    if (tenantId && tenantId !== "ALL") {
+      const { data: members, error: memberError } = await supabase
+        .from("tenant_members")
+        .select("profile_id")
+        .eq("tenant_id", tenantId);
+      
+      if (memberError) {
+        console.error("[getAgentKpiStats] Tenant Members Error:", memberError);
+        return [];
+      }
+      profileIds = members?.map((m) => m.profile_id) || [];
+    }
+
+    // Step 2: Query profiles (they don't have tenant_id)
+    let profileQuery = supabase
+      .from("profiles")
+      .select("id, full_name, email, avatar_url")
+      .eq("role", "AGENT");
+
+    if (profileIds) {
+      if (profileIds.length === 0) return []; // No agents in this tenant
+      profileQuery = profileQuery.in("id", profileIds);
+    }
 
     if (agentId) {
-      profileQuery = (profileQuery as any).eq("id", agentId);
+      profileQuery = profileQuery.eq("id", agentId);
     }
 
     const { data: agents, error: profilesError } = await profileQuery;
@@ -75,23 +95,27 @@ export async function getAgentKpiStats(
       console.error("[getAgentKpiStats] Leads Error:", leadsError);
     }
 
-    return agents.map((agent: any) => {
-      const agentDeals = (deals || []).filter(
-        (d: any) => d.created_by === agent.id,
+    type AgentRow = { id: string; full_name: string | null; email: string | null; avatar_url: string | null };
+    type DealRow = { id: string; created_by: string; commission_amount: number | null; deal_type: string; status: string };
+    type LeadRow = { id: string; assigned_to: string | null };
+
+    return (agents as AgentRow[]).map((agent) => {
+      const agentDeals = (deals as unknown as DealRow[] || []).filter(
+        (d: DealRow) => d.created_by === agent.id,
       );
-      const agentLeads = (leads || []).filter(
-        (l: any) => l.assigned_to === agent.id,
+      const agentLeads = (leads as unknown as LeadRow[] || []).filter(
+        (l: LeadRow) => l.assigned_to === agent.id,
       );
 
       const totalRevenue = agentDeals.reduce(
-        (sum: number, d: any) => sum + (d.commission_amount || 0),
+        (sum: number, d: DealRow) => sum + (d.commission_amount || 0),
         0,
       );
       const salesCount = agentDeals.filter(
-        (d: any) => d.deal_type === "SALE",
+        (d: DealRow) => d.deal_type === "SALE",
       ).length;
       const rentCount = agentDeals.filter(
-        (d: any) => d.deal_type === "RENT",
+        (d: DealRow) => d.deal_type === "RENT",
       ).length;
 
       return {
