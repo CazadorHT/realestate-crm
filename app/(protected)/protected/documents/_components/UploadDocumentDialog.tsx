@@ -23,7 +23,11 @@ import { Upload } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export function UploadDocumentDialog() {
+interface UploadDocumentDialogProps {
+  tenantId?: string | null;
+}
+
+export function UploadDocumentDialog({ tenantId }: UploadDocumentDialogProps) {
   const [open, setOpen] = useState(false);
   const [ownerType, setOwnerType] = useState<DocumentOwnerType>("PROPERTY");
   const [ownerId, setOwnerId] = useState("");
@@ -57,7 +61,13 @@ export function UploadDocumentDialog() {
             break;
         }
 
-        const res = await fetch(endpoint);
+        const queryParams = new URLSearchParams();
+        if (tenantId && tenantId !== "ALL") {
+          queryParams.set("tenantId", tenantId);
+        }
+        const url = `${endpoint}${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
 
@@ -189,6 +199,7 @@ export function UploadDocumentDialog() {
               <DocumentUpload
                 ownerId={ownerId}
                 ownerType={ownerType}
+                tenantId={tenantId}
                 onUploadComplete={handleUploadComplete}
               />
             </div>

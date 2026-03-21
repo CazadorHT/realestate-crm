@@ -55,6 +55,7 @@ export const createDocumentSchema = z.object({
   mime_type: z.string().optional(),
   parent_id: z.string().uuid().optional().nullable(),
   version: z.number().optional().default(1),
+  tenant_id: z.string().uuid().optional().nullable(),
 });
 
 export type CreateDocumentInput = z.input<typeof createDocumentSchema>;

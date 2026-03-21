@@ -29,6 +29,7 @@ interface DocumentUploadProps {
   ownerType: DocumentOwnerType;
   onUploadComplete?: () => void;
   parentId?: string; // If provided, new uploads will be versions of this document
+  tenantId?: string | null;
 }
 
 export function DocumentUpload({
@@ -36,6 +37,7 @@ export function DocumentUpload({
   ownerType,
   onUploadComplete,
   parentId,
+  tenantId,
 }: DocumentUploadProps) {
   const [selectedFiles, setSelectedFiles] = useState<
     { file: File; type: DocumentType }[]
@@ -196,6 +198,7 @@ export function DocumentUpload({
             mime_type: file.type,
             size_bytes: finalSize,
             parent_id: parentId,
+            tenant_id: tenantId === "ALL" ? null : tenantId,
           });
 
           if (!res.success) throw new Error(res.message);

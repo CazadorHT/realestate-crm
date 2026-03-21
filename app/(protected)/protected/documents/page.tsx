@@ -8,11 +8,18 @@ import { DocumentWithRelations } from "@/features/documents/types";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 import { TemplateDialog } from "@/features/documents/components/TemplateDialog";
 
+import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
+
 export default async function DocumentsPage() {
   const { role } = await requireAuthContext();
   assertStaff(role);
 
-  const documents = (await getAllDocuments(200)) as DocumentWithRelations[];
+  const tenantId = await getActiveTenantCookie();
+
+  const documents = (await getAllDocuments(
+    200,
+    tenantId,
+  )) as DocumentWithRelations[];
   const totalDocuments = documents?.length || 0;
   const totalSize =
     documents?.reduce((sum, doc) => sum + (doc.size_bytes || 0), 0) || 0;
@@ -40,7 +47,7 @@ export default async function DocumentsPage() {
         actionSlot={
           <div className="flex gap-2">
             <TemplateDialog />
-            <UploadDocumentDialog />
+            <UploadDocumentDialog tenantId={tenantId} />
           </div>
         }
       />
@@ -49,7 +56,7 @@ export default async function DocumentsPage() {
       <DocumentStats documents={documents} />
 
       {/* Documents Grid */}
-      <DocumentsGrid documents={documents || []} />
+      <DocumentsGrid documents={documents || []} tenantId={tenantId} />
 
       {/* Footer Stats */}
       {documents && documents.length > 0 && (

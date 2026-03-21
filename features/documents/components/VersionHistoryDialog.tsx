@@ -29,6 +29,7 @@ interface VersionHistoryDialogProps {
   documentName: string;
   ownerId?: string; // Optional, needed for upload
   ownerType?: any; // Optional, needed for upload
+  tenantId?: string | null;
   trigger?: React.ReactNode;
 }
 
@@ -37,6 +38,7 @@ export function VersionHistoryDialog({
   documentName,
   ownerId,
   ownerType,
+  tenantId,
   trigger,
 }: VersionHistoryDialogProps) {
   const [open, setOpen] = useState(false);
@@ -138,6 +140,7 @@ export function VersionHistoryDialog({
                 ownerId={ownerId}
                 ownerType={ownerType}
                 parentId={documentId}
+                tenantId={tenantId}
                 onUploadComplete={() => {
                   setShowUpload(false);
                   loadVersions();

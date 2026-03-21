@@ -35,4 +35,5 @@ export type DocumentWithRelations = {
   esign_signed_at?: string | null;
   ai_summary?: string | null;
   ai_analysis?: any | null;
+  tenant?: { id: string; name: string } | null;
 };

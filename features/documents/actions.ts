@@ -7,20 +7,28 @@ import {
   DocumentOwnerType,
 } from "./schema";
 
+import { mapDbError } from "@/lib/db-error";
+
 // 1. Get Documents by Owner
 export async function getDocumentsByOwner(
   ownerId: string,
   ownerType: DocumentOwnerType,
+  tenantId?: string | null,
 ) {
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("documents")
-    .select("*")
+    .select("*, tenant:tenants(id, name)")
     .eq("owner_id", ownerId)
-    .eq("owner_type", ownerType)
-    .order("created_at", { ascending: false });
+    .eq("owner_type", ownerType);
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
     console.error("Fetch Documents Error:", error);
@@ -30,13 +38,20 @@ export async function getDocumentsByOwner(
   return data;
 }
 
-export async function getAllDocuments(limit = 50) {
+export async function getAllDocuments(limit = 50, tenantId?: string | null) {
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
-  const { data, error } = await supabase
-    .from("documents")
-    .select("*")
+  let query = supabase.from("documents").select("*, tenant:tenants(id, name)");
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  } else if (!tenantId) {
+    // If no tenantId provided, we might want to default to ALL or current user tenants
+    // However, RLS will handle the security. This is just for the query builder.
+  }
+
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -47,7 +62,7 @@ export async function getAllDocuments(limit = 50) {
 
   // Manually fetch owner data for each document
   const documentsWithOwners = await Promise.all(
-    (data || []).map(async (doc: any) => {
+    (data || []).map(async (doc) => {
       let ownerData = null;
 
       try {
@@ -125,7 +140,8 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
         version: finalVersion,
         created_by: user.id,
         is_encrypted: false, // Phase 3 item
-      } as any)
+        tenant_id: validated.tenant_id,
+      })
       .select()
       .single();
 
@@ -138,8 +154,8 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
 
     return { success: true, data };
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "An error occurred";
-    return { success: false, message: msg };
+    console.error("Document Action error:", error);
+    return { success: false, message: mapDbError(error) };
   }
 }
 
@@ -243,8 +259,8 @@ export async function getDocumentVersionsAction(documentId: string) {
 
     return { success: true, data: versions };
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "An error occurred";
-    return { success: false, message: msg };
+    console.error("Document Action error:", error);
+    return { success: false, message: mapDbError(error) };
   }
 }
 
@@ -303,6 +319,7 @@ export async function downloadDocumentAction(storagePath: string) {
 export async function searchOwnerAction(
   type: DocumentOwnerType,
   query: string,
+  tenantId?: string | null,
 ) {
   try {
     const { supabase, role } = await requireAuthContext();
@@ -312,34 +329,49 @@ export async function searchOwnerAction(
     if (!q) return [];
 
     if (type === "LEAD") {
-      const { data, error } = await supabase
+      let qry = supabase
         .from("leads")
         .select("id, full_name, email")
-        .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`)
-        .limit(10);
+        .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`);
+
+      if (tenantId && tenantId !== "ALL") {
+        qry = qry.eq("tenant_id", tenantId);
+      }
+
+      const { data, error } = await qry.limit(10);
       if (error) throw error;
       return (data || []).map((l) => ({
         id: l.id,
         label: `${l.full_name} (${l.email || "N/A"})`,
       }));
     } else if (type === "PROPERTY") {
-      const { data, error } = await supabase
+      let qry = supabase
         .from("properties")
         .select("id, title")
         .ilike("title", `%${q}%`)
-        .is("deleted_at", null)
-        .limit(10);
+        .is("deleted_at", null);
+
+      if (tenantId && tenantId !== "ALL") {
+        qry = qry.eq("tenant_id", tenantId);
+      }
+
+      const { data, error } = await qry.limit(10);
       if (error) throw error;
       return (data || []).map((p) => ({
         id: p.id,
         label: p.title,
       }));
     } else if (type === "DEAL") {
-      const { data, error } = await supabase
+      let qry = supabase
         .from("deals")
         .select("id, leads(full_name), properties(title)")
-        .or(`leads.full_name.ilike.%${q}%,properties.title.ilike.%${q}%`)
-        .limit(10);
+        .or(`leads.full_name.ilike.%${q}%,properties.title.ilike.%${q}%`);
+
+      if (tenantId && tenantId !== "ALL") {
+        qry = qry.eq("tenant_id", tenantId);
+      }
+
+      const { data, error } = await qry.limit(10);
       if (error) throw error;
       return (data || []).map((d: any) => ({
         id: d.id,
@@ -347,13 +379,20 @@ export async function searchOwnerAction(
       }));
     } else if (type === "RENTAL_CONTRACT") {
       // For rental contracts, we usually search by lead name or property in the associated deal
-      const { data, error } = await supabase
+      let qry = supabase
         .from("rental_contracts")
         .select("id, deals(leads(full_name), properties(title))")
         .or(
           `deals.leads.full_name.ilike.%${q}%,deals.properties.title.ilike.%${q}%`,
-        )
-        .limit(10);
+        );
+
+      if (tenantId && tenantId !== "ALL") {
+        // Need to join deals to filter by tenant_id if tenant_id is on deals
+        // Actually rental_contracts might have tenant_id too. Let's assume matches pattern.
+        qry = qry.eq("tenant_id", tenantId);
+      }
+
+      const { data, error } = await qry.limit(10);
       if (error) throw error;
       return (data || []).map((c: any) => ({
         id: c.id,

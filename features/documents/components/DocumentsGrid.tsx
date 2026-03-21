@@ -28,6 +28,7 @@ import { VersionHistoryDialog } from "./VersionHistoryDialog";
 import { ESignDialog } from "./ESignDialog";
 import { AIDocumentInsight } from "./AIDocumentInsight";
 import { DocumentPreviewDialog } from "./DocumentPreviewDialog";
+import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DocumentWithRelations } from "../types";
 import {
@@ -40,6 +41,7 @@ import { DOC_TYPE_LABELS, DOC_OWNER_TYPE_LABELS } from "../schema";
 
 interface DocumentsGridProps {
   documents: DocumentWithRelations[];
+  tenantId?: string | null;
 }
 
 function formatSize(bytes: number) {
@@ -53,7 +55,7 @@ function formatSize(bytes: number) {
   return `${bytes} B`;
 }
 
-export function DocumentsGrid({ documents }: DocumentsGridProps) {
+export function DocumentsGrid({ documents, tenantId }: DocumentsGridProps) {
   const allIds = useMemo(() => documents?.map((d) => d.id) || [], [documents]);
   const {
     toggleSelect,
@@ -256,6 +258,19 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                       doc.document_type ||
                       "อื่นๆ"}
                   </Badge>
+                  {tenantId === "ALL" && (
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "text-xs shrink-0 border",
+                        doc.tenant
+                          ? "bg-slate-50 text-slate-600 border-slate-200"
+                          : "bg-amber-50 text-amber-600 border-amber-200",
+                      )}
+                    >
+                      {doc.tenant?.name || "ยังไม่มีสาขา"}
+                    </Badge>
+                  )}
                 </div>
 
                 <div className="space-y-2 text-sm text-slate-600 border-t border-slate-100 pt-4">
@@ -362,6 +377,7 @@ export function DocumentsGrid({ documents }: DocumentsGridProps) {
                             documentName={doc.file_name}
                             ownerId={doc.owner_id}
                             ownerType={doc.owner_type}
+                            tenantId={tenantId}
                           />
                         </div>
                       </TooltipTrigger>

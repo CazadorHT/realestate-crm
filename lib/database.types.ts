@@ -418,6 +418,7 @@ export type Database = {
           root_id: string | null
           size_bytes: number | null
           storage_path: string
+          tenant_id: string | null
           version: number | null
         }
         Insert: {
@@ -440,6 +441,7 @@ export type Database = {
           root_id?: string | null
           size_bytes?: number | null
           storage_path: string
+          tenant_id?: string | null
           version?: number | null
         }
         Update: {
@@ -462,6 +464,7 @@ export type Database = {
           root_id?: string | null
           size_bytes?: number | null
           storage_path?: string
+          tenant_id?: string | null
           version?: number | null
         }
         Relationships: [
@@ -484,6 +487,20 @@ export type Database = {
             columns: ["root_id"]
             isOneToOne: false
             referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
