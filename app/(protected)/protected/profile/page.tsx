@@ -11,6 +11,8 @@ import { ProfileAvatar } from "@/features/profile/ProfileAvatar";
 import { ProfileInfoForm } from "@/features/profile/ProfileInfoForm";
 import { AccountSecurityCard } from "@/features/profile/AccountSecurityCard";
 import { NotificationSettings } from "@/features/profile/NotificationSettings";
+import { TenantMembershipCard } from "@/features/profile/TenantMembershipCard";
+import { RolePermissionsNote } from "@/features/profile/RolePermissionsNote";
 import { AdminTeamCard } from "@/features/profile/AdminTeamCard";
 import {
   Card,
@@ -40,6 +42,12 @@ export default async function ProfilePage() {
       </div>
     );
   }
+
+  // Fetch branch memberships
+  const { data: memberships } = await supabase
+    .from("tenant_members")
+    .select("role, tenant:tenants(id, name)")
+    .eq("profile_id", profile.id);
 
   const isAdmin = profile.role === "ADMIN";
 
@@ -83,6 +91,12 @@ export default async function ProfilePage() {
 
           {/* Account Security */}
           <AccountSecurityCard />
+
+          {/* Branch Memberships */}
+          <TenantMembershipCard memberships={memberships as any || []} />
+
+          {/* Role Permissions Guide */}
+          <RolePermissionsNote />
 
           {/* Admin Team (If Admin) */}
           {isAdmin && (
