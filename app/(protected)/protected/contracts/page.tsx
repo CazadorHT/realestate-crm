@@ -7,35 +7,34 @@ import { getContractStatus } from "@/features/contracts/utils";
 import { RentalContractWithRelations } from "@/features/contracts/types";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 
-export default async function RentalContractsPage() {
-  const { supabase, role, tenantId } = await requireAuthContext();
+import { getContracts } from "@/features/contracts/queries";
+import { mapDbError } from "@/lib/db-error";
+import { StatsTimeFilter } from "../../../../components/dashboard/StatsTimeFilter";
+
+interface RentalContractsPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function RentalContractsPage({
+  searchParams,
+}: RentalContractsPageProps) {
+  const { role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
-  // Fetch contracts with deal info
-  const { data, error } = await supabase
-    .from("rental_contracts")
-    .select(
-      `
-      *,
-      deal:deals(
-        id,
-        property:properties(title),
-        lead:leads(
-          id,
-          full_name,
-          phone,
-          email
-        )
-      )
-    `,
-    )
-    .eq("tenant_id", tenantId!)
-    .order("start_date", { ascending: false });
+  const params = await searchParams;
+  const timeRange = (params.timeRange as string) || "all";
+
+  // Fetch contracts using centralized query with multi-tenancy logic
+  // requireAuthContext already handles the active_tenant_id cookie (including "ALL" for all branches)
+  const { data, count, error } = await getContracts({
+    tenantId: tenantId,
+    timeRange,
+  });
 
   if (error) {
     return (
       <div className="p-8 text-red-500">
-        Error loading contracts: {error.message}
+        Error loading contracts: {mapDbError(error)}
       </div>
     );
   }
@@ -57,11 +56,18 @@ export default async function RentalContractsPage() {
         actionSlot={<CreateContractDialog />}
       />
 
+      {/* Time Filter for Stats */}
+      <StatsTimeFilter />
+
       {/* Statistics Cards */}
       <ContractStats contracts={contracts} />
 
       {/* Contracts Table */}
-      <ContractsTable contracts={contracts} />
+      <ContractsTable 
+        contracts={contracts} 
+        totalCount={count} 
+        filters={{ timeRange }} 
+      />
 
       {/* Quick Stats Footer */}
       {contracts.length > 0 && (

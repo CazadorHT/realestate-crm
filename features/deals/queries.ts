@@ -6,10 +6,9 @@ export async function getDealsByLeadId(
 ): Promise<DealWithProperty[]> {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
-  if (!tenantId) throw new Error("Tenant ID is required but missing");
 
   // Fetch deals and join with properties (select title, price, etc.)
-  const { data, error } = await supabase
+  let query = supabase
     .from("deals")
     .select(
       `
@@ -26,8 +25,13 @@ export async function getDealsByLeadId(
     `,
     )
     .eq("lead_id", leadId)
-    .eq("tenant_id", tenantId)
     .order("created_at", { ascending: false });
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching deals:", error);
@@ -42,9 +46,8 @@ export async function getDealById(
 ): Promise<DealWithProperty | null> {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
-  if (!tenantId) throw new Error("Tenant ID is required but missing");
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("deals")
     .select(
       `
@@ -67,9 +70,13 @@ export async function getDealById(
       )
     `,
     )
-    .eq("id", dealId)
-    .eq("tenant_id", tenantId)
-    .single();
+    .eq("id", dealId);
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  const { data, error } = await query.single();
 
   if (error || !data) {
     return null;
@@ -81,9 +88,8 @@ export async function getDealById(
 export async function getDealCommissions(dealId: string) {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
-  if (!tenantId) throw new Error("Tenant ID is required but missing");
 
-  const { data, error } = await (supabase as any)
+  let query = (supabase as any)
     .from("deal_commissions")
     .select(
       `
@@ -96,8 +102,13 @@ export async function getDealCommissions(dealId: string) {
     `,
     )
     .eq("deal_id", dealId)
-    .eq("tenant_id", tenantId)
     .order("created_at", { ascending: true });
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching deal commissions:", error);
@@ -105,4 +116,84 @@ export async function getDealCommissions(dealId: string) {
   }
 
   return data;
+}
+
+export async function getDealsPageStats(timeRange: string = "all") {
+  const { supabase, role, tenantId } = await requireAuthContext();
+  assertStaff(role);
+
+  let query = supabase
+    .from("deals")
+    .select("status, commission_amount, deal_type, created_at");
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  // Handle Time Range
+  const now = new Date();
+  const currentYear = now.getFullYear();
+
+  if (timeRange !== "all") {
+    let startDate: string | null = null;
+    let endDate: string | null = null;
+
+    if (timeRange === "this-month") {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    } else if (timeRange === "6-months") {
+      startDate = new Date(
+        now.getFullYear(),
+        now.getMonth() - 6,
+        1,
+      ).toISOString();
+    } else if (timeRange === "1-year") {
+      startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1).toISOString();
+    } else if (timeRange === "q1") {
+      startDate = new Date(currentYear, 0, 1).toISOString();
+      endDate = new Date(currentYear, 2, 31, 23, 59, 59).toISOString();
+    } else if (timeRange === "q2") {
+      startDate = new Date(currentYear, 3, 1).toISOString();
+      endDate = new Date(currentYear, 5, 30, 23, 59, 59).toISOString();
+    } else if (timeRange === "q3") {
+      startDate = new Date(currentYear, 6, 1).toISOString();
+      endDate = new Date(currentYear, 8, 30, 23, 59, 59).toISOString();
+    } else if (timeRange === "q4") {
+      startDate = new Date(currentYear, 9, 1).toISOString();
+      endDate = new Date(currentYear, 11, 31, 23, 59, 59).toISOString();
+    }
+
+    if (startDate) {
+      query = query.gte("created_at", startDate);
+    }
+    if (endDate) {
+      query = query.lte("created_at", endDate);
+    }
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching deals page stats:", error);
+    return {
+      totalDeals: 0,
+      activeDeals: 0,
+      wonDeals: 0,
+      lostDeals: 0,
+      totalCommission: 0,
+    };
+  }
+
+  const stats = {
+    totalDeals: data.length,
+    activeDeals: data.filter(
+      (d) => d.status === "NEGOTIATING" || d.status === "SIGNED",
+    ).length,
+    wonDeals: data.filter((d) => d.status === "CLOSED_WIN").length,
+    lostDeals: data.filter((d) => d.status === "CLOSED_LOSS").length,
+    totalCommission: data
+      .filter((d) => d.status === "CLOSED_WIN" && d.commission_amount)
+      .reduce((sum, d) => sum + (d.commission_amount || 0), 0),
+  };
+
+  return stats;
 }

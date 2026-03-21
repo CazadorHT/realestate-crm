@@ -13,6 +13,7 @@ type ListArgs = {
   pageSize?: number;
   order?: "created_at" | "transaction_date";
   ascending?: boolean;
+  timeRange?: string;
 };
 
 // Helper interface for the joined result structure
@@ -57,6 +58,7 @@ export async function getDeals({
   pageSize = 20,
   order = "created_at",
   ascending = false,
+  timeRange = "all",
 }: ListArgs = {}) {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
@@ -76,10 +78,40 @@ export async function getDeals({
       { count: "exact" },
     );
 
-  // Branch isolation: Only filter if tenantId exists.
-  // If tenantId is undefined, it means "ALL Branches" view.
-  if (tenantId) {
+  // Branch isolation: Only filter if tenantId exists and is not "ALL".
+  if (tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
+  }
+
+  // Time Range filtering
+  if (timeRange && timeRange !== "all") {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    let startDate: string | null = null;
+    let endDate: string | null = null;
+
+    if (timeRange === "this-month") {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    } else if (timeRange === "6-months") {
+      startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1).toISOString();
+    } else if (timeRange === "1-year") {
+      startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1).toISOString();
+    } else if (timeRange === "q1") {
+      startDate = new Date(currentYear, 0, 1).toISOString();
+      endDate = new Date(currentYear, 2, 31, 23, 59, 59).toISOString();
+    } else if (timeRange === "q2") {
+      startDate = new Date(currentYear, 3, 1).toISOString();
+      endDate = new Date(currentYear, 5, 30, 23, 59, 59).toISOString();
+    } else if (timeRange === "q3") {
+      startDate = new Date(currentYear, 6, 1).toISOString();
+      endDate = new Date(currentYear, 8, 30, 23, 59, 59).toISOString();
+    } else if (timeRange === "q4") {
+      startDate = new Date(currentYear, 9, 1).toISOString();
+      endDate = new Date(currentYear, 11, 31, 23, 59, 59).toISOString();
+    }
+
+    if (startDate) query = query.gte("created_at", startDate);
+    if (endDate) query = query.lte("created_at", endDate);
   }
 
   query = query
@@ -215,4 +247,79 @@ export async function getDeals({
     page: pageSafe,
     pageSize: size,
   };
+}
+
+/**
+ * Fetch all deal IDs matching filters
+ */
+export async function getAllDealIdsQuery({
+  timeRange = "all",
+  q = "",
+  status,
+  property_id,
+  lead_id,
+}: {
+  timeRange?: string;
+  q?: string;
+  status?: string;
+  property_id?: string;
+  lead_id?: string;
+} = {}) {
+  const { supabase, tenantId } = await requireAuthContext();
+
+  let query = supabase.from("deals").select("id");
+
+  // Branch isolation
+  if (tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  // Time Range filtering (same logic as getDeals)
+  if (timeRange && timeRange !== "all") {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    let startDate: string | null = null;
+    let endDate: string | null = null;
+
+    if (timeRange === "this-month") {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    } else if (timeRange === "6-months") {
+      startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1).toISOString();
+    } else if (timeRange === "1-year") {
+      startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1).toISOString();
+    } else if (timeRange === "q1") {
+      startDate = new Date(currentYear, 0, 1).toISOString();
+      endDate = new Date(currentYear, 2, 31, 23, 59, 59).toISOString();
+    } else if (timeRange === "q2") {
+      startDate = new Date(currentYear, 3, 1).toISOString();
+      endDate = new Date(currentYear, 5, 30, 23, 59, 59).toISOString();
+    } else if (timeRange === "q3") {
+      startDate = new Date(currentYear, 6, 1).toISOString();
+      endDate = new Date(currentYear, 8, 30, 23, 59, 59).toISOString();
+    } else if (timeRange === "q4") {
+      startDate = new Date(currentYear, 9, 1).toISOString();
+      endDate = new Date(currentYear, 11, 31, 23, 59, 59).toISOString();
+    }
+
+    if (startDate) query = query.gte("created_at", startDate);
+    if (endDate) query = query.lte("created_at", endDate);
+  }
+
+  // Filters (same as getDeals)
+  const trimmed = q.trim();
+  if (trimmed) {
+    // Note: for simplicity in ID fetch, we only search if it's a UUID or just skip complex join search
+    // If we want exact match, we should mirror the search logic precisely
+    if (/^[0-9a-fA-F-]{36}$/.test(trimmed)) {
+      query = query.eq("id", trimmed);
+    }
+  }
+
+  if (status) query = query.eq("status", status as any);
+  if (property_id) query = query.eq("property_id", property_id);
+  if (lead_id) query = query.eq("lead_id", lead_id);
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return (data || []).map((d) => d.id);
 }

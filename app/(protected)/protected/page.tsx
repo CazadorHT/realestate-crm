@@ -90,10 +90,11 @@ export default async function DashboardPage() {
   // Basic info always fetched fast
   const notificationsPromise = getRecentNotifications(
     profile?.notification_preferences as any,
+    tenantId,
   );
-  const agendaPromise = getTodayAgenda();
-  const followUpPromise = getFollowUpLeads();
-  const riskPromise = getRiskDeals();
+  const agendaPromise = getTodayAgenda(tenantId);
+  const followUpPromise = getFollowUpLeads(tenantId);
+  const riskPromise = getRiskDeals(tenantId);
   const upcomingPromise = getCalendarEvents(new Date(), addDays(new Date(), 7));
 
   // If not staff, show simple card

@@ -21,7 +21,7 @@ import {
 } from "@/features/leads/labels";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
-import { bulkDeleteLeadsAction } from "@/features/leads/bulk-actions";
+import { bulkDeleteLeadsAction, getAllLeadIdsAction } from "@/features/leads/bulk-actions";
 import { exportLeadsAction } from "@/features/leads/export-action";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -33,14 +33,30 @@ import {
   User,
   Eye,
   Building2,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { TransferLeadsDialog } from "@/features/leads/components/TransferLeadsDialog";
 
-export function LeadsTable({ leads }: { leads: LeadRow[] }) {
+export function LeadsTable({
+  leads,
+  totalCount,
+  showBranch,
+  currentTenantId,
+  isMultiTenant,
+  filters = {},
+}: {
+  leads: LeadRow[];
+  totalCount: number;
+  showBranch?: boolean;
+  currentTenantId?: string | null;
+  isMultiTenant?: boolean;
+  filters?: { q?: string; stage?: string };
+}) {
   const allIds = useMemo(() => leads.map((l) => l.id), [leads]);
   const {
     toggleSelect,
@@ -54,6 +70,22 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
   } = useTableSelection(allIds);
 
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+
+  const handleSelectAllGlobal = async () => {
+    setIsGlobalLoading(true);
+    try {
+      const result = await getAllLeadIdsAction(filters);
+      if (result.success && result.ids) {
+        toggleSelectAll(result.ids);
+        toast.info(`เลือกทั้งหมด ${result.ids.length} รายการแล้ว`);
+      }
+    } catch (err) {
+      toast.error("ไม่สามารถเลือกทั้งหมดได้");
+    } finally {
+      setIsGlobalLoading(false);
+    }
+  };
 
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
@@ -73,9 +105,51 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
         onClear={clearSelection}
         onDelete={handleBulkDelete}
         onExport={() => exportLeadsAction(Array.from(selectedIds))}
-        onTransfer={() => setIsTransferDialogOpen(true)}
+        onTransfer={
+          isMultiTenant &&
+          currentTenantId && 
+          currentTenantId !== "ALL" && 
+          !showBranch 
+            ? (() => setIsTransferDialogOpen(true)) 
+            : undefined
+        }
         entityName="ลีด"
       />
+
+      {/* Global Selection Indicator */}
+      {isAllSelected && selectedCount < totalCount && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-300 shadow-sm">
+          <div className="flex items-center gap-3 text-sm text-blue-800">
+            <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
+            <span>เลือกทั้งหมด {selectedCount} ลีดในหน้านี้แล้ว</span>
+          </div>
+          <button
+            onClick={handleSelectAllGlobal}
+            disabled={isGlobalLoading}
+            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2"
+          >
+            {isGlobalLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : null}
+            เลือกทั้งหมด {totalCount} ลีดในระบบ
+          </button>
+        </div>
+      )}
+
+      {selectedCount === totalCount && totalCount > leads.length && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in duration-300">
+          <div className="flex items-center gap-3 text-sm text-emerald-800">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <span>คุณได้เลือกทั้งหมด <strong>{totalCount}</strong> ลีดในระบบแล้ว (ทุกหน้า)</span>
+          </div>
+          <button
+            onClick={clearSelection}
+            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all"
+          >
+            ยกเลิกการเลือก
+          </button>
+        </div>
+      )}
 
       <TransferLeadsDialog
         isOpen={isTransferDialogOpen}

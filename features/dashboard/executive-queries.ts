@@ -33,6 +33,7 @@ export type PipelineStats = {
 };
 
 export async function getExecutiveStats(
+  tenantId?: string | null,
   year?: number,
 ): Promise<ExecutiveStats> {
   const supabase = await createClient();
@@ -40,26 +41,37 @@ export async function getExecutiveStats(
   const startOfYear = new Date(currentYear, 0, 1).toISOString();
   const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59).toISOString();
 
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
   // 1. Fetch CLOSED_WIN deals for commission and deal counts
-  const { data: deals, error: dealsError } = await supabase
-    .from("deals")
-    .select("deal_type, commission_amount, created_at")
-    .eq("status", "CLOSED_WIN")
-    .gte("created_at", startOfYear)
-    .lte("created_at", endOfYear);
+  const { data: deals, error: dealsError } = await applyTenantFilter(
+    supabase
+      .from("deals")
+      .select("deal_type, commission_amount, created_at")
+      .eq("status", "CLOSED_WIN")
+      .gte("created_at", startOfYear)
+      .lte("created_at", endOfYear),
+  );
 
   if (dealsError) {
     console.error("[getExecutiveStats] Deals error:", dealsError);
   }
 
   // 2. Fetch SOLD/RENTED properties for revenue
-  const { data: properties, error: propsError } = await supabase
-    .from("properties")
-    .select("price, rental_price, status, updated_at")
-    .in("status", ["SOLD", "RENTED"])
-    .is("deleted_at", null)
-    .gte("updated_at", startOfYear)
-    .lte("updated_at", endOfYear);
+  const { data: properties, error: propsError } = await applyTenantFilter(
+    supabase
+      .from("properties")
+      .select("price, rental_price, status, updated_at")
+      .in("status", ["SOLD", "RENTED"])
+      .is("deleted_at", null)
+      .gte("updated_at", startOfYear)
+      .lte("updated_at", endOfYear),
+  );
 
   if (propsError) {
     console.error("[getExecutiveStats] Properties error:", propsError);
@@ -77,7 +89,7 @@ export async function getExecutiveStats(
     rentalCount: 0,
   };
 
-  deals?.forEach((d) => {
+  deals?.forEach((d: any) => {
     const comm = d.commission_amount || 0;
     stats.totalCommission += comm;
     if (d.deal_type === "SALE") {
@@ -90,7 +102,7 @@ export async function getExecutiveStats(
     }
   });
 
-  properties?.forEach((p) => {
+  properties?.forEach((p: any) => {
     const val = p.status === "SOLD" ? p.price || 0 : p.rental_price || 0;
     stats.totalRevenue += val;
     if (p.status === "SOLD") stats.salesRevenue += p.price || 0;
@@ -101,18 +113,28 @@ export async function getExecutiveStats(
 }
 
 export async function getMonthlyRevenueData(
+  tenantId?: string | null,
   year?: number,
 ): Promise<MonthlyRevenue[]> {
   const supabase = await createClient();
   const currentYear = year || new Date().getFullYear();
 
-  const { data, error } = await supabase
-    .from("properties")
-    .select("price, rental_price, status, updated_at")
-    .in("status", ["SOLD", "RENTED"])
-    .is("deleted_at", null)
-    .gte("updated_at", new Date(currentYear, 0, 1).toISOString())
-    .lte("updated_at", new Date(currentYear, 11, 31, 23, 59, 59).toISOString());
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
+  const { data, error } = await applyTenantFilter(
+    supabase
+      .from("properties")
+      .select("price, rental_price, status, updated_at")
+      .in("status", ["SOLD", "RENTED"])
+      .is("deleted_at", null)
+      .gte("updated_at", new Date(currentYear, 0, 1).toISOString())
+      .lte("updated_at", new Date(currentYear, 11, 31, 23, 59, 59).toISOString()),
+  );
 
   if (error) {
     console.error("[getMonthlyRevenueData] Error:", error);
@@ -141,7 +163,7 @@ export async function getMonthlyRevenueData(
     total: 0,
   }));
 
-  data?.forEach((p) => {
+  data?.forEach((p: any) => {
     const date = new Date(p.updated_at);
     const monthIndex = date.getMonth();
     const val = p.status === "SOLD" ? p.price || 0 : p.rental_price || 0;
@@ -156,9 +178,10 @@ export async function getMonthlyRevenueData(
 }
 
 export async function getQuarterlyRevenueData(
+  tenantId?: string | null,
   year?: number,
 ): Promise<QuarterlyRevenue[]> {
-  const monthlyData = await getMonthlyRevenueData(year);
+  const monthlyData = await getMonthlyRevenueData(tenantId, year);
 
   const quarterlyData: QuarterlyRevenue[] = [
     { quarter: "Q1 (ม.ค.-มี.ค.)", sales: 0, rent: 0, total: 0 },
@@ -177,20 +200,31 @@ export async function getQuarterlyRevenueData(
   return quarterlyData;
 }
 
-export async function getPipelineStats(): Promise<PipelineStats> {
+export async function getPipelineStats(
+  tenantId?: string | null,
+): Promise<PipelineStats> {
   const supabase = await createClient();
 
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
   // Fetch deals that are not closed, with their property price/rental_price
-  const { data: deals, error } = await supabase
-    .from("deals")
-    .select(
-      `
+  const { data: deals, error } = await applyTenantFilter(
+    supabase
+      .from("deals")
+      .select(
+        `
       status, 
       deal_type,
       property:properties(price, rental_price)
     `,
-    )
-    .not("status", "in", '("CLOSED_WIN","CLOSED_LOSS")');
+      )
+      .not("status", "in", '("CLOSED_WIN","CLOSED_LOSS")'),
+  );
 
   if (error) {
     console.error("[getPipelineStats] Error:", error);

@@ -26,9 +26,11 @@ import { differenceInHours } from "date-fns";
 import { formatDate, cn } from "@/lib/utils";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
-import { bulkDeleteRentalContractsAction } from "@/features/contracts/bulk-actions";
+import { bulkDeleteRentalContractsAction, getAllContractIdsAction } from "@/features/contracts/bulk-actions";
 import { toast } from "sonner";
 import { RentalContractWithRelations } from "../types";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 function getContractStatus(endDate: string) {
   const now = new Date();
@@ -55,9 +57,17 @@ function getContractStatus(endDate: string) {
 
 interface ContractsTableProps {
   contracts: RentalContractWithRelations[];
+  totalCount: number;
+  filters?: {
+    timeRange?: string;
+  };
 }
 
-export function ContractsTable({ contracts }: ContractsTableProps) {
+export function ContractsTable({
+  contracts,
+  totalCount,
+  filters = {},
+}: ContractsTableProps) {
   const allIds = useMemo(() => contracts.map((c) => c.id), [contracts]);
   const {
     toggleSelect,
@@ -69,6 +79,25 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
     selectedCount,
     selectedIds,
   } = useTableSelection(allIds);
+
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+
+  const handleSelectAllGlobal = async () => {
+    setIsGlobalLoading(true);
+    try {
+      const result = await getAllContractIdsAction({
+        timeRange: filters.timeRange,
+      });
+      if (result.success && result.ids) {
+        toggleSelectAll(result.ids);
+        toast.info(`เลือกทั้งหมด ${result.ids.length} รายการแล้ว`);
+      }
+    } catch (err) {
+      toast.error("ไม่สามารถเลือกทั้งหมดได้");
+    } finally {
+      setIsGlobalLoading(false);
+    }
+  };
 
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
@@ -90,6 +119,41 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
         onDelete={handleBulkDelete}
         entityName="สัญญา"
       />
+
+      {/* Global Selection Indicator */}
+      {isAllSelected && selectedCount < totalCount && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-300 shadow-sm">
+          <div className="flex items-center gap-3 text-sm text-blue-800">
+            <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
+            <span>เลือกทั้งหมด {selectedCount} สัญญาในหน้านี้แล้ว</span>
+          </div>
+          <button
+            onClick={handleSelectAllGlobal}
+            disabled={isGlobalLoading}
+            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2"
+          >
+            {isGlobalLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : null}
+            เลือกทั้งหมด {totalCount} สัญญาในระบบ
+          </button>
+        </div>
+      )}
+
+      {selectedCount === totalCount && totalCount > contracts.length && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in duration-300">
+          <div className="flex items-center gap-3 text-sm text-emerald-800">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <span>คุณได้เลือกทั้งหมด <strong>{totalCount}</strong> สัญญาในระบบแล้ว (ทุกหน้า)</span>
+          </div>
+          <button
+            onClick={clearSelection}
+            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all"
+          >
+            ยกเลิกการเลือก
+          </button>
+        </div>
+      )}
 
       {/* Desktop Table */}
       <div className="hidden lg:block rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -123,15 +187,14 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                 const statusInfo = getContractStatus(contract.end_date);
                 const propertyTitle =
                   contract.deal?.property?.title || "ไม่ระบุทรัพย์สิน";
+                
+                // Tenant info (from lead)
                 const tenantName =
                   contract.deal?.lead?.full_name ||
-                  contract.tenant_name ||
                   "ไม่ระบุ";
                 const tenantContact =
                   contract.deal?.lead?.phone ||
                   contract.deal?.lead?.email ||
-                  contract.tenant_phone ||
-                  contract.tenant_email ||
                   "-";
 
                 return (
@@ -194,9 +257,9 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                       <div className="text-sm">
                         {formatDate(contract.end_date)}
                       </div>
-                      {contract.duration_months && (
+                      {contract.lease_term_months && (
                         <div className="text-xs text-slate-500 mt-1">
-                          {contract.duration_months} เดือน
+                          {contract.lease_term_months} เดือน
                         </div>
                       )}
                     </TableCell>
@@ -302,7 +365,6 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
             const isSel = isSelected(contract.id);
             const tenantName =
               contract.deal?.lead?.full_name ||
-              contract.tenant_name ||
               "ไม่ระบุ";
 
             return (

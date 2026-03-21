@@ -9,7 +9,7 @@ import { ExecutiveDashboardView } from "@/features/dashboard/components/Executiv
 import { requireAuthContext, assertAdminOrManager } from "@/lib/authz";
 
 export default async function ExecutiveDashboardPage() {
-  const { role } = await requireAuthContext();
+  const { role, tenantId } = await requireAuthContext();
   assertAdminOrManager(role);
 
   const year = new Date().getFullYear();
@@ -17,11 +17,11 @@ export default async function ExecutiveDashboardPage() {
   // Fetch data in parallel
   const [stats, monthlyData, quarterlyData, agentStats, topAgents] =
     await Promise.all([
-      getExecutiveStats(year),
-      getMonthlyRevenueData(year),
-      getQuarterlyRevenueData(year),
-      getAgentKpiStats(),
-      getAdvancedTopAgents(),
+      getExecutiveStats(tenantId, year),
+      getMonthlyRevenueData(tenantId, year),
+      getQuarterlyRevenueData(tenantId, year),
+      getAgentKpiStats(tenantId),
+      getAdvancedTopAgents(tenantId),
     ]);
 
   return (

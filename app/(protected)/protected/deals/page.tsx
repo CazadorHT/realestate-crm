@@ -1,7 +1,9 @@
 import { getDeals } from "@/features/deals/queries.getDeals";
 import { getPropertiesForSelect } from "@/features/properties/queries";
+import { getDealsPageStats } from "@/features/deals/queries";
 import { DealsTable } from "@/features/deals/DealsTable";
 import { CreateDealButton } from "./_components/CreateDealButton";
+import { StatsTimeFilter } from "../../../../components/dashboard/StatsTimeFilter";
 import { requireAuthContext } from "@/lib/authz";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -16,30 +18,35 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SectionTitle } from "@/components/dashboard/SectionTitle";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 
+interface DealsPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
 export const metadata = {
   title: "Deals | จัดการดีล",
 };
 
-export default async function DealsPage() {
+export default async function DealsPage({ searchParams }: DealsPageProps) {
   const { tenantId } = await requireAuthContext();
+  const params = await searchParams;
+  const timeRange = (params.timeRange as string) || "all";
 
-  const { data, count } = await getDeals({ page: 1, pageSize: 100 }); // Get more for stats
-  const properties = await getPropertiesForSelect();
+  const [{ data, count }, dealsStats, properties] = await Promise.all([
+    getDeals({ page: 1, pageSize: 20, timeRange }),
+    getDealsPageStats(timeRange),
+    getPropertiesForSelect(),
+  ]);
 
-  // Calculate statistics
-  const totalDeals = data.length;
-  const activeDeals = data.filter(
-    (d) => d.status === "NEGOTIATING" || d.status === "SIGNED",
-  ).length;
-  const wonDeals = data.filter((d) => d.status === "CLOSED_WIN").length;
-  const lostDeals = data.filter((d) => d.status === "CLOSED_LOSS").length;
+  // Use accurate statistics from getDealsPageStats
+  const {
+    totalDeals,
+    activeDeals,
+    wonDeals,
+    lostDeals,
+    totalCommission,
+  } = dealsStats;
 
-  // Calculate total commission from won deals
-  const totalCommission = data
-    .filter((d) => d.status === "CLOSED_WIN" && d.commission_amount)
-    .reduce((sum, d) => sum + (d.commission_amount || 0), 0);
-
-  const isEmptyState = data.length === 0;
+  const isEmptyState = totalDeals === 0;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -52,6 +59,9 @@ export default async function DealsPage() {
         gradient="amber"
         actionSlot={<CreateDealButton properties={properties} />}
       />
+
+      {/* Time Filter for Stats */}
+      <StatsTimeFilter />
 
       {/* Statistics Cards */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-5">
@@ -189,6 +199,7 @@ export default async function DealsPage() {
                 initialPage={1}
                 pageSize={20}
                 properties={properties}
+                timeRange={timeRange}
               />
             </div>
           </div>

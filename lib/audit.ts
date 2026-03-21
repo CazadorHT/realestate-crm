@@ -53,7 +53,9 @@ export type AuditAction =
   | "member.remove"
   | "member.transfer"
   | "property.transfer_branch"
-  | "owner.transfer_branch";
+  | "owner.transfer_branch"
+  | "commission.export_pdf"
+  | "commission.send_line";
 
 type AuditInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];
 

@@ -164,7 +164,14 @@ export function OwnersTable({
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
-        onPull={handleBulkPull}
+        onPull={
+          isMultiTenant &&
+          currentTenantId && 
+          currentTenantId !== "ALL" && 
+          !showBranch 
+            ? handleBulkPull 
+            : undefined
+        }
         onPullLabel="ดึงมาสาขาตัวเอง"
         onPullConfirmMessage={pullConfirmMessage}
         onExport={() => exportOwnersAction(Array.from(selectedIds))}

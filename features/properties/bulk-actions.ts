@@ -293,3 +293,32 @@ export async function bulkMovePropertiesToTenantAction(ids: string[]): Promise<{
     };
   }
 }
+
+/**
+ * Fetch all property IDs matching filters (for global selection)
+ */
+export async function getAllPropertyIdsAction(args: {
+  q?: string;
+  status?: string;
+  type?: string;
+  listing?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  bedrooms?: string;
+  bathrooms?: string;
+  province?: string;
+  district?: string;
+  popular_area?: string;
+  nearTransit?: string;
+  petFriendly?: string;
+  fullyFurnished?: string;
+  allBranches?: string;
+}) {
+  try {
+    const { getAllPropertyIdsQuery } = await import("./queries");
+    const ids = await getAllPropertyIdsQuery(args);
+    return { success: true, ids };
+  } catch (error) {
+    return { success: false, ids: [], message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด" };
+  }
+}

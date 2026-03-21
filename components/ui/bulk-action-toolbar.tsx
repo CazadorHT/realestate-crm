@@ -160,7 +160,7 @@ export function BulkActionToolbar({
               variant="outline"
               size="sm"
               onClick={onTransfer}
-              className="h-8 text-xs bg-white hover:bg-blue-50 border-blue-200 text-blue-700"
+              className="h-8 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium"
             >
               <Loader2
                 className="h-3.5 w-3.5 mr-1 hidden"

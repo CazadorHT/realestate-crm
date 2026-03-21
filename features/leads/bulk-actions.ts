@@ -60,3 +60,19 @@ export async function bulkDeleteLeadsAction(
     return authzFail(error);
   }
 }
+
+/**
+ * Fetch all lead IDs matching filters (for global selection)
+ */
+export async function getAllLeadIdsAction(args: {
+  q?: string;
+  stage?: string;
+}) {
+  try {
+    const { getAllLeadIdsQuery } = await import("./queries");
+    const ids = await getAllLeadIdsQuery(args);
+    return { success: true, ids };
+  } catch (error) {
+    return { success: false, ids: [], message: mapDbError(error) };
+  }
+}

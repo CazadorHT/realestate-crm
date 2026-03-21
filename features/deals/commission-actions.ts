@@ -1,15 +1,13 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import {
   generateCommissionPdf,
   CommissionStatementData,
 } from "@/lib/finance/commission-pdf";
 import { buildCommissionStatementFlex } from "@/lib/line-flex-builders";
-import { sendLineNotification } from "@/lib/line";
 import { format } from "date-fns";
-import { requireAuthContext } from "@/lib/authz";
-import { mapDbError } from "@/lib/db-error";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { logAudit } from "@/lib/audit";
 
 export type LineSendResult = {
   success: boolean;
@@ -17,8 +15,10 @@ export type LineSendResult = {
 };
 
 export async function exportCommissionPdfAction(commissionId: string) {
-  const { supabase, tenantId, role } = await requireAuthContext();
+  const ctx = await requireAuthContext();
+  const { supabase, tenantId, role } = ctx;
   if (!tenantId) return { success: false, message: "Unauthorized branch" };
+  assertStaff(role);
 
   const { data: comm, error } = await (supabase as any)
     .from("deal_commissions")
@@ -51,6 +51,15 @@ export async function exportCommissionPdfAction(commissionId: string) {
 
   try {
     const pdfBytes = await generateCommissionPdf(pdfData);
+    
+    // Audit log
+    await logAudit(ctx, {
+      action: "commission.export_pdf",
+      entity: "deal_commissions",
+      entityId: commissionId,
+      metadata: { dealId: comm.deal_id },
+    });
+
     // Convert to base64 for transmission
     const base64 = Buffer.from(pdfBytes).toString("base64");
 
@@ -66,8 +75,10 @@ export async function exportCommissionPdfAction(commissionId: string) {
 }
 
 export async function sendCommissionToLineAction(commissionId: string) {
-  const { supabase, tenantId } = await requireAuthContext();
+  const ctx = await requireAuthContext();
+  const { supabase, tenantId, role } = ctx;
   if (!tenantId) return { success: false, message: "Unauthorized branch" };
+  assertStaff(role);
 
   const { data: comm, error } = await (supabase as any)
     .from("deal_commissions")
@@ -104,17 +115,18 @@ export async function sendCommissionToLineAction(commissionId: string) {
   });
 
   try {
-    // Note: sendLineNotification currently uses LINE_ADMIN_USER_ID if nothing is passed,
-    // but we want to send to the specific agent.
-    // I might need to modify sendLineNotification in lib/line.ts to accept a 'to' parameter or use a lower level call.
+    const result = await sendToSpecificLineUser(lineId, flexMessage);
+    
+    if (result.success) {
+      await logAudit(ctx, {
+        action: "commission.send_line",
+        entity: "deal_commissions",
+        entityId: commissionId,
+        metadata: { dealId: comm.deal_id, userId: lineId },
+      });
+    }
 
-    // Let's assume we can pass the ID. If not, I'll fix lib/line.ts.
-    // Looking at lib/line.ts, it doesn't take a 'to' parameter in its signature.
-
-    // I'll call the API directly or fix lib/line.ts.
-    // Fix lib/line.ts is better for future use.
-
-    return await sendToSpecificLineUser(lineId, flexMessage);
+    return result;
   } catch (err) {
     console.error("LINE Send Error:", err);
     return { success: false, message: "Failed to send to LINE" };

@@ -8,6 +8,7 @@ export function useDealsTable(
   initialCount: number = 0,
   initialPage: number = 1,
   pageSize: number = 20,
+  initialTimeRange: string = "all",
 ) {
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
@@ -21,13 +22,15 @@ export function useDealsTable(
   const [selectedLeadId, setSelectedLeadId] = useState<string | undefined>(
     undefined,
   );
+  const [timeRange, setTimeRange] = useState(initialTimeRange);
   const [reloadKey, setReloadKey] = useState(0);
 
   // Sync state with props
   useEffect(() => {
     setData(initialData);
     setCount(initialCount);
-  }, [initialData, initialCount]);
+    setTimeRange(initialTimeRange);
+  }, [initialData, initialCount, initialTimeRange]);
 
   // Debounce search
   useEffect(() => {
@@ -45,6 +48,7 @@ export function useDealsTable(
       if (selectedPropertyId !== undefined)
         params.set("property_id", selectedPropertyId);
       if (selectedLeadId !== undefined) params.set("lead_id", selectedLeadId);
+      if (timeRange && timeRange !== "all") params.set("timeRange", timeRange);
       params.set("page", String(page));
       params.set("pageSize", String(pageSize));
 
@@ -73,6 +77,7 @@ export function useDealsTable(
     reloadKey,
     selectedPropertyId,
     selectedLeadId,
+    timeRange,
   ]);
 
   const totalPages = Math.max(1, Math.ceil(count / pageSize));
@@ -99,6 +104,8 @@ export function useDealsTable(
     setSelectedPropertyId,
     selectedLeadId,
     setSelectedLeadId,
+    timeRange,
+    setTimeRange,
     totalPages,
     hasActiveFilters,
     refresh,

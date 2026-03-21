@@ -25,15 +25,18 @@ export async function getContractByDealId(
     assertStaff(role);
 
     // Load contract
-    // Use .order and .limit instead of .single to handle cases where duplicates might exist
-    // This prevents the whole section from failing if multiple contracts were created for one deal.
-    const { data: contracts, error } = await supabase
+    let query = supabase
       .from("rental_contracts")
       .select("*")
       .eq("deal_id", dealId)
-      .eq("tenant_id", ctx.tenantId!)
       .order("created_at", { ascending: false })
       .limit(1);
+
+    if (ctx.tenantId && ctx.tenantId !== "ALL") {
+      query = query.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { data: contracts, error } = await query;
 
     if (error || !contracts || contracts.length === 0) return null;
 
@@ -67,13 +70,16 @@ export async function upsertContractAction(
       // Try to get deal_id for audit if provided in update
       dealIdForAudit = validatedUpdate.deal_id || "";
 
-      const updateRes = await supabase
+      let updateQuery = supabase
         .from("rental_contracts")
         .update(updateData)
-        .eq("id", id)
-        .eq("tenant_id", ctx.tenantId!)
-        .select()
-        .single();
+        .eq("id", id);
+
+      if (ctx.tenantId && ctx.tenantId !== "ALL") {
+        updateQuery = updateQuery.eq("tenant_id", ctx.tenantId);
+      }
+
+      const updateRes = await updateQuery.select().single();
       data = updateRes.data;
       error = updateRes.error;
 
@@ -87,11 +93,16 @@ export async function upsertContractAction(
       dealIdForAudit = validatedCreate.deal_id;
 
       // Check if a contract already exists for this deal to prevent duplicates
-      const { data: existingContract } = await supabase
-        .from("rental_contracts")
-        .select("id")
-        .eq("deal_id", validatedCreate.deal_id)
-        .eq("tenant_id", ctx.tenantId!)
+      const { data: existingContract } = await (ctx.tenantId && ctx.tenantId !== "ALL"
+        ? supabase
+            .from("rental_contracts")
+            .select("id")
+            .eq("deal_id", validatedCreate.deal_id)
+            .eq("tenant_id", ctx.tenantId)
+        : supabase
+            .from("rental_contracts")
+            .select("id")
+            .eq("deal_id", validatedCreate.deal_id))
         .maybeSingle();
 
       if (existingContract) {
@@ -101,13 +112,19 @@ export async function upsertContractAction(
         };
       }
 
-      // Validate deal type
-      const { data: deal, error: dealErr } = await supabase
+      // Validate deal type and get tenant_id
+      // For ADMIN in "ALL Branches" mode, we allow looking up deal without tenantId filter
+      // but we MUST use the deal's tenant_id for the contract.
+      let dealQuery = supabase
         .from("deals")
-        .select("id, deal_type")
-        .eq("id", validatedCreate.deal_id)
-        .eq("tenant_id", ctx.tenantId!)
-        .single();
+        .select("id, deal_type, tenant_id")
+        .eq("id", validatedCreate.deal_id);
+
+      if (ctx.tenantId && ctx.tenantId !== "ALL") {
+        dealQuery = dealQuery.eq("tenant_id", ctx.tenantId);
+      }
+
+      const { data: deal, error: dealErr } = await dealQuery.single();
 
       if (dealErr || !deal)
         return { success: false, message: "ไม่พบข้อมูลดีลที่ต้องการ" };
@@ -118,7 +135,10 @@ export async function upsertContractAction(
         };
 
       // Create -> auto-generate contract number if not provided
-      const toInsert: any = { ...validatedCreate, tenant_id: ctx.tenantId! };
+      const toInsert: any = { 
+        ...validatedCreate, 
+        tenant_id: deal.tenant_id // Always use the deal's tenant_id for consistency
+      };
       if (!toInsert.contract_number) {
         toInsert.contract_number = `RC-${new Date().getFullYear()}-${Math.random()
           .toString(36)
@@ -183,21 +203,30 @@ export async function deleteContractAction(id: string) {
     assertStaff(role);
 
     // Ensure contract exists
-    const { data: existing, error: fetchErr } = await supabase
-      .from("rental_contracts")
-      .select("id, deal_id")
-      .eq("id", id)
-      .eq("tenant_id", ctx.tenantId!)
+    const { data: existing, error: fetchErr } = await (ctx.tenantId &&
+    ctx.tenantId !== "ALL"
+      ? supabase
+          .from("rental_contracts")
+          .select("id, deal_id")
+          .eq("id", id)
+          .eq("tenant_id", ctx.tenantId)
+      : supabase.from("rental_contracts").select("id, deal_id").eq("id", id))
       .single();
 
     if (fetchErr || !existing)
       return { success: false, message: "ไม่พบสัญญาที่ต้องการ" };
 
-    const { error } = await supabase
+    // Delete query
+    let deleteQuery = supabase
       .from("rental_contracts")
       .delete()
-      .eq("id", id)
-      .eq("tenant_id", ctx.tenantId!);
+      .eq("id", id);
+
+    if (ctx.tenantId && ctx.tenantId !== "ALL") {
+      deleteQuery = deleteQuery.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { error } = await deleteQuery;
     if (error) return { success: false, message: mapDbError(error) };
 
     await logAudit({ supabase, user, role } as any, {

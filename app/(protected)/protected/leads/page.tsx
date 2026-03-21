@@ -17,6 +17,8 @@ import { LeadsStats } from "@/components/leads/LeadsStats";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SectionTitle } from "@/components/dashboard/SectionTitle";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { requireAuthContext } from "@/lib/authz";
+import { getSystemConfig } from "@/lib/actions/system-config";
 
 export default async function LeadsPage({
   searchParams,
@@ -26,9 +28,13 @@ export default async function LeadsPage({
     stage?: string;
     page?: string;
     view?: string;
+    allBranches?: string;
   }>;
 }) {
   const sp = (await searchParams) ?? {};
+  const { tenantId } = await requireAuthContext();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
   const view = sp.view ?? "list";
   const page = Number(sp.page ?? "1") || 1;
 
@@ -140,7 +146,14 @@ export default async function LeadsPage({
             />
           ) : (
             <>
-              <LeadsTable leads={listLeads} />
+              <LeadsTable 
+                leads={listLeads} 
+                totalCount={count} 
+                showBranch={sp.allBranches === "true"}
+                currentTenantId={tenantId}
+                isMultiTenant={isMultiTenant}
+                filters={{ q: sp.q, stage: sp.stage }} 
+              />
 
               <div className="flex items-center justify-between text-sm bg-slate-50 rounded-xl p-4 border border-slate-200 shadow-sm">
                 <div className="text-slate-600 font-medium">

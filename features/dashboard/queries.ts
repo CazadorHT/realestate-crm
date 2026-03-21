@@ -479,8 +479,18 @@ export async function getTopAgents(tenantId?: string | null): Promise<TopAgent[]
   return result;
 }
 
-export async function getAdvancedTopAgents(): Promise<TopAgent[]> {
+export async function getAdvancedTopAgents(
+  tenantId?: string | null,
+): Promise<TopAgent[]> {
   const supabase = await createClient();
+
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
   const now = new Date();
   const startOfMonth = new Date(
     now.getFullYear(),
@@ -490,9 +500,8 @@ export async function getAdvancedTopAgents(): Promise<TopAgent[]> {
 
   // Fetch commissions from deal_commissions joined with profiles
   // We use "any" for the table name since it's newly added and might not be in Database types yet
-  const { data: commissions, error } = await (supabase
-    .from("deal_commissions" as any)
-    .select(
+  const { data: commissions, error } = await (applyTenantFilter(
+    supabase.from("deal_commissions" as any).select(
       `
       net_amount,
       agent_id,
@@ -502,7 +511,8 @@ export async function getAdvancedTopAgents(): Promise<TopAgent[]> {
         avatar_url
       )
     `,
-    )
+    ),
+  )
     .eq("status", "PAID") // Only count paid commissions for leaderboard? Or all PENDING too?
     // User usually wants to see "Performance" so let's count all that are not CANCELLED
     .neq("status", "CANCELLED")
@@ -958,30 +968,41 @@ export type AgendaEvent = {
   priority: "high" | "medium" | "low";
 };
 
-export async function getTodayAgenda(): Promise<AgendaEvent[]> {
+export async function getTodayAgenda(tenantId?: string | null): Promise<AgendaEvent[]> {
   const supabase = await createClient();
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayIso = todayStart.toISOString();
 
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
   // 1. Fetch New Leads Today
-  const { data: newLeads } = await supabase
-    .from("leads")
-    .select("id, full_name, created_at, lead_type")
-    .gte("created_at", todayIso)
-    .order("created_at", { ascending: false });
+  const { data: newLeads } = await applyTenantFilter(
+    supabase
+      .from("leads")
+      .select("id, full_name, created_at, lead_type")
+      .gte("created_at", todayIso)
+      .order("created_at", { ascending: false }),
+  );
 
   // 2. Fetch New Deals Today
-  const { data: newDeals } = await supabase
-    .from("deals")
-    .select("id, deal_type, created_at")
-    .gte("created_at", todayIso)
-    .order("created_at", { ascending: false });
+  const { data: newDeals } = await applyTenantFilter(
+    supabase
+      .from("deals")
+      .select("id, deal_type, created_at")
+      .gte("created_at", todayIso)
+      .order("created_at", { ascending: false }),
+  );
 
   const agenda: AgendaEvent[] = [];
 
   // Map Leads to "Call" tasks
-  newLeads?.forEach((lead) => {
+  newLeads?.forEach((lead: any) => {
     agenda.push({
       id: `lead-${lead.id}`,
       time: new Date(lead.created_at).toLocaleTimeString("th-TH", {
@@ -995,7 +1016,7 @@ export async function getTodayAgenda(): Promise<AgendaEvent[]> {
   });
 
   // Map Deals to "Meeting" or "Task"
-  newDeals?.forEach((deal) => {
+  newDeals?.forEach((deal: any) => {
     agenda.push({
       id: `deal-${deal.id}`,
       time: new Date(deal.created_at).toLocaleTimeString("th-TH", {
@@ -1019,22 +1040,34 @@ export type FollowUpLead = {
   stage: string;
 };
 
-export async function getFollowUpLeads(): Promise<FollowUpLead[]> {
+export async function getFollowUpLeads(
+  tenantId?: string | null,
+): Promise<FollowUpLead[]> {
   const supabase = await createClient();
+
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
   // Fetch leads not updated in last 3 days and not closed
-  const { data: leads } = await supabase
-    .from("leads")
-    .select("id, full_name, updated_at, stage")
-    .lt("updated_at", threeDaysAgo.toISOString())
-    .neq("stage", "CLOSED")
-    .limit(5);
+  const { data: leads } = await applyTenantFilter(
+    supabase
+      .from("leads")
+      .select("id, full_name, updated_at, stage")
+      .lt("updated_at", threeDaysAgo.toISOString())
+      .neq("stage", "CLOSED")
+      .limit(5),
+  );
 
   if (!leads) return [];
 
-  return leads.map((l) => {
+  return leads.map((l: any) => {
     const updated = new Date(l.updated_at);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - updated.getTime());
@@ -1056,22 +1089,32 @@ export type RiskDeal = {
   stage: string;
 };
 
-export async function getRiskDeals(): Promise<RiskDeal[]> {
+export async function getRiskDeals(tenantId?: string | null): Promise<RiskDeal[]> {
   const supabase = await createClient();
+
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const { data: deals } = await supabase
-    .from("deals")
-    .select("id, updated_at, status, properties(title)")
-    .lt("updated_at", sevenDaysAgo.toISOString())
-    .neq("status", "CLOSED_WIN")
-    .neq("status", "CLOSED_LOSS")
-    .limit(5);
+  const { data: deals } = await applyTenantFilter(
+    supabase
+      .from("deals")
+      .select("id, updated_at, status, properties(title)")
+      .lt("updated_at", sevenDaysAgo.toISOString())
+      .neq("status", "CLOSED_WIN")
+      .neq("status", "CLOSED_LOSS")
+      .limit(5),
+  );
 
   if (!deals) return [];
 
-  return deals.map((d) => {
+  return deals.map((d: any) => {
     const updated = new Date(d.updated_at);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - updated.getTime());
@@ -1102,18 +1145,30 @@ export type AreaAnalytics = {
   leads_count: number;
 };
 
-export async function getAnalyticsStats(days?: number): Promise<{
+export async function getAnalyticsStats(
+  tenantId?: string | null,
+  days?: number,
+): Promise<{
   topProperties: PropertyAnalytics[];
   topAreas: AreaAnalytics[];
   totalViews: number;
 }> {
   const supabase = await createClient();
 
+  const applyTenantFilter = (query: any) => {
+    if (tenantId && tenantId !== "ALL") {
+      return query.eq("tenant_id", tenantId);
+    }
+    return query;
+  };
+
   // 1. Get Top 10 Properties by Views
-  let query = supabase
-    .from("properties")
-    .select("id, title, slug, view_count, listing_type, price, rental_price")
-    .is("deleted_at", null);
+  let query = applyTenantFilter(
+    supabase
+      .from("properties")
+      .select("id, title, slug, view_count, listing_type, price, rental_price")
+      .is("deleted_at", null),
+  );
 
   if (days) {
     const startDate = new Date();
@@ -1176,7 +1231,7 @@ export async function getAnalyticsStats(days?: number): Promise<{
     .slice(0, 10);
 
   const totalViews = (topProps || []).reduce(
-    (sum, p) => sum + (p.view_count || 0),
+    (sum: number, p: any) => sum + (p.view_count || 0),
     0,
   );
 

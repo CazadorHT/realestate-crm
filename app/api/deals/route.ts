@@ -11,6 +11,7 @@ export async function GET(request: Request) {
   const lead_id = url.searchParams.get("lead_id") ?? undefined;
   const property_id = url.searchParams.get("property_id") ?? undefined;
   const status = url.searchParams.get("status") ?? undefined;
+  const timeRange = url.searchParams.get("timeRange") ?? undefined;
   const page = Number(url.searchParams.get("page") ?? "1");
   const pageSize = Number(url.searchParams.get("pageSize") ?? "20");
   const order =
@@ -27,6 +28,7 @@ export async function GET(request: Request) {
     pageSize,
     order,
     ascending,
+    timeRange,
   });
 
   return NextResponse.json(res);

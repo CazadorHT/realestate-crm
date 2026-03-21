@@ -61,11 +61,14 @@ import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import {
   bulkDeletePropertiesAction,
   bulkMovePropertiesToTenantAction,
+  getAllPropertyIdsAction,
 } from "@/features/properties/bulk-actions";
 import { exportPropertiesAction } from "@/features/properties/export-action";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DuplicatePropertyButton } from "./DuplicatePropertyButton";
+import { useState } from "react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import type {
   PropertyStatus,
   PropertyType,
@@ -82,6 +85,8 @@ interface PropertiesTableProps {
   currentTenantId?: string | null;
   currentTenantName?: string | null;
   showBranch?: boolean;
+  totalCount: number;
+  filters?: any;
 }
 // ... (SortableHead code omitted for brevity as it is unchanged) ...
 
@@ -274,6 +279,8 @@ export function PropertiesTable({
   currentTenantId,
   currentTenantName,
   showBranch,
+  totalCount,
+  filters = {},
 }: PropertiesTableProps): React.ReactElement {
   const allIds = useMemo(() => data.map((p) => p.id), [data]);
   const {
@@ -286,6 +293,23 @@ export function PropertiesTable({
     isPartialSelected,
     selectedCount,
   } = useTableSelection(allIds);
+
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+
+  const handleSelectAllGlobal = async () => {
+    setIsGlobalLoading(true);
+    try {
+      const result = await getAllPropertyIdsAction(filters);
+      if (result.success && result.ids) {
+        toggleSelectAll(result.ids);
+        toast.info(`เลือกทั้งหมด ${result.ids.length} รายการแล้ว`);
+      }
+    } catch (err) {
+      toast.error("ไม่สามารถเลือกทั้งหมดได้");
+    } finally {
+      setIsGlobalLoading(false);
+    }
+  };
 
   const blockedCount = useMemo(() => {
     return Array.from(selectedIds).filter((id) => {
@@ -414,13 +438,54 @@ export function PropertiesTable({
         onClear={clearSelection}
         onDelete={handleBulkDelete}
         onExport={() => exportPropertiesAction(Array.from(selectedIds))}
-        onPull={handleBulkMove}
+        onPull={
+          isMultiTenant &&
+          currentTenantId && 
+          currentTenantId !== "ALL" && 
+          !showBranch 
+            ? handleBulkMove 
+            : undefined
+        }
         onPullLabel="ดึงมาสาขาตัวเอง"
         onPullConfirmMessage={pullConfirmMessage}
         entityName="ทรัพย์"
-        confirmMessage={confirmMessage}
         actionableCount={selectedCount - blockedCount}
       />
+
+      {/* Global Selection Indicator */}
+      {isAllSelected && selectedCount < totalCount && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-300 shadow-sm">
+          <div className="flex items-center gap-3 text-sm text-blue-800">
+            <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
+            <span>เลือกทั้งหมด {selectedCount} ทรัพย์ในหน้านี้แล้ว</span>
+          </div>
+          <button
+            onClick={handleSelectAllGlobal}
+            disabled={isGlobalLoading}
+            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2"
+          >
+            {isGlobalLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : null}
+            เลือกทั้งหมด {totalCount} ทรัพย์ในระบบ
+          </button>
+        </div>
+      )}
+
+      {selectedCount === totalCount && totalCount > data.length && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in duration-300">
+          <div className="flex items-center gap-3 text-sm text-emerald-800">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <span>คุณได้เลือกทั้งหมด <strong>{totalCount}</strong> ทรัพย์ในระบบแล้ว (ทุกหน้า)</span>
+          </div>
+          <button
+            onClick={clearSelection}
+            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all"
+          >
+            ยกเลิกการเลือก
+          </button>
+        </div>
+      )}
 
       <div className="rounded-md border border-gray-200 shadow-sm bg-card overflow-hidden">
         {/* Desktop Table View */}

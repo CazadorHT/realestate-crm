@@ -1,6 +1,5 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
@@ -69,5 +68,24 @@ export async function bulkDeleteDealsAction(
       deletedCount: 0,
       message: mapDbError(error),
     };
+  }
+}
+
+/**
+ * Fetch all deal IDs matching filters (for global selection)
+ */
+export async function getAllDealIdsAction(args: {
+  timeRange?: string;
+  q?: string;
+  status?: string;
+  property_id?: string;
+  lead_id?: string;
+}) {
+  try {
+    const { getAllDealIdsQuery } = await import("./queries.getDeals");
+    const ids = await getAllDealIdsQuery(args);
+    return { success: true, ids };
+  } catch (error) {
+    return { success: false, ids: [], message: mapDbError(error) };
   }
 }

@@ -137,6 +137,8 @@ export default async function PropertiesPage({
               currentTenantId={tenantId}
               currentTenantName={currentTenantName}
               showBranch={isAdminUser && params.allBranches === "true" && isMultiTenant}
+              totalCount={count}
+              filters={params}
             />
             <PaginationControls
               totalCount={count}

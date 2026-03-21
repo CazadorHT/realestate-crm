@@ -44,13 +44,8 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     .from("leads")
     .select("*, property:properties(id, title), tenants(id, name)", { count: "exact" });
 
-  if (isMultiTenant) {
-    if (tenantId === undefined) {
-      // ALL Branches: allow viewing from any branch or unassigned
-      query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
-    } else {
-      query = query.eq("tenant_id", tenantId!);
-    }
+  if (isMultiTenant && tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
   }
 
   query = query.order("created_at", { ascending: false });
@@ -105,6 +100,40 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 }
 
 /**
+ * Fetch ONLY IDs of all leads matching the filters (no pagination)
+ * Used for "Select All across pages" feature.
+ */
+export async function getAllLeadIdsQuery(args: { q?: string; stage?: string } = {}) {
+  const { supabase, role, tenantId } = await requireAuthContext();
+  assertStaff(role);
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  const q = (args.q ?? "").trim();
+  const stage = (args.stage ?? "").trim();
+
+  let query = supabase.from("leads").select("id");
+
+  if (isMultiTenant && tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  if (q) {
+    query = query.or(
+      `full_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`,
+    );
+  }
+  if (stage && stage !== "ALL") {
+    query = query.eq("stage", stage as any);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+
+  return (data || []).map((l) => l.id);
+}
+
+/**
  * Optimized query for Kanban view, fetching all active/recent leads (limited)
  */
 export async function getLeadsForKanbanQuery() {
@@ -117,13 +146,8 @@ export async function getLeadsForKanbanQuery() {
     .from("leads")
     .select("*, tenants(id, name)");
 
-  if (isMultiTenant) {
-    if (tenantId === undefined) {
-      // ALL Branches
-      query = query.or(`tenant_id.eq.${tenantId!},tenant_id.is.null`);
-    } else {
-      query = query.eq("tenant_id", tenantId!);
-    }
+  if (isMultiTenant && tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
   }
 
   const { data, error } = await query
@@ -146,13 +170,8 @@ export async function getLeadByIdQuery(id: string): Promise<LeadRow | null> {
     .select("*")
     .eq("id", id);
 
-  if (isMultiTenant) {
-    if (tenantId === undefined) {
-      // ALL Branches
-      query = query.or(`tenant_id.eq.${tenantId!},tenant_id.is.null`);
-    } else {
-      query = query.eq("tenant_id", tenantId!);
-    }
+  if (isMultiTenant && tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
   }
 
   const { data, error } = await query.single();
@@ -186,13 +205,8 @@ export async function getLeadWithActivitiesQuery(
       )
       .eq("id", id);
 
-    if (isMultiTenant) {
-      if (tenantId === undefined) {
-        // ALL Branches
-        query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
-      } else {
-        query = query.eq("tenant_id", tenantId!);
-      }
+    if (isMultiTenant && tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
     }
 
     const { data, error } = await query.single();
@@ -232,13 +246,8 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
     .is("deleted_at", null)
     .in("id", uniq);
 
-  if (isMultiTenant) {
-    if (tenantId === undefined) {
-      // ALL Branches
-      query = query.or(`tenant_id.eq.${tenantId!},tenant_id.is.null`);
-    } else {
-      query = query.eq("tenant_id", tenantId!);
-    }
+  if (isMultiTenant && tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
   }
 
   const { data: props, error: propsErr } = await query;
@@ -282,13 +291,8 @@ export async function getLeadsDashboardStatsQuery() {
     .from("leads")
     .select("*", { count: "exact", head: true });
 
-  if (isMultiTenant) {
-    if (tenantId === undefined) {
-      // ALL Branches
-      totalQuery = totalQuery.or(`tenant_id.eq.${tenantId!},tenant_id.is.null`);
-    } else {
-      totalQuery = totalQuery.eq("tenant_id", tenantId!);
-    }
+  if (isMultiTenant && tenantId && tenantId !== "ALL") {
+    totalQuery = totalQuery.eq("tenant_id", tenantId);
   }
   const { count: totalLeads } = await totalQuery;
 
@@ -298,13 +302,8 @@ export async function getLeadsDashboardStatsQuery() {
     .select("*", { count: "exact", head: true })
     .neq("stage", "CLOSED");
 
-  if (isMultiTenant) {
-    if (tenantId === undefined) {
-      // ALL Branches
-      activeQuery = activeQuery.or(`tenant_id.eq.${tenantId!},tenant_id.is.null`);
-    } else {
-      activeQuery = activeQuery.eq("tenant_id", tenantId!);
-    }
+  if (isMultiTenant && tenantId && tenantId !== "ALL") {
+    activeQuery = activeQuery.eq("tenant_id", tenantId);
   }
   const { count: activeLeads } = await activeQuery;
 
@@ -321,13 +320,8 @@ export async function getLeadsDashboardStatsQuery() {
     .select("*", { count: "exact", head: true })
     .gte("created_at", startOfMonth);
 
-  if (isMultiTenant) {
-    if (tenantId === undefined) {
-      // ALL Branches
-      newQuery = newQuery.or(`tenant_id.eq.${tenantId!},tenant_id.is.null`);
-    } else {
-      newQuery = newQuery.eq("tenant_id", tenantId!);
-    }
+  if (isMultiTenant && tenantId && tenantId !== "ALL") {
+    newQuery = newQuery.eq("tenant_id", tenantId);
   }
   const { count: newLeadsMonth } = await newQuery;
 
@@ -336,13 +330,8 @@ export async function getLeadsDashboardStatsQuery() {
     .from("leads")
     .select("stage, source");
 
-  if (isMultiTenant) {
-    if (tenantId === undefined) {
-      // ALL Branches
-      distributionQuery = distributionQuery.or(`tenant_id.eq.${tenantId!},tenant_id.is.null`);
-    } else {
-      distributionQuery = distributionQuery.eq("tenant_id", tenantId!);
-    }
+  if (isMultiTenant && tenantId && tenantId !== "ALL") {
+    distributionQuery = distributionQuery.eq("tenant_id", tenantId);
   }
   const { data: leads } = await distributionQuery;
 
