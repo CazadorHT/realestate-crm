@@ -1,5 +1,8 @@
+"use client";
+
 import { GlobalSearch } from "@/components/dashboard/GlobalSearch";
 import { MdWavingHand } from "react-icons/md";
+import { useState, useEffect } from "react";
 
 interface DashboardHeaderProps {
   email?: string | null;
@@ -7,17 +10,43 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ email, name }: DashboardHeaderProps) {
-  // Get time-based greeting safely
-  const hour = new Date().getHours();
-  const greeting =
-    hour < 12 ? "สวัสดีตอนเช้า" : hour < 18 ? "สวัสดีตอนบ่าย" : "สวัสดีตอนเย็น";
-
-  const currentDate = new Date().toLocaleDateString("th-TH", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+  // SSR will use server time, but we update to exact client browser time after mount
+  const [greeting, setGreeting] = useState(() => {
+    const hour = new Date().getHours();
+    return hour < 12 ? "สวัสดีตอนเช้า" : hour < 18 ? "สวัสดีตอนบ่าย" : "สวัสดีตอนเย็น";
   });
+
+  const [currentDate, setCurrentDate] = useState(() => {
+    return new Date().toLocaleDateString("th-TH", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  });
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const hour = now.getHours();
+      setGreeting(
+        hour < 12 ? "สวัสดีตอนเช้า" : hour < 18 ? "สวัสดีตอนบ่าย" : "สวัสดีตอนเย็น"
+      );
+      setCurrentDate(
+        now.toLocaleDateString("th-TH", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      );
+    };
+
+    updateTime();
+    // Keep it updated if the user leaves the tab open for a while
+    const intervalId = setInterval(updateTime, 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <div className="relative overflow-hidden flex flex-col lg:flex-row md:items-center justify-between gap-6 bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-10 rounded-3xl shadow-xl">
