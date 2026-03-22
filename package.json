@@ -9,7 +9,10 @@
     "gen:types": "supabase gen types typescript --project-id nxvoynycshhqiffygddv --schema public > lib/database.types.ts",
     "migrate:slugs": "tsx scripts/migrate-slugs.ts",
     "force-regenerate:slugs": "tsx scripts/force-regenerate-slugs.ts",
-    "seed:line": "tsx scripts/seed-line.ts"
+    "seed:line": "tsx scripts/seed-line.ts",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -97,17 +100,21 @@
     "@types/pizzip": "^3.0.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/ui": "^4.1.0",
     "autoprefixer": "^10.4.23",
     "dompurify": "^3.3.1",
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "^16.1.6",
+    "jsdom": "^29.0.1",
     "postcss": "^8",
     "supabase": "^2.72.8",
     "tailwindcss": "^4.1.18",
     "tailwindcss-animate": "^1.0.7",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
