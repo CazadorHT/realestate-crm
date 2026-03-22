@@ -1,8 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { createClient } from "@/lib/supabase/server";
 
 export type ServiceRow = {
   id: string;
@@ -24,6 +25,7 @@ export type ServiceRow = {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  tenant_id: string | null;
 };
 
 export type CreateServiceInput = {
@@ -49,22 +51,43 @@ export type UpdateServiceInput = Partial<CreateServiceInput> & {
   id: string;
 };
 
-import { MOCK_SERVICES, USE_MOCK_SERVICES } from "./mock-data";
-
 export async function getServices(includeInactive = false) {
-  // Use mock data if enabled (for development/demo)
-  if (USE_MOCK_SERVICES) {
-    const mockData = includeInactive
-      ? MOCK_SERVICES
-      : MOCK_SERVICES.filter((s) => s.is_active);
-    return mockData;
+  const supabase = await createClient();
+  
+  // Attempt to get tenantId if authenticated, but don't fail if not (for public pages/build)
+  let tenantId: string | undefined;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      
+      if (profile) {
+        // Simple tenant check for logged in users
+        const { data: member } = await supabase
+          .from("tenant_members")
+          .select("tenant_id")
+          .eq("profile_id", user.id)
+          .limit(1)
+          .maybeSingle();
+        tenantId = member?.tenant_id;
+      }
+    }
+  } catch (e) {
+    // Ignore errors during build or for unauthenticated users
   }
 
-  const supabase = await createClient();
   let query = supabase
     .from("services")
     .select("*")
     .order("sort_order", { ascending: true });
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
+  }
 
   if (!includeInactive) {
     query = query.eq("is_active", true);
@@ -84,20 +107,20 @@ export async function getServices(includeInactive = false) {
 }
 
 export async function getServiceBySlug(slug: string) {
-  // Use mock data if enabled (for development/demo)
-  if (USE_MOCK_SERVICES) {
-    const mockService = MOCK_SERVICES.find((s) => s.slug === slug);
-    return mockService || null;
-  }
-
   const supabase = await createClient();
-  const { data, error } = await supabase
+  
+  let query = supabase
     .from("services")
     .select("*")
-    .eq("slug", slug)
-    .single();
+    .eq("slug", slug);
 
-  if (error) return null;
+  // For specific service detail, we usually want the one that is active
+  // if accessed publicly. If accessed by staff, they might want inactive ones.
+  // But for now, let's keep it simple and just fetch by slug.
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error || !data) return null;
 
   return {
     ...data,
@@ -108,50 +131,80 @@ export async function getServiceBySlug(slug: string) {
 }
 
 export async function createService(input: CreateServiceInput) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("services").insert({
-    ...input,
-    gallery_images: input.gallery_images
-      ? JSON.stringify(input.gallery_images)
-      : null,
-  });
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+    if (!ctx.tenantId) throw new Error("Tenant context required");
 
-  if (error) return { success: false, message: mapDbError(error) };
+    const { error } = await ctx.supabase.from("services").insert({
+      ...input,
+      tenant_id: ctx.tenantId,
+      gallery_images: input.gallery_images
+        ? JSON.stringify(input.gallery_images)
+        : null,
+    });
 
-  revalidatePath("/services");
-  revalidatePath("/protected/services");
-  return { success: true };
+    if (error) return { success: false, message: mapDbError(error) };
+
+    revalidatePath("/services");
+    revalidatePath("/protected/services");
+    return { success: true };
+  } catch (err) {
+    console.error("createService error:", err);
+    return { success: false, message: "Unauthorized or Invalid context" };
+  }
 }
 
 export async function updateService(input: UpdateServiceInput) {
-  const supabase = await createClient();
-  const { id, ...updates } = input;
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+    if (!ctx.tenantId) throw new Error("Tenant context required");
 
-  const { error } = await supabase
-    .from("services")
-    .update({
-      ...updates,
-      gallery_images: updates.gallery_images
-        ? JSON.stringify(updates.gallery_images)
-        : undefined,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
+    const { id, ...updates } = input;
 
-  if (error) return { success: false, message: mapDbError(error) };
+    const { error } = await ctx.supabase
+      .from("services")
+      .update({
+        ...updates,
+        gallery_images: updates.gallery_images
+          ? JSON.stringify(updates.gallery_images)
+          : undefined,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("tenant_id", ctx.tenantId);
 
-  revalidatePath("/services");
-  revalidatePath("/protected/services");
-  return { success: true };
+    if (error) return { success: false, message: mapDbError(error) };
+
+    revalidatePath("/services");
+    revalidatePath("/protected/services");
+    return { success: true };
+  } catch (err) {
+    console.error("updateService error:", err);
+    return { success: false, message: "Unauthorized or Invalid context" };
+  }
 }
 
 export async function deleteService(id: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("services").delete().eq("id", id);
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+    if (!ctx.tenantId) throw new Error("Tenant context required");
 
-  if (error) return { success: false, message: mapDbError(error) };
+    const { error } = await ctx.supabase
+      .from("services")
+      .delete()
+      .eq("id", id)
+      .eq("tenant_id", ctx.tenantId);
 
-  revalidatePath("/services");
-  revalidatePath("/protected/services");
-  return { success: true };
+    if (error) return { success: false, message: mapDbError(error) };
+
+    revalidatePath("/services");
+    revalidatePath("/protected/services");
+    return { success: true };
+  } catch (err) {
+    console.error("deleteService error:", err);
+    return { success: false, message: "Unauthorized or Invalid context" };
+  }
 }

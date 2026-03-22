@@ -74,6 +74,7 @@ export async function logAudit(
     entity: input.entity,
     entity_id: input.entityId ?? null,
     metadata: (input.metadata ?? {}) as any,
+    tenant_id: ctx.tenantId && ctx.tenantId !== "ALL" ? ctx.tenantId : null,
   };
 
   // สำคัญ: audit log “ต้องไม่ทำให้ flow หลักพัง”

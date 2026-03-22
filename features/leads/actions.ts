@@ -328,7 +328,8 @@ export const transferLeadAction = createSafeAction(
         tenant_id: targetTenantId,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("tenant_id", tenantId);
 
     if (updateErr) throw new Error(mapDbError(updateErr));
 

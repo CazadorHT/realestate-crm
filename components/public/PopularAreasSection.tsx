@@ -8,6 +8,8 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { motion, AnimatePresence } from "framer-motion";
+import { RefreshCw } from "lucide-react";
 
 type ApiPopularArea = {
   popular_area: string;
@@ -35,6 +37,17 @@ export function PopularAreasSection() {
   const [items, setItems] = useState<AreaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Dynamic provinces state
+  const [provinces, setProvinces] = useState<{id: string, display: string}[]>([]);
+  const [activeProvIndex, setActiveProvIndex] = useState(0);
+  
+  const activeProvince = provinces[activeProvIndex]?.id || "กรุงเทพมหานคร";
+  const activeDisplay = provinces[activeProvIndex]?.display || "Bangkok";
+  
+  const nextProvIndex = (activeProvIndex + 1) % (provinces.length || 1);
+  const nextDisplay = provinces[nextProvIndex]?.display || "";
+
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -76,27 +89,46 @@ export function PopularAreasSection() {
     isHorizontalSwipe.current = null;
   };
 
-  // Initialize AOS
+  // Initialize AOS & Fetch Provinces
   useEffect(() => {
-    // Delay AOS init to prevent hydration mismatch
+    // Delay AOS init
     const timer = setTimeout(() => {
-      AOS.init({
-        duration: 800,
-        easing: "ease-out-cubic",
-        once: true, // เล่นครั้งเดียว ไม่กระตุกซ้ำ
-        mirror: false,
-      });
+      AOS.init({ duration: 800, easing: "ease-out-cubic", once: true });
     }, 100);
 
+    // Fetch initial provinces
+    async function fetchProvinces() {
+      try {
+        const res = await fetch("/api/public/popular-areas?mode=provinces");
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            setProvinces(data);
+            // Default to Bangkok if found, else first
+            const bkkIndex = data.findIndex((p: any) => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร");
+            if (bkkIndex !== -1) setActiveProvIndex(bkkIndex);
+          }
+        }
+      } catch (err) {
+        console.error("Fetch provinces error:", err);
+      }
+    }
+
+    fetchProvinces();
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
+    if (provinces.length === 0) return;
+
     const controller = new AbortController();
     async function load() {
       try {
         setIsLoading(true);
-        const res = await fetch("/api/public/popular-areas", {
+        const url = new URL("/api/public/popular-areas", window.location.origin);
+        url.searchParams.set("province", activeProvince);
+        
+        const res = await fetch(url.toString(), {
           cache: "no-store",
           signal: controller.signal,
         });
@@ -114,7 +146,8 @@ export function PopularAreasSection() {
           }),
         );
         setItems(list);
-      } catch {
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
         setItems([]);
       } finally {
         setIsLoading(false);
@@ -122,7 +155,7 @@ export function PopularAreasSection() {
     }
     load();
     return () => controller.abort();
-  }, []);
+  }, [activeProvince, provinces.length]);
 
   // Drag to scroll handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -186,6 +219,66 @@ export function PopularAreasSection() {
             <p className="text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed">
               {t("home.popular_areas.description")}
             </p>
+
+            {/* Province Switcher UI: Superscript Design */}
+            {provinces.length > 1 && (
+              <div className="flex items-center gap-6 mt-10 select-none relative">
+                <div className="relative flex flex-col items-start min-w-[200px]">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeDisplay}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      className="flex flex-col items-start relative pb-4"
+                    >
+                      {/* The "Next" province: Faded "Superscript" above active label */}
+                      <button
+                        onClick={() => setActiveProvIndex(nextProvIndex)}
+                        className="absolute -top-4 left-1 text-[11px] font-black tracking-[0.2em] text-slate-300 hover:text-blue-500 transition-all! duration-300 group/sup"
+                      >
+                        <span className="opacity-60 group-hover/sup:opacity-100 transition-opacity!">
+                          {nextDisplay.toUpperCase()}
+                        </span>
+                        <motion.div 
+                          className="w-0 group-hover/sup:w-full h-1px bg-blue-400 mt-0.5"
+                          transition={{ duration: 0.3 }}
+                        />
+                      </button>
+                      
+                      {/* Active Province Heading with Motion Swap Icon */}
+                      <div className="flex items-center gap-5">
+                        <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tighter uppercase leading-none pb-1">
+                          {activeDisplay}
+                        </h3>
+                        
+                        <button
+                          onClick={() => setActiveProvIndex(nextProvIndex)}
+                          className="p-3.5 rounded-2xl bg-slate-50 hover:bg-blue-600 border border-slate-100 hover:border-blue-500 text-slate-400 hover:text-white transition-all! group-active:scale-95 shadow-xs hover:shadow-lg hover:shadow-blue-500/20"
+                        >
+                          <motion.div
+                            animate={{ rotate: activeProvIndex * 180 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                          >
+                            <RefreshCw className="h-6 w-6 sm:h-7 sm:w-7" />
+                          </motion.div>
+                        </button>
+                      </div>
+
+                      {/* Decorative Dynamic Underline */}
+                      <motion.div 
+                        layoutId="provinceUnderline"
+                        initial={false}
+                        className="h-2 bg-blue-600 rounded-full mt-2"
+                        animate={{ width: activeDisplay.length * 25 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="px-4 md:px-0 w-full md:w-auto md:shrink-0">

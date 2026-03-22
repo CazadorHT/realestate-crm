@@ -27,9 +27,9 @@ export async function searchGlobalAction(
     // Search in title, address_line1, district, province
     const propertiesQuery = supabase
       .from("properties")
-      .select("id, title, address_line1, district, created_by")
+      .select("id, title, address_line1, district, province, created_by")
       .or(
-        `title.ilike.%${query}%,address_line1.ilike.%${query}%,district.ilike.%${query}%`
+        `title.ilike.%${query}%,address_line1.ilike.%${query}%,district.ilike.%${query}%,province.ilike.%${query}%`
       )
       .limit(5);
 

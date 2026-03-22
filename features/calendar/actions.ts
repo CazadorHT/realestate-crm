@@ -1,26 +1,26 @@
 "use server";
 
+import { combineDateTime } from "./utils";
+
 import { requireAuthContext } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import {redirect} from "next/navigation";
+
 export async function createAppointment(formData: FormData) {
-  const { supabase, tenantId, role } = await requireAuthContext();
+  const { supabase, user, tenantId, role } = await requireAuthContext();
 
   const leadId = formData.get("leadId") as string;
   const propertyId = formData.get("propertyId") as string;
   const date = formData.get("date") as string; // ISO string
   const time = formData.get("time") as string; // HH:mm
   const note = formData.get("note") as string;
-
   const activityType = (formData.get("activityType") as string) || "VIEWING";
 
   if (!leadId || !date || !time) {
     throw new Error("Missing required fields");
   }
 
-  // Combine Date and Time
-  const dateTime = new Date(`${date}T${time}:00`);
-  const isoString = dateTime.toISOString();
+  const isoString = combineDateTime(date, time);
 
   const config = await (await import("@/lib/actions/system-config")).getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
@@ -41,9 +41,10 @@ export async function createAppointment(formData: FormData) {
   const { error } = await supabase.from("lead_activities").insert({
     lead_id: leadId,
     property_id: propertyId === "none" ? null : propertyId,
-    activity_type: activityType as any, // Cast to enum
-    created_at: isoString, // Use created_at as the "Event Time" for now based on schema
+    activity_type: activityType as any,
+    created_at: isoString,
     note: note,
+    created_by: user.id,
   });
 
   if (error) {

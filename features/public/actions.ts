@@ -19,7 +19,7 @@ export async function createDepositLeadAction(data: DepositLeadInput) {
     return { success: false, message: "ข้อมูลไม่ถูกต้อง" };
   }
 
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   // Clean data for URIs
   const cleanPhone = data.phone.replace(/[^0-9+]/g, "");
@@ -344,7 +344,7 @@ export async function submitInquiryAction(
     };
   }
 
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   const rawPhone = formData.get("phone")?.toString() || "";
   const sanitizedPhone = rawPhone.replace(/\D/g, "");

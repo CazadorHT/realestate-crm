@@ -14,7 +14,7 @@ const nullableNumber = z.preprocess((val) => {
   if (val === "" || val === null || val === undefined) return null;
   const num = Number(val);
   return Number.isNaN(num) ? null : num;
-}, z.number().nullable().optional());
+}, z.number().min(0, "ห้ามเป็นค่าติดลบ").nullable().optional());
 
 export const leadFormSchema = z.object({
   full_name: z.string().trim().min(1, "กรุณากรอกชื่อ"),

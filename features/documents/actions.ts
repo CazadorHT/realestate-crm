@@ -25,7 +25,7 @@ export async function getDocumentsByOwner(
     .eq("owner_type", ownerType);
 
   if (tenantId && tenantId !== "ALL") {
-    query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+    query = query.eq("tenant_id", tenantId);
   }
 
   const { data, error } = await query.order("created_at", { ascending: false });
@@ -67,27 +67,22 @@ export async function getAllDocuments(limit = 50, tenantId?: string | null) {
 
       try {
         if (doc.owner_type === "PROPERTY") {
-          const { data: property } = await supabase
-            .from("properties")
-            .select("id, title")
-            .eq("id", doc.owner_id)
-            .single();
+          const { data: property } = await (tenantId && tenantId !== "ALL"
+            ? supabase.from("properties").select("id, title").eq("id", doc.owner_id).eq("tenant_id", tenantId)
+            : supabase.from("properties").select("id, title").eq("id", doc.owner_id)
+          ).single();
           ownerData = { property };
         } else if (doc.owner_type === "LEAD") {
-          const { data: lead } = await supabase
-            .from("leads")
-            .select("id, full_name, email")
-            .eq("id", doc.owner_id)
-            .single();
+          const { data: lead } = await (tenantId && tenantId !== "ALL"
+            ? supabase.from("leads").select("id, full_name, email").eq("id", doc.owner_id).eq("tenant_id", tenantId)
+            : supabase.from("leads").select("id, full_name, email").eq("id", doc.owner_id)
+          ).single();
           ownerData = { lead };
         } else if (doc.owner_type === "DEAL") {
-          const { data: deal } = await supabase
-            .from("deals")
-            .select(
-              "id, property:properties(title), lead:leads(id, full_name, email)",
-            )
-            .eq("id", doc.owner_id)
-            .single();
+          const { data: deal } = await (tenantId && tenantId !== "ALL"
+            ? supabase.from("deals").select("id, property:properties(title), lead:leads(id, full_name, email)").eq("id", doc.owner_id).eq("tenant_id", tenantId)
+            : supabase.from("deals").select("id, property:properties(title), lead:leads(id, full_name, email)").eq("id", doc.owner_id)
+          ).single();
           ownerData = { deal };
         } else if (doc.owner_type === "RENTAL_CONTRACT") {
           const { data: contract } = await supabase
@@ -114,7 +109,7 @@ export async function getAllDocuments(limit = 50, tenantId?: string | null) {
 // Note: File upload happens on client (or via separate upload action), this records the metadata
 export async function createDocumentRecordAction(input: CreateDocumentInput) {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     const validated = createDocumentSchema.parse(input);
@@ -137,10 +132,10 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
       .from("documents")
       .insert({
         ...validated,
+        tenant_id: tenantId && tenantId !== "ALL" ? tenantId : validated.tenant_id,
         version: finalVersion,
         created_by: user.id,
         is_encrypted: false, // Phase 3 item
-        tenant_id: validated.tenant_id,
       })
       .select()
       .single();
@@ -164,8 +159,16 @@ export async function getDocumentSignedUrl(
   storagePath: string,
   bucket = "documents",
 ) {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
+
+  // Verify document existence/access first
+  const { data: doc, error: docErr } = await (tenantId && tenantId !== "ALL"
+    ? supabase.from("documents").select("id").eq("storage_path", storagePath).eq("tenant_id", tenantId)
+    : supabase.from("documents").select("id").eq("storage_path", storagePath)
+  ).single();
+
+  if (docErr || !doc) return null;
 
   // Create a signed URL valid for 1 hour (3600 seconds)
   const { data, error } = await supabase.storage
@@ -184,15 +187,14 @@ export async function getDocumentSignedUrl(
  */
 export async function getDocumentVersionsAction(documentId: string) {
   try {
-    const { supabase, role } = await requireAuthContext();
+    const { supabase, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     // 1. Get current document to find its parent_id and owner
-    const { data: currentDoc, error: cError } = await supabase
-      .from("documents")
-      .select("id, parent_id, owner_id")
-      .eq("id", documentId)
-      .single();
+    const { data: currentDoc, error: cError } = await (tenantId && tenantId !== "ALL"
+      ? supabase.from("documents").select("id, parent_id, owner_id").eq("id", documentId).eq("tenant_id", tenantId)
+      : supabase.from("documents").select("id, parent_id, owner_id").eq("id", documentId)
+    ).single();
 
     if (cError || !currentDoc) throw new Error("Document not found");
 
@@ -231,11 +233,16 @@ export async function getDocumentVersionsAction(documentId: string) {
     // 3. Fetch all documents for this owner to reconstruct potential chains
     // In a production app, we'd use a recursive CTE or a root_id column.
     // Here we fetch all docs for the owner and find those connected to the root.
-    const { data: allDocs, error: vError } = await supabase
+    let vQuery = supabase
       .from("documents")
       .select("*")
-      .eq("owner_id", currentDoc.owner_id as string) // TypeScript cast for safety
-      .order("version", { ascending: false });
+      .eq("owner_id", currentDoc.owner_id as string); // TypeScript cast for safety
+
+    if (tenantId && tenantId !== "ALL") {
+      vQuery = vQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: allDocs, error: vError } = await vQuery.order("version", { ascending: false });
 
     if (vError) throw new Error(vError.message);
 
@@ -267,7 +274,7 @@ export async function getDocumentVersionsAction(documentId: string) {
 // 4. Delete Document
 export async function deleteDocumentAction(id: string, storagePath: string) {
   try {
-    const { supabase, role } = await requireAuthContext();
+    const { supabase, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     // 1. Delete from Storage
@@ -278,11 +285,10 @@ export async function deleteDocumentAction(id: string, storagePath: string) {
     if (storageError)
       console.error("Storage Delete Error (non-fatal):", storageError);
 
-    // 2. Delete from DB
-    const { error: dbError } = await supabase
-      .from("documents")
-      .delete()
-      .eq("id", id);
+    const { error: dbError } = await (tenantId && tenantId !== "ALL"
+      ? supabase.from("documents").delete().eq("id", id).eq("tenant_id", tenantId)
+      : supabase.from("documents").delete().eq("id", id)
+    );
 
     if (dbError) throw new Error(mapDbError(dbError));
 
@@ -298,8 +304,15 @@ export async function deleteDocumentAction(id: string, storagePath: string) {
  */
 export async function downloadDocumentAction(storagePath: string) {
   try {
-    const { supabase, role } = await requireAuthContext();
+    const { supabase, role, tenantId } = await requireAuthContext();
     assertStaff(role);
+
+    const { data: doc, error: docErr } = await (tenantId && tenantId !== "ALL"
+      ? supabase.from("documents").select("id").eq("storage_path", storagePath).eq("tenant_id", tenantId)
+      : supabase.from("documents").select("id").eq("storage_path", storagePath)
+    ).single();
+
+    if (docErr || !doc) throw new Error("Unauthorized or document not found");
 
     const { data, error } = await supabase.storage
       .from("documents")

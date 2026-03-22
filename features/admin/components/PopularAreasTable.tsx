@@ -55,15 +55,27 @@ import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeletePopularAreasAction } from "@/features/admin/popular-areas-bulk-actions";
 import { cn } from "@/lib/utils";
+import { ProvinceSelector } from "./ProvinceSelector";
 
 type PopularArea = {
   id: string;
   name: string;
+  province: string | null;
   name_en?: string | null;
   name_cn?: string | null;
   created_at: string;
   property_count?: number;
 };
+
+function ShadcnProvinceSelector({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  return <ProvinceSelector value={value} onChange={onChange} />;
+}
 
 export function PopularAreasTable({
   initialData,
@@ -81,6 +93,7 @@ export function PopularAreasTable({
   const [itemName, setItemName] = useState("");
   const [itemNameEn, setItemNameEn] = useState("");
   const [itemNameCn, setItemNameCn] = useState("");
+  const [itemProvince, setItemProvince] = useState("กรุงเทพมหานคร");
   const [isLoading, setIsLoading] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
@@ -202,11 +215,13 @@ export function PopularAreasTable({
     if (item) {
       setEditingItem(item);
       setItemName(item.name);
+      setItemProvince(item.province || "กรุงเทพมหานคร");
       setItemNameEn(item.name_en || "");
       setItemNameCn(item.name_cn || "");
     } else {
       setEditingItem(null);
       setItemName("");
+      setItemProvince("กรุงเทพมหานคร");
       setItemNameEn("");
       setItemNameCn("");
     }
@@ -244,11 +259,17 @@ export function PopularAreasTable({
       res = await updatePopularAreaAction(
         editingItem.id,
         itemName,
+        itemProvince,
         itemNameEn,
         itemNameCn,
       );
     } else {
-      res = await createPopularAreaAction(itemName, itemNameEn, itemNameCn);
+      res = await createPopularAreaAction(
+        itemName,
+        itemProvince,
+        itemNameEn,
+        itemNameCn,
+      );
     }
     setIsLoading(false);
 
@@ -373,6 +394,14 @@ export function PopularAreasTable({
                 </div>
               </TableHead>
               <TableHead
+                className="font-bold text-slate-900 px-6 cursor-pointer hover:bg-slate-100 transition-colors"
+                onClick={() => toggleSort("province")}
+              >
+                <div className="flex items-center">
+                  จังหวัด <SortIcon column="province" />
+                </div>
+              </TableHead>
+              <TableHead
                 className="font-bold text-slate-900 px-6 text-center cursor-pointer hover:bg-slate-100 transition-colors"
                 onClick={() => toggleSort("property_count")}
               >
@@ -443,6 +472,9 @@ export function PopularAreasTable({
                   </TableCell>
                   <TableCell className="text-slate-600 px-6 font-medium">
                     {item.name_cn || <span className="text-slate-300">-</span>}
+                  </TableCell>
+                  <TableCell className="px-6 font-bold text-blue-600">
+                    {item.province || "กรุงเทพมหานคร"}
                   </TableCell>
                   <TableCell className="px-6 text-center">
                     <span
@@ -579,6 +611,14 @@ export function PopularAreasTable({
                       )}
                     </p>
                   </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                      Province
+                    </span>
+                    <p className="text-xs font-bold text-blue-600">
+                      {item.province || "กรุงเทพมหานคร"}
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -639,6 +679,13 @@ export function PopularAreasTable({
           <div className="space-y-4 py-4">
             <div className="space-y-4">
               <div className="space-y-2">
+                <label className="text-sm font-medium">จังหวัด</label>
+                <ShadcnProvinceSelector
+                  value={itemProvince}
+                  onChange={setItemProvince}
+                />
+              </div>
+              <div className="space-y-2">
                 <label className="text-sm font-medium">ชื่อทำเล (ไทย)</label>
                 <Input
                   value={itemName}
@@ -675,8 +722,10 @@ export function PopularAreasTable({
                 disabled={
                   isLoading ||
                   !itemName.trim() ||
+                  !itemProvince.trim() ||
                   (editingItem !== null &&
                     itemName.trim() === editingItem.name &&
+                    itemProvince === editingItem.province &&
                     itemNameEn.trim() === (editingItem.name_en || "") &&
                     itemNameCn.trim() === (editingItem.name_cn || ""))
                 }

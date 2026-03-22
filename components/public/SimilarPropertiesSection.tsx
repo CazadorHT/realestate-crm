@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { PropertyCard } from "./PropertyCard";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -49,7 +49,7 @@ export async function SimilarPropertiesSection({
   limit = 4,
   compareData,
 }: SimilarPropertiesSectionProps) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   if (!propertyType) return null;
 

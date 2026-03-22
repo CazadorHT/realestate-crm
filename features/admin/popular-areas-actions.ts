@@ -8,11 +8,7 @@ import { generateText } from "@/lib/ai/gemini";
 import { getAiModelConfig } from "@/features/ai-settings/actions";
 import { logAiUsage } from "@/features/ai-monitor/actions";
 
-const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  name_en: z.string().optional(),
-  name_cn: z.string().optional(),
-});
+import { popularAreaSchema } from "./popular-areas-validation";
 
 export async function getPopularAreasAction() {
   const supabase = await createClient();
@@ -50,13 +46,19 @@ export async function getPopularAreasAction() {
 
 export async function createPopularAreaAction(
   name: string,
+  province: string,
   name_en?: string,
   name_cn?: string,
 ) {
   const { role } = await requireAuthContext();
   assertStaff(role);
 
-  const parsed = schema.safeParse({ name, name_en, name_cn });
+  const parsed = popularAreaSchema.safeParse({
+    name,
+    province,
+    name_en,
+    name_cn,
+  });
   if (!parsed.success) {
     return { success: false, message: parsed.error.issues[0].message };
   }
@@ -66,6 +68,7 @@ export async function createPopularAreaAction(
     name: parsed.data.name,
     name_en: parsed.data.name_en,
     name_cn: parsed.data.name_cn,
+    province: parsed.data.province,
   });
 
   if (error) return { success: false, message: error.message };
@@ -76,31 +79,48 @@ export async function createPopularAreaAction(
 export async function updatePopularAreaAction(
   id: string,
   name: string,
+  province: string,
   name_en?: string,
   name_cn?: string,
 ) {
   const { role } = await requireAuthContext();
   assertStaff(role);
 
-  const parsed = schema.safeParse({ name, name_en, name_cn });
+  const parsed = popularAreaSchema.safeParse({
+    name,
+    province,
+    name_en,
+    name_cn,
+  });
   if (!parsed.success) {
     return { success: false, message: parsed.error.issues[0].message };
   }
 
   const supabase = await createClient();
+  
+  console.log(`[Admin] Updating Popular Area ID: ${id}`, {
+    name: parsed.data.name,
+    province: parsed.data.province
+  });
+
   const { data, error } = await supabase
     .from("popular_areas")
     .update({
       name: parsed.data.name,
       name_en: parsed.data.name_en,
       name_cn: parsed.data.name_cn,
+      province: parsed.data.province,
     })
     .eq("id", id)
     .select();
 
-  if (error) return { success: false, message: error.message };
+  if (error) {
+    console.error(`[Admin] Update Error for ${id}:`, error);
+    return { success: false, message: error.message };
+  }
 
   if (!data || data.length === 0) {
+    console.warn(`[Admin] Update matched 0 rows for ID: ${id}`);
     return {
       success: false,
       message: "ไม่สามารถอัปเดตข้อมูลได้ (Matched 0 rows)",

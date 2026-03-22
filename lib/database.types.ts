@@ -61,6 +61,7 @@ export type Database = {
           entity_id: string | null
           id: string
           metadata: Json
+          tenant_id: string | null
           user_id: string
         }
         Insert: {
@@ -70,6 +71,7 @@ export type Database = {
           entity_id?: string | null
           id?: string
           metadata?: Json
+          tenant_id?: string | null
           user_id: string
         }
         Update: {
@@ -79,9 +81,25 @@ export type Database = {
           entity_id?: string | null
           id?: string
           metadata?: Json
+          tenant_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       blog_categories: {
         Row: {
@@ -1151,24 +1169,42 @@ export type Database = {
       popular_areas: {
         Row: {
           created_at: string
+          featured: boolean | null
           id: string
+          image_url: string | null
+          is_active: boolean | null
           name: string
           name_cn: string | null
           name_en: string | null
+          province: string | null
+          slug: string | null
+          sort_order: number | null
         }
         Insert: {
           created_at?: string
+          featured?: boolean | null
           id?: string
+          image_url?: string | null
+          is_active?: boolean | null
           name: string
           name_cn?: string | null
           name_en?: string | null
+          province?: string | null
+          slug?: string | null
+          sort_order?: number | null
         }
         Update: {
           created_at?: string
+          featured?: boolean | null
           id?: string
+          image_url?: string | null
+          is_active?: boolean | null
           name?: string
           name_cn?: string | null
           name_en?: string | null
+          province?: string | null
+          slug?: string | null
+          sort_order?: number | null
         }
         Relationships: []
       }
@@ -2394,18 +2430,21 @@ export type Database = {
           id: string
           manager_id: string | null
           name: string
+          tenant_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
           manager_id?: string | null
           name: string
+          tenant_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
           manager_id?: string | null
           name?: string
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -2413,6 +2452,20 @@ export type Database = {
             columns: ["manager_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teams_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teams_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]

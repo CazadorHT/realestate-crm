@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 
 type CreateFaqInput = {
   question: string;
@@ -44,6 +45,9 @@ export async function getFaq(id: string) {
 
 export async function createFaq(input: CreateFaqInput) {
   try {
+    const { role } = await requireAuthContext();
+    assertStaff(role);
+
     const supabase = await createClient();
     const { error } = await supabase.from("faqs").insert([input]);
 
@@ -58,6 +62,9 @@ export async function createFaq(input: CreateFaqInput) {
 
 export async function updateFaq(input: UpdateFaqInput) {
   try {
+    const { role } = await requireAuthContext();
+    assertStaff(role);
+
     const supabase = await createClient();
     const { id, ...updates } = input;
     const { error } = await supabase.from("faqs").update(updates).eq("id", id);
@@ -73,6 +80,9 @@ export async function updateFaq(input: UpdateFaqInput) {
 
 export async function deleteFaq(id: string) {
   try {
+    const { role } = await requireAuthContext();
+    assertStaff(role);
+
     const supabase = await createClient();
     const { error } = await supabase.from("faqs").delete().eq("id", id);
 

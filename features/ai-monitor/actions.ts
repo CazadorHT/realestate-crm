@@ -14,15 +14,8 @@ export type AiLogInput = {
   completionTokens?: number;
 };
 
-export async function logAiUsage(input: AiLogInput) {
-  const adminClient = createAdminClient();
-  const user = await getCurrentProfile();
-
-  // Define Rates (in USD per 1M tokens)
-  const rates: Record<
-    string,
-    { input: number; output: number; isManual?: boolean }
-  > = {
+export async function calculateAiCost(model: string, promptTokens: number, completionTokens: number) {
+  const rates: Record<string, { input: number; output: number }> = {
     "gemini-1.5-flash": { input: 0.1, output: 0.4 },
     "gemini-1.5-pro": { input: 1.25, output: 5.0 },
     "gemini-flash-latest": { input: 0.1, output: 0.4 },
@@ -31,6 +24,17 @@ export async function logAiUsage(input: AiLogInput) {
   };
 
   const exchangeRate = 32; // 1 USD = 32 THB
+  const modelKey = Object.keys(rates).find((k) => model.includes(k));
+  const rate = modelKey ? rates[modelKey] : rates["gemini-1.5-flash"];
+
+  const inputCostUsd = (promptTokens / 1_000_000) * rate.input;
+  const outputCostUsd = (completionTokens / 1_000_000) * rate.output;
+  return (inputCostUsd + outputCostUsd) * exchangeRate;
+}
+
+export async function logAiUsage(input: AiLogInput) {
+  const adminClient = createAdminClient();
+  const user = await getCurrentProfile();
 
   let costThb = 0;
   if (
@@ -38,12 +42,7 @@ export async function logAiUsage(input: AiLogInput) {
     input.promptTokens &&
     input.completionTokens
   ) {
-    const modelKey = Object.keys(rates).find((k) => input.model.includes(k));
-    const rate = modelKey ? rates[modelKey] : rates["gemini-1.5-flash"];
-
-    const inputCostUsd = (input.promptTokens / 1_000_000) * rate.input;
-    const outputCostUsd = (input.completionTokens / 1_000_000) * rate.output;
-    costThb = (inputCostUsd + outputCostUsd) * exchangeRate;
+    costThb = await calculateAiCost(input.model, input.promptTokens, input.completionTokens);
   }
 
   try {

@@ -81,7 +81,7 @@ export async function getPropertyWithImages(
   const property = data as unknown as PropertyWithImages;
 
   if (property.property_images) {
-    property.property_images.sort((a, b) => a.sort_order - b.sort_order);
+    property.property_images.sort((a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order);
   }
 
   return property;
@@ -91,15 +91,23 @@ export async function getPropertyWithImages(
  * Get all popular areas from database
  */
 export async function getPopularAreasAction(
-  params: { onlyActive?: boolean } = { onlyActive: true },
+  params: { onlyActive?: boolean; province?: string } = {
+    onlyActive: true,
+  },
 ) {
   // Allow public access (no auth required)
-  const supabase = await createAdminClient();
+  const supabase = await createClient();
 
-  const { data: allAreas, error } = await supabase
+  let query = supabase
     .from("popular_areas")
-    .select("name, name_cn, name_en")
+    .select("name, name_cn, name_en, province")
     .order("name");
+
+  if (params.province) {
+    query = query.eq("province", params.province);
+  }
+
+  const { data: allAreas, error } = await query;
 
   if (error) {
     console.error("getPopularAreasAction error:", error);
@@ -137,6 +145,7 @@ export async function addPopularAreaAction(data: {
   name: string;
   name_en?: string;
   name_cn?: string;
+  province?: string;
 }) {
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
@@ -149,6 +158,7 @@ export async function addPopularAreaAction(data: {
     name: data.name.trim(),
     name_en: data.name_en?.trim() || null,
     name_cn: data.name_cn?.trim() || null,
+    province: data.province || "กรุงเทพมหานคร",
   });
 
   if (error) {
@@ -199,7 +209,9 @@ export async function getGlobalPropertiesTableDataAction(params: {
     .order("created_at", { ascending: false });
 
   if (q) {
-    query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
+    query = query.or(
+      `title.ilike.%${q}%,description.ilike.%${q}%,address_line1.ilike.%${q}%,district.ilike.%${q}%,province.ilike.%${q}%`,
+    );
   }
 
   if (propertyType && propertyType !== "ALL") {

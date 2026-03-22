@@ -14,12 +14,14 @@ import {
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createPopularAreaAction } from "@/features/admin/popular-areas-actions";
+import { ProvinceSelector } from "./ProvinceSelector";
 
 export function CreatePopularAreaButton() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [itemName, setItemName] = useState("");
   const [itemNameEn, setItemNameEn] = useState("");
   const [itemNameCn, setItemNameCn] = useState("");
+  const [itemProvince, setItemProvince] = useState("กรุงเทพมหานคร");
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
@@ -37,7 +39,12 @@ export function CreatePopularAreaButton() {
     if (!itemName.trim()) return toast.error("ชื่อทำเลห้ามว่าง");
 
     setIsLoading(true);
-    const res = await createPopularAreaAction(itemName, itemNameEn, itemNameCn);
+    const res = await createPopularAreaAction(
+      itemName,
+      itemProvince,
+      itemNameEn,
+      itemNameCn,
+    );
     setIsLoading(false);
 
     if (res?.success === false) {
@@ -48,6 +55,7 @@ export function CreatePopularAreaButton() {
       setItemName("");
       setItemNameEn("");
       setItemNameCn("");
+      setItemProvince("กรุงเทพมหานคร");
       handleSuccessFeedback();
     }
   };
@@ -69,6 +77,13 @@ export function CreatePopularAreaButton() {
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">จังหวัด</label>
+              <ProvinceSelector
+                value={itemProvince}
+                onChange={setItemProvince}
+              />
+            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">ชื่อทำเล (ไทย)</label>
               <Input
@@ -100,7 +115,7 @@ export function CreatePopularAreaButton() {
             </Button>
             <Button
               onClick={handleSave}
-              disabled={isLoading || !itemName.trim()}
+              disabled={isLoading || !itemName.trim() || !itemProvince.trim()}
               className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed px-8"
             >
               {isLoading ? (

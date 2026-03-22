@@ -63,7 +63,7 @@ export function amountToThaiWords(amount: number | null | undefined): string {
     return result;
   }
   
-  let bahtText = convert(baht) + "บาท";
+  let bahtText = (baht === 0 && satang > 0) ? "ศูนย์บาท" : convert(baht) + "บาท";
   if (satang === 0) bahtText += "ถ้วน";
   else bahtText += convert(satang) + "สตางค์";
   

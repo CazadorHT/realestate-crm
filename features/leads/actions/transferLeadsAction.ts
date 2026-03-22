@@ -38,11 +38,20 @@ export async function transferLeadsAction(
       return { success: false, message: "ผู้รับงานปลายทางไม่ถูกต้อง" };
     }
 
-    // 2) อัปเดตข้อมูล
-    const { error } = await ctx.supabase
+    // 2) อัปเดตข้อมูล (Defense-in-depth: Force tenant filter)
+    let updateQuery = ctx.supabase
       .from("leads")
       .update({ created_by: targetAgentId })
       .in("id", leadIds);
+
+    if (ctx.tenantId) {
+      updateQuery = updateQuery.eq("tenant_id", ctx.tenantId);
+    } else if (ctx.role !== "ADMIN") {
+      // If no tenantId and NOT admin, this shouldn't happen but we fail safe
+      return { success: false, message: "Missing tenant context" };
+    }
+
+    const { error } = await updateQuery;
 
     if (error) {
       console.error("Transfer leads error:", error);

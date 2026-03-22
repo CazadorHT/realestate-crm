@@ -86,7 +86,8 @@ export async function deletePropertyAction(formData: FormData) {
     await supabase
       .from("leads")
       .update({ property_id: null })
-      .eq("property_id", id);
+      .eq("property_id", id)
+      .eq("tenant_id", tenantId);
 
     // 3.2 Delete Sub-tables
     await supabase.from("property_features").delete().eq("property_id", id);

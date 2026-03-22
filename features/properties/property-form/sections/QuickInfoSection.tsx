@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { useAITranslation } from "../hooks/use-ai-translation";
 
-import type { PropertyFormValues } from "@/features/properties/schema"; // ปรับตามจริง
+import type { PropertyFormValues } from "@/features/properties/schema";
+import { useThaiAddress } from "@/hooks/useThaiAddress";
 import {
   FormField,
   FormItem,
@@ -60,6 +61,7 @@ export function QuickInfoSection({
   setNewAreaCn,
   onAddArea,
 }: Props) {
+  const { provinces, loading: addressLoading } = useThaiAddress();
   const hasTitleError = !!form.formState.errors.title;
   const [showAddArea, setShowAddArea] = React.useState(false);
   const { isTranslating, translateTitle } = useAITranslation(form);
@@ -213,6 +215,58 @@ export function QuickInfoSection({
           </div>
         </div>
         <div className="space-y-6 md:col-span-1 ">
+          {/* province (New inclusion in Step 1) */}
+          <FormField
+            control={form.control}
+            name="province"
+            render={({ field }) => (
+              <FormItem className="flex flex-col space-y-2">
+                <label className="font-medium text-sm uppercase tracking-wider text-slate-700 h-8 flex items-center gap-2">
+                  จังหวัด <span className="text-red-500">*</span>
+                  {addressLoading && (
+                    <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
+                  )}
+                </label>
+                <div className="mt-auto w-full">
+                  <Select
+                    value={field.value}
+                    onValueChange={(val) => {
+                      field.onChange(val);
+                      // Reset dependent fields when province changes in Step 1
+                      form.setValue("district", "");
+                      form.setValue("subdistrict", "");
+                      form.setValue("postal_code", "");
+                      form.setValue("popular_area", undefined);
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full border-slate-200">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                          <Flag className="h-5 w-5" />
+                        </div>
+                        <SelectValue placeholder="เลือกจังหวัด" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[350px] p-2">
+                      <SelectGroup>
+                        {provinces.map((p) => (
+                          <SelectItem
+                            key={p.id}
+                            value={p.name_th}
+                            className="rounded-lg"
+                          >
+                            {p.name_th}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* popular_area (ผูกกับ RHF ตรง ๆ) */}
           <FormField
             control={form.control}
@@ -237,7 +291,7 @@ export function QuickInfoSection({
                     <FormControl>
                       <SelectTrigger
                         id={field.name}
-                        className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full"
+                        className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full border-slate-200"
                       >
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                           <MapPin className="h-5 w-5" />
@@ -254,7 +308,7 @@ export function QuickInfoSection({
                         >
                           -- ไม่ระบุ --
                         </SelectItem>
-                        {popularAreas.map((a) => (
+                        {(popularAreas || []).map((a) => (
                           <SelectItem key={a} value={a}>
                             {a}
                           </SelectItem>

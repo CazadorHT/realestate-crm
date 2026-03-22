@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -8,13 +8,7 @@ import { revalidatePath } from "next/cache";
 import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
 
-const createTenantSchema = z.object({
-  name: z.string().min(2, "ชื่อสาขาต้องมีอย่างน้อย 2 ตัวอักษร"),
-  slug: z
-    .string()
-    .min(2, "Slug ต้องมีอย่างน้อย 2 ตัวอักษร")
-    .regex(/^[a-z0-h-]+$/, "Slug ต้องเป็นภาษาอังกฤษตัวเล็กและขีดกลางเท่านั้น"),
-});
+import { createTenantSchema } from "@/lib/validations/tenant";
 
 export async function getTenantCountAction() {
   const { role } = await requireAuthContext();
@@ -585,3 +579,4 @@ export async function deleteTenantAction(id: string) {
 
   return { success: true };
 }
+

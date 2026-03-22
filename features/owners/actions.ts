@@ -14,6 +14,7 @@ import { mapDbError } from "@/lib/db-error";
 import { getSystemConfig } from "@/lib/actions/system-config";
 
 import type { OwnerFormValues } from "./types";
+import { calculatePropertyCounts } from "./logic";
 
 export async function getOwnersAction(allBranches = false) {
   try {
@@ -29,8 +30,11 @@ export async function getOwnersAction(allBranches = false) {
       // Single-tenant: show all
     } else if (allBranches && ctx.role === "ADMIN") {
       // Admin + allBranches: show all
-    } else if (ctx.tenantId) {
+    } else if (ctx.tenantId && ctx.tenantId !== "ALL") {
       query = query.or(`tenant_id.eq.${ctx.tenantId},tenant_id.is.null`);
+    } else if (isMultiTenant && !allBranches) {
+      // Defensive: if multi-tenant is on but no tenantId and not allBranches, show nothing or just global
+      query = query.is("tenant_id", null);
     }
 
     // Allow all authenticated users (Agents/Admins) to see all owners
@@ -165,7 +169,8 @@ export async function updateOwnerAction(id: string, values: OwnerFormValues) {
         company_name: values.company_name || null,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("tenant_id", ctx.tenantId!);
 
     if (error) return { success: false, message: mapDbError(error) };
 
@@ -213,7 +218,8 @@ export async function deleteOwnerAction(id: string) {
     const { error } = await ctx.supabase
       .from("owners")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("tenant_id", ctx.tenantId!);
     if (error) return { success: false, message: mapDbError(error) };
 
     await logAudit(ctx, {
@@ -231,6 +237,7 @@ export async function deleteOwnerAction(id: string) {
   }
 }
 
+
 export async function getOwnersWithPropertyCountAction() {
   const ctx = await requireAuthContext();
   assertStaff(ctx.role);
@@ -242,15 +249,9 @@ export async function getOwnersWithPropertyCountAction() {
     .from("owners")
     .select("*")
     .order("full_name");
-
-  if (isMultiTenant && ctx.tenantId) {
+  if (isMultiTenant && ctx.tenantId && ctx.tenantId !== "ALL") {
     query = query.or(`tenant_id.eq.${ctx.tenantId},tenant_id.is.null`);
   }
-
-  // Allow all authenticated users (Agents/Admins) to see all owners
-  // if (ctx.role !== "ADMIN") {
-  //   query = query.eq("created_by", ctx.user.id);
-  // }
 
   const { data: owners, error: ownersError } = await query;
 
@@ -259,23 +260,20 @@ export async function getOwnersWithPropertyCountAction() {
     return [];
   }
 
-  const { data: propertyCounts, error: countsError } = await ctx.supabase
+  let countsQuery = ctx.supabase
     .from("properties")
     .select("owner_id");
+
+  if (isMultiTenant && ctx.tenantId && ctx.tenantId !== "ALL") {
+    countsQuery = countsQuery.eq("tenant_id", ctx.tenantId);
+  }
+
+  const { data: propertyCounts, error: countsError } = await countsQuery;
 
   if (countsError) {
     console.error("Error fetching property counts:", countsError);
     return owners.map((o) => ({ ...o, property_count: 0 }));
   }
 
-  const countMap = new Map<string, number>();
-  (propertyCounts ?? []).forEach((p) => {
-    if (p.owner_id)
-      countMap.set(p.owner_id, (countMap.get(p.owner_id) || 0) + 1);
-  });
-
-  return owners.map((owner) => ({
-    ...owner,
-    property_count: countMap.get(owner.id) || 0,
-  }));
+  return calculatePropertyCounts(owners, propertyCounts ?? []);
 }

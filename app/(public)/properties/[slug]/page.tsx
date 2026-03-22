@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import dynamic from "next/dynamic";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 // Critical LCP components
 import { PropertyGallery } from "@/components/public/PropertyGallery";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
@@ -78,7 +78,7 @@ export default async function PublicPropertyDetailPage(props: {
   // Decode URL-encoded slug (e.g., %E0%B8%9A... → บ้าน...)
   const slug = decodeURIComponent(rawSlug);
 
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   // Try to find by Slug (primary) or ID (fallback for old URLs)
   let query = supabase.from("properties").select(
@@ -508,7 +508,7 @@ export async function generateMetadata(props: {
   const { slug } = await props.params;
   const decodedSlug = decodeURIComponent(slug); // Fix for Thai characters
 
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   let query = supabase
     .from("properties")
     .select(

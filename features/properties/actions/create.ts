@@ -107,7 +107,11 @@ export async function createPropertyAction(
       // 1) Validate path format
       const valid = validatePropertyImagePaths(images);
       if (!valid.ok) {
-        await supabase.from("properties").delete().eq("id", property.id);
+        await supabase
+          .from("properties")
+          .delete()
+          .eq("id", property.id)
+          .eq("tenant_id", tenantId);
         return { success: false, message: valid.message };
       }
 
@@ -128,7 +132,11 @@ export async function createPropertyAction(
         console.error("Images insertion error:", imagesError);
 
         // ✅ Rollback: ลบ property เพื่อไม่ให้เกิด half-created data
-        await supabase.from("properties").delete().eq("id", property.id);
+        await supabase
+          .from("properties")
+          .delete()
+          .eq("id", property.id)
+          .eq("tenant_id", tenantId);
 
         return { success: false, message: "Failed to attach images" };
       }

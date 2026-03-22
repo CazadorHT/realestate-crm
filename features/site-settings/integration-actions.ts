@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 
 export type IntegrationProvider = "tiktok" | "facebook" | "google" | "line";
@@ -12,7 +12,8 @@ export async function disconnectIntegrationAction(
   provider: IntegrationProvider,
 ) {
   try {
-    const supabase = await createClient();
+    const { supabase, role } = await requireAuthContext();
+    assertStaff(role);
 
     let keysToRemove: string[] = [];
 

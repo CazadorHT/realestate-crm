@@ -1,107 +1,6 @@
 // features/properties/queries.public.ts
 import { createClient } from "@/lib/supabase/server";
-import type { PropertyWithImages } from "./types";
-
-export async function getPublicPropertyWithImagesBySlug(slug: string) {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("properties")
-    .select(
-      `
-      *,
-      property_images (
-        id,
-        property_id,
-        image_url,
-        is_cover,
-        sort_order,
-        created_at
-      )
-    `,
-    )
-    .eq("slug", slug)
-    .eq("status", "ACTIVE")
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!data) return null;
-
-  if (data.property_images) {
-    data.property_images.sort((a, b) => a.sort_order - b.sort_order);
-  }
-
-  // ✅ public ไม่คืน storage_path
-  return data as unknown as Omit<PropertyWithImages, "property_images"> & {
-    property_images: Array<{
-      id: string;
-      property_id: string;
-      image_url: string | null;
-      is_cover: boolean | null;
-      sort_order: number | null;
-      created_at: string;
-    }>;
-  };
-}
-
-export async function searchPropertiesForBot(query: string, limit = 5) {
-  const supabase = createAdminClient();
-  const keywords = query.trim().split(/\s+/).filter(Boolean);
-  if (keywords.length === 0) return [];
-
-  const term = keywords[0];
-  if (term.length < 2 && !["🏠", "📍", "🏙️"].includes(term)) return [];
-  // Using OR filter for title, popular_area, description
-  const { data, error } = await supabase
-    .from("properties")
-    .select(
-      `
-      id,
-      title,
-      title_en,
-      title_cn,
-      price,
-      rental_price,
-      listing_type,
-      property_images (
-        image_url,
-        is_cover,
-        sort_order
-      ),
-      bedrooms, 
-      bathrooms,
-      size_sqm,
-      popular_area
-    `,
-    )
-    .eq("status", "ACTIVE")
-    .or(
-      `title.ilike.%${term}%,popular_area.ilike.%${term}%,description.ilike.%${term}%`,
-    )
-    .limit(limit);
-
-  if (error) {
-    console.error("Search bot error:", error);
-    return [];
-  }
-
-  // Sort images and return
-  return (data || []).map((p) => {
-    if (p.property_images && Array.isArray(p.property_images)) {
-      p.property_images.sort(
-        (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
-      );
-    }
-    return p;
-  });
-}
-
-// ============================
-// LINE Bot: Interactive Search Queries
-// (ใช้ adminClient เพราะเรียกจาก API route)
-// ============================
-import { createAdminClient } from "@/lib/supabase/admin";
-import type { PropertyType } from "./types";
+import type { PropertyWithImages, PropertyType } from "./types";
 
 const BOT_SELECT_FIELDS = `
   id,
@@ -139,12 +38,87 @@ function sortPropertyImages<
   });
 }
 
-/**
- * ดึง property_type ที่มีทรัพย์ ACTIVE จริงๆ (ไม่ hardcode)
- * คืน array เรียงตามจำนวนทรัพย์ (มากไปน้อย)
- */
+export async function getPublicPropertyWithImagesBySlug(slug: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("properties")
+    .select(`
+      *,
+      property_images (
+        id,
+        property_id,
+        image_url,
+        is_cover,
+        sort_order,
+        created_at
+      )
+    `)
+    .eq("slug", slug)
+    .eq("status", "ACTIVE")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  if (data.property_images) {
+    data.property_images.sort((a: { sort_order: number | null }, b: { sort_order: number | null }) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  }
+
+  return data as unknown as Omit<PropertyWithImages, "property_images"> & {
+    property_images: Array<{
+      id: string;
+      property_id: string;
+      image_url: string | null;
+      is_cover: boolean | null;
+      sort_order: number | null;
+      created_at: string;
+    }>;
+  };
+}
+
+export async function searchPropertiesForBot(query: string, limit = 5) {
+  const supabase = await createClient();
+  const keywords = query.trim().split(/\s+/).filter(Boolean);
+  if (keywords.length === 0) return [];
+
+  const term = keywords[0];
+  if (term.length < 2 && !["🏠", "📍", "🏙️"].includes(term)) return [];
+
+  const { data, error } = await supabase
+    .from("properties")
+    .select(`
+      id,
+      title,
+      title_en,
+      title_cn,
+      price,
+      rental_price,
+      listing_type,
+      property_images (
+        image_url,
+        is_cover,
+        sort_order
+      ),
+      bedrooms, 
+      bathrooms,
+      size_sqm,
+      popular_area
+    `)
+    .eq("status", "ACTIVE")
+    .or(`title.ilike.%${term}%,popular_area.ilike.%${term}%,description.ilike.%${term}%`)
+    .limit(limit);
+
+  if (error) {
+    console.error("Search bot error:", error);
+    return [];
+  }
+
+  return sortPropertyImages(data || []);
+}
+
 export async function getActivePropertyTypes(): Promise<string[]> {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("properties")
@@ -156,7 +130,6 @@ export async function getActivePropertyTypes(): Promise<string[]> {
     return [];
   }
 
-  // Count occurrences and sort by most popular
   const typeCount: Record<string, number> = {};
   for (const row of data || []) {
     const pt = row.property_type;
@@ -170,14 +143,8 @@ export async function getActivePropertyTypes(): Promise<string[]> {
     .map(([type]) => type);
 }
 
-/**
- * ดึง popular_area ที่มีทรัพย์ ACTIVE ของ property_type นั้น
- * คืน array ของ area เรียงตามจำนวนทรัพย์ (มากไปน้อย)
- */
-export async function getDistinctAreasForType(
-  propertyType: string,
-): Promise<string[]> {
-  const supabase = createAdminClient();
+export async function getDistinctAreasForType(propertyType: string): Promise<string[]> {
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("properties")
@@ -192,7 +159,6 @@ export async function getDistinctAreasForType(
     return [];
   }
 
-  // Count occurrences and sort by most popular
   const areaCount: Record<string, number> = {};
   for (const row of data || []) {
     const area = row.popular_area?.trim();
@@ -206,17 +172,8 @@ export async function getDistinctAreasForType(
     .map(([area]) => area);
 }
 
-/**
- * ค้นหาทรัพย์ตาม property_type + popular_area
- */
-export async function searchByTypeAndArea(
-  propertyType: string,
-  area: string,
-  limit = 10,
-) {
-  const supabase = createAdminClient();
-
-  console.log(`[BOT] searchByTypeAndArea: type=${propertyType}, area=${area}`);
+export async function searchByTypeAndArea(propertyType: string, area: string, limit = 10) {
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("properties")
@@ -232,38 +189,11 @@ export async function searchByTypeAndArea(
     return [];
   }
 
-  const results = sortPropertyImages(data || []);
-  console.log(
-    `[BOT] searchByTypeAndArea params: type="${propertyType}", area="${area}"`,
-  );
-  console.log(`[BOT] searchByTypeAndArea results found: ${results.length}`);
-
-  if (results.length === 0) {
-    // DIAGNOSTIC: Check if any active properties exist in this area regardless of type
-    const { count, error: countErr } = await supabase
-      .from("properties")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "ACTIVE")
-      .ilike("popular_area", `%${area}%`);
-
-    console.log(
-      `[BOT] DIAGNOSTIC: Total active properties in "${area}" (any type): ${count ?? 0}`,
-    );
-    if (countErr) console.error("[BOT] DIAGNOSTIC error:", countErr);
-  } else {
-    console.log(
-      `[BOT] Example result: ${results[0].title} (ID: ${results[0].id})`,
-    );
-  }
-
-  return results;
+  return sortPropertyImages(data || []);
 }
 
-/**
- * ดึงทรัพย์ล่าสุด (Hot Deals = ทรัพย์ใหม่ล่าสุด)
- */
 export async function getHotProperties(limit = 10) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("properties")
@@ -281,7 +211,7 @@ export async function getHotProperties(limit = 10) {
 }
 
 export async function getPopularAreaTranslations() {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("popular_areas")
     .select("name, name_en, name_cn");

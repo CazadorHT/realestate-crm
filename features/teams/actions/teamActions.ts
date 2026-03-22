@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAuthContext } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { Tables, TablesInsert, TablesUpdate } from "@/lib/database.types";
+import { validateManagerRole, validateTeamName } from "../utils";
 
 export type TeamWithManager = Tables<"teams"> & {
   manager?: {
@@ -20,15 +21,20 @@ export async function getTeamsAction() {
     const ctx = await requireAuthContext();
 
     // ดึงข้อมูลทีมพร้อมข้อมูล Manager
-    const { data, error } = await ctx.supabase
+    let query = ctx.supabase
       .from("teams")
       .select(
         `
         *,
         manager:profiles!teams_manager_id_fkey(full_name)
       `,
-      )
-      .order("created_at", { ascending: false });
+      );
+
+    if (ctx.tenantId && ctx.tenantId !== "ALL") {
+      query = query.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
       console.error(
@@ -58,6 +64,7 @@ export async function getTeamsAction() {
   }
 }
 
+
 /**
  * สร้างทีมใหม่
  */
@@ -69,10 +76,9 @@ export async function createTeamAction(name: string, managerId?: string) {
       return { success: false, message: "ไม่มีสิทธิ์ในการดำเนินการนี้" };
     }
 
-    const trimmedName = name.trim();
-    if (!trimmedName) {
-      return { success: false, message: "กรุณาระบุชื่อทีม" };
-    }
+    const nameVal = validateTeamName(name);
+    if (!nameVal.valid) return { success: false, message: nameVal.message };
+    const trimmedName = nameVal.name!;
 
     // 1) ตรวจสอบชื่อทีมซ้ำ
     const { data: existingTeam } = await ctx.supabase
@@ -93,15 +99,8 @@ export async function createTeamAction(name: string, managerId?: string) {
         .eq("id", managerId)
         .single();
 
-      if (
-        !managerProfile ||
-        (managerProfile.role !== "ADMIN" && managerProfile.role !== "MANAGER")
-      ) {
-        return {
-          success: false,
-          message: "ผู้ที่ถูกเลือกต้องมีบทบาท ADMIN หรือ MANAGER เท่านั้น",
-        };
-      }
+      const roleVal = validateManagerRole(managerProfile?.role);
+      if (!roleVal.valid) return { success: false, message: roleVal.message };
     }
 
     const { data, error } = await ctx.supabase
@@ -109,6 +108,7 @@ export async function createTeamAction(name: string, managerId?: string) {
       .insert({
         name,
         manager_id: managerId || null,
+        tenant_id: ctx.tenantId && ctx.tenantId !== "ALL" ? ctx.tenantId : null,
       })
       .select()
       .single();
@@ -181,10 +181,16 @@ export async function updateTeamAction(
       }
     }
 
-    const { error } = await ctx.supabase
+    let query = ctx.supabase
       .from("teams")
       .update(updates)
       .eq("id", id);
+
+    if (ctx.tenantId && ctx.tenantId !== "ALL") {
+      query = query.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { error } = await query;
 
     if (error) {
       console.error("Error updating team:", error);
@@ -217,13 +223,23 @@ export async function deleteTeamAction(id: string) {
     }
 
     // 1) เคลียร์ team_id ใน profiles ก่อน (ถ้ามี)
-    await ctx.supabase
+    let profileQuery = ctx.supabase
       .from("profiles")
       .update({ team_id: null })
       .eq("team_id", id);
 
+    // Note: Since profiles might not have tenant_id column, we rely on RLS 
+    // or just the team_id match. But we should be careful.
+    await profileQuery;
+
     // 2) ลบทีม
-    const { error } = await ctx.supabase.from("teams").delete().eq("id", id);
+    let deleteQuery = ctx.supabase.from("teams").delete().eq("id", id);
+
+    if (ctx.tenantId && ctx.tenantId !== "ALL") {
+      deleteQuery = deleteQuery.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { error } = await deleteQuery;
 
     if (error) {
       console.error("Error deleting team:", error);

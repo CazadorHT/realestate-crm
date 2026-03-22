@@ -10,15 +10,61 @@ type AreaRow = {
   cover: string | null;
 };
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
+    const { searchParams } = new URL(request.url);
+    const mode = searchParams.get("mode");
+    const requestedProvince = searchParams.get("province"); // e.g., "Bangkok", "Phuket"
 
-    // 1) ดึงทรัพย์ ACTIVE พร้อม fields ที่ใช้สรุปทำเล
-    const { data: props, error: propErr } = await supabase
+    const client = await createClient();
+
+    // 1) Handle "provinces" mode: Return list of all provinces with active properties
+    if (mode === "provinces") {
+      const { data: provinces, error: provErr } = await client
+        .from("properties")
+        .select("province")
+        .eq("status", "ACTIVE")
+        .not("province", "is", null);
+
+      if (provErr) throw provErr;
+
+      // Extract unique Thai names and map to English display names
+      const uniqueThai = Array.from(new Set(provinces.map((p) => p.province).filter(Boolean)));
+      
+      // Reverse map for display (Simplified)
+      const displayMap: Record<string, string> = {
+        "กรุงเทพมหานคร": "Bangkok",
+        "ภูเก็ต": "Phuket",
+        "เชียงใหม่": "Chiang Mai",
+        "ชลบุรี": "Chonburi",
+      };
+
+      const result = uniqueThai.map(name => ({
+        id: name,
+        display: displayMap[name as string] || name
+      }));
+
+      return NextResponse.json(result);
+    }
+
+    // Map English keys to Thai DB values
+    const provinceMap: Record<string, string[]> = {
+      Bangkok: ["กรุงเทพมหานคร"],
+      Phuket: ["ภูเก็ต", "Phuket"],
+    };
+
+    let query = client
       .from("properties")
       .select("id, popular_area, province, created_at")
-      .eq("status", "ACTIVE")
+      .eq("status", "ACTIVE");
+
+    if (requestedProvince && provinceMap[requestedProvince]) {
+      query = query.in("province", provinceMap[requestedProvince]);
+    } else if (requestedProvince) {
+      query = query.eq("province", requestedProvince);
+    }
+
+    const { data: props, error: propErr } = await query
       .order("created_at", { ascending: false })
       .limit(300);
 
@@ -34,7 +80,7 @@ export async function GET() {
     if (ids.length === 0) return NextResponse.json([]);
 
     // 2) ดึงรูป cover ของทรัพย์เหล่านี้ (เฉพาะ is_cover = true ก่อน)
-    const { data: covers, error: coverErr } = await supabase
+    const { data: covers, error: coverErr } = await client
       .from("property_images")
       .select("property_id, image_url, sort_order, is_cover")
       .in("property_id", ids)
@@ -57,10 +103,20 @@ export async function GET() {
     // 3) aggregate ตาม (popular_area + province)
     const map = new Map<string, AreaRow>();
 
-    // 0) Fetch valid popular areas with translations
-    const { data: validAreasData } = await supabase
+    // 0) Fetch valid popular areas with translations (optionally filtered by province)
+    let areasQuery = client
       .from("popular_areas")
-      .select("name, name_en, name_cn");
+      .select("name, name_en, name_cn, province");
+    
+    if (requestedProvince && provinceMap[requestedProvince]) {
+      // Filter by any of the mapped names OR null (for legacy)
+      const names = provinceMap[requestedProvince];
+      areasQuery = areasQuery.or(`province.in.(${names.join(",")}),province.is.null`);
+    } else if (requestedProvince) {
+      areasQuery = areasQuery.or(`province.eq.${requestedProvince},province.is.null`);
+    }
+
+    const { data: validAreasData } = await areasQuery;
 
     // Create a map for quick lookup of translations
     const areaTranslations = new Map<

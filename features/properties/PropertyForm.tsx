@@ -187,10 +187,12 @@ export function PropertyForm({
     if (!newArea.trim()) return;
     setIsAddingArea(true);
     try {
+      const province = form.getValues("province");
       const res = await addPopularAreaAction({
         name: newArea,
         name_en: newAreaEn,
         name_cn: newAreaCn,
+        province: province,
       });
       if (res.success) {
         toast.success("เพิ่มย่านสำเร็จ");

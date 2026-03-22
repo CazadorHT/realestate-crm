@@ -2,6 +2,9 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
+
+import { calculateNewSortOrders } from "./partners-utils";
 
 type CreatePartnerInput = {
   name: string;
@@ -54,27 +57,22 @@ async function resequencePartners() {
 
   if (!partners) return;
 
-  // Batch update with new sequential orders
-  const updates = partners
-    .map((p, index) => {
-      const newOrder = index + 1;
-      if (p.sort_order !== newOrder) {
-        return supabase
-          .from("partners")
-          .update({ sort_order: newOrder })
-          .eq("id", p.id);
-      }
-      return null;
-    })
-    .filter(Boolean);
+  const updates = calculateNewSortOrders(partners);
+
 
   if (updates.length > 0) {
-    await Promise.all(updates);
+    const promises = updates.map(u => 
+      supabase.from("partners").update({ sort_order: u.sort_order }).eq("id", u.id)
+    );
+    await Promise.all(promises);
   }
 }
 
 export async function createPartner(input: CreatePartnerInput) {
   try {
+    const { role } = await requireAuthContext();
+    assertStaff(role);
+
     const supabase = await createClient();
     const { error } = await supabase.from("partners").insert([input]);
 
@@ -93,6 +91,9 @@ export async function createPartner(input: CreatePartnerInput) {
 
 export async function updatePartner(input: UpdatePartnerInput) {
   try {
+    const { role } = await requireAuthContext();
+    assertStaff(role);
+
     const supabase = await createClient();
     const { id, ...updates } = input;
 
@@ -115,6 +116,9 @@ export async function updatePartner(input: UpdatePartnerInput) {
 
 export async function deletePartner(id: string) {
   try {
+    const { role } = await requireAuthContext();
+    assertStaff(role);
+
     const supabase = await createClient();
     const { error } = await supabase.from("partners").delete().eq("id", id);
 

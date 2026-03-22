@@ -10,6 +10,7 @@ import {
   siteSettingsSchema,
 } from "./schema";
 import { mapDbError } from "@/lib/db-error";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 
 const DEFAULT_SETTINGS: SiteSettings = {
   smart_match_wizard_enabled: true,
@@ -160,7 +161,10 @@ export async function updateSiteSetting(
   value: boolean | any[] | string,
 ): Promise<{ success: boolean; message?: string }> {
   try {
-    const supabase = await createClient();
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+
+    const supabase = ctx.supabase;
 
     // Basic validation for single key update if it's part of branding
     if (
@@ -221,7 +225,10 @@ export async function updateSiteSettings(
   settings: Partial<SiteSettings>,
 ): Promise<{ success: boolean; message?: string }> {
   try {
-    const supabase = await createClient();
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+
+    const supabase = ctx.supabase;
 
     // Validation
     const result = siteSettingsSchema.partial().safeParse(settings);

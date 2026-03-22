@@ -33,6 +33,26 @@
     "schemaname": "public",
     "tablename": "audit_logs",
     "rls_enabled": true,
+    "policyname": "Audit logs are visible to branch admins",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(is_admin() OR ((tenant_id = (( SELECT ((auth.jwt() -> 'user_metadata'::text) ->> 'tenant_id'::text)))::uuid) AND is_tenant_admin(tenant_id)))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "audit_logs",
+    "rls_enabled": true,
+    "policyname": "Audit logs creation is handled by system",
+    "permissive": "PERMISSIVE",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "audit_logs",
+    "rls_enabled": true,
     "policyname": "audit_logs_insert_own",
     "permissive": "PERMISSIVE",
     "cmd": "INSERT",
@@ -73,10 +93,30 @@
     "schemaname": "public",
     "tablename": "blog_posts",
     "rls_enabled": true,
+    "policyname": "Public View Published Blogs",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(is_published = true)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "blog_posts",
+    "rls_enabled": true,
     "policyname": "Public can view published posts",
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",
     "qual": "(is_published = true)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "blog_posts",
+    "rls_enabled": true,
+    "policyname": "Staff Manage blog_posts",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "is_staff()",
     "with_check": null
   },
   {
@@ -193,6 +233,16 @@
     "schemaname": "public",
     "tablename": "lead_activities",
     "rls_enabled": true,
+    "policyname": "Public Insert lead_activities",
+    "permissive": "PERMISSIVE",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "lead_activities",
+    "rls_enabled": true,
     "policyname": "Tenant Isolation: Lead Activities",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
@@ -228,6 +278,16 @@
     "cmd": "ALL",
     "qual": "(is_system_admin() OR ((tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) AND (is_tenant_admin(tenant_id) OR (NOT get_isolation_setting('isolation_leads_enabled'::text)) OR (created_by = auth.uid()) OR (assigned_to = auth.uid()) OR is_manager_of(created_by) OR is_manager_of(assigned_to))))",
     "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "leads",
+    "rls_enabled": true,
+    "policyname": "Public Insert leads",
+    "permissive": "PERMISSIVE",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
   },
   {
     "schemaname": "public",
@@ -333,6 +393,16 @@
     "schemaname": "public",
     "tablename": "omni_messages",
     "rls_enabled": true,
+    "policyname": "Public Insert messages",
+    "permissive": "PERMISSIVE",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "omni_messages",
+    "rls_enabled": true,
     "policyname": "Tenant Isolation: Omni Messages",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
@@ -387,6 +457,36 @@
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",
     "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "popular_areas",
+    "rls_enabled": true,
+    "policyname": "Public Read popular_areas",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "popular_areas",
+    "rls_enabled": true,
+    "policyname": "Staff Manage popular_areas",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "rls_enabled": true,
+    "policyname": "Public View Agent Profiles",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(role = ANY (ARRAY['ADMIN'::user_role, 'AGENT'::user_role, 'MANAGER'::user_role]))",
     "with_check": null
   },
   {
@@ -487,6 +587,16 @@
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
     "qual": "(is_system_admin() OR ((tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) AND (is_tenant_admin(tenant_id) OR (NOT get_isolation_setting('isolation_properties_enabled'::text)) OR (created_by = auth.uid()) OR (assigned_to = auth.uid()) OR is_manager_of(created_by))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "properties",
+    "rls_enabled": true,
+    "policyname": "Public View Active Properties",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "((status = 'ACTIVE'::property_status) AND (deleted_at IS NULL))",
     "with_check": null
   },
   {
@@ -643,6 +753,26 @@
     "schemaname": "public",
     "tablename": "services",
     "rls_enabled": true,
+    "policyname": "Public View Active Services",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(is_active = true)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "services",
+    "rls_enabled": true,
+    "policyname": "Staff Manage services",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "services",
+    "rls_enabled": true,
     "policyname": "System Admin Manage services",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
@@ -757,6 +887,26 @@
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
     "qual": "is_system_admin()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "teams",
+    "rls_enabled": true,
+    "policyname": "Teams are manageable by branch admins",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "(is_admin() OR ((tenant_id = (( SELECT ((auth.jwt() -> 'user_metadata'::text) ->> 'tenant_id'::text)))::uuid) AND is_tenant_admin(tenant_id)))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "teams",
+    "rls_enabled": true,
+    "policyname": "Teams are visible to branch members",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "((tenant_id IS NULL) OR (tenant_id = (( SELECT ((auth.jwt() -> 'user_metadata'::text) ->> 'tenant_id'::text)))::uuid) OR is_admin())",
     "with_check": null
   },
   {

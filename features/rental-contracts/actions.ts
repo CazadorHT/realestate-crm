@@ -17,6 +17,7 @@ import {
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
+import { generateContractNumber } from "./utils";
 
 export async function getContractByDealId(
   dealId: string,
@@ -47,6 +48,7 @@ export async function getContractByDealId(
     return null;
   }
 }
+
 
 export async function upsertContractAction(
   id: string | null,
@@ -145,10 +147,7 @@ export async function upsertContractAction(
         end_date: validatedCreate.end_date,
       } as RentalContractInsert;
       if (!toInsert.contract_number) {
-        toInsert.contract_number = `RC-${new Date().getFullYear()}-${Math.random()
-          .toString(36)
-          .slice(2, 8)
-          .toUpperCase()}`;
+        toInsert.contract_number = generateContractNumber();
       }
 
       const insertRes = await supabase

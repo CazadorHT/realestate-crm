@@ -119,6 +119,13 @@
     "column_default": "'{}'::jsonb"
   },
   {
+    "table_name": "audit_logs",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "blog_categories",
     "column_name": "id",
     "data_type": "uuid",
@@ -1671,6 +1678,13 @@
     "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "popular_areas",
+    "column_name": "province",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'กรุงเทพฯ'::text"
   },
   {
     "table_name": "profiles",
@@ -3652,6 +3666,13 @@
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
     "column_default": "now()"
+  },
+  {
+    "table_name": "teams",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "tenant_branding",

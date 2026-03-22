@@ -19,8 +19,15 @@ export default async function ExecutiveDashboardPage({
   assertAdminOrManager(role);
 
   const awaitedParams = await searchParams;
-  const selectedTenantId = awaitedParams.tenantId || authTenantId || "ALL";
-  const compareId = awaitedParams.compareId || null;
+  
+  // SECURITY: Only ADMIN can spoof or view other tenants' data.
+  // Others are STRICTLY locked to their own authTenantId.
+  let selectedTenantId = authTenantId || "ALL";
+  if (role === "ADMIN" && awaitedParams.tenantId) {
+    selectedTenantId = awaitedParams.tenantId;
+  }
+  
+  const compareId = role === "ADMIN" ? (awaitedParams.compareId || null) : null;
 
   const year = new Date().getFullYear();
 

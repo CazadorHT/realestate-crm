@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 
 // ============ TYPES ============
 
@@ -100,7 +101,8 @@ export async function getActiveBudgetRanges(
 export async function createBudgetRange(
   input: Omit<BudgetRange, "id">,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { error } = await supabase
     .from("smart_match_budget_ranges")
@@ -119,7 +121,8 @@ export async function updateBudgetRange(
   id: string,
   input: Partial<BudgetRange>,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { error } = await supabase
     .from("smart_match_budget_ranges")
@@ -138,7 +141,8 @@ export async function updateBudgetRange(
 export async function deleteBudgetRange(
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { error } = await supabase
     .from("smart_match_budget_ranges")
@@ -192,7 +196,8 @@ export async function getActivePropertyTypes(): Promise<PropertyTypeOption[]> {
 export async function createPropertyType(
   input: Omit<PropertyTypeOption, "id">,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { error } = await supabase
     .from("smart_match_property_types")
@@ -211,7 +216,8 @@ export async function updatePropertyType(
   id: string,
   input: Partial<PropertyTypeOption>,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { error } = await supabase
     .from("smart_match_property_types")
@@ -230,7 +236,8 @@ export async function updatePropertyType(
 export async function deletePropertyType(
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { error } = await supabase
     .from("smart_match_property_types")
@@ -388,7 +395,8 @@ export async function updateSmartMatchSetting(
   key: string,
   value: any,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
   const { error } = await supabase.from("smart_match_settings").upsert({
     key,

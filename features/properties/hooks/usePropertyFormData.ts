@@ -23,6 +23,8 @@ export function usePropertyFormData(
   const [popularAreas, setPopularAreas] = React.useState<string[]>([]);
   const [allBranches, setAllBranches] = React.useState(false);
 
+  const province = form.watch("province");
+
   const fetchOwners = async (showAll: boolean) => {
     try {
       const { getOwnersAction } = await import("@/features/owners/actions");
@@ -35,22 +37,19 @@ export function usePropertyFormData(
     }
   };
 
-  const fetchPopularAreas = async () => {
+  const fetchPopularAreas = React.useCallback(async (selectedProvince?: string) => {
     try {
       const areasData = (await getPopularAreasAction({
         onlyActive: false,
+        province: selectedProvince,
       })) as string[];
-      // Merge DB areas with hardcoded defaults to ensure we have a good list
-      const combinedAreas = Array.from(
-        new Set([...areasData, ...(POPULAR_AREAS as unknown as string[])]),
-      ).sort();
-      setPopularAreas(combinedAreas);
-      return combinedAreas;
+      setPopularAreas(areasData);
+      return areasData;
     } catch (error) {
       console.error("Error fetching popular areas:", error);
       return [];
     }
-  };
+  }, []);
 
   React.useEffect(() => {
     async function loadData() {
@@ -70,8 +69,8 @@ export function usePropertyFormData(
           setAgents(agentsData);
         }
 
-        // Load popular areas
-        await fetchPopularAreas();
+        // Load popular areas for initial province
+        await fetchPopularAreas(province);
 
         // If edit mode, load assigned agents
         if (mode === "edit" && defaultValuesId) {
@@ -82,7 +81,7 @@ export function usePropertyFormData(
 
           if (rels && rels.length > 0) {
             const ids = rels.map((r) => r.agent_id);
-            form.setValue("agent_ids", ids); // Note: Make sure field name matches schema
+            form.setValue("agent_ids", ids);
           }
         }
       } catch (error) {
@@ -91,7 +90,14 @@ export function usePropertyFormData(
     }
 
     loadData();
-  }, [mode, defaultValuesId, form, allBranches]); // Added form and allBranches to deps
+  }, [mode, defaultValuesId, allBranches]); // Removed form from deps to avoid loops, watching province separately
+
+  // Re-fetch popular areas when province changes
+  React.useEffect(() => {
+    if (province) {
+      fetchPopularAreas(province);
+    }
+  }, [province, fetchPopularAreas]);
 
   // Fetch Features on Edit Mode
   React.useEffect(() => {

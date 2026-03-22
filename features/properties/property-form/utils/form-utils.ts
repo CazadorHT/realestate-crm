@@ -92,7 +92,7 @@ export const EMPTY_VALUES: PropertyFormValues = {
   nearby_transits: [],
 
   // Location
-  province: "",
+  province: "กรุงเทพมหานคร",
   district: "",
   subdistrict: "",
   address_line1: "",
@@ -107,7 +107,7 @@ export const EMPTY_VALUES: PropertyFormValues = {
 };
 
 export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
-  1: ["listing_type", "property_type", "title", "popular_area"],
+  1: ["listing_type", "property_type", "province", "title", "popular_area"],
   2: [
     "price",
     "original_price",
@@ -145,7 +145,6 @@ export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
     "co_agent_rent_commission_months",
   ],
   3: [
-    "province",
     "district",
     "subdistrict",
     "address_line1",
