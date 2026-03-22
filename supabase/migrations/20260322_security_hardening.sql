@@ -2,7 +2,31 @@
 -- Goal: Consolidate and harden RLS logic for strict multi-tenant isolation.
 -- This script replaces global role-based bypasses with tenant-aware checks.
 
--- 1. Hardened Helper Functions
+-- 1. Clean up Old Policies (MUST BE FIRST to avoid dependency errors with functions)
+DO $$
+DECLARE
+    pol RECORD;
+BEGIN
+    FOR pol IN 
+        SELECT policyname, tablename 
+        FROM pg_policies 
+        WHERE schemaname = 'public' 
+          AND (
+            policyname ILIKE '%Staff can manage%' 
+            OR policyname ILIKE '%Deals select auth%' 
+            OR policyname ILIKE '%lead_activities_select_auth%'
+            OR policyname ILIKE '%Enterprise Access%' -- Catching Leads, Properties, Deals
+            OR policyname ILIKE '%Tenant Isolation%'
+            OR policyname ILIKE '%audit_logs_select_admin%'
+            OR policyname ILIKE '%Allow authenticated to update site_settings%'
+          )
+    LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol.policyname, pol.tablename);
+    END LOOP;
+END $$;
+
+-- 2. Hardened Helper Functions
+DROP FUNCTION IF EXISTS public.is_system_admin() CASCADE;
 CREATE OR REPLACE FUNCTION public.is_system_admin()
 RETURNS boolean AS $$
 BEGIN
@@ -14,6 +38,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP FUNCTION IF EXISTS public.is_tenant_member(UUID) CASCADE;
 CREATE OR REPLACE FUNCTION public.is_tenant_member(target_tenant_id UUID)
 RETURNS boolean AS $$
 BEGIN
@@ -24,6 +49,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP FUNCTION IF EXISTS public.is_tenant_staff(UUID) CASCADE;
 CREATE OR REPLACE FUNCTION public.is_tenant_staff(target_tenant_id UUID)
 RETURNS boolean AS $$
 BEGIN
@@ -36,6 +62,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP FUNCTION IF EXISTS public.is_tenant_admin(UUID) CASCADE;
 CREATE OR REPLACE FUNCTION public.is_tenant_admin(target_tenant_id UUID)
 RETURNS boolean AS $$
 BEGIN
@@ -49,6 +76,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Re-implement missing 'ghost' functions
+DROP FUNCTION IF EXISTS public.is_manager_of(UUID) CASCADE;
 CREATE OR REPLACE FUNCTION public.is_manager_of(agent_id UUID)
 RETURNS boolean AS $$
 BEGIN
@@ -63,6 +91,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP FUNCTION IF EXISTS public.get_isolation_setting(TEXT) CASCADE;
 CREATE OR REPLACE FUNCTION public.get_isolation_setting(setting_key TEXT)
 RETURNS boolean AS $$
 DECLARE
@@ -74,23 +103,6 @@ BEGIN
     RETURN COALESCE(setting_value, true); -- Default to strict isolation
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- 2. Clean up Old Policies (Revoke Unsafe Bypass)
-DO $$
-DECLARE
-    pol RECORD;
-BEGIN
-    FOR pol IN 
-        SELECT policyname, tablename 
-        FROM pg_policies 
-        WHERE schemaname = 'public' 
-          AND (policyname ILIKE '%Staff can manage%' 
-               OR policyname ILIKE '%Deals select auth%' 
-               OR policyname ILIKE '%lead_activities_select_auth%')
-    LOOP
-        EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol.policyname, pol.tablename);
-    END LOOP;
-END $$;
 
 -- 3. Apply Hardened Policies
 

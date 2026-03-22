@@ -1005,6 +1005,7 @@ export type Database = {
           lead_id: string | null
           payload: Json | null
           source: Database["public"]["Enums"]["lead_source"]
+          tenant_id: string | null
         }
         Insert: {
           content?: string | null
@@ -1016,6 +1017,7 @@ export type Database = {
           lead_id?: string | null
           payload?: Json | null
           source: Database["public"]["Enums"]["lead_source"]
+          tenant_id?: string | null
         }
         Update: {
           content?: string | null
@@ -1027,6 +1029,7 @@ export type Database = {
           lead_id?: string | null
           payload?: Json | null
           source?: Database["public"]["Enums"]["lead_source"]
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -1034,6 +1037,20 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "omni_messages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "omni_messages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -2583,7 +2600,7 @@ export type Database = {
       }
     }
     Functions: {
-      get_isolation_setting: { Args: { feature_key: string }; Returns: boolean }
+      get_isolation_setting: { Args: { setting_key: string }; Returns: boolean }
       get_user_tenants: {
         Args: never
         Returns: {
@@ -2597,6 +2614,10 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_manager_of: { Args: { agent_id: string }; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
+      is_system_admin: { Args: never; Returns: boolean }
+      is_tenant_admin: { Args: { target_tenant_id: string }; Returns: boolean }
+      is_tenant_member: { Args: { target_tenant_id: string }; Returns: boolean }
+      is_tenant_staff: { Args: { target_tenant_id: string }; Returns: boolean }
       search_leads_globally: {
         Args: { search_email: string; search_phone: string }
         Returns: {
