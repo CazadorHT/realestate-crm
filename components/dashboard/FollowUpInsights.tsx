@@ -18,8 +18,8 @@ export function FollowUpInsights({ leads = [] }: FollowUpInsightsProps) {
           ต้องติดตาม (Follow Up)
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
-        <div className="space-y-3 max-h-[250px] overflow-y-auto px-4 sm:px-6 py-4">
+      <CardContent className="pb-6">
+        <div className="space-y-3 max-h-[200px] custom-scrollbar overflow-y-auto px-4 sm:px-6 py-4">
           {leads.length === 0 ? (
             <p className="text-xs text-muted-foreground">
               ไม่มีรายการค้างติดตาม

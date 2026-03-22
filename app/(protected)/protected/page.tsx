@@ -171,6 +171,9 @@ export default async function DashboardPage() {
                   <Suspense fallback={<ChartSkeleton />}>
                     <FunnelWrapper tenantId={tenantId} />
                   </Suspense>
+               <FollowUpInsights leads={followUpLeads} />
+               <RiskAlerts deals={riskDeals} />
+                  
                 </div>
 
                 {/* TOP AGENTS */}
@@ -197,10 +200,10 @@ export default async function DashboardPage() {
               <MarketingROIWrapper tenantId={tenantId} />
             </Suspense>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-6">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-6">
                <FollowUpInsights leads={followUpLeads} />
                <RiskAlerts deals={riskDeals} />
-            </div>
+            </div> */}
 
             {/* Daily Management */}
             <UpcomingEvents events={upcomingEvents} />

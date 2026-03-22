@@ -23,7 +23,7 @@ export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-5">
+        <div className="space-y-2">
           {data.map((stage) => {
             const percentage =
               total > 0 ? Math.round((stage.count / total) * 100) : 0;
@@ -35,10 +35,10 @@ export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
               : `bg-${stage.color}`;
 
             return (
-              <div key={stage.stage} className="space-y-2 group cursor-default">
+              <div key={stage.stage} className="space-y-1 group cursor-default">
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">
+                    <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">
                       {stage.label}
                     </span>
                     <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
@@ -46,7 +46,7 @@ export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-base font-black text-slate-900">
+                    <span className="text-base font-semibold text-slate-900">
                       {stage.count}
                     </span>
                     <span className="text-[10px] text-slate-400 font-bold">
