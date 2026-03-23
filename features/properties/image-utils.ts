@@ -9,9 +9,13 @@ const BUCKET_NAME = "property-images";
 /**
  * Generate public URL from storage path
  * @param storagePath - path in storage like "properties/xxx.jpg"
+ * @param bucket - specific storage bucket (default: "property-images")
  * @returns public URL
  */
-export function getPublicImageUrl(storagePath: string): string {
+export function getPublicImageUrl(
+  storagePath: string,
+  bucket: string = BUCKET_NAME,
+): string {
   if (!storagePath) return "";
 
   // 0. If it's already a full URL, return as is
@@ -33,7 +37,19 @@ export function getPublicImageUrl(storagePath: string): string {
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
-  return `${baseUrl}/storage/v1/object/public/${BUCKET_NAME}/${encodedPath}`;
+  return `${baseUrl}/storage/v1/object/public/${bucket}/${encodedPath}`;
+}
+
+/**
+ * Generate public URL specifically for an avatar
+ * @param storagePath - path in 'avatars' bucket
+ * @returns public URL
+ */
+export function getPublicAvatarUrl(storagePath: string): string | null {
+  if (!storagePath) return null;
+  // If already absolute URL, return as is
+  if (storagePath.trim().startsWith("http")) return storagePath.trim();
+  return getPublicImageUrl(storagePath, "avatars");
 }
 
 /**

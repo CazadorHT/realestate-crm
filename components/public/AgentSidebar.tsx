@@ -113,7 +113,7 @@ export function AgentSidebar({
   };
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-xl shadow-slate-100/50 xl:top-24 xl:sticky relative overflow-hidden flex flex-col h-full w-full">
+    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-xl shadow-slate-100/50 relative overflow-hidden flex flex-col w-full">
       {/* Agent Info */}
       <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100 shrink-0">
         <div className="relative shrink-0">

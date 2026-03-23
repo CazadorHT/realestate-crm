@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import dynamic from "next/dynamic";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 // Critical LCP components
 import { PropertyGallery } from "@/components/public/PropertyGallery";
-import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { getPublicImageUrl, getPublicAvatarUrl } from "@/features/properties/image-utils";
 import { PropertySpecs } from "@/components/public/PropertySpecs";
 import { AgentSidebar } from "@/components/public/AgentSidebar";
 import { ShareButtons } from "@/components/public/ShareButtons";
@@ -78,7 +78,7 @@ export default async function PublicPropertyDetailPage(props: {
   // Decode URL-encoded slug (e.g., %E0%B8%9A... → บ้าน...)
   const slug = decodeURIComponent(rawSlug);
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Try to find by Slug (primary) or ID (fallback for old URLs)
   let query = supabase.from("properties").select(
@@ -441,7 +441,7 @@ export default async function PublicPropertyDetailPage(props: {
 
             {/* Right Sidebar (Sticky) */}
             <aside className="relative flex flex-col md:flex-row xl:flex-col gap-6 md:items-stretch w-full">
-              <div className="flex-1 min-w-0 w-full flex flex-col">
+              <div className="flex-1 xl:flex-none min-w-0 w-full flex flex-col">
                 {/* [NEW] Suitability / Rent vs Buy */}
                 <PropertySuitability
                   listingType={data.listing_type || "SALE"}
@@ -451,10 +451,10 @@ export default async function PublicPropertyDetailPage(props: {
                 />
               </div>
 
-              <div className="flex-1 min-w-0 w-full flex flex-col">
+              <div className="flex-1 xl:flex-none min-w-0 w-full flex flex-col  xl:sticky xl:top-24 self-start">
                 <AgentSidebar
                   agentName={agent?.full_name}
-                  agentImage={agent?.avatar_url}
+                  agentImage={getPublicAvatarUrl(agent?.avatar_url || "")}
                   agentPhone={agent?.phone}
                   agentLine={agent?.line_id}
                   isVerified={true}
@@ -487,7 +487,7 @@ export default async function PublicPropertyDetailPage(props: {
 
       <MobilePropertyActions
         agentName={agent?.full_name}
-        agentImage={agent?.avatar_url}
+        agentImage={getPublicAvatarUrl(agent?.avatar_url || "")}
         agentPhone={agent?.phone}
         agentLine={agent?.line_id}
         propertyId={data.id}
@@ -508,7 +508,7 @@ export async function generateMetadata(props: {
   const { slug } = await props.params;
   const decodedSlug = decodeURIComponent(slug); // Fix for Thai characters
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   let query = supabase
     .from("properties")
     .select(

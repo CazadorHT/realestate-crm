@@ -180,10 +180,6 @@ export function PopularAreasSection() {
     return () => controller.abort();
   }, [activeProvince, provinces.length]);
 
-  // Log items for debugging (remove after fix)
-  useEffect(() => {
-    console.log(`[PopularAreas] Language: ${language}, Items: ${items.length}, Loading: ${isLoading}, Error: ${hasError}, Province: ${activeProvince}`);
-  }, [items.length, isLoading, hasError, language, activeProvince]);
 
   // Drag to scroll handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -288,7 +284,7 @@ export function PopularAreasSection() {
                       </TooltipProvider>
 
                       {/* Active Label & Switcher */}
-                      <div className="flex items-center justify-between xl:justify-start w-full gap-3 group/label cursor-pointer ">
+                      <div className="flex items-center justify-between xl:justify-start w-full gap-3 group/label  ">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
