@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 //property listing section
 import {
   useEffect,
@@ -9,7 +9,7 @@ import {
   Suspense,
 } from "react";
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PropertyCard } from "./PropertyCard";
@@ -18,6 +18,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { getProvinceName } from "@/lib/utils/provinces";
 
 type FilterType =
   | "ALL"
@@ -100,8 +101,7 @@ export function PropertyListingSection() {
 }
 
 function PropertyListingContent() {
-  const { t } = useLanguage();
-  const [filter, setFilter] = useState<FilterType>("ALL");
+  const { t, language } = useLanguage();
   const [properties, setProperties] = useState<ApiProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,19 +109,58 @@ function PropertyListingContent() {
 
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [areaFilter, setAreaFilter] = useState<string>("");
-  const [provinceFilter, setProvinceFilter] = useState<string>("");
+
+  // 1. Instant Navigation Detection (shows loader in the first frame of URL change)
+  const [activeParams, setActiveParams] = useState(searchParams.toString());
+  const isNavigating = searchParams.toString() !== activeParams;
+
+  useEffect(() => {
+    if (isNavigating) {
+      const timer = setTimeout(() => {
+        setActiveParams(searchParams.toString());
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isNavigating, searchParams]);
 
   const FILTER_LABELS: Record<FilterType, string> = {
-    ALL: `🏡 ${t("common.all")}`,
-    HOUSE: `🏠 ${t("home.property_types.house")}`,
-    CONDO: `🏢 ${t("home.property_types.condo")}`,
-    OFFICE: t("property_types.office_building"),
-    TOWNHOME: `🏡 ${t("home.property_types.townhome")}`,
-    WAREHOUSE: `🏭 ${t("home.property_types.warehouse")}`,
-    COMMERCIAL: t("property_types.commercial_building"),
-    LAND: `🌳 ${t("home.property_types.land")}`,
-    OTHER: `🔹 ${t("property_types.other")}`,
+    ALL: `${t("common.all")}`,
+    HOUSE: `${t("home.property_types.house")}`,
+    CONDO: `${t("home.property_types.condo")}`,
+    OFFICE: `${t("property_types.office_building")}`,
+    TOWNHOME: `${t("home.property_types.townhome")}`,
+    WAREHOUSE: `${t("home.property_types.warehouse")}`,
+    COMMERCIAL: `${t("property_types.commercial_building")}`,
+    LAND: `${t("home.property_types.land")}`,
+    OTHER: `${t("property_types.other")}`,
+  };
+
+  // Derived filters from searchParams
+  const areaFilter = useMemo(() => (searchParams.get("area") ?? "").trim(), [searchParams]);
+  const provinceFilter = useMemo(() => (searchParams.get("province") ?? "").trim(), [searchParams]);
+  const urlType = searchParams.get("type") ?? "";
+  
+  // Local state for type filter if not in URL, but prioritized by URL
+  const [localFilter, setLocalFilter] = useState<FilterType>("ALL");
+  
+  const filter = useMemo(() => {
+    if (!urlType) return localFilter;
+    const mapped =
+      urlType === "OFFICE_BUILDING"
+        ? "OFFICE"
+        : urlType === "COMMERCIAL_BUILDING"
+          ? "COMMERCIAL"
+          : urlType === "WAREHOUSE"
+            ? "WAREHOUSE"
+            : (urlType as FilterType);
+
+    return (Object.keys(FILTER_LABELS) as string[]).includes(mapped) 
+      ? (mapped as FilterType) 
+      : localFilter;
+  }, [urlType, localFilter, FILTER_LABELS]);
+
+  const setFilter = (newFilter: FilterType) => {
+    setLocalFilter(newFilter);
   };
 
   // -- Drag to Scroll Logic --
@@ -175,6 +214,7 @@ function PropertyListingContent() {
     return () => clearTimeout(timer);
   }, []);
 
+  // 3. Main Data Fetch
   useEffect(() => {
     const controller = new AbortController();
 
@@ -206,30 +246,33 @@ function PropertyListingContent() {
     return () => controller.abort();
   }, [reloadKey]);
 
-  useEffect(() => {
-    const area = (searchParams.get("area") ?? "").trim();
-    const prov = (searchParams.get("province") ?? "").trim();
-    const type = (searchParams.get("type") ?? "").trim();
+  const typeCounts = useMemo(() => {
+    const counts: Record<FilterType, number> = {
+      ALL: 0, HOUSE: 0, CONDO: 0, TOWNHOME: 0, LAND: 0, OFFICE: 0, WAREHOUSE: 0, COMMERCIAL: 0, OTHER: 0
+    };
 
-    setAreaFilter(area);
-    setProvinceFilter(prov);
+    // Filter properties ONLY by geography to determine which categories have ANY results
+    const geoFiltered = properties.filter(item => {
+      let matches = true;
+      if (areaFilter) matches = matches && (item.popular_area ?? "").includes(areaFilter);
+      if (provinceFilter) matches = matches && (item.province ?? "").includes(provinceFilter);
+      return matches;
+    });
 
-    // sync type -> FilterType (รองรับ OFFICE_BUILDING / COMMERCIAL_BUILDING / WAREHOUSE)
-    if (type) {
-      const mapped =
-        type === "OFFICE_BUILDING"
-          ? "OFFICE"
-          : type === "COMMERCIAL_BUILDING"
-            ? "COMMERCIAL"
-            : type === "WAREHOUSE"
-              ? "WAREHOUSE"
-              : (type as FilterType);
-
-      if ((Object.keys(FILTER_LABELS) as string[]).includes(mapped)) {
-        setFilter(mapped as FilterType);
+    counts.ALL = geoFiltered.length;
+    geoFiltered.forEach(item => {
+      const pt = item.property_type ?? "";
+      if (OFFICE_TYPES.has(pt)) counts.OFFICE++;
+      else if (COMMERCIAL_TYPES.has(pt)) counts.COMMERCIAL++;
+      else if (WAREHOUSE_TYPES.has(pt)) counts.WAREHOUSE++;
+      else if (pt in counts) {
+        counts[pt as FilterType]++;
+      } else {
+        counts.OTHER++;
       }
-    }
-  }, [searchParams]);
+    });
+    return counts;
+  }, [properties, areaFilter, provinceFilter]);
 
   const filteredProperties = useMemo(() => {
     let items = properties.filter((item) => matchesFilter(item, filter));
@@ -321,7 +364,12 @@ function PropertyListingContent() {
               {t("property_listing.description")}
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              {!isLoading && !error && (
+              {(isLoading || isNavigating) ? (
+                <div className="flex items-center gap-2 text-sm text-blue-600 animate-pulse font-medium bg-blue-50/50 px-3 py-1 rounded-full border border-blue-100">
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin text-blue-500" />
+                  <span>{t("common.loading")}</span>
+                </div>
+              ) : !error && (
                 <div className="text-sm text-slate-600">
                   {t("property_listing.category_label")}{" "}
                   <span className="font-semibold text-blue-600">
@@ -337,35 +385,44 @@ function PropertyListingContent() {
             </div>
           </div>
 
-          {/* เลือกประเภททรัพย์ (Scrollable with Arrows) */}
+          {/* Right Side: Filters & Navigation */}
           <div
             className="w-full lg:w-auto flex flex-col items-start lg:items-end gap-3 md:gap-4 text-sm"
             data-aos="fade-left"
             suppressHydrationWarning
           >
-            <div className="hidden lg:flex justify-end">
-              <Button
-                asChild
-                variant="outline"
-                className="h-10 md:h-11 px-4 md:px-6 text-sm md:text-base"
-              >
-                <Link href="/properties">
-                  {t("common.more")}
-                  {hasMore && <ArrowRight className="h-4 w-4" />}
-                </Link>
-              </Button>
-            </div>
+            {/* Upper Action Row: See More & Active Filters */}
+            <div className="flex flex-row flex-wrap items-center justify-start lg:justify-end gap-3 md:gap-4 w-full">
+              <div className="hidden lg:flex">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-10 md:h-11 px-4 md:px-6 text-sm md:text-base rounded-2xl"
+                >
+                  <Link href="/properties">
+                    {t("common.more")}
+                    {hasMore && <ArrowRight className="h-4 w-4 ml-2" />}
+                  </Link>
+                </Button>
+              </div>
 
-            <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-start lg:justify-end gap-3 md:gap-4 lg:gap-14 w-full lg:w-auto">
               {(areaFilter || provinceFilter) && (
-                <div className="flex items-center gap-4 text-sm">
-                  <span className="text-slate-500">Area :</span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-700">
-                    {[areaFilter, provinceFilter].filter(Boolean).join(" • ")}
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-slate-500 font-medium whitespace-nowrap">Area :</span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-semibold text-slate-700 shadow-xs">
+                    {[
+                      areaFilter ? getProvinceName(areaFilter, language) : null,
+                      provinceFilter
+                        ? getProvinceName(provinceFilter, language)
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" • ")}
                     <button
                       onClick={() => {
-                        // Clear filters and stay at current position using hash
+                        setLocalFilter("ALL");
                         router.push("/#latest-properties");
+                        document.getElementById("latest-properties")?.scrollIntoView({ behavior: "smooth" });
                       }}
                       className="ml-1 -mr-1 rounded-full p-0.5 hover:bg-rose-400 hover:text-white duration-300 transition-colors"
                       title="Clear"
@@ -388,8 +445,10 @@ function PropertyListingContent() {
                   </span>
                 </div>
               )}
+            </div>
 
-              <div className="relative group w-full lg:w-auto lg:max-w-[400px] xl:max-w-[550px] select-none">
+            {/* Filter Menu Row */}
+            <div className="relative group w-full lg:w-auto lg:min-w-[400px] lg:max-w-[500px] select-none">
                 <div
                   id="filter-scroll-container"
                   ref={scrollContainerRef}
@@ -405,11 +464,14 @@ function PropertyListingContent() {
                 >
                   {(Object.keys(FILTER_LABELS) as FilterType[]).map((type) => {
                     const active = filter === type;
+                    const count = typeCounts[type];
+                    const isDisabled = count === 0 && type !== "ALL";
+
                     return (
                       <button
                         key={type}
+                        disabled={isDisabled}
                         onClick={(e) => {
-                          // ถ้ามีการลาก ไม่ให้ถือว่าคลิก (prevent click triggering after drag)
                           if (isDragClick.current) {
                             e.preventDefault();
                             e.stopPropagation();
@@ -422,10 +484,17 @@ function PropertyListingContent() {
                         className={`shrink-0 snap-start px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border text-xs sm:text-sm font-semibold transition-all duration-300 pointer-events-auto ${
                           active
                             ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                            : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600"
+                            : isDisabled
+                              ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-60 grayscale"
+                              : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600"
                         }`}
                       >
                         {FILTER_LABELS[type]}
+                        {!isDisabled && type !== "ALL" && (
+                          <span className="ml-1.5 opacity-60 font-semibold text-[0.7rem] ">
+                            ({count})
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -439,7 +508,7 @@ function PropertyListingContent() {
                     );
                     if (el) el.scrollBy({ left: -200, behavior: "smooth" });
                   }}
-                  className="absolute left-0 md:-left-4 xl:-left-12 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1.5 md:p-2 text-slate-600 shadow-md hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
+                  className="absolute left-0 md:-left-4 xl:-left-1 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1.5 md:p-2 text-slate-600 shadow-md hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
                   aria-label="Previous filters"
                 >
                   <svg
@@ -465,7 +534,7 @@ function PropertyListingContent() {
                     );
                     if (el) el.scrollBy({ left: 200, behavior: "smooth" });
                   }}
-                  className="absolute right-0 md:-right-4 xl:-right-12 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1.5 md:p-2 text-slate-600 shadow-md hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute right-0 md:-right-4 xl:-right-1 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1.5 md:p-2 text-slate-600 shadow-md hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
                   aria-label="Next filters"
                 >
                   <svg
@@ -485,78 +554,89 @@ function PropertyListingContent() {
               </div>
             </div>
           </div>
-        </div>
-
-        {error ? (
-          <div className="rounded-2xl border border-rose-100 bg-rose-50 p-6 text-rose-700">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>{error}</div>
-              <Button
-                variant="outline"
-                className="bg-white"
-                onClick={() => setReloadKey((k) => k + 1)}
-              >
-                {t("common.loading") === "Loading..." ? "Try Again" : "ลองใหม่"}
-              </Button>
+          {error ? (
+            <div className="rounded-2xl border border-rose-100 bg-rose-50 p-6 text-rose-700">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>{error}</div>
+                <Button
+                  variant="outline"
+                  className="bg-white"
+                  onClick={() => setReloadKey((k) => k + 1)}
+                >
+                  {t("common.loading") === "Loading..." ? "Try Again" : "ลองใหม่"}
+                </Button>
+              </div>
             </div>
-          </div>
-        ) : isLoading ? (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-4 min-h-[400px] md:min-h-[600px]">
-              {Array.from({ length: 8 }).map((_, index) => (
-                <PropertyCardSkeleton key={index} />
-              ))}
-            </div>
-            {/* Button skeleton */}
-            <div className="flex justify-center mt-4">
-              <div className="h-10 w-48 bg-slate-200 rounded-2xl animate-pulse"></div>
-            </div>
-          </>
-        ) : filteredProperties.length === 0 ? (
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6 text-slate-600">
-            {t("property_listing.empty_state")}
-          </div>
-        ) : (
-          <div className="space-y-8 align-center ">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 gap-y-6 md:gap-y-8">
-              {visibleProperties.map((property, index) => {
-                const hasDiscount =
-                  (property.original_price &&
-                    property.price &&
-                    property.original_price > property.price) ||
-                  (property.original_rental_price &&
-                    property.rental_price &&
-                    property.original_rental_price > property.rental_price);
-
-                return (
-                  <div
-                    key={property.id}
-                    data-aos="fade-up"
-                    data-aos-delay={index * 50}
-                    className="relative group"
-                    suppressHydrationWarning
-                  >
-                    <PropertyCard property={property} priority={index === 0} />
+          ) : (isLoading || isNavigating) ? (
+            <div className="relative min-h-[400px] md:min-h-[600px]">
+              {/* Centered Loading Overlay */}
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-[1px] rounded-3xl">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative h-12 w-12">
+                    <div className="absolute inset-0 rounded-full border-4 border-slate-200" />
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 animate-spin" />
                   </div>
-                );
-              })}
-            </div>
+                  <span className="text-blue-600 font-semibold animate-pulse">
+                    {t("common.loading")}
+                  </span>
+                </div>
+              </div>
 
-            <div className="flex justify-center">
-              <Button
-                asChild
-                variant="outline"
-                className="h-10 md:h-11 px-4 md:px-6 text-sm md:text-base w-full sm:w-auto"
-              >
-                <Link href="/properties">
-                  {t("common.more")}
-                  {hasMore && <ArrowRight className="h-4 w-4" />}
-                </Link>
-              </Button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-4">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <PropertyCardSkeleton key={index} />
+                ))}
+              </div>
+              {/* Button skeleton */}
+              <div className="flex justify-center mt-4">
+                <div className="h-10 w-48 bg-slate-200 rounded-2xl animate-pulse"></div>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
+          ) : filteredProperties.length === 0 ? (
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6 text-slate-600">
+              {t("property_listing.empty_state")}
+            </div>
+          ) : (
+            <div className="space-y-8 align-center ">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 gap-y-6 md:gap-y-8">
+                {visibleProperties.map((property, index) => {
+                  const hasDiscount =
+                    (property.original_price &&
+                      property.price &&
+                      property.original_price > property.price) ||
+                    (property.original_rental_price &&
+                      property.rental_price &&
+                      property.original_rental_price > property.rental_price);
+
+                  return (
+                    <div
+                      key={property.id}
+                      data-aos="fade-up"
+                      data-aos-delay={index * 50}
+                      className="relative group"
+                      suppressHydrationWarning
+                    >
+                      <PropertyCard property={property} priority={index === 0} />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex justify-center">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-10 md:h-11 px-4 md:px-6 text-sm md:text-base w-full sm:w-auto"
+                >
+                  <Link href="/properties">
+                    {t("common.more")}
+                    {hasMore && <ArrowRight className="h-4 w-4" />}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }

@@ -1079,7 +1079,8 @@
     "line_id_placeholder": "供客户添加的 Line ID（例如：hunter_asset）",
     "line_user_id_label": "LINE Bot 用户 ID（内部）",
     "line_user_id_placeholder": "Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "line_user_id_help": "用于机器人通知。在机器人中输入 /id 以查找此值。",
+    "line_user_id_help": "用于机器人通知。在机器人中输入 /id 以查找此值。"
+  },
   "documents": {
     "rent_receipt": "租金收据",
     "reservation_form": "预订表",
@@ -1129,5 +1130,4 @@
       "response_detail": "我们优先处理您的问题。我们的支持团队随时准备迅速采取行动。"
     }
   }
-}
 }

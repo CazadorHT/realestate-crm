@@ -43,6 +43,7 @@ export function PopularAreasSection() {
   const router = useRouter();
   const [items, setItems] = useState<AreaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Dynamic provinces state
@@ -164,8 +165,12 @@ export function PopularAreasSection() {
           }),
         );
         setItems(list);
+        setHasError(false);
+        // Refresh AOS after items change to ensure dynamic content starts animating
+        setTimeout(() => AOS.refresh(), 100);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
+        setHasError(true);
         setItems([]);
       } finally {
         setIsLoading(false);
@@ -174,6 +179,11 @@ export function PopularAreasSection() {
     load();
     return () => controller.abort();
   }, [activeProvince, provinces.length]);
+
+  // Log items for debugging (remove after fix)
+  useEffect(() => {
+    console.log(`[PopularAreas] Language: ${language}, Items: ${items.length}, Loading: ${isLoading}, Error: ${hasError}, Province: ${activeProvince}`);
+  }, [items.length, isLoading, hasError, language, activeProvince]);
 
   // Drag to scroll handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -248,6 +258,10 @@ export function PopularAreasSection() {
                       key={activeDisplay}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
+                      onAnimationComplete={() => {
+                        // Ensure AOS refreshes after the title transition too
+                        AOS.refresh();
+                      }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{
                         type: "spring",
@@ -290,15 +304,28 @@ export function PopularAreasSection() {
 
                         <button
                           onClick={() => setActiveProvIndex(nextProvIndex)}
-                          className="p-1.5 xs:p-2 rounded-lg xs:rounded-xl bg-slate-100 hover:bg-blue-600 text-blue-400 hover:text-white transition-all! group-active:scale-90 shadow-sm hover:shadow-md"
+                          disabled={isLoading}
+                          className="p-1.5 xs:p-2 rounded-lg xs:rounded-xl bg-slate-100 hover:bg-blue-600 text-blue-400 hover:text-white transition-all! group-active:scale-90 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <motion.div
-                            animate={{ rotate: activeProvIndex * 180 }}
-                            transition={{
-                              type: "spring",
-                              stiffness: 200,
-                              damping: 15,
-                            }}
+                            animate={
+                              isLoading
+                                ? { rotate: 360 }
+                                : { rotate: activeProvIndex * 180 }
+                            }
+                            transition={
+                              isLoading
+                                ? {
+                                    duration: 1,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                  }
+                                : {
+                                    type: "spring",
+                                    stiffness: 200,
+                                    damping: 15,
+                                  }
+                            }
                           >
                             <RefreshCw className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
                           </motion.div>
@@ -330,49 +357,109 @@ export function PopularAreasSection() {
             </p>
           </div>
           <div className=" w-full md:w-auto md:shrink-0 px-4 md:px-0 ">
-            <button
-              onClick={() => router.push("/?type=ALL#latest-properties")}
-              data-aos="fade-left"
-              suppressHydrationWarning
-              className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all! duration-300! hover:scale-105 flex items-center justify-center"
-            >
-              {/* Animated gradient overlay */}
-              <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity! duration-500!" />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => {
+                      const provinceId = provinces[activeProvIndex]?.id;
+                      const qp = new URLSearchParams({ type: "ALL" });
+                      if (provinceId) qp.set("province", provinceId);
+                      router.push(`/?${qp.toString()}#latest-properties`);
+                      document
+                        .getElementById("latest-properties")
+                        ?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    data-aos="fade-left"
+                    suppressHydrationWarning
+                    className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all! duration-300! hover:scale-105 flex items-center justify-center"
+                  >
+                    {/* Animated gradient overlay */}
+                    <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity! duration-500!" />
 
-              {/* Shine effect */}
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform! duration-700! bg-linear-to-r from-transparent via-white/20 to-transparent" />
+                    {/* Shine effect */}
+                    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform! duration-700! bg-linear-to-r from-transparent via-white/20 to-transparent" />
 
-              {/* Button content */}
-              <div className="relative flex items-center gap-2">
-                <span>{t("common.view_all")}</span>
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform! duration-300!" />
-              </div>
-            </button>
+                    {/* Button content */}
+                    <div className="relative flex items-center gap-2">
+                      <span>{t("common.view_all")}</span>
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform! duration-300!" />
+                    </div>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="text-sm font-medium">
+                  {t("common.view_all")} {activeDisplay}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
         {/* Content Area - Fixed height to prevent layout shift */}
         <div className="min-h-[250px] relative mx-4">
           {isLoading ? (
-            <div className="flex gap-4 overflow-hidden py-4 px-4 md:px-0">
-              {LOADING.map((_, i) => (
-                <div
-                  key={i}
-                  className="h-[160px] sm:h-[180px] w-[220px] sm:w-[260px] shrink-0 rounded-4xl overflow-hidden"
-                >
-                  <div className="h-full w-full animate-shimmer bg-slate-100" />
+            <div className="relative">
+              {/* Centered Loading Overlay */}
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-[1px] rounded-[2.5rem]">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative h-12 w-12">
+                    <div className="absolute inset-0 rounded-full border-4 border-slate-200" />
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600  animate-spin" />
+                  </div>
+                  <span className="text-blue-600 font-semibold animate-pulse">
+                    {t("common.loading")}
+                  </span>
                 </div>
-              ))}
+              </div>
+
+              <div className="flex gap-4 overflow-hidden py-4 px-4 md:px-0">
+                {LOADING.map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-[160px] sm:h-[180px] w-[220px] sm:w-[260px] shrink-0 rounded-4xl overflow-hidden"
+                  >
+                    <div className="h-full w-full animate-shimmer bg-slate-100" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : hasError ? (
+            <div
+              className="rounded-[2.5rem] border-2 border-dashed border-red-200 bg-red-50/50 p-12 md:p-16 text-center"
+              data-aos="fade-up"
+            >
+              <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-red-500">
+                <RefreshCw className="h-8 w-8" />
+              </div>
+              <h3 className="text-slate-900 font-bold text-xl mb-2">
+                {t("common.error_subject_required") || "Error Loading Data"}
+              </h3>
+              <p className="text-slate-500 font-medium mb-6">
+                {t("common.search_error") || "Something went wrong. Please try again."}
+              </p>
+              <button
+                onClick={() => {
+                  // Manual reload trigger: re-running useEffect dependency trick
+                  setActiveProvIndex(prev => prev); // Or just call fetch logic directly if extracted
+                  window.location.reload(); // Simple retry for now
+                }}
+                className="px-8 py-3 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 transition-all active:scale-95"
+              >
+                {t("search.search_again") || "Retry"}
+              </button>
             </div>
           ) : !items.length ? (
             <div
-              className="rounded-[2.5rem] border-2 border-dashed border-slate-100 bg-slate-50/50 p-16 text-center"
+              className="rounded-[2.5rem] border-2 border-dashed border-blue-200 bg-blue-50/80 p-12 mb-8 md:p-16 text-center shadow-xs"
               data-aos="fade-up"
             >
-              <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-slate-300">
+              <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-blue-300">
                 <MapPin className="h-8 w-8" />
               </div>
-              <p className="text-slate-500 font-semibold text-xl">
+              <h3 className="text-slate-900 font-bold text-xl mb-2">
+                {activeDisplay}
+              </h3>
+              <p className="text-slate-500 font-medium">
                 {t("home.popular_areas.no_data")}
               </p>
             </div>
