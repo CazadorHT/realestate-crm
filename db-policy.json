@@ -993,6 +993,26 @@
     "schemaname": "public",
     "tablename": "tenants",
     "rls_enabled": true,
+    "policyname": "Public View Tenants Branding",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "((is_deleted = false) OR (is_deleted IS NULL))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tenants",
+    "rls_enabled": true,
+    "policyname": "System Admin Manage Tenants",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "is_system_admin()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tenants",
+    "rls_enabled": true,
     "policyname": "Users can view tenants they are members of",
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",

@@ -1687,6 +1687,41 @@
     "column_default": "'กรุงเทพฯ'::text"
   },
   {
+    "table_name": "popular_areas",
+    "column_name": "slug",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas",
+    "column_name": "image_url",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "table_name": "popular_areas",
+    "column_name": "sort_order",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "popular_areas",
+    "column_name": "featured",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
     "table_name": "profiles",
     "column_name": "id",
     "data_type": "uuid",
@@ -2614,6 +2649,20 @@
     "table_name": "properties",
     "column_name": "tenant_id",
     "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "popular_area_en",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "popular_area_cn",
+    "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
   },
