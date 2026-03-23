@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Property } from "@/lib/types/property";
+import { mapDbError } from "@/lib/db-error";
 /**
  * Fetch all properties from the database.
  * Returns an empty array if an error occurs (and logs the error).
@@ -16,7 +17,7 @@ export async function getAllProperties(): Promise<Property[]> {
 
     if (error) {
       console.error("Error fetching properties:", error);
-      return [];
+      throw new Error(mapDbError(error));
     }
 
     return (data as unknown as Property[]) || [];
@@ -30,23 +31,34 @@ export async function getAllProperties(): Promise<Property[]> {
  * Fetch all deleted properties from the database (Trash).
  * Returns an empty array if an error occurs (and logs the error).
  */
-export async function getDeletedProperties(): Promise<Property[]> {
+export async function getDeletedProperties(
+  page: number = 1,
+  pageSize: number = 10,
+): Promise<{ data: Property[]; count: number }> {
   const supabase = await createClient();
 
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   try {
-    const { data, error } = await supabase
+    const {
+      data,
+      error,
+      count: totalCount,
+    } = await supabase
       .from("properties")
-      .select("*")
+      .select("*", { count: "exact" })
       .not("deleted_at", "is", null)
-      .order("deleted_at", { ascending: false });
+      .order("deleted_at", { ascending: false })
+      .range(from, to);
 
     if (error) {
       console.error("Error fetching deleted properties:", error);
-      return [];
+      throw new Error(mapDbError(error));
     }
 
     const properties = data || [];
-    if (properties.length === 0) return [];
+    if (properties.length === 0) return { data: [], count: totalCount || 0 };
 
     const propertyIds = properties.map((p) => p.id);
 
@@ -75,9 +87,9 @@ export async function getDeletedProperties(): Promise<Property[]> {
       return { ...p, images: pImages };
     });
 
-    return propertiesWithImages as unknown as Property[];
+    return { data: propertiesWithImages as unknown as Property[], count: totalCount || 0 };
   } catch (err) {
     console.error("Unexpected error in getDeletedProperties:", err);
-    return [];
+    return { data: [], count: 0 };
   }
 }

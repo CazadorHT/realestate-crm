@@ -1,5 +1,6 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { mapDbError } from "@/lib/db-error";
 import type { LeadRow, LeadWithActivities } from "./types";
 import type { Database } from "@/lib/database.types";
 
@@ -65,7 +66,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   const { data, count, error } = await query.range(from, to);
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(mapDbError(error));
 
   const leads = data as LeadRow[];
   const leadIds = leads.map((l) => l.id);
@@ -128,7 +129,7 @@ export async function getAllLeadIdsQuery(args: { q?: string; stage?: string } = 
   }
 
   const { data, error } = await query;
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(mapDbError(error));
 
   return (data || []).map((l) => l.id);
 }
@@ -154,7 +155,7 @@ export async function getLeadsForKanbanQuery() {
     .order("updated_at", { ascending: false })
     .limit(200);
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(mapDbError(error));
 
   return (data ?? []) as LeadRow[];
 }
@@ -213,7 +214,7 @@ export async function getLeadWithActivitiesQuery(
 
     if (error) {
       if (error && "code" in error && error.code === "PGRST116") return null;
-      throw new Error(error.message);
+      throw new Error(mapDbError(error));
     }
     const lead = data as unknown as LeadWithActivities;
 
@@ -252,7 +253,7 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
 
   const { data: props, error: propsErr } = await query;
 
-  if (propsErr) throw new Error(propsErr.message);
+  if (propsErr) throw new Error(mapDbError(propsErr));
 
   const { data: covers, error: coversErr } = await supabase
     .from("property_images")
@@ -260,7 +261,7 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
     .in("property_id", uniq)
     .eq("is_cover", true);
 
-  if (coversErr) throw new Error(coversErr.message);
+  if (coversErr) throw new Error(mapDbError(coversErr));
 
   const coverMap = new Map<string, PropertyImageRow>();
   (covers ?? []).forEach((c) => {

@@ -412,7 +412,7 @@ export async function generateDocumentFromTemplateAction(
   } catch (error: unknown) {
     if (error instanceof z.ZodError) return { success: false, message: "ข้อมูลนำเข้าไม่ถูกต้อง: " + error.issues[0].message };
     console.error("Document Generation Error:", error);
-    const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างเอกสาร";
+    const msg = error instanceof Error ? mapDbError(error) : "เกิดข้อผิดพลาดในการสร้างเอกสาร";
     return { success: false, message: msg };
   }
 }
@@ -598,7 +598,7 @@ export async function generateDocxDocumentFromTemplateAction(
   } catch (error: unknown) {
     if (error instanceof z.ZodError) return { success: false, message: "ข้อมูลนำเข้าไม่ถูกต้อง: " + error.issues[0].message };
     console.error("DOCX Generation Error:", error);
-    const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างไฟล์ DOCX";
+    const msg = error instanceof Error ? mapDbError(error) : "เกิดข้อผิดพลาดในการสร้างไฟล์ DOCX";
     return { success: false, message: msg };
   }
 }

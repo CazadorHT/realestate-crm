@@ -663,6 +663,16 @@
     "schemaname": "public",
     "tablename": "property_image_uploads",
     "rls_enabled": true,
+    "policyname": "Staff Manage property_image_uploads",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "property_image_uploads",
+    "rls_enabled": true,
     "policyname": "piu_insert_own",
     "permissive": "PERMISSIVE",
     "cmd": "INSERT",
@@ -673,10 +683,40 @@
     "schemaname": "public",
     "tablename": "property_images",
     "rls_enabled": true,
+    "policyname": "Public View property_images",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM properties\n  WHERE ((properties.id = property_images.property_id) AND (properties.status = 'ACTIVE'::property_status) AND (properties.deleted_at IS NULL))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "property_images",
+    "rls_enabled": true,
     "policyname": "Public can read images for ACTIVE properties",
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",
     "qual": "(EXISTS ( SELECT 1\n   FROM properties p\n  WHERE ((p.id = property_images.property_id) AND (p.status = 'ACTIVE'::property_status))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "property_images",
+    "rls_enabled": true,
+    "policyname": "Staff Manage property_images",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "property_images",
+    "rls_enabled": true,
+    "policyname": "Staff View property_images",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "is_staff()",
     "with_check": null
   },
   {

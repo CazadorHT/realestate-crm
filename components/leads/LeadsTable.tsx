@@ -42,6 +42,7 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { useState, useCallback } from "react";
 import { TransferLeadsDialog } from "@/features/leads/components/TransferLeadsDialog";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 export function LeadsTable({
   leads,
@@ -91,6 +92,7 @@ export function LeadsTable({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const currentPage = Number(searchParams.get("page")) || 1;
 
   const handleSuccessFeedback = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -438,6 +440,12 @@ export function LeadsTable({
           )}
         </div>
       </div>
+
+      <PaginationControls
+        totalCount={totalCount}
+        pageSize={20}
+        currentPage={currentPage}
+      />
     </div>
   );
 }

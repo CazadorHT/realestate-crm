@@ -8,6 +8,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { PropertyRow, PropertyWithImages } from "../types";
 import { getRecommendedProperties } from "../queries";
+import { mapDbError } from "@/lib/db-error";
 
 /**
  * Get property by ID with images
@@ -233,8 +234,10 @@ export async function getGlobalPropertiesTableDataAction(params: {
   const { data, error, count } = await query;
 
   if (error || !data) {
-    if (error)
+    if (error) {
       console.error("getGlobalPropertiesTableDataAction error:", error);
+      throw new Error(mapDbError(error));
+    }
     return { tableData: [], count: 0 };
   }
 

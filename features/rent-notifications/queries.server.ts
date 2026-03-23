@@ -1,6 +1,11 @@
-export async function getRentNotificationRules(tenantId?: string | null) {
+export async function getRentNotificationRules(
+  page = 1,
+  pageSize = 20,
+  tenantId?: string | null,
+) {
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
+  const offset = (page - 1) * pageSize;
 
   let query = supabase.from("rent_notification_rules").select(
     `
@@ -16,21 +21,25 @@ export async function getRentNotificationRules(tenantId?: string | null) {
         )
       ),
       line_groups (group_id, group_name, picture_url),
-      tenants (name)
+      tenant:tenants (name)
     `,
+    { count: "exact" },
   );
 
   if (tenantId && tenantId !== "ALL") {
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
   }
 
-  const { data, error } = await query.order("created_at", { ascending: false });
+  const { data, error, count } = await query
+    .order("created_at", { ascending: false })
+    .range(offset, offset + pageSize - 1);
 
   if (error) {
-    console.error("Error fetching rules:", error);
-    return [];
+    console.error("Error fetching rent notification rules:", error);
+    throw new Error(require("@/lib/db-error").mapDbError(error));
   }
-  return data;
+
+  return { rules: data || [], count: count || 0 };
 }
 
 export async function getLineGroups(tenantId?: string | null) {

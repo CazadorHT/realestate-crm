@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { mapDbError } from "@/lib/db-error";
 import type { Owner } from "./types";
 
 export async function getOwnerById(id: string): Promise<Owner | null> {
@@ -136,7 +137,7 @@ export async function getOwnersQuery({
 
   if (error) {
     console.error("Error fetching owners query:", error);
-    return { data: [], count: 0, pageSize, page, totalPages: 0 };
+    throw new Error(mapDbError(error));
   }
 
   type OwnerWithCount = Owner & { properties: { count: number }[] };
@@ -259,6 +260,6 @@ export async function getAllOwnerIdsQuery(args: { q?: string; allBranches?: bool
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(mapDbError(error));
   return (data || []).map((o) => o.id);
 }

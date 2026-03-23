@@ -571,7 +571,7 @@ export function PropertyForm({
             <div className="flex flex-col gap-3 py-4">
               <Button
                 variant="outline"
-                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200  rounded-xl group:hover:text-white! group:hover:bg-blue-600!"
+                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200  rounded-xl group:hover:text-white group:hover:bg-blue-600!"
                 onClick={() => {
                   if (successData?.slug) {
                     window.open(`/properties/${successData.slug}`, "_blank");
@@ -606,7 +606,7 @@ export function PropertyForm({
               <div className="pt-2 border-t border-slate-100 mt-2">
                 <Button
                   variant="outline"
-                  className="w-full justify-start gap-3 h-14 text-base font-medium text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50 rounded-xl"
+                  className="w-full justify-start gap-3 h-14 text-base font-medium text-blue-600 hover:text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50 rounded-xl"
                   onClick={async () => {
                     if (!successData?.id) return;
                     const toastId = toast.loading(
@@ -631,7 +631,7 @@ export function PropertyForm({
 
                 <Button
                   variant="outline"
-                  className="w-full justify-start gap-3 h-14 text-base font-medium text-pink-600 border-pink-100 bg-pink-50/50 hover:bg-pink-50 rounded-xl mt-2"
+                  className="w-full justify-start gap-3 h-14 text-base font-medium text-pink-600 hover:text-pink-600 border-pink-100 hover:border-pink-200 bg-pink-50/50 hover:bg-pink-50 rounded-xl mt-2"
                   onClick={async () => {
                     if (!successData?.id) return;
                     const toastId = toast.loading(

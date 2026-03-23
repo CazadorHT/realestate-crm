@@ -34,6 +34,7 @@ interface BulkActionToolbarProps {
   className?: string;
   confirmMessage?: React.ReactNode;
   actionableCount?: number;
+  onDeleteLabel?: string;
 }
 
 export function BulkActionToolbar({
@@ -49,6 +50,7 @@ export function BulkActionToolbar({
   className,
   confirmMessage,
   actionableCount,
+  onDeleteLabel,
 }: BulkActionToolbarProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -186,7 +188,7 @@ export function BulkActionToolbar({
             className="h-8 text-xs"
           >
             <Trash2 className="h-3.5 w-3.5 mr-1" />
-            ลบทั้งหมด
+            {onDeleteLabel || "ลบทั้งหมด"}
           </Button>
         </div>
       </div>
@@ -241,20 +243,24 @@ export function BulkActionToolbar({
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบ</AlertDialogTitle>
+            <AlertDialogTitle>
+              {onDeleteLabel ? "ยืนยันการย้ายลงถังขยะ" : "ยืนยันการลบ"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmMessage ? (
                 confirmMessage
               ) : (
                 <>
-                  คุณกำลังจะลบ{" "}
+                  คุณกำลังจะ{onDeleteLabel ? "ย้าย" : "ลบ"}{" "}
                   <strong className="text-foreground">
                     {selectedCount} {entityName}
                   </strong>{" "}
-                  การดำเนินการนี้ไม่สามารถย้อนกลับได้
+                  {onDeleteLabel
+                    ? "ไปที่ถังขยะ (คุณสามารถกู้คืนได้ภายหลังหน้าถังขยะ)"
+                    : "การดำเนินการนี้ไม่สามารถย้อนกลับได้"}
                 </>
               )}
             </AlertDialogDescription>
@@ -269,12 +275,14 @@ export function BulkActionToolbar({
               {isDeleting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  กำลังลบ...
+                  {onDeleteLabel ? "กำลังย้าย..." : "กำลังลบ..."}
                 </>
               ) : (
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
-                  ลบ {countToDelete} {entityName}
+                  {onDeleteLabel
+                    ? `${onDeleteLabel} ${countToDelete} รายการ`
+                    : `ลบ ${countToDelete} ${entityName}`}
                 </>
               )}
             </AlertDialogAction>

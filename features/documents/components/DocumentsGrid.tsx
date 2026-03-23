@@ -42,6 +42,8 @@ import { DOC_TYPE_LABELS, DOC_OWNER_TYPE_LABELS } from "../schema";
 interface DocumentsGridProps {
   documents: DocumentWithRelations[];
   tenantId?: string | null;
+  totalCount: number;
+  currentPage: number;
 }
 
 function formatSize(bytes: number) {
@@ -56,8 +58,14 @@ function formatSize(bytes: number) {
 }
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
-export function DocumentsGrid({ documents, tenantId }: DocumentsGridProps) {
+export function DocumentsGrid({
+  documents,
+  tenantId,
+  totalCount,
+  currentPage,
+}: DocumentsGridProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -143,8 +151,8 @@ export function DocumentsGrid({ documents, tenantId }: DocumentsGridProps) {
           </h2>
           <p className="text-sm text-slate-500 mt-1">
             {searchQuery
-              ? `พบ ${filteredDocuments.length} รายการจากผลการค้นหา`
-              : `แสดง ${documents.length} เอกสาร`}
+              ? `พบ ${filteredDocuments.length} รายการจากผลการค้นหาหน้าปัจจุบัน`
+              : `พบทั้งหมด ${totalCount} เอกสาร`}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
@@ -476,6 +484,15 @@ export function DocumentsGrid({ documents, tenantId }: DocumentsGridProps) {
             <p className="text-sm">อัพโหลดเอกสารแรกของคุณเพื่อเริ่มต้น</p>
           </div>
         )}
+      </div>
+
+      {/* Standardized Pagination Controls */}
+      <div className="pt-6 border-t border-slate-100">
+        <PaginationControls
+          totalCount={totalCount}
+          pageSize={50}
+          currentPage={currentPage}
+        />
       </div>
     </div>
   );

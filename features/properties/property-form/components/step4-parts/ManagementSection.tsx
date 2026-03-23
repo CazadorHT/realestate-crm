@@ -260,25 +260,25 @@ export const ManagementSection = ({
             )}
           />
 
-          {/* 🏢 Stock Management - Responsive Column Layout */}
-          <div className="col-span-1 md:col-span-2 grid grid-cols-1 lg:grid-cols-12 gap-4 bg-slate-50 p-4 rounded-xl border border-dashed border-slate-200">
+          {/* 🏢 Stock Management - Responsive Grid Layout */}
+          <div className="flex flex-col col-span-2 gap-6 bg-slate-50 p-5 rounded-xl border border-dashed border-slate-200 shadow-inner">
             {/* Total Units */}
             <FormField
               control={form.control}
               name="total_units"
               render={({ field }) => (
-                <div className="lg:col-span-4 flex items-center justify-between lg:justify-start gap-2">
-                  <span className="text-[10px] sm:text-xs font-semibold text-slate-600 uppercase tracking-tight whitespace-nowrap">
-                    ยูนิตทั้งหมด:
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-1">
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                    จำนวนยูนิตทั้งหมด:
                   </span>
-                  <div className="flex items-center gap-0.5">
+                  <div className="flex items-center gap-0.5 self-end sm:self-auto">
                     <button
                       type="button"
                       onClick={() => {
                         const val = (field.value || 0) - 1;
                         if (val >= 1) field.onChange(val);
                       }}
-                      className="h-9 w-9 flex items-center justify-center rounded-l-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
+                      className="h-9 w-9 flex items-center justify-center rounded-l-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors shadow-sm"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
@@ -291,7 +291,7 @@ export const ManagementSection = ({
                         const val = e.target.value;
                         field.onChange(val === "" ? undefined : Number(val));
                       }}
-                      className="h-9 w-12 text-center border-y border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="h-9 w-14 text-center border-y border-slate-200 bg-white text-sm font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <button
                       type="button"
@@ -299,7 +299,7 @@ export const ManagementSection = ({
                         const val = (field.value ?? 1) + 1;
                         field.onChange(val);
                       }}
-                      className="h-9 w-9 flex items-center justify-center rounded-r-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
+                      className="h-9 w-9 flex items-center justify-center rounded-r-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors shadow-sm"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -313,18 +313,18 @@ export const ManagementSection = ({
               control={form.control}
               name="sold_units"
               render={({ field }) => (
-                <div className="lg:col-span-4 flex items-center justify-between lg:justify-start gap-2">
-                  <span className="text-[10px] sm:text-xs font-semibold text-slate-600 uppercase tracking-tight whitespace-nowrap">
-                    ปล่อยแล้ว:
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-1">
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                    ปล่อย/จองแล้ว:
                   </span>
-                  <div className="flex items-center gap-0.5">
+                  <div className="flex items-center gap-0.5 self-end sm:self-auto">
                     <button
                       type="button"
                       onClick={() => {
                         const val = (field.value || 0) - 1;
                         if (val >= 0) field.onChange(val);
                       }}
-                      className="h-9 w-9 flex items-center justify-center rounded-l-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
+                      className="h-9 w-9 flex items-center justify-center rounded-l-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors shadow-sm"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
@@ -337,7 +337,7 @@ export const ManagementSection = ({
                         const val = e.target.value;
                         field.onChange(val === "" ? undefined : Number(val));
                       }}
-                      className="h-9 w-12 text-center border-y border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="h-9 w-14 text-center border-y border-slate-200 bg-white text-sm font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <button
                       type="button"
@@ -345,7 +345,7 @@ export const ManagementSection = ({
                         const val = (field.value ?? 0) + 1;
                         field.onChange(val);
                       }}
-                      className="h-9 w-9 flex items-center justify-center rounded-r-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors"
+                      className="h-9 w-9 flex items-center justify-center rounded-r-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors shadow-sm"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -355,15 +355,15 @@ export const ManagementSection = ({
             />
 
             {/* Remaining - Highlight */}
-            <div className="lg:col-span-4 flex items-center justify-between lg:justify-end gap-2 border-t lg:border-t-0 pt-3 lg:pt-0 mt-2 lg:mt-0">
-              <span className="text-[10px] sm:text-xs font-semibold text-slate-600 uppercase tracking-tight">
-                คงเหลือ:
+            <div className="flex flex-row items-center justify-between lg:justify-end gap-3 border-t lg:border-t-0 border-slate-200 pt-3 lg:pt-0 mt-1 lg:mt-0 p-1">
+              <span className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                คงเหลือปัจจุบัน:
               </span>
               <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-sm ${
+                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-black shadow-sm ring-1 ring-inset ${
                   (totalUnits ?? 1) - (soldUnits ?? 0) > 0
-                    ? "bg-emerald-500 text-white"
-                    : "bg-red-500 text-white"
+                    ? "bg-emerald-500 text-white ring-emerald-600"
+                    : "bg-red-500 text-white ring-red-600"
                 }`}
               >
                 {(totalUnits ?? 1) - (soldUnits ?? 0)} ยูนิต

@@ -1,253 +1,216 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { mapDbError } from "@/lib/db-error";
 
-const PROPERTY_IMAGES_BUCKET = "property-images";
-
-export type BulkDeleteResult = {
+/**
+ * Result type for bulk operations
+ */
+export type BulkActionResult = {
   success: boolean;
-  deletedCount: number;
+  count: number;
   message?: string;
 };
 
 /**
- * Bulk delete properties - ลบหลายทรัพย์พร้อมกัน
- */
-// ... imports
-
-/**
- * Bulk delete properties - ลบหลายทรัพย์พร้อมกัน
+ * 1. Bulk Delete (Soft Delete) - ย้ายลงถังขยะ
+ * หมายเหตุ: เราเปลี่ยนจากการลบทิ้งทันที มาเป็น Soft Delete เพื่อความปลอดภัย
+ * และเพื่อให้สอดคล้องกับหน้า /protected/properties/trash
  */
 export async function bulkDeletePropertiesAction(
   ids: string[]
-): Promise<BulkDeleteResult> {
+): Promise<BulkActionResult> {
   try {
     const { supabase, user, role } = await requireAuthContext();
     assertStaff(role);
 
     if (!ids || ids.length === 0) {
-      return {
-        success: false,
-        deletedCount: 0,
-        message: "ไม่มีรายการที่เลือก",
-      };
+      return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
     }
 
-    // 0) Pre-check: Filter out properties that are SOLD or RENTED (Frontend logic)
-    // or have active deals (Backend integrity)
-
-    // A. Check Property Status
-    const { data: propertiesStatus, error: propErr } = await supabase
+    // กรองทรัพย์ที่ติดดีลสำคัญ (Signed/Closed) หรือสถานะห้ามลบ
+    const { data: propertiesStatus } = await supabase
       .from("properties")
       .select("id, status")
       .in("id", ids);
 
-    if (propErr) throw propErr;
-
-    // B. Check Active Deals
-    const { data: activeDeals, error: checkErr } = await supabase
+    // ตรวจสอบดีลที่ค้างอยู่ (ถ้ามี)
+    const { data: activeDeals } = await supabase
       .from("deals")
-      .select("id, status, property_id")
+      .select("property_id")
       .in("property_id", ids)
-      .in("status", ["SIGNED", "CLOSED_WIN"]); // Status that blocks deletion
+      .in("status", ["SIGNED", "CLOSED_WIN"]);
 
-    if (checkErr) throw checkErr;
-
-    const blockedPropertyIds = new Set<string>();
-
-    // Block by Property Status (matches UI)
+    const blockedIds = new Set<string>();
     propertiesStatus?.forEach((p) => {
-      if (p.status === "SOLD" || p.status === "RENTED") {
-        blockedPropertyIds.add(p.id);
-      }
+      if (p.status === "SOLD" || p.status === "RENTED") blockedIds.add(p.id);
     });
-
-    // Block by Deal Status (Safety net)
     activeDeals?.forEach((d) => {
-      if (d.property_id) blockedPropertyIds.add(d.property_id);
+      if (d.property_id) blockedIds.add(d.property_id);
     });
 
-    const safeIds = ids.filter((id) => !blockedPropertyIds.has(id));
+    const safeIds = ids.filter((id) => !blockedIds.has(id));
 
     if (safeIds.length === 0) {
       return {
         success: false,
-        deletedCount: 0,
-        message:
-          "ไม่สามารถลบรายการที่เลือกได้ เนื่องจากมีสถานะ ขายแล้ว/เช่าแล้ว ทั้งหมด",
+        count: 0,
+        message: "รายการที่เลือกทั้งหมดมีสถานะ ขายแล้ว/เช่าแล้ว หรือมีดีลที่ปิดแล้ว ไม่สามารถลบได้",
       };
     }
 
-    // --- Cleanup Dependencies (Using safeIds) ---
-
-    // A) Get Deal IDs related to these properties (all statuses except the blocked ones above)
-    const { data: relatedDeals } = await supabase
-      .from("deals")
-      .select("id")
-      .in("property_id", safeIds);
-
-    const dealIds = relatedDeals?.map((d) => d.id) || [];
-
-    // B) Delete dependencies of Deals first
-    if (dealIds.length > 0) {
-      // 1. Delete Rental Contracts linked to these deals
-      await supabase.from("rental_contracts").delete().in("deal_id", dealIds);
-
-      // 2. Delete Documents linked to these Deals
-      await supabase
-        .from("documents")
-        .delete()
-        .eq("owner_type", "DEAL")
-        .in("owner_id", dealIds);
-
-      // 3. Delete Deals themselves
-      await supabase.from("deals").delete().in("id", dealIds);
-    }
-
-    // C) Handle Leads linked to these properties
-    await supabase
-      .from("leads")
-      .update({ property_id: null })
-      .in("property_id", safeIds);
-
-    // D) Handle Lead Activities linked to these properties
-    await supabase
-      .from("lead_activities")
-      .update({ property_id: null })
-      .in("property_id", safeIds);
-
-    // E) Delete Documents linked to Property directly
-    await supabase
-      .from("documents")
-      .delete()
-      .eq("owner_type", "PROPERTY")
-      .in("owner_id", safeIds);
-
-    // F) Delete Property Features (link table)
-    await supabase
-      .from("property_features")
-      .delete()
-      .in("property_id", safeIds);
-
-    // G) Delete Property Agents (link table)
-    await supabase.from("property_agents").delete().in("property_id", safeIds);
-
-    // H) Delete Property Matches (Generated by search)
-    await supabase.from("property_matches").delete().in("property_id", safeIds);
-
-    // I) Delete Property Image Uploads (Temp/History)
-    await supabase
-      .from("property_image_uploads")
-      .delete()
-      .in("property_id", safeIds);
-
-    // --- Original Logic: Delete Images & Property (Using safeIds) ---
-
-    // 1) Get all images to delete from storage
-    const { data: images } = await supabase
-      .from("property_images")
-      .select("storage_path")
-      .in("property_id", safeIds);
-
-    // 2) Delete images from storage
-    if (images && images.length > 0) {
-      const pathsToRemove = images
-        .map((img) => img.storage_path)
-        .filter((path): path is string => !!path);
-
-      if (pathsToRemove.length > 0) {
-        // Use Admin Client to bypass RLS for storage deletion
-        const adminSupabase = createAdminClient();
-        await adminSupabase.storage
-          .from(PROPERTY_IMAGES_BUCKET)
-          .remove(pathsToRemove);
-      }
-    }
-
-    // 3) Delete properties (cascade will delete property_images records if not already handled, but we handle explicit items above)
+    // Soft Delete: อัปเดต deleted_at
     const { error, count } = await supabase
       .from("properties")
-      .delete({ count: "exact" })
+      .update({ 
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
       .in("id", safeIds);
 
-    if (error) {
-      console.error("Delete properties error:", error);
-      throw error;
-    }
+    if (error) throw error;
 
-    // 4) Audit log
     await logAudit(
       { supabase, user, role },
       {
-        action: "property.bulk_delete",
+        action: "property.bulk_trash",
         entity: "properties",
         entityId: safeIds.join(","),
-        metadata: {
-          deletedCount: count,
-          skippedCount: blockedPropertyIds.size,
-        },
+        metadata: { count, skipped: blockedIds.size },
       }
     );
 
-    // 5) Cleanup temp uploads
-    await supabase
-      .from("property_image_uploads")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("status", "TEMP");
-
     revalidatePath("/protected/properties");
+    revalidatePath("/protected/properties/trash");
 
-    const skippedCount = blockedPropertyIds.size;
-    const msg =
-      skippedCount > 0
-        ? `ลบสำเร็จ ${count} รายการ (ข้าม ${skippedCount} รายการที่ขาย/เช่าแล้ว)`
-        : `ลบทรัพย์สำเร็จ ${count} รายการ`;
+    const skipped = blockedIds.size;
+    const msg = skipped > 0 
+      ? `ย้ายลงถังขยะสำเร็จ ${count} รายการ (ข้าม ${skipped} รายการที่ติดสถานะห้ามลบ)`
+      : `ย้ายทรัพย์ลงถังขยะสำเร็จ ${count} รายการ`;
 
-    return {
-      success: true,
-      deletedCount: count ?? safeIds.length,
-      message: msg,
-    };
+    return { success: true, count: count ?? safeIds.length, message: msg };
   } catch (error) {
-    console.error("bulkDeletePropertiesAction error:", error);
-    return {
-      success: false,
-      deletedCount: 0,
-      message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
-    };
+    console.error("bulkDelete error:", error);
+    return { success: false, count: 0, message: mapDbError(error) };
   }
 }
 
 /**
- * Bulk move properties to current tenant - ดึงทรัพย์มาสาขาตัวเอง
+ * 2. Bulk Restore - กู้คืนทรัพย์จากถังขยะ
  */
-export async function bulkMovePropertiesToTenantAction(ids: string[]): Promise<{
-  success: boolean;
-  count: number;
-  message: string;
-}> {
+export async function bulkRestorePropertiesAction(
+  ids: string[]
+): Promise<BulkActionResult> {
+  try {
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
+    if (!ids || ids.length === 0) {
+      return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
+    }
+
+    const { error, count } = await supabase
+      .from("properties")
+      .update({ 
+        deleted_at: null,
+        updated_at: new Date().toISOString()
+      })
+      .in("id", ids);
+
+    if (error) throw error;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "property.bulk_restore",
+        entity: "properties",
+        entityId: ids.join(","),
+        metadata: { count },
+      }
+    );
+
+    revalidatePath("/protected/properties");
+    revalidatePath("/protected/properties/trash");
+
+    return { success: true, count: count ?? ids.length, message: `กู้คืนทรัพย์สำเร็จ ${count} รายการ` };
+  } catch (error) {
+    console.error("bulkRestore error:", error);
+    return { success: false, count: 0, message: mapDbError(error) };
+  }
+}
+
+/**
+ * 3. Bulk Permanent Delete - ลบถาวร (ลบจริงจาก DB)
+ */
+export async function bulkPermanentDeletePropertiesAction(
+  ids: string[]
+): Promise<BulkActionResult> {
+  try {
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
+    if (!ids || ids.length === 0) {
+      return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
+    }
+
+    // หมายเหตุ: หากฐานข้อมูลมี ON DELETE CASCADE จะลบข้อมูลเกี่ยวเนื่องโดยอัตโนมัติ
+    // หากไม่มี เราควรไล่ลบแมนนวลเพื่อความสะอาดของข้อมูล (รูปภาพ/ฟีเจอร์)
+    
+    // ลบรูปภาพที่ผูกไว้ (ถ้ามี)
+    await supabase.from("property_images").delete().in("property_id", ids);
+    // ลบฟีเจอร์ที่ผูกไว้
+    await supabase.from("property_features").delete().in("property_id", ids);
+    // ลบผู้ดูแล
+    await supabase.from("property_agents").delete().in("property_id", ids);
+
+    // ลบตัวหลัก
+    const { error, count } = await supabase
+      .from("properties")
+      .delete()
+      .in("id", ids);
+
+    if (error) throw error;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "property.bulk_hard_delete",
+        entity: "properties",
+        entityId: ids.join(","),
+        metadata: { count },
+      }
+    );
+
+    revalidatePath("/protected/properties/trash");
+
+    return { success: true, count: count ?? ids.length, message: `ลบข้อมูลถาวรสำเร็จ ${count} รายการ` };
+  } catch (error) {
+    console.error("bulkPermanentDelete error:", error);
+    return { success: false, count: 0, message: mapDbError(error) };
+  }
+}
+
+/**
+ * 4. Bulk Move - ดึงทรัพย์มาสาขาตัวเอง
+ */
+export async function bulkMovePropertiesToTenantAction(
+  ids: string[]
+): Promise<BulkActionResult> {
   try {
     const { supabase, role, tenantId, user } = await requireAuthContext();
     assertStaff(role);
 
-    if (!tenantId) {
-      return {
-        success: false,
-        count: 0,
-        message: "ไม่พบข้อมูลสาขาของคุณ กรุณาติดต่อผู้ดูแลระบบ",
-      };
+    if (!tenantId || tenantId === "ALL") {
+      return { success: false, count: 0, message: "ไม่พบข้อมูลสาขาที่ถูกต้อง" };
     }
 
     if (!ids || ids.length === 0) {
       return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
     }
 
-    // Update tenant_id only if it's currently null or undefined
     const { error, count } = await supabase
       .from("properties")
       .update({
@@ -255,47 +218,31 @@ export async function bulkMovePropertiesToTenantAction(ids: string[]): Promise<{
         updated_at: new Date().toISOString(),
       })
       .in("id", ids)
-      .is("tenant_id", null);
+      .is("tenant_id", null); // ป้องกันการดึงทรัพย์ที่มีเจ้าของสาขาอยู่แล้ว
 
-    if (error) {
-      console.error("Move properties error:", error);
-      throw new Error(`เกิดข้อผิดพลาดในการย้ายข้อมูล: ${error.message}`);
-    }
+    if (error) throw error;
 
-    // Audit log
     await logAudit(
       { supabase, user, role },
       {
         action: "property.bulk_move",
         entity: "properties",
         entityId: ids.join(","),
-        metadata: {
-          moveCount: count,
-          targetTenantId: tenantId,
-          requestedIds: ids,
-        },
+        metadata: { count, targetTenantId: tenantId },
       },
     );
 
     revalidatePath("/protected/properties");
 
-    return {
-      success: true,
-      count: count ?? 0,
-      message: `ดึงข้อมูลมายังสาขาของคุณสำเร็จ ${count ?? 0} รายการ`,
-    };
+    return { success: true, count: count ?? 0, message: `ดึงข้อมูลมายังสาขาของคุณสำเร็จ ${count} รายการ` };
   } catch (error) {
-    console.error("bulkMovePropertiesToTenantAction error:", error);
-    return {
-      success: false,
-      count: 0,
-      message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
-    };
+    console.error("bulkMove error:", error);
+    return { success: false, count: 0, message: mapDbError(error) };
   }
 }
 
 /**
- * Fetch all property IDs matching filters (for global selection)
+ * 5. Fetch all property IDs (for global selection)
  */
 export async function getAllPropertyIdsAction(args: {
   q?: string;
@@ -319,6 +266,6 @@ export async function getAllPropertyIdsAction(args: {
     const ids = await getAllPropertyIdsQuery(args);
     return { success: true, ids };
   } catch (error) {
-    return { success: false, ids: [], message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด" };
+    return { success: false, ids: [], message: "ไม่สามารถดึงข้อมูลรายการทั้งหมดได้" };
   }
 }

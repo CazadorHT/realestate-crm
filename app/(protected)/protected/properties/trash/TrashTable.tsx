@@ -17,12 +17,22 @@ import { Badge } from "@/components/ui/badge";
 import { PROPERTY_TYPE_LABELS } from "@/features/properties/labels";
 import { TrashIcon } from "lucide-react";
 
+import { PaginationControls } from "@/components/ui/pagination-controls";
+
 interface TrashTableProps {
   data: Property[];
+  totalCount: number;
+  pageSize: number;
+  currentPage: number;
 }
 
-export function TrashTable({ data }: TrashTableProps) {
-  if (data.length === 0) {
+export function TrashTable({ 
+  data, 
+  totalCount, 
+  pageSize, 
+  currentPage 
+}: TrashTableProps) {
+  if (data.length === 0 && totalCount === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 border border-slate-200 rounded-lg bg-muted/10 h-[400px]">
         <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center mb-4">
@@ -195,6 +205,18 @@ export function TrashTable({ data }: TrashTableProps) {
           ))}
         </TableBody>
       </Table>
+      
+      {data.length === 0 && totalCount > 0 && (
+        <div className="py-10 text-center text-sm text-slate-400 border-t border-slate-100">
+          ไม่พบข้อมูลในหน้านี้ กรุณาเปลี่ยนหน้ากูหรอ
+        </div>
+      )}
+
+      <PaginationControls
+        totalCount={totalCount}
+        pageSize={pageSize}
+        currentPage={currentPage}
+      />
     </div>
   );
 }

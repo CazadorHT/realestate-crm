@@ -36,13 +36,25 @@ import {
 } from "@/features/rent-notifications/actions";
 import { toast } from "sonner";
 import { AddRuleDialog } from "./AddRuleDialog";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+
+interface RuleListProps {
+  initialRules: any[]; // These come from getRentNotificationRules which has complex joins
+  groups: any[];
+  properties: any[];
+  tenantId: string | null;
+  totalCount: number;
+  currentPage: number;
+}
 
 export function RuleList({
   initialRules,
   groups,
   properties,
   tenantId,
-}: any) {
+  totalCount,
+  currentPage,
+}: RuleListProps) {
   const [rules, setRules] = useState(initialRules);
   const [editingRule, setEditingRule] = useState<any>(null);
 
@@ -285,6 +297,14 @@ export function RuleList({
           onOpenChange={(open: boolean) => !open && setEditingRule(null)}
         />
       )}
+      {/* Standardized Pagination Controls */}
+      <div className="mt-6 pt-6 border-t border-slate-100">
+        <PaginationControls
+          totalCount={totalCount}
+          pageSize={20}
+          currentPage={currentPage}
+        />
+      </div>
     </>
   );
 }

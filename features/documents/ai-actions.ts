@@ -4,6 +4,7 @@ import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { generateText } from "@/lib/ai/gemini";
 import { getDocumentSignedUrl } from "./actions";
 import { revalidatePath } from "next/cache";
+import { mapDbError } from "@/lib/db-error";
 
 /**
  * AI Document Analysis
@@ -113,7 +114,7 @@ export async function analyzeDocumentAction(documentId: string) {
     console.error("AI Analysis Error:", error);
     return {
       success: false,
-      message: error.message || "เกิดข้อผิดพลาดในการวิเคราะห์ AI",
+      message: mapDbError(error) || "เกิดข้อผิดพลาดในการวิเคราะห์ AI",
     };
   }
 }

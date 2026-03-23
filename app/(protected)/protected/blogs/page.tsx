@@ -1,6 +1,6 @@
-import { getAllBlogPosts } from "@/lib/services/blog";
-import { Plus, Tag, AlertCircle } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
+import { getAllBlogPosts } from "@/lib/services/blog";
 import { Button } from "@/components/ui/button";
 import { BlogsTable } from "@/features/blogs/components/BlogsTable";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -8,82 +8,40 @@ import { BlogStats } from "@/features/blogs/components/BlogStats";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
-export default async function BlogListPage() {
-  const posts = await getAllBlogPosts();
-
-  // Calculate statistics
-  const draftPosts = posts.filter((p) => !p.is_published).length;
-  // Get unique categories
-  const categories = new Set(posts.map((p) => p.category).filter(Boolean));
+export default async function BlogsPage(props: {
+  searchParams: Promise<{ page?: string; success?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  const page = Number(searchParams.page) || 1;
+  const pageSize = 10;
+  const { posts, count: totalPosts } = await getAllBlogPosts(page, pageSize);
 
   return (
-    <div className="space-y-6">
-      <SuccessAnimation />
-      {/* Premium Header */}
+    <div className="p-6 space-y-6 animate-fade-in">
+      {searchParams.success === "true" && <SuccessAnimation />}
       <PageHeader
-        title="บทความ (Blogs)"
-        subtitle="จัดการบทความและเนื้อหาทั้งหมด"
-        count={posts.length}
+        title="จัดการบทความ (Blogs)"
+        subtitle="สร้างและจัดการเนื้อหาบนเว็บไซต์ของคุณ"
+        count={totalPosts}
         icon="fileText"
-        gradient="purple"
+        gradient="blue"
         actionSlot={
-          <div className="flex flex-col md:flex-row items-center gap-2">
-            <Button
-              variant="outline"
-              asChild
-              className="bg-white/80 hover:bg-white shadow-sm"
-            >
-              <Link href="/protected/blogs/categories">
-                <Tag className="mr-2 h-4 w-4" />
-                จัดการหมวดหมู่
-              </Link>
-            </Button>
-            <Button
-              asChild
-              className="bg-white text-slate-800 hover:bg-white/90 shadow-lg font-semibold"
-            >
-              <Link href="/protected/blogs/new">
-                <Plus className="mr-2 h-4 w-4" />
-                สร้างบทความใหม่
-              </Link>
-            </Button>
-          </div>
+          <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Link href="/protected/blogs/new">
+              <Plus className="mr-2 h-4 w-4" />
+              สร้างบทความใหม่
+            </Link>
+          </Button>
         }
       />
 
       {/* Statistics Cards */}
       <BlogStats posts={posts} />
 
-      {/* Posts Table */}
-      <BlogsTable posts={posts} />
+      <BlogsTable posts={posts} totalCount={totalPosts} currentPage={page} />
 
-      {/* Footer Stats */}
-      {posts.length > 0 && (
-        <TableFooterStats
-          totalCount={posts.length}
-          unitLabel="บทความ"
-          secondaryStats={[
-            ...(draftPosts > 0
-              ? [
-                  {
-                    label: "แบบร่างรอเผยแพร่",
-                    value: draftPosts,
-                    color: "orange" as const,
-                    icon: "clock" as const,
-                  },
-                ]
-              : []),
-            ...(categories.size > 0
-              ? [
-                  {
-                    label: "หมวดหมู่",
-                    value: categories.size,
-                    color: "slate" as const,
-                  },
-                ]
-              : []),
-          ]}
-        />
+      {posts && posts.length > 0 && (
+        <TableFooterStats totalCount={totalPosts} unitLabel="บทความ" />
       )}
     </div>
   );

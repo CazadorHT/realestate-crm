@@ -6,16 +6,23 @@ import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 import { CreateFAQDialog } from "@/features/admin/components/CreateFAQDialog";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
-export default async function FAQsPage() {
-  const faqs = await getFaqs();
+interface FAQsPageProps {
+  searchParams: Promise<{ page?: string; success?: string }>;
+}
 
-  const totalFaqs = faqs?.length || 0;
+export default async function FAQsPage(props: FAQsPageProps) {
+  const searchParams = await props.searchParams;
+  const page = Number(searchParams.page) || 1;
+  const pageSize = 10;
+
+  const { faqs, count: totalFaqs } = await getFaqs(page, pageSize);
+
   const activeFaqs = faqs?.filter((f) => f.is_active).length || 0;
 
   return (
     <div className=" space-y-6 animate-fade-in">
-      <SuccessAnimation />
-      {/* Premium Header */}
+      {searchParams.success === "true" && <SuccessAnimation />}
+      
       <PageHeader
         title="คำถามที่พบบ่อย (FAQs)"
         subtitle="จัดการคำถามและคำตอบสำหรับลูกค้า"
@@ -25,13 +32,14 @@ export default async function FAQsPage() {
         gradient="blue"
       />
 
-      {/* Statistics Cards */}
       <FAQStats faqs={faqs ?? []} />
 
-      {/* FAQs Table */}
-      <FAQsTable faqs={faqs ?? []} />
+      <FAQsTable
+        faqs={faqs ?? []}
+        totalCount={totalFaqs}
+        currentPage={page}
+      />
 
-      {/* Footer Stats */}
       {totalFaqs > 0 && (
         <TableFooterStats
           totalCount={totalFaqs}
@@ -40,7 +48,7 @@ export default async function FAQsPage() {
             activeFaqs > 0
               ? [
                   {
-                    label: "ใช้งาน",
+                    label: "ใช้งาน (หน้าปัจจุบัน)",
                     value: activeFaqs,
                     color: "green" as const,
                   },

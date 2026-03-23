@@ -58,6 +58,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import {
   bulkDeletePropertiesAction,
   bulkMovePropertiesToTenantAction,
@@ -284,6 +285,7 @@ export function PropertiesTable({
 }: PropertiesTableProps): React.ReactElement {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const currentPage = Number(searchParams.get("page")) || 1;
   const pathname = usePathname();
   const allIds = useMemo(() => data.map((p) => p.id), [data]);
   const {
@@ -449,6 +451,7 @@ export function PropertiesTable({
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
+        onDeleteLabel="ย้ายลงถังขยะ"
         onExport={() => exportPropertiesAction(Array.from(selectedIds))}
         onPull={
           isMultiTenant &&
@@ -952,6 +955,14 @@ export function PropertiesTable({
             ))}
           </div>
         </div>
+      </div>
+      
+      <div className="mt-2 px-4 pb-6">
+        <PaginationControls
+          totalCount={totalCount}
+          pageSize={10}
+          currentPage={currentPage}
+        />
       </div>
     </div>
   );

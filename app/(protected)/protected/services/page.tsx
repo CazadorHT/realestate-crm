@@ -7,36 +7,53 @@ import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
 export const dynamic = "force-dynamic";
 
-async function ServicesContent() {
-  const services = await getServices(true); // Include inactive
+interface ServicesPageProps {
+  searchParams: Promise<{ page?: string; success?: string }>;
+}
+
+async function ServicesContent({ page }: { page: number }) {
+  const { data: services, count: totalCount } = await getServices(
+    page,
+    10,
+    true,
+  ); // Include inactive
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <SuccessAnimation />
       <PageHeader
         title="บริการที่นำเสนอ"
         subtitle="จัดการบริการของคุณ (ตกแต่งภายใน, ขนย้าย ฯลฯ) และแกลเลอรีรูปภาพ"
         icon="layout"
-        count={services.length}
+        count={totalCount}
         actionSlot={<CreateServiceDialog />}
         gradient="blue"
       />
 
-      <ServicesTable services={services} />
+      <ServicesTable
+        services={services}
+        totalCount={totalCount}
+        currentPage={page}
+      />
     </div>
   );
 }
 
-export default function ServicesPage() {
+export default async function ServicesPage(props: ServicesPageProps) {
+  const searchParams = await props.searchParams;
+  const page = Number(searchParams.page) || 1;
+
   return (
-    <Suspense
-      fallback={
-        <div className="p-8 text-center text-slate-500">
-          กำลังโหลดข้อมูลบริการ...
-        </div>
-      }
-    >
-      <ServicesContent />
-    </Suspense>
+    <div className="p-6 space-y-6">
+      {searchParams.success === "true" && <SuccessAnimation />}
+      <Suspense
+        fallback={
+          <div className="p-8 text-center text-slate-500">
+            กำลังโหลดข้อมูลบริการ...
+          </div>
+        }
+      >
+        <ServicesContent page={page} />
+      </Suspense>
+    </div>
   );
 }

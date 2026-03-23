@@ -53,7 +53,6 @@ export default async function OwnersPage({ searchParams }: PageProps) {
   const {
     data: owners,
     count,
-    totalPages,
   } = await getOwnersQuery({
     q,
     page,
@@ -64,14 +63,6 @@ export default async function OwnersPage({ searchParams }: PageProps) {
   const stats = await getOwnersDashboardStatsQuery(
     isAdminUser && allBranches && isMultiTenant,
   );
-
-  const makeHref = (newPage: number) => {
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (allBranches) params.set("all_branches", "true");
-    params.set("page", newPage.toString());
-    return `/protected/owners?${params.toString()}#table`;
-  };
 
   const isEmptyState = owners.length === 0 && page === 1 && !q;
 
@@ -122,36 +113,6 @@ export default async function OwnersPage({ searchParams }: PageProps) {
               count={count}
               q={q}
             />
-
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-sm bg-slate-50 rounded-xl p-4 border border-gray-200 shadow-xs">
-              <div className="text-slate-600 font-medium order-2 lg:order-1 text-center lg:text-left">
-                ทั้งหมด <span className="text-slate-900">{count}</span> รายการ •
-                หน้า <span className="text-slate-900">{page}</span> จาก{" "}
-                <span className="text-slate-900">{totalPages}</span>
-              </div>
-              <div className="flex gap-2 order-1 lg:order-2 w-full lg:w-auto">
-                <Link
-                  className={`flex-1 lg:flex-none text-center rounded-lg border border-gray-200 bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
-                    page <= 1 ? "pointer-events-none opacity-50" : ""
-                  }`}
-                  href={makeHref(page - 1)}
-                  aria-disabled={page <= 1}
-                  scroll={false}
-                >
-                  ← ก่อนหน้า
-                </Link>
-                <Link
-                  className={`flex-1 lg:flex-none text-center rounded-lg border border-gray-200 bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
-                    page >= totalPages ? "pointer-events-none opacity-50" : ""
-                  }`}
-                  href={makeHref(page + 1)}
-                  aria-disabled={page >= totalPages}
-                  scroll={false}
-                >
-                  ถัดไป →
-                </Link>
-              </div>
-            </div>
           </>
         )}
       </div>

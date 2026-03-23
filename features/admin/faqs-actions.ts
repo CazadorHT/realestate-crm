@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { mapDbError } from "@/lib/db-error";
 
 type CreateFaqInput = {
   question: string;
@@ -20,15 +21,22 @@ type UpdateFaqInput = {
   is_active?: boolean;
 };
 
-export async function getFaqs() {
+export async function getFaqs(page = 1, pageSize = 10) {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("faqs")
-    .select("*")
-    .order("sort_order", { ascending: true });
+  const offset = (page - 1) * pageSize;
 
-  if (error) throw new Error(error.message);
-  return data;
+  const { data, error, count } = await supabase
+    .from("faqs")
+    .select("*", { count: "exact" })
+    .order("sort_order", { ascending: true })
+    .range(offset, offset + pageSize - 1);
+
+  if (error) {
+    console.error("Error fetching FAQs:", error);
+    throw new Error(mapDbError(error));
+  }
+
+  return { faqs: data || [], count: count || 0 };
 }
 
 export async function getFaq(id: string) {

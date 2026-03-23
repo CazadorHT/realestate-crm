@@ -47,7 +47,7 @@ export default async function CategoriesPage() {
       </div>
 
       {/* Statistics Cards */}
-      <CategoryStatsCard categories={categories || []} posts={posts} />
+      <CategoryStatsCard categories={categories || []} posts={posts.posts} />
 
       {/* Category Manager */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -64,7 +64,7 @@ export default async function CategoriesPage() {
         </div>
 
         {/* Stats Sidebar */}
-        <CategorySidebarStats categories={categories || []} posts={posts} />
+        <CategorySidebarStats categories={categories || []} posts={posts.posts} />
       </div>
     </div>
   );

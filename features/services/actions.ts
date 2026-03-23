@@ -51,22 +51,27 @@ export type UpdateServiceInput = Partial<CreateServiceInput> & {
   id: string;
 };
 
-export async function getServices(includeInactive = false) {
+export async function getServices(
+  page = 1,
+  pageSize = 10,
+  includeInactive = false,
+) {
+  const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
-  
-  // Attempt to get tenantId if authenticated, but don't fail if not (for public pages/build)
-  let tenantId: string | undefined;
+  const offset = (page - 1) * pageSize;
+
+  let tenantId = null;
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-      
-      if (profile) {
-        // Simple tenant check for logged in users
+      const { getActiveTenantCookie } = await import(
+        "@/lib/actions/tenant-context"
+      );
+      tenantId = await getActiveTenantCookie();
+
+      if (!tenantId) {
         const { data: member } = await supabase
           .from("tenant_members")
           .select("tenant_id")
@@ -77,13 +82,14 @@ export async function getServices(includeInactive = false) {
       }
     }
   } catch (e) {
-    // Ignore errors during build or for unauthenticated users
+    // Ignore errors
   }
 
   let query = supabase
     .from("services")
-    .select("*")
-    .order("sort_order", { ascending: true });
+    .select("*", { count: "exact" })
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
 
   if (tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -93,17 +99,25 @@ export async function getServices(includeInactive = false) {
     query = query.eq("is_active", true);
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query.range(
+    offset,
+    offset + pageSize - 1,
+  );
 
   if (error) {
     console.error("Error fetching services:", error);
-    return [];
+    throw new Error(mapDbError(error));
   }
 
-  return (data as any[]).map((row) => ({
-    ...row,
-    gallery_images: Array.isArray(row.gallery_images) ? row.gallery_images : [],
-  })) as ServiceRow[];
+  return {
+    data: (data || []).map((row: any) => ({
+      ...row,
+      gallery_images: Array.isArray(row.gallery_images)
+        ? row.gallery_images
+        : [],
+    })) as ServiceRow[],
+    count: count || 0,
+  };
 }
 
 export async function getServiceBySlug(slug: string) {

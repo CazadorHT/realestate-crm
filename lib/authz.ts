@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { type UserRole, isAdmin, isStaff } from "./auth-shared";
 import { cookies } from "next/headers";
+import { mapDbError } from "./db-error";
 export { type UserRole, isAdmin, isStaff };
 
 export type AuthContext = {
@@ -153,10 +154,9 @@ export function assertAdminOrManager(role: UserRole) {
  */
 export function authzFail(err: unknown): { success: false; message: string } {
   if (err instanceof AuthzError) {
+    if (err.code === "UNAUTHORIZED") return { success: false, message: "กรุณาเข้าสู่ระบบก่อนดำเนินการ" };
+    if (err.code === "FORBIDDEN") return { success: false, message: "คุณไม่มีสิทธิ์ดำเนินการในส่วนนี้" };
     return { success: false, message: err.message };
   }
-  if (err instanceof Error) {
-    return { success: false, message: err.message };
-  }
-  return { success: false, message: "An unknown error occurred" };
+  return { success: false, message: mapDbError(err) };
 }

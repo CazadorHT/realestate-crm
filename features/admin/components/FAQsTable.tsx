@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Edit, Trash2, HelpCircle } from "lucide-react";
 import { useTableSelection } from "@/hooks/useTableSelection";
@@ -47,9 +48,11 @@ interface FAQ {
 
 interface FAQsTableProps {
   faqs: FAQ[];
+  totalCount: number;
+  currentPage: number;
 }
 
-export function FAQsTable({ faqs }: FAQsTableProps) {
+export function FAQsTable({ faqs, totalCount, currentPage }: FAQsTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -243,6 +246,14 @@ export function FAQsTable({ faqs }: FAQsTableProps) {
             )}
           </TableBody>
         </Table>
+        {/* Standardized Pagination Controls for Desktop */}
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200">
+          <PaginationControls
+            totalCount={totalCount}
+            pageSize={10}
+            currentPage={currentPage}
+          />
+        </div>
       </div>
 
       {/* Mobile & Tablet Card View */}

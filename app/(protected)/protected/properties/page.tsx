@@ -9,7 +9,6 @@ import { getSystemConfig } from "@/lib/actions/system-config";
 import { PropertiesHeader } from "./_components/PropertiesHeader";
 import { PropertiesEmptyState } from "./_components/PropertiesEmptyState";
 import { PropertyFilters } from "@/components/properties/PropertyFilters";
-import { PaginationControls } from "@/components/ui/pagination-controls";
 import { requireAuthContext } from "@/lib/authz";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
@@ -141,11 +140,6 @@ export default async function PropertiesPage({
               showBranch={isAdminUser && params.allBranches === "true" && isMultiTenant}
               totalCount={count}
               filters={params}
-            />
-            <PaginationControls
-              totalCount={count}
-              pageSize={PAGE_SIZE}
-              currentPage={currentPage}
             />
           </>
         )}

@@ -34,12 +34,19 @@ import {
 import { ServiceForm } from "./ServiceForm";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface ServicesTableProps {
   services: ServiceRow[];
+  totalCount: number;
+  currentPage: number;
 }
 
-export function ServicesTable({ services }: ServicesTableProps) {
+export function ServicesTable({
+  services,
+  totalCount,
+  currentPage,
+}: ServicesTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -312,6 +319,15 @@ export function ServicesTable({ services }: ServicesTableProps) {
               </div>
             ))
           )}
+        </div>
+
+        {/* Standardized Pagination Controls */}
+        <div className="pt-2">
+          <PaginationControls
+            totalCount={totalCount}
+            pageSize={10}
+            currentPage={currentPage}
+          />
         </div>
       </div>
 

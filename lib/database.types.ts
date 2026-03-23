@@ -1360,6 +1360,8 @@ export type Database = {
           parking_slots: number | null
           parking_type: string | null
           popular_area: string | null
+          popular_area_cn: string | null
+          popular_area_en: string | null
           postal_code: string | null
           posted_to_facebook_at: string | null
           posted_to_instagram_at: string | null
@@ -1478,6 +1480,8 @@ export type Database = {
           parking_slots?: number | null
           parking_type?: string | null
           popular_area?: string | null
+          popular_area_cn?: string | null
+          popular_area_en?: string | null
           postal_code?: string | null
           posted_to_facebook_at?: string | null
           posted_to_instagram_at?: string | null
@@ -1596,6 +1600,8 @@ export type Database = {
           parking_slots?: number | null
           parking_type?: string | null
           popular_area?: string | null
+          popular_area_cn?: string | null
+          popular_area_en?: string | null
           postal_code?: string | null
           posted_to_facebook_at?: string | null
           posted_to_instagram_at?: string | null

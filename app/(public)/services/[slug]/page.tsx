@@ -22,8 +22,9 @@ export const revalidate = 60;
 export async function generateStaticParams() {
   const { getServices } = await import("@/features/services/actions");
   const services = await getServices();
+  const data = services.data || [];
 
-  return services.map((service) => ({
+  return data.map((service) => ({
     slug: service.slug,
   }));
 }

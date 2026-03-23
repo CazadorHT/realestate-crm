@@ -22,15 +22,17 @@ import {
   MapPin,
   ArrowUpRight,
   TrendingDown,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { AnalyticsFilters } from "./components/AnalyticsFilters";
 import { ResetViewsButton } from "./components/ResetViewsButton";
 import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 export default async function AnalyticsPage(props: {
-  searchParams: Promise<{ range?: string }>;
+  searchParams: Promise<{ range?: string; page?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const profile = await getCurrentProfile();
@@ -41,7 +43,11 @@ export default async function AnalyticsPage(props: {
   const tenantId = await getActiveTenantCookie();
   const range = searchParams.range;
   const days = range && range !== "all" ? parseInt(range) : undefined;
-  const { topProperties, topAreas, totalViews } = await getAnalyticsStats(tenantId, days);
+  const page = Number(searchParams.page) || 1;
+  const pageSize = 10;
+
+  const { topProperties, topPropertiesCount, topAreas, totalViews } = 
+    await getAnalyticsStats(tenantId, days, page, pageSize);
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -66,7 +72,7 @@ export default async function AnalyticsPage(props: {
           <CardHeader className="pb-2">
             <CardDescription className="text-blue-100 flex items-center gap-2">
               <Eye className="h-4 w-4" />
-              ยอดเข้าชมรวม (Top 10)
+              ยอดเข้าชมรวม (Top-Level)
             </CardDescription>
             <CardTitle className="text-3xl md:text-4xl font-semibold text-white">
               {totalViews.toLocaleString()} <span className="text-blue-50 text-xs font-normal tracking-normal">ยอดเข้าชมรวม</span>
@@ -134,7 +140,7 @@ export default async function AnalyticsPage(props: {
             </div>
           </CardHeader>
           <CardContent className="p-0 flex-1 overflow-hidden">
-            <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
+            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
               <table className="w-full text-sm text-left">
                 <thead className="text-[10px] md:text-xs text-slate-500 uppercase bg-slate-50/50 sticky top-0 z-10 backdrop-blur-sm">
                   <tr>
@@ -153,7 +159,7 @@ export default async function AnalyticsPage(props: {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {topProperties.map((prop: PropertyAnalytics, idx: number) => (
+                  {topProperties.map((prop: PropertyAnalytics) => (
                     <tr
                       key={prop.id}
                       className="hover:bg-slate-50/50 transition-colors"
@@ -215,6 +221,15 @@ export default async function AnalyticsPage(props: {
                 </tbody>
               </table>
             </div>
+
+            {/* Standardized Pagination Controls */}
+            <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100">
+              <PaginationControls
+                totalCount={topPropertiesCount}
+                pageSize={pageSize}
+                currentPage={page}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -230,7 +245,7 @@ export default async function AnalyticsPage(props: {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-4 md:p-6 flex-1 overflow-hidden">
-            <div className="max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200 space-y-5 md:space-y-6">
+            <div className="max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200 space-y-5 md:space-y-6">
               {topAreas.map((area: AreaAnalytics, idx: number) => (
                 <div key={area.name} className="flex flex-col gap-2">
                   <div className="flex justify-between items-end">
@@ -279,5 +294,3 @@ export default async function AnalyticsPage(props: {
     </div>
   );
 }
-
-import { Users } from "lucide-react";

@@ -6,9 +6,19 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, Trash2, AlertCircle } from "lucide-react";
 
-export default async function TrashPage() {
-  const deletedProperties = await getDeletedProperties();
-  const count = deletedProperties.length;
+export default async function TrashPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page } = await searchParams;
+  const currentPage = Number(page) || 1;
+  const PAGE_SIZE = 10;
+
+  const { data: deletedProperties, count } = await getDeletedProperties(
+    currentPage,
+    PAGE_SIZE,
+  );
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
@@ -58,7 +68,16 @@ export default async function TrashPage() {
           </div>
         </div>
 
-        <TrashTable data={deletedProperties} />
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-4 sm:p-6 space-y-4">
+          <TrashTable 
+            data={deletedProperties} 
+            totalCount={count}
+            pageSize={PAGE_SIZE}
+            currentPage={currentPage}
+          />
+        </div>
+      </div>
       </div>
     </div>
   );

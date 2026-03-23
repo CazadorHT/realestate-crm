@@ -4,26 +4,29 @@ import { UploadDocumentDialog } from "./_components/UploadDocumentDialog";
 import { DocumentsGrid } from "@/features/documents/components/DocumentsGrid";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { DocumentStats } from "@/features/documents/components/DocumentStats";
-import { DocumentWithRelations } from "@/features/documents/types";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 import { TemplateDialog } from "@/features/documents/components/TemplateDialog";
-
-import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
+import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
 
-export default async function DocumentsPage() {
+interface DocumentsPageProps {
+  searchParams: Promise<{ tenant?: string; page?: string; success?: string }>;
+}
+
+export default async function DocumentsPage(props: DocumentsPageProps) {
   const { role } = await requireAuthContext();
   assertStaff(role);
 
-  const tenantId = await getActiveTenantCookie();
+  const searchParams = await props.searchParams;
+  const tenantId = searchParams.tenant || (await getActiveTenantCookie()) || "ALL";
+  const page = Number(searchParams.page) || 1;
+  const pageSize = 50;
 
-  const documents = (await getAllDocuments(
-    200,
+  const { data: documents, count: totalCount } = await getAllDocuments(
+    page,
+    pageSize,
     tenantId,
-  )) as DocumentWithRelations[];
-  const totalDocuments = documents?.length || 0;
-  const totalSize =
-    documents?.reduce((sum, doc) => sum + (doc.size_bytes || 0), 0) || 0;
+  );
 
   const formatSize = (bytes: number) => {
     if (bytes >= 1024 * 1024 * 1024) {
@@ -36,14 +39,16 @@ export default async function DocumentsPage() {
     return `${bytes} B`;
   };
 
+  const totalSize = documents.reduce((sum, doc) => sum + (doc.size_bytes || 0), 0);
+
   return (
     <div className="p-6 space-y-6 animate-fade-in">
-      <SuccessAnimation />
-      {/* Premium Header */}
+      {searchParams.success === "true" && <SuccessAnimation />}
+      
       <PageHeader
-        title="เอกสาร (Documents)"
+        title="คลังเอกสาร (Documents)"
         subtitle="จัดการเอกสารและไฟล์แนบทั้งหมดในระบบ"
-        count={totalDocuments}
+        count={totalCount}
         icon="fileText"
         gradient="blue"
         actionSlot={
@@ -54,20 +59,22 @@ export default async function DocumentsPage() {
         }
       />
 
-      {/* Statistics Cards */}
       <DocumentStats documents={documents} />
 
-      {/* Documents Grid */}
-      <DocumentsGrid documents={documents || []} tenantId={tenantId} />
+      <DocumentsGrid
+        documents={documents}
+        totalCount={totalCount}
+        currentPage={page}
+        tenantId={tenantId}
+      />
 
-      {/* Footer Stats */}
       {documents && documents.length > 0 && (
         <TableFooterStats
-          totalCount={totalDocuments}
+          totalCount={totalCount}
           unitLabel="ไฟล์"
           secondaryStats={[
             {
-              label: "รวม",
+              label: "รวมขนาด (หน้าปัจจุบัน)",
               value: formatSize(totalSize),
               color: "blue",
               icon: "info",

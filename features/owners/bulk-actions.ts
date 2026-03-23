@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { mapDbError } from "@/lib/db-error";
 
 export type BulkDeleteResult = {
   success: boolean;
@@ -60,7 +61,7 @@ export async function bulkDeleteOwnersAction(
     return {
       success: false,
       deletedCount: 0,
-      message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+      message: mapDbError(error),
     };
   }
 }
@@ -116,7 +117,7 @@ export async function bulkMoveOwnersToTenantAction(
     console.error("bulkMoveOwnersToTenantAction error:", error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+      message: mapDbError(error),
     };
   }
 }
@@ -136,7 +137,7 @@ export async function getAllOwnerIdsAction(args: {
     return {
       success: false,
       ids: [],
-      message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+      message: mapDbError(error),
     };
   }
 }

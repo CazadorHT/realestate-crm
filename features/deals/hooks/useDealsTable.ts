@@ -30,7 +30,8 @@ export function useDealsTable(
     setData(initialData);
     setCount(initialCount);
     setTimeRange(initialTimeRange);
-  }, [initialData, initialCount, initialTimeRange]);
+    setPage(initialPage);
+  }, [initialData, initialCount, initialTimeRange, initialPage]);
 
   // Debounce search
   useEffect(() => {

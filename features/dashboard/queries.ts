@@ -1184,8 +1184,11 @@ export type AreaAnalytics = {
 export async function getAnalyticsStats(
   tenantId?: string | null,
   days?: number,
+  page = 1,
+  pageSize = 10,
 ): Promise<{
   topProperties: PropertyAnalytics[];
+  topPropertiesCount: number;
   topAreas: AreaAnalytics[];
   totalViews: number;
 }> {
@@ -1199,11 +1202,13 @@ export async function getAnalyticsStats(
     return query;
   };
 
-  // 1. Get Top 10 Properties by Views
+  const offset = (page - 1) * pageSize;
+
+  // 1. Get Top Properties by Views (Paginated)
   let query = applyTenantFilter(
     supabase
       .from("properties")
-      .select("id, title, slug, view_count, listing_type, price, rental_price")
+      .select("id, title, slug, view_count, listing_type, price, rental_price", { count: "exact" })
       .is("deleted_at", null),
   );
 
@@ -1213,9 +1218,9 @@ export async function getAnalyticsStats(
     query = query.gte("created_at", startDate.toISOString());
   }
 
-  const { data: topProps } = await query
+  const { data: topProps, count: topPropsCount } = await query
     .order("view_count", { ascending: false })
-    .limit(10);
+    .range(offset, offset + pageSize - 1);
 
   // 2. Get Top Areas by Views
   // Since view_count is per property, we sum them by popular_area
@@ -1278,13 +1283,16 @@ export async function getAnalyticsStats(
 
     return {
       topProperties: (topProps as any) || [],
+      topPropertiesCount: topPropsCount || 0,
       topAreas,
       totalViews,
     };
   } catch (error) {
-    console.error("getAnalyticsStats Error:", error);
+    const { mapDbError } = await import("@/lib/db-error");
+    console.error("getAnalyticsStats Error:", mapDbError(error));
     return {
       topProperties: [],
+      topPropertiesCount: 0,
       topAreas: [],
       totalViews: 0,
     };

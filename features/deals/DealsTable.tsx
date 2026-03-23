@@ -25,7 +25,7 @@ import { useDealsTable } from "./hooks/useDealsTable";
 import { DealsFilters } from "./components/DealsFilters";
 import { DealsTableRow } from "./components/DealsTableRow";
 import { DealsMobileCard } from "./components/DealsMobileCard";
-import { DealsPagination } from "./components/DealsPagination";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface DealsTableProps {
   initialData?: DealWithProperty[];
@@ -286,12 +286,10 @@ export function DealsTable({
         </div>
       </div>
 
-      <DealsPagination
-        page={page}
-        setPage={setPage}
-        totalPages={totalPages}
+      <PaginationControls
+        totalCount={count}
         pageSize={pageSize}
-        count={count}
+        currentPage={page}
       />
     </div>
   );

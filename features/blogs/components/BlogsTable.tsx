@@ -19,6 +19,7 @@ import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteBlogsAction } from "@/features/blogs/bulk-actions";
 import { toast } from "sonner";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { DeleteBlogPostButton } from "@/app/(protected)/protected/blogs/_components/DeleteBlogPostButton";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -35,9 +36,11 @@ interface BlogPost {
 
 interface BlogsTableProps {
   posts: BlogPost[];
+  totalCount: number;
+  currentPage: number;
 }
 
-export function BlogsTable({ posts }: BlogsTableProps) {
+export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -393,6 +396,15 @@ export function BlogsTable({ posts }: BlogsTableProps) {
             );
           })
         )}
+      </div>
+
+      {/* Standardized Pagination Controls */}
+      <div className="pt-2">
+        <PaginationControls
+          totalCount={totalCount}
+          pageSize={10}
+          currentPage={currentPage}
+        />
       </div>
     </div>
   );

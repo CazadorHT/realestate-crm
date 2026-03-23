@@ -18,21 +18,21 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SectionTitle } from "@/components/dashboard/SectionTitle";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 
-interface DealsPageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
 export const metadata = {
   title: "Deals | จัดการดีล",
 };
 
-export default async function DealsPage({ searchParams }: DealsPageProps) {
+export default async function DealsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ timeRange?: string; page?: string }>;
+}) {
   const { tenantId } = await requireAuthContext();
-  const params = await searchParams;
-  const timeRange = (params.timeRange as string) || "all";
+  const { timeRange = "all", page } = await searchParams;
+  const currentPage = Number(page) || 1;
 
   const [{ data, count }, dealsStats, properties] = await Promise.all([
-    getDeals({ page: 1, pageSize: 20, timeRange }),
+    getDeals({ page: currentPage, pageSize: 20, timeRange }),
     getDealsPageStats(timeRange),
     getPropertiesForSelect(),
   ]);
@@ -179,7 +179,7 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
                   รายการดีลทั้งหมด
                 </h2>
                 <p className="text-sm text-slate-500 mt-1">
-                  แสดง {data.slice(0, 20).length} จาก {count} ดีล
+                  แสดง {data.length} จาก {count} ดีล
                 </p>
               </div>
               {activeDeals > 0 && (
@@ -194,9 +194,9 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
 
             <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden p-4">
               <DealsTable
-                initialData={data.slice(0, 20)}
+                initialData={data}
                 initialCount={count}
-                initialPage={1}
+                initialPage={currentPage}
                 pageSize={20}
                 properties={properties}
                 timeRange={timeRange}

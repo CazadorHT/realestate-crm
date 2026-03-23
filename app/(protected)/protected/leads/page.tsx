@@ -50,8 +50,6 @@ export default async function LeadsPage({
     pageSize: 20,
   });
 
-  const totalPages = Math.max(1, Math.ceil(count / pageSize));
-
   // If kanban, we fetch a larger set (or a different subset)
   // For simplicity, we'll use a separate query for Kanban to avoid pagination issues
   let kanbanLeads: any[] = [];
@@ -59,16 +57,6 @@ export default async function LeadsPage({
     const allLeads = await getLeadsForKanbanQuery();
     kanbanLeads = allLeads;
   }
-
-  const makeHref = (p: number) => {
-    const params = new URLSearchParams();
-    if (sp.q) params.set("q", sp.q);
-    if (sp.stage) params.set("stage", sp.stage);
-    if (sp.view) params.set("view", sp.view);
-    if (p > 1) params.set("page", String(p));
-    const qs = params.toString();
-    return qs ? `/protected/leads?${qs}` : `/protected/leads`;
-  };
 
   const toggleViewHref = (v: string) => {
     const params = new URLSearchParams();
@@ -156,32 +144,6 @@ export default async function LeadsPage({
                 isMultiTenant={isMultiTenant}
                 filters={{ q: sp.q, stage: sp.stage }} 
               />
-
-              <div className="flex items-center justify-between text-sm bg-slate-50 rounded-xl p-4 border border-slate-200 shadow-sm">
-                <div className="text-slate-600 font-medium">
-                  ทั้งหมด <span className="text-slate-900">{count}</span> รายการ
-                  • หน้า <span className="text-slate-900">{page}</span> จาก{" "}
-                  <span className="text-slate-900">{totalPages}</span>
-                </div>
-                <div className="flex gap-2">
-                  <Link
-                    className={`rounded-lg border border-slate-200 bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
-                      page <= 1 ? "pointer-events-none opacity-50" : ""
-                    }`}
-                    href={makeHref(page - 1)}
-                  >
-                    ← ก่อนหน้า
-                  </Link>
-                  <Link
-                    className={`rounded-lg border border-slate-200 bg-white px-4 py-2 font-medium hover:bg-slate-50 transition-colors ${
-                      page >= totalPages ? "pointer-events-none opacity-50" : ""
-                    }`}
-                    href={makeHref(page + 1)}
-                  >
-                    ถัดไป →
-                  </Link>
-                </div>
-              </div>
             </>
           )}
         </div>

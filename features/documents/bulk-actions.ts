@@ -93,7 +93,7 @@ export async function bulkDeleteDocumentsAction(
     return {
       success: false,
       deletedCount: 0,
-      message: error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการลบ",
+      message: mapDbError(error) || "เกิดข้อผิดพลาดในการลบ",
     };
   }
 }

@@ -38,26 +38,25 @@ export async function getDocumentsByOwner(
   return data;
 }
 
-export async function getAllDocuments(limit = 50, tenantId?: string | null) {
+export async function getAllDocuments(page = 1, pageSize = 50, tenantId?: string | null) {
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
-  let query = supabase.from("documents").select("*, tenant:tenants(id, name)");
+  const offset = (page - 1) * pageSize;
+
+  let query = supabase.from("documents").select("*, tenant:tenants(id, name)", { count: "exact" });
 
   if (tenantId && tenantId !== "ALL") {
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
-  } else if (!tenantId) {
-    // If no tenantId provided, we might want to default to ALL or current user tenants
-    // However, RLS will handle the security. This is just for the query builder.
   }
 
-  const { data, error } = await query
+  const { data, error, count } = await query
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .range(offset, offset + pageSize - 1);
 
   if (error) {
     console.error("Fetch All Documents Error:", error);
-    return [];
+    throw new Error(mapDbError(error));
   }
 
   // Manually fetch owner data for each document
@@ -102,7 +101,7 @@ export async function getAllDocuments(limit = 50, tenantId?: string | null) {
     }),
   );
 
-  return documentsWithOwners;
+  return { data: documentsWithOwners, count: count || 0 };
 }
 
 // 2. Create Document Record (Metadata)
@@ -140,7 +139,7 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error));
 
     // Revalidate paths based on owner type?
     // Hard to map exactly to URL, but usually we are on:
@@ -196,7 +195,7 @@ export async function getDocumentVersionsAction(documentId: string) {
       : supabase.from("documents").select("id, parent_id, owner_id").eq("id", documentId)
     ).single();
 
-    if (cError || !currentDoc) throw new Error("Document not found");
+    if (cError || !currentDoc) throw new Error("ไม่พบเอกสารที่ระบุ");
 
     // 2. Find the root parent
     let rootId = documentId;
@@ -244,7 +243,7 @@ export async function getDocumentVersionsAction(documentId: string) {
 
     const { data: allDocs, error: vError } = await vQuery.order("version", { ascending: false });
 
-    if (vError) throw new Error(vError.message);
+    if (vError) throw new Error(mapDbError(vError));
 
     // 4. Filter documents that are part of this chain
     // A document is in the chain if:
@@ -312,7 +311,7 @@ export async function downloadDocumentAction(storagePath: string) {
       : supabase.from("documents").select("id").eq("storage_path", storagePath)
     ).single();
 
-    if (docErr || !doc) throw new Error("Unauthorized or document not found");
+    if (docErr || !doc) throw new Error("ไม่พบเอกสาร หรือคุณไม่มีสิทธิ์เข้าถึง");
 
     const { data, error } = await supabase.storage
       .from("documents")

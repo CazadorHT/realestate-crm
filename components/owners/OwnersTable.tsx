@@ -29,6 +29,8 @@ import { exportOwnersAction } from "@/features/owners/export-action";
 import { toast } from "sonner";
 import { AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface OwnersTableProps {
   owners: (Owner & {
@@ -68,6 +70,8 @@ export function OwnersTable({
   } = useTableSelection(allIds);
 
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const currentPage = Number(searchParams.get("page")) || 1;
 
   const handleSelectAllGlobal = async () => {
     setIsGlobalLoading(true);
@@ -471,6 +475,12 @@ export function OwnersTable({
           ))}
         </div>
       </div>
+
+      <PaginationControls
+        totalCount={count}
+        pageSize={10}
+        currentPage={currentPage}
+      />
     </div>
   );
 }

@@ -28,8 +28,8 @@ function ServicesContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getServices().then((data) => {
-      setServices(data || []);
+    getServices().then((res) => {
+      setServices(res.data || []);
       setLoading(false);
     });
   }, []);

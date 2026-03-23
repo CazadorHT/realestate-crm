@@ -18,13 +18,12 @@ import {
   Search,
   Building2,
   Layers,
-  ChevronLeft,
-  ChevronRight,
   Filter,
   X,
   CreditCard,
   Target,
   ArrowUpRight,
+  Eye,
 } from "lucide-react";
 import {
   Dialog,
@@ -43,23 +42,30 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+import { PaginationControls } from "@/components/ui/pagination-controls";
+
 export default function GlobalInventoryPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const page = Number(searchParams.get("page")) || 1;
+  const query = searchParams.get("q") || "";
+  const propertyType = searchParams.get("type") || "ALL";
+  const listingType = searchParams.get("listing") || "ALL";
+  const status = searchParams.get("status") || "ALL";
+  const targetTenantId = searchParams.get("tenant") || "ALL";
+
   const [data, setData] = useState<any[]>([]);
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [query, setQuery] = useState("");
-
-  // Filter States
-  const [propertyType, setPropertyType] = useState("ALL");
-  const [listingType, setListingType] = useState("ALL");
-  const [status, setStatus] = useState("ALL");
-  const [targetTenantId, setTargetTenantId] = useState("ALL");
   const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState(query);
 
   const fetchData = async () => {
     setLoading(true);
@@ -98,21 +104,32 @@ export default function GlobalInventoryPage() {
 
   useEffect(() => {
     fetchData();
-  }, [page, propertyType, listingType, status, targetTenantId]);
+  }, [page, query, propertyType, listingType, status, targetTenantId]);
+
+  const updateFilters = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "ALL" || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+    // Always reset to page 1 when filter changes, unless only page changed
+    if (!updates.page) {
+      params.delete("page");
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setPage(1);
-    fetchData();
+    updateFilters({ q: searchInput });
   };
 
   const resetFilters = () => {
-    setPropertyType("ALL");
-    setListingType("ALL");
-    setStatus("ALL");
-    setTargetTenantId("ALL");
-    setQuery("");
-    setPage(1);
+    setSearchInput("");
+    router.push(pathname);
   };
 
   const activeFiltersCount = [
@@ -120,13 +137,14 @@ export default function GlobalInventoryPage() {
     listingType !== "ALL",
     status !== "ALL",
     targetTenantId !== "ALL",
+    query !== "",
   ].filter(Boolean).length;
 
   const totalPages = Math.ceil(count / 10);
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-12 space-y-8 animate-in fade-in duration-700">
-      {/* Header Section (Kept as requested but reduced bold) */}
+      {/* Header Section */}
       <div className="relative overflow-hidden bg-white border-b border-slate-200 px-6 py-8 rounded-b-3xl shadow-sm">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-50" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 max-w-7xl mx-auto">
@@ -161,7 +179,7 @@ export default function GlobalInventoryPage() {
       </div>
 
       <div className="max-w-screen-2xl mx-auto px-6 space-y-6">
-        {/* Quick Stats Grid (Kept as requested but reduced bold) */}
+        {/* Quick Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group overflow-hidden relative">
             <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-blue-50 rounded-full opacity-50 group-hover:scale-125 transition-transform" />
@@ -189,7 +207,7 @@ export default function GlobalInventoryPage() {
                   <Layers className="h-4 w-4 text-emerald-600" />
                 </div>
                 <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                  ออนไลน์ (Active)
+                  ระบบออนไลน์
                 </div>
                 <div className="text-2xl font-bold text-slate-900">
                   {data.filter((i) => i.status === "ACTIVE").length}
@@ -218,7 +236,7 @@ export default function GlobalInventoryPage() {
           </div>
         </div>
 
-        {/* Action Bar (Kept as requested but reduced bold) */}
+        {/* Action Bar */}
         <div className="flex flex-col lg:flex-row gap-3 items-center bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
           <form
             onSubmit={handleSearch}
@@ -228,8 +246,8 @@ export default function GlobalInventoryPage() {
             <Input
               placeholder="ค้นหาตามชื่อทรัพย์สิน, ทำเล, หรือรายละเอียด..."
               className="pl-11 h-11 border-none bg-slate-50/50 focus-visible:ring-blue-500/10 rounded-xl text-sm"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
           </form>
 
@@ -266,7 +284,7 @@ export default function GlobalInventoryPage() {
                     </Label>
                     <Select
                       value={targetTenantId}
-                      onValueChange={setTargetTenantId}
+                      onValueChange={(val) => updateFilters({ tenant: val })}
                     >
                       <SelectTrigger className="h-10 rounded-xl border-slate-200">
                         <SelectValue placeholder="เลือกสาขา" />
@@ -289,7 +307,7 @@ export default function GlobalInventoryPage() {
                       </Label>
                       <Select
                         value={propertyType}
-                        onValueChange={setPropertyType}
+                        onValueChange={(val) => updateFilters({ type: val })}
                       >
                         <SelectTrigger className="h-10 rounded-xl border-slate-200">
                           <SelectValue placeholder="เลือก" />
@@ -307,7 +325,10 @@ export default function GlobalInventoryPage() {
                       <Label className="text-slate-500 font-medium text-xs uppercase tracking-wider">
                         สถานะ
                       </Label>
-                      <Select value={status} onValueChange={setStatus}>
+                      <Select 
+                        value={status} 
+                        onValueChange={(val) => updateFilters({ status: val })}
+                      >
                         <SelectTrigger className="h-10 rounded-xl border-slate-200">
                           <SelectValue placeholder="เลือก" />
                         </SelectTrigger>
@@ -325,7 +346,10 @@ export default function GlobalInventoryPage() {
                     <Label className="text-slate-500 font-medium text-xs uppercase tracking-wider">
                       การขาย/เช่า
                     </Label>
-                    <Select value={listingType} onValueChange={setListingType}>
+                    <Select 
+                      value={listingType} 
+                      onValueChange={(val) => updateFilters({ listing: val })}
+                    >
                       <SelectTrigger className="h-10 rounded-xl border-slate-200">
                         <SelectValue placeholder="ประเภทการดีล" />
                       </SelectTrigger>
@@ -373,7 +397,7 @@ export default function GlobalInventoryPage() {
           </div>
         </div>
 
-        {/* Table Reverted to Original Simple Layout but with Interactive Feedback */}
+        {/* Table View */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <Table>
             <TableHeader>
@@ -463,11 +487,11 @@ export default function GlobalInventoryPage() {
                         <Button
                           asChild
                           variant="ghost"
-                          size="sm"
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg text-xs"
+                          size="icon"
+                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                         >
                           <Link href={`/protected/properties/${item.id}`}>
-                            ดูรายละเอียด
+                            <Eye className="h-4 w-4" />
                           </Link>
                         </Button>
                       </TableCell>
@@ -492,40 +516,13 @@ export default function GlobalInventoryPage() {
             </TableBody>
           </Table>
 
-          {/* Simple Pagination */}
-          <div className="flex items-center justify-between px-6 py-4 bg-slate-50/30 border-t border-slate-100">
-            <div className="text-xs text-slate-500">
-              แสดง{" "}
-              <span className="text-slate-900 font-semibold">
-                {data.length}
-              </span>{" "}
-              จาก <span className="text-slate-900 font-semibold">{count}</span>{" "}
-              รายการ
-            </div>
-
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 rounded-lg border-slate-200"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                <ChevronLeft className="h-4 w-4 text-slate-500" />
-              </Button>
-              <div className="text-xs font-semibold text-slate-700">
-                หน้า {page} / {totalPages || 1}
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 rounded-lg border-slate-200"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages || totalPages === 0}
-              >
-                <ChevronRight className="h-4 w-4 text-slate-500" />
-              </Button>
-            </div>
+          {/* Standardized Pagination Controls */}
+          <div className="px-6 py-4 bg-slate-50/30 border-t border-slate-100">
+            <PaginationControls
+              totalCount={count}
+              pageSize={10}
+              currentPage={page}
+            />
           </div>
         </div>
       </div>
