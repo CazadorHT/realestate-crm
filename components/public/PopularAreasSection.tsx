@@ -8,8 +8,15 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { getProvinceName } from "@/lib/utils/provinces";
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCw } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type ApiPopularArea = {
   popular_area: string;
@@ -37,16 +44,22 @@ export function PopularAreasSection() {
   const [items, setItems] = useState<AreaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Dynamic provinces state
-  const [provinces, setProvinces] = useState<{id: string, display: string}[]>([]);
+  const [provinces, setProvinces] = useState<{ id: string; display: string }[]>(
+    [],
+  );
   const [activeProvIndex, setActiveProvIndex] = useState(0);
-  
+
   const activeProvince = provinces[activeProvIndex]?.id || "กรุงเทพมหานคร";
-  const activeDisplay = provinces[activeProvIndex]?.display || "Bangkok";
-  
+  const activeDisplay = provinces[activeProvIndex]
+    ? getProvinceName(provinces[activeProvIndex].id, language)
+    : "Bangkok";
+
   const nextProvIndex = (activeProvIndex + 1) % (provinces.length || 1);
-  const nextDisplay = provinces[nextProvIndex]?.display || "";
+  const nextDisplay = provinces[nextProvIndex]
+    ? getProvinceName(provinces[nextProvIndex].id, language)
+    : "";
 
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -105,7 +118,9 @@ export function PopularAreasSection() {
           if (data && data.length > 0) {
             setProvinces(data);
             // Default to Bangkok if found, else first
-            const bkkIndex = data.findIndex((p: any) => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร");
+            const bkkIndex = data.findIndex(
+              (p: any) => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร",
+            );
             if (bkkIndex !== -1) setActiveProvIndex(bkkIndex);
           }
         }
@@ -125,9 +140,12 @@ export function PopularAreasSection() {
     async function load() {
       try {
         setIsLoading(true);
-        const url = new URL("/api/public/popular-areas", window.location.origin);
+        const url = new URL(
+          "/api/public/popular-areas",
+          window.location.origin,
+        );
         url.searchParams.set("province", activeProvince);
-        
+
         const res = await fetch(url.toString(), {
           cache: "no-store",
           signal: controller.signal,
@@ -147,7 +165,7 @@ export function PopularAreasSection() {
         );
         setItems(list);
       } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return;
+        if (err instanceof Error && err.name === "AbortError") return;
         setItems([]);
       } finally {
         setIsLoading(false);
@@ -180,108 +198,138 @@ export function PopularAreasSection() {
     <section className="pt-8 bg-white">
       <div className="max-w-screen-2xl mx-auto sm:px-4 md:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 md:gap-12 py-6 mb-4 px-4">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between px-4 ">
           <div
-            className="space-y-4 px-4 md:px-0 flex-1 md:max-w-2xl lg:max-w-6xl"
+            className="space-y-4 px-4 md:px-0 flex-1"
             data-aos="fade-right"
             suppressHydrationWarning
           >
-            {/* Animated Badge with Glow */}
-            <div className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-blue-500/30 to-purple-500/30  px-4 py-2 text-sm font-bold border border-blue-200/50 shadow-sm hover:shadow-md hover:shadow-blue-500/20 transition-all! duration-300! group cursor-default">
+            {/* Animated Badge with Glass Effect */}
+            <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 backdrop-blur-md px-4 py-2 text-sm font-bold border border-blue-200/50 shadow-[0_4px_12px_rgba(59,130,246,0.1)] hover:shadow-[0_4px_20px_rgba(59,130,246,0.2)] transition-all! duration-300! group cursor-default">
               <div className="relative">
                 <MapPin className="h-4 w-4 relative z-10 text-blue-600" />
-                <div className="absolute inset-0 bg-blue-500 blur-md opacity-30 group-hover:opacity-50 transition-opacity!" />
+                <div className="absolute inset-0 bg-blue-400 blur-md opacity-20 group-hover:opacity-40 transition-opacity!" />
               </div>
-              <span className="tracking-wide text-blue-600">
+              <span className="tracking-wide text-blue-700 font-extrabold">
                 {t("home.popular_areas.title")}
               </span>
             </div>
 
-            {/* SEO-Optimized Gradient Heading */}
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
-              {t("home.popular_areas.subtitle")
-                .split("|")
-                .map((part, i) =>
-                  i % 2 === 1 ? (
-                    <span
-                      key={i}
-                      className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-blue-500 to-purple-600"
-                    >
-                      {part}
-                    </span>
-                  ) : (
-                    <span key={i}>{part}</span>
-                  ),
-                )}
-            </h2>
+            {/* SEO-Optimized Gradient Heading - Unified Flow for Responsive support */}
+            <h2 className="font-bold text-slate-900 leading-relaxed flex flex-wrap items-center gap-x-3 xs:gap-x-4 gap-y-2 xs:gap-y-3 max-w-screen-2xl">
+              <span className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl flex flex-wrap items-center gap-x-2 xs:gap-x-3">
+                {t("home.popular_areas.subtitle")
+                  .split("|")
+                  .map((part, i) =>
+                    i % 2 === 1 ? (
+                      <span
+                        key={i}
+                        className="text-transparent inline-block leading-relaxed bg-clip-text bg-linear-to-r from-blue-600 via-blue-500 to-purple-600"
+                      >
+                        {part}
+                      </span>
+                    ) : (
+                      <span key={i} className="inline-block leading-relaxed">
+                        {part}
+                      </span>
+                    ),
+                  )}
+              </span>
 
-            {/* SEO-Enhanced Description with Keywords */}
-            <p className="text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed">
-              {t("home.popular_areas.description")}
-            </p>
-
-            {/* Province Switcher UI: Superscript Design */}
-            {provinces.length > 1 && (
-              <div className="flex items-center gap-6 mt-10 select-none relative">
-                <div className="relative flex flex-col items-start min-w-[200px]">
+              {/* Province Switcher UI: Integrated Inline */}
+              {provinces.length > 1 && (
+                /* 1. ใช้ flex-1 เพื่อให้กินพื้นที่ที่เหลือ 
+                   2. ใช้ min-w-full ในหน้าจอเล็ก (xs/sm) เพื่อบังคับขึ้นบรรทัดใหม่แล้วเต็มจอ 
+                   3. md:min-w-[200px] กลับไปเป็นขนาดปกติในจอใหญ่ 
+                */
+                <div className="flex-1 min-w-full sm:min-w-[250px] md:min-w-[300px] select-none relative my-4  xl:my-0">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeDisplay}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      className="flex flex-col items-start relative pb-4"
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                      }}
+                      className="flex items-center w-full"
                     >
-                      {/* The "Next" province: Faded "Superscript" above active label */}
-                      <button
-                        onClick={() => setActiveProvIndex(nextProvIndex)}
-                        className="absolute -top-4 left-1 text-[11px] font-black tracking-[0.2em] text-slate-300 hover:text-blue-500 transition-all! duration-300 group/sup"
-                      >
-                        <span className="opacity-60 group-hover/sup:opacity-100 transition-opacity!">
-                          {nextDisplay.toUpperCase()}
-                        </span>
-                        <motion.div 
-                          className="w-0 group-hover/sup:w-full h-1px bg-blue-400 mt-0.5"
-                          transition={{ duration: 0.3 }}
-                        />
-                      </button>
-                      
-                      {/* Active Province Heading with Motion Swap Icon */}
-                      <div className="flex items-center gap-5">
-                        <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tighter uppercase leading-none pb-1">
-                          {activeDisplay}
-                        </h3>
-                        
+                      {/* Superscript Label */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => setActiveProvIndex(nextProvIndex)}
+                              className="absolute -top-3 md:-top-5 left-0 text-[9px] xs:text-[11px] font-bold tracking-[0.2em] text-blue-500 hover:text-blue-500 transition-all! duration-300 group/sup max-w-[100px] xs:max-w-[150px] truncate"
+                            >
+                              <span className="opacity-80 group-hover/sup:opacity-100 uppercase">
+                                {nextDisplay}
+                              </span>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>{nextDisplay}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      {/* Active Label & Switcher */}
+                      <div className="flex items-center justify-between xl:justify-start w-full gap-3 group/label cursor-pointer ">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 uppercase leading-tight block truncate transition-all duration-300 shadow-[0_4px_0_0_transparent] group-hover/label:shadow-[0_4px_0_0_#3b82f6]">
+                                {activeDisplay}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent className="text-md ">
+                              {activeDisplay}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
                         <button
                           onClick={() => setActiveProvIndex(nextProvIndex)}
-                          className="p-3.5 rounded-2xl bg-slate-50 hover:bg-blue-600 border border-slate-100 hover:border-blue-500 text-slate-400 hover:text-white transition-all! group-active:scale-95 shadow-xs hover:shadow-lg hover:shadow-blue-500/20"
+                          className="p-1.5 xs:p-2 rounded-lg xs:rounded-xl bg-slate-100 hover:bg-blue-600 text-blue-400 hover:text-white transition-all! group-active:scale-90 shadow-sm hover:shadow-md"
                         >
                           <motion.div
                             animate={{ rotate: activeProvIndex * 180 }}
-                            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 200,
+                              damping: 15,
+                            }}
                           >
-                            <RefreshCw className="h-6 w-6 sm:h-7 sm:w-7" />
+                            <RefreshCw className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
                           </motion.div>
                         </button>
                       </div>
-
-                      {/* Decorative Dynamic Underline */}
-                      <motion.div 
-                        layoutId="provinceUnderline"
-                        initial={false}
-                        className="h-2 bg-blue-600 rounded-full mt-2"
-                        animate={{ width: activeDisplay.length * 25 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      />
                     </motion.div>
                   </AnimatePresence>
                 </div>
-              </div>
-            )}
+              )}
+            </h2>
           </div>
+        </div>
 
-          <div className="px-4 md:px-0 w-full md:w-auto md:shrink-0">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8 px-4! md:px-0">
+          {" "}
+          {/* min-w-0 สำคัญมากเพื่อให้ truncate ทำงาน */}
+          {/* Subtitle Part 2: Separated line as requested */}
+          <div
+            className="flex flex-col px-4 md:px-0 "
+            data-aos="fade-right"
+            suppressHydrationWarning
+          >
+            <h2 className="text-base xs:text-base sm:text-xl md:text-2xl lg:text-3xl font-medium text-slate-600 leading-relaxed">
+              {t("home.popular_areas.subtitle-2")}
+            </h2>
+            {/* SEO-Enhanced Description with Keywords */}
+            <p className="text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed">
+              {t("home.popular_areas.description")}
+            </p>
+          </div>
+          <div className=" w-full md:w-auto md:shrink-0 px-4 md:px-0 ">
             <button
               onClick={() => router.push("/?type=ALL#latest-properties")}
               data-aos="fade-left"
@@ -393,7 +441,9 @@ export function PopularAreasSection() {
                         {t("property_listing.found_suffix")}
                       </p>
                       <div className="flex items-center gap-1 text-white text-[10px] sm:text-xs font-semibold uppercase tracking-wider shrink-0">
-                        <span className="hidden sm:inline truncate max-w-[80px]">{t("home.popular_areas.explore")}</span>
+                        <span className="hidden sm:inline truncate max-w-[80px]">
+                          {t("home.popular_areas.explore")}
+                        </span>
                         <ArrowRight className="h-3 w-3 shrink-0 transition-transform! lg:group-hover:translate-x-1" />
                       </div>
                     </div>

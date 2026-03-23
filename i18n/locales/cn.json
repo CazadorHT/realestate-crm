@@ -269,7 +269,8 @@
     },
     "popular_areas": {
       "title": "热门区域",
-      "subtitle": "深入了解|曼谷宜居社区|",
+      "subtitle": "深入了解 |宜居社区| 在",
+      "subtitle-2": "寻找 住宅 · 公寓 · 办公楼 买卖 · 租赁",
       "description": "集合靠近公共交通和设施的高潜力区域优质房源。",
       "explore": "探索此区域",
       "no_data": "暂无区域数据"

@@ -264,7 +264,8 @@
     },
     "popular_areas": {
       "title": "Popular Areas",
-      "subtitle": "Insight into |Great Neighborhoods| in Bangkok",
+      "subtitle": "Insight into |Great Neighborhoods| in ",
+      "subtitle-2": "for House, Condo, Office, Buy · Sell · Rent",
       "description": "Collection of quality properties in high-potential areas near transit and amenities.",
       "explore": "Explore this area",
       "no_data": "No area data found"
@@ -341,7 +342,7 @@
     "subtitle": "{siteName} - Quality Real Estate Network"
   },
   "property_listing": {
-    "title": "Houses, Condos, Offices | Buy · Sell · Rent",
+    "title": "House, Condo, Office | Buy · Sell · Rent",
     "description": "Verified listings of all property types. 100% data verified.",
     "category_label": "Category:",
     "empty_state": "No properties found in this category - try another or see 'All'",
