@@ -1,6 +1,6 @@
-import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { CancelButton } from "@/features/properties/btn-cancel";
+import { Loader2 } from "lucide-react";
 
 interface PropertyFormNavigationProps {
   currentStep: number;
@@ -11,6 +11,7 @@ interface PropertyFormNavigationProps {
   onBack: () => void;
   onNext: () => void;
   onSubmit: () => void;
+  isSubmitting?: boolean;
 }
 
 export function PropertyFormNavigation({
@@ -22,6 +23,7 @@ export function PropertyFormNavigation({
   onBack,
   onNext,
   onSubmit,
+  isSubmitting,
 }: PropertyFormNavigationProps) {
   return (
     <div className="mt-6 sm:mt-12">
@@ -65,9 +67,12 @@ export function PropertyFormNavigation({
               aria-label={
                 mode === "create" ? "ยืนยันสร้างประกาศ" : "บันทึกการแก้ไข"
               }
-              disabled={mode === "edit" && !isDirty}
+              disabled={(mode === "edit" && !isDirty) || isSubmitting}
               className="h-12 sm:h-14 px-8 sm:px-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 hover:-translate-y-1 text-white shadow-lg shadow-emerald-100 font-bold text-base sm:text-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex-[1.5] sm:flex-none"
             >
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : null}
               {mode === "create" ? "ยืนยัน" : "บันทึก"}
               <span className="hidden sm:inline ml-1">
                 {mode === "create" ? "สร้างประกาศ" : "การแก้ไข"}

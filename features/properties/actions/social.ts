@@ -183,7 +183,7 @@ export async function postPropertyToMetaAction(
       .replace(/{{agent_phone}}/g, primaryAgent?.phone || "")
       .replace(/{{agent_line}}/g, primaryAgent?.line_id || "");
 
-    // ดึงรูปภาพทั้งหมด (สูงสุด 20 รูปตามที่ Meta กำหนด)
+    // ดึงรูปภาพทั้งหมด (สูงสุด 20 รูปสำหรับโพสต์โซเชียล)
     const images =
       property.property_images
         ?.map((img: any) => img.image_url)

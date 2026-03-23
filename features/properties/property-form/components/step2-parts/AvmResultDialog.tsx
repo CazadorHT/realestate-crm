@@ -59,7 +59,7 @@ export function AvmResultDialog({
       values.property_type !== "LAND"
     ) {
       setError(
-        "❌ กรุณากลับไประบุ 'ขนาดพื้นที่' (Step 1) เพื่อให้ AI ประเมินราคาได้ใกล้เคียงที่สุด",
+        "❌ กรุณากลับไประบุ 'ขนาดพื้นที่' (Step 2) เพื่อให้ AI ประเมินราคาได้ใกล้เคียงที่สุด",
       );
       return;
     }

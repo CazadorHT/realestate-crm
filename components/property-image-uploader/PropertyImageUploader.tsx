@@ -31,6 +31,16 @@ import { ImageItem, PropertyImageUploaderProps } from "./types";
 import { IMAGE_UPLOAD_POLICY } from "./constants";
 import { normalizeImageFileName } from "./utils";
 import { SortableImageItem } from "./SortableImageItem";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, Info } from "lucide-react";
 
 export function PropertyImageUploader({
   sessionId,
@@ -42,6 +52,13 @@ export function PropertyImageUploader({
   disabled = false,
   cleanupOnUnmount = true,
 }: PropertyImageUploaderProps) {
+  const [errorDialog, setErrorDialog] = useState<{
+    type: "warning" | "error";
+    title: string;
+    description: string;
+    errors?: string[];
+  } | null>(null);
+
   const [images, setImages] = useState<ImageItem[]>(() => {
     if (initialImages && initialImages.length > 0) {
       const {
@@ -192,7 +209,11 @@ export function PropertyImageUploader({
       // Validate file count
       const remainingSlots = maxFiles - images.length;
       if (acceptedFiles.length > remainingSlots) {
-        toast.error(`สามารถเพิ่มได้อีกสูงสุด ${remainingSlots} รูป`);
+        setErrorDialog({
+          type: "warning",
+          title: "จำนวนรูปเกินขีดจำกัด",
+          description: `คุณสามารถเพิ่มได้อีกสูงสุด ${remainingSlots} รูป (สูงสุด ${maxFiles} รูปต่อประกาศ) ระบบจะเลือกเฉพาะ ${remainingSlots} รูปแรกให้โดยอัตโนมัติ`,
+        });
         acceptedFiles = acceptedFiles.slice(0, remainingSlots);
       }
 
@@ -200,6 +221,8 @@ export function PropertyImageUploader({
 
       // Step 1: Create immediate preview items (Non-blocking)
       isUploadingRef.current = true;
+      const uploadErrors: string[] = [];
+
       const newItems: ImageItem[] = acceptedFiles.map((file, index) => ({
         id: `new-${Date.now()}-${index}`,
         storage_path: "",
@@ -272,7 +295,7 @@ export function PropertyImageUploader({
         } catch (error) {
           console.error(`Error processing ${file.name}:`, error);
           const msg = error instanceof Error ? error.message : "ล้มเหลว";
-          toast.error(`${file.name}: ${msg}`);
+          uploadErrors.push(`${file.name}: ${msg}`);
 
           // Remove item and revoke its blob
           if (item.preview_url?.startsWith("blob:")) {
@@ -282,6 +305,15 @@ export function PropertyImageUploader({
           }
           setImages((prev) => prev.filter((img) => img.id !== item.id));
         }
+      }
+
+      if (uploadErrors.length > 0) {
+        setErrorDialog({
+          type: "error",
+          title: "พบข้อผิดพลาดขณะอัปโหลด",
+          description: "บางไฟล์ไม่สามารถอัปโหลดได้ กรุณาตรวจสอบ:",
+          errors: uploadErrors,
+        });
       }
 
       isUploadingRef.current = false;
@@ -477,6 +509,62 @@ export function PropertyImageUploader({
           <p className="text-xs sm:text-sm font-medium">ยังไม่มีรูปภาพ</p>
         </div>
       )}
+
+      <Dialog
+        open={!!errorDialog}
+        onOpenChange={(open) => !open && setErrorDialog(null)}
+      >
+        <DialogContent className="sm:max-w-md bg-white border-0 shadow-xl rounded-2xl">
+          <DialogHeader>
+            <DialogTitle
+              className={cn(
+                "flex items-center gap-3 text-xl",
+                errorDialog?.type === "error"
+                  ? "text-red-600"
+                  : "text-amber-600",
+              )}
+            >
+              <div
+                className={cn(
+                  "p-2 rounded-full",
+                  errorDialog?.type === "error"
+                    ? "bg-red-50"
+                    : "bg-amber-50",
+                )}
+              >
+                {errorDialog?.type === "error" ? (
+                  <AlertTriangle className="w-6 h-6" />
+                ) : (
+                  <Info className="w-6 h-6" />
+                )}
+              </div>
+              {errorDialog?.title}
+            </DialogTitle>
+            <DialogDescription className="text-base text-slate-600 pt-2">
+              {errorDialog?.description}
+            </DialogDescription>
+          </DialogHeader>
+
+          {errorDialog?.errors && errorDialog.errors.length > 0 && (
+            <div className="max-h-[200px] overflow-y-auto bg-slate-50 rounded-xl p-3 border border-slate-100 mt-2">
+              <ul className="list-disc list-inside space-y-1 text-sm text-slate-500">
+                {errorDialog.errors.map((err, i) => (
+                  <li key={i}>{err}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <DialogFooter className="mt-4">
+            <Button
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-11"
+              onClick={() => setErrorDialog(null)}
+            >
+              ตกลง
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

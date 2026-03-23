@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 export const PROPERTY_IMAGES_BUCKET = "property-images";
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
 export const UPLOAD_RATE_WINDOW_MS = 60_000; // 1 minute
-export const UPLOAD_RATE_MAX = 20; // uploads per window per user
+export const UPLOAD_RATE_MAX = 40; // uploads per window per user
 export const SESSION_ID_RE = /^[a-zA-Z0-9_-]{8,128}$/;
 export const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

@@ -174,6 +174,7 @@ export const TRANSIT_TYPE_ENUM = [
   "SRT",
   "SRT2",
   "SRT3",
+  "MRT3",
   "OTHER",
 ] as const;
 export type TransitType = (typeof TRANSIT_TYPE_ENUM)[number];
@@ -186,6 +187,7 @@ export const TRANSIT_TYPE_LABELS: Record<TransitType, string> = {
   SRT2: "รถไฟฟ้า (สายสีส้ม)",
   SRT3: "รถไฟฟ้า (สายสีชมพู)",
   MRT2: "รถไฟฟ้า (สายสีม่วง)",
+  MRT3: "รถไฟฟ้า (สายสีเหลือง)",
   OTHER: "อื่นๆ",
 };
 
@@ -208,6 +210,7 @@ export const TRANSIT_TYPE_STYLES: Record<
     icon: "text-orange-500",
   },
   SRT3: { bg: "bg-pink-50", text: "text-pink-700", icon: "text-pink-500" },
+  MRT3: { bg: "bg-yellow-50", text: "text-yellow-700", icon: "text-yellow-500" },
   OTHER: { bg: "bg-slate-50", text: "text-slate-700", icon: "text-slate-500" },
 };
 

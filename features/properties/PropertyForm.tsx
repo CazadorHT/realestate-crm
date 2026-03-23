@@ -99,6 +99,7 @@ export function PropertyForm({
   const [newAreaCn, setNewAreaCn] = React.useState("");
   const [isAddingArea, setIsAddingArea] = React.useState(false);
   const [isQuickInfoOpen, setIsQuickInfoOpen] = React.useState(false);
+  const [isActuallySubmitting, setIsActuallySubmitting] = React.useState(false);
 
   const uploadSessionId = useRef<string>(
     typeof crypto !== "undefined" ? crypto.randomUUID() : "fallback",
@@ -295,9 +296,13 @@ export function PropertyForm({
 
   // === SUBMIT ===
   const onSubmit = async (values: PropertyFormValues) => {
+    setIsActuallySubmitting(true);
     try {
       const canProceed = await checkDuplicates(values);
-      if (!canProceed) return;
+      if (!canProceed) {
+        setIsActuallySubmitting(false);
+        return;
+      }
 
       let result: CreatePropertyResult;
 
@@ -333,6 +338,8 @@ export function PropertyForm({
     } catch (e: any) {
       console.error("Error submitting property form:", e);
       toast.error(e.message || "เกิดข้อผิดพลาดไม่ทราบสาเหตุ");
+    } finally {
+      setIsActuallySubmitting(false);
     }
   };
 
@@ -340,6 +347,7 @@ export function PropertyForm({
     setShowDuplicateDialog(false);
     if (!pendingSubmit) return;
 
+    setIsActuallySubmitting(true);
     try {
       const result: CreatePropertyResult = await createPropertyAction(
         pendingSubmit,
@@ -361,6 +369,8 @@ export function PropertyForm({
       }
     } catch (e: any) {
       toast.error(e.message);
+    } finally {
+      setIsActuallySubmitting(false);
     }
 
     setPendingSubmit(null);
@@ -449,6 +459,7 @@ export function PropertyForm({
         title={defaultValues?.title}
         uploadSessionId={uploadSessionId}
         isDirty={form.formState.isDirty}
+        isSubmitting={isActuallySubmitting}
         onSubmit={submitNow}
       />
 
@@ -528,6 +539,7 @@ export function PropertyForm({
             mode={mode}
             uploadSessionId={uploadSessionId}
             isDirty={form.formState.isDirty}
+            isSubmitting={isActuallySubmitting}
             onBack={handleBack}
             onNext={handleNext}
             onSubmit={submitNow}
@@ -571,7 +583,7 @@ export function PropertyForm({
             <div className="flex flex-col gap-3 py-4">
               <Button
                 variant="outline"
-                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200  rounded-xl group:hover:text-white group:hover:bg-blue-600!"
+                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200  rounded-xl group:hover:text-white group:hover:bg-blue-600 group:hover:border-blue-600 cursor-pointer"
                 onClick={() => {
                   if (successData?.slug) {
                     window.open(`/properties/${successData.slug}`, "_blank");

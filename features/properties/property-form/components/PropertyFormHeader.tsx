@@ -1,12 +1,13 @@
-import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { CancelButton } from "@/features/properties/btn-cancel";
+import { Loader2 } from "lucide-react";
 
 interface PropertyFormHeaderProps {
   mode: "create" | "edit";
   title?: string;
   uploadSessionId: string;
   isDirty: boolean;
+  isSubmitting?: boolean;
   onSubmit: () => void;
 }
 
@@ -15,6 +16,7 @@ export function PropertyFormHeader({
   title,
   uploadSessionId,
   isDirty,
+  isSubmitting,
   onSubmit,
 }: PropertyFormHeaderProps) {
   return (
@@ -40,9 +42,12 @@ export function PropertyFormHeader({
           {mode === "edit" && (
             <Button
               onClick={onSubmit}
-              disabled={!isDirty}
+              disabled={!isDirty || isSubmitting}
               className="bg-emerald-600 hover:bg-emerald-700 text-white h-10 sm:h-14 px-4 sm:px-10 rounded-xl font-medium shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none text-sm sm:text-base"
             >
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               บันทึก<span className="hidden sm:inline">การแก้ไข</span>
             </Button>
           )}

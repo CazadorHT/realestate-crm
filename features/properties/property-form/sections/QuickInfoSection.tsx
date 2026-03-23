@@ -114,9 +114,9 @@ export function QuickInfoSection({
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="space-y-6 lg:col-span-3">
-          {/* Main Thai Title */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Main Thai Title - Full Width */}
+        <div className="md:col-span-2 lg:col-span-4">
           <FormField
             control={form.control}
             name="title"
@@ -171,51 +171,56 @@ export function QuickInfoSection({
               </FormItem>
             )}
           />
-
-          {/* Multilingual Titles */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="title_en"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    <Languages className="w-3 h-3" /> Title (English)
-                  </label>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      className="h-14 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md"
-                      placeholder="English title..."
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="title_cn"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    <Languages className="w-3 h-3" /> 物业名称 (Chinese)
-                  </label>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      className="h-14 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md"
-                      placeholder="中文名称..."
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
         </div>
-        <div className="space-y-6 md:col-span-1 ">
-          {/* province (New inclusion in Step 1) */}
+
+        {/* Title (English) */}
+        <div className="md:col-span-1 lg:col-span-2">
+          <FormField
+            control={form.control}
+            name="title_en"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Languages className="w-3 h-3" /> Title (English)
+                </label>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className="h-14 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md"
+                    placeholder="English title..."
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* 物业名称 (Chinese) */}
+        <div className="md:col-span-1 lg:col-span-2">
+          <FormField
+            control={form.control}
+            name="title_cn"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Languages className="w-3 h-3" /> 物业名称 (Chinese)
+                </label>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className="h-14 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md"
+                    placeholder="中文名称..."
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* province */}
+        <div className="md:col-span-1 lg:col-span-2">
           <FormField
             control={form.control}
             name="province"
@@ -266,8 +271,10 @@ export function QuickInfoSection({
               </FormItem>
             )}
           />
+        </div>
 
-          {/* popular_area (ผูกกับ RHF ตรง ๆ) */}
+        {/* popular_area */}
+        <div className="md:col-span-1 lg:col-span-2">
           <FormField
             control={form.control}
             name="popular_area"
@@ -322,8 +329,9 @@ export function QuickInfoSection({
             )}
           />
         </div>
-        <div className="space-y-6 md:col-span-4 flex flex-col">
-          {/* เพิ่มย่านใหม่ */}
+
+        {/* เพิ่มย่านใหม่ - Full Width Bottom */}
+        <div className="md:col-span-2 lg:col-span-4 flex flex-col">
           <div className="flex-1 flex flex-col justify-end space-y-4 pt-4 border-t border-slate-100">
             {!showAddArea ? (
               <div className="h-10 flex items-center">
