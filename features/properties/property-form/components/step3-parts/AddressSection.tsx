@@ -17,6 +17,7 @@ import {
   FormControl,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -111,7 +112,7 @@ export function AddressSection({ form }: AddressSectionProps) {
 
       <CardContent className="pt-6 px-4 sm:px-6">
         {/* Address Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {/* Province */}
           <FormField
             control={form.control}
@@ -148,6 +149,9 @@ export function AddressSection({ form }: AddressSectionProps) {
                     ))}
                   </SelectContent>
                 </Select>
+                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
+                  เลือกจังหวัดที่ตั้งของทรัพย์สิน
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -186,6 +190,9 @@ export function AddressSection({ form }: AddressSectionProps) {
                     ))}
                   </SelectContent>
                 </Select>
+                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
+                  เลือกเขตหรืออำเภอ
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -229,6 +236,9 @@ export function AddressSection({ form }: AddressSectionProps) {
                     ))}
                   </SelectContent>
                 </Select>
+                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
+                  เลือกแขวงหรือตำบล ระบบจะเติมรหัสไปรษณีย์ให้อัตโนมัติ
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -253,6 +263,9 @@ export function AddressSection({ form }: AddressSectionProps) {
                     className="rounded-lg bg-slate-100 border-slate-200 font-medium px-4 shadow-sm text-xs cursor-not-allowed text-left"
                   />
                 </FormControl>
+                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
+                  รหัสไปรษณีย์จะถูกเติมตามตำบลที่เลือก
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -276,6 +289,9 @@ export function AddressSection({ form }: AddressSectionProps) {
                     className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
                   />
                 </FormControl>
+                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
+                  บ้านเลขที่, ชื่อหมู่บ้าน หรือชื่อโครงการ (ถ้ามี)
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -299,6 +315,9 @@ export function AddressSection({ form }: AddressSectionProps) {
                     className="h-11 rounded-lg border-slate-200 bg-slate-50/50 px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all"
                   />
                 </FormControl>
+                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
+                  ชื่อโครงการในภาษาอังกฤษ เพื่อรองรับกลุ่มชาวต่างชาติ
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -322,6 +341,9 @@ export function AddressSection({ form }: AddressSectionProps) {
                     className="h-11 rounded-lg border-slate-200 bg-slate-50/50 px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all"
                   />
                 </FormControl>
+                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
+                  ชื่อโครงการในภาษาจีน เพื่อรองรับกลุ่มชาวจีน
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -345,6 +367,9 @@ export function AddressSection({ form }: AddressSectionProps) {
                     className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
                   />
                 </FormControl>
+                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1 leading-relaxed">
+                   google map ตัวอย่าง "https://maps.app.goo.gl/....."
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
