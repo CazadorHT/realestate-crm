@@ -1,31 +1,72 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "edge";
+
+// Cache font data across requests in the same execution unit
+let cachedFont: ArrayBuffer | null = null;
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
 
     // Get parameters from URL
+    const id = searchParams.get("id");
     const title = searchParams.get("title") || "Real Estate Property";
-    const price = searchParams.get("price") || "";
+    const rawPrice = searchParams.get("price") || "";
     const type = searchParams.get("type") || "Property";
     const location = searchParams.get("location") || "";
-    const imageUrl = searchParams.get("img");
-    const lang = searchParams.get("lang") || "th";
 
-    // Fetch Thai Font (Kanit) for proper rendering
-    let fontData: ArrayBuffer | undefined;
-    try {
-      const fontRes = await fetch(
-        new URL("https://github.com/google/fonts/raw/main/ofl/kanit/Kanit-Bold.ttf")
+    // 1. Fetch Property Image from Supabase if ID is provided
+    let imageUrl = null;
+    if (id) {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
       );
-      if (fontRes.ok) {
-        fontData = await fontRes.arrayBuffer();
+
+      // Get the cover image or the first image
+      const { data: images } = await supabase
+        .from("property_images")
+        .select("image_url, storage_path, is_cover")
+        .eq("property_id", id)
+        .order("is_cover", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .limit(1);
+
+      if (images && images.length > 0) {
+        imageUrl = images[0].image_url;
+        
+        // Ensure absolute URL
+        if (imageUrl && !imageUrl.startsWith("http")) {
+          const { data: { publicUrl } } = supabase.storage
+            .from("property-images")
+            .getPublicUrl(images[0].storage_path);
+          imageUrl = publicUrl;
+        }
       }
-    } catch (e) {
-      console.error("Font fetch failed:", e);
+    }
+
+    // 2. Format Price (re-add symbols)
+    let displayPrice = rawPrice;
+    if (rawPrice && !rawPrice.includes("฿")) {
+      // Re-add ฿ if it was removed for URL safety
+      displayPrice = `฿ ${rawPrice}`;
+    }
+
+    // 3. Fetch Thai Font (Kanit) for proper rendering
+    if (!cachedFont) {
+      try {
+        const fontRes = await fetch(
+          new URL("https://github.com/google/fonts/raw/main/ofl/kanit/Kanit-Bold.ttf")
+        );
+        if (fontRes.ok) {
+          cachedFont = await fontRes.arrayBuffer();
+        }
+      } catch (e) {
+        console.error("Font fetch failed:", e);
+      }
     }
 
     // Standard colors
@@ -170,15 +211,16 @@ export async function GET(req: NextRequest) {
                 width: "100%",
               }}
             >
-              {price && (
+              {displayPrice && (
                 <div
                   style={{
-                    fontSize: "60px",
+                    fontSize: displayPrice.length > 20 ? "42px" : "60px",
                     fontWeight: "bold",
                     color: "#fbbf24", // amber-400
+                    maxWidth: "700px",
                   }}
                 >
-                  {price}
+                  {displayPrice}
                 </div>
               )}
 
@@ -216,19 +258,20 @@ export async function GET(req: NextRequest) {
       {
         width: 1200,
         height: 630,
-        ...(fontData ? {
-          fonts: [
-            {
-              name: "Kanit",
-              data: fontData,
-              style: "normal",
-            },
-          ],
-        } : {}),
+        fonts: cachedFont
+          ? [
+              {
+                name: "Kanit",
+                data: cachedFont,
+                style: "normal",
+                weight: 700,
+              },
+            ]
+          : [],
       }
     );
   } catch (e: any) {
-    console.error(e.message);
+    console.error("OG Generation Error:", e.message);
     return new Response(`Failed to generate the image`, {
       status: 500,
     });

@@ -202,6 +202,30 @@ const SEO_LABELS: Record<string, Record<string, string>> = {
 const TRANSLIT_MAP: Record<string, string> = {
   // Actions Special Cases
   "ขายและเช่า": "sale-rent",
+  "ให้เช่า": "rent",
+  "ขาย": "sale",
+  // Common Property Terms
+  "ห้องนอน": "bedroom",
+  "ห้องน้ำ": "bathroom",
+  "ตรม": "sqm",
+  "ตร.ม.": "sqm",
+  "ตารางเมตร": "sqm",
+  "เมตร": "m",
+  "กม": "km",
+  "กิโลเมตร": "km",
+  "ชั้น": "floor",
+  "ที่ดิน": "land",
+  "บ้าน": "house",
+  "คอนโด": "condo",
+  "อพาร์ทเม้น": "apartment",
+  "สวย": "prime",
+  "หรู": "luxury",
+  "ถูก": "cheap",
+  "ลดราคา": "sale-off",
+  "ติดรถไฟฟ้า": "near-transit",
+  "ใกล้": "near",
+  "ใหม่": "new",
+  "พร้อมอยู่": "ready-to-move-in",
   // Locations (Common - these aren't in SEO_LABELS yet)
   "กรุงเทพ": "bangkok",
   "กรุงเทพมหานคร": "bangkok",
@@ -245,48 +269,64 @@ export function generatePropertySlug(
   data: PropertyDataForSEO,
   language: string = "th",
 ): string {
-  const lang = (
-    language === "th" || language === "en" || language === "cn"
-      ? language
-      : "th"
-  ) as "th" | "en" | "cn";
+  const getWords = (s: string) => s ? s.toLowerCase().split(/[\s-]+/).filter(Boolean) : [];
+  const uniqueWords = new Set<string>();
+  const addWords = (s: string | undefined | null) => {
+    if (!s) return;
+    getWords(s).forEach(w => uniqueWords.add(w));
+  };
 
-  // 1. Action (Sale/Rent) - Prefer English labels for URL
-  const actionLabel = data.listing_type === "RENT" ? "rent" : data.listing_type === "SALE" ? "sale" : "sale-rent";
+  // 1. Action & Type
+  addWords(data.listing_type === "RENT" ? "rent" : data.listing_type === "SALE" ? "sale" : "sale-rent");
+  addWords(data.property_type ? SEO_LABELS[data.property_type]?.["en"] : "property");
 
-  // 2. Property Type - Prefer English
-  const typeLabel = data.property_type ? SEO_LABELS[data.property_type]?.["en"]?.toLowerCase() || "property" : "property";
+  // 2. Title / Project
+  const titlePart = data.title_en || transliterate(data.title);
+  addWords(titlePart.split(/[\s-]+/).slice(0, 5).join("-"));
 
-  // 3. Title - Strategic choice: 
-  // - If English title exists, use it (CLEANEST)
-  // - If not, use Thai title but transliterate common terms
-  let titlePart = data.title_en || transliterate(data.title);
+  // 3. Room Specs
+  if (data.bedrooms) addWords(`${data.bedrooms}-bedroom`);
+  if (data.bathrooms) addWords(`${data.bathrooms}-bathroom`);
   
-  // Limit title part to 5 words / components to keep it short
-  titlePart = titlePart.split(/[\s-]+/).slice(0, 6).join("-");
+  // 4. Size Specs
+  if (data.size_sqm) addWords(`${data.size_sqm}-sqm`);
+  
+  // 5. Special Flags (Higher Priority for SEO)
+  if (data.is_pet_friendly) addWords("pet-friendly");
+  if (data.is_corner_unit) addWords("corner-unit");
+  if (data.is_renovated) addWords("renovated");
+  if (data.is_fully_furnished) addWords("fully-furnished");
+  if (data.is_foreigner_quota) addWords("foreigner-quota");
+  if (data.is_hot_sale) addWords("hot-sale");
 
-  // 4. Location - Prioritize Popular Area (Brand/Zone) over District (Admin)
-  const popularAreaPart = data.popular_area_en || transliterate(data.popular_area || "");
-  const districtPart = data.district_en || transliterate(data.district || "");
-  const provincePart = data.province_en || transliterate(data.province || "");
+  // 6. Transit Station & Nearby Places
+  if (data.near_transit || data.transit_station_name) {
+    const station = data.transit_station_name_en || transliterate(data.transit_station_name || "");
+    if (station) {
+      addWords("near-bts-mrt");
+      addWords(station);
+    }
+  }
+  if (data.nearby_places && data.nearby_places.length > 0) {
+    const firstPlace = data.nearby_places[0];
+    const placeName = firstPlace.name_en || transliterate(firstPlace.name || "");
+    if (placeName) {
+      addWords("near");
+      addWords(placeName);
+    }
+  }
 
-  const parts = [
-    actionLabel,
-    typeLabel,
-    titlePart,
-    popularAreaPart, // Sukhumvit (HIGHEST PRIORITY)
-    districtPart !== popularAreaPart ? districtPart : null, // Wattana (SECONDARY)
-    (provincePart !== districtPart && provincePart !== popularAreaPart) ? provincePart : null, 
-  ].filter(Boolean);
+  // 7. Detailed Location Hierarchy
+  addWords(data.popular_area_en || transliterate(data.popular_area || ""));
+  addWords(data.subdistrict_en || transliterate(data.subdistrict || ""));
+  addWords(data.district_en || transliterate(data.district || ""));
+  addWords(data.province_en || transliterate(data.province || ""));
 
-  const rawString = parts.join("-");
-
-  // Final cleaning: 
-  // - Strictly ASCII-only (removes Thai characters to prevent URL expansion)
-  // - This ensures the URL remains short and compatible with all mobile apps/LINE
-  const cleaned = rawString
-    .replace(/[^\x00-\x7F]/g, "") // Remove all non-ASCII
-    .replace(/[^a-zA-Z0-9\s_-]/g, " ") // Remove special chars
+  // Final assembly
+  const baseSlug = Array.from(uniqueWords)
+    .join("-")
+    .replace(/[^\x00-\x7F]/g, "") // Strictly ASCII
+    .replace(/[^a-zA-Z0-9\s_-]/g, " ")
     .trim()
     .toLowerCase()
     .replace(/[\s/_]+/g, "-")
@@ -294,8 +334,8 @@ export function generatePropertySlug(
 
   const suffix = Date.now().toString(36).slice(-4);
   
-  // Hard limit: 80 characters for the main part + suffix
-  return `${cleaned.slice(0, 80)}-${suffix}`;
+  // High limit: 140 characters to allow more keywords while staying safe
+  return `${baseSlug.slice(0, 140)}-${suffix}`;
 }
 
 /**

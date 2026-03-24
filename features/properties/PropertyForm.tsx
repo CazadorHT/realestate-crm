@@ -325,8 +325,15 @@ export function PropertyForm({
         );
         clearDraft();
         setPersistImages(true);
-        form.reset(EMPTY_VALUES);
-        // router.push("/protected/properties");
+
+        // Only reset to empty for create mode. 
+        // For edit mode, reset to current values to mark form as "clean" (not dirty)
+        if (mode === "create") {
+          form.reset(EMPTY_VALUES);
+        } else {
+          form.reset(values);
+        }
+
         setSuccessData({
           id: propertyId,
           slug: result.slug,
@@ -357,8 +364,14 @@ export function PropertyForm({
       if (result.success) {
         toast.success("เพิ่มทรัพย์ใหม่สำเร็จ (ยืนยันข้อมูลซ้ำ)");
         setPersistImages(true);
-        form.reset(EMPTY_VALUES);
-        // router.push("/protected/properties");
+        
+        // Match the same logic as onSubmit to prevent clearing in edit mode (though duplicate is mostly create-only)
+        if (mode === "create") {
+          form.reset(EMPTY_VALUES);
+        } else if (pendingSubmit) {
+          form.reset(pendingSubmit);
+        }
+
         setSuccessData({
           id: result.propertyId!,
           slug: result.slug,

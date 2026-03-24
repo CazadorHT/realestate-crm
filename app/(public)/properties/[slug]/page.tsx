@@ -587,7 +587,7 @@ export async function generateMetadata(props: {
   let query = supabase
     .from("properties")
     .select(
-      "title, title_en, title_cn, description, description_en, description_cn, slug, listing_type, property_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, size_sqm, province, district, subdistrict, popular_area, property_images(image_url, storage_path, is_cover)",
+      "id, title, title_en, title_cn, description, description_en, description_cn, slug, listing_type, property_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, size_sqm, province, district, subdistrict, popular_area, property_images(image_url, storage_path, is_cover)",
     );
 
   if (UUID_RE.test(decodedSlug)) {
@@ -661,10 +661,9 @@ export async function generateMetadata(props: {
 
   const canonicalUrl = `${siteConfig.url}/properties/${encodeURIComponent(data.slug || slug)}`;
   const ogUrl = new URL(`${siteConfig.url}/api/og/property`);
-  // Truncate title for OG param safety (max 60 chars) and clean up branding for OG
-  // We split by both " - " and " | " to remove siteConfig.name if present
+  // Truncate title for OG param safety (max 40 chars to keep the total URL short for LINE)
   const ogTitle = pageTitle.split(" - ")[0].split(" | ")[0];
-  ogUrl.searchParams.set("title", ogTitle.length > 60 ? ogTitle.slice(0, 57) + "..." : ogTitle);
+  ogUrl.searchParams.set("title", ogTitle.length > 40 ? ogTitle.slice(0, 37) + "..." : ogTitle);
   
   // Logic to handle Sale + Rent and find the most relevant price
   let displayPrice = "";
@@ -681,10 +680,12 @@ export async function generateMetadata(props: {
     else if (sp) displayPrice = `฿ ${sp.toLocaleString()}`;
     else if (rp) displayPrice = `฿ ${rp.toLocaleString()}/mo`;
   }
-  ogUrl.searchParams.set("price", displayPrice);
+  // Sanitize price for OG param safety (remove symbols, the API will re-add them)
+  const cleanPrice = displayPrice.replace(/[฿|,]/g, "").trim();
+  ogUrl.searchParams.set("price", cleanPrice);
   ogUrl.searchParams.set("type", data.property_type ? (t(`property_types.${data.property_type.toLowerCase()}`) || data.property_type) : "");
   ogUrl.searchParams.set("location", data.popular_area || data.district || "");
-  ogUrl.searchParams.set("img", COVER_IMAGE);
+  ogUrl.searchParams.set("id", data.id); // Send ID instead of full image URL to keep OG URL short
   ogUrl.searchParams.set("lang", language);
 
   const DYNAMIC_OG_IMAGE = ogUrl.toString();
@@ -705,7 +706,14 @@ export async function generateMetadata(props: {
     openGraph: {
       title: pageTitle,
       description: pageDesc,
-      images: [{ url: DYNAMIC_OG_IMAGE, width: 1200, height: 630 }],
+      images: [
+        {
+          url: DYNAMIC_OG_IMAGE,
+          width: 1200,
+          height: 630,
+          alt: pageTitle,
+        },
+      ],
       url: canonicalUrl,
       type: "website",
       siteName: siteConfig.name,
