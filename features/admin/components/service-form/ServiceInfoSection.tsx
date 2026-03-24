@@ -1,0 +1,201 @@
+"use client";
+
+import React from "react";
+import { UseFormReturn } from "react-hook-form";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Tag, Sparkles, Loader2, Languages, DollarSign, Link as LinkIcon } from "lucide-react";
+
+interface ServiceInfoSectionProps {
+  form: UseFormReturn<any>;
+  isTranslating: boolean;
+  onTranslate: () => void;
+  onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+export function ServiceInfoSection({
+  form,
+  isTranslating,
+  onTranslate,
+  onTitleChange,
+}: ServiceInfoSectionProps) {
+  return (
+    <div className="group bg-white rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      <div className="px-6 py-4 bg-linear-to-r from-blue-50 to-indigo-50 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-xl">
+            <Sparkles className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-slate-800">ข้อมูลบริการ</h3>
+            <p className="text-xs text-slate-500">กรอกรายละเอียดพื้นฐาน</p>
+          </div>
+        </div>
+      </div>
+      <div className="p-6 space-y-5">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center justify-between">
+                <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-slate-400" />
+                  ชื่อบริการ (ไทย)
+                </FormLabel>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onTranslate}
+                  disabled={isTranslating}
+                  className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1.5 transition-all text-xs"
+                >
+                  {isTranslating ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                  )}
+                  AI แปลเป็น EN/CN
+                </Button>
+              </div>
+              <FormControl>
+                <Input
+                  placeholder="เช่น Interior Design, บริการทำความสะอาด"
+                  className="h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400 focus:ring-blue-400/20 transition-all font-medium"
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    onTitleChange(e);
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="title_en"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Languages className="w-3 h-3" /> Service Name (EN)
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className="h-10 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm"
+                    placeholder="English name..."
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="title_cn"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Languages className="w-3 h-3" /> 服务名称 (CN)
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className="h-10 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm"
+                    placeholder="中文名称..."
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <FormField
+            control={form.control}
+            name="slug"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-slate-700 font-medium">
+                  Slug (URL)
+                </FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                      /services/
+                    </span>
+                    <Input
+                      placeholder="interior-design"
+                      className="h-11 pl-[76px] bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400 font-mono text-sm"
+                      {...field}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="price_range"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-slate-400" />
+                  ราคา / ช่วงราคา
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="เริ่มต้น 5,000 บาท"
+                    className="h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="contact_link"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
+                <LinkIcon className="h-4 w-4 text-slate-400" />
+                ลิงก์ติดต่อภายนอก (Optional)
+              </FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="https://line.me/ti/p/@yourlineid"
+                  className="h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription className="text-xs">
+                ใส่ลิงก์ Line หรือช่องทางติดต่อโดยตรง
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+    </div>
+  );
+}
