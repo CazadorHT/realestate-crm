@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CopyPlus } from "lucide-react";
+import { CopyPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { duplicatePropertyAction } from "@/features/properties/actions";
 import { cn } from "@/lib/utils";
@@ -42,7 +42,11 @@ export function DuplicatePropertyButton({
       aria-label="Duplicate"
       title="Duplicate"
     >
-      <CopyPlus className="h-4 w-4" />
+      {isPending ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <CopyPlus className="h-4 w-4" />
+      )}
     </Button>
   );
 }
