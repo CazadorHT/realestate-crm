@@ -21,9 +21,10 @@ export async function GET(req: NextRequest) {
     // 1. Fetch Property Image from Supabase if ID is provided
     let imageUrl = null;
     if (id) {
+      // Use Service Role Key to bypass RLS on the server (safe for Edge Runtime)
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
 
       // Get the cover image or the first image
@@ -38,11 +39,18 @@ export async function GET(req: NextRequest) {
       if (images && images.length > 0) {
         imageUrl = images[0].image_url;
         
-        // Ensure absolute URL
+        // Ensure absolute URL + Optimization (Resize for OG 1200x630)
+        // This prevents the Edge Runtime from crashing on 10MB images
         if (imageUrl && !imageUrl.startsWith("http")) {
           const { data: { publicUrl } } = supabase.storage
             .from("property-images")
-            .getPublicUrl(images[0].storage_path);
+            .getPublicUrl(images[0].storage_path, {
+              transform: {
+                width: 1200,
+                height: 630,
+                quality: 80,
+              }
+            });
           imageUrl = publicUrl;
         }
       }
@@ -55,19 +63,36 @@ export async function GET(req: NextRequest) {
       displayPrice = `฿ ${rawPrice}`;
     }
 
-    // 3. Fetch Thai Font (Kanit) for proper rendering
+    // 3. Robust Font Loading (with Multiple Fallbacks)
     if (!cachedFont) {
+      // Try local host first (fastest)
+      const host = req.headers.get("host");
+      const localFontUrl = `https://${host}/fonts/Kanit-Bold.ttf`;
+      
       try {
-        const fontRes = await fetch(
-          new URL("https://github.com/google/fonts/raw/main/ofl/kanit/Kanit-Bold.ttf")
-        );
+        const fontRes = await fetch(localFontUrl);
         if (fontRes.ok) {
           cachedFont = await fontRes.arrayBuffer();
+        } else {
+          // Fallback 1: Direct File Reference
+          const fileRes = await fetch(new URL("../../../../public/fonts/Kanit-Bold.ttf", import.meta.url));
+          if (fileRes.ok) {
+            cachedFont = await fileRes.arrayBuffer();
+          } else {
+            // Fallback 2: Stable CDN (Google Fonts directly)
+            const googleFontRes = await fetch("https://fonts.gstatic.com/s/kanit/v15/n0felmS_IDxbg6sRRC631X8.ttf");
+            if (googleFontRes.ok) {
+              cachedFont = await googleFontRes.arrayBuffer();
+            }
+          }
         }
       } catch (e) {
         console.error("Font fetch failed:", e);
       }
     }
+
+    // Diagnostic logging for Vercel
+    console.log(`Generating OG [${id}] - Img: ${imageUrl?.slice(0, 50)}... - Font: ${cachedFont ? "OK" : "MISSING"}`);
 
     // Standard colors
     const primaryColor = "#0f172a"; // slate-900

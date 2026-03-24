@@ -663,7 +663,7 @@ export async function generateMetadata(props: {
   const ogUrl = new URL(`${siteConfig.url}/api/og/property`);
   // Truncate title for OG param safety (max 40 chars to keep the total URL short for LINE)
   const ogTitle = pageTitle.split(" - ")[0].split(" | ")[0];
-  ogUrl.searchParams.set("title", ogTitle.length > 40 ? ogTitle.slice(0, 37) + "..." : ogTitle);
+  ogUrl.searchParams.set("title", ogTitle.length > 60 ? ogTitle.slice(0, 57) + "..." : ogTitle);
   
   // Logic to handle Sale + Rent and find the most relevant price
   let displayPrice = "";
