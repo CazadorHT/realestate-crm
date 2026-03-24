@@ -11,8 +11,14 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "../../components/SectionHeader";
-import { SmartEditor } from "../../components/SmartEditor";
+import dynamic from "next/dynamic";
 import { FileText, Sparkles, Languages, Loader2 } from "lucide-react";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+
+const SmartEditor = dynamic(() => import("../../components/SmartEditor").then(mod => mod.SmartEditor), {
+  ssr: false,
+  loading: () => <div className="h-[500px] w-full bg-slate-50 animate-pulse rounded-xl border border-slate-200" />
+});
 import { useAITranslation } from "../../hooks/use-ai-translation";
 import { UseFormReturn } from "react-hook-form";
 import { generateAIPropertyDescriptionAction } from "../../actions/ai-actions";
@@ -115,22 +121,24 @@ export function DescriptionSection({
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <SmartEditor
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    disabled={isReadOnly}
-                    placeholder={`ตัวอย่าง:\n• จุดเด่น: รีโนเวทใหม่ / วิวโล่ง / ใกล้ BTS\n• เฟอร์นิเจอร์/เครื่องใช้ไฟฟ้า: ...\n• เงื่อนไข: ...`}
-                    onAiGenerate={
-                      isFeatureEnabled("ai_auto_description")
-                        ? handleGenerate
-                        : undefined
-                    }
-                    height={
-                      typeof window !== "undefined" && window.innerWidth < 640
-                        ? 300
-                        : 500
-                    }
-                  />
+                  <ErrorBoundary>
+                    <SmartEditor
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      disabled={isReadOnly}
+                      placeholder={`ตัวอย่าง:\n• จุดเด่น: รีโนเวทใหม่ / วิวโล่ง / ใกล้ BTS\n• เฟอร์นิเจอร์/เครื่องใช้ไฟฟ้า: ...\n• เงื่อนไข: ...`}
+                      onAiGenerate={
+                        isFeatureEnabled("ai_auto_description")
+                          ? handleGenerate
+                          : undefined
+                      }
+                      height={
+                        typeof window !== "undefined" && window.innerWidth < 640
+                          ? 300
+                          : 500
+                      }
+                    />
+                  </ErrorBoundary>
                 </FormControl>
                 <FormDescription className="text-xs text-slate-500">
                   แนะนำใส่ “สิ่งที่ทำให้ต่างจากทรัพย์อื่น” 3–5 ข้อ

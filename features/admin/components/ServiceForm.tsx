@@ -43,7 +43,13 @@ import {
 } from "@/features/services/actions";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { TiptapEditor } from "@/components/blog/TiptapEditor";
+import dynamic from "next/dynamic";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+
+const TiptapEditor = dynamic(() => import("@/components/blog/TiptapEditor").then(mod => mod.TiptapEditor), {
+  ssr: false,
+  loading: () => <div className="h-[400px] w-full bg-slate-50 animate-pulse rounded-md border border-slate-200" />
+});
 import { BlogImageUploader } from "@/components/blog/BlogImageUploader";
 
 const formSchema = z.object({
@@ -498,10 +504,12 @@ export function ServiceForm({
                       </FormLabel>
                       <FormControl>
                         <div className="rounded-xl overflow-hidden border border-slate-200">
-                          <TiptapEditor
-                            value={field.value || ""}
-                            onChange={field.onChange}
-                          />
+                          <ErrorBoundary>
+                            <TiptapEditor
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                            />
+                          </ErrorBoundary>
                         </div>
                       </FormControl>
                       <FormMessage />

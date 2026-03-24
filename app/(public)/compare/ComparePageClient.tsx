@@ -72,7 +72,7 @@ function ComparePageContent() {
 
   const handleRemove = (id: string) => {
     // We update the URL to reflect the removal
-    const currentIds = ids.split(",").filter((x) => x && x !== id);
+    const currentIds = ids.split(",").filter((x: string) => x && x !== id);
     if (currentIds.length === 0) {
       router.push("/compare");
     } else {

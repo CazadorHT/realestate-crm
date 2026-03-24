@@ -39,8 +39,9 @@ function Step4MediaComponent({
         </div>
 
         {/* Right Column: Management & Details (40%) */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-6 ">
           {/* Card 1: Management (Status, Owner, Agents) */}
+
           <ManagementSection
             form={form}
             owners={owners}

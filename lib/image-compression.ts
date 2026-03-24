@@ -5,8 +5,6 @@
  * - Resizes to max 1600px
  */
 
-import imageCompression from "browser-image-compression";
-
 export interface CompressionOptions {
   maxSizeMB?: number; // Max file size in MB
   maxWidthOrHeight?: number; // Max dimension
@@ -42,6 +40,8 @@ export async function compressImage(
   try {
     const originalSize = file.size;
 
+    // Dynamic import to reduce initial bundle size
+    const { default: imageCompression } = await import("browser-image-compression");
     const compressedFile = await imageCompression(file, mergedOptions);
 
     const compressedSize = compressedFile.size;

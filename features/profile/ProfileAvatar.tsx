@@ -6,7 +6,6 @@ import { Camera, Loader2 } from "lucide-react";
 import { uploadAvatarAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import imageCompression from "browser-image-compression";
 
 interface ProfileAvatarProps {
   avatarUrl: string | null;
@@ -64,6 +63,8 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
         };
 
         try {
+          // Dynamic import to reduce initial bundle size
+          const { default: imageCompression } = await import("browser-image-compression");
           fileToUpload = await imageCompression(file, options);
         } catch (compressionError) {
           console.error(

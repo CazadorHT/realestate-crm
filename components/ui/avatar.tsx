@@ -21,16 +21,26 @@ function Avatar({
   )
 }
 
+import Image from "next/image"
+
 function AvatarImage({
   className,
+  src,
+  alt,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+}: React.ComponentProps<typeof AvatarPrimitive.Image> & { src?: string; alt?: string }) {
+  if (!src) return null;
+
   return (
-    <AvatarPrimitive.Image
-      data-slot="avatar-image"
-      className={cn("aspect-square size-full", className)}
-      {...props}
-    />
+    <AvatarPrimitive.Image asChild {...props}>
+      <Image
+        src={src}
+        alt={alt || ""}
+        width={40}
+        height={40}
+        className={cn("aspect-square size-full object-cover", className)}
+      />
+    </AvatarPrimitive.Image>
   )
 }
 

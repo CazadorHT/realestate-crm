@@ -10,8 +10,15 @@ export const metadata: Metadata = {
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { SmartSummary } from "@/components/dashboard/SmartSummary";
 import { PipelineSummary } from "@/components/dashboard/PipelineSummary";
-import { FunnelChart } from "@/components/dashboard/FunnelChart";
-import { RevenueChart } from "@/components/dashboard/RevenueChart";
+import dynamic from "next/dynamic";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+
+const FunnelChart = dynamic(() => import("@/components/dashboard/FunnelChart").then(mod => mod.FunnelChart), {
+  loading: () => <div className="h-[250px] w-full bg-slate-50 animate-pulse rounded-xl" />
+});
+const RevenueChart = dynamic(() => import("@/components/dashboard/RevenueChart").then(mod => mod.RevenueChart), {
+  loading: () => <div className="h-[300px] w-full bg-slate-50 animate-pulse rounded-xl" />
+});
 import { AgendaList } from "@/components/dashboard/AgendaList";
 import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
 import { FollowUpInsights } from "@/components/dashboard/FollowUpInsights";
@@ -159,7 +166,9 @@ export default async function DashboardPage() {
                 {/* REVENUE CHART (Priority 1) */}
                 <div className="min-h-[400px]">
                   <Suspense fallback={<ChartSkeleton />}>
-                    <RevenueWrapper tenantId={tenantId} />
+                    <ErrorBoundary>
+                      <RevenueWrapper tenantId={tenantId} />
+                    </ErrorBoundary>
                   </Suspense>
                 </div>
 
@@ -169,7 +178,9 @@ export default async function DashboardPage() {
                     <PipelineWrapper tenantId={tenantId} />
                   </Suspense>
                   <Suspense fallback={<ChartSkeleton />}>
-                    <FunnelWrapper tenantId={tenantId} />
+                    <ErrorBoundary>
+                      <FunnelWrapper tenantId={tenantId} />
+                    </ErrorBoundary>
                   </Suspense>
                <FollowUpInsights leads={followUpLeads} />
                <RiskAlerts deals={riskDeals} />

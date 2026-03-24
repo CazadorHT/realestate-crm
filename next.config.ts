@@ -54,6 +54,10 @@ const nextConfig: NextConfig = {
       "@radix-ui/react-icons",
       "date-fns",
       "lodash",
+      "@tiptap/react",
+      "@tiptap/starter-kit",
+      "framer-motion",
+      "recharts",
     ],
     serverActions: {
       bodySizeLimit: "4mb",

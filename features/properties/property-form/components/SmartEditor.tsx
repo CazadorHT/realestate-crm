@@ -5,7 +5,14 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import CharacterCount from "@tiptap/extension-character-count";
-import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
+import dynamic from "next/dynamic";
+
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
+  ssr: false,
+  loading: () => <div className="h-[350px] w-[320px] bg-slate-50 animate-pulse rounded-lg" />
+});
+
+import { EmojiClickData } from "emoji-picker-react";
 import {
   Bold,
   Italic,

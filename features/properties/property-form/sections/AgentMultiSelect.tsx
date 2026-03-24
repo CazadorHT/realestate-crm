@@ -130,10 +130,10 @@ export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
                     )}
 
                     {/* Agent Info & Avatar */}
-                    <div className="flex items-center gap-3 flex-1 min-w-0 w-full">
+                    <div className="flex items-center gap-3 flex-1 min-w-0 w-full overflow-hidden">
                       <Avatar
                         className={cn(
-                          "h-12 w-12 border-2",
+                          "h-12 w-12 shrink-0 border-2", // เพิ่ม shrink-0 กันรูปโดนเบียดแบน
                           isPrimary ? "border-blue-200" : "border-slate-100",
                         )}
                       >
@@ -154,7 +154,7 @@ export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
                         </AvatarFallback>
                       </Avatar>
 
-                      <div className="flex-1 space-y-1 min-w-0">
+                      <div className="flex-1 min-w-0 space-y-1">
                         {/* Agent Selector */}
                         <Select
                           value={agentId || undefined}
@@ -163,12 +163,14 @@ export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
                           <FormControl>
                             <SelectTrigger
                               className={cn(
-                                "h-9 rounded-xl  bg-transparent p-0 font-bold text-slate-900 shadow-none focus:ring-0 focus:bg-slate-50/50 border-2 border-slate-200  hover:bg-slate-50/50 px-2 -ml-2 w-full md:w-auto min-w-[150px] ",
-                                !agentId &&
-                                  "text-slate-400 font-normal italic border-2 border-slate-200  ",
+                                // ปรับตรงนี้: ลบ w-full ออก แล้วใช้ max-w-full หรือกำหนดความกว้างที่เหมาะสม
+                                "h-9 rounded-xl bg-transparent p-0 font-bold text-slate-900 shadow-none focus:ring-0 focus:bg-slate-50/50 border-2 border-slate-200 hover:bg-slate-50/50 px-2 -ml-2 w-full max-w-[200px] md:max-w-[250px]",
+                                !agentId && "text-slate-400 font-normal italic",
                               )}
                             >
-                              <SelectValue placeholder="เลือกรายชื่อ Agent..." />
+                              <div className="truncate text-left">
+                                <SelectValue placeholder="เลือกรายชื่อ Agent..." />
+                              </div>
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="max-h-[300px] ">
@@ -188,16 +190,12 @@ export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
                             ))}
                           </SelectContent>
                         </Select>
-
                         {/* Contact Info Display */}
                         {agent?.phone && (
-                          <div className="flex items-center gap-3 text-xs text-slate-500 px-1">
-                            <span
-                              className="flex items-center gap-1 hover:text-slate-700 cursor-copy"
-                              title="คลิกเพื่อคัดลอก"
-                            >
-                              <Phone className="w-3 h-3" /> {agent.phone}
-                            </span>
+                          <div className="flex items-center gap-3 text-xs text-slate-500 px-1 truncate">
+                            <span className="flex items-center gap-1 truncate">
+                              <Phone className="w-3 h-3 shrink-0" /> {agent.phone}
+                            </span> 
                           </div>
                         )}
                       </div>
@@ -236,32 +234,6 @@ export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
 
                     {/* Actions */}
                     <div className="flex items-center gap-1 border-l pl-2 ml-2 md:border-l-0 md:pl-0 md:ml-0 border-slate-200">
-                      {agent?.phone && (
-                        <>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-full"
-                            title="โทรออก"
-                            asChild
-                          >
-                            <a href={`tel:${agent.phone}`}>
-                              <Phone className="w-3.5 h-3.5" />
-                            </a>
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-full"
-                            title="Line Contact"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                          </Button>
-                        </>
-                      )}
-
                       <Button
                         type="button"
                         variant="ghost"

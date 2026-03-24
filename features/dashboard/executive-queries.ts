@@ -42,6 +42,24 @@ export type SetupProgress = {
   totalSteps: number;
 };
 
+interface DealQueryResult {
+  status: string;
+  deal_type: string;
+  commission_amount?: number | null;
+  created_at?: string;
+  property?: {
+    price: number | null;
+    rental_price: number | null;
+  }
+}
+
+interface PropertyQueryResult {
+  price: number | null;
+  rental_price: number | null;
+  status: string;
+  updated_at: string;
+}
+
 export async function getExecutiveStats(
   tenantId?: string | null,
   year?: number,
@@ -52,7 +70,7 @@ export async function getExecutiveStats(
     const startOfYear = new Date(currentYear, 0, 1).toISOString();
     const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59).toISOString();
 
-    const applyTenantFilter = (query: any) => {
+    const applyTenantFilter = <T extends { eq: (col: string, val: string) => T }>(query: T): T => {
       if (tenantId && tenantId !== "ALL") {
         return query.eq("tenant_id", tenantId);
       }
@@ -63,7 +81,7 @@ export async function getExecutiveStats(
     const { data: deals, error: dealsError } = await applyTenantFilter(
       supabase
         .from("deals")
-        .select("deal_type, commission_amount, created_at")
+        .select("status, deal_type, commission_amount, created_at")
         .eq("status", "CLOSED_WIN")
         .gte("created_at", startOfYear)
         .lte("created_at", endOfYear),
@@ -100,7 +118,7 @@ export async function getExecutiveStats(
     rentalCount: 0,
   };
 
-  deals?.forEach((d: any) => {
+  deals?.forEach((d: DealQueryResult) => {
     const comm = d.commission_amount || 0;
     stats.totalCommission += comm;
     if (d.deal_type === "SALE") {
@@ -113,7 +131,7 @@ export async function getExecutiveStats(
     }
   });
 
-    properties?.forEach((p: any) => {
+    properties?.forEach((p: PropertyQueryResult) => {
       const val = p.status === "SOLD" ? p.price || 0 : p.rental_price || 0;
       stats.totalRevenue += val;
       if (p.status === "SOLD") stats.salesRevenue += p.price || 0;
@@ -145,7 +163,7 @@ export async function getMonthlyRevenueData(
     const supabase = await createClient();
     const currentYear = year || new Date().getFullYear();
 
-    const applyTenantFilter = (query: any) => {
+    const applyTenantFilter = <T extends { eq: (col: string, val: string) => T }>(query: T): T => {
       if (tenantId && tenantId !== "ALL") {
         return query.eq("tenant_id", tenantId);
       }
@@ -192,7 +210,7 @@ export async function getMonthlyRevenueData(
     total: 0,
   }));
 
-  data?.forEach((p: any) => {
+  data?.forEach((p: PropertyQueryResult) => {
     const date = new Date(p.updated_at);
     const monthIndex = date.getMonth();
     const val = p.status === "SOLD" ? p.price || 0 : p.rental_price || 0;
@@ -239,7 +257,7 @@ export async function getPipelineStats(
   try {
     const supabase = await createClient();
 
-    const applyTenantFilter = (query: any) => {
+    const applyTenantFilter = <T extends { eq: (col: string, val: string) => T }>(query: T): T => {
       if (tenantId && tenantId !== "ALL") {
         return query.eq("tenant_id", tenantId);
       }
@@ -270,7 +288,7 @@ export async function getPipelineStats(
       stageBreakdown: {},
     };
 
-    deals?.forEach((d: any) => {
+    deals?.forEach((d: DealQueryResult) => {
       const propertyPrice =
         d.deal_type === "SALE"
           ? d.property?.price || 0

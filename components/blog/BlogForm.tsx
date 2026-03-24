@@ -75,7 +75,13 @@ import {
   createBlogPostAction,
   updateBlogPostAction,
 } from "@/features/blog/actions";
-import { TiptapEditor } from "./TiptapEditor";
+import dynamic from "next/dynamic";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+
+const TiptapEditor = dynamic(() => import("./TiptapEditor").then(mod => mod.TiptapEditor), {
+  ssr: false,
+  loading: () => <div className="h-[400px] w-full bg-slate-50 animate-pulse rounded-md border border-input" />
+});
 import { CategoryDialog } from "./CategoryDialog";
 import { BlogImageUploader } from "./BlogImageUploader";
 import { BlogAiGenerator } from "./BlogAiGenerator";
@@ -637,10 +643,12 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <TiptapEditor
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                      />
+                      <ErrorBoundary>
+                        <TiptapEditor
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                        />
+                      </ErrorBoundary>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
