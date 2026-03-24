@@ -43,13 +43,26 @@ export async function GET(req: NextRequest) {
             alignItems: "flex-start",
             justifyContent: "flex-end",
             backgroundColor: primaryColor,
-            backgroundImage: imageUrl ? `url(${imageUrl})` : "none",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
             position: "relative",
-            fontFamily: "Kanit",
+            fontFamily: "Kanit, sans-serif",
           }}
         >
+          {/* Background Image using <img> for better Satori compatibility */}
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "1200px",
+                height: "630px",
+                objectFit: "cover",
+              }}
+              alt=""
+            />
+          )}
+
           {/* Dark Gradient Overlay for text readability */}
           <div
             style={{
@@ -58,12 +71,13 @@ export async function GET(req: NextRequest) {
               left: 0,
               right: 0,
               bottom: 0,
-              background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0) 100%)",
+              background:
+                "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0) 100%)",
             }}
           />
 
           {/* Luxury Border Accent */}
-          <div 
+          <div
             style={{
               position: "absolute",
               top: 40,
@@ -182,7 +196,7 @@ export async function GET(req: NextRequest) {
                     color: "white",
                   }}
                 >
-                  Cazador
+                  VC Connect
                 </div>
                 <div
                   style={{
@@ -192,7 +206,7 @@ export async function GET(req: NextRequest) {
                     marginLeft: "8px",
                   }}
                 >
-                  CRM
+                  Asset
                 </div>
               </div>
             </div>

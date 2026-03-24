@@ -118,12 +118,19 @@ export default async function PublicPropertyDetailPage(props: {
       `,
   );
 
-  if (UUID_RE.test(slug)) {
+  let decodedSlug = slug;
+  try {
+    decodedSlug = decodeURIComponent(slug);
+  } catch (e) {
+    // Fallback to raw slug
+  }
+
+  if (UUID_RE.test(decodedSlug)) {
     // Fallback: treat as UUID
-    query = query.eq("id", slug);
+    query = query.eq("id", decodedSlug);
   } else {
     // Primary: treat as slug (case-insensitive)
-    query = query.ilike("slug", slug);
+    query = query.ilike("slug", decodedSlug);
   }
 
   // Type assertion for the complex joined result
@@ -569,7 +576,12 @@ export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await props.params;
-  const decodedSlug = decodeURIComponent(slug); // Fix for Thai characters
+  let decodedSlug = slug;
+  try {
+    decodedSlug = decodeURIComponent(slug);
+  } catch (e) {
+    // Fallback to raw slug
+  }
 
   const supabase = createAdminClient();
   let query = supabase
@@ -581,7 +593,7 @@ export async function generateMetadata(props: {
   if (UUID_RE.test(decodedSlug)) {
     query = query.eq("id", decodedSlug);
   } else {
-    query = query.eq("slug", decodedSlug);
+    query = query.ilike("slug", decodedSlug);
   }
 
   const { data } = await query.maybeSingle();
@@ -642,8 +654,9 @@ export async function generateMetadata(props: {
     "/images/hero-realestate.png";
 
   // Ensure COVER_IMAGE is an absolute URL for OpenGraph compatibility
-  if (COVER_IMAGE.startsWith("/")) {
-    COVER_IMAGE = `${siteConfig.url}${COVER_IMAGE}`;
+  if (COVER_IMAGE && !COVER_IMAGE.startsWith("http")) {
+    const cleanPath = COVER_IMAGE.startsWith("/") ? COVER_IMAGE : `/${COVER_IMAGE}`;
+    COVER_IMAGE = `${siteConfig.url}${cleanPath}`;
   }
 
   const canonicalUrl = `${siteConfig.url}/properties/${encodeURIComponent(data.slug || slug)}`;
