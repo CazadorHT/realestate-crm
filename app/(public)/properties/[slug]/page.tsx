@@ -708,7 +708,13 @@ export async function generateMetadata(props: {
       description: pageDesc,
       images: [
         {
-          url: DYNAMIC_OG_IMAGE,
+          url: COVER_IMAGE, // Primary: Actual property image for maximum reliability
+          width: 1200,
+          height: 630,
+          alt: pageTitle,
+        },
+        {
+          url: DYNAMIC_OG_IMAGE, // Secondary: High-engagement dynamic card
           width: 1200,
           height: 630,
           alt: pageTitle,
@@ -724,7 +730,7 @@ export async function generateMetadata(props: {
       card: "summary_large_image",
       title: pageTitle,
       description: pageDesc,
-      images: [DYNAMIC_OG_IMAGE],
+      images: [COVER_IMAGE, DYNAMIC_OG_IMAGE],
     },
   };
 }
