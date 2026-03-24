@@ -1,15 +1,26 @@
-﻿import { Metadata } from "next";
+import { Metadata } from "next";
 import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
+import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
+  const canonicalUrl = `${siteConfig.url}/properties`; // This line remains for the properties page
   return {
-    title: t("metadata.search_title"),
-    description: t("metadata.search_description"),
+    title: t("metadata.search_title"), // This remains for the properties page
+    description: t("metadata.search_description"), // This remains for the properties page
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        "th-TH": `${canonicalUrl}?lang=th`,
+        "en-US": `${canonicalUrl}?lang=en`,
+        "zh-CN": `${canonicalUrl}?lang=cn`,
+        "x-default": canonicalUrl,
+      },
+    },
   };
 }
 

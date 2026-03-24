@@ -9,7 +9,17 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/protected/", "/api/", "/admin/"],
+      disallow: [
+        "/protected/", 
+        "/api/", 
+        "/admin/",
+        "/*?sort=",
+        "/*?view=",
+        "/*?minPrice=",
+        "/*?maxPrice=",
+        "/*?bedrooms=",
+        "/*?bathrooms=",
+      ],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
   };

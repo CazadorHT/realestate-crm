@@ -64,11 +64,17 @@ export function generateKeywords(
 }
 
 export function prepareSEOData(
-  propertyData: any, // using any for simplicity as it mirrors duplicate huge object logic
+  propertyData: any,
   safeValues: PropertyFormValues,
+  language: string = "th",
 ) {
-  return generatePropertySEO({
-    title: propertyData.title,
+  return generatePropertySEO(
+    {
+      id: propertyData.id,
+      slug: propertyData.slug,
+      title: propertyData.title,
+      title_en: propertyData.title_en,
+      title_cn: propertyData.title_cn,
     property_type: propertyData.property_type,
     listing_type: propertyData.listing_type,
     bedrooms: propertyData.bedrooms ?? undefined,
@@ -77,13 +83,19 @@ export function prepareSEOData(
     price: propertyData.price ?? undefined,
     rental_price: propertyData.rental_price ?? undefined,
     popular_area: propertyData.popular_area ?? undefined,
+    popular_area_en: propertyData.popular_area_en ?? undefined,
     subdistrict: propertyData.subdistrict ?? undefined,
+    subdistrict_en: propertyData.subdistrict_en ?? undefined,
     district: propertyData.district ?? undefined,
+    district_en: propertyData.district_en ?? undefined,
     province: propertyData.province ?? undefined,
+    province_en: propertyData.province_en ?? undefined,
     address_line1: propertyData.address_line1 ?? undefined,
+    address_line1_en: propertyData.address_line1_en ?? undefined,
     postal_code: propertyData.postal_code ?? undefined,
     description: propertyData.description ?? undefined,
     transit_station_name: (propertyData as any).transit_station_name,
+    transit_station_name_en: (propertyData as any).transit_station_name_en,
     // SEO Flags
     is_pet_friendly: !!propertyData.is_pet_friendly,
     is_corner_unit: !!propertyData.is_corner_unit,
@@ -106,5 +118,5 @@ export function prepareSEOData(
     nearby_transits: (propertyData as any).nearby_transits || [],
     nearby_places: (propertyData as any).nearby_places || [],
     features: (propertyData as any).features || [],
-  });
+  }, language);
 }

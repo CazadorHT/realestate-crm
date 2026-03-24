@@ -6,9 +6,11 @@
  */
 
 import slugify from "slugify";
+import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
 
 import { siteConfig } from "@/lib/site-config";
+import { getLocalizedField } from "@/lib/i18n";
 
 type PropertyType = Database["public"]["Enums"]["property_type"];
 type ListingType = Database["public"]["Enums"]["listing_type"];
@@ -18,11 +20,16 @@ export interface PropertySEOData {
   metaTitle: string;
   metaDescription: string;
   metaKeywords: string[];
-  structuredData: any; // Schema.org JSON-LD
+  structuredData: Record<string, any>; // Schema.org JSON-LD
+  faqSchema?: Record<string, any>;
 }
 
 interface PropertyDataForSEO {
+  id?: string;
+  slug?: string;
   title: string;
+  title_en?: string;
+  title_cn?: string;
   property_type: PropertyType;
   listing_type: ListingType;
   bedrooms?: number;
@@ -31,10 +38,15 @@ interface PropertyDataForSEO {
   price?: number;
   rental_price?: number;
   popular_area?: string;
+  popular_area_en?: string;
   subdistrict?: string;
+  subdistrict_en?: string;
   district?: string;
+  district_en?: string;
   province?: string;
+  province_en?: string;
   address_line1?: string;
+  address_line1_en?: string;
   postal_code?: string;
   description?: string;
   // SEO Flags for Keyword-Rich Slugs
@@ -47,6 +59,7 @@ interface PropertyDataForSEO {
   is_hot_sale?: boolean;
   near_transit?: boolean;
   transit_station_name?: string; // Legacy/Single field
+  transit_station_name_en?: string;
   nearby_transits?: {
     type: string;
     station_name: string;
@@ -140,14 +153,93 @@ const SEO_LABELS: Record<string, Record<string, string>> = {
     SECOND_HAND_TH: "บ้านมือสอง",
     SALE_EN: "Property for Sale",
     RENT_EN: "Property for Rent",
-    REAL_ESTATE_EN: "Real Estate Thailand",
+    REAL_ESTATE_EN: "Real Estate Bangkok",
+  },
+
+  // FAQ Labels
+  FAQ_Q_PRICE: {
+    th: "ราคาของ {title} คือเท่าไหร่?",
+    en: "What is the price of {title}?",
+    cn: "{title} 的价格是多少？",
+  },
+  FAQ_A_PRICE: {
+    th: "ราคาของ {title} คือ {price} {currency} ครับ ตั้งอยู่ในทำเล {location}",
+    en: "The price of {title} is {price} {currency}, located in {location}.",
+    cn: "{title} 的价格为 {price} {currency}，位于 {location}。",
+  },
+  FAQ_Q_PET: {
+    th: "{title} เลี้ยงสัตว์ได้ไหม?",
+    en: "Is {title} pet friendly?",
+    cn: "{title} 可以养宠物吗？",
+  },
+  FAQ_A_PET_YES: {
+    th: "ใช่ครับ {title} เป็นโครงการที่อนุญาตให้เลี้ยงสัตว์ได้ (Pet Friendly)",
+    en: "Yes, {title} is a pet-friendly property.",
+    cn: "是的，{title} 是一处宠物友好的房产。",
+  },
+  FAQ_A_PET_NO: {
+    th: "ขออภัยครับ {title} ไม่อนุญาตให้เลี้ยงสัตว์ครับ",
+    en: "Sorry, {title} does not allow pets.",
+    cn: "抱歉，{title} 不允许携带宠物。",
+  },
+  FAQ_Q_TRANSIT: {
+    th: "{title} ใกล้รถไฟฟ้าสถานีอะไร?",
+    en: "Which transit station is near {title}?",
+    cn: "哪个轻轨站靠近 {title}？",
+  },
+  FAQ_A_TRANSIT: {
+    th: "{title} ตั้งอยู่ใกล้กับ {station} ทำให้เดินทางสะดวกมากครับ",
+    en: "{title} is located near {station}, making it very convenient for commuting.",
+    cn: "{title} 靠近 {station}，交通非常便利。",
   },
 };
 
 /**
+ * Transliteration mapping for common Thai real estate terms
+ * to keep URLs clean (ASCII) but SEO relevant.
+ * This is populated dynamically from SEO_LABELS where possible.
+ */
+const TRANSLIT_MAP: Record<string, string> = {
+  // Actions Special Cases
+  "ขายและเช่า": "sale-rent",
+  // Locations (Common - these aren't in SEO_LABELS yet)
+  "กรุงเทพ": "bangkok",
+  "กรุงเทพมหานคร": "bangkok",
+  "ภูเก็ต": "phuket",
+  "เชียงใหม่": "chiang-mai",
+  "ชลบุรี": "chonburi",
+  "พัทยา": "pattaya",
+  "สมุทรปราการ": "samut-prakan",
+  "นนทบุรี": "nonthaburi",
+  "ปทุมธานี": "pathum-thani",
+};
+
+// Initialize mapping from SEO_LABELS to avoid duplication
+// This handles Categories, Flags, and Types
+Object.entries(SEO_LABELS).forEach(([key, labels]) => {
+  if (labels.th && labels.en) {
+    // Standardize the EN label for URL (e.g. "Office Building" -> "office-building")
+    const enValue = labels.en.toLowerCase().replace(/[\s/]+/g, "-");
+    TRANSLIT_MAP[labels.th] = enValue;
+  }
+});
+
+function transliterate(text: string): string {
+  if (!text) return "";
+  let result = text.toLowerCase();
+  
+  // Apply mapping - Sort by length descending to match longer phrases first
+  const sortedKeys = Object.keys(TRANSLIT_MAP).sort((a, b) => b.length - a.length);
+  sortedKeys.forEach((th) => {
+    result = result.replace(new RegExp(th, "g"), ` ${TRANSLIT_MAP[th]} `);
+  });
+
+  return result.trim();
+}
+
+/**
  * Generate URL-friendly slug
- * Preserves Thai characters while removing symbols/emojis
- * Enriched with: Title, Bedrooms, Bathrooms, Area, Type, Location
+ * Hybrid Strategy: Prefer English, Transliterate common Thai, Shorten length.
  */
 export function generatePropertySlug(
   data: PropertyDataForSEO,
@@ -159,153 +251,39 @@ export function generatePropertySlug(
       : "th"
   ) as "th" | "en" | "cn";
 
-  const typeLabel = data.property_type
-    ? SEO_LABELS[data.property_type]?.[lang] ||
-      SEO_LABELS[data.property_type]?.["th"]
-    : "";
+  // 1. Action (Sale/Rent) - Prefer English labels for URL
+  const actionLabel = data.listing_type === "RENT" ? "rent" : data.listing_type === "SALE" ? "sale" : "sale-rent";
 
-  const seoKeywords = [
-    data.is_hot_sale && SEO_LABELS.HOT_SALE[lang],
-    data.near_transit && SEO_LABELS.NEAR_TRANSIT[lang],
-    data.is_pet_friendly && SEO_LABELS.PET_FRIENDLY[lang],
-    data.is_corner_unit && SEO_LABELS.CORNER_UNIT[lang],
-    data.is_renovated && SEO_LABELS.RENOVATED[lang],
-    data.is_fully_furnished && SEO_LABELS.FULLY_FURNISHED[lang],
-    data.is_selling_with_tenant && SEO_LABELS.WITH_TENANT[lang],
-    data.is_foreigner_quota && SEO_LABELS.FOREIGNER_QUOTA[lang],
-  ].filter(Boolean);
+  // 2. Property Type - Prefer English
+  const typeLabel = data.property_type ? SEO_LABELS[data.property_type]?.["en"]?.toLowerCase() || "property" : "property";
 
-  // Extract Top 2 Nearby Places (Priority: Transit > Others)
-  const nearbyKeywords: string[] = [];
-  const nearTransitLabel = SEO_LABELS.NEAR_STATION[lang];
+  // 3. Title - Strategic choice: 
+  // - If English title exists, use it (CLEANEST)
+  // - If not, use Thai title but transliterate common terms
+  let titlePart = data.title_en || transliterate(data.title);
+  
+  // Limit title part to 5 words / components to keep it short
+  titlePart = titlePart.split(/[\s-]+/).slice(0, 6).join("-");
 
-  // 1. Priority: Main Transit Station from Form (Legacy/Simple)
-  if (data.near_transit && data.transit_station_name) {
-    const stationName = data.transit_station_name.trim().replace(/\s+/g, "-");
-    nearbyKeywords.push(`${nearTransitLabel}${stationName}`);
-  }
-
-  // 1.5 Priority: Transit List from Step 3 (nearby_transits) - Covers BTS, MRT, ARL, etc.
-  if (data.nearby_transits && data.nearby_transits.length > 0) {
-    data.nearby_transits.forEach((transit: any) => {
-      // Use localized station name if available
-      let stationNameValue = transit.station_name;
-      if (language === "en" && transit.station_name_en) {
-        stationNameValue = transit.station_name_en;
-      } else if (language === "cn" && transit.station_name_cn) {
-        stationNameValue = transit.station_name_cn;
-      }
-
-      if (stationNameValue) {
-        const type = transit.type || "";
-        const name = stationNameValue.trim().replace(/\s+/g, "-");
-        // e.g. "ใกล้รถไฟฟ้าสถานี-bts-ทองหล่อ" or "near-transit-station-bts-thong-lo"
-        const keyword = `${nearTransitLabel}${type}-${name}`;
-
-        if (!nearbyKeywords.includes(keyword)) {
-          nearbyKeywords.push(keyword);
-        }
-      }
-    });
-  }
-
-  // 2. Secondary: Transit from Nearby Places (Google Places API or similar)
-  if (data.nearby_places && data.nearby_places.length > 0) {
-    // Explicitly find transit stations and add them to URL
-    data.nearby_places.forEach((place: any) => {
-      // Use name from item, or localized if available
-      let placeNameValue = place.name;
-      if (language === "en" && place.name_en) {
-        placeNameValue = place.name_en;
-      } else if (language === "cn" && place.name_cn) {
-        placeNameValue = place.name_cn;
-      }
-
-      const isTransit =
-        placeNameValue.includes("BTS") ||
-        placeNameValue.includes("MRT") ||
-        placeNameValue.includes("สายสี");
-
-      if (isTransit) {
-        const stationName = placeNameValue.trim().replace(/\s+/g, "-");
-        const keyword = `${nearTransitLabel}${stationName}`;
-
-        if (!nearbyKeywords.includes(keyword)) {
-          nearbyKeywords.push(keyword);
-        }
-      }
-    });
-
-    const addedCategories = new Set<string>();
-    const selectedNearbyPlaces: any[] = [];
-
-    for (const place of data.nearby_places) {
-      if (selectedNearbyPlaces.length >= 3) break;
-
-      // Localized name check for transit exclusion
-      let placeNameValue = place.name;
-      if (language === "en" && place.name_en) {
-        placeNameValue = place.name_en;
-      } else if (language === "cn" && place.name_cn) {
-        placeNameValue = place.name_cn;
-      }
-
-      const isTransit =
-        placeNameValue.includes("BTS") ||
-        placeNameValue.includes("MRT") ||
-        placeNameValue.includes("สายสี");
-
-      if (isTransit) continue;
-
-      const category = place.category || "Other";
-
-      if (!addedCategories.has(category)) {
-        selectedNearbyPlaces.push(place);
-        addedCategories.add(category);
-      }
-    }
-
-    const nearLabel = SEO_LABELS.NEAR[lang];
-    selectedNearbyPlaces.forEach((place) => {
-      // Final localized name for Slug
-      let placeNameValue = place.name;
-      if (language === "en" && place.name_en) {
-        placeNameValue = place.name_en;
-      } else if (language === "cn" && place.name_cn) {
-        placeNameValue = place.name_cn;
-      }
-
-      const keyword = `${nearLabel}${placeNameValue.replace(/\s+/g, "-")}`;
-      if (!nearbyKeywords.includes(keyword)) {
-        nearbyKeywords.push(keyword);
-      }
-    });
-  }
-
-  const featureKeywords: string[] = [];
-  if (data.features && data.features.length > 0) {
-    data.features.slice(0, 2).forEach((feat) => {
-      featureKeywords.push(feat);
-    });
-  }
+  // 4. Location - Prioritize Popular Area (Brand/Zone) over District (Admin)
+  const popularAreaPart = data.popular_area_en || transliterate(data.popular_area || "");
+  const districtPart = data.district_en || transliterate(data.district || "");
+  const provincePart = data.province_en || transliterate(data.province || "");
 
   const parts = [
-    data.title,
-    ...featureKeywords,
-    ...nearbyKeywords,
-    ...seoKeywords,
-    data.bedrooms && `${data.bedrooms}${SEO_LABELS.BEDS[lang]}`,
-    data.bathrooms && `${data.bathrooms}${SEO_LABELS.BATHS[lang]}`,
-    data.size_sqm && `${data.size_sqm}${SEO_LABELS.SQM[lang]}`,
+    actionLabel,
     typeLabel,
-    data.popular_area,
-    data.subdistrict,
-    data.district,
-    data.province,
+    titlePart,
+    popularAreaPart, // Sukhumvit (HIGHEST PRIORITY)
+    districtPart !== popularAreaPart ? districtPart : null, // Wattana (SECONDARY)
+    (provincePart !== districtPart && provincePart !== popularAreaPart) ? provincePart : null, 
   ].filter(Boolean);
 
-  const rawString = parts.join(" ");
+  const rawString = parts.join("-");
 
+  // Final cleaning: 
+  // - Allow Thai characters only if transliteration didn't catch them
+  // - But heavily discourage long strings
   const cleaned = rawString
     .replace(/[^\u0E00-\u0E7Fa-zA-Z0-9\s_-]/g, " ")
     .trim()
@@ -314,7 +292,9 @@ export function generatePropertySlug(
     .replace(/-+/g, "-");
 
   const suffix = Date.now().toString(36).slice(-4);
-  return `${cleaned.slice(0, 220)}-${suffix}`;
+  
+  // Hard limit: 80 characters for the main part + suffix
+  return `${cleaned.slice(0, 80)}-${suffix}`;
 }
 
 /**
@@ -340,8 +320,16 @@ export function generateMetaTitle(
     );
   }
 
-  if (data.district) parts.push(data.district);
-  if (data.province) parts.push(data.province);
+  // Prioritize Popular Area (e.g., "Sukhumvit") > District > Province
+  const locationStr = data.popular_area || data.district || data.province || "";
+  if (locationStr) parts.push(locationStr);
+  
+  // If popular area is used, optionally add district for extra context if it's different and short
+  if (data.popular_area && data.district && data.popular_area !== data.district) {
+    if ((parts.join(" | ") + data.district).length < 50) {
+      parts.push(data.district);
+    }
+  }
 
   const title = parts.join(" | ");
   const suffix = ` - ${siteConfig.name}`;
@@ -375,10 +363,11 @@ export function generateMetaDescription(
     parts.push(
       `${SEO_LABELS.AREA_SIZE[lang]} ${data.size_sqm} ${SEO_LABELS.SQM_FULL[lang]}`,
     );
-  if (data.district && data.province)
-    parts.push(
-      `${SEO_LABELS.LOCATION[lang]} ${data.district}, ${data.province}`,
-    );
+  // Location: [Popular Area], [District], [Province]
+  const locationParts = [data.popular_area, data.district, data.province].filter(Boolean);
+  if (locationParts.length > 0) {
+    parts.push(`${SEO_LABELS.LOCATION[lang]} ${locationParts.slice(0, 2).join(", ")}`);
+  }
 
   let description = parts.join(" ");
 
@@ -419,73 +408,167 @@ export function generateMetaKeywords(
       `${data.bedrooms} ${SEO_LABELS.BEDROOMS_FULL[language === "en" ? "en" : "th"]}`,
     );
 
-  // Add common keywords
-  if (language === "th") {
-    keywords.add(SEO_LABELS.KEYWORDS.SALE_TH);
-    keywords.add(SEO_LABELS.KEYWORDS.RENT_TH);
-    keywords.add(SEO_LABELS.KEYWORDS.REAL_ESTATE_TH);
-    keywords.add(SEO_LABELS.KEYWORDS.SECOND_HAND_TH);
-  } else {
-    keywords.add(SEO_LABELS.KEYWORDS.SALE_EN);
-    keywords.add(SEO_LABELS.KEYWORDS.RENT_EN);
-    keywords.add(SEO_LABELS.KEYWORDS.REAL_ESTATE_EN);
+  // 3. Combined Keywords (e.g. "Condo for Sale in Sukhumvit")
+  const typeLabel =
+    SEO_LABELS[data.property_type]?.[language] ||
+    SEO_LABELS[data.property_type]?.["en"];
+  const actionLabel =
+    data.listing_type === "RENT"
+      ? SEO_LABELS.FOR_RENT[language]
+      : SEO_LABELS.FOR_SALE[language];
+  // Prioritize Popular Area (Sukhumvit > Wattana)
+  const locationPart = data.popular_area || data.district || data.province || "";
+  const locationEn = data.popular_area_en || data.district_en || data.province_en || "";
+
+  if (typeLabel && actionLabel && locationPart) {
+    keywords.add(`${typeLabel}${actionLabel}${locationPart}`); 
+    keywords.add(`${actionLabel}${typeLabel}${locationPart}`); 
   }
 
-  // Add title words (split by space)
-  data.title.split(/\s+/).forEach((word) => {
-    if (word.length > 2) keywords.add(word);
+  if (language === "en" && typeLabel && locationEn) {
+    keywords.add(`${typeLabel} for ${data.listing_type?.toLowerCase()} in ${locationEn}`);
+  }
+
+  // 4. Feature & Status Keywords
+  if (data.is_pet_friendly) keywords.add(SEO_LABELS.PET_FRIENDLY[language]);
+  if (data.near_transit) keywords.add(SEO_LABELS.NEAR_TRANSIT[language]);
+  if (data.is_fully_furnished) keywords.add(SEO_LABELS.FULLY_FURNISHED[language]);
+  if (data.is_hot_sale) keywords.add(SEO_LABELS.HOT_SALE[language]);
+
+  // 5. Language Specific Defaults
+  if (language === "th") {
+    keywords.add("อสังหาริมทรัพย์");
+    keywords.add("บ้านมือสอง");
+    keywords.add("ที่พักกรุงเทพ");
+    keywords.add(`${typeLabel}ราคาถูก`);
+  } else if (language === "cn") {
+    keywords.add("曼谷房产");
+    keywords.add("泰国买房");
+    keywords.add(`${typeLabel}出售`);
+  } else {
+    keywords.add("real estate bangkok");
+    keywords.add("thailand property");
+    keywords.add(`cheap ${typeLabel?.toLowerCase()}`);
+  }
+
+  // 6. Title words (Long ones)
+  const title = language === "en" ? data.title_en : language === "cn" ? data.title_cn : data.title;
+  (title || data.title).split(/[\s,.-]+/).forEach((word: string) => {
+    if (word.length > 3) keywords.add(word);
   });
 
-  return Array.from(keywords);
+  return Array.from(keywords).filter(Boolean).slice(0, 15); // Limit to top 15
 }
 
 /**
- * Generate Schema.org structured data (JSON-LD)
- * For better SEO and rich snippets
+ * Generate FAQ Schema (JSON-LD)
+ * Based on property features and location
  */
-export function generateStructuredData(data: PropertyDataForSEO): any {
-  const structuredData: any = {
+export function generateFAQSchema(data: PropertyDataForSEO, language: string = "th"): Record<string, any> {
+  const faqs = [];
+  const title = getLocalizedField<string>(data, "title", language);
+  // Important: Use popular_area for context if available
+  const location = data.popular_area || data.district || data.province || "";
+
+  // 1. Price FAQ
+  if (data.price || data.rental_price) {
+    const priceText = data.price 
+      ? `${data.price.toLocaleString()} ${SEO_LABELS.CURRENCY[language]}`
+      : `${data.rental_price?.toLocaleString()} ${SEO_LABELS.CURRENCY[language]}${SEO_LABELS.PER_MONTH[language]}`;
+    
+    faqs.push({
+      "@type": "Question",
+      "name": SEO_LABELS.FAQ_Q_PRICE[language].replace("{title}", title),
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": SEO_LABELS.FAQ_A_PRICE[language]
+          .replace("{title}", title)
+          .replace("{price}", priceText)
+          .replace("{currency}", "")
+          .replace("{location}", location)
+      }
+    });
+  }
+
+  // 2. Pet Friendly FAQ
+  faqs.push({
+    "@type": "Question",
+    "name": SEO_LABELS.FAQ_Q_PET[language].replace("{title}", title),
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": data.is_pet_friendly 
+        ? SEO_LABELS.FAQ_A_PET_YES[language].replace("{title}", title)
+        : SEO_LABELS.FAQ_A_PET_NO[language].replace("{title}", title)
+    }
+  });
+
+  // 3. Transit FAQ
+  if (data.near_transit || data.popular_area) {
+    const station = data.popular_area || data.district || "";
+    faqs.push({
+      "@type": "Question",
+      "name": SEO_LABELS.FAQ_Q_TRANSIT[language].replace("{title}", title),
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": SEO_LABELS.FAQ_A_TRANSIT[language]
+          .replace("{title}", title)
+          .replace("{station}", station)
+      }
+    });
+  }
+
+  return {
     "@context": "https://schema.org",
-    "@type": "Product",
-    name: data.title,
+    "@type": "FAQPage",
+    "mainEntity": faqs
+  };
+}
+
+/**
+ * Generate Structured Data (JSON-LD)
+ * Updated to include more granular details
+ */
+export function generateStructuredData(data: PropertyDataForSEO): Record<string, any> {
+  const structuredData: Record<string, any> = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    "name": data.title,
+    "description": data.description?.replace(/<[^>]*>?/gm, "") || data.title,
+    "url": `${siteConfig.url}/properties/${data.slug || data.id}`,
   };
 
-  // Address
-  if (data.address_line1 || data.district || data.province) {
-    structuredData.address = {
+  // Main Entity (The actual property)
+  structuredData.mainEntity = {
+    "@type": ["Place", "Accommodation", data.property_type === "HOUSE" ? "House" : data.property_type === "CONDO" ? "Apartment" : "Accommodation"],
+    "name": data.title,
+    "address": {
       "@type": "PostalAddress",
-      streetAddress: data.address_line1,
-      addressLocality: data.district,
-      addressRegion: data.province,
-      postalCode: data.postal_code,
-      addressCountry: "TH",
-    };
-  }
+      "streetAddress": data.address_line1,
+      "addressLocality": data.district,
+      "addressRegion": data.province,
+      "postalCode": data.postal_code,
+      "addressCountry": "TH",
+    }
+  };
 
-  // Offer (price)
+  // Offer Details
   if (data.price || data.rental_price) {
-    structuredData.offers = {
+    structuredData.mainEntity.offers = {
       "@type": "Offer",
-      price: data.price || data.rental_price,
-      priceCurrency: "THB",
+      "price": data.price || data.rental_price,
+      "priceCurrency": "THB",
+      "availability": "https://schema.org/InStock"
     };
   }
 
-  // Property details
-  if (data.bedrooms) {
-    structuredData.numberOfRooms = data.bedrooms;
-  }
-
+  // Room details
+  if (data.bedrooms) structuredData.mainEntity.numberOfRooms = data.bedrooms;
   if (data.size_sqm) {
-    structuredData.floorSize = {
+    structuredData.mainEntity.floorSize = {
       "@type": "QuantitativeValue",
-      value: data.size_sqm,
-      unitCode: "MTK", // Square meter
+      "value": data.size_sqm,
+      "unitCode": "MTK"
     };
-  }
-
-  if (data.description) {
-    structuredData.description = data.description.replace(/<[^>]*>?/gm, ""); // Clean HTML
   }
 
   return structuredData;
@@ -493,13 +576,15 @@ export function generateStructuredData(data: PropertyDataForSEO): any {
 
 /**
  * Generate all SEO data at once
+ * Added FAQ support
  */
-export function generatePropertySEO(data: PropertyDataForSEO): PropertySEOData {
+export function generatePropertySEO(data: PropertyDataForSEO, language: string = "th"): PropertySEOData {
   return {
-    slug: generatePropertySlug(data),
-    metaTitle: generateMetaTitle(data),
-    metaDescription: generateMetaDescription(data),
-    metaKeywords: generateMetaKeywords(data),
+    slug: generatePropertySlug(data, language),
+    metaTitle: generateMetaTitle(data, language),
+    metaDescription: generateMetaDescription(data, language),
+    metaKeywords: generateMetaKeywords(data, language),
     structuredData: generateStructuredData(data),
+    faqSchema: generateFAQSchema(data, language),
   };
 }

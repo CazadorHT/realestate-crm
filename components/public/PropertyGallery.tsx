@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
@@ -39,6 +39,7 @@ interface PropertyGalleryProps {
   petFriendly?: boolean;
   propertyId?: string;
   language?: "th" | "en" | "cn";
+  imageAlt?: string;
 }
 
 // ImageWithFallback as a separate component to avoid re-creation on every render
@@ -127,6 +128,7 @@ export function PropertyGallery({
   petFriendly,
   propertyId,
   language: customLanguage,
+  imageAlt,
 }: PropertyGalleryProps) {
   const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
@@ -356,7 +358,7 @@ export function PropertyGallery({
                 {/* Main Content Image */}
                 <ImageWithFallback
                   img={img}
-                  alt={`${title} ${idx + 1}`}
+                  alt={`${imageAlt || title} - ${idx + 1}`}
                   containerClassName="relative z-10 "
                   className="object-contain "
                   priority={idx === 0}
@@ -402,7 +404,7 @@ export function PropertyGallery({
             {/* Main Image */}
             <ImageWithFallback
               img={mainImage}
-              alt={title}
+              alt={imageAlt || title}
               containerClassName="relative z-10"
               className="object-contain group-hover/main:scale-105 transition-transform duration-700"
               priority
@@ -447,7 +449,7 @@ export function PropertyGallery({
                 {/* Main Image */}
                 <ImageWithFallback
                   img={img}
-                  alt={`${title} - ${idx + 2}`}
+                  alt={`${imageAlt || title} - ${idx + 2}`}
                   containerClassName="relative z-10"
                   className="object-cover group-hover/sub:scale-105 transition-transform duration-500"
                   sizes="25vw"

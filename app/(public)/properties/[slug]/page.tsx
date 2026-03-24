@@ -4,7 +4,13 @@ import dynamic from "next/dynamic";
 import { createAdminClient } from "@/lib/supabase/admin";
 // Critical LCP components
 import { PropertyGallery } from "@/components/public/PropertyGallery";
-import { getPublicImageUrl, getPublicAvatarUrl } from "@/features/properties/image-utils";
+import {
+  generatePropertySEO,
+} from "@/lib/seo-utils";
+import {
+  getPublicImageUrl,
+  getPublicAvatarUrl,
+} from "@/features/properties/image-utils";
 import { PropertySpecs } from "@/components/public/PropertySpecs";
 import { AgentSidebar } from "@/components/public/AgentSidebar";
 import { ShareButtons } from "@/components/public/ShareButtons";
@@ -141,47 +147,26 @@ export default async function PublicPropertyDetailPage(props: {
   }
 
   // Normalize images: Resolve public URL from storage_path if image_url is missing/relative
-  const images = (rawData.property_images || []).map(
-    (img: { image_url?: string | null; storage_path?: string | null }) => {
-      // 1. If already absolute URL, use as is (matching pickCoverImage logic)
-      if (img.image_url && img.image_url.startsWith("http")) {
-        return {
-          ...img,
-          image_url: img.image_url,
-        };
-      }
+  const images = (rawData.property_images || []).map((img: any) => {
+    // 1. If already absolute URL, use as is
+    if (img.image_url && img.image_url.startsWith("http")) {
+      return img;
+    }
 
-      // 2. If storage_path exists, resolve via utility
-      if (img.storage_path) {
-        return {
-          ...img,
-          image_url: getPublicImageUrl(img.storage_path),
-        };
-      }
-
-      // 3. Last fallback
+    // 2. If storage_path exists, resolve via utility
+    if (img.storage_path) {
       return {
         ...img,
-        image_url: img.image_url || "/images/hero-realestate.png",
+        image_url: getPublicImageUrl(img.storage_path),
       };
-    },
-  );
+    }
 
-  // Debug logs to help identify why images might be missing
-  // console.log(
-  //   `[SlugPage] Rendering property: ${data.id} (${slug})`,
-  //   JSON.stringify({
-  //     foundImages: images.length,
-  //     rawImages: rawData.property_images?.map((i: any) => ({
-  //       id: i.id,
-  //       url: i.image_url,
-  //       path: i.storage_path,
-  //     })),
-  //   }),
-  // );
-  // if (images.length > 0) {
-  //   console.log(`[SlugPage] Normalized First Image: ${images[0].image_url}`);
-  // }
+    // 3. Last fallback
+    return {
+      ...img,
+      image_url: img.image_url || "/images/hero-realestate.png",
+    };
+  });
 
   const agent = data.assigned_agent;
 
@@ -196,24 +181,49 @@ export default async function PublicPropertyDetailPage(props: {
   const formatPrice = (val: number | null) =>
     val ? utilFormatPrice(val, language) : "-";
 
-  // Schema.org RealEstateListing
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "Product", // Consider RealEstateListing if Schema supports it fully, but Product is standard for Google
-    name: getLocaleValue(data, "title", language),
-    description: getLocaleValue(data, "description", language)?.replace(
-      /<[^>]*>?/gm,
-      "",
-    ),
-    image: images.map((img: { image_url: string }) => img.image_url),
-    offers: {
-      "@type": "Offer",
-      priceCurrency: "THB",
-      price: data.listing_type === "RENT" ? data.rental_price : data.price,
-      availability: "https://schema.org/InStock",
-      url: `${siteConfig.url}/properties/${data.slug || data.id}`,
-    },
-  };
+  // Generate Professional SEO Data (including FAQSchema)
+  let seo;
+  try {
+    seo = generatePropertySEO({
+      id: data.id,
+      slug: data.slug || slug,
+      title: data.title,
+      title_en: data.title_en || undefined,
+      title_cn: data.title_cn || undefined,
+      property_type: data.property_type,
+      listing_type: data.listing_type,
+      bedrooms: data.bedrooms ?? undefined,
+      bathrooms: data.bathrooms ?? undefined,
+      size_sqm: data.size_sqm ?? undefined,
+      description: data.description ?? undefined,
+      address_line1: data.address_line1 ?? undefined,
+      district: data.district ?? undefined,
+      province: data.province ?? undefined,
+      postal_code: data.postal_code || undefined,
+      near_transit: !!data.near_transit,
+      is_pet_friendly: !!data.meta_keywords?.includes("Pet Friendly"),
+      is_fully_furnished: !!data.meta_keywords?.includes("Fully Furnished"),
+      is_hot_sale: (data.original_price !== null && data.price !== null && data.original_price > data.price),
+      price: data.listing_type === "SALE" ? (data.price || undefined) : undefined,
+      rental_price: data.listing_type === "RENT" ? (data.rental_price || undefined) : undefined,
+      popular_area: data.popular_area ?? undefined,
+      nearby_transits: (data.nearby_transits as any) || [],
+      nearby_places: (data.nearby_places as any) || [],
+    }, language);
+  } catch (err) {
+    console.error("SEO Generation failed:", err);
+    // Minimal fallback
+    seo = {
+      slug: data.slug || slug,
+      metaTitle: `${data.title} | ${siteConfig.name}`,
+      metaDescription: data.title,
+      metaKeywords: [],
+      structuredData: {},
+      faqSchema: null,
+    };
+  }
+
+  const schemaData = seo.structuredData;
 
   const shareUrl = `${siteConfig.url}/properties/${data.slug || slug}`;
 
@@ -249,6 +259,55 @@ export default async function PublicPropertyDetailPage(props: {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
+      {/* 1.1 Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": t("nav.home") || "Home",
+                "item": siteConfig.url
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": t("nav.properties") || "Properties",
+                "item": `${siteConfig.url}/properties`
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": data.property_type ? (t(`property_types.${data.property_type.toLowerCase()}`) || data.property_type) : "Property",
+                "item": `${siteConfig.url}/properties?type=${data.property_type}`
+              },
+              {
+                "@type": "ListItem",
+                "position": 4,
+                "name": data.province || "Location",
+                "item": `${siteConfig.url}/properties?province=${data.province}`
+              },
+              {
+                "@type": "ListItem",
+                "position": 5,
+                "name": getLocaleValue(data, "title", language),
+                "item": `${siteConfig.url}/properties/${data.slug || data.id}`
+              }
+            ]
+          })
+        }}
+      />
+      {/* 1.2 FAQ Schema */}
+      {seo.faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(seo.faqSchema) }}
+        />
+      )}
       <GTMPropertyPageView
         property={{
           id: data.id,
@@ -271,9 +330,11 @@ export default async function PublicPropertyDetailPage(props: {
           {/* 2. Gallery (Mosaic) */}
           <section className="mb-6 md:mb-10">
             <PropertyGallery
-              images={images as any[]}
-              title={data.title}
+              images={images}
+              title={getLocaleValue(data, "title", language)}
               propertyId={data.id}
+              // SEO Alt Tag Strategy: [Title] in [District], [Province]
+              imageAlt={`${getLocaleValue(data, "title", language)} ${t("seo.in")} ${data.district || ""}, ${data.province || ""}`}
               isHot={
                 (data.original_price !== null &&
                   data.price !== null &&
@@ -418,8 +479,8 @@ export default async function PublicPropertyDetailPage(props: {
                 propertyId={data.id}
                 propertyTitle={data.title}
                 location={data.popular_area || undefined}
-                data={(data.nearby_places as any[]) || []}
-                transits={(data.nearby_transits as any[]) || []}
+                data={(data.nearby_places as any) || []}
+                transits={(data.nearby_transits as any) || []}
               />
 
               <hr className="border-slate-100" />
@@ -584,6 +645,20 @@ export async function generateMetadata(props: {
   }
 
   const canonicalUrl = `${siteConfig.url}/properties/${data.slug || slug}`;
+  const ogUrl = new URL(`${siteConfig.url}/api/og/property`);
+  // Truncate title for OG param safety (max 60 chars)
+  const ogTitle = pageTitle.split(" | ")[0];
+  ogUrl.searchParams.set("title", ogTitle.length > 60 ? ogTitle.slice(0, 57) + "..." : ogTitle);
+  ogUrl.searchParams.set("price", data.listing_type === "RENT" 
+    ? (data.rental_price ? `฿ ${data.rental_price.toLocaleString()}/mo` : "")
+    : (data.price ? `฿ ${data.price.toLocaleString()}` : "")
+  );
+  ogUrl.searchParams.set("type", data.property_type ? (t(`property_types.${data.property_type.toLowerCase()}`) || data.property_type) : "");
+  ogUrl.searchParams.set("location", data.popular_area || data.district || "");
+  ogUrl.searchParams.set("img", COVER_IMAGE);
+  ogUrl.searchParams.set("lang", language);
+
+  const DYNAMIC_OG_IMAGE = ogUrl.toString();
 
   return {
     title: pageTitle,
@@ -591,14 +666,20 @@ export async function generateMetadata(props: {
     keywords: keywords,
     alternates: {
       canonical: canonicalUrl,
+      languages: {
+        "th-TH": `${canonicalUrl}?lang=th`,
+        "en-US": `${canonicalUrl}?lang=en`,
+        "zh-CN": `${canonicalUrl}?lang=cn`,
+        "x-default": canonicalUrl,
+      },
     },
     openGraph: {
       title: pageTitle,
       description: pageDesc,
-      images: [{ url: COVER_IMAGE, width: 1200, height: 630 }],
+      images: [{ url: DYNAMIC_OG_IMAGE, width: 1200, height: 630 }],
       url: canonicalUrl,
       type: "website",
-      siteName: siteConfig.name, // Branding
+      siteName: siteConfig.name,
       locale:
         language === "th" ? "th_TH" : language === "cn" ? "zh_CN" : "en_US",
     },
@@ -606,7 +687,7 @@ export async function generateMetadata(props: {
       card: "summary_large_image",
       title: pageTitle,
       description: pageDesc,
-      images: [COVER_IMAGE],
+      images: [DYNAMIC_OG_IMAGE],
     },
   };
 }

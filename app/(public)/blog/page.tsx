@@ -23,10 +23,20 @@ interface BlogListingPageProps {
 
 export async function generateMetadata() {
   const { t } = await getServerTranslations();
+  const canonicalUrl = `${siteConfig.url}/blog`;
 
   return {
     title: t("blog.schema_name"),
     description: t("blog.schema_desc"),
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        "th-TH": `${canonicalUrl}?lang=th`,
+        "en-US": `${canonicalUrl}?lang=en`,
+        "zh-CN": `${canonicalUrl}?lang=cn`,
+        "x-default": canonicalUrl,
+      },
+    },
   };
 }
 
