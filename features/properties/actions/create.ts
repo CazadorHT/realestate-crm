@@ -75,8 +75,15 @@ export async function createPropertyAction(
     }
 
     // SEO & Keywords
+    const mainImageUrl = images?.[0] ? getPublicImageUrl(images[0]) : undefined;
     const finalKeywords = generateKeywords(safeValues);
-    const seoData = prepareSEOData(propertyData, safeValues);
+    const seoData = prepareSEOData(
+      {
+        ...propertyData,
+        main_image: mainImageUrl,
+      },
+      safeValues,
+    );
 
     const mergedKeywords = Array.from(
       new Set([...(seoData.metaKeywords || []), ...finalKeywords]),
@@ -220,7 +227,7 @@ export async function duplicatePropertyAction(
 
     const { data: src, error: srcErr } = await supabase
       .from("properties")
-      .select("*")
+      .select("*, property_images(image_url, is_cover)")
       .eq("id", id)
       .eq("tenant_id", tenantId)
       .single();
@@ -248,6 +255,7 @@ export async function duplicatePropertyAction(
       address_line1: src.address_line1 ?? undefined,
       postal_code: src.postal_code ?? undefined,
       description: src.description ?? undefined,
+      main_image: (src as any).property_images?.find((img: any) => img.is_cover)?.image_url || undefined, // Carry over cover image if available
     });
 
     const uniqueSlug = `${seoData.slug}-${randomUUID().slice(0, 8)}`;

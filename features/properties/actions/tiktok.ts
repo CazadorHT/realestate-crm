@@ -44,6 +44,7 @@ export async function postPropertyToTikTokAction(
     return {
       success: true,
       message: "Post successfully sent to TikTok!",
+      data: { share_url: "https://www.tiktok.com" } // Demo placeholder
     };
   } catch (err) {
     console.error("postPropertyToTikTokAction → error:", err);

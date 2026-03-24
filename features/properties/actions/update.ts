@@ -103,6 +103,14 @@ export async function updatePropertyAction(
     }
 
     // 4) SEO metadata
+    // Determine the main cover image URL for OG tags
+    const newCoverPath = images?.[0];
+    const existingCover = (existing.property_images as any[])?.find(
+      (img) => img.is_cover,
+    )?.image_url;
+    const mainImageUrl = newCoverPath
+      ? getPublicImageUrl(newCoverPath)
+      : existingCover;
 
     // We reuse existing keywords logic by passing existing ones
     const finalKeywords = generateKeywords(
@@ -110,7 +118,13 @@ export async function updatePropertyAction(
       existing.meta_keywords || [],
     );
 
-    const seoData = prepareSEOData(propertyData, safeValues);
+    const seoData = prepareSEOData(
+      {
+        ...propertyData,
+        main_image: mainImageUrl,
+      },
+      safeValues,
+    );
 
     const mergedKeywords = Array.from(
       new Set([...(seoData.metaKeywords || []), ...finalKeywords]),
@@ -341,8 +355,11 @@ export async function updatePropertyAction(
       }
     }
 
+    // protected pages
     revalidatePath("/protected/properties");
-    revalidatePath(`/protected/properties/${id}`);
+    // Public pages (to ensure OG and detail are fresh)
+    revalidatePath("/(public)/properties/[slug]", "page");
+
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
   } catch (err) {
     return authzFail(err);

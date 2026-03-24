@@ -20,6 +20,7 @@ export interface PropertySEOData {
   metaTitle: string;
   metaDescription: string;
   metaKeywords: string[];
+  ogImage: string;
   structuredData: Record<string, any>; // Schema.org JSON-LD
   faqSchema?: Record<string, any>;
 }
@@ -201,41 +202,41 @@ const SEO_LABELS: Record<string, Record<string, string>> = {
  */
 const TRANSLIT_MAP: Record<string, string> = {
   // Actions Special Cases
-  "ขายและเช่า": "sale-rent",
-  "ให้เช่า": "rent",
-  "ขาย": "sale",
+  ขายและเช่า: "sale-rent",
+  ให้เช่า: "rent",
+  ขาย: "sale",
   // Common Property Terms
-  "ห้องนอน": "bedroom",
-  "ห้องน้ำ": "bathroom",
-  "ตรม": "sqm",
+  ห้องนอน: "bedroom",
+  ห้องน้ำ: "bathroom",
+  ตรม: "sqm",
   "ตร.ม.": "sqm",
-  "ตารางเมตร": "sqm",
-  "เมตร": "m",
-  "กม": "km",
-  "กิโลเมตร": "km",
-  "ชั้น": "floor",
-  "ที่ดิน": "land",
-  "บ้าน": "house",
-  "คอนโด": "condo",
-  "อพาร์ทเม้น": "apartment",
-  "สวย": "prime",
-  "หรู": "luxury",
-  "ถูก": "cheap",
-  "ลดราคา": "sale-off",
-  "ติดรถไฟฟ้า": "near-transit",
-  "ใกล้": "near",
-  "ใหม่": "new",
-  "พร้อมอยู่": "ready-to-move-in",
+  ตารางเมตร: "sqm",
+  เมตร: "m",
+  กม: "km",
+  กิโลเมตร: "km",
+  ชั้น: "floor",
+  ที่ดิน: "land",
+  บ้าน: "house",
+  คอนโด: "condo",
+  อพาร์ทเม้น: "apartment",
+  สวย: "prime",
+  หรู: "luxury",
+  ถูก: "cheap",
+  ลดราคา: "sale-off",
+  ติดรถไฟฟ้า: "near-transit",
+  ใกล้: "near",
+  ใหม่: "new",
+  พร้อมอยู่: "ready-to-move-in",
   // Locations (Common - these aren't in SEO_LABELS yet)
-  "กรุงเทพ": "bangkok",
-  "กรุงเทพมหานคร": "bangkok",
-  "ภูเก็ต": "phuket",
-  "เชียงใหม่": "chiang-mai",
-  "ชลบุรี": "chonburi",
-  "พัทยา": "pattaya",
-  "สมุทรปราการ": "samut-prakan",
-  "นนทบุรี": "nonthaburi",
-  "ปทุมธานี": "pathum-thani",
+  กรุงเทพ: "bangkok",
+  กรุงเทพมหานคร: "bangkok",
+  ภูเก็ต: "phuket",
+  เชียงใหม่: "chiang-mai",
+  ชลบุรี: "chonburi",
+  พัทยา: "pattaya",
+  สมุทรปราการ: "samut-prakan",
+  นนทบุรี: "nonthaburi",
+  ปทุมธานี: "pathum-thani",
 };
 
 // Initialize mapping from SEO_LABELS to avoid duplication
@@ -251,9 +252,11 @@ Object.entries(SEO_LABELS).forEach(([key, labels]) => {
 function transliterate(text: string): string {
   if (!text) return "";
   let result = text.toLowerCase();
-  
+
   // Apply mapping - Sort by length descending to match longer phrases first
-  const sortedKeys = Object.keys(TRANSLIT_MAP).sort((a, b) => b.length - a.length);
+  const sortedKeys = Object.keys(TRANSLIT_MAP).sort(
+    (a, b) => b.length - a.length,
+  );
   sortedKeys.forEach((th) => {
     result = result.replace(new RegExp(th, "g"), ` ${TRANSLIT_MAP[th]} `);
   });
@@ -263,35 +266,58 @@ function transliterate(text: string): string {
 
 /**
  * Generate URL-friendly slug
- * Hybrid Strategy: Prefer English, Transliterate common Thai, Shorten length.
+ * Strategy: Prioritize SEO-critical info first (Listing Type, Property Type, Title, Location)
  */
 export function generatePropertySlug(
   data: PropertyDataForSEO,
   language: string = "th",
 ): string {
-  const getWords = (s: string) => s ? s.toLowerCase().split(/[\s-]+/).filter(Boolean) : [];
+  const getWords = (s: string) =>
+    s
+      ? s
+          .toLowerCase()
+          .split(/[\s-]+/)
+          .filter(Boolean)
+      : [];
   const uniqueWords = new Set<string>();
   const addWords = (s: string | undefined | null) => {
     if (!s) return;
-    getWords(s).forEach(w => uniqueWords.add(w));
+    getWords(s).forEach((w) => uniqueWords.add(w));
   };
 
-  // 1. Action & Type
-  addWords(data.listing_type === "RENT" ? "rent" : data.listing_type === "SALE" ? "sale" : "sale-rent");
-  addWords(data.property_type ? SEO_LABELS[data.property_type]?.["en"] : "property");
+  // 1. Action (e.g. "for-sale", "for-rent")
+  const actionLabel =
+    data.listing_type === "RENT"
+      ? "for-rent"
+      : data.listing_type === "SALE"
+        ? "for-sale"
+        : "for-sale-rent";
+  addWords(actionLabel);
 
-  // 2. Title / Project
+  // 2. Property Type (e.g. "condo", "house")
+  addWords(
+    data.property_type ? SEO_LABELS[data.property_type]?.["en"] : "property",
+  );
+
+  // 3. Title / Project Name (Increasing to 15 words)
   const titlePart = data.title_en || transliterate(data.title);
-  addWords(titlePart.split(/[\s-]+/).slice(0, 5).join("-"));
+  addWords(
+    titlePart
+      .split(/[\s-]+/)
+      .slice(0, 20)
+      .join("-"),
+  );
 
-  // 3. Room Specs
+  // 4. Detailed Location (Area, District, Province) - Move up for better SEO context
+  addWords(data.popular_area_en || transliterate(data.popular_area || ""));
+  addWords(data.district_en || transliterate(data.district || ""));
+  addWords(data.province_en || transliterate(data.province || ""));
+
+  // 5. Room Specs
   if (data.bedrooms) addWords(`${data.bedrooms}-bedroom`);
   if (data.bathrooms) addWords(`${data.bathrooms}-bathroom`);
-  
-  // 4. Size Specs
   if (data.size_sqm) addWords(`${data.size_sqm}-sqm`);
-  
-  // 5. Special Flags (Higher Priority for SEO)
+  // 6. Special Flags
   if (data.is_pet_friendly) addWords("pet-friendly");
   if (data.is_corner_unit) addWords("corner-unit");
   if (data.is_renovated) addWords("renovated");
@@ -299,28 +325,46 @@ export function generatePropertySlug(
   if (data.is_foreigner_quota) addWords("foreigner-quota");
   if (data.is_hot_sale) addWords("hot-sale");
 
-  // 6. Transit Station & Nearby Places
-  if (data.near_transit || data.transit_station_name) {
-    const station = data.transit_station_name_en || transliterate(data.transit_station_name || "");
+  // 7. Refined Transit & Nearby Places (2 each, unique categories/types)
+  const addedTransitTypes = new Set<string>();
+  let transitCount = 0;
+  if (data.nearby_transits && data.nearby_transits.length > 0) {
+    data.nearby_transits.forEach((transit) => {
+      if (transitCount < 2 && !addedTransitTypes.has(transit.type)) {
+        const station =
+          transit.station_name_en || transliterate(transit.station_name || "");
+        if (station) {
+          addWords("near");
+          addWords(station);
+          addedTransitTypes.add(transit.type);
+          transitCount++;
+        }
+      }
+    });
+  } else if (data.transit_station_name) {
+    const station =
+      data.transit_station_name_en || transliterate(data.transit_station_name);
     if (station) {
-      addWords("near-bts-mrt");
+      addWords("near");
       addWords(station);
     }
   }
-  if (data.nearby_places && data.nearby_places.length > 0) {
-    const firstPlace = data.nearby_places[0];
-    const placeName = firstPlace.name_en || transliterate(firstPlace.name || "");
-    if (placeName) {
-      addWords("near");
-      addWords(placeName);
-    }
-  }
 
-  // 7. Detailed Location Hierarchy
-  addWords(data.popular_area_en || transliterate(data.popular_area || ""));
-  addWords(data.subdistrict_en || transliterate(data.subdistrict || ""));
-  addWords(data.district_en || transliterate(data.district || ""));
-  addWords(data.province_en || transliterate(data.province || ""));
+  const addedPlaceCats = new Set<string>();
+  let placeCount = 0;
+  if (data.nearby_places && data.nearby_places.length > 0) {
+    data.nearby_places.forEach((place) => {
+      if (placeCount < 2 && !addedPlaceCats.has(place.category)) {
+        const placeName = place.name_en || transliterate(place.name || "");
+        if (placeName) {
+          addWords("near");
+          addWords(placeName);
+          addedPlaceCats.add(place.category);
+          placeCount++;
+        }
+      }
+    });
+  }
 
   // Final assembly
   const baseSlug = Array.from(uniqueWords)
@@ -333,9 +377,9 @@ export function generatePropertySlug(
     .replace(/-+/g, "-");
 
   const suffix = Date.now().toString(36).slice(-4);
-  
-  // High limit: 140 characters to allow more keywords while staying safe
-  return `${baseSlug.slice(0, 140)}-${suffix}`;
+
+  // High limit: 160 characters to allow more keywords while staying safe
+  return `${baseSlug.slice(0, 180)}-${suffix}`;
 }
 
 /**
@@ -364,9 +408,13 @@ export function generateMetaTitle(
   // Prioritize Popular Area (e.g., "Sukhumvit") > District > Province
   const locationStr = data.popular_area || data.district || data.province || "";
   if (locationStr) parts.push(locationStr);
-  
+
   // If popular area is used, optionally add district for extra context if it's different and short
-  if (data.popular_area && data.district && data.popular_area !== data.district) {
+  if (
+    data.popular_area &&
+    data.district &&
+    data.popular_area !== data.district
+  ) {
     if ((parts.join(" | ") + data.district).length < 50) {
       parts.push(data.district);
     }
@@ -405,9 +453,15 @@ export function generateMetaDescription(
       `${SEO_LABELS.AREA_SIZE[lang]} ${data.size_sqm} ${SEO_LABELS.SQM_FULL[lang]}`,
     );
   // Location: [Popular Area], [District], [Province]
-  const locationParts = [data.popular_area, data.district, data.province].filter(Boolean);
+  const locationParts = [
+    data.popular_area,
+    data.district,
+    data.province,
+  ].filter(Boolean);
   if (locationParts.length > 0) {
-    parts.push(`${SEO_LABELS.LOCATION[lang]} ${locationParts.slice(0, 2).join(", ")}`);
+    parts.push(
+      `${SEO_LABELS.LOCATION[lang]} ${locationParts.slice(0, 2).join(", ")}`,
+    );
   }
 
   let description = parts.join(" ");
@@ -458,22 +512,27 @@ export function generateMetaKeywords(
       ? SEO_LABELS.FOR_RENT[language]
       : SEO_LABELS.FOR_SALE[language];
   // Prioritize Popular Area (Sukhumvit > Wattana)
-  const locationPart = data.popular_area || data.district || data.province || "";
-  const locationEn = data.popular_area_en || data.district_en || data.province_en || "";
+  const locationPart =
+    data.popular_area || data.district || data.province || "";
+  const locationEn =
+    data.popular_area_en || data.district_en || data.province_en || "";
 
   if (typeLabel && actionLabel && locationPart) {
-    keywords.add(`${typeLabel}${actionLabel}${locationPart}`); 
-    keywords.add(`${actionLabel}${typeLabel}${locationPart}`); 
+    keywords.add(`${typeLabel}${actionLabel}${locationPart}`);
+    keywords.add(`${actionLabel}${typeLabel}${locationPart}`);
   }
 
   if (language === "en" && typeLabel && locationEn) {
-    keywords.add(`${typeLabel} for ${data.listing_type?.toLowerCase()} in ${locationEn}`);
+    keywords.add(
+      `${typeLabel} for ${data.listing_type?.toLowerCase()} in ${locationEn}`,
+    );
   }
 
   // 4. Feature & Status Keywords
   if (data.is_pet_friendly) keywords.add(SEO_LABELS.PET_FRIENDLY[language]);
   if (data.near_transit) keywords.add(SEO_LABELS.NEAR_TRANSIT[language]);
-  if (data.is_fully_furnished) keywords.add(SEO_LABELS.FULLY_FURNISHED[language]);
+  if (data.is_fully_furnished)
+    keywords.add(SEO_LABELS.FULLY_FURNISHED[language]);
   if (data.is_hot_sale) keywords.add(SEO_LABELS.HOT_SALE[language]);
 
   // 5. Language Specific Defaults
@@ -493,7 +552,12 @@ export function generateMetaKeywords(
   }
 
   // 6. Title words (Long ones)
-  const title = language === "en" ? data.title_en : language === "cn" ? data.title_cn : data.title;
+  const title =
+    language === "en"
+      ? data.title_en
+      : language === "cn"
+        ? data.title_cn
+        : data.title;
   (title || data.title).split(/[\s,.-]+/).forEach((word: string) => {
     if (word.length > 3) keywords.add(word);
   });
@@ -505,7 +569,10 @@ export function generateMetaKeywords(
  * Generate FAQ Schema (JSON-LD)
  * Based on property features and location
  */
-export function generateFAQSchema(data: PropertyDataForSEO, language: string = "th"): Record<string, any> {
+export function generateFAQSchema(
+  data: PropertyDataForSEO,
+  language: string = "th",
+): Record<string, any> {
   const faqs = [];
   const title = getLocalizedField<string>(data, "title", language);
   // Important: Use popular_area for context if available
@@ -513,34 +580,34 @@ export function generateFAQSchema(data: PropertyDataForSEO, language: string = "
 
   // 1. Price FAQ
   if (data.price || data.rental_price) {
-    const priceText = data.price 
+    const priceText = data.price
       ? `${data.price.toLocaleString()} ${SEO_LABELS.CURRENCY[language]}`
       : `${data.rental_price?.toLocaleString()} ${SEO_LABELS.CURRENCY[language]}${SEO_LABELS.PER_MONTH[language]}`;
-    
+
     faqs.push({
       "@type": "Question",
-      "name": SEO_LABELS.FAQ_Q_PRICE[language].replace("{title}", title),
-      "acceptedAnswer": {
+      name: SEO_LABELS.FAQ_Q_PRICE[language].replace("{title}", title),
+      acceptedAnswer: {
         "@type": "Answer",
-        "text": SEO_LABELS.FAQ_A_PRICE[language]
+        text: SEO_LABELS.FAQ_A_PRICE[language]
           .replace("{title}", title)
           .replace("{price}", priceText)
           .replace("{currency}", "")
-          .replace("{location}", location)
-      }
+          .replace("{location}", location),
+      },
     });
   }
 
   // 2. Pet Friendly FAQ
   faqs.push({
     "@type": "Question",
-    "name": SEO_LABELS.FAQ_Q_PET[language].replace("{title}", title),
-    "acceptedAnswer": {
+    name: SEO_LABELS.FAQ_Q_PET[language].replace("{title}", title),
+    acceptedAnswer: {
       "@type": "Answer",
-      "text": data.is_pet_friendly 
+      text: data.is_pet_friendly
         ? SEO_LABELS.FAQ_A_PET_YES[language].replace("{title}", title)
-        : SEO_LABELS.FAQ_A_PET_NO[language].replace("{title}", title)
-    }
+        : SEO_LABELS.FAQ_A_PET_NO[language].replace("{title}", title),
+    },
   });
 
   // 3. Transit FAQ
@@ -548,20 +615,20 @@ export function generateFAQSchema(data: PropertyDataForSEO, language: string = "
     const station = data.popular_area || data.district || "";
     faqs.push({
       "@type": "Question",
-      "name": SEO_LABELS.FAQ_Q_TRANSIT[language].replace("{title}", title),
-      "acceptedAnswer": {
+      name: SEO_LABELS.FAQ_Q_TRANSIT[language].replace("{title}", title),
+      acceptedAnswer: {
         "@type": "Answer",
-        "text": SEO_LABELS.FAQ_A_TRANSIT[language]
+        text: SEO_LABELS.FAQ_A_TRANSIT[language]
           .replace("{title}", title)
-          .replace("{station}", station)
-      }
+          .replace("{station}", station),
+      },
     });
   }
 
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    "mainEntity": faqs
+    mainEntity: faqs,
   };
 }
 
@@ -569,36 +636,46 @@ export function generateFAQSchema(data: PropertyDataForSEO, language: string = "
  * Generate Structured Data (JSON-LD)
  * Updated to include more granular details
  */
-export function generateStructuredData(data: PropertyDataForSEO): Record<string, any> {
+export function generateStructuredData(
+  data: PropertyDataForSEO,
+): Record<string, any> {
   const structuredData: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
-    "name": data.title,
-    "description": data.description?.replace(/<[^>]*>?/gm, "") || data.title,
-    "url": `${siteConfig.url}/properties/${data.slug || data.id}`,
+    name: data.title,
+    description: data.description?.replace(/<[^>]*>?/gm, "") || data.title,
+    url: `${siteConfig.url}/properties/${data.slug || data.id}`,
   };
 
   // Main Entity (The actual property)
   structuredData.mainEntity = {
-    "@type": ["Place", "Accommodation", data.property_type === "HOUSE" ? "House" : data.property_type === "CONDO" ? "Apartment" : "Accommodation"],
-    "name": data.title,
-    "address": {
+    "@type": [
+      "Place",
+      "Accommodation",
+      data.property_type === "HOUSE"
+        ? "House"
+        : data.property_type === "CONDO"
+          ? "Apartment"
+          : "Accommodation",
+    ],
+    name: data.title,
+    address: {
       "@type": "PostalAddress",
-      "streetAddress": data.address_line1,
-      "addressLocality": data.district,
-      "addressRegion": data.province,
-      "postalCode": data.postal_code,
-      "addressCountry": "TH",
-    }
+      streetAddress: data.address_line1,
+      addressLocality: data.district,
+      addressRegion: data.province,
+      postalCode: data.postal_code,
+      addressCountry: "TH",
+    },
   };
 
   // Offer Details
   if (data.price || data.rental_price) {
     structuredData.mainEntity.offers = {
       "@type": "Offer",
-      "price": data.price || data.rental_price,
-      "priceCurrency": "THB",
-      "availability": "https://schema.org/InStock"
+      price: data.price || data.rental_price,
+      priceCurrency: "THB",
+      availability: "https://schema.org/InStock",
     };
   }
 
@@ -607,8 +684,8 @@ export function generateStructuredData(data: PropertyDataForSEO): Record<string,
   if (data.size_sqm) {
     structuredData.mainEntity.floorSize = {
       "@type": "QuantitativeValue",
-      "value": data.size_sqm,
-      "unitCode": "MTK"
+      value: data.size_sqm,
+      unitCode: "MTK",
     };
   }
 
@@ -619,12 +696,16 @@ export function generateStructuredData(data: PropertyDataForSEO): Record<string,
  * Generate all SEO data at once
  * Added FAQ support
  */
-export function generatePropertySEO(data: PropertyDataForSEO, language: string = "th"): PropertySEOData {
+export function generatePropertySEO(
+  data: PropertyDataForSEO & { main_image?: string },
+  language: string = "th",
+): PropertySEOData {
   return {
     slug: generatePropertySlug(data, language),
     metaTitle: generateMetaTitle(data, language),
     metaDescription: generateMetaDescription(data, language),
     metaKeywords: generateMetaKeywords(data, language),
+    ogImage: data.main_image || siteConfig.ogImage || "/hero-realestate.png",
     structuredData: generateStructuredData(data),
     faqSchema: generateFAQSchema(data, language),
   };

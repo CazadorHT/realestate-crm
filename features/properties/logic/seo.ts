@@ -118,5 +118,6 @@ export function prepareSEOData(
     nearby_transits: (propertyData as any).nearby_transits || [],
     nearby_places: (propertyData as any).nearby_places || [],
     features: (propertyData as any).features || [],
+    main_image: (propertyData as any).main_image || undefined,
   }, language);
 }

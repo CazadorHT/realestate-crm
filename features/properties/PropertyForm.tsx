@@ -14,7 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, List, Facebook, Instagram, Loader2 } from "lucide-react";
+import { ExternalLink, List, Facebook, Instagram, Loader2, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { FormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
 import type { PropertyRow } from "@/features/properties/types";
@@ -40,6 +41,8 @@ import { PropertyFormHeader } from "./property-form/components/PropertyFormHeade
 import { PropertyFormStepper } from "./property-form/components/PropertyFormStepper";
 import { PropertyFormNavigation } from "./property-form/components/PropertyFormNavigation";
 import { ErrorSummary } from "./property-form/components/ErrorSummary";
+import { TikTokPostButton } from "./components/TikTokPostButton";
+import { FaTiktok } from "react-icons/fa";
 
 // Step components (Memoized for performance)
 import { Step1BasicInfo } from "./property-form/steps/Step1BasicInfo";
@@ -100,6 +103,9 @@ export function PropertyForm({
   const [isAddingArea, setIsAddingArea] = React.useState(false);
   const [isQuickInfoOpen, setIsQuickInfoOpen] = React.useState(false);
   const [isActuallySubmitting, setIsActuallySubmitting] = React.useState(false);
+  const [shareStatus, setShareStatus] = React.useState<{
+    [key: string]: { loading: boolean; success: boolean; url?: string | null };
+  }>({});
 
   const uploadSessionId = useRef<string>(
     typeof crypto !== "undefined" ? crypto.randomUUID() : "fallback",
@@ -576,8 +582,10 @@ export function PropertyForm({
           open={!!successData}
           onOpenChange={(open) => {
             if (!open) {
-              // If closed without choice, default to list
-              router.push("/protected/properties?success=true");
+              setSuccessData(null);
+              // Always go back to list when closing success dialog manually
+              // Adding #table to focus on the table section
+              router.push("/protected/properties?success=true#table");
             }
           }}
         >
@@ -600,7 +608,7 @@ export function PropertyForm({
                 onClick={() => {
                   if (successData?.slug) {
                     window.open(`/properties/${successData.slug}`, "_blank");
-                    router.push("/protected/properties?success=true"); // Go back to list in current tab logic
+                    router.push("/protected/properties?success=true#table"); // Go back to list in current tab logic
                   } else {
                     toast.error("ไม่พบข้อมูล Slug สำหรับเปิดหน้าเว็บ");
                   }
@@ -617,7 +625,7 @@ export function PropertyForm({
 
               <Button
                 className="w-full justify-start gap-3 h-14 text-base font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-xl"
-                onClick={() => router.push("/protected/properties?success=true")}
+                onClick={() => router.push("/protected/properties?success=true#table")}
               >
                 <List className="w-5 h-5" />
                 <div className="flex flex-col items-start">
@@ -628,61 +636,139 @@ export function PropertyForm({
                 </div>
               </Button>
 
-              <div className="pt-2 border-t border-slate-100 mt-2">
+              <div className="pt-2 border-t border-slate-100 mt-2 grid grid-cols-3 gap-4">
                 <Button
                   variant="outline"
-                  className="w-full justify-start gap-3 h-14 text-base font-medium text-blue-600 hover:text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50 rounded-xl"
+                  className={cn(
+                    "w-full flex-col justify-center items-center gap-2 h-24 text-sm font-medium rounded-xl transition-all hover:text-blue-100 hover:bg-blue-500! relative",
+                    shareStatus["FACEBOOK"]?.success 
+                      ? "text-emerald-600 border-emerald-100 bg-emerald-50/50" 
+                      : "text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50"
+                  )}
+                  disabled={shareStatus["FACEBOOK"]?.loading}
                   onClick={async () => {
                     if (!successData?.id) return;
-                    const toastId = toast.loading(
-                      "กำลังโพสต์ไปยัง Facebook...",
-                    );
+                    setShareStatus(prev => ({ ...prev, FACEBOOK: { loading: true, success: false } }));
                     const res = await postPropertyToMetaAction(successData.id);
                     if (res.success) {
-                      toast.success("โพสต์สำเร็จ!", { id: toastId });
+                      setShareStatus(prev => ({ 
+                        ...prev, 
+                        FACEBOOK: { loading: false, success: true, url: res.data?.id ? `https://facebook.com/${res.data.id}` : null } 
+                      }));
+                      toast.success("โพสต์ลง Facebook สำเร็จ!");
                     } else {
-                      toast.error(res.message, { id: toastId });
+                      setShareStatus(prev => ({ ...prev, FACEBOOK: { loading: false, success: false } }));
+                      toast.error(res.message);
                     }
                   }}
                 >
-                  <Facebook className="w-5 h-5" />
-                  <div className="flex flex-col items-start">
-                    <span>โพสต์ลง Facebook ทันที</span>
-                    <span className="text-xs text-slate-500 font-normal">
-                      แชร์ไปยังเพจที่เชื่อมต่อไว้
+                  {shareStatus["FACEBOOK"]?.loading ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : shareStatus["FACEBOOK"]?.success ? (
+                    <CheckCircle2 className="w-6 h-6" />
+                  ) : (
+                    <Facebook className="w-6 h-6" />
+                  )}
+                  <div className="flex flex-col items-center text-center">
+                    <span className="leading-tight">{shareStatus["FACEBOOK"]?.success ? "สำเร็จแล้ว" : "Facebook"}</span>
+                    <span className="text-[10px] font-light opacity-80">
+                      {shareStatus["FACEBOOK"]?.success ? "ดูโพสต์" : "แชร์ทันที"}
                     </span>
                   </div>
+                  {shareStatus["FACEBOOK"]?.success && shareStatus["FACEBOOK"]?.url && (
+                    <div 
+                      className="absolute top-1 right-1 p-1.5 hover:bg-emerald-100 rounded-lg text-emerald-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(shareStatus["FACEBOOK"]!.url!, "_blank");
+                      }}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </div>
+                  )}
                 </Button>
 
                 <Button
                   variant="outline"
-                  className="w-full justify-start gap-3 h-14 text-base font-medium text-pink-600 hover:text-pink-600 border-pink-100 hover:border-pink-200 bg-pink-50/50 hover:bg-pink-50 rounded-xl mt-2"
+                  className={cn(
+                    "w-full flex-col justify-center items-center gap-2 h-24 text-sm font-medium rounded-xl transition-all hover:text-pink-100 hover:bg-pink-700!",
+                    shareStatus["INSTAGRAM"]?.success 
+                      ? "text-emerald-600 border-emerald-100 bg-emerald-50/50" 
+                      : "text-pink-600 border-pink-100 bg-pink-50/50 hover:bg-pink-50"
+                  )}
+                  disabled={shareStatus["INSTAGRAM"]?.loading}
                   onClick={async () => {
                     if (!successData?.id) return;
-                    const toastId = toast.loading(
-                      "กำลังโพสต์ไปยัง Instagram...",
-                    );
-                    const res = await postPropertyToMetaAction(
-                      successData.id,
-                      "INSTAGRAM",
-                    );
+                    setShareStatus(prev => ({ ...prev, INSTAGRAM: { loading: true, success: false } }));
+                    const res = await postPropertyToMetaAction(successData.id, "INSTAGRAM");
                     if (res.success) {
-                      toast.success("โพสต์ลง Instagram สำเร็จ!", {
-                        id: toastId,
-                      });
+                      setShareStatus(prev => ({ 
+                        ...prev, 
+                        INSTAGRAM: { loading: false, success: true, url: null } 
+                      }));
+                      toast.success("โพสต์ลง Instagram สำเร็จ!");
                     } else {
-                      toast.error(res.message, { id: toastId });
+                      setShareStatus(prev => ({ ...prev, INSTAGRAM: { loading: false, success: false } }));
+                      toast.error(res.message);
                     }
                   }}
                 >
-                  <Instagram className="w-5 h-5" />
-                  <div className="flex flex-col items-start">
-                    <span>โพสต์ลง Instagram ทันที</span>
-                    <span className="text-xs text-slate-500 font-normal">
-                      แชร์ไปยังบัญชี IG ที่เชื่อมต่อไว้
+                  {shareStatus["INSTAGRAM"]?.loading ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : shareStatus["INSTAGRAM"]?.success ? (
+                    <CheckCircle2 className="w-6 h-6" />
+                  ) : (
+                    <Instagram className="w-6 h-6" />
+                  )}
+                  <div className="flex flex-col items-center text-center">
+                    <span className="leading-tight">{shareStatus["INSTAGRAM"]?.success ? "สำเร็จแล้ว" : "Instagram"}</span>
+                    <span className="text-[10px] font-light opacity-80">
+                      {shareStatus["INSTAGRAM"]?.success ? "แชร์แล้ว" : "แชร์ทันที"}
                     </span>
                   </div>
                 </Button>
+
+                <TikTokPostButton 
+                  propertyId={successData?.id || ""}
+                  onLoading={(loading) => setShareStatus(prev => ({ ...prev, TIKTOK: { ...prev["TIKTOK"], loading } }))}
+                  onSuccess={(url) => setShareStatus(prev => ({ ...prev, TIKTOK: { loading: false, success: true, url } }))}
+                >
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full flex-col justify-center items-center gap-2 h-24 text-sm font-medium rounded-xl transition-all hover:text-slate-100 hover:border-slate-300 hover:bg-slate-900! relative",
+                      shareStatus["TIKTOK"]?.success 
+                        ? "text-emerald-600 border-emerald-100 bg-emerald-50/50" 
+                        : "text-slate-900 border-slate-200 hover:border-slate-300 bg-slate-50/50 hover:bg-slate-50"
+                    )}
+                    disabled={shareStatus["TIKTOK"]?.loading}
+                  >
+                    {shareStatus["TIKTOK"]?.loading ? (
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : shareStatus["TIKTOK"]?.success ? (
+                      <CheckCircle2 className="w-6 h-6" />
+                    ) : (
+                      <FaTiktok className="w-6 h-6" />
+                    )}
+                    <div className="flex flex-col items-center text-center">
+                      <span className="leading-tight">{shareStatus["TIKTOK"]?.success ? "สำเร็จแล้ว" : "TikTok"}</span>
+                      <span className="text-[10px] font-light opacity-80">
+                        {shareStatus["TIKTOK"]?.success ? "ดูวิดีโอ" : "แชร์วิดีโอ"}
+                      </span>
+                    </div>
+                    {shareStatus["TIKTOK"]?.success && shareStatus["TIKTOK"]?.url && (
+                      <div 
+                        className="absolute top-1 right-1 p-1.5 hover:bg-emerald-100 rounded-lg text-emerald-700"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(shareStatus["TIKTOK"]!.url!, "_blank");
+                        }}
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </div>
+                    )}
+                  </Button>
+                </TikTokPostButton>
               </div>
             </div>
           </DialogContent>

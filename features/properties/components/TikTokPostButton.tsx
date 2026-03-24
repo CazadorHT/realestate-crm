@@ -30,6 +30,9 @@ interface TikTokPostButtonProps {
     | "destructive";
   size?: "default" | "sm" | "lg" | "icon";
   showLabel?: boolean;
+  children?: React.ReactNode;
+  onSuccess?: (url?: string | null) => void;
+  onLoading?: (isLoading: boolean) => void;
 }
 
 export function TikTokPostButton({
@@ -38,6 +41,9 @@ export function TikTokPostButton({
   variant = "outline",
   size = "default",
   showLabel = true,
+  children,
+  onSuccess,
+  onLoading,
 }: TikTokPostButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -45,14 +51,16 @@ export function TikTokPostButton({
 
   const handlePost = async () => {
     setIsLoading(true);
+    onLoading?.(true);
     const toastId = toast.loading("กำลังส่งข้อมูลไปยัง TikTok...");
-
+ 
     try {
       const res = await postPropertyToTikTokAction(propertyId, caption);
       if (res.success) {
         toast.success(res.message, { id: toastId });
         setIsOpen(false);
         setCaption("");
+        onSuccess?.(res.data?.share_url);
       } else {
         toast.error(res.message, { id: toastId });
       }
@@ -60,23 +68,28 @@ export function TikTokPostButton({
       toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ", { id: toastId });
     } finally {
       setIsLoading(false);
+      onLoading?.(false);
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant={variant}
-          size={size}
-          className={cn("gap-2", className)}
-          disabled={isLoading}
-        >
-          <FaTiktok className="h-4 w-4" />
-          {showLabel && "โพสต์ลง TikTok"}
-        </Button>
+        {children ? (
+          children
+        ) : (
+          <Button
+            variant={variant}
+            size={size}
+            className={cn("gap-2", className)}
+            disabled={isLoading}
+          >
+            <FaTiktok className="h-4 w-4" />
+            {showLabel && "โพสต์ลง TikTok"}
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] rounded-2xl">
+      <DialogContent className="sm:max-w-[425px]! rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FaTiktok className="h-5 w-5" />

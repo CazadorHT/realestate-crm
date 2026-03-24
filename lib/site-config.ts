@@ -17,7 +17,7 @@ export const siteConfig = {
   url: getBaseUrl(),
   logo: "/images/v-link-svg-png-logo.svg",
   logoDark: "/images/v-link-svg-png-dark.svg",
-  ogImage: "/opengraph-image.png",
+  ogImage: "/images/hero-realestate.png",
   keywords: [
     "ซื้อขายบ้าน",
     "เช่าคอนโด",

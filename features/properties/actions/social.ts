@@ -215,11 +215,15 @@ export async function postPropertyToMetaAction(
         .eq("id", propertyId);
 
       revalidatePath("/(protected)/protected/properties", "page");
-
-      return { success: true, message: `โพสต์ไปยัง ${platform} สำเร็จ` };
-    } else {
-      return { success: false, message: `เกิดข้อผิดพลาด: ${result.error}` };
-    }
+ 
+      return { 
+        success: true, 
+        message: `โพสต์ไปยัง ${platform} สำเร็จ`,
+        data: result.data
+      };
+     } else {
+       return { success: false, message: `เกิดข้อผิดพลาด: ${result.error}` };
+     }
   } catch (err) {
     console.error("postPropertyToMetaAction → error:", err);
     return { success: false, message: "เกิดข้อผิดพลาดในการเชื่อมต่อระบบ" };
