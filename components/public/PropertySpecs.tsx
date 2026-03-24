@@ -91,9 +91,9 @@ export function PropertySpecs({
       {specs.map((spec, index) => (
         <div
           key={index}
-          className="flex items-center gap-1.5 md:gap-2 p-1.5 md:p-2 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-100/50 hover:bg-blue-50/50 transition-colors"
+          className="flex items-center gap-1.5 md:gap-2 p-1.5 md:p-2 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-100/50 hover:bg-blue-200/50 duration-300 group transition-colors"
         >
-          <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 text-blue-600">
+          <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 text-blue-600 group-hover:scale-110  duration-300 transition-all">
             {spec.icon}
           </div>
           <div className="min-w-0">

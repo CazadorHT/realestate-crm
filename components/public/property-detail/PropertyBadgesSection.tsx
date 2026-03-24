@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -520,11 +520,11 @@ export function PropertyBadgesSection({
                 <div
                   key={idx}
                   className={cn(
-                    "flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/50 transition-all hover:bg-white hover:shadow-md group",
+                    "flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/50 transition-all duration-300 hover:bg-white hover:shadow-lg hover:-translate-y-1 group cursor-default",
                     item.color,
                   )}
                 >
-                  <div className="p-2 rounded-lg bg-white shadow-sm ring-1 ring-slate-200/50 group-hover:ring-blue-200 transition-all">
+                  <div className="p-2 rounded-lg bg-white shadow-sm ring-1 ring-slate-200/50 group-hover:ring-blue-200 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
                     <item.icon className="w-4 h-4" />
                   </div>
                   <span className="text-xs font-semibold leading-tight text-slate-700">

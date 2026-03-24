@@ -611,76 +611,7 @@ export function PropertyHeader({
               </div>
             </div>
             {/* Key Selling Points */}
-            <div className="w-full max-w-[950px] ">
-              {/* <KeySellingPoints
-                  points={finalKeySellingPoints}
-                  listingType={property.listing_type || "SALE"}
-                /> */}
-              {/* Price */}
-              {/* <div className="bg-slate-50/50 border border-slate-200  rounded-xl px-4 py-6 mt-4">
-                <div className="flex flex-col items-end gap-2">
-                  {(() => {
-                    if (property.listing_type === "SALE_AND_RENT") {
-                      return (
-                        <>
-                          {renderPriceBlock(
-                            property.price,
-                            property.original_price,
-                            t("common.for_sale"),
-                            false,
-                          )}
-                          {renderPriceBlock(
-                            property.rental_price,
-                            property.original_rental_price,
-                            t("common.for_rent"),
-                            true,
-                          )}
-                        </>
-                      );
-                    }
-
-                    if (property.listing_type === "RENT") {
-                      return renderPriceBlock(
-                        property.rental_price,
-                        property.original_rental_price,
-                        t("common.for_rent"),
-                        true,
-                      );
-                    }
-
-                    return renderPriceBlock(
-                      property.price,
-                      property.original_price,
-                      t("common.for_sale"),
-                      false,
-                    );
-                  })()}
-
-                  {(property.listing_type === "RENT" ||
-                    property.listing_type === "SALE_AND_RENT") &&
-                    property.min_contract_months && (
-                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200 ">
-                        <CalendarDays className="w-4 h-4 text-blue-500" />
-                        <span className="text-sm text-slate-600">
-                          {t("property.min_contract")}{" "}
-                          <strong className="text-slate-900">
-                            {property.min_contract_months} {t("common.month")}
-                            {property.min_contract_months >= 12 &&
-                              property.min_contract_months % 12 === 0 && (
-                                <span className="text-slate-500 font-normal">
-                                  {" "}
-                                  {t("common.or")}{" "}
-                                  {property.min_contract_months / 12}{" "}
-                                  {t("common.year")}
-                                </span>
-                              )}
-                          </strong>
-                        </span>
-                      </div>
-                    )}
-                </div>
-              </div> */}
-            </div>
+            
           </div>
         </div>
       </div>

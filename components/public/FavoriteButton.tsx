@@ -71,10 +71,10 @@ export function FavoriteButton({
       variant="outline"
       size={showText ? "default" : "icon"}
       className={cn(
-        "rounded-full transition-all duration-300 border-slate-200! hover:border-red-200! hover:bg-red-50! bg-white!",
+        "rounded-full transition-all duration-300 border-slate-200 hover:border-rose-200 hover:bg-rose-500 hover:text-white",
         favorited
-          ? "text-red-500! border-red-200! bg-red-50!"
-          : "text-slate-400! bg-slate-200!",
+          ? "text-rose-500  border-rose-200 bg-rose-200"
+          : "text-slate-400 bg-slate-200",
         className,
       )}
       onClick={handleToggle}

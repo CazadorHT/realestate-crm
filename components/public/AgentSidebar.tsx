@@ -189,9 +189,11 @@ export function AgentSidebar({
             propertyTitle={propertyTitle}
             language={language as Language}
             trigger={
-              <Button className="w-full h-12 rounded-xl text-base md:text-sm xl:text-base font-semibold bg-white text-slate-700 hover:text-blue-600 border border-blue-100 hover:bg-blue-100 shadow-sm transition-all hover:-translate-y-0.5">
-                <Phone className="w-6 h-6 md:w-5 md:h-5 xl:w-6 xl:h-6 mr-2 text-slate-400 shrink-0" />
-                <span className="truncate">{getDisplayedPhone()}</span>
+              <Button 
+              variant={"soft"}
+              className="w-full h-12 rounded-xl text-base md:text-sm xl:text-base font-semibold text-slate-700 hover:text-blue-600  border-blue-100 hover:bg-blue-100 transition-all duration-300 ">
+                <Phone className="w-6 h-6 md:w-5 md:h-5 xl:w-6 xl:h-6 mr-2 shrink-0" />
+                <span className="truncate ">{getDisplayedPhone()}</span>
               </Button>
             }
           />
@@ -206,7 +208,7 @@ export function AgentSidebar({
               trigger={
                 <Button
                   variant="outline"
-                  className="w-full rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 h-12 text-sm md:text-xs xl:text-sm font-semibold px-2 md:px-1 xl:px-2"
+                  className="w-full rounded-xl border-blue-200 hover:text-blue-600 text-blue-700 hover:bg-blue-50 h-12 text-sm md:text-xs xl:text-sm font-semibold px-2 md:px-1 xl:px-2"
                 >
                   <CalendarSearch className="w-3.5 h-3.5 md:w-3 md:h-3 xl:w-3.5 xl:h-3.5 mr-1.5 shrink-0" />
                   <span className="truncate">{t("property.book_viewing")}</span>
@@ -224,7 +226,7 @@ export function AgentSidebar({
               trigger={
                 <Button
                   variant="outline"
-                  className="w-full rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 h-12 text-sm md:text-xs xl:text-sm font-semibold px-2 md:px-1 xl:px-2"
+                  className="w-full rounded-xl border-slate-200 hover:text-slate-600 text-slate-700 hover:bg-slate-100 h-12 text-sm md:text-xs xl:text-sm font-semibold px-2 md:px-1 xl:px-2"
                 >
                   <MessageCircleQuestion className="w-3.5 h-3.5 md:w-3 md:h-3 xl:w-3.5 xl:h-3.5 mr-1.5 shrink-0" />
                   <span className="truncate">{t("property.inquiry")}</span>
@@ -249,7 +251,7 @@ export function AgentSidebar({
                   propertyId={propertyId}
                   propertyTitle={shareTitle}
                   showText={false}
-                  className="w-12 h-12 rounded-full bg-slate-100 hover:bg-slate-200 border-none shrink-0"
+                  className="w-12 h-12 rounded-full border-none shrink-0"
                 />
               )}
               <div className="flex-1 flex justify-end">

@@ -125,7 +125,7 @@ export function PropertyDescription({
         <div className="flex justify-center mt-4 mb-2">
           <button
             onClick={handleToggle}
-            className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition-colors py-2 px-4 rounded-full bg-blue-50 hover:bg-blue-100 shadow-sm border border-blue-100 cursor-pointer"
+            className="flex items-center gap-2 text-blue-600 font-semibold hover:text-white transition-all duration-300 py-2 px-4 rounded-full bg-blue-50 hover:bg-blue-500 shadow-sm hover:border-blue-500 hover:scale-105 border hover:shadow-lg border-blue-100 cursor-pointer"
           >
             {isExpanded ? (
               <>

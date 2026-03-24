@@ -649,7 +649,8 @@ export async function generateMetadata(props: {
   const canonicalUrl = `${siteConfig.url}/properties/${data.slug || slug}`;
   const ogUrl = new URL(`${siteConfig.url}/api/og/property`);
   // Truncate title for OG param safety (max 60 chars) and clean up branding for OG
-  const ogTitle = pageTitle.split(" | ")[0];
+  // We split by both " - " and " | " to remove siteConfig.name if present
+  const ogTitle = pageTitle.split(" - ")[0].split(" | ")[0];
   ogUrl.searchParams.set("title", ogTitle.length > 60 ? ogTitle.slice(0, 57) + "..." : ogTitle);
   
   // Logic to handle Sale + Rent and find the most relevant price
