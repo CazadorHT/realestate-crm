@@ -282,10 +282,11 @@ export function generatePropertySlug(
   const rawString = parts.join("-");
 
   // Final cleaning: 
-  // - Allow Thai characters only if transliteration didn't catch them
-  // - But heavily discourage long strings
+  // - Strictly ASCII-only (removes Thai characters to prevent URL expansion)
+  // - This ensures the URL remains short and compatible with all mobile apps/LINE
   const cleaned = rawString
-    .replace(/[^\u0E00-\u0E7Fa-zA-Z0-9\s_-]/g, " ")
+    .replace(/[^\x00-\x7F]/g, "") // Remove all non-ASCII
+    .replace(/[^a-zA-Z0-9\s_-]/g, " ") // Remove special chars
     .trim()
     .toLowerCase()
     .replace(/[\s/_]+/g, "-")
