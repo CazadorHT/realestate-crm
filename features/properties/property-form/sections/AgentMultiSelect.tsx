@@ -34,6 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import type { AgentMultiSelectProps } from "../types";
 import { siteConfig } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
+import { FaPhone } from "react-icons/fa6";
 
 /**
  * Agent Multi-Select Section
@@ -108,12 +109,11 @@ export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
                 const initials = agent?.full_name
                   ? agent.full_name.slice(0, 2).toUpperCase()
                   : "AG";
-
                 return (
                   <div
                     key={`${index}-${agentId || "new"}`}
                     className={cn(
-                      "group relative flex flex-col md:flex-row gap-4 items-start md:items-center p-4 rounded-xl border transition-all duration-200",
+                      "group relative flex flex-col md:flex-row gap-4 items-stretch md:items-center p-2 rounded-xl border transition-all duration-200",
                       isPrimary
                         ? "bg-blue-50/40 border-blue-200/60 shadow-sm"
                         : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm",
@@ -121,27 +121,28 @@ export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
                   >
                     {/* Primary Badge */}
                     {isPrimary && (
-                      <div className="absolute -top-3 left-4">
-                        <span className="flex items-center gap-1 text-[10px] uppercase font-bold text-blue-700 tracking-wider bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-full shadow-sm">
-                          <ShieldCheck className="w-3 h-3" /> ผู้ดูแลหลัก /
-                          Listing Agent 🏢
+                      <div className="absolute -top-3 left-4 z-10">
+                        <span className="flex items-center gap-1 text-[10px] uppercase font-bold text-blue-700 tracking-wider bg-white border border-blue-200 px-2.5 py-1 rounded-full shadow-xs">
+                          <ShieldCheck className="w-3 h-3 text-blue-600" />
+                          ผู้ดูแลหลัก / Listing Agent 🏢
                         </span>
                       </div>
                     )}
 
-                    {/* Agent Info & Avatar */}
-                    <div className="flex items-center gap-3 flex-1 min-w-0 w-full overflow-hidden">
+                    {/* Left: Avatar & Info Unit */}
+                    <div className="flex items-center gap-2 flex-1 min-w-0 ">
                       <Avatar
                         className={cn(
-                          "h-12 w-12 shrink-0 border-2", // เพิ่ม shrink-0 กันรูปโดนเบียดแบน
+                          "h-12 w-12 shrink-0 border-2",
                           isPrimary ? "border-blue-200" : "border-slate-100",
                         )}
                       >
                         <AvatarImage
                           src={
                             agent?.avatar_url ||
-                            `https://api.dicebear.com/7.x/initials/svg?seed=${agent?.full_name || "Agent"}`
+                            `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(agent?.full_name || "Agent")}`
                           }
+                          alt={agent?.full_name || undefined}
                         />
                         <AvatarFallback
                           className={
@@ -154,8 +155,7 @@ export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
                         </AvatarFallback>
                       </Avatar>
 
-                      <div className="flex-1 min-w-0 space-y-1">
-                        {/* Agent Selector */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
                         <Select
                           value={agentId || undefined}
                           onValueChange={(val) => handleAgentChange(index, val)}
@@ -163,87 +163,101 @@ export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
                           <FormControl>
                             <SelectTrigger
                               className={cn(
-                                // ปรับตรงนี้: ลบ w-full ออก แล้วใช้ max-w-full หรือกำหนดความกว้างที่เหมาะสม
-                                "h-9 rounded-xl bg-transparent p-0 font-bold text-slate-900 shadow-none focus:ring-0 focus:bg-slate-50/50 border-2 border-slate-200 hover:bg-slate-50/50 px-2 -ml-2 w-full max-w-[200px] md:max-w-[250px]",
-                                !agentId && "text-slate-400 font-normal italic",
+                                "h-16! rounded-xl bg-white/50 border-slate-200 px-3 my-2 flex items-center gap-2 w-full shadow-none hover:bg-white transition-colors group min-w-0",
+                                !agentId && "text-slate-400 italic",
                               )}
                             >
-                              <div className="truncate text-left">
-                                <SelectValue placeholder="เลือกรายชื่อ Agent..." />
+                              <div className="flex-1 text-left min-w-0 truncate overflow-hidden">
+                                {agentId ? (
+                                  <div className="flex flex-col space-y-2 min-w-0 max-w-[140px]">
+                                    <span className="text-sm font-bold text-slate-900 truncate ">
+                                      K. {agent?.full_name}
+                                    </span>
+                                    {agent?.phone && (
+                                      <span className="text-[11px] text-slate-500 font-medium flex items-center gap-1">
+                                        <div className="p-1 rounded-full bg-blue-100">
+                                          <FaPhone className="w-2.5! h-2.5! shrink-0 text-blue-600" /> 
+                                        </div>
+                                        {agent.phone}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <SelectValue placeholder="เลือกรายชื่อ Agent..." />
+                                )}
                               </div>
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="max-h-[300px] ">
+                          <SelectContent className="max-h-[280px] ">
                             {agents.map((a) => (
-                              <SelectItem
-                                key={a.id}
-                                value={a.id}
-                                className="py-2.5 font-medium text-sm "
-                              >
-                                <div className="flex items-center gap-2 ">
-                                  <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-500 ">
-                                    {a.full_name?.slice(0, 1)}
-                                  </div>
-                                  {a.full_name}
+                              <SelectItem key={a.id} value={a.id} className="py-2.5">
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarImage 
+                                      src={a.avatar_url || ""} 
+                                      alt={a.full_name || undefined}
+                                    />
+                                    <AvatarFallback className="text-[10px]">
+                                      {a.full_name?.slice(0, 1) || "?"}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="font-medium text-sm">{a.full_name}</span>
                                 </div>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        {/* Contact Info Display */}
-                        {agent?.phone && (
-                          <div className="flex items-center gap-3 text-xs text-slate-500 px-1 truncate">
-                            <span className="flex items-center gap-1 truncate">
-                              <Phone className="w-3 h-3 shrink-0" /> {agent.phone}
-                            </span> 
-                          </div>
-                        )}
+                      </div>
+
+                      {/* Delete button (Mobile only) */}
+                      <div className="md:hidden">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full"
+                          onClick={() => handleRemove(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
 
-                    {/* Roles & Commission (UI Visuals) */}
-                    <div className="flex items-center gap-2 w-full md:w-auto">
-                      {/* Role Selector */}
-                      <div className="flex-1 md:w-32">
+                    {/* Right: Role & Actions Group */}
+                    <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+                      <div className="flex-none w-full md:w-[120px]">
                         <Select
-                          // Use local state for value, default based on index
-                          value={
-                            agentRoles[index] ||
-                            (isPrimary ? "primary" : "support")
-                          }
+                          value={agentRoles[index] || (isPrimary ? "primary" : "support")}
                           onValueChange={(val) => {
-                            setAgentRoles((prev) => ({
-                              ...prev,
-                              [index]: val,
-                            }));
+                            setAgentRoles((prev) => ({ ...prev, [index]: val }));
                           }}
                         >
-                          <SelectTrigger className="h-8 text-xs bg-white border-slate-200">
-                            <SelectValue />
+                          <SelectTrigger className="h-15! w-full bg-white/50 border-slate-200 text-xs font-semibold rounded-lg shadow-none px-2 flex items-center justify-between gap-1 overflow-hidden">
+                            <div className="flex-1 text-left truncate min-w-0 ">
+                              <SelectValue />
+                            </div>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="primary">ผู้ดูแลหลัก</SelectItem>
-                            <SelectItem value="support">
-                              ผู้ประสานงาน
-                            </SelectItem>
+                            <SelectItem value="primary">ผู้ดูแลหลัก (Primary)</SelectItem>
+                            <SelectItem value="support">ผู้ประสานงาน (Support)</SelectItem>
                             <SelectItem value="cobroker">Co-Broker</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 border-l pl-2 ml-2 md:border-l-0 md:pl-0 md:ml-0 border-slate-200">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-full"
-                        onClick={() => handleRemove(index)}
-                        title="ลบรายชื่อ"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {/* Desktop Actions */}
+                      <div className="hidden md:flex items-center pl-2 border-l border-slate-100 shrink-0">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                          onClick={() => handleRemove(index)}
+                          title="ลบรายชื่อ"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );

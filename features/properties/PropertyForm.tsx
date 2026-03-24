@@ -583,7 +583,7 @@ export function PropertyForm({
             <div className="flex flex-col gap-3 py-4">
               <Button
                 variant="outline"
-                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200  rounded-xl group:hover:text-white group:hover:bg-blue-600 group:hover:border-blue-600 cursor-pointer"
+                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200  rounded-xl group:hover:bg-blue-600 group:hover:border-blue-600 cursor-pointer"
                 onClick={() => {
                   if (successData?.slug) {
                     window.open(`/properties/${successData.slug}`, "_blank");

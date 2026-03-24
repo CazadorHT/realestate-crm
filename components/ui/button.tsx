@@ -8,19 +8,24 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        add: "bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-500/20",
+        default:
+          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+        add: "bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-500/20 shadow-sm",
         destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20",
+          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 shadow-sm",
         outline:
-          "border border-blue-600 cursor-pointer text-blue-600 bg-white hover:text-white hover:bg-blue-600 hover:border-blue-600 focus:bg-white active:bg-white duration-300 transition-all font-medium",
+          "border border-blue-600 cursor-pointer text-blue-600 bg-white hover:bg-blue-600 hover:text-white duration-300 transition-all font-medium shadow-sm",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost:
-          "hover:bg-accent hover:text-accent-foreground",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
         cancel:
           "bg-white border-2 border-slate-100 text-slate-500 hover:border-slate-300 hover:text-slate-700 hover:bg-slate-50/50 shadow-sm",
         link: "text-primary underline-offset-4 hover:underline",
+
+        // เพิ่มเติมที่น่าสนใจ
+        warning:
+          "bg-amber-500 text-white hover:bg-amber-600 focus-visible:ring-amber-500/20 shadow-sm",
+        soft: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-100 transition-colors",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

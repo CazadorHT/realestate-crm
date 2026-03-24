@@ -179,8 +179,12 @@ export const ManagementSection = ({
                     }
                   >
                     <FormControl>
-                      <SelectTrigger className="h-11 flex-1 min-w-0 rounded-lg bg-white border border-slate-200 font-normal px-4 text-xs sm:text-sm">
-                        <SelectValue placeholder="เลือกเจ้าของ" />
+                      <SelectTrigger className="h-11 flex-1 min-w-0 rounded-lg bg-white border border-slate-200 font-normal px-4 text-xs sm:text-sm overflow-hidden">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="truncate flex-1 text-left">
+                            <SelectValue placeholder="เลือกเจ้าของ" />
+                          </div>
+                        </div>
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-white rounded-xl shadow-lg border-none max-h-[300px] overflow-y-auto custom-scrollbar">
