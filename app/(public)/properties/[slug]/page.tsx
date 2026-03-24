@@ -57,6 +57,8 @@ type PropertyDetail = Database["public"]["Tables"]["properties"]["Row"] & {
   popular_area_cn?: string | null;
   title_en?: string | null; // Ensure present
   title_cn?: string | null;
+  original_price?: number | null;
+  original_rental_price?: number | null;
   property_images: Pick<
     Database["public"]["Tables"]["property_images"]["Row"],
     "id" | "image_url" | "storage_path" | "is_cover" | "sort_order"
@@ -573,7 +575,7 @@ export async function generateMetadata(props: {
   let query = supabase
     .from("properties")
     .select(
-      "title, title_en, title_cn, description, description_en, description_cn, slug, listing_type, property_type, price, rental_price, bedrooms, bathrooms, size_sqm, province, district, subdistrict, popular_area, property_images(image_url, storage_path, is_cover)",
+      "title, title_en, title_cn, description, description_en, description_cn, slug, listing_type, property_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, size_sqm, province, district, subdistrict, popular_area, property_images(image_url, storage_path, is_cover)",
     );
 
   if (UUID_RE.test(decodedSlug)) {
@@ -646,13 +648,26 @@ export async function generateMetadata(props: {
 
   const canonicalUrl = `${siteConfig.url}/properties/${data.slug || slug}`;
   const ogUrl = new URL(`${siteConfig.url}/api/og/property`);
-  // Truncate title for OG param safety (max 60 chars)
+  // Truncate title for OG param safety (max 60 chars) and clean up branding for OG
   const ogTitle = pageTitle.split(" | ")[0];
   ogUrl.searchParams.set("title", ogTitle.length > 60 ? ogTitle.slice(0, 57) + "..." : ogTitle);
-  ogUrl.searchParams.set("price", data.listing_type === "RENT" 
-    ? (data.rental_price ? `฿ ${data.rental_price.toLocaleString()}/mo` : "")
-    : (data.price ? `฿ ${data.price.toLocaleString()}` : "")
-  );
+  
+  // Logic to handle Sale + Rent and find the most relevant price
+  let displayPrice = "";
+  if (data.listing_type === "RENT") {
+    const p = data.rental_price || data.original_rental_price;
+    if (p) displayPrice = `฿ ${p.toLocaleString()}/mo`;
+  } else if (data.listing_type === "SALE") {
+    const p = data.price || data.original_price;
+    if (p) displayPrice = `฿ ${p.toLocaleString()}`;
+  } else if (data.listing_type === "SALE_AND_RENT") {
+    const sp = data.price || data.original_price;
+    const rp = data.rental_price || data.original_rental_price;
+    if (sp && rp) displayPrice = `฿ ${sp.toLocaleString()} | ฿ ${rp.toLocaleString()}/mo`;
+    else if (sp) displayPrice = `฿ ${sp.toLocaleString()}`;
+    else if (rp) displayPrice = `฿ ${rp.toLocaleString()}/mo`;
+  }
+  ogUrl.searchParams.set("price", displayPrice);
   ogUrl.searchParams.set("type", data.property_type ? (t(`property_types.${data.property_type.toLowerCase()}`) || data.property_type) : "");
   ogUrl.searchParams.set("location", data.popular_area || data.district || "");
   ogUrl.searchParams.set("img", COVER_IMAGE);
