@@ -1126,8 +1126,8 @@
     "policyname": "Staff Manage: Property Images",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
-    "qual": "((bucket_id = 'property-images'::text) AND ((storage.foldername(name))[1] = 'properties'::text) AND (is_system_admin() OR (EXISTS ( SELECT 1\n   FROM properties p\n  WHERE (((p.id)::text = (storage.foldername(objects.name))[2]) AND (p.tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))))))",
-    "with_check": "((bucket_id = 'property-images'::text) AND ((storage.foldername(name))[1] = 'properties'::text) AND (is_system_admin() OR (EXISTS ( SELECT 1\n   FROM properties p\n  WHERE (((p.id)::text = (storage.foldername(objects.name))[2]) AND (p.tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))))))"
+    "qual": "((bucket_id = 'property-images'::text) AND ((storage.foldername(name))[1] = 'properties'::text) AND is_staff())",
+    "with_check": "((bucket_id = 'property-images'::text) AND ((storage.foldername(name))[1] = 'properties'::text) AND is_staff())"
   },
   {
     "schemaname": "storage",

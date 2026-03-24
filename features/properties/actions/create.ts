@@ -14,6 +14,7 @@ import {
 import {
   finalizeUploadSession,
   validatePropertyImagePaths,
+  PROPERTY_IMAGES_BUCKET,
 } from "../logic/images";
 import { generateKeywords, prepareSEOData } from "../logic/seo";
 import { FormSchema } from "../schema";
@@ -284,10 +285,8 @@ export async function duplicatePropertyAction(
         message: mapDbError(insErr) ?? "Duplicate ไม่สำเร็จ",
       };
     }
-    // Explicitly re-affirm inserted is not null for TS (though the if above should handle it, sometimes block scoping is tricky)
     const newPropertyId = inserted.id;
-
-    // copy images rows (ไม่ copy ไฟล์จริงใน storage — ใช้ไฟล์เดิมได้)
+    // ✅ Step 4.2: copy images rows & files (ต้อง copy ไฟล์จริงใน storage ด้วย - เพื่ออิสระในการลบตัวต้นฉบับ)
     const { data: imgs } = await supabase
       .from("property_images")
       .select("image_url, storage_path, is_cover, sort_order")
@@ -295,21 +294,46 @@ export async function duplicatePropertyAction(
       .order("sort_order", { ascending: true });
 
     if (imgs?.length) {
-      const rows = imgs.map((img) => ({
-        property_id: newPropertyId,
-        image_url: img.image_url,
-        storage_path: img.storage_path,
-        is_cover: img.is_cover,
-        sort_order: img.sort_order,
-      }));
+      const copyPromises = imgs.map(async (img) => {
+        if (!img.storage_path) return null;
 
-      const { error: imgErr } = await supabase
-        .from("property_images")
-        .insert(rows);
+        // แยกนามสกุลไฟล์
+        const ext = img.storage_path.split(".").pop() || "webp";
+        // สร้าง path ใหม่: properties/<user_id>/dup-<uuid>.<ext>
+        const newPath = `properties/${user.id}/dup-${randomUUID()}.${ext}`;
 
-      if (imgErr) {
-        // ไม่ถึงกับ fail ทั้งหมด แต่แจ้งไว้
-        console.warn("duplicatePropertyAction: copy images failed", imgErr);
+        const { error: copyErr } = await supabase.storage
+          .from(PROPERTY_IMAGES_BUCKET)
+          .copy(img.storage_path, newPath);
+
+        if (copyErr) {
+          console.error("duplicatePropertyAction: storage copy failed", copyErr);
+          // ถ้าก๊อปปี้ไม่ได้ อาจจะใช้ตัวเดิมไปก่อน (แต่ถ้าลบต้นฉบับจะพังเหมือนเดิม)
+          // ในที่นี้เราจะข้ามใบที่ก๊อปปี้ไม่สำเร็จ
+          return null;
+        }
+
+        return {
+          property_id: newPropertyId,
+          image_url: getPublicImageUrl(newPath),
+          storage_path: newPath,
+          is_cover: img.is_cover,
+          sort_order: img.sort_order,
+        };
+      });
+
+      const newRows = (await Promise.all(copyPromises)).filter(
+        (r): r is NonNullable<typeof r> => !!r,
+      );
+
+      if (newRows.length > 0) {
+        const { error: imgErr } = await supabase
+          .from("property_images")
+          .insert(newRows);
+
+        if (imgErr) {
+          console.warn("duplicatePropertyAction: copy image rows failed", imgErr);
+        }
       }
     }
 
