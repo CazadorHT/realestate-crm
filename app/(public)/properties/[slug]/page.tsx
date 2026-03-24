@@ -227,7 +227,7 @@ export default async function PublicPropertyDetailPage(props: {
 
   const schemaData = seo.structuredData;
 
-  const shareUrl = `${siteConfig.url}/properties/${data.slug || slug}`;
+  const shareUrl = `${siteConfig.url}/properties/${encodeURIComponent(data.slug || slug)}`;
 
   // Helper: Try to resolve short links (server-side)
   async function resolveGoogleMapsLink(url: string | null) {
@@ -646,7 +646,7 @@ export async function generateMetadata(props: {
     COVER_IMAGE = `${siteConfig.url}${COVER_IMAGE}`;
   }
 
-  const canonicalUrl = `${siteConfig.url}/properties/${data.slug || slug}`;
+  const canonicalUrl = `${siteConfig.url}/properties/${encodeURIComponent(data.slug || slug)}`;
   const ogUrl = new URL(`${siteConfig.url}/api/og/property`);
   // Truncate title for OG param safety (max 60 chars) and clean up branding for OG
   // We split by both " - " and " | " to remove siteConfig.name if present
