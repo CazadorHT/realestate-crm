@@ -9,8 +9,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { Edit, Trash2, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useState, useTransition } from "react";
 import { deleteService, type ServiceRow } from "@/features/services/actions";
 import { toast } from "sonner";
 import {
@@ -50,7 +50,9 @@ export function ServicesTable({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [editingService, setEditingService] = useState<ServiceRow | null>(null);
 
   const handleSuccessFeedback = () => {
@@ -62,19 +64,26 @@ export function ServicesTable({
 
   const handleDelete = async () => {
     if (!deletingId) return;
-    try {
-      const res = await deleteService(deletingId);
-      if (res.success) {
-        toast.success("ลบข้อมูลสำเร็จ");
-        handleSuccessFeedback();
-      } else {
-        toast.error("ลบข้อมูลไม่สำเร็จ: " + res.message);
-      }
-    } catch (error: any) {
-      toast.error("เกิดข้อผิดพลาด: " + error.message);
-    } finally {
-      setDeletingId(null);
-    }
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        setIsDeleting(true);
+        try {
+          const res = await deleteService(deletingId);
+          if (res.success) {
+            toast.success("ลบข้อมูลสำเร็จ");
+            handleSuccessFeedback();
+          } else {
+            toast.error("ลบข้อมูลไม่สำเร็จ: " + res.message);
+          }
+        } catch (error: any) {
+          toast.error("เกิดข้อผิดพลาด: " + error.message);
+        } finally {
+          setIsDeleting(false);
+          setDeletingId(null);
+          resolve();
+        }
+      });
+    });
   };
 
   const handleEditSuccess = () => {
@@ -344,14 +353,25 @@ export function ServicesTable({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2 mt-4">
-            <AlertDialogCancel className="w-full sm:w-auto rounded-xl">
+            <AlertDialogCancel className="w-full sm:w-auto rounded-xl" disabled={isDeleting}>
               ยกเลิก
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+              disabled={isDeleting}
               className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 rounded-xl"
             >
-              ยืนยันการลบ
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  กำลังลบ...
+                </>
+              ) : (
+                "ยืนยันการลบ"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

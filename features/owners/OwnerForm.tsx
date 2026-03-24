@@ -106,21 +106,16 @@ export function OwnerForm(props: Props) {
 
     startTransition(async () => {
       try {
-        let res: { success: boolean; message?: string; id?: string };
-        if (props.mode === "create") {
-          res = await createOwnerAction(payload);
-        } else {
-          res = await updateOwnerAction(props.id, payload);
-        }
+        const res = props.mode === "create"
+          ? await createOwnerAction(payload)
+          : await updateOwnerAction(props.id, payload);
 
         if (res?.success === false) {
           toast.error(res.message || "เกิดข้อผิดพลาด");
           return;
         }
 
-        toast.success(
-          props.mode === "create" ? "เพิ่มเจ้าของสำเร็จ" : "บันทึกข้อมูลสำเร็จ",
-        );
+        toast.success(res.message || (props.mode === "create" ? "เพิ่มเจ้าของสำเร็จ" : "บันทึกข้อมูลสำเร็จ"));
 
         router.refresh();
 

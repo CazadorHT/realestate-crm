@@ -15,6 +15,7 @@ import {
   CreateDealInput,
   UpdateDealInput,
 } from "./schema";
+import { z } from "zod";
 import { DealCommission } from "./types";
 import { Database } from "@/lib/database.types";
 import { logAudit } from "@/lib/audit";
@@ -169,11 +170,16 @@ export async function createDealAction(input: CreateDealInput) {
 
     revalidatePath(`/protected/leads/${validated.lead_id}`);
     revalidatePath("/protected/deals");
-    return { success: true, data };
+    return { success: true, message: "สร้างดีลสำเร็จ", data };
   } catch (error: any) {
     if (error.code === "AUTHZ_ERROR") return authzFail(error);
     console.error("Create Deal Error:", error);
-    return { success: false, message: mapDbError(error) };
+    return { 
+      success: false, 
+      message: error instanceof z.ZodError 
+        ? error.issues[0].message 
+        : mapDbError(error) 
+    };
   }
 }
 
@@ -318,11 +324,16 @@ export async function updateDealAction(input: UpdateDealInput) {
     }
 
     revalidatePath("/protected/deals");
-    return { success: true };
+    return { success: true, message: "อัปเดตดีลสำเร็จ" };
   } catch (error: any) {
     if (error.code === "AUTHZ_ERROR") return authzFail(error);
     console.error("Update Deal Error:", error);
-    return { success: false, message: mapDbError(error) };
+    return { 
+      success: false, 
+      message: error instanceof z.ZodError 
+        ? error.issues[0].message 
+        : mapDbError(error) 
+    };
   }
 }
 
@@ -377,9 +388,14 @@ export async function deleteDealAction(dealId: string, leadId: string) {
       );
     }
 
-    return { success: true };
+    return { success: true, message: "ลบดีลสำเร็จ" };
   } catch (error: any) {
-    return { success: false, message: mapDbError(error) };
+    return { 
+      success: false, 
+      message: error instanceof z.ZodError 
+        ? error.issues[0].message 
+        : mapDbError(error) 
+    };
   }
 }
 
@@ -475,9 +491,14 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
     if (insertErr) throw new Error(insertErr.message);
 
     revalidatePath("/protected/deals/[id]"); // Update specifically if in detail view
-    return { success: true };
+    return { success: true, message: "คำนวณและบันทึกค่าคอมมิชชั่นสำเร็จ" };
   } catch (error: any) {
     console.error("Calculate Commissions Error:", error);
-    return { success: false, message: mapDbError(error) };
+    return { 
+      success: false, 
+      message: error instanceof z.ZodError 
+        ? error.issues[0].message 
+        : mapDbError(error) 
+    };
   }
 }

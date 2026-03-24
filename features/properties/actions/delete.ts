@@ -139,8 +139,9 @@ export async function deletePropertyAction(formData: FormData) {
       .eq("status", "TEMP");
 
     revalidatePath("/protected/properties");
-  } catch (error) {
+    return { success: true, message: "ลบทรัพย์สำเร็จ" };
+  } catch (error: any) {
     console.error("deletePropertyAction → error:", error);
-    throw new Error(mapDbError(error));
+    return { success: false, message: mapDbError(error) };
   }
 }

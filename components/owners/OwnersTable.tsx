@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useTransition, useState } from "react";
 import { differenceInHours } from "date-fns";
 import {
   Table,
@@ -28,7 +28,6 @@ import {
 import { exportOwnersAction } from "@/features/owners/export-action";
 import { toast } from "sonner";
 import { AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 
@@ -69,6 +68,7 @@ export function OwnersTable({
     selectedIds,
   } = useTableSelection(allIds);
 
+  const [isPending, startTransition] = useTransition();
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page")) || 1;
@@ -92,14 +92,19 @@ export function OwnersTable({
   };
 
   const handleBulkDelete = async () => {
-    const ids = Array.from(selectedIds);
-    const result = await bulkDeleteOwnersAction(ids);
-    if (result.success) {
-      toast.success(result.message);
-      clearSelection();
-    } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-    }
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const ids = Array.from(selectedIds);
+        const result = await bulkDeleteOwnersAction(ids);
+        if (result.success) {
+          toast.success(result.message);
+          clearSelection();
+        } else {
+          toast.error(result.message || "เกิดข้อผิดพลาด");
+        }
+        resolve();
+      });
+    });
   };
 
   const pullableCount = useMemo(() => {
@@ -166,14 +171,19 @@ export function OwnersTable({
   ]);
 
   const handleBulkPull = async () => {
-    const ids = Array.from(selectedIds);
-    const result = await bulkMoveOwnersToTenantAction(ids);
-    if (result.success) {
-      toast.success(result.message);
-      clearSelection();
-    } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-    }
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const ids = Array.from(selectedIds);
+        const result = await bulkMoveOwnersToTenantAction(ids);
+        if (result.success) {
+          toast.success(result.message);
+          clearSelection();
+        } else {
+          toast.error(result.message || "เกิดข้อผิดพลาด");
+        }
+        resolve();
+      });
+    });
   };
 
   if (owners.length === 0) {
@@ -206,6 +216,7 @@ export function OwnersTable({
         onPullConfirmMessage={pullConfirmMessage}
         onExport={() => exportOwnersAction(Array.from(selectedIds))}
         entityName="เจ้าของ"
+        className={isPending ? "opacity-50 pointer-events-none" : ""}
       />
 
       {/* Global Selection Indicator */}

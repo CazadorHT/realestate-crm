@@ -28,28 +28,33 @@ export type ServiceRow = {
   tenant_id: string | null;
 };
 
-export type CreateServiceInput = {
-  slug: string;
-  title: string;
-  title_en?: string;
-  title_cn?: string;
-  description?: string;
-  description_en?: string;
-  description_cn?: string;
-  content?: string;
-  content_en?: string;
-  content_cn?: string;
-  cover_image?: string;
-  gallery_images?: string[];
-  price_range?: string;
-  contact_link?: string;
-  is_active?: boolean;
-  sort_order?: number;
-};
+import { z } from "zod";
 
-export type UpdateServiceInput = Partial<CreateServiceInput> & {
-  id: string;
-};
+const serviceSchema = z.object({
+  slug: z.string().min(1, "กรุณาระบุ Slug"),
+  title: z.string().min(1, "กรุณาระบุชื่อบริการ"),
+  title_en: z.string().optional().nullable(),
+  title_cn: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  description_en: z.string().optional().nullable(),
+  description_cn: z.string().optional().nullable(),
+  content: z.string().optional().nullable(),
+  content_en: z.string().optional().nullable(),
+  content_cn: z.string().optional().nullable(),
+  cover_image: z.string().optional().nullable(),
+  gallery_images: z.array(z.string()).optional().nullable(),
+  price_range: z.string().optional().nullable(),
+  contact_link: z.string().optional().nullable(),
+  is_active: z.boolean().optional().default(true),
+  sort_order: z.number().optional().default(0),
+});
+
+const updateServiceSchema = serviceSchema.partial().extend({
+  id: z.string().uuid(),
+});
+
+export type CreateServiceInput = z.infer<typeof serviceSchema>;
+export type UpdateServiceInput = z.infer<typeof updateServiceSchema>;
 
 export async function getServices(
   page = 1,
@@ -146,57 +151,63 @@ export async function getServiceBySlug(slug: string) {
 
 export async function createService(input: CreateServiceInput) {
   try {
+    const validated = serviceSchema.parse(input);
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
     const { error } = await ctx.supabase.from("services").insert({
-      ...input,
+      ...validated,
       tenant_id: ctx.tenantId,
-      gallery_images: input.gallery_images
-        ? JSON.stringify(input.gallery_images)
-        : null,
     });
 
-    if (error) return { success: false, message: mapDbError(error) };
+    if (error) throw error;
 
     revalidatePath("/services");
     revalidatePath("/protected/services");
-    return { success: true };
-  } catch (err) {
+    return { success: true, message: "สร้างบริการสำเร็จ" };
+  } catch (err: any) {
     console.error("createService error:", err);
-    return { success: false, message: "Unauthorized or Invalid context" };
+    return { 
+      success: false, 
+      message: err instanceof z.ZodError 
+        ? err.issues[0].message 
+        : mapDbError(err) 
+    };
   }
 }
 
 export async function updateService(input: UpdateServiceInput) {
   try {
+    const validated = updateServiceSchema.parse(input);
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
-    const { id, ...updates } = input;
+    const { id, ...updates } = validated;
 
     const { error } = await ctx.supabase
       .from("services")
       .update({
         ...updates,
-        gallery_images: updates.gallery_images
-          ? JSON.stringify(updates.gallery_images)
-          : undefined,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
       .eq("tenant_id", ctx.tenantId);
 
-    if (error) return { success: false, message: mapDbError(error) };
+    if (error) throw error;
 
     revalidatePath("/services");
     revalidatePath("/protected/services");
-    return { success: true };
-  } catch (err) {
+    return { success: true, message: "แก้ไขบริการสำเร็จ" };
+  } catch (err: any) {
     console.error("updateService error:", err);
-    return { success: false, message: "Unauthorized or Invalid context" };
+    return { 
+      success: false, 
+      message: err instanceof z.ZodError 
+        ? err.issues[0].message 
+        : mapDbError(err) 
+    };
   }
 }
 
@@ -212,13 +223,13 @@ export async function deleteService(id: string) {
       .eq("id", id)
       .eq("tenant_id", ctx.tenantId);
 
-    if (error) return { success: false, message: mapDbError(error) };
+    if (error) throw error;
 
     revalidatePath("/services");
     revalidatePath("/protected/services");
-    return { success: true };
-  } catch (err) {
+    return { success: true, message: "ลบบริการสำเร็จ" };
+  } catch (err: any) {
     console.error("deleteService error:", err);
-    return { success: false, message: "Unauthorized or Invalid context" };
+    return { success: false, message: mapDbError(err) };
   }
 }

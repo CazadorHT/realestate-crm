@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import {
@@ -99,7 +100,12 @@ export function PropertyStatusSelect(props: {
           )}
           aria-label="เปลี่ยนสถานะทรัพย์"
         >
-          <SelectValue>{label}</SelectValue>
+          <SelectValue>
+            <div className="flex items-center gap-2">
+              {isPending && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+              {label}
+            </div>
+          </SelectValue>
         </SelectTrigger>
 
         <SelectContent align="end" className="min-w-[160px]">

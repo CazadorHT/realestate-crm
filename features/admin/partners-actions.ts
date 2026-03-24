@@ -2,25 +2,25 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { mapDbError } from "@/lib/db-error";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
-
 import { calculateNewSortOrders } from "./partners-utils";
+import { z } from "zod";
 
-type CreatePartnerInput = {
-  name: string;
-  logo_url: string;
-  website_url?: string;
-  sort_order?: number;
-};
+const partnerSchema = z.object({
+  name: z.string().min(1, "กรุณาระบุชื่อพาร์ทเนอร์"),
+  logo_url: z.string().url("กรุณาระบุ URL รูปภาพที่ถูกต้อง"),
+  website_url: z.string().optional().nullable(),
+  sort_order: z.number().optional().default(0),
+  is_active: z.boolean().optional().default(true),
+});
 
-type UpdatePartnerInput = {
-  id: string;
-  name?: string;
-  logo_url?: string;
-  website_url?: string;
-  sort_order?: number;
-  is_active?: boolean;
-};
+const updatePartnerSchema = partnerSchema.partial().extend({
+  id: z.string().uuid(),
+});
+
+type CreatePartnerInput = z.infer<typeof partnerSchema>;
+type UpdatePartnerInput = z.infer<typeof updatePartnerSchema>;
 
 export async function getPartners() {
   const supabase = await createClient();
@@ -70,13 +70,15 @@ async function resequencePartners() {
 
 export async function createPartner(input: CreatePartnerInput) {
   try {
+    const validated = partnerSchema.parse(input);
+
     const { role } = await requireAuthContext();
     assertStaff(role);
 
     const supabase = await createClient();
-    const { error } = await supabase.from("partners").insert([input]);
+    const { error } = await supabase.from("partners").insert([validated]);
 
-    if (error) return { success: false, message: error.message };
+    if (error) throw error;
 
     // Clean up order after insert
     await resequencePartners();
@@ -85,23 +87,32 @@ export async function createPartner(input: CreatePartnerInput) {
     revalidatePath("/");
     return { success: true, message: "สร้างพาร์ทเนอร์สำเร็จ" };
   } catch (error: any) {
-    return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
+    console.error("createPartner error:", error);
+    return { 
+      success: false, 
+      message: error instanceof z.ZodError 
+        ? error.issues[0].message 
+        : mapDbError(error) 
+    };
   }
 }
 
 export async function updatePartner(input: UpdatePartnerInput) {
   try {
+    const validated = updatePartnerSchema.parse(input);
+
     const { role } = await requireAuthContext();
     assertStaff(role);
 
     const supabase = await createClient();
-    const { id, ...updates } = input;
+    const { id, ...updates } = validated;
 
     const { error } = await supabase
       .from("partners")
       .update(updates)
       .eq("id", id);
-    if (error) return { success: false, message: error.message };
+
+    if (error) throw error;
 
     // Clean up order after update
     await resequencePartners();
@@ -110,7 +121,13 @@ export async function updatePartner(input: UpdatePartnerInput) {
     revalidatePath("/");
     return { success: true, message: "แก้ไขพาร์ทเนอร์สำเร็จ" };
   } catch (error: any) {
-    return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
+    console.error("updatePartner error:", error);
+    return { 
+      success: false, 
+      message: error instanceof z.ZodError 
+        ? error.issues[0].message 
+        : mapDbError(error) 
+    };
   }
 }
 
@@ -122,7 +139,7 @@ export async function deletePartner(id: string) {
     const supabase = await createClient();
     const { error } = await supabase.from("partners").delete().eq("id", id);
 
-    if (error) return { success: false, message: error.message };
+    if (error) throw error;
 
     // Re-sequence after delete to fill gaps
     await resequencePartners();
@@ -131,7 +148,8 @@ export async function deletePartner(id: string) {
     revalidatePath("/");
     return { success: true, message: "ลบพาร์ทเนอร์สำเร็จ" };
   } catch (error: any) {
-    return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
+    console.error("deletePartner error:", error);
+    return { success: false, message: mapDbError(error) };
   }
 }
 

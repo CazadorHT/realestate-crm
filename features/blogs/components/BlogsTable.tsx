@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useTransition } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -44,6 +44,7 @@ export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
   const now = new Date();
   const allIds = useMemo(() => posts.map((p) => p.id), [posts]);
   const {
@@ -65,15 +66,20 @@ export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) 
   };
 
   const handleBulkDelete = async () => {
-    const ids = Array.from(selectedIds);
-    const result = await bulkDeleteBlogsAction(ids);
-    if (result.success) {
-      toast.success(result.message);
-      clearSelection();
-      handleSuccessFeedback();
-    } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-    }
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const ids = Array.from(selectedIds);
+        const result = await bulkDeleteBlogsAction(ids);
+        if (result.success) {
+          toast.success(result.message);
+          clearSelection();
+          handleSuccessFeedback();
+        } else {
+          toast.error(result.message || "เกิดข้อผิดพลาด");
+        }
+        resolve();
+      });
+    });
   };
 
   return (
@@ -83,6 +89,7 @@ export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) 
         onClear={clearSelection}
         onDelete={handleBulkDelete}
         entityName="บทความ"
+        className={isPending ? "opacity-50 pointer-events-none" : ""}
       />
 
       {/* Desktop Table View */}

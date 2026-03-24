@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useTransition, useCallback } from "react";
 import { differenceInHours } from "date-fns";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -40,7 +40,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import { useState, useCallback } from "react";
 import { TransferLeadsDialog } from "@/features/leads/components/TransferLeadsDialog";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 
@@ -73,6 +72,7 @@ export function LeadsTable({
 
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const [isTransitionPending, startTransition] = useTransition();
 
   const handleSelectAllGlobal = async () => {
     setIsGlobalLoading(true);
@@ -102,15 +102,20 @@ export function LeadsTable({
   };
 
   const handleBulkDelete = async () => {
-    const ids = Array.from(selectedIds);
-    const result = await bulkDeleteLeadsAction(ids);
-    if (result.success) {
-      toast.success(result.message);
-      clearSelection();
-      handleSuccessFeedback();
-    } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-    }
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const ids = Array.from(selectedIds);
+        const result = await bulkDeleteLeadsAction(ids);
+        if (result.success) {
+          toast.success(result.message);
+          clearSelection();
+          handleSuccessFeedback();
+        } else {
+          toast.error(result.message || "เกิดข้อผิดพลาด");
+        }
+        resolve();
+      });
+    });
   };
 
   return (
@@ -129,6 +134,7 @@ export function LeadsTable({
             : undefined
         }
         entityName="ลีด"
+        className={isTransitionPending ? "opacity-50 pointer-events-none" : ""}
       />
 
       {/* Global Selection Indicator */}

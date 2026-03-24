@@ -5,6 +5,9 @@ import { revalidatePath } from "next/cache";
 import { BlogPostInput } from "./types";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { getServerTranslations } from "@/lib/i18n";
+import { mapDbError } from "@/lib/db-error";
+import { blogPostSchema } from "./schema";
+import { z } from "zod";
 
 import { generateBlogPost, refineBlogContent } from "./services/ai-service";
 import { uploadBlogImage } from "./services/storage-service";
@@ -21,62 +24,67 @@ export type ActionResponse = {
 export async function createBlogPostAction(
   input: BlogPostInput,
 ): Promise<ActionResponse> {
-  const supabase = await createClient();
-  const user = await getCurrentProfile();
-  const { t } = await getServerTranslations();
+  try {
+    const validated = blogPostSchema.parse(input);
+    const supabase = await createClient();
+    const user = await getCurrentProfile();
+    const { t } = await getServerTranslations();
 
-  if (!user || !["ADMIN", "AGENT", "MANAGER"].includes(user.role)) {
-    return { success: false, message: "Unauthorized" };
-  }
+    if (!user || !["ADMIN", "AGENT", "MANAGER"].includes(user.role)) {
+      return { success: false, message: "Unauthorized" };
+    }
 
-  const tagsArray = input.tags
-    ? input.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean)
-    : [];
+    const tagsArray = validated.tags
+      ? validated.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
 
-  const { error } = await supabase.from("blog_posts").insert({
-    title: input.title,
-    title_en: input.title_en || null,
-    title_cn: input.title_cn || null,
-    slug: input.slug,
-    content: input.content || "",
-    content_en: input.content_en || null,
-    content_cn: input.content_cn || null,
-    excerpt: input.excerpt || "",
-    excerpt_en: input.excerpt_en || null,
-    excerpt_cn: input.excerpt_cn || null,
-    category: input.category,
-    cover_image: input.cover_image || null,
-    is_published: input.is_published,
-    published_at:
-      input.published_at ||
-      (input.is_published ? new Date().toISOString() : null),
-    tags: tagsArray,
-    author: {
-      name: user.full_name || "Admin",
-      avatar: user.avatar_url || "",
-    },
-    structured_data: input.structured_data
-      ? JSON.parse(input.structured_data)
-      : null,
-  });
+    const { error } = await supabase.from("blog_posts").insert({
+      title: validated.title,
+      title_en: validated.title_en || null,
+      title_cn: validated.title_cn || null,
+      slug: validated.slug,
+      content: validated.content || "",
+      content_en: validated.content_en || null,
+      content_cn: validated.content_cn || null,
+      excerpt: validated.excerpt || "",
+      excerpt_en: validated.excerpt_en || null,
+      excerpt_cn: validated.excerpt_cn || null,
+      category: validated.category,
+      cover_image: validated.cover_image || null,
+      is_published: validated.is_published,
+      published_at:
+        validated.published_at ||
+        (validated.is_published ? new Date().toISOString() : null),
+      tags: tagsArray,
+      author: {
+        name: user.full_name || "Admin",
+        avatar: user.avatar_url || "",
+      },
+      structured_data: validated.structured_data
+        ? JSON.parse(validated.structured_data)
+        : null,
+    });
 
-  if (error) {
+    if (error) throw error;
+
+    revalidatePath("/protected/blogs");
+    revalidatePath("/blog");
+    return {
+      success: true,
+      message: t("blog.action_success_create") || "สร้างบทความสำเร็จ",
+    };
+  } catch (error: any) {
     console.error("Create blog error:", error);
     return {
       success: false,
-      message: t("blog.action_error_create") || "Failed to create post",
+      message: error instanceof z.ZodError 
+        ? error.issues[0].message 
+        : mapDbError(error),
     };
   }
-
-  revalidatePath("/protected/blogs");
-  revalidatePath("/blog");
-  return {
-    success: true,
-    message: t("blog.action_success_create") || "Post created successfully",
-  };
 }
 
 /**
@@ -86,63 +94,68 @@ export async function updateBlogPostAction(
   id: string,
   input: BlogPostInput,
 ): Promise<ActionResponse> {
-  const supabase = await createClient();
-  const user = await getCurrentProfile();
-  const { t } = await getServerTranslations();
+  try {
+    const validated = blogPostSchema.parse(input);
+    const supabase = await createClient();
+    const user = await getCurrentProfile();
+    const { t } = await getServerTranslations();
 
-  if (!user || !["ADMIN", "AGENT", "MANAGER"].includes(user.role)) {
-    return { success: false, message: "Unauthorized" };
-  }
+    if (!user || !["ADMIN", "AGENT", "MANAGER"].includes(user.role)) {
+      return { success: false, message: "Unauthorized" };
+    }
 
-  const tagsArray = input.tags
-    ? input.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean)
-    : [];
+    const tagsArray = validated.tags
+      ? validated.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
 
-  const { error } = await supabase
-    .from("blog_posts")
-    .update({
-      title: input.title,
-      title_en: input.title_en,
-      title_cn: input.title_cn,
-      slug: input.slug,
-      content: input.content,
-      content_en: input.content_en,
-      content_cn: input.content_cn,
-      excerpt: input.excerpt,
-      excerpt_en: input.excerpt_en,
-      excerpt_cn: input.excerpt_cn,
-      category: input.category,
-      cover_image: input.cover_image,
-      is_published: input.is_published,
-      published_at:
-        input.published_at ||
-        (input.is_published ? new Date().toISOString() : input.published_at),
-      tags: tagsArray,
-      structured_data: input.structured_data
-        ? JSON.parse(input.structured_data)
-        : null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
+    const { error } = await supabase
+      .from("blog_posts")
+      .update({
+        title: validated.title,
+        title_en: validated.title_en,
+        title_cn: validated.title_cn,
+        slug: validated.slug,
+        content: validated.content,
+        content_en: validated.content_en,
+        content_cn: validated.content_cn,
+        excerpt: validated.excerpt,
+        excerpt_en: validated.excerpt_en,
+        excerpt_cn: validated.excerpt_cn,
+        category: validated.category,
+        cover_image: validated.cover_image,
+        is_published: validated.is_published,
+        published_at:
+          validated.published_at ||
+          (validated.is_published ? new Date().toISOString() : validated.published_at),
+        tags: tagsArray,
+        structured_data: validated.structured_data
+          ? JSON.parse(validated.structured_data)
+          : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
 
-  if (error) {
+    if (error) throw error;
+
+    revalidatePath("/protected/blogs");
+    revalidatePath("/blog");
+    revalidatePath(`/blog/${validated.slug}`);
+    return {
+      success: true,
+      message: t("blog.action_success_update") || "อัปเดตบทความสำเร็จ",
+    };
+  } catch (error: any) {
     console.error("Update blog error:", error);
     return {
       success: false,
-      message: t("blog.action_error_update") || "Failed to update post",
+      message: error instanceof z.ZodError 
+        ? error.issues[0].message 
+        : mapDbError(error),
     };
   }
-
-  revalidatePath("/protected/blogs");
-  revalidatePath("/blog");
-  revalidatePath(`/blog/${input.slug}`);
-  return {
-    success: true,
-    message: t("blog.action_success_update") || "Post updated successfully",
-  };
 }
 
 /**
@@ -151,29 +164,31 @@ export async function updateBlogPostAction(
 export async function deleteBlogPostAction(
   id: string,
 ): Promise<ActionResponse> {
-  const supabase = await createClient();
-  const user = await getCurrentProfile();
-  const { t } = await getServerTranslations();
+  try {
+    const supabase = await createClient();
+    const user = await getCurrentProfile();
+    const { t } = await getServerTranslations();
 
-  if (!user || !["ADMIN", "AGENT", "MANAGER"].includes(user.role)) {
-    return { success: false, message: "Unauthorized" };
-  }
+    if (!user || !["ADMIN", "AGENT", "MANAGER"].includes(user.role)) {
+      return { success: false, message: "Unauthorized" };
+    }
 
-  const { error } = await supabase.from("blog_posts").delete().eq("id", id);
+    const { error } = await supabase.from("blog_posts").delete().eq("id", id);
 
-  if (error) {
+    if (error) throw error;
+
+    revalidatePath("/protected/blogs");
+    return {
+      success: true,
+      message: t("blog.action_success_delete") || "ลบบทความสำเร็จ",
+    };
+  } catch (error: any) {
     console.error("Delete blog error:", error);
     return {
       success: false,
-      message: t("blog.action_error_delete") || "Failed to delete post",
+      message: mapDbError(error),
     };
   }
-
-  revalidatePath("/protected/blogs");
-  return {
-    success: true,
-    message: t("blog.action_success_delete") || "Post deleted successfully",
-  };
 }
 
 /**

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import {
   Table,
@@ -30,6 +30,8 @@ import {
   ImageIcon,
   AlertTriangle,
   Building2,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -68,8 +70,6 @@ import { exportPropertiesAction } from "@/features/properties/export-action";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DuplicatePropertyButton } from "./DuplicatePropertyButton";
-import { useState } from "react";
-import { Loader2, CheckCircle2 } from "lucide-react";
 import type {
   PropertyStatus,
   PropertyType,
@@ -300,6 +300,7 @@ export function PropertiesTable({
   } = useTableSelection(allIds);
 
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const [isTransitionPending, startTransition] = useTransition();
 
   const handleSelectAllGlobal = async () => {
     setIsGlobalLoading(true);
@@ -421,27 +422,37 @@ export function PropertiesTable({
   };
 
   const handleBulkDelete = async () => {
-    const ids = Array.from(selectedIds);
-    const result = await bulkDeletePropertiesAction(ids);
-    if (result.success) {
-      toast.success(result.message);
-      clearSelection();
-      handleSuccessFeedback();
-    } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-    }
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const ids = Array.from(selectedIds);
+        const result = await bulkDeletePropertiesAction(ids);
+        if (result.success) {
+          toast.success(result.message);
+          clearSelection();
+          handleSuccessFeedback();
+        } else {
+          toast.error(result.message || "เกิดข้อผิดพลาด");
+        }
+        resolve();
+      });
+    });
   };
 
   const handleBulkMove = async () => {
-    const ids = Array.from(selectedIds);
-    const result = await bulkMovePropertiesToTenantAction(ids);
-    if (result.success) {
-      toast.success(result.message);
-      clearSelection();
-      handleSuccessFeedback();
-    } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-    }
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const ids = Array.from(selectedIds);
+        const result = await bulkMovePropertiesToTenantAction(ids);
+        if (result.success) {
+          toast.success(result.message);
+          clearSelection();
+          handleSuccessFeedback();
+        } else {
+          toast.error(result.message || "เกิดข้อผิดพลาด");
+        }
+        resolve();
+      });
+    });
   };
 
   return (
@@ -465,6 +476,7 @@ export function PropertiesTable({
         onPullConfirmMessage={pullConfirmMessage}
         entityName="ทรัพย์"
         actionableCount={selectedCount - blockedCount}
+        className={isTransitionPending ? "opacity-50 pointer-events-none" : ""}
       />
 
       {/* Global Selection Indicator */}

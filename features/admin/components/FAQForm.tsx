@@ -110,20 +110,21 @@ export function FAQForm({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setSaving(true);
     try {
-      if (isNew) {
-        await createFaq(values);
-        toast.success("สร้างคำถามใหม่สำเร็จ");
+      const res = isNew 
+        ? await createFaq(values)
+        : await updateFaq({ id: faqId!, ...values });
+
+      if (res.success) {
+        toast.success(res.message);
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push("/protected/faqs?success=true");
+        }
+        router.refresh();
       } else {
-        if (!faqId) throw new Error("Missing ID for update");
-        await updateFaq({ id: faqId, ...values });
-        toast.success("อัปเดตข้อมูลสำเร็จ");
+        toast.error(res.message);
       }
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        router.push("/protected/faqs?success=true");
-      }
-      router.refresh();
     } catch (error: any) {
       toast.error("เกิดข้อผิดพลาด: " + error.message);
     } finally {

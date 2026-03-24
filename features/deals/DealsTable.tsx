@@ -25,6 +25,7 @@ import { useDealsTable } from "./hooks/useDealsTable";
 import { DealsFilters } from "./components/DealsFilters";
 import { DealsTableRow } from "./components/DealsTableRow";
 import { DealsMobileCard } from "./components/DealsMobileCard";
+import { useTransition } from "react";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface DealsTableProps {
@@ -97,16 +98,23 @@ export function DealsTable({
     }
   };
 
+  const [isTransitionPending, startTransition] = useTransition();
+
   const handleBulkDelete = async () => {
-    const ids = Array.from(selectedIds);
-    const result = await bulkDeleteDealsAction(ids);
-    if (result.success) {
-      toast.success(result.message);
-      clearSelection();
-      refresh();
-    } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-    }
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const ids = Array.from(selectedIds);
+        const result = await bulkDeleteDealsAction(ids);
+        if (result.success) {
+          toast.success(result.message);
+          clearSelection();
+          refresh();
+        } else {
+          toast.error(result.message || "เกิดข้อผิดพลาด");
+        }
+        resolve();
+      });
+    });
   };
 
   return (
@@ -117,6 +125,7 @@ export function DealsTable({
         onDelete={handleBulkDelete}
         onExport={() => exportDealsAction(Array.from(selectedIds))}
         entityName="ดีล"
+        className={isTransitionPending ? "opacity-50 pointer-events-none" : ""}
       />
 
       {/* Global Selection Indicator */}

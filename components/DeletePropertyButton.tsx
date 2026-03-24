@@ -20,16 +20,12 @@ export function DeletePropertyButton({ id }: { id: string }) {
         formData.append("id", id);
         const res = await deletePropertyAction(formData);
 
-        // Note: deletePropertyAction returns void or redirect?
-        // We assume it handles revalidation.
-        // If it throws, we catch it.
-        // If it returns a result object, we should check it.
-        // Based on previous code, it just returns void/redirect or result.
-        // Let's assume standard "throws on error" or "returns result".
-        // The original code was: await deletePropertyAction(formData);
-
-        toast.success("ลบข้อมูลทรัพย์เรียบร้อยแล้ว");
-        router.refresh();
+        if (res.success) {
+          toast.success(res.message || "ลบข้อมูลทรัพย์เรียบร้อยแล้ว");
+          router.refresh();
+        } else {
+          toast.error(res.message || "เกิดข้อผิดพลาดในการลบข้อมูล");
+        }
       } catch (e: any) {
         toast.error(e.message || "เกิดข้อผิดพลาดในการลบข้อมูล");
       } finally {

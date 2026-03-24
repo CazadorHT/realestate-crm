@@ -40,8 +40,7 @@ export async function createPropertyAction(
     if (!parsed.success) {
       return {
         success: false,
-        message: "Validation failed",
-        errors: parsed.error.format(),
+        message: parsed.error.issues[0].message,
       };
     }
     const safeValues = parsed.data;
@@ -196,7 +195,12 @@ export async function createPropertyAction(
       },
     );
     revalidatePath("/protected/properties");
-    return { success: true, propertyId: property.id, slug: seoData.slug };
+    return { 
+      success: true, 
+      message: "สร้างทรัพย์ใหม่สำเร็จ",
+      propertyId: property.id, 
+      slug: seoData.slug 
+    };
   } catch (err) {
     console.error("createPropertyAction → error:", err);
     return authzFail(err);
@@ -348,7 +352,7 @@ export async function duplicatePropertyAction(
     );
 
     revalidatePath("/protected/properties");
-    return { success: true, propertyId: newPropertyId };
+    return { success: true, message: "คัดลอกทรัพย์สำเร็จ", propertyId: newPropertyId };
   } catch (err) {
     console.error("duplicatePropertyAction → error:", err);
     return authzFail(err);

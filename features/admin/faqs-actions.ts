@@ -5,21 +5,26 @@ import { revalidatePath } from "next/cache";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { mapDbError } from "@/lib/db-error";
 
-type CreateFaqInput = {
-  question: string;
-  answer: string;
-  category?: string;
-  sort_order?: number;
-};
+import { z } from "zod";
 
-type UpdateFaqInput = {
-  id: string;
-  question?: string;
-  answer?: string;
-  category?: string;
-  sort_order?: number;
-  is_active?: boolean;
-};
+const faqSchema = z.object({
+  question: z.string().min(1, "กรุณาระบุคำถาม"),
+  question_en: z.string().optional().nullable(),
+  question_cn: z.string().optional().nullable(),
+  answer: z.string().min(1, "กรุณาระบุคำตอบ"),
+  answer_en: z.string().optional().nullable(),
+  answer_cn: z.string().optional().nullable(),
+  category: z.string().optional().nullable(),
+  sort_order: z.number().optional().default(0),
+  is_active: z.boolean().optional().default(true),
+});
+
+const updateFaqSchema = faqSchema.partial().extend({
+  id: z.string().uuid(),
+});
+
+export type CreateFaqInput = z.infer<typeof faqSchema>;
+export type UpdateFaqInput = z.infer<typeof updateFaqSchema>;
 
 export async function getFaqs(page = 1, pageSize = 10) {
   const supabase = await createClient();
@@ -53,52 +58,87 @@ export async function getFaq(id: string) {
 
 export async function createFaq(input: CreateFaqInput) {
   try {
-    const { role } = await requireAuthContext();
+    const validated = faqSchema.parse(input);
+    const { role, tenantId } = await requireAuthContext();
     assertStaff(role);
+    if (!tenantId) throw new Error("Tenant context required");
 
     const supabase = await createClient();
-    const { error } = await supabase.from("faqs").insert([input]);
+    const { error } = await supabase.from("faqs").insert([{
+      ...validated,
+      tenant_id: tenantId
+    }]);
 
-    if (error) return { success: false, message: error.message };
+    if (error) throw error;
+    
     revalidatePath("/admin/faqs");
+    revalidatePath("/protected/faqs");
     revalidatePath("/"); // Update public page
     return { success: true, message: "สร้างคำถามสำเร็จ" };
   } catch (error: any) {
-    return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
+    console.error("createFaq error:", error);
+    return { 
+      success: false, 
+      message: error instanceof z.ZodError 
+        ? error.issues[0].message 
+        : mapDbError(error) 
+    };
   }
 }
 
 export async function updateFaq(input: UpdateFaqInput) {
   try {
-    const { role } = await requireAuthContext();
+    const validated = updateFaqSchema.parse(input);
+    const { role, tenantId } = await requireAuthContext();
     assertStaff(role);
+    if (!tenantId) throw new Error("Tenant context required");
 
     const supabase = await createClient();
-    const { id, ...updates } = input;
-    const { error } = await supabase.from("faqs").update(updates).eq("id", id);
+    const { id, ...updates } = validated;
+    const { error } = await supabase
+      .from("faqs")
+      .update(updates)
+      .eq("id", id)
+      .eq("tenant_id", tenantId);
 
-    if (error) return { success: false, message: error.message };
+    if (error) throw error;
+
     revalidatePath("/admin/faqs");
+    revalidatePath("/protected/faqs");
     revalidatePath("/");
     return { success: true, message: "แก้ไขคำถามสำเร็จ" };
   } catch (error: any) {
-    return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
+    console.error("updateFaq error:", error);
+    return { 
+      success: false, 
+      message: error instanceof z.ZodError 
+        ? error.issues[0].message 
+        : mapDbError(error) 
+    };
   }
 }
 
 export async function deleteFaq(id: string) {
   try {
-    const { role } = await requireAuthContext();
+    const { role, tenantId } = await requireAuthContext();
     assertStaff(role);
+    if (!tenantId) throw new Error("Tenant context required");
 
     const supabase = await createClient();
-    const { error } = await supabase.from("faqs").delete().eq("id", id);
+    const { error } = await supabase
+      .from("faqs")
+      .delete()
+      .eq("id", id)
+      .eq("tenant_id", tenantId);
 
-    if (error) return { success: false, message: error.message };
+    if (error) throw error;
+
     revalidatePath("/admin/faqs");
+    revalidatePath("/protected/faqs");
     revalidatePath("/");
     return { success: true, message: "ลบคำถามสำเร็จ" };
   } catch (error: any) {
-    return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
+    console.error("deleteFaq error:", error);
+    return { success: false, message: mapDbError(error) };
   }
 }

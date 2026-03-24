@@ -78,19 +78,21 @@ export function PartnerForm({
   async function onSubmit(values: PartnerFormValues) {
     setSaving(true);
     try {
-      if (isNew) {
-        await createPartner(values);
-        toast.success("สร้างพาร์ทเนอร์ใหม่สำเร็จ");
-      } else {
-        await updatePartner({ id: initialData.id, ...values });
-        toast.success("อัปเดตข้อมูลสำเร็จ");
-      }
+      const result = isNew 
+        ? await createPartner(values)
+        : await updatePartner({ id: initialData.id, ...values });
 
-      if (onSuccess) {
-        onSuccess();
+      if (result.success) {
+        toast.success(result.message || (isNew ? "สร้างพาร์ทเนอร์ใหม่สำเร็จ" : "อัปเดตข้อมูลสำเร็จ"));
+        
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push("/protected/partners?success=true");
+          router.refresh();
+        }
       } else {
-        router.push("/protected/partners?success=true");
-        router.refresh();
+        toast.error(result.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       }
     } catch (error: any) {
       toast.error("เกิดข้อผิดพลาด: " + error.message);

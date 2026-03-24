@@ -12,8 +12,32 @@ import {
 import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { z } from "zod";
 
-import type { OwnerFormValues } from "./types";
+const ownerSchema = z.object({
+  full_name: z.string().min(1, "กรุณากรอกชื่อเจ้าของ"),
+  phone: z
+    .string()
+    .refine(
+      (val) => !val || /^0[0-9]{8,9}$/.test(val.replace(/[- ]/g, "")),
+      "เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมี 9-10 หลัก)",
+    )
+    .nullable()
+    .optional(),
+  line_id: z.string().nullable().optional(),
+  facebook_url: z.string().nullable().optional(),
+  other_contact: z.string().nullable().optional(),
+  company_name: z.string().nullable().optional(),
+  owner_type: z.string().nullable().optional(),
+});
+
+const updateOwnerSchema = ownerSchema.partial().extend({
+  id: z.string().uuid(),
+});
+
+export type CreateOwnerInput = z.infer<typeof ownerSchema>;
+export type UpdateOwnerInput = z.infer<typeof updateOwnerSchema>;
+
 import { calculatePropertyCounts } from "./logic";
 
 export async function getOwnersAction(allBranches = false) {
@@ -88,58 +112,58 @@ export async function getOwnerByIdAction(id: string) {
   return owner;
 }
 
-export async function createOwnerAction(values: OwnerFormValues) {
+export async function createOwnerAction(input: CreateOwnerInput) {
   try {
+    const validated = ownerSchema.parse(input);
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
+    if (!ctx.tenantId) throw new Error("Tenant context required");
 
     const { data: owner, error } = await ctx.supabase
       .from("owners")
       .insert({
-        full_name: values.full_name,
-        phone: values.phone || null,
-        line_id: values.line_id || null,
-        facebook_url: values.facebook_url || null,
-        other_contact: values.other_contact || null,
-        owner_type: values.owner_type || null,
-        company_name: values.company_name || null,
+        ...validated,
         created_by: ctx.user.id,
-        tenant_id: ctx.tenantId!,
+        tenant_id: ctx.tenantId,
         updated_at: new Date().toISOString(),
       })
       .select("id")
       .single();
 
-    if (error || !owner)
-      return {
-        success: false,
-        message: mapDbError(error) ?? "ไม่สามารถสร้างข้อมูลเจ้าของทรัพย์ได้",
-      };
+    if (error || !owner) throw error;
 
     await logAudit(ctx, {
       action: "owner.create",
-
       entity: "owners",
       entityId: owner.id,
       metadata: {},
     });
 
     revalidatePath("/protected/owners");
-    return { success: true, id: owner.id };
-  } catch (err) {
-    return authzFail(err);
+    return { success: true, message: "เพิ่มเจ้าของสำเร็จ", id: owner.id };
+  } catch (err: any) {
+    if (err.code === "AUTHZ_ERROR") return authzFail(err);
+    console.error("createOwnerAction error:", err);
+    return { 
+      success: false, 
+      message: err instanceof z.ZodError 
+        ? err.issues[0].message 
+        : mapDbError(err) || "ไม่สามารถสร้างข้อมูลเจ้าของทรัพย์ได้" 
+    };
   }
 }
 
-export async function updateOwnerAction(id: string, values: OwnerFormValues) {
+export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
   try {
+    const validated = ownerSchema.parse(input);
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
+    if (!ctx.tenantId) throw new Error("Tenant context required");
 
-    // 1) Verify ownership and branch isolation
+    // 1) Verify presence and branch isolation
     const { data: existing, error: findError } = await ctx.supabase
       .from("owners")
-      .select("created_by, tenant_id")
+      .select("id, tenant_id")
       .eq("id", id)
       .single();
 
@@ -152,27 +176,16 @@ export async function updateOwnerAction(id: string, values: OwnerFormValues) {
       return { success: false, message: "คุณไม่มีสิทธิ์แก้ไขข้อมูลของสาขาอื่น" };
     }
 
-    assertAuthenticated({
-      userId: ctx.user.id,
-      role: ctx.role,
-    });
-
     const { error } = await ctx.supabase
       .from("owners")
       .update({
-        full_name: values.full_name,
-        phone: values.phone || null,
-        line_id: values.line_id || null,
-        facebook_url: values.facebook_url || null,
-        other_contact: values.other_contact || null,
-        owner_type: values.owner_type || null,
-        company_name: values.company_name || null,
+        ...validated,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .eq("tenant_id", ctx.tenantId!);
+      .eq("tenant_id", ctx.tenantId);
 
-    if (error) return { success: false, message: mapDbError(error) };
+    if (error) throw error;
 
     await logAudit(ctx, {
       action: "owner.update",
@@ -183,9 +196,16 @@ export async function updateOwnerAction(id: string, values: OwnerFormValues) {
 
     revalidatePath("/protected/owners");
     revalidatePath("/protected/properties");
-    return { success: true };
-  } catch (err) {
-    return authzFail(err);
+    return { success: true, message: "บันทึกข้อมูลสำเร็จ" };
+  } catch (err: any) {
+    if (err.code === "AUTHZ_ERROR") return authzFail(err);
+    console.error("updateOwnerAction error:", err);
+    return { 
+      success: false, 
+      message: err instanceof z.ZodError 
+        ? err.issues[0].message 
+        : mapDbError(err) 
+    };
   }
 }
 
@@ -193,11 +213,12 @@ export async function deleteOwnerAction(id: string) {
   try {
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
+    if (!ctx.tenantId) throw new Error("Tenant context required");
 
-    // 1) Verify ownership and branch isolation
+    // 1) Verify presence and branch isolation
     const { data: existing, error: findError } = await ctx.supabase
       .from("owners")
-      .select("created_by, tenant_id")
+      .select("id, tenant_id")
       .eq("id", id)
       .single();
 
@@ -210,17 +231,13 @@ export async function deleteOwnerAction(id: string) {
       return { success: false, message: "คุณไม่มีสิทธิ์ลบข้อมูลของสาขาอื่น" };
     }
 
-    assertAuthenticated({
-      userId: ctx.user.id,
-      role: ctx.role,
-    });
-
     const { error } = await ctx.supabase
       .from("owners")
       .delete()
       .eq("id", id)
-      .eq("tenant_id", ctx.tenantId!);
-    if (error) return { success: false, message: mapDbError(error) };
+      .eq("tenant_id", ctx.tenantId);
+
+    if (error) throw error;
 
     await logAudit(ctx, {
       action: "owner.delete",
@@ -231,9 +248,10 @@ export async function deleteOwnerAction(id: string) {
 
     revalidatePath("/protected/owners");
     revalidatePath("/protected/properties");
-    return { success: true };
+    return { success: true, message: "ลบเจ้าของสำเร็จ" };
   } catch (err) {
-    return authzFail(err);
+    if ((err as any).code === "AUTHZ_ERROR") return authzFail(err);
+    return { success: false, message: mapDbError(err) };
   }
 }
 

@@ -47,8 +47,7 @@ export async function updatePropertyAction(
     if (!parsed.success) {
       return {
         success: false,
-        message: "Validation failed",
-        errors: parsed.error.format(),
+        message: parsed.error.issues[0].message,
       };
     }
     const safeValues = parsed.data;
@@ -344,7 +343,7 @@ export async function updatePropertyAction(
 
     revalidatePath("/protected/properties");
     revalidatePath(`/protected/properties/${id}`);
-    return { success: true, propertyId: id, slug: seoData.slug };
+    return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
   } catch (err) {
     return authzFail(err);
   }
@@ -418,13 +417,9 @@ export async function updatePropertyStatusAction(input: {
 
     // protected pages
     revalidatePath("/protected/properties");
-    revalidatePath(`/protected/properties/${input.id}`);
-
-    // public pages ที่อาจแสดงเฉพาะ ACTIVE
-    revalidatePath("/");
     revalidatePath("/properties");
 
-    return { success: true };
+    return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (e: unknown) {
     return { success: false, message: mapDbError(e) };
   }

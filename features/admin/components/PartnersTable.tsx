@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useTransition, useState } from "react";
 import Link from "next/link";
 import {
   Table,
@@ -35,7 +35,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { PartnerForm } from "./PartnerForm";
 import { cn } from "@/lib/utils";
@@ -59,6 +58,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
   const [deleteConfirmPartner, setDeleteConfirmPartner] =
     useState<Partner | null>(null);
@@ -84,33 +84,43 @@ export function PartnersTable({ partners }: PartnersTableProps) {
   };
 
   const handleBulkDelete = async () => {
-    const ids = Array.from(selectedIds);
-    const result = await bulkDeletePartnersAction(ids);
-    if (result.success) {
-      toast.success(result.message);
-      clearSelection();
-      handleSuccessFeedback();
-    } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-    }
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const ids = Array.from(selectedIds);
+        const result = await bulkDeletePartnersAction(ids);
+        if (result.success) {
+          toast.success(result.message);
+          clearSelection();
+          handleSuccessFeedback();
+        } else {
+          toast.error(result.message || "เกิดข้อผิดพลาด");
+        }
+        resolve();
+      });
+    });
   };
 
   const handleDelete = async (partner: Partner) => {
-    setIsDeleting(true);
-    try {
-      const res = await deletePartner(partner.id);
-      if (res.success) {
-        toast.success(res.message);
-        handleSuccessFeedback();
-      } else {
-        toast.error(res.message || "เกิดข้อผิดพลาดในการลบ");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "เกิดข้อผิดพลาดในการลบ");
-    } finally {
-      setIsDeleting(false);
-      setDeleteConfirmPartner(null);
-    }
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        setIsDeleting(true);
+        try {
+          const res = await deletePartner(partner.id);
+          if (res.success) {
+            toast.success(res.message);
+            handleSuccessFeedback();
+          } else {
+            toast.error(res.message || "เกิดข้อผิดพลาดในการลบ");
+          }
+        } catch (error: any) {
+          toast.error(error.message || "เกิดข้อผิดพลาดในการลบ");
+        } finally {
+          setIsDeleting(false);
+          setDeleteConfirmPartner(null);
+          resolve();
+        }
+      });
+    });
   };
 
   const handleEditSuccess = () => {
@@ -125,6 +135,7 @@ export function PartnersTable({ partners }: PartnersTableProps) {
         onClear={clearSelection}
         onDelete={handleBulkDelete}
         entityName="พาร์ทเนอร์"
+        className={isPending ? "opacity-50 pointer-events-none" : ""}
       />
 
       {/* Desktop Table View */}

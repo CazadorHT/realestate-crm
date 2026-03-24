@@ -123,12 +123,16 @@ export function PropertyRowActions({
   };
 
   const handleRenew = async () => {
-    const res = await renewPropertyAction(id);
-    if (res.success) {
-      toast.success("ดันประกาศสำเร็จ");
-    } else {
-      toast.error(res.message || "เกิดข้อผิดพลาด");
-    }
+    const promise = renewPropertyAction(id);
+    
+    toast.promise(promise, {
+      loading: "กำลังดันประกาศ (Renew)...",
+      success: (res) => {
+        if (res.success) return "ดันประกาศสำเร็จ";
+        throw new Error(res.message || "เกิดข้อผิดพลาด");
+      },
+      error: (err) => err.message || "เกิดข้อผิดพลาดในการดันประกาศ",
+    });
   };
 
   return (

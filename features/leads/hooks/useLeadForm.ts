@@ -54,16 +54,32 @@ export function useLeadForm(
     startTransition(async () => {
       try {
         if (onSubmitAction) {
-          await onSubmitAction(values);
-          toast.success("บันทึกข้อมูลสำเร็จ");
+          const result = await (onSubmitAction(values) as any);
+          
+          // Check if the action returned a standard ActionState object
+          if (result && typeof result === 'object' && 'success' in result) {
+            if (result.success) {
+              toast.success(result.message || "บันทึกข้อมูลสำเร็จ");
+            } else {
+              const msg = result.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
+              toast.error(msg);
+              setError(msg);
+              return; // Stop here on failure
+            }
+          } else {
+            // Fallback for actions that don't return ActionState (legacy or simple promises)
+            toast.success("บันทึกข้อมูลสำเร็จ");
+          }
         }
       } catch (e: any) {
         if (isNextRedirectError(e)) {
-          toast.success("บันทึกข้อมูลสำเร็จ");
+          // Redirects in Server Actions are thrown as special errors
+          // We usually don't want to show an error toast for them
           throw e;
         }
-        toast.error(e?.message ?? "เกิดข้อผิดพลาด");
-        setError(e?.message ?? "เกิดข้อผิดพลาด");
+        const msg = e?.message ?? "เกิดข้อผิดพลาด";
+        toast.error(msg);
+        setError(msg);
       }
     });
   };

@@ -83,7 +83,7 @@ export async function updateProfileAction(
     revalidatePath("/protected/profile");
     revalidatePath("/protected");
 
-    return { success: true };
+    return { success: true, message: "บันทึกข้อมูลโปรไฟล์สำเร็จ" };
   } catch (err) {
     return { success: false, message: mapDbError(err) || "Unauthorized" };
   }
@@ -219,7 +219,7 @@ export async function updateNotificationSettings(
     */
 
     revalidatePath("/protected/profile");
-    return { success: true };
+    return { success: true, message: "บันทึกการตั้งค่าสำเร็จ" };
   } catch (error) {
     console.error("updateNotificationSettings error:", error);
     return { success: false, message: mapDbError(error) || "Unauthorized or Error" };

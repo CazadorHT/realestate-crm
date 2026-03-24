@@ -156,27 +156,24 @@ export function ServiceForm({
         price_range: values.price_range?.trim() || "สอบถามราคา",
       };
 
-      if (isNew) {
-        const res = await createService(finalValues);
-        if (!res.success) throw new Error(res.message);
-        toast.success("Service created successfully");
-      } else {
-        const res = await updateService({
-          id: initialData.id,
-          ...finalValues,
-        });
-        if (!res.success) throw new Error(res.message);
-        toast.success("Service updated successfully");
-      }
+      const res = isNew 
+        ? await createService(finalValues)
+        : await updateService({ id: initialData.id, ...finalValues });
 
-      if (onSuccess) {
-        onSuccess();
+      if (res.success) {
+        toast.success(res.message || (isNew ? "สร้างบริการสำเร็จ" : "อัปเดตข้อมูลบริการสำเร็จ"));
+        
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push("/protected/services");
+          router.refresh();
+        }
       } else {
-        router.push("/protected/services");
-        router.refresh();
+        toast.error(res.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       }
     } catch (error: any) {
-      toast.error("Error: " + error.message);
+      toast.error("เกิดข้อผิดพลาด: " + error.message);
     } finally {
       setSaving(false);
     }
