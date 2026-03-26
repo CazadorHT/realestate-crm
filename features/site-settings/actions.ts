@@ -21,6 +21,8 @@ const DEFAULT_SETTINGS: SiteSettings = {
   isolation_deals_enabled: false,
   social_automation_keywords: [],
   social_post_template: `🏠 {{title}}\n💰 {{price}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`,
+  social_post_template_en: `🏠 {{title}}\n💰 {{price}}\n\nMore details: {{link}}`,
+  social_post_template_cn: `🏠 {{title}}\n💰 {{price}}\n\n更多详情: {{link}}`,
   site_name: "VC Connect Asset",
   company_name: "VC Connect Asset Co., Ltd.",
   site_description: "Real Estate CRM & Listing Portal",
@@ -82,6 +84,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
             : [];
         } else if (
           key === "social_post_template" ||
+          key === "social_post_template_en" ||
+          key === "social_post_template_cn" ||
           key === "site_name" ||
           key === "company_name" ||
           key === "site_description" ||
@@ -140,7 +144,11 @@ export async function getSiteSetting(key: SiteSettingKey): Promise<any> {
       return Array.isArray(data.value) ? data.value : [];
     }
 
-    if (key === "social_post_template") {
+    if (
+      key === "social_post_template" ||
+      key === "social_post_template_en" ||
+      key === "social_post_template_cn"
+    ) {
       return typeof data.value === "string"
         ? data.value
         : DEFAULT_SETTINGS[key];
@@ -274,6 +282,7 @@ export async function updateSiteSettings(
 export async function generateSocialAutomationTemplatesAction(
   type: "SOCIAL_POST" | "KEYWORD_DM",
   keyword?: string,
+  lang: "th" | "en" | "cn" = "th",
 ): Promise<{ success: boolean; data?: string; message?: string }> {
   try {
     const { generateText } = await import("@/lib/ai/gemini");
@@ -284,12 +293,17 @@ export async function generateSocialAutomationTemplatesAction(
 
     let prompt = "";
     if (type === "SOCIAL_POST") {
+      const langName = lang === "th" ? "ภาษาไทย" : lang === "en" ? "English" : "Chinese";
       prompt = `
         คุณเป็นนักการตลาดอสังหาริมทรัพย์มืออาชีพ
         ช่วยเขียน Template สำหรับโพสต์ลง Facebook/Instagram เพื่อดึงดูดลูกค้า
+        โดยให้เขียนเป็น ${langName}
+        
         ให้ใช้ "Dynamic Tags" เหล่านี้ประกอบในเนื้อหา:
         - {{title}}: ชื่อทรัพย์
         - {{price}}: ราคา
+        - {{original_price}}: ราคาเดิม (ถ้ามี)
+        - {{rental_price}}: ราคาเช่า (ถ้ามี)
         - {{location}}: ทำเล
         - {{link}}: ลิงก์ทรัพย์
         - {{bedrooms}}: ห้องนอน
@@ -297,16 +311,18 @@ export async function generateSocialAutomationTemplatesAction(
         - {{agent_phone}}: เบอร์ติดต่อ
         
         คำแนะนำ:
-        1. ใช้ภาษาไทยที่น่าสนใจ เร้าอารมณ์
+        1. ใช้ ${langName} ที่น่าสนใจ เร้าอารมณ์
         2. ใส่ Emoji ให้ดูสวยงาม
         3. เขียนให้สั้น กระชับ แต่อ่านแล้วอยากกดดูต่อ
         4. ส่งกลับเฉพาะเนื้อหา Template เท่านั้น ไม่ต้องขยายความ
       `;
     } else {
+      const langName = lang === "th" ? "ภาษาไทย" : lang === "en" ? "English" : "Chinese";
       prompt = `
         คุณเป็นเอเจนท์อสังหาริมทรัพย์ที่บริการดีเยี่ยม
         ช่วยเขียนข้อความตอบกลับลูกค้าทาง Inbox (DM) เมื่อลูกค้าสนใจสอบถามข้อมูล
         โดยลูกค้าพิมพ์ Keyword ว่า "${keyword || "สนใจ"}"
+        และให้ตอบกลับเป็น ${langName}
         
         ให้ใช้ "Dynamic Tags" เหล่านี้ประกอบในเนื้อหา:
         - {{title}}: ชื่อทรัพย์
@@ -315,7 +331,7 @@ export async function generateSocialAutomationTemplatesAction(
         - {{description}}: รายละเอียดเต็ม
         
         คำแนะนำ:
-        1. ใช้ภาษาไทยที่สุภาพ เป็นกันเอง และดูเป็นมืออาชีพ
+        1. ใช้ ${langName} ที่สุภาพ เป็นกันเอง และดูเป็นมืออาชีพ
         2. ใส่ Emoji ให้ดูเป็นมิตร
         3. ควรเริ่มด้วยการทักทายและขอบคุณที่สนใจ
         4. ส่งกลับเฉพาะเนื้อหาข้อความตอบกลับเท่านั้น ไม่ต้องขยายความ

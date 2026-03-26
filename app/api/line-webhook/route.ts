@@ -10,7 +10,7 @@ import {
   getPopularAreaTranslations,
 } from "@/features/properties/queries.public";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getLineProfile, saveOmniMessage } from "@/lib/line";
+import { getLineProfile, saveOmniMessage, sendLineNotification } from "@/lib/line";
 import { siteConfig } from "@/lib/site-config";
 import { chatWithAI } from "@/features/chatbot/actions";
 import {
@@ -24,6 +24,7 @@ import {
   buildLanguageSelection,
   buildSearchResultText,
   type AreaTranslations,
+  t,
 } from "@/lib/line-flex-builders";
 import {
   type FlexMessage,
@@ -579,6 +580,46 @@ async function handleInteractiveCommand(
   ) {
     const msg = buildLanguageSelection();
     await replyMessage(replyToken, [msg]);
+    return;
+  }
+
+  // --- สนใจทรัพย์ ---
+  if (text.startsWith("สนใจทรัพย์:")) {
+    // 1. ตอบกลับผู้ใช้ทันที
+    const replyMsg = t("interested_reply", lang);
+    await replyMessage(replyToken, [{ type: "text", text: replyMsg }]);
+
+    // 2. ดึงข้อมูล Property ID และ Title สำหรับแจ้งเตือน
+    const idMatch =
+      text.match(/\(รหัส: (.*?)\)/) ||
+      text.match(/\(ID: (.*?)\)/) ||
+      text.match(/\(编号: (.*?)\)/);
+    const propertyId = idMatch ? idMatch[1] : "";
+    const propertyTitle = text
+      .replace("สนใจทรัพย์:", "")
+      .replace(/\(รหัส:.*?\)/, "")
+      .replace(/\(ID:.*?\)/, "")
+      .replace(/\(编号:.*?\)/, "")
+      .trim();
+
+    // 3. ดึงข้อมูลผู้ใช้ (Lead) และโปรไฟล์ LINE
+    const supabase = createAdminClient();
+    const profile = await getLineProfile(userId);
+    const { data: lead } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("line_id", userId)
+      .maybeSingle();
+
+    // 4. แจ้งเตือนแอดมินทันที
+    const adminAlert = `🔔 มีคนสนใจทรัพย์สิน!\n\nผู้สนใจ: ${profile?.displayName || lead?.full_name || "ลูกค้า LINE"}\nทรัพย์สิน: ${propertyTitle}\nรหัส: ${propertyId || "-"}\n\nกรุณาติดต่อกลับโดยด่วนครับ`;
+    await sendLineNotification(adminAlert);
+
+    // 5. บันทึกข้อมูลเพิ่มลงในโน้ตของ Lead (ถ้ามี)
+    if (lead) {
+      const newNote = `[${new Date().toLocaleString("th-TH")}] สนใจทรัพย์: ${propertyTitle} (ID: ${propertyId})\n${lead.note || ""}`;
+      await supabase.from("leads").update({ note: newNote }).eq("id", lead.id);
+    }
     return;
   }
 

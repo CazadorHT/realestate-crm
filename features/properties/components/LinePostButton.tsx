@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Facebook, Loader2 } from "lucide-react";
-import { postPropertyToMetaAction } from "@/features/properties/actions";
-import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { FaLine } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import { SocialPostDialog } from "./SocialPostDialog";
 
-interface FacebookPostButtonProps {
+interface LinePostButtonProps {
   propertyId: string;
   propertyTitle?: string;
   className?: string;
@@ -23,14 +22,14 @@ interface FacebookPostButtonProps {
   showLabel?: boolean;
 }
 
-export function FacebookPostButton({
+export function LinePostButton({
   propertyId,
   propertyTitle,
   className,
   variant = "outline",
   size = "default",
   showLabel = true,
-}: FacebookPostButtonProps) {
+}: LinePostButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -39,7 +38,7 @@ export function FacebookPostButton({
       <SocialPostDialog
         propertyId={propertyId}
         propertyTitle={propertyTitle}
-        platform="FACEBOOK"
+        platform="LINE"
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         onSuccess={() => {
@@ -56,9 +55,9 @@ export function FacebookPostButton({
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
-          <Facebook className="h-4 w-4" />
+          <FaLine className="h-4 w-4" />
         )}
-        {showLabel && (isLoading ? "กำลังโพสต์..." : "โพสต์ลง Facebook")}
+        {showLabel && (isLoading ? "กำลังส่ง..." : "บรอดแคสต์ลง Line")}
       </Button>
     </>
   );

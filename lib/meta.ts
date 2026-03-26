@@ -426,7 +426,7 @@ export async function postToMetaPage(
       // Multi-photo Post
       // 1. Upload photos as unpublished
       const mediaIds: string[] = [];
-      for (const imgUrl of images.slice(0, 20)) {
+      for (const imgUrl of images.slice(0, 50)) {
         const uploadUrl = `${metaConfig.graphApiUrl}/me/photos?access_token=${token}`;
         const uploadRes = await fetch(uploadUrl, {
           method: "POST",

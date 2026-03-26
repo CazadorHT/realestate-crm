@@ -1,21 +1,35 @@
 "use server";
 
 import { requireAuthContext, assertStaff } from "@/lib/authz";
-import { sendLineNotification } from "@/lib/line";
+import { broadcastLineMessage } from "@/lib/line";
+import { buildSocialPostFlex, LOCATION_MAP } from "@/lib/line-flex-builders";
+import { translateTextAction } from "@/lib/ai/translation-actions";
+import { getProvinceName } from "@/lib/utils/provinces";
 import { revalidatePath } from "next/cache";
 
 /**
- * แชร์ข้อมูลทรัพย์ไปยัง Line (Broadcast/Push)
+ * แชร์ข้อมูลทรัพย์ไปยัง Line (Broadcast ไปยังทุกคน)
  */
-export async function postPropertyToLineAction(propertyId: string) {
+export async function postPropertyToLineAction(
+  propertyId: string,
+  customMessage?: string,
+  lang: "th" | "en" | "cn" = "th",
+) {
   try {
     const { supabase, role } = await requireAuthContext();
     assertStaff(role);
 
-    // 1. ดึงข้อมูลทรัพย์
+    // 1. ดึงข้อมูลทรัพย์ พร้อมรูปภาพ
     const { data: property, error: propError } = await supabase
       .from("properties")
-      .select("*")
+      .select(`
+        *,
+        property_images (
+          image_url,
+          is_cover,
+          sort_order
+        )
+      `)
       .eq("id", propertyId)
       .single();
 
@@ -23,18 +37,58 @@ export async function postPropertyToLineAction(propertyId: string) {
       return { success: false, message: "ไม่พบข้อมูลทรัพย์" };
     }
 
-    // 2. สร้างสารข้อความแชร์ (Simple version for now, could use Flex in future)
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "";
-    const publicUrl = `${baseUrl}/properties/${property.slug || property.id}`;
+    // 2. Preparing localized location if needed (AI Fallback)
+    const p = property as any;
+    if (lang !== "th") {
+      const provinceTr = p.province ? getProvinceName(p.province, lang) : "";
+      
+      const hasDistrictTr = p.district && (p[`district_${lang}`] || LOCATION_MAP[p.district]);
+      const hasProvinceTr = p.province && (p[`province_${lang}`] || (provinceTr && provinceTr !== p.province));
 
-    const message = `🏠 ${property.title}\n💰 ราคา: ${property.price?.toLocaleString() || "-"}\n\nดูข้อมูลเพิ่มเติม: ${publicUrl}`;
+      if (!hasDistrictTr || !hasProvinceTr) {
+        try {
+          const districtToTranslate = !hasDistrictTr ? p.district : "";
+          const provinceToTranslate = !hasProvinceTr && !provinceTr ? p.province : "";
+          
+          const toTranslate = [districtToTranslate, provinceToTranslate].filter(Boolean).join(", ");
+          if (toTranslate) {
+            const tr = await translateTextAction(toTranslate);
+            if (lang === "en") {
+              if (districtToTranslate) p.district_en = tr.en;
+            } else if (lang === "cn") {
+              if (districtToTranslate) p.district_cn = tr.cn;
+            }
+          }
+        } catch (e) {
+          console.error("AI Location Translation failed:", e);
+        }
+      }
+    }
 
-    // 3. ส่ง Notification (Push to Admin/Staff as a broadcast test)
-    // หมายเหตุ: ในระบบจริงอาจเป็นการ Broadcast ให้ลูกค้าทุกคน หรือส่งเข้ากลุ่ม
-    await sendLineNotification(message);
+    // 3. เตรียมรูปภาพ (เรียงตาม sort_order)
+    const images = (property.property_images || [])
+      .sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map((img: any) => img.image_url);
 
-    // 4. บันทึก Timestamp
+    // 3. สร้าง Flex Message
+    const flexMessage = buildSocialPostFlex(
+      property as any,
+      images,
+      customMessage,
+      lang
+    );
+
+    // 4. ส่ง Broadcast ไปยังทุกคน
+    const broadcastRes = await broadcastLineMessage(flexMessage);
+
+    if (!broadcastRes.success) {
+      return { 
+        success: false, 
+        message: `Line Error: ${broadcastRes.message || "ไม่สามารถบรอดแคสต์ได้"}` 
+      };
+    }
+
+    // 5. บันทึก Timestamp
     await supabase
       .from("properties")
       .update({ posted_to_line_at: new Date().toISOString() })
@@ -42,7 +96,7 @@ export async function postPropertyToLineAction(propertyId: string) {
 
     revalidatePath("/(protected)/protected/properties", "page");
 
-    return { success: true, message: "แชร์ลง Line เรียบร้อย" };
+    return { success: true, message: "บรอดแคสต์ลง Line เรียบร้อย" };
   } catch (err) {
     console.error("postPropertyToLineAction → error:", err);
     return { success: false, message: "เกิดข้อผิดพลาดในการแชร์ลง Line" };

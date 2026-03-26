@@ -72,3 +72,4 @@
 ในช่อง Address Bar ของ Explorer (ที่พิมพ์ me/accounts ตะกี้)
 ให้ลบของเดิมแล้วพิมพ์เลข ID เพจลงไปตามนี้เลยครับ:
 👉 111608617234370?fields=access_token
+**111608617234370?fields=id,name,access_token ก๊อปอันนี้ไปวางได้เลย** จะถูกโพสต์ได้ที่ deploy

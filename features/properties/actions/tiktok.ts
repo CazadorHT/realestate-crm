@@ -11,15 +11,21 @@ import { revalidatePath } from "next/cache";
 export async function postPropertyToTikTokAction(
   propertyId: string,
   caption?: string,
+  lang: "th" | "en" | "cn" = "th",
 ) {
   try {
     const { supabase, role } = await requireAuthContext();
     assertStaff(role);
 
-    // 1. ดึงข้อมูลทรัพย์
+    // 1. ดึงข้อมูลทรัพย์ พร้อมรูป
     const { data: property, error: propError } = await supabase
       .from("properties")
-      .select("*")
+      .select(`
+        *,
+        property_images (
+          image_url
+        )
+      `)
       .eq("id", propertyId)
       .single();
 

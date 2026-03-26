@@ -6,6 +6,9 @@ import { Copy, Check, Share2, MessageCircle, ExternalLink } from "lucide-react";
 import { FaLine } from "react-icons/fa";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Languages } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +37,18 @@ interface QuickShareButtonProps {
     bedrooms?: number | null;
     bathrooms?: number | null;
     area_sqm?: number | null;
+    size_sqm?: number | null;
     cover_image_url?: string | null;
+    title_en?: string | null;
+    title_cn?: string | null;
+    description_en?: string | null;
+    description_cn?: string | null;
+    popular_area_en?: string | null;
+    popular_area_cn?: string | null;
+    district_en?: string | null;
+    district_cn?: string | null;
+    province_en?: string | null;
+    province_cn?: string | null;
   };
   className?: string;
 }
@@ -44,71 +58,63 @@ export function QuickShareButton({
   className,
 }: QuickShareButtonProps) {
   const [copied, setCopied] = useState(false);
-
-  const formatPrice = (val: number | null) =>
-    val
-      ? new Intl.NumberFormat("th-TH", {
-          style: "currency",
-          currency: "THB",
-          maximumFractionDigits: 0,
-        }).format(val)
-      : "-";
+  const [lang, setLang] = useState<"th" | "en" | "cn">("th");
 
   const publicUrl = `${siteConfig.url}/properties/${property.id}`;
+
+  const tTitle = (lang === "th" ? property.title : (property as any)[`title_${lang}`]) || property.title || "";
+  const tDistrict = (lang === "th" ? property.district : (property as any)[`district_${lang}`]) || property.district || "";
+  const tProvince = (lang === "th" ? property.province : (property as any)[`province_${lang}`]) || property.province || "";
+  const tPopularArea = (lang === "th" ? property.popular_area : (property as any)[`popular_area_${lang}`]) || property.popular_area || "";
+
+  // Labels
+  const L = {
+    th: { intro: "📢 ฝากทรัพย์คุณภาพครับ ✨", price: "💰 ราคา:", sale: "ขาย", rent: "เช่า", month: "/เดือน", location: "📍 ทำเล:", area: "📐 พื้นที่:", sqm: "ตร.ม.", bed: "ห้องนอน", bath: "ห้องน้ำ", id: "🆔 รหัสทรัพย์:", link: "🔗 ดูรายละเอียดเพิ่มเติม:", from: "ลดจาก" },
+    en: { intro: "📢 Premium Property for you ✨", price: "💰 Price:", sale: "Sale", rent: "Rent", month: "/mo", location: "📍 Location:", area: "📐 Area:", sqm: "sqm", bed: "Bedrooms", bath: "Bathrooms", id: "🆔 Property ID:", link: "🔗 View more details:", from: "Discount from" },
+    cn: { intro: "📢 为您推荐优质房产 ✨", price: "💰 价格:", sale: "出售", rent: "出租", month: "/月", location: "📍 地点:", area: "📐 面积:", sqm: "平方米", bed: "卧室", bath: "浴室", id: "🆔 房产编号:", link: "🔗 查看更多详情:", from: "原价" }
+  }[lang];
 
   // Location logic: Priority Neighborhood > Subdistrict > District
   const locationText =
     [
-      property.popular_area ? `ย่าน${property.popular_area}` : null,
-      property.province,
+      tPopularArea ? (lang === "th" ? `ย่าน${tPopularArea}` : tPopularArea) : null,
+      tProvince,
     ]
       .filter(Boolean)
       .join(", ") ||
-    property.province ||
+    tProvince ||
     "";
 
-  // Price logic: Support Sale, Rent, and discounts
+  // Price logic
   const prices: string[] = [];
+  const formatPriceVal = (val: number | null) =>
+    val ? val.toLocaleString() + " " + (lang === "en" ? "THB" : lang === "cn" ? "泰铢" : "บาท") : "-";
 
-  if (
-    property.listing_type === "SALE" ||
-    property.listing_type === "SALE_AND_RENT"
-  ) {
-    let p = `💰 ขาย: ${formatPrice(property.price ?? null)}`;
-    if (
-      property.original_price &&
-      property.price &&
-      property.original_price > property.price
-    ) {
-      p += ` (ลดจาก ${formatPrice(property.original_price)}) 🔥`;
+  if (property.listing_type === "SALE" || property.listing_type === "SALE_AND_RENT") {
+    let p = `${L.price} ${L.sale} ${formatPriceVal(property.price ?? null)}`;
+    if (property.original_price && property.price && property.original_price > property.price) {
+      p += ` (${L.from} ${formatPriceVal(property.original_price)}) 🔥`;
     }
     prices.push(p);
   }
 
-  if (
-    property.listing_type === "RENT" ||
-    property.listing_type === "SALE_AND_RENT"
-  ) {
-    let p = `💎 เช่า: ${formatPrice(property.rental_price ?? null)}/เดือน`;
-    if (
-      property.original_rental_price &&
-      property.rental_price &&
-      property.original_rental_price > property.rental_price
-    ) {
-      p += ` (ลดจาก ${formatPrice(property.original_rental_price)}) 🔥`;
+  if (property.listing_type === "RENT" || property.listing_type === "SALE_AND_RENT") {
+    let p = `${L.price} ${L.rent} ${formatPriceVal(property.rental_price ?? null)}${L.month}`;
+    if (property.original_rental_price && property.rental_price && property.original_rental_price > property.rental_price) {
+      p += ` (${L.from} ${formatPriceVal(property.original_rental_price)}) 🔥`;
     }
     prices.push(p);
   }
 
   const shareMessage = `
-📢 ฝากทรัพย์คุณภาพครับ ✨
-🏠 ${property.title}
+${L.intro}
+${tTitle}
 ${prices.join("\n")}
-📍 ทำเล: ${locationText}
-📐 พื้นที่: ${property.area_sqm || "-"} ตร.ม.
-🛏️ ${property.bedrooms || 0} ห้องนอน | 🚿 ${property.bathrooms || 0} ห้องน้ำ
-🆔 รหัสทรัพย์: ${property.id.split("-")[0].toUpperCase()}
-🔗 ดูรายละเอียดเพิ่มเติม: ${publicUrl}
+${L.location} ${locationText}
+${L.area} ${property.size_sqm || property.area_sqm || "-"} ${L.sqm}
+🛏️ ${property.bedrooms || 0} ${L.bed} | 🚿 ${property.bathrooms || 0} ${L.bath}
+${L.id} ${property.id.split("-")[0].toUpperCase()}
+${L.link} ${publicUrl}
   `.trim();
 
   const handleCopy = async () => {
@@ -141,30 +147,54 @@ ${prices.join("\n")}
           ส่งข้อมูลให้ลูกค้า
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md rounded-2xl">
+      <DialogContent className="sm:max-w-md sm:max-h-[80vh] overflow-y-auto custom-scrollbar rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <MessageCircle className="w-5 h-5 text-blue-600" />
-            แชร์ข้อมูลทรัพย์แบบด่วน
+          <DialogTitle className="flex items-center justify-between text-xl">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5 text-blue-600" />
+              แชร์ข้อมูลทรัพย์แบบด่วน
+            </div>
           </DialogTitle>
         </DialogHeader>
-        <div className="mt-4 flex flex-col gap-4">
-          {property.cover_image_url && (
-            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-100 shadow-sm">
-              <Image
-                src={property.cover_image_url}
-                alt={property.title}
-                fill
-                className="object-cover"
-              />
+
+        <div className="mt-4 space-y-4">
+          {/* Language Selector */}
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <Languages className="w-3 h-3" /> เลือกภาษาสำหรับแชร์
+            </Label>
+            <Tabs 
+              value={lang} 
+              onValueChange={(v) => setLang(v as any)}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-lg">
+                <TabsTrigger value="th" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">ไทย (TH)</TabsTrigger>
+                <TabsTrigger value="en" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">EN</TabsTrigger>
+                <TabsTrigger value="cn" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">CN</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {property.cover_image_url && (
+              <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-100 shadow-sm">
+                <Image
+                  src={property.cover_image_url}
+                  alt={property.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            )}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <pre className="whitespace-pre-wrap text-sm text-slate-700 font-sans leading-relaxed">
+                {shareMessage}
+              </pre>
             </div>
-          )}
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-            <pre className="whitespace-pre-wrap text-sm text-slate-700 font-sans leading-relaxed">
-              {shareMessage}
-            </pre>
           </div>
         </div>
+
         <div className="grid grid-cols-2 gap-3 mt-4">
           <Button
             variant="outline"

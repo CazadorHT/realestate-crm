@@ -9,6 +9,8 @@ export type SiteSettingKey =
   | "isolation_deals_enabled"
   | "social_automation_keywords"
   | "social_post_template"
+  | "social_post_template_en"
+  | "social_post_template_cn"
   | "site_name"
   | "company_name"
   | "site_description"
@@ -47,6 +49,8 @@ export interface SiteSettings {
   isolation_deals_enabled: boolean;
   social_automation_keywords: SocialKeyword[];
   social_post_template?: string;
+  social_post_template_en?: string;
+  social_post_template_cn?: string;
   site_name: string;
   company_name: string;
   site_description: string;

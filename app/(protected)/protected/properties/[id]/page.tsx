@@ -34,6 +34,7 @@ import { BsStars } from "react-icons/bs";
 import { FacebookPostButton } from "@/features/properties/components/FacebookPostButton";
 import { InstagramPostButton } from "@/features/properties/components/InstagramPostButton";
 import { TikTokPostButton } from "@/features/properties/components/TikTokPostButton";
+import { LinePostButton } from "@/features/properties/components/LinePostButton";
 import { QuickShareButton } from "@/features/properties/components/QuickShareButton";
 
 export default async function PropertyDetailsPage({
@@ -260,18 +261,28 @@ export default async function PropertyDetailsPage({
         />
         <FacebookPostButton
           propertyId={property.id}
+          propertyTitle={property.title}
           variant="outline"
           className="flex-1 lg:flex-none rounded-full bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
         />
 
         <InstagramPostButton
           propertyId={property.id}
+          propertyTitle={property.title}
           variant="outline"
           className="flex-1 lg:flex-none rounded-full bg-pink-50 text-pink-600 border-pink-100 hover:bg-pink-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
         />
 
+        <LinePostButton
+          propertyId={property.id}
+          propertyTitle={property.title}
+          variant="outline"
+          className="flex-1 lg:flex-none rounded-full bg-green-50 text-green-600 border-green-100 hover:bg-green-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+        />
+
         <TikTokPostButton
           propertyId={property.id}
+          propertyTitle={property.title}
           variant="outline"
           className="flex-1 lg:flex-none rounded-full bg-slate-50 text-slate-900 border-slate-200 hover:bg-slate-900 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
         />

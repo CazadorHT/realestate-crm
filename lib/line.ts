@@ -82,6 +82,46 @@ export async function sendLineNotification(
 }
 
 /**
+ * ส่งข้อความแบบ Broadcast ไปยังทุกคนที่ติดตาม Line OA
+ */
+export async function broadcastLineMessage(
+  message: string | Record<string, any>,
+) {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token) {
+    console.error("ไม่พบ LINE_CHANNEL_ACCESS_TOKEN");
+    return { success: false, message: "Missing token" };
+  }
+
+  const messages =
+    typeof message === "string" ? [{ type: "text", text: message }] : [message];
+
+  try {
+    const response = await fetch("https://api.line.me/v2/bot/message/broadcast", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        messages: messages,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("LINE Broadcast Error:", errorData);
+      return { success: false, message: errorData.message || "Line API error" };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("LINE Broadcast Exception:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+/**
  * ดึงข้อมูลโปรไฟล์จาก LINE (ชื่อ และ รูป)
  */
 export async function getLineProfile(userId: string) {

@@ -182,7 +182,7 @@ function SocialStatusBadges({
                   : "bg-slate-50 border-slate-100 text-slate-200",
               )}
             >
-              <Facebook className="h-3 w-3" />
+              <Facebook className="h-4 w-4" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
@@ -207,7 +207,7 @@ function SocialStatusBadges({
                   : "bg-slate-50 border-slate-100 text-slate-200",
               )}
             >
-              <Instagram className="h-3 w-3" />
+              <Instagram className="h-4 w-4" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
@@ -226,13 +226,13 @@ function SocialStatusBadges({
           <TooltipTrigger asChild>
             <div
               className={cn(
-                "p-1 rounded-md border transition-all duration-200",
+                " rounded-md border transition-all duration-200",
                 lineAt
                   ? "bg-green-50 border-green-200 text-green-600"
                   : "bg-slate-50 border-slate-100 text-slate-200",
               )}
             >
-              <FaLine className="h-3 w-3" />
+              <FaLine className="h-6 w-6" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
@@ -257,7 +257,7 @@ function SocialStatusBadges({
                   : "bg-slate-50 border-slate-100 text-slate-200",
               )}
             >
-              <FaTiktok className="h-3 w-3" />
+              <FaTiktok className="h-4 w-4" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">

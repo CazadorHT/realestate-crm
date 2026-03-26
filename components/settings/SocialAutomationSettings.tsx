@@ -21,7 +21,16 @@ import {
   Info,
   Sparkles,
   Zap,
+  Languages,
+  Globe,
+  ThumbsUp,
+  MessageCircle,
+  Share2,
+  ChevronDown,
+  ArrowDown,
+  ArrowUp,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   getSiteSettings,
@@ -30,13 +39,154 @@ import {
 } from "@/features/site-settings/actions";
 import { SocialKeyword } from "@/features/site-settings/schema";
 import { Badge } from "@/components/ui/badge";
+import { useRef } from "react";
+
+const MOCK_PROPERTY_DATA = {
+  title: "Baan Sook Jai (สุขใจ) - Luxury House with Pool",
+  price: "฿12,500,000",
+  original_price: "฿13,900,000",
+  sale_price: "฿12,500,000",
+  rental_price: "65,000 บาท/เดือน",
+  original_sale_price: "฿13,900,000",
+  original_rental_price: "75,000 บาท/เดือน",
+  bedrooms: "4",
+  bathrooms: "5",
+  size_sqm: "320",
+  floor: "2",
+  property_type: "House",
+  listing_type: "Sale",
+  popular_area: "ห้วยขวาง (Huai Khwang)",
+  amenities: "สระว่ายน้ำ, ฟิตเนส, รปภ. 24 ชม.",
+  nearby_places: "MRT ห้วยขวาง, เซ็นทรัล พระราม 9",
+  near_transit: "MRT ห้วยขวาง, MRT ศูนย์วัฒนธรรม",
+  transit: "MRT ห้วยขวาง (300ม.)",
+  google_maps: "https://maps.google.com/?q=Huai+Khwang",
+  verified: "✅ ตรวจสอบแล้ว",
+  exclusive: "🌟 Exclusive",
+  agent_name: "John Doe",
+  agent_phone: "081-234-5678",
+  agent_line: "@realestate_john",
+  link: "https://your-crm.com/properties/123",
+  description: "บ้านเดี่ยวสุดหรู 2 ชั้น พร้อมสระว่ายน้ำส่วนตัว ทำเลทองย่านห้วยขวาง พื้นที่ใช้สอยกว้างขวาง ตกแต่งครบครัน...",
+};
+
+function FacebookPostPreview({ 
+  template, 
+  language = "th" 
+}: { 
+  template: string; 
+  language?: "th" | "en" | "cn" 
+}) {
+  const renderContent = (text: string) => {
+    if (!text) return <span className="text-slate-300 italic">กรุณากรอกรูปแบบข้อความเพื่อดูตัวอย่าง...</span>;
+    
+    let rendered = text;
+    Object.entries(MOCK_PROPERTY_DATA).forEach(([key, value]) => {
+      const regex = new RegExp(`\\{\\{${key}\\}\\}`, "g");
+      rendered = rendered.replace(regex, value || "");
+    });
+
+    return rendered.split('\n').map((line, i) => (
+      <span key={i} className="block min-h-[1em]">{line}</span>
+    ));
+  };
+
+  return (
+    <div className="bg-white border rounded-xl border-slate-200 shadow-sm overflow-hidden max-w-md mx-auto sticky top-24">
+      {/* Header */}
+      <div className="p-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+            VC
+          </div>
+          <div>
+            <div className="font-bold text-[15px] flex items-center gap-1">
+              VC Connect Asset
+              <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+                <Badge className="h-2 w-2 p-0 border-0 bg-white" />
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-[13px] text-slate-500">
+              Just now · <Globe className="h-3 w-3" />
+            </div>
+          </div>
+        </div>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500">
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 pb-3 text-[15px] leading-relaxed text-slate-900 whitespace-pre-wrap">
+        {renderContent(template)}
+      </div>
+
+      {/* Media Placeholder */}
+      <div className="aspect-video bg-slate-100 relative group overflow-hidden">
+        <img 
+          src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800" 
+          alt="Mock Property"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+        />
+        <div className="absolute top-3 left-3 flex gap-2">
+          <Badge className="bg-white/90 text-slate-900 border-0 shadow-sm backdrop-blur-xs font-bold">
+            {MOCK_PROPERTY_DATA.listing_type === "Sale" ? "FOR SALE" : "FOR RENT"}
+          </Badge>
+          <Badge className="bg-blue-600/90 text-white border-0 shadow-sm backdrop-blur-xs font-bold">
+            {MOCK_PROPERTY_DATA.price}
+          </Badge>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="px-4 py-3 flex items-center justify-between border-b border-slate-200 text-[13px] text-slate-500">
+        <div className="flex items-center gap-1">
+          <div className="flex -space-x-1">
+            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center border-2 border-white">
+              <ThumbsUp className="h-2.5 w-2.5 text-white fill-current" />
+            </div>
+          </div>
+          42
+        </div>
+        <div className="flex gap-3">
+          <span>8 comments</span>
+          <span>5 shares</span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="px-2 py-1 flex justify-between text-slate-500 font-bold text-[14px]">
+        <Button variant="ghost" className="flex-1 gap-2 hover:bg-slate-100 p-0 h-10">
+          <ThumbsUp className="h-5 w-5" /> Like
+        </Button>
+        <Button variant="ghost" className="flex-1 gap-2 hover:bg-slate-100 p-0 h-10">
+          <MessageCircle className="h-5 w-5" /> Comment
+        </Button>
+        <Button variant="ghost" className="flex-1 gap-2 hover:bg-slate-100 p-0 h-10">
+          <Share2 className="h-5 w-5" /> Share
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export function SocialAutomationSettings() {
   const [keywords, setKeywords] = useState<SocialKeyword[]>([]);
   const [socialPostTemplate, setSocialPostTemplate] = useState<string>("");
+  const [socialPostTemplateEn, setSocialPostTemplateEn] = useState<string>("");
+  const [socialPostTemplateCn, setSocialPostTemplateCn] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"th" | "en" | "cn">("th");
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const templateSectionRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
+
+  const scrollToTemplate = () => {
+    templateSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  
 
   useEffect(() => {
     async function load() {
@@ -45,6 +195,8 @@ export function SocialAutomationSettings() {
         const settings = await getSiteSettings();
         setKeywords(settings.social_automation_keywords || []);
         setSocialPostTemplate(settings.social_post_template || "");
+        setSocialPostTemplateEn(settings.social_post_template_en || "");
+        setSocialPostTemplateCn(settings.social_post_template_cn || "");
       } catch (err) {
         toast.error("ไม่สามารถโหลดข้อมูลได้");
       } finally {
@@ -89,7 +241,17 @@ export function SocialAutomationSettings() {
         socialPostTemplate,
       );
 
-      if (res.success && templateRes.success) {
+      const templateEnRes = await updateSiteSetting(
+        "social_post_template_en",
+        socialPostTemplateEn,
+      );
+
+      const templateCnRes = await updateSiteSetting(
+        "social_post_template_cn",
+        socialPostTemplateCn,
+      );
+
+      if (res.success && templateRes.success && templateEnRes.success && templateCnRes.success) {
         toast.success("บันทึกการตั้งค่าเรียบร้อย");
       } else {
         toast.error("เกิดข้อผิดพลาดในการบันทึก");
@@ -106,10 +268,12 @@ export function SocialAutomationSettings() {
 
     setIsGenerating(loadingId);
     try {
-      const res = await generateSocialAutomationTemplatesAction(type, keyword);
+      const res = await generateSocialAutomationTemplatesAction(type, keyword, activeTab);
       if (res.success && res.data) {
         if (type === "SOCIAL_POST") {
-          setSocialPostTemplate(res.data);
+          if (activeTab === "th") setSocialPostTemplate(res.data);
+          else if (activeTab === "en") setSocialPostTemplateEn(res.data);
+          else if (activeTab === "cn") setSocialPostTemplateCn(res.data);
         } else if (index !== undefined) {
           updateRow(index, { dm_content: res.data });
         }
@@ -159,6 +323,15 @@ export function SocialAutomationSettings() {
             >
               <Plus className="h-4 w-4 mr-2" />
               เพิ่มรายการ
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={scrollToTemplate}
+              className="border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-full px-4"
+            >
+              <ArrowDown className="h-4 w-4 mr-2" />
+              จัดการ Template โพสต์
             </Button>
           </div>
 
@@ -353,48 +526,136 @@ export function SocialAutomationSettings() {
       </Card>
 
       {/* Social Post Template Section */}
-      <Card className="mt-8 border-slate-200 shadow-sm">
-        <CardHeader className="bg-linear-to-r from-slate-50 to-amber-50 border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-100 rounded-xl">
-                <Plus className="h-5 w-5 text-amber-600" />
+      <div ref={templateSectionRef} className="scroll-mt-6">
+        <Card className="mt-8 border-slate-200 shadow-sm relative overflow-hidden">
+          {/* Decorative Backgound */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-100/30 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
+          
+          <CardHeader className="bg-linear-to-r from-slate-50 to-amber-50 border-b relative">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-100 rounded-xl">
+                  <Languages className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-bold">
+                    Social Post Template (Auto-Post)
+                  </CardTitle>
+                  <CardDescription>
+                    กำหนดรูปแบบข้อความสำหรับการแชร์ลง Facebook / Instagram ตามภาษาที่เลือก
+                  </CardDescription>
+                </div>
               </div>
-              <div>
-                <CardTitle className="text-lg font-bold">
-                  Social Post Template (Auto-Post)
-                </CardTitle>
-                <CardDescription>
-                  กำหนดรูปแบบข้อความเริ่มต้นสำหรับปุ่ม "โพสต์ลง Facebook /
-                  Instagram"
-                </CardDescription>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-amber-200! bg-amber-50 text-amber-700 hover:text-amber-100! hover:bg-amber-600! gap-2 font-medium"
+                  onClick={() => handleAiGenerate("SOCIAL_POST")}
+                  disabled={!!isGenerating}
+                >
+                  {isGenerating === "social-post" ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-amber-500 hover:text-amber-100" />
+                  ) : (
+                    <Zap className="h-4 w-4 text-amber-500 fill-amber-500 hover:text-amber-100" />
+                  )}
+                  AI ช่วยสร้างรูปแบบ ({activeTab.toUpperCase()})
+                </Button>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-amber-200! bg-amber-50 text-amber-700 hover:text-amber-100! hover:bg-amber-600! gap-2 font-medium"
-              onClick={() => handleAiGenerate("SOCIAL_POST")}
-              disabled={!!isGenerating}
-            >
-              {isGenerating === "social-post" ? (
-                <Loader2 className="h-4 w-4 animate-spin text-amber-500 hover:text-amber-100" />
-              ) : (
-                <Zap className="h-4 w-4 text-amber-500 fill-amber-500 hover:text-amber-100" />
-              )}
-              AI ช่วยสร้างรูปแบบโพสต์
-            </Button>
-          </div>
-        </CardHeader>
+          </CardHeader>
 
         <CardContent className="p-0">
-          <div className="p-6 space-y-4">
-            <Textarea
-              placeholder="🏠 {{title}}\n💰 {{price}}\n..."
-              value={socialPostTemplate}
-              onChange={(e) => setSocialPostTemplate(e.target.value)}
-              className="min-h-[200px] font-mono text-sm border-slate-200 focus:border-blue-500 placeholder:text-slate-300"
-            />
+          <Tabs
+            defaultValue="th"
+            value={activeTab}
+            onValueChange={(val) => setActiveTab(val as any)}
+            className="w-full"
+          >
+            <div className="px-6 pt-4">
+              <TabsList className="grid w-full grid-cols-3 bg-slate-100/50 p-1">
+                <TabsTrigger value="th" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all">ภาษาไทย (TH)</TabsTrigger>
+                <TabsTrigger value="en" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all">English (EN)</TabsTrigger>
+                <TabsTrigger value="cn" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all">Chinese (CN)</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-x divide-slate-100">
+              {/* Left Column: Editor */}
+              <div>
+                <TabsContent value="th" className="m-0">
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Template Editor (TH)</label>
+                      <Badge className="bg-blue-50 text-blue-600 hover:text-white border-blue-100 font-normal">Auto-Saving...</Badge>
+                    </div>
+                    <Textarea
+                      placeholder="🏠 {{title}}\n💰 {{price}}\n..."
+                      value={socialPostTemplate}
+                      onChange={(e) => setSocialPostTemplate(e.target.value)}
+                      className="min-h-[350px] font-mono text-sm border-slate-200 focus:border-amber-500 focus:ring-amber-200 placeholder:text-slate-300 resize-none"
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="en" className="m-0">
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Template Editor (EN)</label>
+                      <Badge className="bg-blue-50 text-blue-600 border-blue-100 font-normal">Auto-Saving...</Badge>
+                    </div>
+                    <Textarea
+                      placeholder="🏠 {{title}}\n💰 {{price}}\n..."
+                      value={socialPostTemplateEn}
+                      onChange={(e) => setSocialPostTemplateEn(e.target.value)}
+                      className="min-h-[350px] font-mono text-sm border-slate-200 focus:border-amber-500 focus:ring-amber-200 placeholder:text-slate-300 resize-none"
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="cn" className="m-0">
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Template Editor (CN)</label>
+                      <Badge className="bg-blue-50 text-blue-600 border-blue-100 font-normal">Auto-Saving...</Badge>
+                    </div>
+                    <Textarea
+                      placeholder="🏠 {{title}}\n💰 {{price}}\n..."
+                      value={socialPostTemplateCn}
+                      onChange={(e) => setSocialPostTemplateCn(e.target.value)}
+                      className="min-h-[350px] font-mono text-sm border-slate-200 focus:border-amber-500 focus:ring-amber-200 placeholder:text-slate-300 resize-none"
+                    />
+                  </div>
+                </TabsContent>
+              </div>
+
+              {/* Right Column: Premium Preview */}
+              <div className="bg-slate-50/50 p-6 flex flex-col items-center">
+                <div className="w-full flex items-center justify-between mb-6">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Facebook Post Preview</label>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-[10px] text-slate-500 font-medium">Real-time Preview</span>
+                  </div>
+                </div>
+                
+                <FacebookPostPreview 
+                  template={
+                    activeTab === "th" ? socialPostTemplate :
+                    activeTab === "en" ? socialPostTemplateEn :
+                    socialPostTemplateCn
+                  }
+                  language={activeTab}
+                />
+                
+                <p className="mt-8 text-[11px] text-slate-400 text-center max-w-[280px]">
+                  💡 <b>Pro Tip:</b> ใช้ตัวแปร {"{{...}}"} เพื่อดึงข้อมูลทรัพย์สินมาแสดงโดยอัตโนมัติในตอนที่กดโพสต์จริง
+                </p>
+              </div>
+            </div>
+          </Tabs>
+
+          <div className="px-6 pb-6 pt-0 space-y-4">
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
               {[
@@ -455,6 +716,7 @@ export function SocialAutomationSettings() {
           </div>
         </CardContent>
       </Card>
-    </>
-  );
+    </div>
+  </>
+);
 }
