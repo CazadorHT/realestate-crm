@@ -155,7 +155,7 @@ export async function getPropertySocialContent(
 /**
  * Helper function สำหรับ Render Template ด้วยข้อมูลทรัพย์สิน
  */
-function renderSocialTemplate(template: string, property: any, lang: "th" | "en" | "cn") {
+export function renderSocialTemplate(template: string, property: any, lang: "th" | "en" | "cn") {
   if (!template) return "";
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";

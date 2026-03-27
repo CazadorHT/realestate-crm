@@ -2,6 +2,7 @@
 
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
+import { getPropertySocialContent, renderSocialTemplate } from "./social";
 
 /**
  * เตรียมข้อมูลสำหรับโพสต์ไปยัง TikTok (Content Posting API)
@@ -24,6 +25,21 @@ export async function postPropertyToTikTokAction(
         *,
         property_images (
           image_url
+        ),
+        property_agents (
+          profiles (
+            full_name,
+            phone,
+            line_id
+          )
+        ),
+        property_features (
+          features (
+            name,
+            name_en,
+            name_cn,
+            icon_key
+          )
         )
       `)
       .eq("id", propertyId)
@@ -33,12 +49,23 @@ export async function postPropertyToTikTokAction(
       return { success: false, message: "ไม่พบข้อมูลทรัพย์" };
     }
 
-    // 2. ตรวจสอบการเชื่อมต่อ TikTok (Placeholder for Token Logic)
+    // 2. จัดเตรียม Caption (Robust Logic)
+    let finalCaption = caption;
+    if (!finalCaption) {
+      // หากไม่มี caption ส่งมา ให้ใช้ Template จาก Settings
+      const contentData = await getPropertySocialContent(propertyId, lang);
+      finalCaption = contentData.content;
+    } else {
+      // หากมี caption ส่งมา (เช่น แก้ไขจากหน้า UI) ให้ลอง Render Tags เผื่อไว้
+      finalCaption = renderSocialTemplate(finalCaption, property, lang);
+    }
+
+    // 3. ตรวจสอบการเชื่อมต่อ TikTok (Placeholder for Token Logic)
     // ในอนาคตจะต้องรัน Step: Exchange Code -> Access Token จาก TikTok
 
-    // 3. จำลองการโพสต์ (หรือส่งเข้า Queue สำหรับ Video Processing)
+    // 4. จำลองการโพสต์ (หรือส่งเข้า Queue สำหรับ Video Processing)
     // สำหรับสถานะการสาธิต (Demo) เราจะตอบกลับด้วยข้อความที่ TikTok กำหนด
-    console.log("TikTok Demo Post with caption:", caption);
+    console.log("TikTok Demo Post with final caption:", finalCaption);
 
     await supabase
       .from("properties")
