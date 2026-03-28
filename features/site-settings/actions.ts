@@ -20,9 +20,15 @@ const DEFAULT_SETTINGS: SiteSettings = {
   isolation_leads_enabled: false,
   isolation_deals_enabled: false,
   social_automation_keywords: [],
-  social_post_template: `🏠 {{title}}\n💰 {{price}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`,
-  social_post_template_en: `🏠 {{title}}\n💰 {{price}}\n\nMore details: {{link}}`,
-  social_post_template_cn: `🏠 {{title}}\n💰 {{price}}\n\n更多详情: {{link}}`,
+  social_post_template: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`,
+  social_post_template_en: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nMore details: {{link}}`,
+  social_post_template_cn: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\n更多详情: {{link}}`,
+  line_post_template: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`,
+  line_post_template_en: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nMore details: {{link}}`,
+  line_post_template_cn: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\n更多详情: {{link}}`,
+  tiktok_post_template: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n\n#RealEstate #Property {{link}}`,
+  tiktok_post_template_en: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n\n#RealEstate #Property {{link}}`,
+  tiktok_post_template_cn: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n\n#RealEstate #Property {{link}}`,
   site_name: "VC Connect Asset",
   company_name: "VC Connect Asset Co., Ltd.",
   site_description: "Real Estate CRM & Listing Portal",
@@ -86,6 +92,12 @@ export async function getSiteSettings(): Promise<SiteSettings> {
           key === "social_post_template" ||
           key === "social_post_template_en" ||
           key === "social_post_template_cn" ||
+          key === "line_post_template" ||
+          key === "line_post_template_en" ||
+          key === "line_post_template_cn" ||
+          key === "tiktok_post_template" ||
+          key === "tiktok_post_template_en" ||
+          key === "tiktok_post_template_cn" ||
           key === "site_name" ||
           key === "company_name" ||
           key === "site_description" ||
@@ -147,7 +159,13 @@ export async function getSiteSetting(key: SiteSettingKey): Promise<any> {
     if (
       key === "social_post_template" ||
       key === "social_post_template_en" ||
-      key === "social_post_template_cn"
+      key === "social_post_template_cn" ||
+      key === "line_post_template" ||
+      key === "line_post_template_en" ||
+      key === "line_post_template_cn" ||
+      key === "tiktok_post_template" ||
+      key === "tiktok_post_template_en" ||
+      key === "tiktok_post_template_cn"
     ) {
       return typeof data.value === "string"
         ? data.value
@@ -280,7 +298,7 @@ export async function updateSiteSettings(
  * AI Generate Social Post or DM templates
  */
 export async function generateSocialAutomationTemplatesAction(
-  type: "SOCIAL_POST" | "KEYWORD_DM",
+  type: "SOCIAL_POST" | "KEYWORD_DM" | "LINE_POST" | "TIKTOK_POST",
   keyword?: string,
   lang: "th" | "en" | "cn" = "th",
 ): Promise<{ success: boolean; data?: string; message?: string }> {
@@ -301,13 +319,12 @@ export async function generateSocialAutomationTemplatesAction(
         
         ให้ใช้ "Dynamic Tags" เหล่านี้ประกอบในเนื้อหา:
         - {{title}}: ชื่อทรัพย์
-        - {{price}}: ราคา
-        - {{original_price}}: ราคาเดิม (ถ้ามี)
-        - {{rental_price}}: ราคาเช่า (ถ้ามี)
-        - {{location}}: ทำเล
+        - {{price_tag}}: ป้ายราคาอัจฉริยะ (จัดการเรื่อง ลดราคา/ขาย/เช่า ให้อัตโนมัติ - แนะนำให้ใช้แทน {{price}})
+        - {{details}}: สรุปข้อมูลเบื้องต้น (เช่น 2 Bed | 2 Bath | 50 Sqm)
+        - {{description}}: รายละเอียดทรัพย์สิน (รายละเอียดเต็ม)
+        - {{location}}: ทำละ (เขต/จังหวัด) 
         - {{link}}: ลิงก์ทรัพย์
-        - {{bedrooms}}: ห้องนอน
-        - {{size_sqm}}: พื้นที่
+        - {{google_maps}}: ลิงก์ Google Maps 
         - {{agent_phone}}: เบอร์ติดต่อ
         
         คำแนะนำ:
@@ -315,6 +332,47 @@ export async function generateSocialAutomationTemplatesAction(
         2. ใส่ Emoji ให้ดูสวยงาม
         3. เขียนให้สั้น กระชับ แต่อ่านแล้วอยากกดดูต่อ
         4. ส่งกลับเฉพาะเนื้อหา Template เท่านั้น ไม่ต้องขยายความ
+      `;
+    } else if (type === "LINE_POST") {
+      const langName = lang === "th" ? "ภาษาไทย" : lang === "en" ? "English" : "Chinese";
+      prompt = `
+        คุณเป็นนักการตลาดอสังหาริมทรัพย์มืออาชีพ
+        ช่วยเขียน Template สำหรับแสดงผลใน Line Flex Message (ส่วนข้อความรายละเอียด)
+        โดยให้เขียนเป็น ${langName}
+        
+        ให้ใช้ "Dynamic Tags" เหล่านี้ประกอบในเนื้อหา:
+        - {{title}}: ชื่อทรัพย์
+        - {{price_tag}}: ป้ายราคาอัจฉริยะ (จัดการเรื่อง ลดราคา/ขาย/เช่า ให้อัตโนมัติ)
+        - {{details}}: สรุปข้อมูลเบื้องต้น
+        - {{location}}: ทำเล
+        - {{link}}: ลิงก์ทรัพย์
+        - {{google_maps}}: ลิงก์ Google Maps
+        
+        คำแนะนำ:
+        1. เขียนให้สั้น กระชับ เพราะพื้นที่ใน Line Flex มีจำกัด
+        2. ใส่ Emoji ให้ดูเป็นมิตร
+        3. เน้นจุดเด่นของทรัพย์
+        4. ส่งกลับเฉพาะเนื้อหา Template เท่านั้น ไม่ต้องขยายความ
+      `;
+    } else if (type === "TIKTOK_POST") {
+      const langName = lang === "th" ? "ภาษาไทย" : lang === "en" ? "English" : "Chinese";
+      prompt = `
+        คุณเป็นครีเอเตอร์ TikTok สายอสังหาริมทรัพย์ที่เก่งมาก
+        ช่วยเขียน Caption สำหรับโพสต์ TikTok เพื่อดึงดูดคนดูคลิป
+        โดยให้เขียนเป็น ${langName}
+        
+        ให้ใช้ "Dynamic Tags" เหล่านี้ประกอบในเนื้อหา:
+        - {{title}}: ชื่อทรัพย์
+        - {{price_tag}}: ป้ายราคาอัจฉริยะ (จัดการเรื่อง ลดราคา/ขาย/เช่า ให้อัตโนมัติ)
+        - {{details}}: สรุปข้อมูลเบื้องต้น
+        - {{location}}: ทำเล
+        - {{link}}: ลิงก์ทรัพย์
+        
+        คำแนะนำ:
+        1. เขียนให้ดูสนุก เป็นกันเอง และทันสมัย (TikTok Style)
+        2. ใส่ Emoji เยอะๆ และใส่ Hashtag ที่เกี่ยวข้อง
+        3. เขียนให้สั้น กระชับ แต่อ่านแล้วอยากหยุดดูคลิป
+        4. ส่งกลับเฉพาะเนื้อหา Caption เท่านั้น ไม่ต้องขยายความ
       `;
     } else {
       const langName = lang === "th" ? "ภาษาไทย" : lang === "en" ? "English" : "Chinese";
@@ -326,9 +384,11 @@ export async function generateSocialAutomationTemplatesAction(
         
         ให้ใช้ "Dynamic Tags" เหล่านี้ประกอบในเนื้อหา:
         - {{title}}: ชื่อทรัพย์
-        - {{price}}: ราคา
+        - {{price_tag}}: ป้ายราคาอัจฉริยะ (จัดการเรื่อง ลดราคา/ขาย/เช่า ให้อัตโนมัติ)
+        - {{details}}: สรุปข้อมูลเบื้องต้น
+        - {{description}}: รายละเอียดทรัพย์สิน
         - {{link}}: ลิงก์รายละเอียด
-        - {{description}}: รายละเอียดเต็ม
+        - {{google_maps}}: ลิงก์ Google Maps
         
         คำแนะนำ:
         1. ใช้ ${langName} ที่สุภาพ เป็นกันเอง และดูเป็นมืออาชีพ

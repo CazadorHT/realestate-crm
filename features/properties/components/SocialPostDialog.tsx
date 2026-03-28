@@ -99,7 +99,7 @@ export function SocialPostDialog({
   const loadContent = async () => {
     setIsLoading(true);
     try {
-      const data = await getPropertySocialContent(propertyId, lang);
+      const data = await getPropertySocialContent(propertyId, lang, platform);
       setContent(data.content || "");
       setImages(data.images);
       setPreviewData(data);

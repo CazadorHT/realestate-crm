@@ -77,8 +77,8 @@ import type {
   PropertyTableData,
 } from "@/features/properties/types";
 import { cn } from "@/lib/utils";
-import { FaLine, FaTiktok } from "react-icons/fa";
-
+import { FaLine, FaTiktok , FaFacebook} from "react-icons/fa";
+import {RiInstagramFill} from "react-icons/ri"
 interface PropertiesTableProps {
   data: PropertyTableData[];
   isAdmin?: boolean;
@@ -176,13 +176,13 @@ function SocialStatusBadges({
           <TooltipTrigger asChild>
             <div
               className={cn(
-                "p-1 rounded-md border transition-all duration-200",
+                "p-0.5 rounded-md border transition-all duration-200",
                 facebookAt
                   ? "bg-blue-50 border-blue-200 text-blue-600"
                   : "bg-slate-50 border-slate-100 text-slate-200",
               )}
             >
-              <Facebook className="h-4 w-4" />
+              <FaFacebook className="h-5 w-5" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
@@ -201,13 +201,13 @@ function SocialStatusBadges({
           <TooltipTrigger asChild>
             <div
               className={cn(
-                "p-1 rounded-md border transition-all duration-200",
+                "p-0.5 rounded-md border transition-all duration-200",
                 instagramAt
                   ? "bg-pink-50 border-pink-200 text-pink-600"
                   : "bg-slate-50 border-slate-100 text-slate-200",
               )}
             >
-              <Instagram className="h-4 w-4" />
+              <RiInstagramFill className="h-5 w-5" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">

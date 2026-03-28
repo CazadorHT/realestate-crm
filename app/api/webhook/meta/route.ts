@@ -427,6 +427,90 @@ async function handleWhatsAppWebhook(message: any, contact: any) {
 }
 
 /**
+ * Helper function to replace all smart tags in a template
+ */
+function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any, lang: "th" | "en" | "cn" = "th") {
+  if (!text) return "";
+  let rendered = text;
+  const {
+    priceTag,
+    priceText,
+    originalPriceText,
+    salePrice,
+    rentPrice,
+    originalSalePrice,
+    originalRentPrice,
+    detailsSummary,
+    amenities,
+    nearbyPlaces,
+    nearbyTransits,
+    link,
+    primaryAgent,
+  } = dynamicValues;
+
+  return rendered
+    .replace(/{{title}}/g, (lang === "th" ? propertyData.title : propertyData[`title_${lang}`]) || propertyData.title || "")
+    .replace(/{{description}}/g, (lang === "th" ? propertyData.description : propertyData[`description_${lang}`]) || propertyData.description || "")
+    .replace(/{{price}}/g, priceText)
+    .replace(/{{original}}/g, originalPriceText)
+    .replace(/{{original_price}}/g, originalPriceText)
+    .replace(/{{sale_price}}/g, salePrice)
+    .replace(/{{rent_price}}/g, rentPrice)
+    .replace(/{{rental_price}}/g, rentPrice)
+    .replace(/{{original_sale_price}}/g, originalSalePrice)
+    .replace(/{{original_rent_price}}/g, originalRentPrice)
+    .replace(/{{original_rental_price}}/g, originalRentPrice)
+    .replace(/{{bedrooms}}/g, propertyData.bedrooms?.toString() || "-")
+    .replace(/{{bathrooms}}/g, propertyData.bathrooms?.toString() || "-")
+    .replace(/{{size_sqm}}/g, propertyData.size_sqm?.toString() || "-")
+    .replace(/{{floor}}/g, propertyData.floor?.toString() || "-")
+    .replace(/{{property_type}}/g, propertyData.property_type || "")
+    .replace(
+      /{{listing_type}}/g,
+      propertyData.listing_type === "SALE"
+        ? (lang === "th" ? "ขาย" : "Sale")
+        : propertyData.listing_type === "RENT"
+          ? (lang === "th" ? "ให้เช่า" : "Rent")
+          : (lang === "th" ? "ขาย/เช่า" : "Sale/Rent"),
+    )
+    .replace(
+      /{{location}}/g,
+      `${(lang === "th" ? propertyData.district : propertyData[`district_${lang}`]) || propertyData.district || ""} ${(lang === "th" ? propertyData.province : propertyData[`province_${lang}`]) || propertyData.province || ""}`.trim(),
+    )
+    .replace(/{{popular_area}}/g, (lang === "th" ? propertyData.popular_area : propertyData[`popular_area_${lang}`]) || propertyData.popular_area || "-")
+    .replace(/{{amenities}}/g, amenities)
+    .replace(/{{nearby_places}}/g, nearbyPlaces)
+    .replace(/{{near_transit}}/g, nearbyTransits)
+    .replace(
+      /{{transit}}/g,
+      propertyData.transit_station_name
+        ? `${propertyData.transit_station_name} (${propertyData.transit_distance_meters || 0} ม.)`
+        : "-",
+    )
+    .replace(/{{verified}}/g, propertyData.verified ? (lang === "th" ? "✅ ตรวจสอบแล้ว" : "✅ Verified") : "")
+    .replace(
+      /{{exclusive}}/g,
+      propertyData.is_exclusive ? "💎 Exclusive" : "",
+    )
+    .replace(/{{google_maps}}/g, propertyData.google_maps_link || "")
+    .replace(/{{link}}/g, link)
+    .replace(/{{price_tag}}/g, priceTag)
+    .replace(/{{details}}/g, detailsSummary)
+    .replace(/{{agent_name}}/g, primaryAgent?.full_name || "")
+    .replace(/{{agent_phone}}/g, primaryAgent?.phone || "")
+    .replace(/{{agent_line}}/g, primaryAgent?.line_id || "");
+}
+
+/**
+ * Detect language of a given text (Thai, Chinese, or English)
+ */
+function detectLanguage(text: string): "th" | "en" | "cn" {
+  if (/[ก-ฮ]/.test(text)) return "th";
+  if (/[\u4e00-\u9fa5]/.test(text)) return "cn";
+  return "en";
+}
+
+/**
  * Handle Keyword-based Automation (Comment-to-DM)
  */
 async function handleKeywordAutomation(
@@ -464,136 +548,114 @@ async function handleKeywordAutomation(
     propertyData = await lookupPropertyByPostId(postId);
   }
 
-  // 4. Prepare Message with Placeholders
+  // 4. Prepare Message Content
   let dmContent = match.dm_content;
+  let publicReply = match.public_reply;
+
   if (propertyData) {
-    // จัดการเรื่องราคา (Smart Price Tag)
+    const lang = detectLanguage(dmContent);
+
+    // Price logic
+    const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : "售价";
+    const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : "租金";
+    const tBaht = lang === "th" ? "บาท" : lang === "en" ? "THB" : "泰铢";
+    const tPerMonth = lang === "th" ? "/เดือน" : lang === "en" ? "/mo" : "/月";
+
     let priceText = "";
     if (propertyData.listing_type === "SALE_AND_RENT") {
       const parts = [];
-      if (propertyData.price)
-        parts.push(`ขาย ${propertyData.price.toLocaleString()} บาท`);
-      if (propertyData.rental_price)
-        parts.push(
-          `เช่า ${propertyData.rental_price.toLocaleString()} บาท/เดือน`,
-        );
+      if (propertyData.price) parts.push(`${tSale} ${propertyData.price.toLocaleString()} ${tBaht}`);
+      if (propertyData.rental_price) parts.push(`${tRent} ${propertyData.rental_price.toLocaleString()} ${tBaht}${tPerMonth}`);
       priceText = parts.join(" | ");
     } else if (propertyData.listing_type === "RENT") {
-      priceText = propertyData.rental_price
-        ? `${propertyData.rental_price.toLocaleString()} บาท/เดือน`
-        : "";
+      priceText = propertyData.rental_price ? `${propertyData.rental_price.toLocaleString()} ${tBaht}${tPerMonth}` : "";
     } else {
-      priceText = propertyData.price
-        ? `${propertyData.price.toLocaleString()} บาท`
-        : "";
+      priceText = propertyData.price ? `${propertyData.price.toLocaleString()} ${tBaht}` : "";
     }
 
     let originalPriceText = "";
     if (propertyData.listing_type === "SALE_AND_RENT") {
       const parts = [];
-      if (propertyData.original_price)
-        parts.push(`ขาย ${propertyData.original_price.toLocaleString()} บาท`);
-      if (propertyData.original_rental_price)
-        parts.push(
-          `เช่า ${propertyData.original_rental_price.toLocaleString()} บาท/เดือน`,
-        );
+      if (propertyData.original_price) parts.push(`${tSale} ${propertyData.original_price.toLocaleString()} ${tBaht}`);
+      if (propertyData.original_rental_price) parts.push(`${tRent} ${propertyData.original_rental_price.toLocaleString()} ${tBaht}${tPerMonth}`);
       originalPriceText = parts.join(" | ");
     } else if (propertyData.listing_type === "RENT") {
-      originalPriceText = propertyData.original_rental_price
-        ? `${propertyData.original_rental_price.toLocaleString()} บาท/เดือน`
-        : "";
+      originalPriceText = propertyData.original_rental_price ? `${propertyData.original_rental_price.toLocaleString()} ${tBaht}${tPerMonth}` : "";
     } else {
-      originalPriceText = propertyData.original_price
-        ? `${propertyData.original_price.toLocaleString()} บาท`
-        : "";
+      originalPriceText = propertyData.original_price ? `${propertyData.original_price.toLocaleString()} ${tBaht}` : "";
     }
 
-    // Granular Price Tags (Fallback to empty string instead of "-")
-    const salePrice = propertyData.price
-      ? `${propertyData.price.toLocaleString()} บาท`
-      : "";
-    const rentPrice = propertyData.rental_price
-      ? `${propertyData.rental_price.toLocaleString()} บาท/เดือน`
-      : "";
-    const originalSalePrice = propertyData.original_price
-      ? `${propertyData.original_price.toLocaleString()} บาท`
-      : "";
-    const originalRentPrice = propertyData.original_rental_price
-      ? `${propertyData.original_rental_price.toLocaleString()} บาท/เดือน`
-      : "";
+    const salePrice = propertyData.price ? `${propertyData.price.toLocaleString()} ${tBaht}` : "";
+    const rentPrice = propertyData.rental_price ? `${propertyData.rental_price.toLocaleString()} ${tBaht}${tPerMonth}` : "";
+    const originalSalePrice = propertyData.original_price ? `${propertyData.original_price.toLocaleString()} ${tBaht}` : "";
+    const originalRentPrice = propertyData.original_rental_price ? `${propertyData.original_rental_price.toLocaleString()} ${tBaht}${tPerMonth}` : "";
+
+    // Magic price tag
+    let priceTag = "";
+    const formatSale = (price: number, original?: number) => {
+      if (original && original > price) {
+        const pct = Math.round(((original - price) / original) * 100);
+        return lang === "th"
+          ? `🔥 ลดพิเศษ! ${price.toLocaleString()} บาท (จาก ${original.toLocaleString()} - ลด ${pct}%)`
+          : lang === "en"
+            ? `🔥 Hot Deal! ${price.toLocaleString()} THB (Was ${original.toLocaleString()} - ${pct}% OFF)`
+            : `🔥 特价! ${price.toLocaleString()} 泰铢 (原价 ${original.toLocaleString()} - 优惠 ${pct}%)`;
+      }
+      return `${tSale}: ${price.toLocaleString()} ${tBaht}`;
+    };
+    const formatRent = (price: number, original?: number) => {
+      if (original && original > price) {
+        const pct = Math.round(((original - price) / original) * 100);
+        return lang === "th"
+          ? `🔥 ดีลดี! เช่า ${price.toLocaleString()} บาท/เดือน (จาก ${original.toLocaleString()} - ลด ${pct}%)`
+          : lang === "en"
+            ? `🔥 Great Deal! Rent ${price.toLocaleString()} THB/mo (Was ${original.toLocaleString()} - ${pct}% OFF)`
+            : `🔥 优选! 租金 ${price.toLocaleString()} 泰铢/月 (原价 ${original.toLocaleString()} - 优惠 ${pct}%)`;
+      }
+      return `${tRent}: ${price.toLocaleString()} ${tBaht}${tPerMonth}`;
+    };
+
+    if (propertyData.listing_type === "SALE_AND_RENT") {
+      const parts = [];
+      if (propertyData.price) parts.push(formatSale(propertyData.price, propertyData.original_price || undefined));
+      if (propertyData.rental_price) parts.push(formatRent(propertyData.rental_price, propertyData.original_rental_price || undefined));
+      priceTag = parts.join("\n");
+    } else if (propertyData.listing_type === "RENT") {
+      priceTag = propertyData.rental_price ? formatRent(propertyData.rental_price, propertyData.original_rental_price || undefined) : (lang === "th" ? "ติดต่อสอบถามราคาเช่า" : "Contact for Rent");
+    } else {
+      priceTag = propertyData.price ? formatSale(propertyData.price, propertyData.original_price || undefined) : (lang === "th" ? "ติดต่อสอบถามราคาขาย" : "Contact for Sale");
+    }
 
     const link = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
     const primaryAgent = propertyData.property_agents?.[0]?.profiles;
 
-    // รายการสิ่งอำนวยความสะดวก (Amenities)
-    const amenities =
-      (propertyData as any).property_features
-        ?.map((f: any) => `- ${f.features?.name}`)
-        .filter(Boolean)
-        .join("\n") || "-";
+    const amenities = (propertyData as any).property_features?.map((f: any) => `- ${f.features?.name}`).filter(Boolean).join("\n") || "-";
+    const nearbyPlaces = (propertyData.nearby_places as any[])?.map((p: any) => `- ${p.name} (${p.distance || ""})`).slice(0, 5).join("\n") || "-";
+    const nearbyTransits = (propertyData.nearby_transits as any[])?.map((p: any) => `- ${p.name} (${p.distance || ""})`).join("\n") || "-";
 
-    // สถานที่ใกล้เคียง (Nearby Places & Transits)
-    const nearbyPlaces =
-      (propertyData.nearby_places as any[])
-        ?.map((p: any) => `- ${p.name} (${p.distance || ""})`)
-        .slice(0, 5)
-        .join("\n") || "-";
+    const detailsSummary = [
+      propertyData.bedrooms ? (lang === "th" ? `${propertyData.bedrooms} ห้องนอน` : lang === "en" ? `${propertyData.bedrooms} Bed` : `${propertyData.bedrooms} 卧室`) : null,
+      propertyData.bathrooms ? (lang === "th" ? `${propertyData.bathrooms} ห้องน้ำ` : lang === "en" ? `${propertyData.bathrooms} Bath` : `${propertyData.bathrooms} 浴室`) : null,
+      propertyData.size_sqm ? `${propertyData.size_sqm} ${lang === "th" ? "ตร.ม." : "Sqm"}` : null,
+      propertyData.floor ? (lang === "th" ? `ชั้น ${propertyData.floor}` : lang === "en" ? `Floor ${propertyData.floor}` : `${propertyData.floor} 层`) : null,
+    ].filter(Boolean).join(" | ") || "-";
 
-    const nearbyTransits =
-      (propertyData.nearby_transits as any[])
-        ?.map((p: any) => `- ${p.name} (${p.distance || ""})`)
-        .join("\n") || "-";
+    const dynamicValues = {
+      priceTag, priceText, originalPriceText, salePrice, rentPrice,
+      originalSalePrice, originalRentPrice, detailsSummary, amenities,
+      nearbyPlaces, nearbyTransits, link, primaryAgent
+    };
 
-    dmContent = dmContent
-      .replace(/{{title}}/g, propertyData.title || "")
-      .replace(/{{description}}/g, propertyData.description || "")
-      .replace(/{{price}}/g, priceText)
-      .replace(/{{original}}/g, originalPriceText)
-      .replace(/{{original_price}}/g, originalPriceText) // support both
-      .replace(/{{sale_price}}/g, salePrice)
-      .replace(/{{rental_price}}/g, rentPrice)
-      .replace(/{{original_sale_price}}/g, originalSalePrice)
-      .replace(/{{original_rental_price}}/g, originalRentPrice)
-      .replace(/{{bedrooms}}/g, propertyData.bedrooms?.toString() || "-")
-      .replace(/{{bathrooms}}/g, propertyData.bathrooms?.toString() || "-")
-      .replace(/{{size_sqm}}/g, propertyData.size_sqm?.toString() || "-")
-      .replace(/{{floor}}/g, propertyData.floor?.toString() || "-")
-      .replace(/{{property_type}}/g, propertyData.property_type || "")
-      .replace(
-        /{{listing_type}}/g,
-        propertyData.listing_type === "SALE"
-          ? "ขาย"
-          : propertyData.listing_type === "RENT"
-            ? "ให้เช่า"
-            : "ขาย/เช่า",
-      )
-      .replace(
-        /{{location}}/g,
-        `${propertyData.district || ""} ${propertyData.province || ""}`.trim(),
-      )
-      .replace(/{{popular_area}}/g, propertyData.popular_area || "-")
-      .replace(/{{amenities}}/g, amenities)
-      .replace(/{{nearby_places}}/g, nearbyPlaces)
-      .replace(/{{near_transit}}/g, nearbyTransits)
-      .replace(
-        /{{transit}}/g, // Keep for backward compatibility
-        propertyData.transit_station_name
-          ? `${propertyData.transit_station_name} (${propertyData.transit_distance_meters || 0} ม.)`
-          : "-",
-      )
-      .replace(/{{verified}}/g, propertyData.verified ? "✅ ตรวจสอบแล้ว" : "")
-      .replace(
-        /{{exclusive}}/g,
-        propertyData.is_exclusive ? "💎 Exclusive" : "",
-      )
-      .replace(/{{google_maps}}/g, propertyData.google_maps_link || "")
-      .replace(/{{link}}/g, link)
-      .replace(/{{agent_name}}/g, primaryAgent?.full_name || "")
-      .replace(/{{agent_phone}}/g, primaryAgent?.phone || "")
-      .replace(/{{agent_line}}/g, primaryAgent?.line_id || "");
+    dmContent = replaceTemplateTags(dmContent, propertyData, dynamicValues, lang);
+    if (publicReply) {
+      publicReply = replaceTemplateTags(publicReply, propertyData, dynamicValues, lang);
+    }
   } else {
     // Fallback: Remove tags if no property found
     dmContent = dmContent.replace(/{{[a-z_]+}}/g, "");
+    if (publicReply) {
+      publicReply = publicReply.replace(/{{[a-z_]+}}/g, "");
+    }
   }
 
   // 5. Send Private Reply (DM)
@@ -602,10 +664,7 @@ async function handleKeywordAutomation(
   if (dmRes.success && senderId) {
     // 6. Media Support (Albums)
     if (propertyData && propertyData.images) {
-      const images = Array.isArray(propertyData.images)
-        ? propertyData.images
-        : [];
-
+      const images = Array.isArray(propertyData.images) ? propertyData.images : [];
       if (images.length > 0) {
         const carouselElements = images.slice(0, 10).map((imgUrl: any) => ({
           title: propertyData.title || "Property Photo",
@@ -616,23 +675,13 @@ async function handleKeywordAutomation(
             url: `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`,
           },
         }));
-
         await sendMetaCarousel(senderId, carouselElements, platform);
       }
     }
 
     // 6. Public Reply (if configured)
-    if (match.public_reply) {
-      let publicContent = match.public_reply;
-      if (propertyData) {
-        publicContent = publicContent.replace(
-          /{{title}}/g,
-          propertyData.title || "",
-        );
-      } else {
-        publicContent = publicContent.replace(/{{title}}/g, "");
-      }
-      await replyToMetaComment(commentId, publicContent);
+    if (publicReply) {
+      await replyToMetaComment(commentId, publicReply);
     }
   } else {
     console.error(`Failed to send private reply for ${platform}:`, dmRes.error);

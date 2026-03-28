@@ -2,7 +2,8 @@
 
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { broadcastLineMessage } from "@/lib/line";
-import { buildSocialPostFlex, LOCATION_MAP } from "@/lib/line-flex-builders";
+import { buildSocialPostFlex, LOCATION_MAP, BotLang } from "@/lib/line-flex-builders";
+import { getPropertySocialContent, renderPropertySocialTemplate } from "./social";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { revalidatePath } from "next/cache";
@@ -65,17 +66,21 @@ export async function postPropertyToLineAction(
       }
     }
 
-    // 3. เตรียมรูปภาพ (เรียงตาม sort_order)
-    const images = (property.property_images || [])
-      .sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-      .map((img: any) => img.image_url);
+    // 3. เตรียมรูปภาพและเนื้อหา (ใช้ Line Template เฉพาะ)
+    const contentData = await getPropertySocialContent(propertyId, lang, "LINE");
+    const images = contentData.images;
+
+    // หากมีการแก้ไขข้อความ (customMessage) ให้ลอง Render Tags ใหม่
+    const finalContent = customMessage 
+      ? await renderPropertySocialTemplate(customMessage, property, lang)
+      : contentData.content;
 
     // 3. สร้าง Flex Message
     const flexMessage = buildSocialPostFlex(
       property as any,
       images,
-      customMessage,
-      lang
+      finalContent,
+      lang as BotLang
     );
 
     // 4. ส่ง Broadcast ไปยังทุกคน

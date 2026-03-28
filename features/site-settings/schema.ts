@@ -11,6 +11,12 @@ export type SiteSettingKey =
   | "social_post_template"
   | "social_post_template_en"
   | "social_post_template_cn"
+  | "line_post_template"
+  | "line_post_template_en"
+  | "line_post_template_cn"
+  | "tiktok_post_template"
+  | "tiktok_post_template_en"
+  | "tiktok_post_template_cn"
   | "site_name"
   | "company_name"
   | "site_description"
@@ -51,6 +57,12 @@ export interface SiteSettings {
   social_post_template?: string;
   social_post_template_en?: string;
   social_post_template_cn?: string;
+  line_post_template?: string;
+  line_post_template_en?: string;
+  line_post_template_cn?: string;
+  tiktok_post_template?: string;
+  tiktok_post_template_en?: string;
+  tiktok_post_template_cn?: string;
   site_name: string;
   company_name: string;
   site_description: string;

@@ -7,170 +7,27 @@ import { postToMetaPage } from "@/lib/meta";
 import { getSiteSettings } from "@/features/site-settings/actions";
 
 /**
- * ดึงข้อมูลเนื้อหาสำหรับโพสต์โซเชี่ยว โดยประมวลผลจาก Template ในการตั้งค่า
+ * Helper function for formatting prices consistently
  */
-export async function getPropertySocialContent(
-  propertyId: string,
-  lang: "th" | "en" | "cn" = "th",
-) {
-  const { supabase } = await requireAuthContext();
-
-  // 1. ดึงข้อมูลทรัพย์สิน
-  const { data: property, error: propError } = await supabase
-    .from("properties")
-    .select(
-      `
-      *,
-      property_images (
-        image_url
-      ),
-      property_agents (
-        profiles (
-          full_name,
-          phone,
-          line_id
-        )
-      ),
-      property_features (
-        features (
-          name,
-          name_en,
-          name_cn,
-          icon_key
-        )
-      )
-    `,
-    )
-    .eq("id", propertyId)
-    .single();
-
-  if (propError || !property) {
-    throw new Error("ไม่พบข้อมูลทรัพย์สิน");
-  }
-
-  // 2. ดึง Templates จาก Site Settings
-  const settings = await getSiteSettings();
-  
-  const social_post_template = settings.social_post_template || "";
-  const social_post_template_en = settings.social_post_template_en || "";
-  const social_post_template_cn = settings.social_post_template_cn || "";
-
-  let template: string = (lang === "en" ? social_post_template_en : lang === "cn" ? social_post_template_cn : social_post_template);
-
-  const templates = {
-    th: social_post_template || "",
-    en: social_post_template_en || "",
-    cn: social_post_template_cn || ""
-  };
-
-  // 3. เตรียมข้อมูล
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-  const publicUrl = `${baseUrl}/properties/${property.slug || property.id}`;
-
-  const amenities = (property as any).property_features
-    ?.map((f: any) => `- ${f.features?.name}`)
-    .filter(Boolean)
-    .join("\n") || "-";
-
-  const nearbyPlaces = (property.nearby_places as any[])
-    ?.map((p: any) => `- ${p.name} (${p.distance || ""})`)
-    .slice(0, 5)
-    .join("\n") || "-";
-
-  const nearbyTransits = (property.nearby_transits as any[])
-    ?.map((p: any) => `- ${p.name} (${p.distance || ""})`)
-    .join("\n") || "-";
-
-  const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : "出售";
-  const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : "出租";
-  const tBaht = lang === "th" ? "บาท" : lang === "en" ? "THB" : "泰铢";
-  const tPerMonth = lang === "th" ? "/เดือน" : lang === "en" ? "/mo" : "/月";
-
-  const formatPrice = (p: any) => {
-    if (p === null || p === undefined) return "";
-    const num = Number(p);
-    return isNaN(num) ? p.toString() : num.toLocaleString();
-  };
-
-  let priceText = "";
-  if (property.listing_type === "SALE_AND_RENT") {
-    const parts = [];
-    if (property.price) parts.push(`${tSale} ${formatPrice(property.price)} ${tBaht}`);
-    if (property.rental_price) parts.push(`${tRent} ${formatPrice(property.rental_price)} ${tBaht}${tPerMonth}`);
-    priceText = parts.join(" | ");
-  } else if (property.listing_type === "RENT") {
-    priceText = property.rental_price ? `${formatPrice(property.rental_price)} ${tBaht}${tPerMonth}` : "";
-  } else {
-    priceText = property.price ? `${formatPrice(property.price)} ${tBaht}` : "";
-  }
-
-  const primaryAgent = property.property_agents?.[0]?.profiles;
-
-  // 4. เตรียมข้อความแปล (Localization)
-  const tTitle = (lang === "th" ? property.title : (property as any)[`title_${lang}`]) || property.title || "";
-  const tDescription = (lang === "th" ? property.description : (property as any)[`description_${lang}`]) || property.description || "";
-  const tDistrict = (lang === "th" ? property.district : (property as any)[`district_${lang}`]) || property.district || "";
-  const tProvince = (lang === "th" ? property.province : (property as any)[`province_${lang}`]) || property.province || "";
-  
-  // แปลประเภททรัพย์
-  const PROPERTY_TYPE_LABELS: Record<string, Record<string, string>> = {
-    th: { CONDO: "คอนโด", HOUSE: "บ้านเดี่ยว", TOWNHOUSE: "ทาวน์เฮ้าส์", LAND: "ที่ดิน", COMMERCIAL: "อาคารพาณิชย์", OFFICE: "สำนักงาน", WAREHOUSE: "โกดัง" },
-    en: { CONDO: "Condo", HOUSE: "House", TOWNHOUSE: "Townhouse", LAND: "Land", COMMERCIAL: "Commercial", OFFICE: "Office", WAREHOUSE: "Warehouse" },
-    cn: { CONDO: "公寓", HOUSE: "别墅", TOWNHOUSE: "联排别墅", LAND: "土地", COMMERCIAL: "商业", OFFICE: "办公室", WAREHOUSE: "仓库" }
-  };
-  const tPropertyType = PROPERTY_TYPE_LABELS[lang]?.[property.property_type] || property.property_type;
-
-  const tAmenities = (property as any).property_features
-    ?.map((f: any) => {
-      const name = (lang === "th" ? f.features?.name : (f.features?.[`name_${lang}`])) || f.features?.name;
-      return `- ${name}`;
-    })
-    .filter(Boolean)
-    .join("\n") || "-";
-
-  // 5. แทนที่ Tags
-  const content = renderSocialTemplate(template, property, lang);
-  const images = property.property_images?.map((img: any) => img.image_url).filter(Boolean) || [];
-
-  return { 
-    content, 
-    template,
-    templates, 
-    images, 
-    title: tTitle,
-    priceDisplay: priceText,
-    location: `${tDistrict} ${tProvince}`.trim(),
-    propertyType: tPropertyType,
-    bedrooms: property.bedrooms,
-    bathrooms: property.bathrooms,
-    size_sqm: property.size_sqm,
-    land_size_sqwah: property.land_size_sqwah,
-    listingType: property.listing_type,
-    listingType_label: property.listing_type === "SALE" ? tSale : property.listing_type === "RENT" ? tRent : (lang === "th" ? "ขาย/เช่า" : lang === "en" ? "Sale/Rent" : "出售/出租"),
-    isExclusive: property.is_exclusive,
-    verified: property.verified
-  };
-}
+const formatPrice = (p: any) => {
+  if (p === null || p === undefined) return "";
+  const num = Number(p);
+  return isNaN(num) ? p.toString() : num.toLocaleString();
+};
 
 /**
- * Helper function สำหรับ Render Template ด้วยข้อมูลทรัพย์สิน
+ * Render social template with property data
  */
-export function renderSocialTemplate(template: string, property: any, lang: "th" | "en" | "cn") {
+export async function renderPropertySocialTemplate(template: string, property: any, lang: string) {
   if (!template) return "";
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
   const publicUrl = `${baseUrl}/properties/${property.slug || property.id}`;
 
-  const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : "出售";
-  const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : "出租";
+  const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : "售价";
+  const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : "租金";
   const tBaht = lang === "th" ? "บาท" : lang === "en" ? "THB" : "泰铢";
   const tPerMonth = lang === "th" ? "/เดือน" : lang === "en" ? "/mo" : "/月";
-
-  const formatPrice = (p: any) => {
-    if (p === null || p === undefined) return "";
-    const num = Number(p);
-    return isNaN(num) ? p.toString() : num.toLocaleString();
-  };
 
   let priceText = "";
   if (property.listing_type === "SALE_AND_RENT") {
@@ -192,14 +49,14 @@ export function renderSocialTemplate(template: string, property: any, lang: "th"
   const tPopularArea = (lang === "th" ? property.popular_area : (property as any)[`popular_area_${lang}`]) || property.popular_area || "";
   
   const PROPERTY_TYPE_LABELS: Record<string, Record<string, string>> = {
-    th: { CONDO: "คอนโด", HOUSE: "บ้านเดี่ยว", TOWNHOUSE: "ทาวน์เฮ้าส์", LAND: "ที่ดิน", COMMERCIAL: "อาคารพาณิชย์", OFFICE: "สำนักงาน", WAREHOUSE: "โกดัง" },
+    th: { CONDO: "คอนโด", HOUSE: "บ้าน", TOWNHOUSE: "ทาวน์เฮ้าส์", LAND: "ที่ดิน", COMMERCIAL: "อาคารพาณิชย์", OFFICE: "ออฟฟิศ", WAREHOUSE: "โกดัง" },
     en: { CONDO: "Condo", HOUSE: "House", TOWNHOUSE: "Townhouse", LAND: "Land", COMMERCIAL: "Commercial", OFFICE: "Office", WAREHOUSE: "Warehouse" },
-    cn: { CONDO: "公寓", HOUSE: "别墅", TOWNHOUSE: "联排别墅", LAND: "土地", COMMERCIAL: "商业", OFFICE: "办公室", WAREHOUSE: "仓库" }
+    cn: { CONDO: "公寓", HOUSE: "别墅", TOWNHOUSE: "联排别墅", LAND: "土地", COMMERCIAL: "商用楼", OFFICE: "办公室", WAREHOUSE: "仓库" }
   };
   const tPropertyType = PROPERTY_TYPE_LABELS[lang]?.[property.property_type] || property.property_type;
 
   const LISTING_TYPE_LABELS: Record<string, Record<string, string>> = {
-    th: { SALE: "ขาย", RENT: "เช่า", SALE_AND_RENT: "ขาย/เช่า" },
+    th: { SALE: "ขาย", RENT: "ให้เช่า", SALE_AND_RENT: "ขาย/เช่า" },
     en: { SALE: "Sale", RENT: "Rent", SALE_AND_RENT: "Sale/Rent" },
     cn: { SALE: "出售", RENT: "出租", SALE_AND_RENT: "出售/出租" }
   };
@@ -225,15 +82,67 @@ export function renderSocialTemplate(template: string, property: any, lang: "th"
   const closestTransitName = (lang === "th" ? property.transit_station_name : (property as any)[`transit_station_name_${lang}`]) || property.transit_station_name || "";
   const closestTransit = closestTransitName ? `${property.transit_type || ""} ${closestTransitName} (${property.transit_distance_meters || "0"}m.)` : "-";
 
+  const formatDetails = () => {
+    const parts = [
+      property.bedrooms ? (lang === "th" ? `${property.bedrooms} ห้องนอน` : lang === "en" ? `${property.bedrooms} Bed` : `${property.bedrooms} 卧室`) : null,
+      property.bathrooms ? (lang === "th" ? `${property.bathrooms} ห้องน้ำ` : lang === "en" ? `${property.bathrooms} Bath` : `${property.bathrooms} 浴室`) : null,
+      property.size_sqm ? `${property.size_sqm} ${lang === "th" ? "ตร.ม." : "Sqm"}` : null,
+      property.floor ? (lang === "th" ? `ชั้น ${property.floor}` : lang === "en" ? `Floor ${property.floor}` : `${property.floor} 层`) : null,
+    ];
+    return parts.filter(Boolean).join(" | ") || "-";
+  };
+
+  const formatSaleTag = (price: number, original?: number) => {
+    const pStr = formatPrice(price);
+    const oStr = original ? formatPrice(original) : "";
+    if (original && original > price) {
+      const pct = Math.round(((original - price) / original) * 100);
+      return lang === "th" 
+        ? `🔥 ลดพิเศษ! ${pStr} ${tBaht} (จาก ${oStr} - ลด ${pct}%)`
+        : lang === "en"
+          ? `🔥 Hot Deal! ${pStr} ${tBaht} (Was ${oStr} - ${pct}% OFF)`
+          : `🔥 特价! ${pStr} ${tBaht} (原价 ${oStr} - 优惠 ${pct}%)`;
+    }
+    return lang === "th" ? `ราคาขาย: ${pStr} ${tBaht}` : lang === "en" ? `Sale Price: ${pStr} ${tBaht}` : `售价: ${pStr} ${tBaht}`;
+  };
+
+  const formatRentTag = (price: number, original?: number) => {
+    const pStr = formatPrice(price);
+    const oStr = original ? formatPrice(original) : "";
+    if (original && original > price) {
+      const pct = Math.round(((original - price) / original) * 100);
+      return lang === "th"
+        ? `🔥 ดีลดี! เช่า ${pStr} ${tBaht}${tPerMonth} (จาก ${oStr} - ลด ${pct}%)`
+        : lang === "en"
+          ? `🔥 Great Deal! Rent ${pStr} ${tBaht}${tPerMonth} (Was ${oStr} - ${pct}% OFF)`
+          : `🔥 优选! 租金 ${pStr} ${tBaht}${tPerMonth} (原价 ${oStr} - 优惠 ${pct}%)`;
+    }
+    return lang === "th" ? `ค่าเช่า: ${pStr} ${tBaht}${tPerMonth}` : lang === "en" ? `Rent: ${pStr} ${tBaht}${tPerMonth}` : `租金: ${pStr} ${tBaht}${tPerMonth}`;
+  };
+
+  let priceTag = "";
+  if (property.listing_type === "SALE_AND_RENT") {
+    const parts = [];
+    if (property.price) parts.push(formatSaleTag(property.price, property.original_price));
+    if (property.rental_price) parts.push(formatRentTag(property.rental_price, property.original_rental_price));
+    priceTag = parts.join("\n");
+  } else if (property.listing_type === "RENT") {
+    priceTag = property.rental_price ? formatRentTag(property.rental_price, property.original_rental_price) : (lang === "th" ? "ติดต่อสอบถามราคาเช่า" : "Contact for Rent");
+  } else {
+    priceTag = property.price ? formatSaleTag(property.price, property.original_price) : (lang === "th" ? "ติดต่อสอบถามราคาขาย" : "Contact for Sale");
+  }
+
   return template
     .replace(/{{title}}/g, tTitle)
     .replace(/{{description}}/g, tDescription)
     .replace(/{{price}}/g, priceText)
-    .replace(/{{original_price}}/g, priceText) // Summary of original
+    .replace(/{{original_price}}/g, priceText)
     .replace(/{{sale_price}}/g, property.price ? `${formatPrice(property.price)} ${tBaht}` : "")
     .replace(/{{rental_price}}/g, property.rental_price ? `${formatPrice(property.rental_price)} ${tBaht}${tPerMonth}` : "")
     .replace(/{{original_sale_price}}/g, property.original_price ? `${formatPrice(property.original_price)} ${tBaht}` : "")
     .replace(/{{original_rental_price}}/g, property.original_rental_price ? `${formatPrice(property.original_rental_price)} ${tBaht}${tPerMonth}` : "")
+    .replace(/{{price_tag}}/g, priceTag)
+    .replace(/{{details}}/g, formatDetails())
     .replace(/{{location}}/g, `${tDistrict} ${tProvince}`.trim())
     .replace(/{{popular_area}}/g, tPopularArea)
     .replace(/{{amenities}}/g, tAmenities)
@@ -247,8 +156,8 @@ export function renderSocialTemplate(template: string, property: any, lang: "th"
     .replace(/{{bathrooms}}/g, property.bathrooms?.toString() || "0")
     .replace(/{{size_sqm}}/g, property.size_sqm?.toString() || "0")
     .replace(/{{floor}}/g, property.floor?.toString() || "-")
-    .replace(/{{verified}}/g, property.verified ? "✅ ตรวจสอบแล้ว" : "")
-    .replace(/{{exclusive}}/g, property.is_exclusive ? "🌟 Exclusive" : "")
+    .replace(/{{verified}}/g, property.verified ? "Verified" : "")
+    .replace(/{{exclusive}}/g, property.is_exclusive ? "Exclusive" : "")
     .replace(/{{link}}/g, publicUrl)
     .replace(/{{agent_name}}/g, primaryAgent?.full_name || "")
     .replace(/{{agent_phone}}/g, primaryAgent?.phone || "")
@@ -256,7 +165,118 @@ export function renderSocialTemplate(template: string, property: any, lang: "th"
 }
 
 /**
- * โพสต์ไปยัง Meta (Facebook/Instagram)
+ * Get social content data for posting
+ */
+export async function getPropertySocialContent(
+  propertyId: string,
+  lang: "th" | "en" | "cn" = "th",
+  platform?: "FACEBOOK" | "INSTAGRAM" | "LINE" | "TIKTOK",
+) {
+  const { supabase } = await requireAuthContext();
+
+  // 1. Fetch property data
+  const { data: property, error: propError } = await supabase
+    .from("properties")
+    .select(
+      `
+      *,
+      property_images ( image_url ),
+      property_agents ( profiles ( full_name, phone, line_id ) ),
+      property_features ( features ( name, name_en, name_cn, icon_key ) )
+    `,
+    )
+    .eq("id", propertyId)
+    .single();
+
+  if (propError || !property) {
+    throw new Error("Property not found");
+  }
+
+  const settings = await getSiteSettings();
+  
+  const social_post_template = settings.social_post_template || "";
+  const social_post_template_en = settings.social_post_template_en || "";
+  const social_post_template_cn = settings.social_post_template_cn || "";
+
+  const line_post_template = settings.line_post_template || "";
+  const line_post_template_en = settings.line_post_template_en || "";
+  const line_post_template_cn = settings.line_post_template_cn || "";
+  
+  const tiktok_post_template = settings.tiktok_post_template || "";
+  const tiktok_post_template_en = settings.tiktok_post_template_en || "";
+  const tiktok_post_template_cn = settings.tiktok_post_template_cn || "";
+
+  const isLine = platform === "LINE";
+  const isTikTok = platform === "TIKTOK";
+
+  let template: string = "";
+  if (isLine) {
+    template = lang === "en" ? line_post_template_en : lang === "cn" ? line_post_template_cn : line_post_template;
+  } else if (isTikTok) {
+    template = lang === "en" ? tiktok_post_template_en : lang === "cn" ? tiktok_post_template_cn : tiktok_post_template;
+  } else {
+    template = lang === "en" ? social_post_template_en : lang === "cn" ? social_post_template_cn : social_post_template;
+  }
+
+  const templates = {
+    th: isLine ? line_post_template : isTikTok ? tiktok_post_template : social_post_template,
+    en: isLine ? line_post_template_en : isTikTok ? tiktok_post_template_en : social_post_template_en,
+    cn: isLine ? line_post_template_cn : isTikTok ? tiktok_post_template_cn : social_post_template_cn
+  };
+
+  const tSale = lang === "th" ? "Sale (TH)" : lang === "en" ? "Sale" : "Sale (CN)";
+  const tRent = lang === "th" ? "Rent (TH)" : lang === "en" ? "Rent" : "Rent (CN)";
+  const tBaht = lang === "th" ? "Baht" : lang === "en" ? "THB" : "Baht";
+  const tPerMonth = lang === "th" ? "/mo" : lang === "en" ? "/mo" : "/mo";
+
+  let priceText = "";
+  if (property.listing_type === "SALE_AND_RENT") {
+    const parts = [];
+    if (property.price) parts.push(`${tSale} ${formatPrice(property.price)} ${tBaht}`);
+    if (property.rental_price) parts.push(`${tRent} ${formatPrice(property.rental_price)} ${tBaht}${tPerMonth}`);
+    priceText = parts.join(" | ");
+  } else if (property.listing_type === "RENT") {
+    priceText = property.rental_price ? `${formatPrice(property.rental_price)} ${tBaht}${tPerMonth}` : "";
+  } else {
+    priceText = property.price ? `${formatPrice(property.price)} ${tBaht}` : "";
+  }
+
+  const tTitle = (lang === "th" ? property.title : (property as any)[`title_${lang}`]) || property.title || "";
+  const tDistrict = (lang === "th" ? property.district : (property as any)[`district_${lang}`]) || property.district || "";
+  const tProvince = (lang === "th" ? property.province : (property as any)[`province_${lang}`]) || property.province || "";
+  
+  const PROPERTY_TYPE_LABELS: Record<string, Record<string, string>> = {
+    th: { CONDO: "Condo", HOUSE: "House", TOWNHOUSE: "Townhouse", LAND: "Land", COMMERCIAL: "Commercial", OFFICE: "Office", WAREHOUSE: "Warehouse" },
+    en: { CONDO: "Condo", HOUSE: "House", TOWNHOUSE: "Townhouse", LAND: "Land", COMMERCIAL: "Commercial", OFFICE: "Office", WAREHOUSE: "Warehouse" },
+    cn: { CONDO: "Condo", HOUSE: "House", TOWNHOUSE: "Townhouse", LAND: "Land", COMMERCIAL: "Commercial", OFFICE: "Office", WAREHOUSE: "Warehouse" }
+  };
+  const tPropertyType = PROPERTY_TYPE_LABELS[lang]?.[property.property_type] || property.property_type;
+
+  const content = await renderPropertySocialTemplate(template, property, lang);
+  const images = property.property_images?.map((img: any) => img.image_url).filter(Boolean) || [];
+
+  return { 
+    content, 
+    template,
+    templates, 
+    images, 
+    title: tTitle,
+    priceDisplay: priceText,
+    location: `${tDistrict} ${tProvince}`.trim(),
+    propertyType: tPropertyType,
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    size_sqm: property.size_sqm,
+    land_size_sqwah: property.land_size_sqwah,
+    listingType: property.listing_type,
+    listingType_label: property.listing_type === "SALE" ? tSale : property.listing_type === "RENT" ? tRent : "Sale/Rent",
+    isExclusive: property.is_exclusive,
+    verified: property.verified
+  };
+}
+
+/**
+ * Post property to Meta (Facebook/Instagram)
  */
 export async function postPropertyToMetaAction(
   propertyId: string,
@@ -268,24 +288,21 @@ export async function postPropertyToMetaAction(
     const { supabase, user, role } = await requireAuthContext();
     assertStaff(role);
 
-    // 4. ดึงข้อมูลทรัพย์เพื่อใช้ Render Tags (ถ้ามี)
     const { data: property, error: propError } = await supabase
       .from("properties")
       .select(`*, property_images(image_url), property_agents(profiles(*)), property_features(features(*))`)
       .eq("id", propertyId)
       .single();
 
-    if (propError || !property) throw new Error("ไม่พบข้อมูลทรัพย์สิน");
+    if (propError || !property) throw new Error("Property not found");
 
-    const contentData = await getPropertySocialContent(propertyId, lang);
+    const contentData = await getPropertySocialContent(propertyId, lang, platform);
     const images = contentData.images;
 
-    // หากมีการแก้ไขข้อความ (customContent) ให้ลอง Render Tags ใหม่
     const finalContent = customContent 
-      ? renderSocialTemplate(customContent, property, lang)
+      ? await renderPropertySocialTemplate(customContent, property, lang)
       : contentData.content;
 
-    // 5. ส่งข้อมูลไปยัง Meta Graph API
     const result = await postToMetaPage(finalContent, images, platform);
 
     if (result.success) {
@@ -304,12 +321,12 @@ export async function postPropertyToMetaAction(
 
       revalidatePath("/(protected)/protected/properties", "page");
  
-      return { success: true, message: `โพสต์ไปยัง ${platform} สำเร็จ`, data: result.data };
+      return { success: true, message: `Posted to ${platform} successfully`, data: result.data };
      } else {
-       return { success: false, message: `เกิดข้อผิดพลาด: ${result.error}` };
+       return { success: false, message: `Error: ${result.error}` };
      }
   } catch (err) {
-    console.error("postPropertyToMetaAction → error:", err);
-    return { success: false, message: "เกิดข้อผิดพลาดในการเชื่อมต่อระบบ" };
+    console.error("postPropertyToMetaAction error:", err);
+    return { success: false, message: "Connection error" };
   }
 }

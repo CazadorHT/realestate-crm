@@ -15,6 +15,14 @@ import {
   type QuickReplyItem,
   type QuickReply,
 } from "@/types/line";
+
+export type {
+  BotLang,
+  FlexBubble,
+  FlexMessage,
+  QuickReplyItem,
+  QuickReply,
+};
 import { size } from "zod";
 
 interface PropertyForFlex {
@@ -1733,7 +1741,7 @@ export function buildSocialPostFlex(
               ],
             },
             {
-              type: "box",
+              type: "box" as const,
               layout: "horizontal",
               margin: "lg" as const,
               contents: [

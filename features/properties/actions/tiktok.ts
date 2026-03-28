@@ -2,7 +2,7 @@
 
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
-import { getPropertySocialContent, renderSocialTemplate } from "./social";
+import { getPropertySocialContent, renderPropertySocialTemplate } from "./social";
 
 /**
  * เตรียมข้อมูลสำหรับโพสต์ไปยัง TikTok (Content Posting API)
@@ -57,7 +57,7 @@ export async function postPropertyToTikTokAction(
       finalCaption = contentData.content;
     } else {
       // หากมี caption ส่งมา (เช่น แก้ไขจากหน้า UI) ให้ลอง Render Tags เผื่อไว้
-      finalCaption = renderSocialTemplate(finalCaption, property, lang);
+      finalCaption = await renderPropertySocialTemplate(finalCaption, property, lang);
     }
 
     // 3. ตรวจสอบการเชื่อมต่อ TikTok (Placeholder for Token Logic)
