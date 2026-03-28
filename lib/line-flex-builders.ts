@@ -1473,11 +1473,15 @@ export function buildSocialPostFlex(
     return cleanUrl;
   };
 
-  const rawBase = siteConfig.url || "https://realestate-crm-rho.vercel.app";
+  const rawBase = siteConfig.url;
   let baseUrl = rawBase;
-  if (!baseUrl.startsWith("http")) {
-    baseUrl = `https://${baseUrl}`;
+  
+  // If we're getting a localhost URL in a production-like context (LINE requires HTTPS), 
+  // or if the URL is empty/missing, use the verified production domain as a robust fallback.
+  if (!baseUrl || baseUrl.includes("localhost") || !baseUrl.startsWith("http")) {
+    baseUrl = "https://realestate-crm-rho.vercel.app";
   }
+  
   baseUrl = baseUrl.replace(/\/$/, "");
   
   const targetId = prop.slug || prop.id;
@@ -1778,6 +1782,30 @@ export function buildSocialPostFlex(
           ],
           paddingAll: "lg",
         },
+        ...(customContent
+          ? [
+              {
+                type: "box" as const,
+                layout: "vertical" as const,
+                paddingAll: "lg" as const,
+                paddingTop: "none" as const,
+                contents: [
+                  {
+                    type: "separator" as const,
+                    margin: "md" as const,
+                  },
+                  {
+                    type: "text" as const,
+                    text: customContent || (lang === "th" ? "รายละเอียดทรัพย์..." : lang === "en" ? "Property Details..." : "房产详情..."),
+                    size: "xs" as const,
+                    color: "#666666",
+                    wrap: true,
+                    margin: "lg" as const,
+                  },
+                ],
+              },
+            ]
+          : []),
       ],
     },
     footer: {

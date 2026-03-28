@@ -1,4 +1,6 @@
 const getBaseUrl = () => {
+  // Support standard NEXT_PUBLIC_SITE_URL first
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
   if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
   
   // High Priority: Use the verified production domain if in production environment
