@@ -258,9 +258,9 @@ export const T: Record<string, Record<BotLang, string>> = {
     cn: "对这套房感兴趣: {title}\n(编号: {id})",
   },
   interested_reply: {
-    th: "ขอบคุณที่ให้ความสนใจค่ะ 🙏\nเจ้าหน้าที่จะติดต่อกลับหาคุณโดยเร็วที่สุดนะคะ 😊",
-    en: "Thank you for your interest! 🙏\nOur team will contact you soon. 😊",
-    cn: "感谢您的关注！🙏\n我们的团队将很快与您联系。😊",
+    th: "ขอบคุณที่สนใจนะคะ! 🙏 เจ้าหน้าที่จะติดต่อกลับหาคุณโดยเร็วที่สุดค่ะ 😊✨",
+    en: "Thank you for your interest! 🙏 Our team will get back to you as soon as possible. 😊✨",
+    cn: "感谢您的关注！🙏 我们的团队会尽快与您联系。😊✨",
   },
 };
 
