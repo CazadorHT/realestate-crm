@@ -201,6 +201,11 @@ export async function discoverWhatsAppPhoneNumberId(): Promise<string | null> {
  * Automatically discover the Instagram Business Account ID associated with the page
  */
 export async function discoverInstagramBusinessId(): Promise<string | null> {
+  // Use manual override if available
+  if (metaConfig.instagramBusinessId) {
+    return metaConfig.instagramBusinessId;
+  }
+
   const token = metaConfig.pageAccessToken;
   if (!token) return null;
 
