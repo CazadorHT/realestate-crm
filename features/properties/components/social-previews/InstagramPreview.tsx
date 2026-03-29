@@ -18,7 +18,7 @@ export function InstagramPreview({
   previewData,
 }: InstagramPreviewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const maxLength = 100; // Instagram usually truncates earlier
+  const maxLength = 500; // Increased for better multi-language preview
   const isTooLong = content?.length > maxLength;
   const displayContent = isTooLong && !isExpanded ? content.slice(0, maxLength).trim() + "..." : content;
 
@@ -85,7 +85,7 @@ export function InstagramPreview({
         <div className="text-[12px] font-bold leading-none mb-1">42 likes</div>
         <div className="text-[12px] leading-relaxed">
           <span className="font-bold mr-1.5">vcc.asset</span>
-          <span className="text-slate-900">{displayContent || "Loading content..."}</span>
+          <span className="text-slate-900 whitespace-pre-wrap">{displayContent || "Loading content..."}</span>
           {isTooLong && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}

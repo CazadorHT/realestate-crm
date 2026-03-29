@@ -21,7 +21,7 @@ export function FacebookPreview({
   lang,
 }: FacebookPreviewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const maxLength = 150;
+  const maxLength = 500;
   const isTooLong = content?.length > maxLength;
   const displayContent = isTooLong && !isExpanded ? content.slice(0, maxLength).trim() + "..." : content;
 

@@ -104,7 +104,12 @@ export function SocialPostDialog({
         selectedLangs.map(l => getPropertySocialContent(propertyId, l, platform))
       );
       
-      const combinedContent = contents.map(c => c.content).filter(Boolean).join("\n\n");
+      const combinedContent = contents
+        .map((c) => c.content)
+        .filter(Boolean)
+        .map((text) => (contents.length > 1 ? `${text}\n\n---\n\n` : text))
+        .join("");
+      
       const firstData = contents[0];
       
       setContent(combinedContent);
