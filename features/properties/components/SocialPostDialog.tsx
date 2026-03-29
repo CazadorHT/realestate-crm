@@ -107,8 +107,7 @@ export function SocialPostDialog({
       const combinedContent = contents
         .map((c) => c.content)
         .filter(Boolean)
-        .map((text) => (contents.length > 1 ? `${text}\n\n---\n\n` : text))
-        .join("");
+        .join("\n\n---\n\n");
       
       const firstData = contents[0];
       
@@ -345,7 +344,18 @@ export function SocialPostDialog({
                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-[11px] text-slate-400 italic">
                        <ImageIcon className="h-3.5 w-3.5 shrink-0" />
-                       <span>รูปภาพทั้งหมด {images.length} รูป จะถูกอัปโหลดอัตโนมัติ</span>
+                       <span>
+                      รูปภาพทั้งหมด{" "}
+                      {platform === "INSTAGRAM"
+                        ? Math.min(images.length, 10)
+                        : images.length}{" "}
+                      รูป จะถูกอัปโหลดอัตโนมัติ
+                      {platform === "INSTAGRAM" && images.length > 10 && (
+                        <span className="text-[10px] text-amber-600 ml-1 font-medium bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 italic lowercase tracking-tight">
+                          (จำกัด 10 รูปแรกสำหรับ API)
+                        </span>
+                      )}
+                    </span>
                     </div>
                     <div className={cn(
                       "text-[10px] font-bold px-2 py-0.5 rounded-full border",

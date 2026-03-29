@@ -5,6 +5,8 @@ import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { postToMetaPage } from "@/lib/meta";
 import { getSiteSettings } from "@/features/site-settings/actions";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { getProvinceName } from "@/lib/utils/provinces";
 
 /**
  * Helper function for formatting prices consistently
@@ -44,9 +46,11 @@ export async function renderPropertySocialTemplate(template: string, property: a
   const primaryAgent = property.property_agents?.[0]?.profiles;
   const tTitle = (lang === "th" ? property.title : (property as any)[`title_${lang}`]) || property.title || "";
   const tDescription = (lang === "th" ? property.description : (property as any)[`description_${lang}`]) || property.description || "";
-  const tDistrict = (lang === "th" ? property.district : (property as any)[`district_${lang}`]) || property.district || "";
-  const tProvince = (lang === "th" ? property.province : (property as any)[`province_${lang}`]) || property.province || "";
-  const tPopularArea = (lang === "th" ? property.popular_area : (property as any)[`popular_area_${lang}`]) || property.popular_area || "";
+  
+  // Use same logic as PropertyCard for consistent localization
+  const tPopularArea = getLocaleValue(property, "popular_area", lang);
+  const tProvince = getProvinceName(property.province || "", lang);
+  const tLocation = [tPopularArea, tProvince].filter(Boolean).join(lang === "th" ? " " : ", ");
   
   const PROPERTY_TYPE_LABELS: Record<string, Record<string, string>> = {
     th: { CONDO: "คอนโด", HOUSE: "บ้าน", TOWNHOUSE: "ทาวน์เฮ้าส์", LAND: "ที่ดิน", COMMERCIAL: "อาคารพาณิชย์", OFFICE: "ออฟฟิศ", WAREHOUSE: "โกดัง" },
@@ -121,15 +125,27 @@ export async function renderPropertySocialTemplate(template: string, property: a
   };
 
   let priceTag = "";
+  const contactPrice = lang === "th" ? "ติดต่อสอบถามราคา" : lang === "en" ? "Contact for Price" : "联系咨询价格";
+
+  // Robust price extraction (matches website behavior)
+  const actualPrice = property.price || property.price_per_sqm * (property.size_sqm || 0) || 0;
+  const actualRentPrice = property.rental_price || property.rent_price_per_sqm * (property.size_sqm || 0) || 0;
+
   if (property.listing_type === "SALE_AND_RENT") {
     const parts = [];
-    if (property.price) parts.push(formatSaleTag(property.price, property.original_price));
-    if (property.rental_price) parts.push(formatRentTag(property.rental_price, property.original_rental_price));
-    priceTag = parts.join("\n");
+    if (actualPrice) parts.push(formatSaleTag(actualPrice, property.original_price));
+    if (actualRentPrice) parts.push(formatRentTag(actualRentPrice, property.original_rental_price));
+    priceTag = parts.length > 0 ? parts.join("\n") : contactPrice;
   } else if (property.listing_type === "RENT") {
-    priceTag = property.rental_price ? formatRentTag(property.rental_price, property.original_rental_price) : (lang === "th" ? "ติดต่อสอบถามราคาเช่า" : "Contact for Rent");
+    const finalPrice = actualRentPrice || actualPrice;
+    priceTag = finalPrice 
+      ? formatRentTag(finalPrice, property.original_rental_price) 
+      : (lang === "th" ? "ติดต่อสอบถามราคาเช่า" : lang === "en" ? "Contact for Rent" : "联系咨询租金");
   } else {
-    priceTag = property.price ? formatSaleTag(property.price, property.original_price) : (lang === "th" ? "ติดต่อสอบถามราคาขาย" : "Contact for Sale");
+    const finalPrice = actualPrice || actualRentPrice;
+    priceTag = finalPrice 
+      ? formatSaleTag(finalPrice, property.original_price) 
+      : (lang === "th" ? "ติดต่อสอบถามราคาขาย" : lang === "en" ? "Contact for Sale" : "联系咨询售价");
   }
 
   return template
@@ -143,7 +159,7 @@ export async function renderPropertySocialTemplate(template: string, property: a
     .replace(/{{original_rental_price}}/g, property.original_rental_price ? `${formatPrice(property.original_rental_price)} ${tBaht}${tPerMonth}` : "")
     .replace(/{{price_tag}}/g, priceTag)
     .replace(/{{details}}/g, formatDetails())
-    .replace(/{{location}}/g, `${tDistrict} ${tProvince}`.trim())
+    .replace(/{{location}}/g, tLocation)
     .replace(/{{popular_area}}/g, tPopularArea)
     .replace(/{{amenities}}/g, tAmenities)
     .replace(/{{nearby_places}}/g, nearbyPlaces)
