@@ -9,17 +9,21 @@ const TENANT_COOKIE_NAME = "active_tenant_id";
  * Use "ALL" to represent "All Branches".
  */
 export async function setActiveTenantCookieAction(tenantId: string | null) {
-  const cookieStore = await cookies();
-  
-  if (!tenantId || tenantId === "ALL") {
-    cookieStore.delete(TENANT_COOKIE_NAME);
-  } else {
-    cookieStore.set(TENANT_COOKIE_NAME, tenantId, {
-      path: "/",
-      sameSite: "lax",
-      httpOnly: true,
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    });
+  try {
+    const cookieStore = await cookies();
+    
+    if (!tenantId) {
+      cookieStore.delete(TENANT_COOKIE_NAME);
+    } else {
+      cookieStore.set(TENANT_COOKIE_NAME, tenantId, {
+        path: "/",
+        sameSite: "lax",
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+    }
+  } catch (err) {
+    console.error("Failed to set tenant cookie:", err);
   }
 }
 

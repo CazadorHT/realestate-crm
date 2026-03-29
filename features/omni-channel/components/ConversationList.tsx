@@ -12,16 +12,20 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { FaComment, FaLine } from "react-icons/fa6";
+import { useTenant } from "@/components/providers/TenantProvider";
+import { Conversation } from "../types";
 
 export function ConversationList({
   conversations,
   selectedLeadId,
   onSelect,
 }: {
-  conversations: any[];
+  conversations: Conversation[];
   selectedLeadId: string | null;
   onSelect: (id: string) => void;
 }) {
+  const { isMultiTenantEnabled } = useTenant();
+
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       <div className="p-4 border-b border-slate-100 font-bold text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50/50">
@@ -77,7 +81,7 @@ export function ConversationList({
                   )}
                 </div>
                 <div className="absolute -bottom-1 -right-1 bg-white p-0.5 rounded-full">
-                  <SourceIcon
+                  {/* <SourceIcon
                     className={cn(
                       "h-4 w-4",
                       conv.source === "LINE"
@@ -90,7 +94,7 @@ export function ConversationList({
                               ? "text-emerald-500"
                               : "text-slate-400",
                     )}
-                  />
+                  /> */}
                 </div>
               </div>
               <div className="flex-1 min-w-0">
@@ -122,22 +126,22 @@ export function ConversationList({
                   <p className="text-[11px] text-slate-500 truncate font-medium">
                     {lastMsg ? lastMsg.content : "เริ่มการสนทนา"}
                   </p>
-                  <div className="flex items-center gap-2">
+                </div>
+                  <div className="flex items-center justify-end gap-2">
                     {lastMsg && (
                       <span className="text-[10px] font-medium text-slate-400">
-                        {formatDistanceToNow(new Date(lastMsg.created_at), {
+                        {formatDistanceToNow(new Date(lastMsg.created_at || 0), {
                           addSuffix: false,
                           locale: th,
                         })}
                       </span>
                     )}
-                    {(conv as any).tenants?.name && (
+                    {isMultiTenantEnabled && (conv as any).tenants?.name && (
                       <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-bold border border-slate-200/50">
                         {(conv as any).tenants.name}
                       </span>
                     )}
                   </div>
-                </div>
               </div>
               {lastMsg &&
                 !lastMsg.is_read &&

@@ -1,11 +1,12 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { Conversation } from "./types";
 
 /**
  * Fetch initial conversations (leads with latest omni messages)
  * with branch-aware filtering.
  */
-export async function getInboxConversationsQuery() {
+export async function getInboxConversationsQuery(): Promise<Conversation[]> {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
   const config = await getSystemConfig();
@@ -19,6 +20,7 @@ export async function getInboxConversationsQuery() {
       full_name,
       source,
       line_id,
+      tenant_id,
       note,
       tenants(id, name),
       omni_messages (
@@ -34,11 +36,12 @@ export async function getInboxConversationsQuery() {
     .not("omni_messages", "is", null);
 
   if (isMultiTenant) {
-    if (tenantId === undefined) {
-      // ALL Branches: include unassigned or any branch
-      query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+    if (tenantId) {
+      // Specific Branch: Filter by selected tenant
+      query = query.eq("tenant_id", tenantId);
     } else {
-      query = query.eq("tenant_id", tenantId!);
+      // ALL Branches / Global View: No additional filter needed
+      // (Bypasses the eq/or that used undefined variables)
     }
   }
 
@@ -53,3 +56,4 @@ export async function getInboxConversationsQuery() {
 
   return data || [];
 }
+    

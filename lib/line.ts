@@ -114,6 +114,22 @@ export async function broadcastLineMessage(
       return { success: false, message: errorData.message || "Line API error" };
     }
 
+    // 🔥 LOG BROADCAST ONCE (GLOBAL)
+    try {
+      const supabase = createAdminClient();
+      const textContent = typeof message === "string" ? message : JSON.stringify(message);
+      
+      await supabase.from("omni_messages").insert({
+        lead_id: null,
+        source: "LINE" as const,
+        content: textContent,
+        direction: "OUTGOING" as const,
+        payload: { is_broadcast: true, global: true }
+      });
+    } catch (logErr) {
+      console.error("Error logging broadcast:", logErr);
+    }
+
     return { success: true };
   } catch (error: any) {
     console.error("LINE Broadcast Exception:", error);
@@ -161,6 +177,7 @@ export async function saveOmniMessage(data: {
   content: string;
   payload?: any;
   direction: "INCOMING" | "OUTGOING";
+  tenant_id?: string;
 }) {
   const supabase = createAdminClient();
   const { error } = await supabase.from("omni_messages").insert({
@@ -170,6 +187,7 @@ export async function saveOmniMessage(data: {
     content: data.content,
     payload: data.payload,
     direction: data.direction,
+    tenant_id: data.tenant_id,
   });
 
   if (error) {

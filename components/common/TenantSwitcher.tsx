@@ -144,7 +144,20 @@ export function TenantSwitcher() {
               );
             })}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-xs text-blue-600 hover:text-blue-700">
+            <DropdownMenuItem
+              onClick={() => setTenantId("ALL")}
+              className="flex items-center justify-between py-2 cursor-pointer text-blue-600 font-bold"
+            >
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="h-4 w-4" />
+                <span>ทุกสาขา (Show All)</span>
+              </div>
+              {activeTenant?.id === "ALL" && (
+                <Check className="h-4 w-4 text-green-500 shrink-0" />
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-xs text-slate-400 cursor-not-allowed">
               + เพิ่มสาขาใหม่ / แฟรนไชส์
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -169,6 +182,34 @@ export function TenantSwitcher() {
             </SheetHeader>
 
             <div className="p-4 space-y-2 pb-12 mb-4">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">ตัวเลือกการแสดงผล</p>
+              <button
+                onClick={() => {
+                  setTenantId("ALL");
+                  setOpen(false);
+                }}
+                className={cn(
+                  "flex items-center justify-between px-4 py-4 rounded-xl border text-left transition-all group w-full mb-4",
+                  activeTenant?.id === "ALL"
+                    ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
+                    : "bg-white border-slate-100 text-slate-600 hover:bg-slate-50"
+                )}
+              >
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className={cn(
+                    "h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-colors uppercase font-bold text-xs",
+                    activeTenant?.id === "ALL" ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-400 group-hover:bg-slate-200"
+                  )}>
+                    ALL
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-bold truncate text-blue-600">แสดงทุกสาขา (Show All Branches)</span>
+                    <span className="text-[10px] text-slate-400">สำหรับตรวจสอบข้อมูลภาพรวม</span>
+                  </div>
+                </div>
+                {activeTenant?.id === "ALL" && <Check className="h-5 w-5 text-blue-600" />}
+              </button>
+
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">สาขาทั้งหมด ({tenants.length})</p>
               <div className="grid gap-2">
                 {tenants.map((tenant) => {

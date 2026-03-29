@@ -544,13 +544,20 @@ async function handleIncomingChannelMessage(
       }
     } catch (e) {}
 
+    let activeTenantId = lead?.tenant_id;
+    if (!lead && (activeLeadId)) {
+      // In case of new lead, we might need to fetch its tenant_id if assigned by trigger
+      // but for simplicity, we use undefined and let DB handle it if needed
+    }
+
     await saveOmniMessage({
-      lead_id: activeLeadId,
+      lead_id: activeLeadId!,
       source: "LINE",
       external_message_id: event.message?.id,
       content: text,
       payload: { ...event, profile },
       direction: "INCOMING",
+      tenant_id: (activeTenantId as string) || undefined,
     });
   }
 
@@ -594,7 +601,7 @@ async function handleInteractiveCommand(
       text.match(/\(รหัส: (.*?)\)/) ||
       text.match(/\(ID: (.*?)\)/) ||
       text.match(/\(编号: (.*?)\)/);
-    const propertyId = idMatch ? idMatch[1] : "";
+    const propertyId = idMatch ? idMatch[1].slice(0, 6) : "";
     const propertyTitle = text
       .replace("สนใจทรัพย์:", "")
       .replace(/\(รหัส:.*?\)/, "")

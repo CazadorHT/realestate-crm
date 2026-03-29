@@ -115,9 +115,20 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         // Multi-tenant mode logic
         if (tenantList && tenantList.length > 0) {
           const storedId = localStorage.getItem("active_tenant_id");
-          const initial =
-            tenantList.find((t) => t.id === storedId) || tenantList[0];
-          setActiveTenant(initial);
+          
+          if (storedId === "ALL") {
+            setActiveTenant({
+              id: "ALL",
+              name: "ทุกสาขา (Global View)",
+              slug: "all",
+              logo_url: null,
+              userRole: "ADMIN",
+            });
+          } else {
+            const initial =
+              tenantList.find((t) => t.id === storedId) || tenantList[0];
+            setActiveTenant(initial);
+          }
         }
       }
     } catch (err) {
@@ -132,9 +143,26 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
 
   const setTenantId = (id: string) => {
+    if (id === "ALL") {
+      setActiveTenant({
+        id: "ALL",
+        name: "ทุกสาขา (Global View)",
+        slug: "all",
+        logo_url: null,
+        userRole: "ADMIN",
+      });
+      localStorage.setItem("active_tenant_id", "ALL");
+      setActiveTenantCookieAction("ALL");
+      startTransition(() => {
+        router.refresh();
+      });
+      return;
+    }
+
     const selected = tenants.find((t) => t.id === id);
     if (selected) {
       setActiveTenant(selected);
+      localStorage.setItem("active_tenant_id", id);
       // Update cookie for server-side state
       setActiveTenantCookieAction(id);
       
