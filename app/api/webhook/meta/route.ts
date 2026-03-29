@@ -13,6 +13,8 @@ import { getSiteSettings } from "@/features/site-settings/actions";
 import { SocialKeyword } from "@/features/site-settings/schema";
 import { z } from "zod";
 import { MetaPlatform, MetaWebhookBody } from "@/types/meta";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { getProvinceName } from "@/lib/utils/provinces";
 
 /**
  * Zod Schemas for Meta Webhook Validation
@@ -475,7 +477,11 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
     )
     .replace(
       /{{location}}/g,
-      `${(lang === "th" ? propertyData.district : propertyData[`district_${lang}`]) || propertyData.district || ""} ${(lang === "th" ? propertyData.province : propertyData[`province_${lang}`]) || propertyData.province || ""}`.trim(),
+      (() => {
+        const tPopularArea = getLocaleValue(propertyData, "popular_area", lang);
+        const tProvince = getProvinceName(propertyData.province || "", lang);
+        return [tPopularArea, tProvince].filter(Boolean).join(lang === "th" ? " " : ", ");
+      })()
     )
     .replace(/{{popular_area}}/g, (lang === "th" ? propertyData.popular_area : propertyData[`popular_area_${lang}`]) || propertyData.popular_area || "-")
     .replace(/{{amenities}}/g, amenities)
@@ -615,15 +621,25 @@ async function handleKeywordAutomation(
       return `${tRent}: ${price.toLocaleString()} ${tBaht}${tPerMonth}`;
     };
 
+    // Smart Price Detection (Matches social.ts)
+    const actualPrice = propertyData.price || (propertyData.price_per_sqm || 0) * (propertyData.size_sqm || 0);
+    const actualRentPrice = propertyData.rental_price || (propertyData.rent_price_per_sqm || 0) * (propertyData.size_sqm || 0);
+
     if (propertyData.listing_type === "SALE_AND_RENT") {
       const parts = [];
-      if (propertyData.price) parts.push(formatSale(propertyData.price, propertyData.original_price || undefined));
-      if (propertyData.rental_price) parts.push(formatRent(propertyData.rental_price, propertyData.original_rental_price || undefined));
-      priceTag = parts.join("\n");
+      if (actualPrice) parts.push(formatSale(actualPrice, propertyData.original_price || undefined));
+      if (actualRentPrice) parts.push(formatRent(actualRentPrice, propertyData.original_rental_price || undefined));
+      priceTag = parts.length > 0 ? parts.join("\n") : (lang === "th" ? "ติดต่อสอบถามราคา" : "Contact for Price");
     } else if (propertyData.listing_type === "RENT") {
-      priceTag = propertyData.rental_price ? formatRent(propertyData.rental_price, propertyData.original_rental_price || undefined) : (lang === "th" ? "ติดต่อสอบถามราคาเช่า" : "Contact for Rent");
+      const finalPrice = actualRentPrice || actualPrice;
+      priceTag = finalPrice 
+        ? formatRent(finalPrice, propertyData.original_rental_price || undefined) 
+        : (lang === "th" ? "ติดต่อสอบถามราคาเช่า" : "Contact for Rent");
     } else {
-      priceTag = propertyData.price ? formatSale(propertyData.price, propertyData.original_price || undefined) : (lang === "th" ? "ติดต่อสอบถามราคาขาย" : "Contact for Sale");
+      const finalPrice = actualPrice || actualRentPrice;
+      priceTag = finalPrice 
+        ? formatSale(finalPrice, propertyData.original_price || undefined) 
+        : (lang === "th" ? "ติดต่อสอบถามราคาขาย" : "Contact for Sale");
     }
 
     const link = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
