@@ -522,7 +522,7 @@ export async function postToMetaPage(
         return { success: true, data: publishData };
       }
 
-      // Multi-image (Carousel) - Support up to 20 images
+      // Multi-image (Carousel) - Support up to 10 images (API Limit)
       // 1. Create items
       const childIds: string[] = [];
       let lastError = "";

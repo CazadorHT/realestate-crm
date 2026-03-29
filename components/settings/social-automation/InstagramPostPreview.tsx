@@ -53,7 +53,7 @@ export function InstagramPostPreview({
           className="w-full h-full object-cover"
         />
          <div className="absolute top-3 right-3">
-             <Badge className="bg-black/50 text-white border-0 backdrop-blur-md text-[10px]">1/20</Badge>
+             <Badge className="bg-black/50 text-white border-0 backdrop-blur-md text-[10px]">1/10 (API Limit)</Badge>
          </div>
       </div>
 
