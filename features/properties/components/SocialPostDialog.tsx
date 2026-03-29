@@ -261,7 +261,6 @@ export function SocialPostDialog({
                       >
                         <span className="text-2xl">{l.flag}</span>
                         <span className="text-[10px] uppercase font-bold tracking-wider">{l.label}</span>
-                        {isActive && <CheckCircle2 className="h-3 w-3 absolute top-1 right-1 text-amber-500" />}
                       </button>
                     );
                   })}

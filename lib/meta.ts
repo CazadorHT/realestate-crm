@@ -526,9 +526,10 @@ export async function postToMetaPage(
       // 1. Create items
       const childIds: string[] = [];
       let lastError = "";
-      console.log(`[meta.ts] Processing ${images.length} images for Instagram carousel...`);
+      const imagesToUpload = images.slice(0, 10);
+      console.log(`[meta.ts] Processing ${imagesToUpload.length} images for Instagram carousel...`);
       
-      for (const imgUrl of images.slice(0, 20)) {
+      for (const imgUrl of imagesToUpload) {
         const itemUrl = `${metaConfig.graphApiUrl}/${igId}/media?image_url=${encodeURIComponent(imgUrl)}&is_carousel_item=true&access_token=${token}`;
         const itemRes = await fetch(itemUrl, { method: "POST" });
         const itemData = await itemRes.json();

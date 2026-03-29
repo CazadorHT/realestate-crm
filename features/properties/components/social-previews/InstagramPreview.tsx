@@ -55,7 +55,7 @@ export function InstagramPreview({
         )}
         {images.length > 1 && (
           <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] text-white font-medium">
-            1/{images.length}
+            1/{Math.min(images.length, 10)}
           </div>
         )}
       </div>
