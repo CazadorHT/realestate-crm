@@ -32,7 +32,7 @@ export async function sendMetaMessage(
   platform: MetaPlatform,
 ): Promise<MetaApiResponse> {
   const token = metaConfig.pageAccessToken;
-  if (!token) return { success: false, error: "Missing token" };
+  if (!token) return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ (Page Access Token)" };
 
   try {
     const url = `${metaConfig.graphApiUrl}/me/messages?access_token=${token}`;
@@ -52,13 +52,13 @@ export async function sendMetaMessage(
       console.error(`[meta.ts] sendMetaMessage failure:`, detailedError);
       return {
         success: false,
-        error: detailedError,
+        error: `เกิดข้อผิดพลาดจาก Meta API (${response.status}): ${errData.error?.message || "ไม่ทราบสาเหตุ"}`,
       };
     }
     return { success: true };
   } catch (err: any) {
     console.error(`Error sending Meta message for ${platform}:`, err);
-    return { success: false, error: err.message || "Connection error" };
+    return { success: false, error: err.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ" };
   }
 }
 
@@ -72,7 +72,7 @@ export async function sendMetaMedia(
   platform: MetaPlatform,
 ): Promise<MetaApiResponse> {
   const token = metaConfig.pageAccessToken;
-  if (!token) return { success: false, error: "Missing token" };
+  if (!token) return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ" };
 
   try {
     const apiUrl = `${metaConfig.graphApiUrl}/me/messages?access_token=${token}`;
@@ -97,7 +97,7 @@ export async function sendMetaMedia(
       const errData = await response.json();
       return {
         success: false,
-        error: errData.error?.message || "Unknown error",
+        error: errData.error?.message || "ไม่ทราบสาเหตุ",
       };
     }
     return { success: true };
@@ -122,7 +122,7 @@ export async function sendMetaCarousel(
   platform: MetaPlatform,
 ): Promise<MetaApiResponse> {
   const token = metaConfig.pageAccessToken;
-  if (!token) return { success: false, error: "Missing token" };
+  if (!token) return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ" };
 
   // Instagram doesn't support Generic Template (Carousel) in the same way FB does via API
   // Best practice for IG is to send separate images
@@ -159,7 +159,7 @@ export async function sendMetaCarousel(
       const errData = await response.json();
       return {
         success: false,
-        error: errData.error?.message || "Unknown error",
+        error: errData.error?.message || "ไม่ทราบสาเหตุ",
       };
     }
     return { success: true };
@@ -208,6 +208,10 @@ export async function discoverInstagramBusinessId(): Promise<string | null> {
     const url = `${metaConfig.graphApiUrl}/me?fields=instagram_business_account&access_token=${token}`;
     const response = await fetch(url);
     const data = await response.json();
+
+    if (!data.instagram_business_account) {
+      console.warn("[meta.ts] No instagram_business_account found in Meta API response:", data);
+    }
 
     return data.instagram_business_account?.id || null;
   } catch (err) {
@@ -260,7 +264,7 @@ export async function sendWhatsAppMessage(
       const errData = await response.json();
       return {
         success: false,
-        error: errData.error?.message || "Unknown error",
+        error: errData.error?.message || "ไม่ทราบสาเหตุ",
       };
     }
     return { success: true };
@@ -278,7 +282,7 @@ export async function replyToMetaComment(
   content: string,
 ): Promise<MetaApiResponse<{ id: string }>> {
   const token = metaConfig.pageAccessToken;
-  if (!token) return { success: false, error: "Missing token" };
+  if (!token) return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ" };
 
   try {
     const url = `${metaConfig.graphApiUrl}/${commentId}/comments?access_token=${token}`;
@@ -292,7 +296,7 @@ export async function replyToMetaComment(
       const errData = await response.json();
       return {
         success: false,
-        error: errData.error?.message || "Unknown error",
+        error: errData.error?.message || "ไม่ทราบสาเหตุ",
       };
     }
     const resData = await response.json();
@@ -312,7 +316,7 @@ export async function sendPrivateReply(
   platform: MetaPlatform,
 ): Promise<MetaApiResponse> {
   const token = metaConfig.pageAccessToken;
-  if (!token) return { success: false, error: "Missing token" };
+  if (!token) return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ" };
 
   try {
     let url = "";
@@ -346,7 +350,7 @@ export async function sendPrivateReply(
       const errData = await response.json();
       return {
         success: false,
-        error: errData.error?.message || "Unknown error",
+        error: errData.error?.message || "ไม่ทราบสาเหตุ",
       };
     }
     return { success: true };
@@ -385,7 +389,7 @@ export async function postToMetaPage(
   platform: MetaPlatform = "FACEBOOK",
 ): Promise<MetaApiResponse> {
   const token = metaConfig.pageAccessToken;
-  if (!token) return { success: false, error: "Missing token" };
+  if (!token) return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ (Page Access Token)" };
 
   const images = Array.isArray(imageUrls)
     ? imageUrls
@@ -460,12 +464,12 @@ export async function postToMetaPage(
       if (!igId) {
         return {
           success: false,
-          error: "Could not find linked Instagram Business Account",
+          error: "ไม่พบบัญชี Instagram Business ที่เชื่อมต่อกับเพจนี้ (กรุณาเช็คการเชื่อมต่อในหน้าตั้งค่า Facebook Page)",
         };
       }
 
       if (images.length === 0) {
-        return { success: false, error: "Instagram posts must have an image" };
+        return { success: false, error: "การโพสต์ Instagram จำเป็นต้องมีรูปภาพ" };
       }
 
       if (images.length === 1) {
@@ -475,10 +479,11 @@ export async function postToMetaPage(
         const createData = await createRes.json();
 
         if (!createRes.ok || !createData.id) {
+          console.error("Instagram Media Creation Error:", createData);
           return {
             success: false,
             error:
-              createData.error?.message || "Failed to create Instagram media",
+              createData.error?.message || "ไม่สามารถสร้างสื่อสำหรับ Instagram ได้",
           };
         }
 
@@ -486,9 +491,11 @@ export async function postToMetaPage(
         const publishRes = await fetch(publishUrl, { method: "POST" });
         const publishData = await publishRes.json();
 
-        return publishRes.ok
-          ? { success: true, data: publishData }
-          : { success: false, error: publishData.error?.message };
+        if (!publishRes.ok) {
+          console.error("Instagram Media Publish Error:", publishData);
+          return { success: false, error: publishData.error?.message };
+        }
+        return { success: true, data: publishData };
       }
 
       // Multi-image (Carousel)
@@ -509,11 +516,12 @@ export async function postToMetaPage(
       const carouselData = await carouselRes.json();
 
       if (!carouselRes.ok || !carouselData.id) {
+        console.error("Instagram Carousel Creation Error:", carouselData);
         return {
           success: false,
           error:
             carouselData.error?.message ||
-            "Failed to create Instagram carousel",
+            "ไม่สามารถสร้าง Carousel สำหรับ Instagram ได้",
         };
       }
 
@@ -528,11 +536,11 @@ export async function postToMetaPage(
     } else {
       return {
         success: false,
-        error: "WhatsApp does not support feed posting via this endpoint",
+        error: "WhatsApp ไม่รองรับการโพสต์ฟีดผ่านช่องทางนี้",
       };
     }
   } catch (err: any) {
     console.error("Error posting to Meta:", err);
-    return { success: false, error: err.message };
+    return { success: false, error: `เกิดข้อผิดพลาดในการโพสต์: ${err.message}` };
   }
 }

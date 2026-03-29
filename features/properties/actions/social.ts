@@ -294,7 +294,7 @@ export async function postPropertyToMetaAction(
       .eq("id", propertyId)
       .single();
 
-    if (propError || !property) throw new Error("Property not found");
+    if (propError || !property) throw new Error("ไม่พบข้อมูลอสังหาริมทรัพย์");
 
     const contentData = await getPropertySocialContent(propertyId, lang, platform);
     const images = contentData.images;
@@ -321,12 +321,12 @@ export async function postPropertyToMetaAction(
 
       revalidatePath("/(protected)/protected/properties", "page");
  
-      return { success: true, message: `Posted to ${platform} successfully`, data: result.data };
+      return { success: true, message: `โพสต์ไปที่ ${platform} สำเร็จแล้ว`, data: result.data };
      } else {
-       return { success: false, message: `Error: ${result.error}` };
+       return { success: false, message: `ข้อผิดพลาด: ${result.error}` };
      }
   } catch (err) {
     console.error("postPropertyToMetaAction error:", err);
-    return { success: false, message: "Connection error" };
+    return { success: false, message: "เกิดข้อผิดพลาดในการเชื่อมต่อ" };
   }
 }

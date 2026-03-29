@@ -82,7 +82,7 @@ export function SocialPostDialog({
   const [previewData, setPreviewData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
-  const [lang, setLang] = useState<"th" | "en" | "cn">("th");
+  const [selectedLangs, setSelectedLangs] = useState<Array<"th" | "en" | "cn">>(["th"]);
   const [status, setStatus] = useState<
     "IDLE" | "POSTING" | "SUCCESS" | "ERROR"
   >("IDLE");
@@ -94,20 +94,35 @@ export function SocialPostDialog({
       setResultMessage("");
       loadContent();
     }
-  }, [isOpen, propertyId, lang]);
+  }, [isOpen, propertyId, selectedLangs.join(",")]);
 
   const loadContent = async () => {
+    if (selectedLangs.length === 0) return;
     setIsLoading(true);
     try {
-      const data = await getPropertySocialContent(propertyId, lang, platform);
-      setContent(data.content || "");
-      setImages(data.images);
-      setPreviewData(data);
+      const contents = await Promise.all(
+        selectedLangs.map(l => getPropertySocialContent(propertyId, l, platform))
+      );
+      
+      const combinedContent = contents.map(c => c.content).filter(Boolean).join("\n\n");
+      const firstData = contents[0];
+      
+      setContent(combinedContent);
+      setImages(firstData.images);
+      setPreviewData(firstData);
     } catch (err) {
       toast.error("ไม่สามารถโหลดข้อมูลพรีวิวได้");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const toggleLang = (l: "th" | "en" | "cn") => {
+    setSelectedLangs(prev => 
+      prev.includes(l) 
+        ? prev.filter(x => x !== l) 
+        : [...prev, l]
+    );
   };
 
   const handleReset = () => {
@@ -138,19 +153,19 @@ export function SocialPostDialog({
           propertyId,
           platform,
           content,
-          lang,
+          selectedLangs[0] || "th",
         )) as any;
       } else if (platform === "LINE") {
         res = (await postPropertyToLineAction(
           propertyId,
           content,
-          lang,
+          selectedLangs[0] || "th",
         )) as any;
       } else if (platform === "TIKTOK") {
         res = (await postPropertyToTikTokAction(
           propertyId,
           content,
-          lang,
+          selectedLangs[0] || "th",
         )) as any;
       }
 
@@ -203,7 +218,7 @@ export function SocialPostDialog({
               </DialogTitle>
               <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-100/80 border border-slate-200">
                 <span className="text-xs uppercase tracking-[2px] font-bold text-slate-500">
-                  {lang}
+                  {selectedLangs.join(" + ").toUpperCase()}
                 </span>
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               </div>
@@ -219,33 +234,33 @@ export function SocialPostDialog({
               {/* Language Selector */}
               <div className="space-y-3">
                 <Label className="text-xs font-bold text-slate-500 uppercase tracking-[2px] ml-1">
-                  Language Selection
+                  Language Selection (Select one or more)
                 </Label>
-                <Tabs value={lang} onValueChange={(v) => setLang(v as any)} className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 bg-slate-100/80 p-1 rounded-xl h-auto gap-1">
-                    <TabsTrigger
-                      value="th"
-                      className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-amber-600 font-bold transition-all py-3 flex flex-col gap-1 items-center border border-transparent data-[state=active]:border-amber-100"
-                    >
-                      <span className="text-2xl">🇹🇭</span>
-                      <span className="text-[10px] uppercase tracking-wider">Thai</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="en"
-                      className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-amber-600 font-bold transition-all py-3 flex flex-col gap-1 items-center border border-transparent data-[state=active]:border-amber-100"
-                    >
-                      <span className="text-2xl">🇺🇸</span>
-                      <span className="text-[10px] uppercase tracking-wider">English</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="cn"
-                      className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-amber-600 font-bold transition-all py-3 flex flex-col gap-1 items-center border border-transparent data-[state=active]:border-amber-100"
-                    >
-                      <span className="text-2xl">🇨🇳</span>
-                      <span className="text-[10px] uppercase tracking-wider">Chinese</span>
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "th", label: "Thai", flag: "🇹🇭" },
+                    { id: "en", label: "English", flag: "🇺🇸" },
+                    { id: "cn", label: "Chinese", flag: "🇨🇳" }
+                  ].map((l) => {
+                    const isActive = selectedLangs.includes(l.id as any);
+                    return (
+                      <button
+                        key={l.id}
+                        onClick={() => toggleLang(l.id as any)}
+                        className={cn(
+                          "flex flex-col items-center gap-1 py-3 px-2 rounded-xl border transition-all duration-200",
+                          isActive 
+                            ? "bg-amber-50 border-amber-200 shadow-sm text-amber-700" 
+                            : "bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100"
+                        )}
+                      >
+                        <span className="text-2xl">{l.flag}</span>
+                        <span className="text-[10px] uppercase font-bold tracking-wider">{l.label}</span>
+                        {isActive && <CheckCircle2 className="h-3 w-3 absolute top-1 right-1 text-amber-500" />}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Manage Templates Shortcut */}
@@ -304,9 +319,9 @@ export function SocialPostDialog({
               ) : (
                 <div className="space-y-6 flex flex-col items-center py-4">
                   {platform === "LINE" && previewData ? (
-                    <LinePreview images={images} previewData={previewData} lang={lang} />
+                    <LinePreview images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
                   ) : platform === "FACEBOOK" ? (
-                    <FacebookPreview content={content} images={images} previewData={previewData} lang={lang} />
+                    <FacebookPreview content={content} images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
                   ) : platform === "INSTAGRAM" ? (
                     <InstagramPreview content={content} images={images} previewData={previewData} />
                   ) : (
