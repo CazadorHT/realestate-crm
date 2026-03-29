@@ -18,15 +18,16 @@ import { TemplateEditorCard } from "./social-automation/TemplateEditorCard";
 export function SocialAutomationSettings() {
   const [keywords, setKeywords] = useState<SocialKeyword[]>([]);
   const [templates, setTemplates] = useState({
-    social: { th: "", en: "", cn: "" },
+    facebook: { th: "", en: "", cn: "" },
+    instagram: { th: "", en: "", cn: "" },
     tiktok: { th: "", en: "", cn: "" },
     line: { th: "", en: "", cn: "" },
   });
 
   const [activeTab, setActiveTab] = useState<"th" | "en" | "cn">("th");
   const [activePlatform, setActivePlatform] = useState<
-    "social" | "line" | "tiktok"
-  >("social");
+    "facebook" | "instagram" | "line" | "tiktok"
+  >("facebook");
   
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
@@ -49,10 +50,15 @@ export function SocialAutomationSettings() {
         const settings = await getSiteSettings();
         setKeywords(settings.social_automation_keywords || []);
         setTemplates({
-          social: {
-            th: settings.social_post_template || "",
-            en: settings.social_post_template_en || "",
-            cn: settings.social_post_template_cn || "",
+          facebook: {
+            th: settings.facebook_post_template || "",
+            en: settings.facebook_post_template_en || "",
+            cn: settings.facebook_post_template_cn || "",
+          },
+          instagram: {
+            th: settings.instagram_post_template || "",
+            en: settings.instagram_post_template_en || "",
+            cn: settings.instagram_post_template_cn || "",
           },
           tiktok: {
             th: settings.tiktok_post_template || "",
@@ -93,7 +99,7 @@ export function SocialAutomationSettings() {
   };
 
   const updateTemplate = (
-    platform: "social" | "line" | "tiktok",
+    platform: "facebook" | "instagram" | "line" | "tiktok",
     lang: "th" | "en" | "cn",
     value: string,
   ) => {
@@ -109,9 +115,12 @@ export function SocialAutomationSettings() {
   const hasChanges = initialData
     ? JSON.stringify(keywords) !==
         JSON.stringify(initialData.social_automation_keywords || []) ||
-      templates.social.th !== (initialData.social_post_template || "") ||
-      templates.social.en !== (initialData.social_post_template_en || "") ||
-      templates.social.cn !== (initialData.social_post_template_cn || "") ||
+      templates.facebook.th !== (initialData.facebook_post_template || "") ||
+      templates.facebook.en !== (initialData.facebook_post_template_en || "") ||
+      templates.facebook.cn !== (initialData.facebook_post_template_cn || "") ||
+      templates.instagram.th !== (initialData.instagram_post_template || "") ||
+      templates.instagram.en !== (initialData.instagram_post_template_en || "") ||
+      templates.instagram.cn !== (initialData.instagram_post_template_cn || "") ||
       templates.line.th !== (initialData.line_post_template || "") ||
       templates.line.en !== (initialData.line_post_template_en || "") ||
       templates.line.cn !== (initialData.line_post_template_cn || "") ||
@@ -130,9 +139,12 @@ export function SocialAutomationSettings() {
       try {
         const promises = [
           updateSiteSetting("social_automation_keywords", keywords),
-          updateSiteSetting("social_post_template", templates.social.th),
-          updateSiteSetting("social_post_template_en", templates.social.en),
-          updateSiteSetting("social_post_template_cn", templates.social.cn),
+          updateSiteSetting("facebook_post_template", templates.facebook.th),
+          updateSiteSetting("facebook_post_template_en", templates.facebook.en),
+          updateSiteSetting("facebook_post_template_cn", templates.facebook.cn),
+          updateSiteSetting("instagram_post_template", templates.instagram.th),
+          updateSiteSetting("instagram_post_template_en", templates.instagram.en),
+          updateSiteSetting("instagram_post_template_cn", templates.instagram.cn),
           updateSiteSetting("line_post_template", templates.line.th),
           updateSiteSetting("line_post_template_en", templates.line.en),
           updateSiteSetting("line_post_template_cn", templates.line.cn),
@@ -148,9 +160,12 @@ export function SocialAutomationSettings() {
           if (!silent) toast.success("บันทึกการตั้งค่าเรียบร้อย");
           setInitialData({
             social_automation_keywords: keywords,
-            social_post_template: templates.social.th,
-            social_post_template_en: templates.social.en,
-            social_post_template_cn: templates.social.cn,
+            facebook_post_template: templates.facebook.th,
+            facebook_post_template_en: templates.facebook.en,
+            facebook_post_template_cn: templates.facebook.cn,
+            instagram_post_template: templates.instagram.th,
+            instagram_post_template_en: templates.instagram.en,
+            instagram_post_template_cn: templates.instagram.cn,
             line_post_template: templates.line.th,
             line_post_template_en: templates.line.en,
             line_post_template_cn: templates.line.cn,
@@ -191,7 +206,7 @@ export function SocialAutomationSettings() {
       index !== undefined
         ? `dm-${index}`
         : type === "SOCIAL_POST"
-          ? "social-post"
+          ? `${activePlatform}-post`
           : type === "TIKTOK_POST"
             ? "tiktok-post"
             : "line-post";
@@ -217,12 +232,16 @@ export function SocialAutomationSettings() {
 
         const results = await Promise.all(
           languages.map((lang) =>
-            generateSocialAutomationTemplatesAction(type, keyword, lang),
+            generateSocialAutomationTemplatesAction(
+              type,
+              type === "SOCIAL_POST" ? activePlatform : keyword,
+              lang,
+            ),
           ),
         );
 
-        const platformMap: Record<string, "social" | "line" | "tiktok"> = {
-          SOCIAL_POST: "social",
+        const platformMap: Record<string, "facebook" | "instagram" | "line" | "tiktok"> = {
+          SOCIAL_POST: activePlatform === "instagram" ? "instagram" : "facebook",
           LINE_POST: "line",
           TIKTOK_POST: "tiktok",
         };

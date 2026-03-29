@@ -194,34 +194,27 @@ export async function getPropertySocialContent(
 
   const settings = await getSiteSettings();
   
-  const social_post_template = settings.social_post_template || "";
-  const social_post_template_en = settings.social_post_template_en || "";
-  const social_post_template_cn = settings.social_post_template_cn || "";
-
-  const line_post_template = settings.line_post_template || "";
-  const line_post_template_en = settings.line_post_template_en || "";
-  const line_post_template_cn = settings.line_post_template_cn || "";
-  
-  const tiktok_post_template = settings.tiktok_post_template || "";
-  const tiktok_post_template_en = settings.tiktok_post_template_en || "";
-  const tiktok_post_template_cn = settings.tiktok_post_template_cn || "";
-
   const isLine = platform === "LINE";
   const isTikTok = platform === "TIKTOK";
+  const isFacebook = platform === "FACEBOOK";
+  const isInstagram = platform === "INSTAGRAM";
 
-  let template: string = "";
+  let template = "";
   if (isLine) {
-    template = lang === "en" ? line_post_template_en : lang === "cn" ? line_post_template_cn : line_post_template;
+    template = lang === "th" ? settings.line_post_template || "" : lang === "en" ? settings.line_post_template_en || "" : settings.line_post_template_cn || "";
   } else if (isTikTok) {
-    template = lang === "en" ? tiktok_post_template_en : lang === "cn" ? tiktok_post_template_cn : tiktok_post_template;
+    template = lang === "th" ? settings.tiktok_post_template || "" : lang === "en" ? settings.tiktok_post_template_en || "" : settings.tiktok_post_template_cn || "";
+  } else if (isInstagram) {
+    template = lang === "th" ? settings.instagram_post_template || "" : lang === "en" ? settings.instagram_post_template_en || "" : settings.instagram_post_template_cn || "";
   } else {
-    template = lang === "en" ? social_post_template_en : lang === "cn" ? social_post_template_cn : social_post_template;
+    // Default to Facebook for Meta platforms or fallback
+    template = lang === "th" ? settings.facebook_post_template || "" : lang === "en" ? settings.facebook_post_template_en || "" : settings.facebook_post_template_cn || "";
   }
 
   const templates = {
-    th: isLine ? line_post_template : isTikTok ? tiktok_post_template : social_post_template,
-    en: isLine ? line_post_template_en : isTikTok ? tiktok_post_template_en : social_post_template_en,
-    cn: isLine ? line_post_template_cn : isTikTok ? tiktok_post_template_cn : social_post_template_cn
+    th: isLine ? settings.line_post_template : isTikTok ? settings.tiktok_post_template : isInstagram ? settings.instagram_post_template : settings.facebook_post_template,
+    en: isLine ? settings.line_post_template_en : isTikTok ? settings.tiktok_post_template_en : isInstagram ? settings.instagram_post_template_en : settings.facebook_post_template_en,
+    cn: isLine ? settings.line_post_template_cn : isTikTok ? settings.tiktok_post_template_cn : isInstagram ? settings.instagram_post_template_cn : settings.facebook_post_template_cn
   };
 
   const tSale = lang === "th" ? "Sale (TH)" : lang === "en" ? "Sale" : "Sale (CN)";

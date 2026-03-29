@@ -8,9 +8,12 @@ export type SiteSettingKey =
   | "isolation_leads_enabled"
   | "isolation_deals_enabled"
   | "social_automation_keywords"
-  | "social_post_template"
-  | "social_post_template_en"
-  | "social_post_template_cn"
+  | "facebook_post_template"
+  | "facebook_post_template_en"
+  | "facebook_post_template_cn"
+  | "instagram_post_template"
+  | "instagram_post_template_en"
+  | "instagram_post_template_cn"
   | "line_post_template"
   | "line_post_template_en"
   | "line_post_template_cn"
@@ -54,9 +57,12 @@ export interface SiteSettings {
   isolation_leads_enabled: boolean;
   isolation_deals_enabled: boolean;
   social_automation_keywords: SocialKeyword[];
-  social_post_template?: string;
-  social_post_template_en?: string;
-  social_post_template_cn?: string;
+  facebook_post_template?: string;
+  facebook_post_template_en?: string;
+  facebook_post_template_cn?: string;
+  instagram_post_template?: string;
+  instagram_post_template_en?: string;
+  instagram_post_template_cn?: string;
   line_post_template?: string;
   line_post_template_en?: string;
   line_post_template_cn?: string;

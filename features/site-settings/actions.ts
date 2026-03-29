@@ -20,9 +20,12 @@ const DEFAULT_SETTINGS: SiteSettings = {
   isolation_leads_enabled: false,
   isolation_deals_enabled: false,
   social_automation_keywords: [],
-  social_post_template: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`,
-  social_post_template_en: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nMore details: {{link}}`,
-  social_post_template_cn: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\n更多详情: {{link}}`,
+  facebook_post_template: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`,
+  facebook_post_template_en: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nMore details: {{link}}`,
+  facebook_post_template_cn: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\n更多详情: {{link}}`,
+  instagram_post_template: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`,
+  instagram_post_template_en: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nMore details: {{link}}`,
+  instagram_post_template_cn: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\n更多详情: {{link}}`,
   line_post_template: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`,
   line_post_template_en: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nMore details: {{link}}`,
   line_post_template_cn: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\n更多详情: {{link}}`,
@@ -89,9 +92,12 @@ export async function getSiteSettings(): Promise<SiteSettings> {
             ? (row.value as any)
             : [];
         } else if (
-          key === "social_post_template" ||
-          key === "social_post_template_en" ||
-          key === "social_post_template_cn" ||
+          key === "facebook_post_template" ||
+          key === "facebook_post_template_en" ||
+          key === "facebook_post_template_cn" ||
+          key === "instagram_post_template" ||
+          key === "instagram_post_template_en" ||
+          key === "instagram_post_template_cn" ||
           key === "line_post_template" ||
           key === "line_post_template_en" ||
           key === "line_post_template_cn" ||
@@ -157,9 +163,12 @@ export async function getSiteSetting(key: SiteSettingKey): Promise<any> {
     }
 
     if (
-      key === "social_post_template" ||
-      key === "social_post_template_en" ||
-      key === "social_post_template_cn" ||
+      key === "facebook_post_template" ||
+      key === "facebook_post_template_en" ||
+      key === "facebook_post_template_cn" ||
+      key === "instagram_post_template" ||
+      key === "instagram_post_template_en" ||
+      key === "instagram_post_template_cn" ||
       key === "line_post_template" ||
       key === "line_post_template_en" ||
       key === "line_post_template_cn" ||
@@ -311,26 +320,33 @@ export async function generateSocialAutomationTemplatesAction(
 
     let prompt = "";
     if (type === "SOCIAL_POST") {
+      const isInstagram = keyword === "instagram"; // We can reuse keyword field for platform hint
+      const platformName = isInstagram ? "Instagram" : "Facebook";
       const langName = lang === "th" ? "ภาษาไทย" : lang === "en" ? "English" : "Chinese";
+      
+      const igAdvice = isInstagram 
+        ? "เน้นความสวยงาม ใช้ Hashtag ที่เกี่ยวข้อง (ไม่เกิน 30 อัน) และเขียนแคปชั่นให้น่าอ่านบนมือถือ"
+        : "เน้นการให้ข้อมูลที่ครบพื้นฐาน ดึงดูดให้คนคอมเมนต์หรือแชร์";
+
       prompt = `
         คุณเป็นนักการตลาดอสังหาริมทรัพย์มืออาชีพ
-        ช่วยเขียน Template สำหรับโพสต์ลง Facebook/Instagram เพื่อดึงดูดลูกค้า
+        ช่วยเขียน Template สำหรับโพสต์ลง ${platformName} เพื่อดึงดูดลูกค้า
         โดยให้เขียนเป็น ${langName}
         
         ให้ใช้ "Dynamic Tags" เหล่านี้ประกอบในเนื้อหา:
         - {{title}}: ชื่อทรัพย์
-        - {{price_tag}}: ป้ายราคาอัจฉริยะ (จัดการเรื่อง ลดราคา/ขาย/เช่า ให้อัตโนมัติ - แนะนำให้ใช้แทน {{price}})
+        - {{price_tag}}: ป้ายราคาอัจฉริยะ (แนะนำให้ใช้แทน {{price}})
         - {{details}}: สรุปข้อมูลเบื้องต้น (เช่น 2 Bed | 2 Bath | 50 Sqm)
-        - {{description}}: รายละเอียดทรัพย์สิน (รายละเอียดเต็ม)
-        - {{location}}: ทำละ (เขต/จังหวัด) 
+        - {{description}}: รายละเอียดทรัพย์สินเต็ม
+        - {{location}}: ทำเล (เขต/จังหวัด) 
         - {{link}}: ลิงก์ทรัพย์
         - {{google_maps}}: ลิงก์ Google Maps 
         - {{agent_phone}}: เบอร์ติดต่อ
         
-        คำแนะนำ:
+        คำแนะนำสำหรับ ${platformName}:
         1. ใช้ ${langName} ที่น่าสนใจ เร้าอารมณ์
         2. ใส่ Emoji ให้ดูสวยงาม
-        3. เขียนให้สั้น กระชับ แต่อ่านแล้วอยากกดดูต่อ
+        3. ${igAdvice}
         4. ส่งกลับเฉพาะเนื้อหา Template เท่านั้น ไม่ต้องขยายความ
       `;
     } else if (type === "LINE_POST") {

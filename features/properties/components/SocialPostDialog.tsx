@@ -336,12 +336,29 @@ export function SocialPostDialog({
                   )}
                 </div>
               )}
-              {/* Quick Info */}
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100/50">
-                 <div className="flex items-center gap-2 text-[11px] text-slate-400 italic">
-                    <ImageIcon className="h-3.5 w-3.5 shrink-0" />
-                    <span>รูปภาพทั้งหมด {images.length} รูป จะถูกอัปโหลดอัตโนมัติ</span>
+              {/* Quick Info & Character Count */}
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100/50 flex flex-col gap-2">
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-[11px] text-slate-400 italic">
+                       <ImageIcon className="h-3.5 w-3.5 shrink-0" />
+                       <span>รูปภาพทั้งหมด {images.length} รูป จะถูกอัปโหลดอัตโนมัติ</span>
+                    </div>
+                    <div className={cn(
+                      "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                      platform === "INSTAGRAM" && content.length > 2200 
+                        ? "bg-red-50 text-red-600 border-red-100 animate-pulse"
+                        : platform === "INSTAGRAM" && content.length > 2000
+                          ? "bg-amber-50 text-amber-600 border-amber-100"
+                          : "bg-white text-slate-400 border-slate-200"
+                    )}>
+                      {content.length.toLocaleString()} / {platform === "INSTAGRAM" ? "2,200" : "63,000"} ตัวอักษร
+                    </div>
                  </div>
+                 {platform === "INSTAGRAM" && content.length > 2200 && (
+                   <p className="text-[10px] text-red-600 font-bold leading-tight">
+                     ⚠️ Instagram จำกัดข้อความไม่เกิน 2,200 ตัวอักษร (รวมอิโมจิ) โปรดแก้ไขเนื้อหาก่อนโพสต์
+                   </p>
+                 )}
               </div>
             </div>
           </div>
@@ -358,7 +375,12 @@ export function SocialPostDialog({
             
             <Button
               onClick={status === "SUCCESS" ? () => onOpenChange(false) : status === "ERROR" ? handleReset : handlePost}
-              disabled={status === "POSTING" || isLoading || (!content.trim() && platform !== "LINE")}
+              disabled={
+                status === "POSTING" || 
+                isLoading || 
+                (!content.trim() && platform !== "LINE") ||
+                (platform === "INSTAGRAM" && content.length > 2200)
+              }
               className={cn(
                 "flex-2 rounded-2xl h-11 font-bold text-white shadow-lg",
                 status === "SUCCESS" ? "bg-green-600 hover:bg-green-700" :

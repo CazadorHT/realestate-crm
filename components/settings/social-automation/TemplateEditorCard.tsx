@@ -9,27 +9,30 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { FaMeta, FaTiktok, FaLine } from "react-icons/fa6";
+import { FaMeta, FaTiktok, FaLine, FaInstagram, FaFacebook } from "react-icons/fa6";
 import { Sparkles, Loader2, Save } from "lucide-react";
 import { FacebookPostPreview } from "./FacebookPostPreview";
+import { InstagramPostPreview } from "@/components/settings/social-automation/InstagramPostPreview";
 import { TikTokPostPreview } from "./TikTokPostPreview";
 import { LinePostPreview } from "./LinePostPreview";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 import { SMART_TAGS } from "./constants";
 
 interface TemplateEditorCardProps {
-  activePlatform: "social" | "line" | "tiktok";
-  setActivePlatform: (platform: "social" | "line" | "tiktok") => void;
+  activePlatform: "facebook" | "instagram" | "line" | "tiktok";
+  setActivePlatform: (platform: "facebook" | "instagram" | "line" | "tiktok") => void;
   activeTab: "th" | "en" | "cn";
   setActiveTab: (tab: "th" | "en" | "cn") => void;
   templates: {
-    social: { th: string; en: string; cn: string };
+    facebook: { th: string; en: string; cn: string };
+    instagram: { th: string; en: string; cn: string };
     tiktok: { th: string; en: string; cn: string };
     line: { th: string; en: string; cn: string };
   };
   updateTemplate: (
-    platform: "social" | "line" | "tiktok",
+    platform: "facebook" | "instagram" | "line" | "tiktok",
     lang: "th" | "en" | "cn",
     value: string,
   ) => void;
@@ -57,6 +60,9 @@ export function TemplateEditorCard({
   handleSave,
   templateSectionRef,
 }: TemplateEditorCardProps) {
+  const isInvalid = activePlatform === "instagram" && 
+    Object.values(templates.instagram).some(text => text.length > 2200);
+
   return (
     <div ref={templateSectionRef} className="scroll-mt-6">
       <Card className="mt-8 border-slate-200 shadow-sm relative overflow-hidden">
@@ -67,40 +73,55 @@ export function TemplateEditorCard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-xl">
-                {activePlatform === "social" ? (
+                {activePlatform === "facebook" ? (
                   <FaMeta className="h-5 w-5 text-blue-600" />
+                ) : activePlatform === "instagram" ? (
+                  <FaMeta className="h-5 w-5 text-pink-600" />
                 ) : activePlatform === "tiktok" ? (
-                  <FaTiktok className="h-5 w-5 text-pink-600" />
+                  <FaTiktok className="h-5 w-5 text-slate-900" />
                 ) : (
                   <FaLine className="h-5 w-5 text-emerald-600" />
                 )}
               </div>
               <div>
                 <CardTitle className="text-lg font-bold">
-                  {activePlatform === "social"
-                    ? "Meta Post Template"
-                    : activePlatform === "tiktok"
-                      ? "TikTok Post Template"
-                      : "Line Flex Template"}
+                  {activePlatform === "facebook"
+                    ? "Facebook Post Template"
+                    : activePlatform === "instagram"
+                      ? "Instagram Post Template"
+                      : activePlatform === "tiktok"
+                        ? "TikTok Post Template"
+                        : "Line Flex Template"}
                 </CardTitle>
                 <CardDescription>
-                  {activePlatform === "social"
-                    ? "แก้ไขรูปแบบข้อความสำหรับ Facebook และ Instagram"
-                    : activePlatform === "tiktok"
-                      ? "แก้ไข Caption สำหรับโพสต์ลง TikTok"
-                      : "แก้ไขเนื้อหาที่จะแสดงใน Line Flex Message"}
+                  {activePlatform === "facebook"
+                    ? "แก้ไขรูปแบบข้อความสำหรับโพสต์ลง Facebook"
+                    : activePlatform === "instagram"
+                      ? "แก้ไขรูปแบบข้อความสำหรับโพสต์ลง Instagram"
+                      : activePlatform === "tiktok"
+                        ? "แก้ไข Caption สำหรับโพสต์ลง TikTok"
+                        : "แก้ไขเนื้อหาที่จะแสดงใน Line Flex Message"}
                 </CardDescription>
               </div>
             </div>
             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-sm overflow-hidden">
               <Button
-                variant={activePlatform === "social" ? "secondary" : "ghost"}
+                variant={activePlatform === "facebook" ? "secondary" : "ghost"}
                 size="sm"
-                onClick={() => setActivePlatform("social")}
-                className={`rounded-lg px-4 h-8 transition-all ${activePlatform === "social" ? "bg-white text-blue-600 shadow-xs" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"}`}
+                onClick={() => setActivePlatform("facebook")}
+                className={`rounded-lg px-4 h-8 transition-all ${activePlatform === "facebook" ? "bg-white text-blue-600 shadow-xs" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"}`}
               >
-                <FaMeta className="h-3.5 w-3.5 mr-2" />
-                Meta
+                <FaFacebook className="h-3.5 w-3.5 mr-2" />
+                Facebook
+              </Button>
+              <Button
+                variant={activePlatform === "instagram" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setActivePlatform("instagram")}
+                className={`rounded-lg px-4 h-8 transition-all ${activePlatform === "instagram" ? "bg-white text-pink-600 shadow-xs" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"}`}
+              >
+                <FaInstagram className="h-3.5 w-3.5 mr-2" />
+                Instagram
               </Button>
               <Button
                 variant={activePlatform === "tiktok" ? "secondary" : "ghost"}
@@ -130,7 +151,7 @@ export function TemplateEditorCard({
               className="border-amber-200! bg-amber-50 text-amber-700 hover:text-amber-100! hover:bg-amber-600! gap-2 font-medium h-8 rounded-lg"
               onClick={() =>
                 handleAiGenerate(
-                  activePlatform === "social"
+                  activePlatform === "facebook" || activePlatform === "instagram"
                     ? "SOCIAL_POST"
                     : activePlatform === "tiktok"
                       ? "TIKTOK_POST"
@@ -139,7 +160,8 @@ export function TemplateEditorCard({
               }
               disabled={!!isGenerating}
             >
-              {isGenerating === "social-post" ||
+              {isGenerating === "facebook-post" ||
+              isGenerating === "instagram-post" ||
               isGenerating === "line-post" ||
               isGenerating === "tiktok-post" ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -189,11 +211,13 @@ export function TemplateEditorCard({
                     <div className="p-6 space-y-4">
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                          {activePlatform === "social"
-                            ? `Template Editor (${lang.toUpperCase()})`
-                            : activePlatform === "tiktok"
-                              ? `TikTok Editor (${lang.toUpperCase()})`
-                              : `Line Content Editor (${lang.toUpperCase()})`}
+                          {activePlatform === "facebook"
+                            ? `Facebook Editor (${lang.toUpperCase()})`
+                            : activePlatform === "instagram"
+                              ? `Instagram Editor (${lang.toUpperCase()})`
+                              : activePlatform === "tiktok"
+                                ? `TikTok Editor (${lang.toUpperCase()})`
+                                : `Line Content Editor (${lang.toUpperCase()})`}
                         </label>
                         <Badge
                           variant="outline"
@@ -227,8 +251,27 @@ export function TemplateEditorCard({
                             e.target.value,
                           )
                         }
-                        className="min-h-[350px] font-mono text-sm border-slate-200 focus:border-amber-500 focus:ring-amber-200 placeholder:text-slate-300 resize-none"
+                        className="min-h-[350px] font-mono text-sm border-slate-200 focus:border-amber-500 focus:ring-amber-200 placeholder:text-slate-300 resize-none pb-8"
                       />
+                      <div className="flex justify-between items-center mt-2 px-1">
+                        <div className="text-[11px] text-slate-400 italic">
+                          {activePlatform === "instagram" && 
+                           templates[activePlatform][lang as "th" | "en" | "cn"].length > 2200 && (
+                            <span className="text-red-500 font-bold flex items-center gap-1 animate-pulse">
+                              ⚠️ ยาวเกินกำหนด (จำกัด 2,200)
+                            </span>
+                          )}
+                        </div>
+                        <div className={cn(
+                          "text-[10px] font-medium px-2 py-0.5 rounded-full border bg-white",
+                          activePlatform === "instagram" && templates[activePlatform][lang as "th" | "en" | "cn"].length > 2200
+                            ? "text-red-600 border-red-200 bg-red-50"
+                            : "text-slate-400 border-slate-200"
+                        )}>
+                          {templates[activePlatform][lang as "th" | "en" | "cn"].length.toLocaleString()} 
+                          {activePlatform === "instagram" ? " / 2,200" : ""} ตัวอักษร
+                        </div>
+                      </div>
                     </div>
                   </TabsContent>
                 ))}
@@ -238,8 +281,10 @@ export function TemplateEditorCard({
               <div className="bg-slate-50/50 p-6 flex flex-col items-center">
                 <div className="w-full flex items-center justify-between mb-6">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    {activePlatform === "social"
+                    {activePlatform === "facebook"
                       ? "Facebook Post Preview"
+                      : activePlatform === "instagram"
+                        ? "Instagram Post Preview"
                       : activePlatform === "tiktok"
                         ? "TikTok Video Preview"
                         : "Line Flex Preview"}
@@ -252,9 +297,14 @@ export function TemplateEditorCard({
                   </div>
                 </div>
 
-                {activePlatform === "social" ? (
+                {activePlatform === "facebook" ? (
                   <FacebookPostPreview
-                    template={templates.social[activeTab]}
+                    template={templates.facebook[activeTab]}
+                    language={activeTab}
+                  />
+                ) : activePlatform === "instagram" ? (
+                  <InstagramPostPreview
+                    template={templates.instagram[activeTab]}
                     language={activeTab}
                   />
                 ) : activePlatform === "tiktok" ? (
@@ -305,7 +355,7 @@ export function TemplateEditorCard({
           <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
             <Button
               onClick={handleSave}
-              disabled={isPending || !hasChanges}
+              disabled={isPending || !hasChanges || isInvalid}
               className="bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPending ? (

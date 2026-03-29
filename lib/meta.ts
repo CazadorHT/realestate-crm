@@ -427,9 +427,11 @@ export async function postToMetaPage(
           body: JSON.stringify({ url: images[0], caption: content }),
         });
         const data = await res.json();
-        return res.ok
-          ? { success: true, data }
-          : { success: false, error: data.error?.message };
+        if (!res.ok) {
+          console.error("Facebook Photo Post Error:", data);
+          return { success: false, error: `ไม่สามารถโพสต์รูปภาพไปยัง Facebook ได้ (${data.error?.message || "Unknown error"})` };
+        }
+        return { success: true, data };
       }
 
       // Multi-photo Post
@@ -437,15 +439,28 @@ export async function postToMetaPage(
       const mediaIds: string[] = [];
       for (const imgUrl of images.slice(0, 50)) {
         const uploadUrl = `${metaConfig.graphApiUrl}/me/photos?access_token=${token}`;
-        const uploadRes = await fetch(uploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: imgUrl, published: false }),
-        });
-        const uploadData = await uploadRes.json();
-        if (uploadRes.ok && uploadData.id) {
-          mediaIds.push(uploadData.id);
+        try {
+          const uploadRes = await fetch(uploadUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: imgUrl, published: false }),
+          });
+          const uploadData = await uploadRes.json();
+          if (uploadRes.ok && uploadData.id) {
+            mediaIds.push(uploadData.id);
+          } else {
+            console.warn("[meta.ts] Failed to upload photo to FB:", uploadData);
+          }
+        } catch (err) {
+          console.error("[meta.ts] Error uploading photo to FB:", err);
         }
+      }
+
+      if (mediaIds.length === 0) {
+        return {
+          success: false,
+          error: "ไม่สามารถอัปโหลดรูปภาพไปยัง Facebook สำหรับโพสต์แบบกลุ่มได้เลยแม้แต่รูปเดียว (กรุณาเช็คว่า URL รูปภาพเข้าถึงได้จากอินเทอร์เน็ตหรือไม่)",
+        };
       }
 
       // 2. Attach to feed
@@ -460,9 +475,11 @@ export async function postToMetaPage(
         }),
       });
       const feedData = await feedRes.json();
-      return feedRes.ok
-        ? { success: true, data: feedData }
-        : { success: false, error: feedData.error?.message };
+      if (!feedRes.ok) {
+        console.error("Facebook Feed Post Error:", feedData);
+        return { success: false, error: `ไม่สามารถสร้างโพสต์แบบกลุ่มบน Facebook ได้ (${feedData.error?.message || "Unknown error"})` };
+      }
+      return { success: true, data: feedData };
     } else if (platform === "INSTAGRAM") {
       // Instagram Post
       const igId = await discoverInstagramBusinessId();
@@ -487,8 +504,7 @@ export async function postToMetaPage(
           console.error("Instagram Media Creation Error:", createData);
           return {
             success: false,
-            error:
-              createData.error?.message || "ไม่สามารถสร้างสื่อสำหรับ Instagram ได้",
+            error: `ไม่สามารถเริ่มสร้างโพสต์ Instagram ได้ (${createData.error?.message || "Unknown error"})`,
           };
         }
 
@@ -498,12 +514,15 @@ export async function postToMetaPage(
 
         if (!publishRes.ok) {
           console.error("Instagram Media Publish Error:", publishData);
-          return { success: false, error: publishData.error?.message };
+          return {
+            success: false,
+            error: `ไม่สามารถนำโพสต์ขึ้น Instagram ได้ (${publishData.error?.message || "Unknown error"})`,
+          };
         }
         return { success: true, data: publishData };
       }
 
-      // Multi-image (Carousel)
+      // Multi-image (Carousel) - Support up to 20 images
       // 1. Create items
       const childIds: string[] = [];
       for (const imgUrl of images.slice(0, 20)) {
@@ -512,7 +531,33 @@ export async function postToMetaPage(
         const itemData = await itemRes.json();
         if (itemRes.ok && itemData.id) {
           childIds.push(itemData.id);
+        } else {
+          console.warn("[meta.ts] Failed to create carousel item:", itemData);
         }
+      }
+
+      if (childIds.length === 0) {
+        return {
+          success: false,
+          error: "ไม่สามารถอัปโหลดรูปภาพไปยัง Instagram ได้เลยแม้แต่รูปเดียว (กรุณาเช็คว่า URL รูปภาพเข้าถึงได้จากอินเทอร์เน็ตหรือไม่)",
+        };
+      }
+
+      // Fallback: If only 1 image remains after processing, post it as a single image
+      if (childIds.length === 1) {
+        console.log("[meta.ts] Only one image succeeded for carousel, falling back to single image post");
+        const singleUrl = `${metaConfig.graphApiUrl}/${igId}/media?image_url=${encodeURIComponent(images[0])}&caption=${encodeURIComponent(content)}&access_token=${token}`;
+        const singleRes = await fetch(singleUrl, { method: "POST" });
+        const singleData = await singleRes.json();
+        
+        if (!singleRes.ok || !singleData.id) {
+          return { success: false, error: `ไม่สามารถโพสต์รูปแบบรูปเดี่ยว (Fallback) ได้: ${singleData.error?.message}` };
+        }
+
+        const pubUrl = `${metaConfig.graphApiUrl}/${igId}/media_publish?creation_id=${singleData.id}&access_token=${token}`;
+        const pubRes = await fetch(pubUrl, { method: "POST" });
+        const pubData = await pubRes.json();
+        return pubRes.ok ? { success: true, data: pubData } : { success: false, error: `มีปัญหาตอนนำโพสต์ (Fallback) ขึ้น IG: ${pubData.error?.message}` };
       }
 
       // 2. Create Carousel Container
@@ -524,20 +569,18 @@ export async function postToMetaPage(
         console.error("Instagram Carousel Creation Error:", carouselData);
         return {
           success: false,
-          error:
-            carouselData.error?.message ||
-            "ไม่สามารถสร้าง Carousel สำหรับ Instagram ได้",
+          error: `ไม่สามารถรวมรูปภาพเข้าด้วยกันเป็น Carousel ได้ (${carouselData.error?.message || "OAuthException 100?"})`,
         };
       }
 
-      // 3. Publish
+      // 3. Publish Carousel
       const publishUrl = `${metaConfig.graphApiUrl}/${igId}/media_publish?creation_id=${carouselData.id}&access_token=${token}`;
       const publishRes = await fetch(publishUrl, { method: "POST" });
       const publishData = await publishRes.json();
 
       return publishRes.ok
         ? { success: true, data: publishData }
-        : { success: false, error: publishData.error?.message };
+        : { success: false, error: `ไม่สามารถนำโพสต์แบบกลุ่ม (Carousel) ขึ้น IG ได้ (${publishData.error?.message})` };
     } else {
       return {
         success: false,
