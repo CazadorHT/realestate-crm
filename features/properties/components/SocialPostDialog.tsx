@@ -348,11 +348,18 @@ export function SocialPostDialog({
                       รูปภาพทั้งหมด{" "}
                       {platform === "INSTAGRAM"
                         ? Math.min(images.length, 10)
-                        : images.length}{" "}
+                        : platform === "TIKTOK"
+                          ? Math.min(images.length, 35)
+                          : images.length}{" "}
                       รูป จะถูกอัปโหลดอัตโนมัติ
                       {platform === "INSTAGRAM" && images.length > 10 && (
                         <span className="text-[10px] text-amber-600 ml-1 font-medium bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 italic lowercase tracking-tight">
                           (จำกัด 10 รูปแรกสำหรับ API)
+                        </span>
+                      )}
+                      {platform === "TIKTOK" && images.length > 35 && (
+                        <span className="text-[10px] text-amber-600 ml-1 font-medium bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 italic lowercase tracking-tight">
+                          (จำกัด 35 รูปแรกสำหรับ API)
                         </span>
                       )}
                     </span>

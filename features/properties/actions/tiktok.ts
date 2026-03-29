@@ -60,12 +60,29 @@ export async function postPropertyToTikTokAction(
       finalCaption = await renderPropertySocialTemplate(finalCaption, property, lang);
     }
 
-    // 3. ตรวจสอบการเชื่อมต่อ TikTok (Placeholder for Token Logic)
-    // ในอนาคตจะต้องรัน Step: Exchange Code -> Access Token จาก TikTok
+    // 3. เตรียมรูปภาพ (Hardened Validation for TikTok Rules)
+    const rawImages = (property.property_images || []).map((img: any) => img.image_url);
+    
+    // กรองเฉพาะนามสกุลที่ TikTok Content Posting API รองรับ (JPG, JPEG, WEBP)
+    const supportedExtensions = [".jpg", ".jpeg", ".webp"];
+    const filteredImages = rawImages.filter(url => {
+      const lowerUrl = url.toLowerCase();
+      return supportedExtensions.some(ext => lowerUrl.endsWith(ext) || lowerUrl.includes(`${ext}?`));
+    });
+
+    // จำกัด 35 รูปตามมาตรฐาน Photo Mode
+    const imagesToPost = filteredImages.slice(0, 35);
+
+    if (imagesToPost.length === 0 && rawImages.length > 0) {
+      return { 
+        success: false, 
+        message: "ไม่พบรูปภาพที่รองรับโดย TikTok (ต้องเป็น .jpg, .jpeg หรือ .webp เท่านั้น)" 
+      };
+    }
 
     // 4. จำลองการโพสต์ (หรือส่งเข้า Queue สำหรับ Video Processing)
     // สำหรับสถานะการสาธิต (Demo) เราจะตอบกลับด้วยข้อความที่ TikTok กำหนด
-    console.log("TikTok Demo Post with final caption:", finalCaption);
+    console.log(`TikTok Demo Post with ${imagesToPost.length} validated images and caption:`, finalCaption);
 
     await supabase
       .from("properties")
@@ -76,7 +93,7 @@ export async function postPropertyToTikTokAction(
 
     return {
       success: true,
-      message: "Post successfully sent to TikTok!",
+      message: `Successfully prepared ${imagesToPost.length} images for TikTok!`,
       data: { share_url: "https://www.tiktok.com" } // Demo placeholder
     };
   } catch (err) {
