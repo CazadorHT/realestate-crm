@@ -525,6 +525,9 @@ export async function postToMetaPage(
       // Multi-image (Carousel) - Support up to 20 images
       // 1. Create items
       const childIds: string[] = [];
+      let lastError = "";
+      console.log(`[meta.ts] Processing ${images.length} images for Instagram carousel...`);
+      
       for (const imgUrl of images.slice(0, 20)) {
         const itemUrl = `${metaConfig.graphApiUrl}/${igId}/media?image_url=${encodeURIComponent(imgUrl)}&is_carousel_item=true&access_token=${token}`;
         const itemRes = await fetch(itemUrl, { method: "POST" });
@@ -532,14 +535,15 @@ export async function postToMetaPage(
         if (itemRes.ok && itemData.id) {
           childIds.push(itemData.id);
         } else {
-          console.warn("[meta.ts] Failed to create carousel item:", itemData);
+          lastError = itemData.error?.message || "Unknown error";
+          console.error(`[meta.ts] Failed to create carousel item for ${imgUrl}:`, itemData);
         }
       }
 
       if (childIds.length === 0) {
         return {
           success: false,
-          error: "ไม่สามารถอัปโหลดรูปภาพไปยัง Instagram ได้เลยแม้แต่รูปเดียว (กรุณาเช็คว่า URL รูปภาพเข้าถึงได้จากอินเทอร์เน็ตหรือไม่)",
+          error: `ไม่สามารถส่งรูปภาพไปยัง Instagram ได้เลยแม้แต่รูปเดียว (${lastError}) (กรุณาเช็คว่า URL รูปภาพเข้าถึงได้จากอินเทอร์เน็ตหรือไม่ หากรันบน Localhost ต้องใช้ URL สาธารณะเท่านั้น)`,
         };
       }
 

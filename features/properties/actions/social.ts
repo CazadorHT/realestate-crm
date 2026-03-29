@@ -246,7 +246,14 @@ export async function getPropertySocialContent(
   const tPropertyType = PROPERTY_TYPE_LABELS[lang]?.[property.property_type] || property.property_type;
 
   const content = await renderPropertySocialTemplate(template, property, lang);
-  const images = property.property_images?.map((img: any) => img.image_url).filter(Boolean) || [];
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const images = property.property_images?.map((img: any) => {
+    const url = img.image_url;
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    // Fallback for relative paths in Supabase
+    return `${supabaseUrl}/storage/v1/object/public/property_images/${url}`;
+  }).filter(Boolean) as string[] || [];
 
   return { 
     content, 
