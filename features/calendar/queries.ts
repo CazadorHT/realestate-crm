@@ -30,6 +30,8 @@ export type CalendarEvent = {
     rentPrice?: number;
     startDate?: string;
     endDate?: string;
+    leadName?: string;
+    start?: string;
   };
   color?: string; // For UI
 };
@@ -104,10 +106,12 @@ export async function getCalendarEvents(
         color: color,
         meta: {
           leadId: v.lead_id,
+          leadName: v.leads?.full_name,
           note: v.note,
           propertyTitle: v.properties?.title,
           propertyId: v.property_id,
           propertyImage: v.properties?.images?.[0]?.image_url || null,
+          start: v.created_at,
         },
       });
     });
