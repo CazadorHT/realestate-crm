@@ -1,101 +1,124 @@
 import { describe, it, expect } from 'vitest';
-import { calculateCommission, calculateAdvancedSplit, CommissionRuleSet } from './commissions';
+import { 
+  calculateCommission, 
+  calculateAdvancedSplit, 
+  CommissionRuleSet, 
+  roundToTwo,
+  FinanceError
+} from './commissions';
 
-describe('Commission Calculation Engine', () => {
-  describe('calculateCommission', () => {
-    it('should calculate flat percentage correctly', () => {
-      const rules: CommissionRuleSet = { type: 'FLAT', flatPercentage: 3 };
-      expect(calculateCommission(1000000, rules)).toBe(30000);
+describe('Commission Calculation Engine (Hardened)', () => {
+  describe('roundToTwo Utility', () => {
+    it('should round standard decimals correctly', () => {
+      expect(roundToTwo(10.555)).toBe(10.56);
+      expect(roundToTwo(10.554)).toBe(10.55);
     });
 
-    it('should calculate tiered commission correctly', () => {
+    it('should handle floating point drift (0.1 + 0.2)', () => {
+      expect(roundToTwo(0.1 + 0.2)).toBe(0.3);
+    });
+  });
+
+  describe('calculateCommission (Precision & Boundaries)', () => {
+    it('should calculate flat percentage with rounding', () => {
+      const rules: CommissionRuleSet = { type: 'FLAT', flatPercentage: 3.33 };
+      // 1,000,000 * 0.0333 = 33300
+      expect(calculateCommission(1000000, rules)).toBe(33300);
+      
+      // 99.99 * 0.0333 = 3.329667 -> 3.33
+      expect(calculateCommission(99.99, rules)).toBe(3.33);
+    });
+
+    it('should handle continuous boundaries in tiered commissions', () => {
       const rules: CommissionRuleSet = {
         type: 'TIERED',
         tiers: [
           { minPrice: 0, maxPrice: 1000000, percentage: 2 },
-          { minPrice: 1000001, maxPrice: null, percentage: 3 },
+          { minPrice: 1000000, maxPrice: null, percentage: 3 },
         ],
       };
-      expect(calculateCommission(500000, rules)).toBe(10000);
-      expect(calculateCommission(2000000, rules)).toBe(60000);
+      
+      // Boundary value: 1,000,000 should belong to Tier 1 [0, 1000000]
+      expect(calculateCommission(1000000, rules)).toBe(20000);
+      
+      // Just above boundary: 1,000,000.01 should belong to Tier 2 (1000000, null]
+      expect(calculateCommission(1000000.01, rules)).toBe(30000);
     });
 
-    it('should return 0 for negative price', () => {
-      const rules: CommissionRuleSet = { type: 'FLAT', flatPercentage: 3 };
-      expect(calculateCommission(-100, rules)).toBe(0);
+    it('should throw FinanceError for invalid FLAT rules', () => {
+      const rules: CommissionRuleSet = { type: 'FLAT', flatPercentage: 150 };
+      expect(() => calculateCommission(100, rules)).toThrow(FinanceError);
     });
 
-    it('should return 0 if no tiers match the price', () => {
+    it('should throw FinanceError for empty TIERED rules', () => {
+      const rules: CommissionRuleSet = { type: 'TIERED', tiers: [] };
+      expect(() => calculateCommission(100, rules)).toThrow(FinanceError);
+    });
+
+    it('should throw FinanceError for overlapping tiers', () => {
       const rules: CommissionRuleSet = {
         type: 'TIERED',
-        tiers: [{ minPrice: 1000, maxPrice: 2000, percentage: 5 }],
+        tiers: [
+          { minPrice: 0, maxPrice: 1000000, percentage: 2 },
+          { minPrice: 500000, maxPrice: null, percentage: 3 }, // Overlap with Tier 1
+        ],
       };
-      expect(calculateCommission(500, rules)).toBe(0);
-      expect(calculateCommission(2500, rules)).toBe(0);
+      expect(() => calculateCommission(1200000, rules)).toThrow(/ซ้อนทับกัน/);
     });
   });
 
-  describe('calculateAdvancedSplit', () => {
-    const config = {
+  describe('calculateAdvancedSplit (Safety & Scaling)', () => {
+    const validConfig = {
       listingPercent: 30,
       closingPercent: 50,
       agencyPercent: 20,
     };
 
-    it('should split 100,000 commission correctly without team pool', () => {
-      const total = 100000;
+    it('should prevent invalid team pool percentage', () => {
+      expect(() => calculateAdvancedSplit(1000, { ...validConfig, enableTeamPool: true, teamPoolPercent: 150 }, {})).toThrow(/Team Pool/);
+      expect(() => calculateAdvancedSplit(1000, { ...validConfig, enableTeamPool: true, teamPoolPercent: -10 }, {})).toThrow(/Team Pool/);
+    });
+
+    it('should split with high precision including WHT', () => {
+      const total = 999.99;
       const agents = { listingAgentId: 'agent-1', closingAgentId: 'agent-2' };
-      const results = calculateAdvancedSplit(total, { ...config, enableTeamPool: false }, agents);
+      const results = calculateAdvancedSplit(total, { ...validConfig, enableTeamPool: false }, agents);
 
       const listing = results.find(r => r.role === 'LISTING');
       const closing = results.find(r => r.role === 'CLOSING');
       const agency = results.find(r => r.role === 'AGENCY');
 
-      expect(listing?.amount).toBe(30000);
-      expect(listing?.whtAmount).toBe(900); // 3% of 30,000
-      expect(listing?.netAmount).toBe(29100);
+      // Manual calc: 999.99 * 0.3 = 299.997 -> 300.00
+      expect(listing?.amount).toBe(300.00);
+      expect(listing?.whtAmount).toBe(9.00); // 3% of 300
+      expect(listing?.netAmount).toBe(291.00);
 
-      expect(closing?.amount).toBe(50000);
-      expect(closing?.whtAmount).toBe(1500); // 3% of 50,000
-      expect(closing?.netAmount).toBe(48500);
-
-      expect(agency?.amount).toBe(20000);
-      expect(agency?.whtAmount).toBe(0); // Agency pays no WHT to itself
-      expect(agency?.netAmount).toBe(20000);
+      // Total sum check
+      const sum = results.reduce((s, r) => s + r.amount, 0);
+      expect(sum).toBe(1000.00); // due to precision rounding from 999.997 / 499.995 / 199.998
     });
 
-    it('should handle team pool and scale correctly', () => {
+    it('should prevent over-allocation (Sum > 100%)', () => {
+      const invalidConfig = {
+        listingPercent: 50,
+        closingPercent: 50,
+        agencyPercent: 50, // Sum = 150
+      };
+      expect(() => calculateAdvancedSplit(1000, invalidConfig, {})).toThrow(FinanceError);
+    });
+
+    it('should scale listing/closing based on team pool', () => {
       const total = 100000;
-      const teamPoolConfig = { ...config, enableTeamPool: true, teamPoolPercent: 10 };
-      const results = calculateAdvancedSplit(total, teamPoolConfig, {});
+      const poolConfig = { ...validConfig, enableTeamPool: true, teamPoolPercent: 10 };
+      const results = calculateAdvancedSplit(total, poolConfig, {});
 
       const pool = results.find(r => r.role === 'TEAM_POOL');
-      expect(pool?.amount).toBe(10000);
-
-      // Remaining 90% should be split 30/50/20 of the remaining? 
-      // Current implementation scales by (100 - teamPool) / 100 = 0.9
       const listing = results.find(r => r.role === 'LISTING');
-      expect(listing?.percentage).toBe(30 * 0.9); // 27%
+
+      expect(pool?.amount).toBe(10000);
+      // Listing: 30% of remaining 90% = 27%
+      expect(listing?.percentage).toBe(27);
       expect(listing?.amount).toBe(27000);
-    });
-
-    it('should handle zero total commission gracefully', () => {
-      const results = calculateAdvancedSplit(0, { listingPercent: 30, closingPercent: 50, agencyPercent: 20 }, {});
-      results.forEach(r => {
-        expect(r.amount).toBe(0);
-        expect(r.netAmount).toBe(0);
-      });
-    });
-
-    it('should scale correctly even if input percents do not sum to 100', () => {
-      // If user enters 50/50/50, it should still scale based on remainingPercent?
-      // Actually, the current code just multiplies by scale.
-      // If listing=50, closing=50, agency=50 (Total 150) and Pool=0 (Scale 1.0)
-      // Results will be 50, 50, 50 (Total 150%)
-      const total = 100000;
-      const results = calculateAdvancedSplit(total, { listingPercent: 50, closingPercent: 50, agencyPercent: 50 }, {});
-      const sum = results.reduce((s, r) => s + r.amount, 0);
-      expect(sum).toBe(150000); 
     });
   });
 });

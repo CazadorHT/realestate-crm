@@ -6,7 +6,7 @@ export type RentalContract =
 export type RentalContractInsert =
   Database["public"]["Tables"]["rental_contracts"]["Insert"];
 
-export const contractFormSchema = z.object({
+const contractBaseSchema = z.object({
   deal_id: z.string("กรุณาเลือกดีล เพื่อสร้างสัญญา").uuid("รหัสดีลไม่ถูกต้อง"),
   start_date: z
     .string()
@@ -14,7 +14,7 @@ export const contractFormSchema = z.object({
   end_date: z
     .string()
     .refine((val) => !isNaN(Date.parse(val)), "Invalid Date"),
-  rent_price: z.coerce.number().min(0, "ราคาค่าเช่าต้องไม่ต่ำกว่า 0"),
+  rent_price: z.coerce.number().min(0, "ราคาค่าเช่่าต้องไม่ต่ำกว่า 0"),
   deposit_amount: z.coerce
     .number()
     .min(0, "เงินประกันต้องไม่ต่ำกว่า 0")
@@ -27,14 +27,34 @@ export const contractFormSchema = z.object({
   payment_cycle: z.string().optional(),
   other_terms: z.string().optional(),
   status: z.enum(["DRAFT", "ACTIVE", "TERMINATED"]).optional(),
+  contract_number: z.string().optional(),
 });
+
+const dateRefinement = (data: any, ctx: z.RefinementCtx) => {
+  if (data.start_date && data.end_date) {
+    const start = new Date(data.start_date);
+    const end = new Date(data.end_date);
+    if (end <= start) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "วันที่สิ้นสุดสัญญาต้องอยู่หลังจากวันที่เริ่มสัญญา",
+        path: ["end_date"],
+      });
+    }
+  }
+};
+
+export const contractFormSchema = contractBaseSchema.superRefine(dateRefinement);
 
 export type ContractFormInput = z.infer<typeof contractFormSchema>;
 
-export const updateContractSchema = contractFormSchema.partial().extend({
-  id: z.string().uuid(),
-  check_in_date: z.string().optional().nullable(),
-  check_out_date: z.string().optional().nullable(),
-});
+export const updateContractSchema = contractBaseSchema
+  .partial()
+  .extend({
+    id: z.string().uuid(),
+    check_in_date: z.string().optional().nullable(),
+    check_out_date: z.string().optional().nullable(),
+  })
+  .superRefine(dateRefinement);
 
 export type UpdateContractInput = z.infer<typeof updateContractSchema>;

@@ -1,3 +1,21 @@
+/**
+ * Financial Calculation Utilities for Real Estate CRM
+ */
+
+export class FinanceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "FinanceError";
+  }
+}
+
+/**
+ * Ensures financial precision by rounding to 2 decimal places (standard for THB).
+ */
+export function roundToTwo(num: number): number {
+  return Math.round((num + Number.EPSILON) * 100) / 100;
+}
+
 export interface CommissionTier {
   minPrice: number;
   maxPrice: number | null; // null means no upper limit
@@ -18,6 +36,41 @@ export interface CommissionRuleSet {
   enableAdvancedSplit?: boolean;
 }
 
+/**
+ * Validates that a rule set is logically sound.
+ */
+export function validateRuleSet(ruleSet: CommissionRuleSet): void {
+  if (ruleSet.type === "FLAT") {
+    if (
+      ruleSet.flatPercentage === undefined ||
+      ruleSet.flatPercentage < 0 ||
+      ruleSet.flatPercentage > 100
+    ) {
+      throw new FinanceError("เปอร์เซ็นต์คอมมิชชันต้องอยู่ระหว่าง 0 ถึง 100");
+    }
+  }
+
+  if (ruleSet.type === "TIERED") {
+    if (!ruleSet.tiers || ruleSet.tiers.length === 0) {
+      throw new FinanceError("ระบบคอมมิชชันแบบขั้นบันไดต้องมีอย่างน้อย 1 ขั้น");
+    }
+
+    let lastMax: number | null = -1;
+    ruleSet.tiers.forEach((t, idx) => {
+      if (t.percentage < 0 || t.percentage > 100) {
+        throw new FinanceError(`เปอร์เซ็นต์ในขั้นที่ ${idx + 1} ต้องอยู่ระหว่าง 0 ถึง 100`);
+      }
+      if (t.minPrice < 0) {
+        throw new FinanceError(`ราคาขั้นต่ำในขั้นที่ ${idx + 1} ต้องไม่ติดลบ`);
+      }
+      if (lastMax !== null && t.minPrice < lastMax) {
+        throw new FinanceError(`รอยต่อของขั้นที่ ${idx + 1} ไม่ควรซ้อนทับกัน (ขั้นต่ำปัจุบัน: ${t.minPrice} < ขั้นสูงสุดก่อนหน้า: ${lastMax})`);
+      }
+      lastMax = t.maxPrice;
+    });
+  }
+}
+
 export type CommissionRole =
   | "LISTING"
   | "CLOSING"
@@ -36,42 +89,44 @@ export interface CommissionSplitResult {
 
 /**
  * Calculates commission based on a price and a set of rules.
+ * Hardened to handle boundary continuity and precision.
  */
 export function calculateCommission(
   price: number,
   ruleSet: CommissionRuleSet,
 ): number {
-  if (price < 0) return 0;
+  if (price <= 0) return 0;
+  validateRuleSet(ruleSet);
+
+  let amount = 0;
 
   if (ruleSet.type === "FLAT") {
-    return (price * (ruleSet.flatPercentage || 0)) / 100;
-  }
-
-  if (ruleSet.type === "TIERED" && ruleSet.tiers) {
+    amount = (price * (ruleSet.flatPercentage || 0)) / 100;
+  } else if (ruleSet.type === "TIERED" && ruleSet.tiers) {
+    // Gapless boundary matching: [min, max)
     const tier = ruleSet.tiers.find(
       (t) =>
-        price >= t.minPrice && (t.maxPrice === null || price <= t.maxPrice),
+        price > t.minPrice && (t.maxPrice === null || price <= t.maxPrice),
     );
 
     if (tier) {
-      return (price * tier.percentage) / 100;
+      amount = (price * tier.percentage) / 100;
     }
   }
 
-  return 0;
+  return roundToTwo(amount);
 }
 
 /**
  * Split commission between company and agent based on a split ratio (agent's cut).
- * Traditional simple split.
  */
 export function splitCommission(
   totalCommission: number,
   agentCutPercentage: number,
 ): { companyAmount: number; agentAmount: number } {
-  const agentAmount = (totalCommission * agentCutPercentage) / 100;
+  const agentAmount = roundToTwo((totalCommission * agentCutPercentage) / 100);
   return {
-    companyAmount: totalCommission - agentAmount,
+    companyAmount: roundToTwo(totalCommission - agentAmount),
     agentAmount,
   };
 }
@@ -79,6 +134,7 @@ export function splitCommission(
 /**
  * Advanced Commission Splitting (Listing 30%, Closing 50%, Agency 20%)
  * Includes WHT 3% calculation.
+ * Hardened with Over-allocation protection and Scaling validation.
  */
 export function calculateAdvancedSplit(
   totalCommission: number,
@@ -98,27 +154,36 @@ export function calculateAdvancedSplit(
   const results: CommissionSplitResult[] = [];
   const WHT_RATE = 3;
 
+  // 1. Input Validation (Hardening)
+  if (config.enableTeamPool && (config.teamPoolPercent === undefined || config.teamPoolPercent < 0 || config.teamPoolPercent > 100)) {
+    throw new FinanceError("เปอร์เซ็นต์กองกลาง (Team Pool) ต้องอยู่ระหว่าง 0 ถึง 100");
+  }
+
+  const inputSum = 
+    config.listingPercent + 
+    config.closingPercent + 
+    config.agencyPercent;
+  
+  if (inputSum > 100.01 || inputSum < 99.99) {
+    throw new FinanceError(`ผลรวมเปอร์เซ็นต์ส่วนแบ่งต้องเท่ากับ 100% (ปัจจุบัน: ${inputSum}%)`);
+  }
+
   let remainingPercent = 100;
 
   // 1. Team Pool (Optional)
   if (config.enableTeamPool && config.teamPoolPercent) {
-    const amount = (totalCommission * config.teamPoolPercent) / 100;
+    const amount = roundToTwo((totalCommission * config.teamPoolPercent) / 100);
     results.push({
       role: "TEAM_POOL",
       percentage: config.teamPoolPercent,
       amount,
-      whtAmount: 0, // Usually no WHT for internal pool
+      whtAmount: 0,
       netAmount: amount,
     });
     remainingPercent -= config.teamPoolPercent;
   }
 
-  // Calculate ratios based on remaining 100% or adjusted?
-  // User said: Listing 30%, Closing 50%, Agency 20% (Total 100%)
-  // If Team Pool 2% is enabled, we might want to scale or just subtract from Agency.
-  // Standard agency behavior: Team pool comes out of Agency cut or is fixed.
-  // Let's assume the user wants it fixed and the rest split proportionally.
-
+  // Calculate scaling factor based on remaining pool
   const scale = remainingPercent / 100;
 
   const roles: { role: CommissionRole; pct: number; id?: string }[] = [
@@ -129,15 +194,15 @@ export function calculateAdvancedSplit(
 
   roles.forEach((r) => {
     const actualPct = r.pct * scale;
-    const amount = (totalCommission * actualPct) / 100;
-    const whtAmount = r.role !== "AGENCY" ? (amount * WHT_RATE) / 100 : 0; // Agency doesn't pay WHT to itself
+    const amount = roundToTwo((totalCommission * actualPct) / 100);
+    const whtAmount = r.role !== "AGENCY" && r.id ? roundToTwo((amount * WHT_RATE) / 100) : 0;
 
     results.push({
       role: r.role,
-      percentage: actualPct,
+      percentage: roundToTwo(actualPct),
       amount,
       whtAmount,
-      netAmount: amount - whtAmount,
+      netAmount: roundToTwo(amount - whtAmount),
       agentId: r.id,
     });
   });
