@@ -419,6 +419,8 @@ export type Database = {
         Row: {
           ai_analysis: Json | null
           ai_summary: string | null
+          ai_verified_at: string | null
+          ai_verified_by: string | null
           created_at: string
           created_by: string | null
           document_type: Database["public"]["Enums"]["document_type"]
@@ -442,6 +444,8 @@ export type Database = {
         Insert: {
           ai_analysis?: Json | null
           ai_summary?: string | null
+          ai_verified_at?: string | null
+          ai_verified_by?: string | null
           created_at?: string
           created_by?: string | null
           document_type: Database["public"]["Enums"]["document_type"]
@@ -465,6 +469,8 @@ export type Database = {
         Update: {
           ai_analysis?: Json | null
           ai_summary?: string | null
+          ai_verified_at?: string | null
+          ai_verified_by?: string | null
           created_at?: string
           created_by?: string | null
           document_type?: Database["public"]["Enums"]["document_type"]
@@ -486,6 +492,13 @@ export type Database = {
           version?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_ai_verified_by_fkey"
+            columns: ["ai_verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documents_created_by_fkey"
             columns: ["created_by"]
@@ -1315,6 +1328,7 @@ export type Database = {
           has_garden_view: boolean | null
           has_multi_parking: boolean | null
           has_pool_view: boolean | null
+          has_private_elevator: boolean | null
           has_private_pool: boolean | null
           has_raised_floor: boolean | null
           has_river_view: boolean | null
@@ -1322,6 +1336,7 @@ export type Database = {
           id: string
           images: Json | null
           is_bare_shell: boolean | null
+          is_cbd: boolean | null
           is_central_air: boolean | null
           is_co_agent: boolean | null
           is_column_free: boolean | null
@@ -1332,10 +1347,14 @@ export type Database = {
           is_grade_a: boolean | null
           is_grade_b: boolean | null
           is_grade_c: boolean | null
+          is_handicapped_friendly: boolean | null
           is_high_ceiling: boolean | null
+          is_high_floor: boolean | null
+          is_never_lived_in: boolean | null
           is_pet_friendly: boolean | null
           is_renovated: boolean | null
           is_selling_with_tenant: boolean | null
+          is_smart_home: boolean | null
           is_split_air: boolean | null
           is_tax_registered: boolean | null
           land_size_sqwah: number | null
@@ -1435,6 +1454,7 @@ export type Database = {
           has_garden_view?: boolean | null
           has_multi_parking?: boolean | null
           has_pool_view?: boolean | null
+          has_private_elevator?: boolean | null
           has_private_pool?: boolean | null
           has_raised_floor?: boolean | null
           has_river_view?: boolean | null
@@ -1442,6 +1462,7 @@ export type Database = {
           id?: string
           images?: Json | null
           is_bare_shell?: boolean | null
+          is_cbd?: boolean | null
           is_central_air?: boolean | null
           is_co_agent?: boolean | null
           is_column_free?: boolean | null
@@ -1452,10 +1473,14 @@ export type Database = {
           is_grade_a?: boolean | null
           is_grade_b?: boolean | null
           is_grade_c?: boolean | null
+          is_handicapped_friendly?: boolean | null
           is_high_ceiling?: boolean | null
+          is_high_floor?: boolean | null
+          is_never_lived_in?: boolean | null
           is_pet_friendly?: boolean | null
           is_renovated?: boolean | null
           is_selling_with_tenant?: boolean | null
+          is_smart_home?: boolean | null
           is_split_air?: boolean | null
           is_tax_registered?: boolean | null
           land_size_sqwah?: number | null
@@ -1555,6 +1580,7 @@ export type Database = {
           has_garden_view?: boolean | null
           has_multi_parking?: boolean | null
           has_pool_view?: boolean | null
+          has_private_elevator?: boolean | null
           has_private_pool?: boolean | null
           has_raised_floor?: boolean | null
           has_river_view?: boolean | null
@@ -1562,6 +1588,7 @@ export type Database = {
           id?: string
           images?: Json | null
           is_bare_shell?: boolean | null
+          is_cbd?: boolean | null
           is_central_air?: boolean | null
           is_co_agent?: boolean | null
           is_column_free?: boolean | null
@@ -1572,10 +1599,14 @@ export type Database = {
           is_grade_a?: boolean | null
           is_grade_b?: boolean | null
           is_grade_c?: boolean | null
+          is_handicapped_friendly?: boolean | null
           is_high_ceiling?: boolean | null
+          is_high_floor?: boolean | null
+          is_never_lived_in?: boolean | null
           is_pet_friendly?: boolean | null
           is_renovated?: boolean | null
           is_selling_with_tenant?: boolean | null
+          is_smart_home?: boolean | null
           is_split_air?: boolean | null
           is_tax_registered?: boolean | null
           land_size_sqwah?: number | null

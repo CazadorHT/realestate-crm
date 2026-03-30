@@ -8,6 +8,7 @@ import {
 } from "./schema";
 
 import { mapDbError } from "@/lib/db-error";
+import { revalidatePath } from "next/cache";
 
 // 1. Get Documents by Owner
 export async function getDocumentsByOwner(
@@ -416,5 +417,49 @@ export async function searchOwnerAction(
   } catch (err) {
     console.error("Search Owner Error:", err);
     return [];
+  }
+}
+
+import { aiAnalysisSchema, ActionResponse, AIAnalysisResult } from "./schema";
+
+/**
+ * 7. Verify AI Analysis
+ * Saves the AI analysis results after human confirmation.
+ */
+export async function verifyAiAnalysisAction(
+  documentId: string,
+  summary: string,
+  analysis: AIAnalysisResult,
+): Promise<ActionResponse> {
+  try {
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
+    // Final Validation before save (Hardening)
+    const validatedData = aiAnalysisSchema.parse({
+      ...analysis,
+      summary,
+    });
+
+    const { error } = await supabase
+      .from("documents")
+      .update({
+        ai_summary: validatedData.summary,
+        ai_analysis: validatedData,
+        ai_verified_at: new Date().toISOString(),
+        ai_verified_by: user.id,
+      })
+      .eq("id", documentId);
+
+    if (error) throw new Error(mapDbError(error));
+
+    revalidatePath("/protected/documents");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Verify AI Analysis Error:", error);
+    return {
+      success: false,
+      message: mapDbError(error) || "เกิดข้อผิดพลาดในการยืนยันข้อมูล AI",
+    };
   }
 }

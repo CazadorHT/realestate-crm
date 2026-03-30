@@ -8,6 +8,7 @@ import {
   BarChart,
   Target,
   Zap,
+  Info,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -103,6 +104,15 @@ export function AiExecutiveBriefing({
             </ul>
           </CardContent>
         </Card>
+      </div>
+
+      {/* AI Usage Disclaimer */}
+      <div className="flex items-start gap-3 p-4 bg-slate-100/50 border border-slate-200 rounded-xl text-slate-500 mt-4">
+        <Info className="h-5 w-5 text-slate-400 shrink-0 mt-0.5" />
+        <div className="text-[11px] leading-relaxed italic">
+          <p className="font-bold text-slate-600 mb-0.5">⚠️ ข้อมูลการใช้งานระบบ AI (AI Usage Disclaimer):</p>
+          บทพยากรณ์และข้อเสนอแนะเชิงกลยุทธ์นี้ประมวลผลโดย Generative AI เพื่อช่วยอำนวยความสะดวกในการวิเคราะห์ข้อมูลเบื้องต้นเท่านั้น โปรดตรวจสอบความถูกต้องของตัวเลขและสรุปผลกับรายงานทางสถิติและข้อมูลบัญชีจริงจากระบบ CRM ทุกครั้งก่อนนำไปประกอบการตัดสินใจทางธุรกิจ
+        </div>
       </div>
     </div>
   );

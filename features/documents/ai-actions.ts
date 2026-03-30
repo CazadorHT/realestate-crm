@@ -5,12 +5,15 @@ import { generateText } from "@/lib/ai/gemini";
 import { getDocumentSignedUrl } from "./actions";
 import { revalidatePath } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
+import { aiAnalysisSchema, ActionResponse, AIAnalysisResult } from "./schema";
 
 /**
  * AI Document Analysis
  * Uses Gemini to summarize and detect risks in a document
  */
-export async function analyzeDocumentAction(documentId: string) {
+export async function analyzeDocumentAction(
+  documentId: string,
+): Promise<ActionResponse<AIAnalysisResult>> {
   try {
     const { supabase, role } = await requireAuthContext();
     assertStaff(role);
@@ -22,7 +25,7 @@ export async function analyzeDocumentAction(documentId: string) {
       .eq("id", documentId)
       .single();
 
-    if (dError || !doc) throw new Error("ไม่พบเอกสาร");
+    if (dError || !doc) throw new Error("ไม่พบเอกสารในระบบ");
 
     // Guard: File Size (Gemini 1.5 Flash handles large files, but for CRM we restrict to 10MB to avoid timeouts/costs)
     const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -77,9 +80,9 @@ export async function analyzeDocumentAction(documentId: string) {
       }
     }
 
-    let analysis;
+    let rawJson;
     try {
-      analysis = JSON.parse(jsonStr);
+      rawJson = JSON.parse(jsonStr);
     } catch (parseError) {
       console.error("AI JSON Parse Error. Raw text:", aiRes.text);
       throw new Error(
@@ -87,29 +90,12 @@ export async function analyzeDocumentAction(documentId: string) {
       );
     }
 
-    // Basic validation of expected fields
-    if (!analysis.summary) {
-      analysis.summary = aiRes.text.substring(0, 500) + "..."; // Fallback summary
-    }
+    // 4. Validate and Sanitize with Zod (Hardening)
+    const validatedAnalysis = aiAnalysisSchema.parse(rawJson);
 
-    // 4. Update Database
-    const { error: uError } = await supabase
-      .from("documents")
-      .update({
-        ai_summary: analysis.summary,
-        ai_analysis: analysis,
-        document_type:
-          doc.document_type === "OTHER" && analysis.document_type_suggestion
-            ? analysis.document_type_suggestion
-            : doc.document_type,
-      })
-      .eq("id", documentId);
-
-    if (uError)
-      throw new Error("บันทึกผลวิเคราะห์ AI ไม่สำเร็จ: " + uError.message);
-
+    // 5. Return results for human verification (DO NOT save to DB yet)
     revalidatePath("/protected/documents");
-    return { success: true, data: analysis };
+    return { success: true, data: validatedAnalysis };
   } catch (error: any) {
     console.error("AI Analysis Error:", error);
     return {

@@ -18,16 +18,21 @@ import {
   FileText,
   CheckCircle2,
   ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { verifyAiAnalysisAction } from "../actions";
+import { AIAnalysisResult } from "../schema";
 
 interface AIDocumentInsightProps {
   documentId: string;
   documentName: string;
   initialSummary?: string | null;
-  initialAnalysis?: any | null;
+  initialAnalysis?: AIAnalysisResult | null;
+  aiVerifiedAt?: string | null;
+  aiVerifiedBy?: string | null;
 }
 
 export function AIDocumentInsight({
@@ -35,22 +40,27 @@ export function AIDocumentInsight({
   documentName,
   initialSummary,
   initialAnalysis,
+  aiVerifiedAt,
+  aiVerifiedBy,
 }: AIDocumentInsightProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [summary, setSummary] = useState(initialSummary);
-  const [analysis, setAnalysis] = useState(initialAnalysis);
+  const [summary, setSummary] = useState<string | undefined>(initialSummary || undefined);
+  const [analysis, setAnalysis] = useState<AIAnalysisResult | undefined>(initialAnalysis || undefined);
+  const [verifiedAt, setVerifiedAt] = useState(aiVerifiedAt);
 
   const handleAnalyze = async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await analyzeDocumentAction(documentId);
-      if (res.success) {
+      if (res.success && res.data) {
         setSummary(res.data.summary);
         setAnalysis(res.data);
-        toast.success("วิเคราะห์เอกสารด้วย AI สำเร็จ");
+        setVerifiedAt(null); // Reset when new analysis is generated
+        toast.success("AI วิเคราะห์เสร็จสิ้น กรุณาตรวจสอบและกดยืนยันข้อมูล");
       } else {
         setError(res.message || "การวิเคราะห์ล้มเหลว");
         toast.error(res.message || "การวิเคราะห์ล้มเหลว");
@@ -63,7 +73,26 @@ export function AIDocumentInsight({
     }
   };
 
-  const hasData = summary || analysis;
+  const handleVerify = async () => {
+    if (!summary || !analysis) return;
+    setIsVerifying(true);
+    try {
+      const res = await verifyAiAnalysisAction(documentId, summary, analysis);
+      if (res.success) {
+        setVerifiedAt(new Date().toISOString());
+        toast.success("บันทึกและยืนยันข้อมูล AI เรียบร้อยแล้ว");
+      } else {
+        toast.error(res.message || "ยืนยันข้อมูลไม่สำเร็จ");
+      }
+    } catch (err) {
+      toast.error("เกิดข้อผิดพลาดในการบันทึก");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const hasData = !!(summary || analysis);
+  const isVerified = !!verifiedAt;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -71,22 +100,40 @@ export function AIDocumentInsight({
         <Button
           variant="ghost"
           size="icon"
-          className={`h-8 w-8 ${hasData ? "text-amber-500 hover:text-amber-600" : "text-slate-400 hover:text-indigo-600"}`}
-          title="AI Insights"
+          className={`h-8 w-8 ${
+            isVerified 
+              ? "text-emerald-500 hover:text-emerald-600" 
+              : hasData 
+                ? "text-amber-500 hover:text-amber-600 animate-pulse" 
+                : "text-slate-400 hover:text-indigo-600"
+          }`}
+          title={isVerified ? "AI Verified" : "AI Insights"}
         >
-          <Sparkles className={`h-4 w-4 ${loading ? "animate-pulse" : ""}`} />
+          {isVerified ? (
+            <CheckCircle2 className="h-4 w-4" />
+          ) : (
+            <Sparkles className={`h-4 w-4 ${loading ? "animate-pulse" : ""}`} />
+          )}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <Sparkles className="h-6 w-6 text-amber-500 fill-amber-50" />
-            AI Document Assistant
+          <DialogTitle className="flex items-center justify-between text-xl pr-6">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-amber-500 fill-amber-50" />
+              AI Document Assistant
+            </div>
+            {isVerified && (
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 gap-1.5 py-1 px-3">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                ตรวจสอบแล้ว
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="py-4 space-y-6">
-          <div className="p-3 bg-slate-50 border rounded-lg">
+        <div className="py-2 space-y-5">
+          <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
               Analyzing File:
             </p>
@@ -96,30 +143,29 @@ export function AIDocumentInsight({
           </div>
 
           {!hasData && !loading && !error && (
-            <div className="flex flex-col items-center justify-center py-10 text-center space-y-4">
+            <div className="flex flex-col items-center justify-center py-10 text-center space-y-4 border-2 border-dashed border-slate-100 rounded-2xl">
               <div className="h-16 w-16 bg-amber-50 rounded-full flex items-center justify-center">
                 <Sparkles className="h-8 w-8 text-amber-400" />
               </div>
               <div className="max-w-[300px]">
                 <h3 className="text-lg font-bold text-slate-800">
-                  ยังไม่มีข้อมูลวิเคราะห์
+                  พร้อมวิเคราะห์ด้วย AI
                 </h3>
                 <p className="text-sm text-slate-500 mt-1">
-                  ให้ AI
-                  ช่วยสรุปเนื้อหาและตรวจสอบจุดเสี่ยงในเอกสารนี้ให้อัตโนมัติ
+                  ระบบจะช่วยสรุปเนื้อหาและตรวจสอบจุดเสี่ยงในเอกสารนี้ให้อัตโนมัติ
                 </p>
               </div>
               <Button
                 onClick={handleAnalyze}
-                className="bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 border-none shadow-lg shadow-amber-200"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-8 shadow-lg shadow-indigo-100"
               >
-                เริ่มวิเคราะห์ด้วย AI
+                เริ่มวิเคราะห์ทันที
               </Button>
             </div>
           )}
 
           {error && !loading && (
-            <div className="flex flex-col items-center justify-center py-10 text-center space-y-4">
+            <div className="flex flex-col items-center justify-center py-10 text-center space-y-4 bg-red-50/30 rounded-2xl border border-red-100">
               <div className="h-16 w-16 bg-red-50 rounded-full flex items-center justify-center">
                 <AlertTriangle className="h-8 w-8 text-red-500" />
               </div>
@@ -132,7 +178,7 @@ export function AIDocumentInsight({
               <Button
                 onClick={handleAnalyze}
                 variant="outline"
-                className="border-red-200 text-red-700 hover:bg-red-50"
+                className="border-red-200 text-red-700 hover:bg-red-50 rounded-xl"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 ลองใหม่อีกครั้ง
@@ -143,15 +189,15 @@ export function AIDocumentInsight({
           {loading && (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <div className="relative">
-                <Loader2 className="h-12 w-12 text-amber-500 animate-spin" />
-                <Sparkles className="h-5 w-5 text-amber-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                <Loader2 className="h-12 w-12 text-indigo-500 animate-spin" strokeWidth={1.5} />
+                <Sparkles className="h-5 w-5 text-amber-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
               </div>
               <div className="text-center">
                 <p className="font-bold text-slate-700">
-                  Gemini กำลังอ่านเอกสาร...
+                  Gemini กำลังอ่านเอกสารอย่างละเอียด...
                 </p>
                 <p className="text-xs text-slate-400 mt-1 italic">
-                  ระบบกำลังสรุปข้อมูลและตรวจสอบข้อบัญญัติต่างๆ
+                  ระบบกำลังสรุปข้อมูลและตรวจสอบข้อสัญญาต่างๆ
                 </p>
               </div>
             </div>
@@ -159,93 +205,126 @@ export function AIDocumentInsight({
 
           {hasData && !loading && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {!isVerified && (
+                <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 shadow-sm">
+                  <AlertTriangle className="h-5 w-5 shrink-0 text-amber-500 mt-0.5" />
+                  <div className="text-xs leading-relaxed">
+                    <p className="font-bold mb-1">📢 ข้อมูลนี้ยังไม่ผ่านการตรวจสอบโดยเจ้าหน้าที่</p>
+                    <p className="opacity-90">ข้อมูลชุดนี้ประมวลผลโดย AI ซึ่งอาจมีการคาดเคลื่อนของตัวเลขหรือวันที่ กรุณาตรวจทานเทียบกับเอกสารจริง และกดยืนยันเพื่อบันทึกลงระบบ</p>
+                  </div>
+                </div>
+              )}
+
               {/* Summary Section */}
               <section className="space-y-2">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-indigo-500" />
-                  <h3 className="font-bold text-slate-800">
-                    สรุปเนื้อหา (Summary)
-                  </h3>
+                  <h3 className="font-bold text-slate-800">สรุปเนื้อหา (Summary)</h3>
                 </div>
-                <div className="p-4 bg-indigo-50/30 border border-indigo-100 rounded-xl leading-relaxed text-slate-700 text-sm italic">
-                  "{summary}"
+                <div 
+                  className={`p-4 rounded-xl leading-relaxed text-sm transition-colors ${
+                    isVerified ? "bg-slate-50 text-slate-600 italic" : "bg-white border-2 border-amber-100 text-slate-900 font-medium shadow-sm"
+                  }`}
+                  contentEditable={!isVerified}
+                  onBlur={(e) => setSummary(e.currentTarget.textContent || "")}
+                  suppressContentEditableWarning={true}
+                >
+                  {summary}
                 </div>
               </section>
 
-              {/* Risks Section */}
-              {analysis?.risks && analysis.risks.length > 0 && (
-                <section className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                    <h3 className="font-bold text-slate-800">
-                      ข้อควรระวัง/จุดเสี่ยง (Risks)
-                    </h3>
-                  </div>
-                  <div className="grid gap-2">
-                    {analysis.risks.map((risk: string, i: number) => (
-                      <div
-                        key={i}
-                        className="flex gap-2 p-2.5 bg-red-50/50 border border-red-100 rounded-lg text-xs text-red-800"
-                      >
-                        <ChevronRight className="h-3.5 w-3.5 mt-0.5 shrink-0 text-red-400" />
-                        {risk}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Key Dates Section */}
-              {analysis?.key_dates && analysis.key_dates.length > 0 && (
-                <section className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-green-600" />
-                    <h3 className="font-bold text-slate-800">
-                      วันที่สำคัญ (Key Dates)
-                    </h3>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {analysis.key_dates.map((item: any, i: number) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-3 p-3 bg-background border rounded-lg shadow-sm"
-                      >
-                        <div className="h-8 w-8 rounded-full bg-green-50 flex items-center justify-center">
-                          <Clock01 className="h-4 w-4 text-green-600" />
+              {/* Highlights/Points */}
+              <div className="grid grid-cols-1 gap-4">
+                {/* Risks Section */}
+                {analysis?.risks && analysis.risks.length > 0 && (
+                  <section className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                      <h3 className="font-bold text-slate-800 text-sm">จุดเสี่ยงที่พบ (Risks)</h3>
+                    </div>
+                    <div className="grid gap-2">
+                      {analysis.risks.map((risk: string, i: number) => (
+                        <div
+                          key={i}
+                          className="flex gap-2 p-2.5 bg-red-50/50 border border-red-100 rounded-lg text-[11px] text-red-800"
+                        >
+                          <ChevronRight className="h-3.5 w-3.5 mt-0.5 shrink-0 text-red-400" />
+                          {risk}
                         </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">
-                            {item.description}
-                          </p>
-                          <p className="text-xs font-bold text-slate-700">
-                            {item.date}
-                          </p>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Key Dates Section */}
+                {analysis?.key_dates && analysis.key_dates.length > 0 && (
+                  <section className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-green-600" />
+                      <h3 className="font-bold text-slate-800 text-sm">ข้อมูลสำคัญ (Key Dates/Terms)</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {analysis.key_dates.map((item: any, i: number) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-lg shadow-sm"
+                        >
+                          <div className="h-8 w-8 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                            <Clock01 className="h-4 w-4 text-green-600" />
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase">
+                              {item.description}
+                            </p>
+                            <p className="text-xs font-bold text-slate-800">
+                              {item.date}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </div>
 
-              <Separator />
+              <Separator className="my-2" />
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-slate-400" />
-                  <span className="text-[10px] text-slate-400 italic">
-                    วิเคราะห์โดย AI ล่าสุดเมื่อ{" "}
-                    {new Date().toLocaleDateString("th-TH")}
-                  </span>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-[10px] text-slate-400 flex items-center gap-2">
+                  <CheckCircle2 className={`h-3.5 w-3.5 ${isVerified ? "text-emerald-500" : "text-slate-300"}`} />
+                  {isVerified ? (
+                    <span>ยืนยันโดย {aiVerifiedBy || "เจ้าหน้าที่"} เมื่อ {verifiedAt ? new Date(verifiedAt).toLocaleDateString("th-TH") : "N/A"}</span>
+                  ) : (
+                    <span className="italic">รอการตรวจสอบความถูกต้องก่อนบันทึก</span>
+                  )}
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAnalyze}
-                  className="h-8 text-[11px] gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50"
-                >
-                  <RefreshCw className="h-3 w-3" />
-                  วิเคราะห์ใหม่
-                </Button>
+
+                <div className="flex gap-2 w-full sm:w-auto">
+                  {!isVerified && (
+                    <Button
+                      onClick={handleVerify}
+                      disabled={isVerifying}
+                      className="flex-1 sm:flex-none h-9 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-100 px-6 font-bold"
+                    >
+                      {isVerifying ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                      )}
+                      ตรวจสอบถูกต้องแล้ว
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleAnalyze}
+                    disabled={loading || isVerifying}
+                    className="h-9 text-[11px] gap-1.5 text-slate-400 hover:text-indigo-600"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+                    ขอวิเคราะห์ใหม่
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -274,6 +353,3 @@ function Clock01({ className }: { className?: string }) {
     </svg>
   );
 }
-
-// Fixed missing icon imports in the code above: RefreshCw
-import { RefreshCw } from "lucide-react";

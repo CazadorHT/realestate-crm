@@ -73,3 +73,22 @@ export type CreateTemplateInput = z.infer<typeof createTemplateSchema>;
 
 export const updateTemplateSchema = createTemplateSchema.partial();
 export type UpdateTemplateInput = z.infer<typeof updateTemplateSchema>;
+
+// AI Analysis Schemas
+export const aiAnalysisSchema = z.object({
+  summary: z.string().min(1, "สรุปข้อมูลต้องไม่เป็นค่าว่าง"),
+  risks: z.array(z.string()).default([]),
+  key_dates: z.array(z.object({
+    date: z.string(),
+    description: z.string(),
+  })).default([]),
+  document_type_suggestion: z.string().optional(),
+});
+
+export type AIAnalysisResult = z.infer<typeof aiAnalysisSchema>;
+
+export interface ActionResponse<T = any> {
+  success: boolean;
+  data?: T;
+  message?: string;
+}

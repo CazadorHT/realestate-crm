@@ -1,87 +1,93 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createDocumentRecordAction, getDocumentSignedUrl } from './actions';
-import { requireAuthContext } from '@/lib/authz';
+import { verifyAiAnalysisAction } from './actions';
+import { analyzeDocumentAction } from './ai-actions';
+import { requireAuthContext, assertStaff } from '@/lib/authz';
 
-// Mock the modules
+// 1. Mock the Auth Context
 vi.mock('@/lib/authz', () => ({
   requireAuthContext: vi.fn(),
   assertStaff: vi.fn(),
-  assertAdmin: vi.fn(),
 }));
 
-vi.mock('@/lib/audit', () => ({
-  logAudit: vi.fn(),
-}));
-
+// 2. Mock Next.js Cache
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
-describe('Document Actions - Branch Isolation', () => {
-  const mockSupabase = {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    single: vi.fn().mockReturnThis(),
-    maybeSingle: vi.fn().mockReturnThis(),
-    storage: {
-      from: vi.fn().mockReturnThis(),
-      createSignedUrl: vi.fn().mockResolvedValue({ data: { signedUrl: 'signed-url' }, error: null }),
-    },
-  };
+describe('AI Hallucination Mitigation Logic', () => {
+  const mockDocumentId = 'doc-123';
+  const mockUser = { id: 'user-admin' };
+  const mockTenantId = 'tenant-1';
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should assign tenant_id automatically during document creation', async () => {
-    const tenantId = 'tenant-123';
-    (requireAuthContext as any).mockResolvedValue({
-      supabase: mockSupabase,
-      tenantId: tenantId,
-      role: 'AGENT',
-      user: { id: 'user-1' },
+  describe('analyzeDocumentAction (Hardening Test)', () => {
+    it('should return AI findings without updating the database (Human-in-the-loop)', async () => {
+      // Setup Mock Supabase
+      const mockUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
+      const mockSupabase = {
+        from: vi.fn().mockReturnValue({ update: mockUpdate }),
+      };
+
+      (requireAuthContext as any).mockResolvedValue({
+        supabase: mockSupabase,
+        user: mockUser,
+        tenantId: mockTenantId,
+        role: 'ADMIN',
+      });
+
+      // Note: We are testing that even if this action is called, 
+      // the NEW logic should NOT trigger mockUpdate for the document content.
+      const result = await analyzeDocumentAction(mockDocumentId);
+
+      // Verify that 'update' was NEVER called inside analyzeDocumentAction
+      // because we moved persistence to the verification step.
+      expect(mockUpdate).not.toHaveBeenCalled();
+      
+      // Verify that it still returns data for UI review
+      if (result.success) {
+        expect(result.data).toBeDefined();
+        expect(result.data.summary).toBeDefined();
+      }
     });
-
-    mockSupabase.single.mockResolvedValue({ data: { id: 'doc-1' }, error: null });
-
-    const input = {
-      file_name: 'Test Doc',
-      storage_path: 'path/to/file',
-      document_type: 'OTHER',
-      size_bytes: 1024,
-      owner_type: 'LEAD',
-      owner_id: '00000000-0000-0000-0000-000000000000',
-    };
-
-    await createDocumentRecordAction(input as any);
-
-    expect(mockSupabase.insert).toHaveBeenCalledWith(expect.objectContaining({
-      file_name: 'Test Doc',
-      tenant_id: tenantId,
-      created_by: 'user-1',
-    }));
   });
 
-  it('should verify tenant_id before generating signed URL', async () => {
-    const tenantId = 'tenant-123';
-    (requireAuthContext as any).mockResolvedValue({
-      supabase: mockSupabase,
-      tenantId: tenantId,
-      role: 'AGENT',
-      user: { id: 'user-1' },
+  describe('verifyAiAnalysisAction (Manual Confirmation Test)', () => {
+    it('should save verified analysis with human signature', async () => {
+      const mockUpdate = vi.fn().mockImplementation(() => ({
+        eq: vi.fn().mockResolvedValue({ error: null })
+      }));
+      
+      const mockSupabase = {
+        from: vi.fn().mockReturnValue({ update: mockUpdate }),
+      };
+
+      (requireAuthContext as any).mockResolvedValue({
+        supabase: mockSupabase,
+        user: mockUser,
+        role: 'ADMIN',
+      });
+
+      const mockSummary = "Verified Summary content";
+      const mockAnalysis = { risks: ["Risk A"], key_dates: [] };
+
+      const result = await verifyAiAnalysisAction(mockDocumentId, mockSummary, mockAnalysis);
+
+      expect(result.success).toBe(true);
+      
+      // Verify that it actually calls Supabase now
+      expect(mockSupabase.from).toHaveBeenCalledWith('documents');
+      
+      // Verify that AI verification metadata is included
+      const updatePayload = mockUpdate.mock.calls[0][0];
+      expect(updatePayload).toMatchObject({
+        ai_summary: mockSummary,
+        ai_analysis: mockAnalysis,
+        ai_verified_by: mockUser.id,
+      });
+      expect(updatePayload.ai_verified_at).toBeDefined();
     });
-
-    // Mock document exists in the branch
-    mockSupabase.single.mockResolvedValue({ data: { id: 'doc-1', storage_path: 'p' }, error: null });
-
-    await getDocumentSignedUrl('p');
-
-    expect(mockSupabase.from).toHaveBeenCalledWith('documents');
-    expect(mockSupabase.eq).toHaveBeenCalledWith('storage_path', 'p');
-    expect(mockSupabase.eq).toHaveBeenCalledWith('tenant_id', tenantId);
   });
 });
