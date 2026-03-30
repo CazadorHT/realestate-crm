@@ -34,21 +34,21 @@ export async function GET(req: NextRequest) {
     
     console.log(`[Image Proxy Metadata] Original: ${metadata.width}x${metadata.height}, Format: ${metadata.format}`);
 
-    // TikTok requires at least 360x360. 
-    // If it's smaller, we upscale. If it's a valid size, we just convert.
-    let pipeline = image;
-    
-    if (metadata.width && metadata.height && (metadata.width < 360 || metadata.height < 360)) {
-      console.log(`[Image Proxy State] Image too small! Upscaling to at least 1080px...`);
-      pipeline = pipeline.resize(1080, 1080, { fit: 'inside', withoutEnlargement: false });
-    }
-
-    const jpegBuffer = await pipeline
+    // TikTok Optimization Mode:
+    // 1. Ensure min resolution 360x360
+    // 2. Fit into a safe 1080x1350 box (standard high-quality vertical)
+    // 3. Add white padding for extreme aspect ratios
+    const jpegBuffer = await image
+      .resize(1080, 1350, {
+        fit: 'contain',
+        background: { r: 255, g: 255, b: 255, alpha: 1 },
+        withoutEnlargement: false // Allow upscaling small images to 360+
+      })
       .flatten({ background: { r: 255, g: 255, b: 255 } })
       .jpeg({ quality: 85 })
       .toBuffer();
 
-    console.log(`[Image Proxy State] Conversion successful. Returning JPG buffer.`);
+    console.log(`[Image Proxy State] Conversion & Resizing successful. Returning JPG buffer.`);
 
     // 3. Return the JPEG binary (Converted to Uint8Array for Next.js compatibility)
     return new NextResponse(new Uint8Array(jpegBuffer), {
