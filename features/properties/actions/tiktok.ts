@@ -75,7 +75,7 @@ export async function postPropertyToTikTokAction(
       })
       .filter(Boolean) as string[];
     
-    const supportedExtensions = [".jpg", ".jpeg", ".png"];
+    const supportedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
     const imagesToPost = rawImages
       .filter(url => {
         const cleanUrl = url.split("?")[0].toLowerCase();
@@ -89,7 +89,7 @@ export async function postPropertyToTikTokAction(
       return { 
         success: false, 
         message: rawImagesCount > 0 
-          ? "ไม่พบรูปภาพที่ TikTok รองรับ (.jpg, .jpeg, .webp) กรุณาตรวจสอบไฟล์รูปภาพของคุณ" 
+          ? "ไม่พบรูปภาพที่ TikTok รองรับ (.jpg, .jpeg, .png, .webp) กรุณาตรวจสอบไฟล์รูปภาพของคุณ" 
           : "ไม่พบรูปภาพในทรัพย์สินนี้ กรุณาเพิ่มรูปภาพก่อนโพสต์"
       };
     }
