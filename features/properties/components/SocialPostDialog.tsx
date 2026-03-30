@@ -370,6 +370,15 @@ export function SocialPostDialog({
                         <div className="text-[11px] text-slate-500 font-medium">
                           เข้าที่ <span className="font-bold text-slate-900">Inbox {" > "} System notifications</span> นะครับ
                         </div>
+                        
+                        <div className="mt-4 pt-4 border-t border-slate-100 w-full text-left">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">ไม่พบแบบร่าง? ลองตรวจสอบ:</p>
+                          <ul className="text-[10px] text-slate-500 space-y-1.5 list-disc pl-3">
+                            <li>ตรวจสอบว่า <span className="font-medium">เปิด Notification</span> ในแอป TikTok แล้ว</li>
+                            <li>เช็คที่เมนู <span className="font-medium">Inbox {" > "} All activity</span> ด้านบนสุด</li>
+                            <li>หากยังไม่พบ แนะนำให้ลอง <span className="font-medium text-blue-500 underline">เชื่อมต่อ TikTok ใหม่อีกครั้ง</span> ที่หน้าตั้งค่าเพื่อ Refresh สิทธิ์การใช้งานครับ</li>
+                          </ul>
+                        </div>
                       </div>
                     )}
                   </div>
