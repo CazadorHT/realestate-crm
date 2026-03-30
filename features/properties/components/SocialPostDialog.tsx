@@ -432,7 +432,7 @@ export function SocialPostDialog({
                                   )} />
                                   <span className="text-[11px] font-bold text-slate-700">
                                     {tiktokStatus.status === "SUCCESS" ? "สำเร็จแล้ว" : 
-                                     tiktokStatus.status === "FAILED" ? "ล้มเหลว" : "กำลังประมวลผล..."}
+                                     tiktokStatus.status === "FAILED" ? "ล้มเหลว" : "กำลังประมวลผล... (ลองเช็คในแอปได้เลย)"}
                                   </span>
                                 </div>
                                 {tiktokStatus.fail_reason && (
