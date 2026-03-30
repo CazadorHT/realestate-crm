@@ -38,7 +38,7 @@ import { FaLine, FaTiktok } from "react-icons/fa";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CheckCircle2 } from "lucide-react";
 import { getLineBotInfo } from "@/lib/line";
-import { FaUser } from "react-icons/fa6";
+import { FaFacebook, FaMeta, FaUser } from "react-icons/fa6";
 import { getSiteSettings } from "@/features/site-settings/actions";
 import { SiteSettings } from "@/features/site-settings/schema";
 
@@ -246,10 +246,10 @@ export default async function SettingsPage({
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Facebook
+                      <FaMeta
                         className={`h-5 w-5 ${isFacebookConnected ? "text-[#4dabf7]" : "text-[#1877F2]"}`}
                       />
-                      Facebook Integration
+                      Meta Integration
                     </div>
                     {isFacebookConnected && (
                       <div className="flex flex-col items-end gap-1">
@@ -269,7 +269,7 @@ export default async function SettingsPage({
                   <CardDescription
                     className={isFacebookConnected ? "text-slate-400" : ""}
                   >
-                    เชื่อมต่อ Facebook เพื่อโพสต์ทรัพย์ลง Page โดยอัตโนมัติ
+                    เชื่อมต่อ Facebook , Instagram เพื่อโพสต์ทรัพย์ลง Page โดยอัตโนมัติ
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

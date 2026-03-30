@@ -161,6 +161,12 @@ export const FormSchema = z
     is_tax_registered: z.boolean().default(false),
     has_raised_floor: z.boolean().default(false),
     is_high_ceiling: z.boolean().default(false),
+    is_cbd: z.boolean().default(false),
+    is_smart_home: z.boolean().default(false),
+    has_private_elevator: z.boolean().default(false),
+    is_handicapped_friendly: z.boolean().default(false),
+    is_high_floor: z.boolean().default(false),
+    is_never_lived_in: z.boolean().default(false),
 
     feature_ids: z.array(z.string()).default([]),
 

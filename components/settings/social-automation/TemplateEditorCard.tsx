@@ -286,24 +286,48 @@ export function TemplateEditorCard({
             className="w-full"
           >
             <div className="px-6 pt-4">
-              <TabsList className="grid w-full grid-cols-3 bg-slate-100/50 p-1">
+              <TabsList className="grid w-full grid-cols-3 bg-slate-200/40 backdrop-blur-xs p-1.5 rounded-2xl border border-slate-200/50">
                 <TabsTrigger
                   value="th"
-                  className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+                  className={cn(
+                    "relative h-10 rounded-xl font-bold transition-all duration-300 gap-2",
+                    "data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-lg data-[state=active]:shadow-slate-200/50",
+                    "text-slate-500 hover:text-slate-700"
+                  )}
                 >
-                  ภาษาไทย (TH)
+                  <span className="text-lg">🇹🇭</span>
+                  <span>ไทย</span>
+                  {templates[activePlatform].th && (
+                    <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200" />
+                  )}
                 </TabsTrigger>
                 <TabsTrigger
                   value="en"
-                  className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+                  className={cn(
+                    "relative h-10 rounded-xl font-bold transition-all duration-300 gap-2",
+                    "data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-lg data-[state=active]:shadow-slate-200/50",
+                    "text-slate-500 hover:text-slate-700"
+                  )}
                 >
-                  English (EN)
+                  <span className="text-lg">🇺🇸</span>
+                  <span>EN</span>
+                  {templates[activePlatform].en && (
+                    <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200" />
+                  )}
                 </TabsTrigger>
                 <TabsTrigger
                   value="cn"
-                  className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+                  className={cn(
+                    "relative h-10 rounded-xl font-bold transition-all duration-300 gap-2",
+                    "data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-lg data-[state=active]:shadow-slate-200/50",
+                    "text-slate-500 hover:text-slate-700"
+                  )}
                 >
-                  Chinese (CN)
+                  <span className="text-lg">🇨🇳</span>
+                  <span>中文</span>
+                  {templates[activePlatform].cn && (
+                    <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200" />
+                  )}
                 </TabsTrigger>
               </TabsList>
             </div>

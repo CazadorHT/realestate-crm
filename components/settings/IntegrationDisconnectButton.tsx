@@ -70,7 +70,7 @@ export function IntegrationDisconnectButton({
         <Button
           variant={variant}
           size="sm"
-          className={`gap-2 ${className}`}
+          className={`gap-2 ${className} hover:bg-slate-200/60 font-semibold duration-300 transition-all`}
           disabled={isLoading}
         >
           <Link2Off className="h-4 w-4" />

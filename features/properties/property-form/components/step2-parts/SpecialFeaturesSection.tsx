@@ -39,7 +39,20 @@ import {
   Sunset,
   ArrowUpFromLine,
   Scan,
+  Cpu,
+  TrainFront,
+  Accessibility,
+  ArrowUpCircle,
+  Gem,
+  MapPin,
+  Sparkles,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SpecialFeaturesSectionProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -159,6 +172,32 @@ export function SpecialFeaturesSection({
           </div>
         </div>
 
+        {/* Group 1b: Location & Transit */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
+            <MapPin className="h-4 w-4" /> ทำเลและการเดินทาง
+          </h4>
+          <div className="flex flex-wrap gap-3">
+            <FeatureChip
+              form={form}
+              name="is_cbd"
+              label="ย่านโซน CBD"
+              icon={MapPin}
+              color="indigo"
+              disabled={isReadOnly}
+              title="ย่านศูนย์กลางธุรกิจ (Central Business District) แหล่งรวมออฟฟิศระดับเกรด A และการเดินทางที่สะดวกที่สุด"
+            />
+            <FeatureChip
+              form={form}
+              name="near_transit"
+              label="ใกล้รถไฟฟ้า"
+              icon={TrainFront}
+              color="blue"
+              disabled={isReadOnly}
+            />
+          </div>
+        </div>
+
         {/* Group 2: Condition & Decor */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
@@ -195,6 +234,22 @@ export function SpecialFeaturesSection({
               label="ห้องเปล่า / พื้นที่เปล่า"
               icon={BoxSelect}
               color="amber"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              form={form}
+              name="is_never_lived_in"
+              label="มือหนึ่ง / ไม่เคยเข้าอยู่"
+              icon={Gem}
+              color="sky"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              form={form}
+              name="is_high_floor"
+              label="ยูนิตชั้นสูง"
+              icon={ArrowUpCircle}
+              color="indigo"
               disabled={isReadOnly}
             />
           </div>
@@ -367,6 +422,30 @@ export function SpecialFeaturesSection({
               color="indigo"
               disabled={isReadOnly}
             />
+            <FeatureChip
+              form={form}
+              name="is_smart_home"
+              label="ระบบบ้านอัจฉริยะ"
+              icon={Cpu}
+              color="purple"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              form={form}
+              name="has_private_elevator"
+              label="ลิฟต์ส่วนตัว"
+              icon={ArrowUpFromLine}
+              color="amber"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              form={form}
+              name="is_handicapped_friendly"
+              label="รองรับผู้สูงอายุ/ผู้พิการ"
+              icon={Accessibility}
+              color="emerald"
+              disabled={isReadOnly}
+            />
           </div>
         </div>
 
@@ -482,10 +561,11 @@ function FeatureChip({
   name,
   label,
   icon: Icon,
+  title,
   color,
   disabled,
 }: FeatureChipProps) {
-  return (
+  const content = (
     <FormField
       control={form.control}
       name={name}
@@ -524,4 +604,19 @@ function FeatureChip({
       }}
     />
   );
+
+  if (title) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>{content}</TooltipTrigger>
+          <TooltipContent className="bg-slate-900 text-white border-none shadow-xl px-4 py-2 text-xs">
+            <p className="max-w-[200px]">{title}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return content;
 }
