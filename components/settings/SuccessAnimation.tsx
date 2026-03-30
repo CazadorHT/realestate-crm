@@ -52,7 +52,17 @@ export function SuccessAnimation() {
               transition={{ delay: 0.2 }}
               className="text-xl font-bold text-slate-900"
             >
-              {success === "true" ? "บันทึกข้อมูลสำเร็จ!" : success}
+              {success === "true" 
+                ? "บันทึกข้อมูลสำเร็จ!" 
+                : success === "tiktok_connected"
+                ? "เชื่อมต่อ TikTok สำเร็จแล้ว"
+                : success === "facebook_connected"
+                ? "เชื่อมต่อ Facebook สำเร็จแล้ว"
+                : success === "google_connected"
+                ? "เชื่อมต่อ Google สำเร็จแล้ว"
+                : success === "line_connected"
+                ? "เชื่อมต่อ LINE สำเร็จแล้ว"
+                : success}
             </motion.p>
           </div>
 
