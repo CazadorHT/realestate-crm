@@ -87,6 +87,12 @@ export const EMPTY_VALUES: PropertyFormValues = {
   has_fiber_optic: false,
   is_tax_registered: false,
   is_high_ceiling: false,
+  is_cbd: false,
+  is_smart_home: false,
+  has_private_elevator: false,
+  is_handicapped_friendly: false,
+  is_high_floor: false,
+  is_never_lived_in: false,
   feature_ids: [],
   nearby_places: [],
   nearby_transits: [],
@@ -194,6 +200,12 @@ export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
     "is_tax_registered",
     "has_raised_floor",
     "is_high_ceiling",
+    "is_cbd",
+    "is_smart_home",
+    "has_private_elevator",
+    "is_handicapped_friendly",
+    "is_high_floor",
+    "is_never_lived_in",
   ],
   6: ["description", "status"],
 };
@@ -274,6 +286,12 @@ export const FIELD_LABELS: Record<keyof PropertyFormValues | string, string> = {
   is_selling_with_tenant: "ขายพร้อมผู้เช่า",
   is_bare_shell: "Bare Shell",
   is_exclusive: "Exclusive",
+  is_cbd: "ย่าน CBD",
+  is_smart_home: "Smart Home",
+  has_private_elevator: "ลิฟต์ส่วนตัว",
+  is_handicapped_friendly: "รองรับผู้พิการ",
+  is_high_floor: "ชั้นสูง (High Floor)",
+  is_never_lived_in: "ไม่เคยเข้าอยู่",
 
   // Step 6 - Review
   description: "คำอธิบาย",
@@ -397,6 +415,14 @@ export function mapRowToFormValues(
     is_tax_registered: (row.meta_keywords || []).includes("Tax Registered"),
     is_high_ceiling:
       row.is_high_ceiling ?? (row.meta_keywords || []).includes("High Ceiling"),
+    is_cbd: (row.meta_keywords || []).includes("CBD Zone"),
+    is_smart_home: (row.meta_keywords || []).includes("Smart Home"),
+    has_private_elevator: (row.meta_keywords || []).includes("Private Elevator"),
+    is_handicapped_friendly: (row.meta_keywords || []).includes(
+      "Handicapped Friendly",
+    ),
+    is_high_floor: (row.meta_keywords || []).includes("High Floor"),
+    is_never_lived_in: (row.meta_keywords || []).includes("Never Lived In"),
     feature_ids:
       (row as any).property_features?.map((f: any) => f.feature_id) ?? [],
     nearby_places: (row.nearby_places as any[]) || [],
