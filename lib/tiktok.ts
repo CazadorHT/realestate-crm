@@ -183,10 +183,53 @@ export async function publishTikTokPhotoPost(
     return {
       success: true,
       publish_id: data.data?.publish_id,
+      data: data.data
     };
   } catch (error) {
     console.error("TikTok Publish Exception:", error);
     return { success: false, error: "Network error calling TikTok API" };
+  }
+}
+
+/**
+ * Check the status of a TikTok post by publish_id
+ */
+export async function getTikTokPublishStatus(
+  accessToken: string,
+  publishId: string
+) {
+  const url = "https://open.tiktokapis.com/v2/post/publish/status/fetch/";
+  
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ publish_id: publishId }),
+    });
+
+    const data = await response.json();
+    console.log("[TikTok Status Response]:", JSON.stringify(data, null, 2));
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.error?.message || "Failed to fetch status",
+        data: data
+      };
+    }
+
+    return {
+      success: true,
+      status: data.data?.status,
+      fail_reason: data.data?.fail_reason,
+      public_url: data.data?.public_url,
+      data: data.data
+    };
+  } catch (error) {
+    return { success: false, error: "Network error checking TikTok status" };
   }
 }
 

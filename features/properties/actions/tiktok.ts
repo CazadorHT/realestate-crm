@@ -3,7 +3,7 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { getPropertySocialContent, renderPropertySocialTemplate } from "./social";
-import { refreshTikTokTokenIfNeeded, publishTikTokPhotoPost } from "@/lib/tiktok";
+import { refreshTikTokTokenIfNeeded, publishTikTokPhotoPost, getTikTokPublishStatus } from "@/lib/tiktok";
 import { getPublicImageUrl } from "../image-utils";
 
 /**
@@ -74,20 +74,51 @@ export async function postPropertyToTikTokAction(
       .filter(Boolean) as string[];
     
     const supportedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
-    const imagesToPost = rawImages
-      .filter(url => {
-        const cleanUrl = url.split("?")[0].toLowerCase();
-        return supportedExtensions.some(ext => cleanUrl.endsWith(ext));
-      })
-      .slice(0, 35);
+    
+    // Get the current app URL for the image proxy
+    // We prefer NEXT_PUBLIC_SUPABASE_URL domain for verification, 
+    // but the proxy is on the App domain.
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+    if (appUrl && !appUrl.startsWith("http")) {
+      appUrl = `https://${appUrl}`;
+    }
+    appUrl = appUrl.replace(/\/$/, "");
 
-    console.log(`[TikTok Post] Sending ${imagesToPost.length} images to TikTok:`, imagesToPost);
+    const imagesToPost = rawImages
+      .map(url => {
+        const cleanUrl = url.split("?")[0].toLowerCase();
+        const isCompatible = [".jpg", ".jpeg", ".png"].some(ext => cleanUrl.endsWith(ext));
+        const isWebp = cleanUrl.endsWith(".webp");
+        
+        if (isCompatible) return url;
+        
+        // If it's WebP, route it through our magic proxy converter
+        if (isWebp && appUrl) {
+          return `${appUrl}/api/proxy/image?url=${encodeURIComponent(url)}`;
+        }
+        
+        return null;
+      })
+      .filter(Boolean) as string[];
+
+    console.log(`[TikTok Post] Sending ${imagesToPost.length} images to TikTok (with Proxy if WebP):`, imagesToPost);
+
+    // 5. Self-Test: Verify image accessibility before sending to TikTok
+    if (imagesToPost.length > 0) {
+      try {
+        const testRes = await fetch(imagesToPost[0], { method: 'HEAD' });
+        console.log(`[TikTok Self-Test] First image check: ${testRes.status} ${testRes.statusText}`);
+        // Note: Proxy might return 200 even if TikTok has issues, but it's a good start.
+      } catch (e) {
+        console.error("[TikTok Self-Test] Error checking image:", e);
+      }
+    }
 
     if (imagesToPost.length === 0) {
       return { 
         success: false, 
         message: rawImagesCount > 0 
-          ? "ไม่พบรูปภาพที่ TikTok รองรับ (.jpg, .jpeg, .png, .webp) กรุณาตรวจสอบไฟล์รูปภาพของคุณ" 
+          ? "ไม่พบรูปภาพที่รองรับ (TikTok รองรับเฉพาะ .jpg, .jpeg, .png)" 
           : "ไม่พบรูปภาพในทรัพย์สินนี้ กรุณาเพิ่มรูปภาพก่อนโพสต์"
       };
     }
@@ -126,11 +157,24 @@ export async function postPropertyToTikTokAction(
 
     return {
       success: true,
-      message: "ส่งแบบร่างสำเร็จ! กรุณาเปิดแอป TikTok > Inbox > System Notifications เพื่อกดยืนยันการโพสต์",
+      message: "ดำเนินการสำเร็จ!\nส่งแบบร่างสำเร็จ!  กรุณาเปิดแอป TikTok > Inbox > System Notifications เพื่อกดยืนยันการโพสต์",
       publish_id: publishResult.publish_id
     };
-  } catch (err) {
-    console.error("postPropertyToTikTokAction → error:", err);
-    return { success: false, message: "เกิดข้อผิดพลาดในการเชื่อมต่อกับ TikTok" };
+  } catch (err: any) {
+    console.error("TikTok Post Exception:", err);
+    return { success: false, message: err.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ" };
+  }
+}
+
+/**
+ * Check the status of a TikTok post
+ */
+export async function getTikTokPostStatusAction(publishId: string) {
+  try {
+    const accessToken = await refreshTikTokTokenIfNeeded();
+    if (!accessToken) return { success: false, status: "FAILED", error: "Unauthorized" };
+    return await getTikTokPublishStatus(accessToken, publishId);
+  } catch (error) {
+    return { success: false, status: "FAILED", error: "Failed to fetch status" };
   }
 }

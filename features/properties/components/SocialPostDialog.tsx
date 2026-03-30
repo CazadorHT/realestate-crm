@@ -19,7 +19,7 @@ import {
   postPropertyToMetaAction,
 } from "@/features/properties/actions/social";
 import { postPropertyToLineAction } from "@/features/properties/actions/line";
-import { postPropertyToTikTokAction } from "@/features/properties/actions/tiktok";
+import { postPropertyToTikTokAction, getTikTokPostStatusAction } from "@/features/properties/actions/tiktok";
 import { FaFacebook, FaInstagram, FaLine, FaTiktok } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import { dispatchSocialPostEvent } from "@/lib/social-post-events";
@@ -86,6 +86,9 @@ export function SocialPostDialog({
   const [isConnected, setIsConnected] = useState(true);
   const [identity, setIdentity] = useState<{ display_name?: string; avatar_url?: string }>({});
   const versionRef = useRef(0);
+  const [publishId, setPublishId] = useState<string | null>(null);
+  const [tiktokStatus, setTiktokStatus] = useState<any>(null);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
   const loadContent = useCallback(async () => {
     if (!isOpen || !propertyId || selectedLangs.length === 0) return;
@@ -142,7 +145,25 @@ export function SocialPostDialog({
   const handleReset = () => {
     setStatus("IDLE");
     setResultMessage("");
+    setPublishId(null);
+    setTiktokStatus(null);
     loadContent();
+  };
+
+  const handleCheckStatus = async () => {
+    if (!publishId) return;
+    setIsCheckingStatus(true);
+    try {
+      const res = await getTikTokPostStatusAction(publishId);
+      setTiktokStatus(res);
+      if (res.success && (res as any).status === "SUCCESS") {
+        toast.success("โพสต์สำเร็จเรียบร้อยแล้ว!");
+      }
+    } catch (err) {
+      toast.error("ไม่สามารถตรวจสอบสถานะได้ในขณะนี้");
+    } finally {
+      setIsCheckingStatus(false);
+    }
   };
 
   const handlePost = async () => {
@@ -192,6 +213,9 @@ export function SocialPostDialog({
         });
         setStatus("SUCCESS");
         setResultMessage(res.message || "โพสต์สำเร็จเรียบร้อย");
+        if (platform === "TIKTOK" && res.publish_id) {
+          setPublishId(res.publish_id);
+        }
         onSuccess?.();
       } else {
         dispatchSocialPostEvent({
@@ -350,7 +374,7 @@ export function SocialPostDialog({
                       >
                         {status === "SUCCESS" ? "ดำเนินการสำเร็จ!" : "เกิดข้อผิดพลาด"}
                       </h3>
-                      <p className="text-slate-500 leading-relaxed max-w-[320px] text-sm">
+                      <p className="text-slate-500 leading-relaxed max-w-[400px] mx-auto text-sm">
                         {resultMessage}
                       </p>
                     </div>
@@ -382,6 +406,46 @@ export function SocialPostDialog({
                         <div className="text-[11px] text-slate-500 font-medium">
                           เข้าที่ <span className="font-bold text-slate-900">Inbox {" > "} System notifications</span> นะครับ
                         </div>
+
+                        {platform === "TIKTOK" && publishId && (
+                          <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">สถานะจาก TikTok</span> 
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-6 text-[10px] text-blue-600 hover:text-blue-700 p-0 "
+                                onClick={handleCheckStatus}
+                                disabled={isCheckingStatus}
+                              >
+                                {isCheckingStatus ? "กำลังตรวจสอบ..." : "ตรวจสอบสถานะล่าสุด"}
+                              </Button>
+                            </div>
+                            
+                            {tiktokStatus ? (
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                  <div className={cn(
+                                    "w-2 h-2 rounded-full",
+                                    tiktokStatus.status === "SUCCESS" ? "bg-green-500" :
+                                    tiktokStatus.status === "FAILED" ? "bg-red-500" : "bg-amber-500 animate-pulse"
+                                  )} />
+                                  <span className="text-[11px] font-bold text-slate-700">
+                                    {tiktokStatus.status === "SUCCESS" ? "สำเร็จแล้ว" : 
+                                     tiktokStatus.status === "FAILED" ? "ล้มเหลว" : "กำลังประมวลผล..."}
+                                  </span>
+                                </div>
+                                {tiktokStatus.fail_reason && (
+                                  <p className="text-[10px] text-red-500 bg-red-50 p-1.5 rounded-lg border border-red-100">
+                                    สาเหตุ: {tiktokStatus.fail_reason}
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-[10px] text-slate-500 italic">กดตรวจสอบเพื่อดูความคืบหน้าของแบบร่าง</p>
+                            )}
+                          </div>
+                        )}
                         
                         <div className="mt-4 pt-4 border-t border-slate-100 w-full text-left">
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">ไม่พบแบบร่าง? ลองตรวจสอบ:</p>
