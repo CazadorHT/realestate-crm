@@ -19,16 +19,21 @@ describe('SEO Utilities', () => {
   describe('generatePropertySlug', () => {
     it('should generate a slug containing title and basic info', () => {
       const slug = generatePropertySlug(mockProperty, 'en');
-      expect(slug).toContain('luxury-condo');
+      expect(slug).toContain('luxury');
+      expect(slug).toContain('condo');
       expect(slug).toContain('2br');
       expect(slug).toContain('2ba');
       expect(slug).toContain('85sqm');
     });
 
-    it('should handle Thai characters in slug', () => {
+    it('should transliterate and strip Thai characters to produce an English slug', () => {
       const thProperty = { ...mockProperty, title: 'คอนโดหรูใกล้ BTS ทองหล่อ' };
       const slug = generatePropertySlug(thProperty, 'th');
-      expect(slug).toContain('คอนโดหรูใกล้-bts-ทองหล่อ');
+      expect(slug).toContain('condo');
+      expect(slug).toContain('luxury');
+      expect(slug).toContain('near');
+      expect(slug).toContain('bts');
+      expect(slug).not.toContain('ทองหล่อ');
     });
 
     it('should include SEO flags in slug', () => {

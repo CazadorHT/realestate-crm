@@ -380,7 +380,7 @@ export async function getPropertiesTableData(params: {
   let query = supabase
     .from("properties")
     .select(
-      "id, title, description, status, property_type, listing_type, price, rental_price, original_price, original_rental_price, updated_at, created_at, bedrooms, bathrooms, province, district, popular_area, view_count, address_line1, images, total_units, sold_units, posted_to_facebook_at, posted_to_instagram_at, posted_to_line_at, posted_to_tiktok_at, assigned_to, tenant_id, tenants(name)",
+      "id, title, description, status, property_type, listing_type, price, rental_price, original_price, original_rental_price, updated_at, created_at, bedrooms, bathrooms, province, district, popular_area, view_count, address_line1, images, total_units, sold_units, posted_to_facebook_at, posted_to_instagram_at, posted_to_line_at, posted_to_tiktok_at, assigned_to, tenant_id, tenants(name), requires_ai_review",
       {
         count: "exact",
       },
@@ -610,6 +610,7 @@ export async function getPropertiesTableData(params: {
       price: p.price,
       rental_price: p.rental_price,
       status: p.status as any,
+      requires_ai_review: (p as any).requires_ai_review ?? false,
       leads_count: leadsCountMap.get(p.id) || 0,
       updated_at: p.updated_at,
       created_at: p.created_at,

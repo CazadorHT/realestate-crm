@@ -59,6 +59,7 @@ export default async function EditPropertyPage({
         mode="edit"
         defaultValues={property}
         initialImages={initialImages}
+        userRole={role}
       />
     </div>
   );

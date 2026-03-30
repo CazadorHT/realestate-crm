@@ -23,6 +23,9 @@ export interface PropertySEOData {
   ogImage: string;
   structuredData: Record<string, any>; // Schema.org JSON-LD
   faqSchema?: Record<string, any>;
+  breadcrumbSchema?: Record<string, any>; // Schema.org BreadcrumbList
+  ogPriceAmount?: number;
+  ogPriceCurrency?: string;
 }
 
 interface PropertyDataForSEO {
@@ -299,6 +302,9 @@ export function generatePropertySlug(
     data.property_type ? SEO_LABELS[data.property_type]?.["en"] : "property",
   );
 
+  // Enforce English for fully ASCII URLs
+  const slugLang = "en";
+
   // 3. Title / Project Name (Increasing to 15 words)
   const titlePart = data.title_en || transliterate(data.title);
   addWords(
@@ -314,16 +320,19 @@ export function generatePropertySlug(
   addWords(data.province_en || transliterate(data.province || ""));
 
   // 5. Room Specs
-  if (data.bedrooms) addWords(`${data.bedrooms}-bedroom`);
-  if (data.bathrooms) addWords(`${data.bathrooms}-bathroom`);
-  if (data.size_sqm) addWords(`${data.size_sqm}-sqm`);
+  if (data.bedrooms) addWords(`${data.bedrooms}${SEO_LABELS.BEDS[slugLang]?.toLowerCase() || "bedroom"}`);
+  if (data.bathrooms) addWords(`${data.bathrooms}${SEO_LABELS.BATHS[slugLang]?.toLowerCase() || "bathroom"}`);
+  if (data.size_sqm) addWords(`${data.size_sqm}${SEO_LABELS.SQM[slugLang]?.toLowerCase() || "sqm"}`);
+
   // 6. Special Flags
-  if (data.is_pet_friendly) addWords("pet-friendly");
-  if (data.is_corner_unit) addWords("corner-unit");
-  if (data.is_renovated) addWords("renovated");
-  if (data.is_fully_furnished) addWords("fully-furnished");
-  if (data.is_foreigner_quota) addWords("foreigner-quota");
-  if (data.is_hot_sale) addWords("hot-sale");
+  const getFlagLabel = (key: string) => SEO_LABELS[key]?.[slugLang] || SEO_LABELS[key]?.["en"] || key.toLowerCase().replace(/_/g, '-');
+
+  if (data.is_pet_friendly) addWords(getFlagLabel("PET_FRIENDLY"));
+  if (data.is_corner_unit) addWords(getFlagLabel("CORNER_UNIT"));
+  if (data.is_renovated) addWords(getFlagLabel("RENOVATED"));
+  if (data.is_fully_furnished) addWords(getFlagLabel("FULLY_FURNISHED"));
+  if (data.is_foreigner_quota) addWords(getFlagLabel("FOREIGNER_QUOTA"));
+  if (data.is_hot_sale) addWords(getFlagLabel("HOT_SALE"));
 
   // 7. Refined Transit & Nearby Places (2 each, unique categories/types)
   const addedTransitTypes = new Set<string>();
@@ -633,6 +642,83 @@ export function generateFAQSchema(
 }
 
 /**
+ * Generate Breadcrumb Schema (JSON-LD)
+ * Helps Google display clean site structure (Home > Sale > Bangkok > Property)
+ */
+export function generateBreadcrumbSchema(
+  data: PropertyDataForSEO,
+  language: string = "th",
+): Record<string, any> {
+  const lang = (language === "cn" ? "cn" : language === "en" ? "en" : "th") as "th" | "en" | "cn";
+  const title = getLocalizedField<string>(data, "title", language);
+  
+  const actionLabel = data.listing_type === "RENT" 
+    ? SEO_LABELS.FOR_RENT[lang] 
+    : SEO_LABELS.FOR_SALE[lang];
+    
+  const typeLabel = data.property_type 
+    ? (SEO_LABELS[data.property_type]?.[lang] || SEO_LABELS[data.property_type]?.["en"]) 
+    : "Property";
+    
+  // 1. Home
+  const itemListElement = [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: language === "en" ? "Home" : language === "cn" ? "首页" : "หน้าแรก",
+      item: `${siteConfig.url}/${language === "th" ? "" : language}`,
+    },
+  ];
+
+  // 2. Action + Type (e.g. "Condo For Rent")
+  itemListElement.push({
+    "@type": "ListItem",
+    position: 2,
+    name: `${typeLabel} ${actionLabel}`,
+    item: `${siteConfig.url}/${language === "th" ? "" : language}/properties?listing=${data.listing_type}&type=${data.property_type}`,
+  });
+
+  // 3. Location (Province)
+  const province = getLocalizedField<string>(data, "province", language) || data.province;
+  if (province) {
+    itemListElement.push({
+      "@type": "ListItem",
+      position: 3,
+      name: province,
+      item: `${siteConfig.url}/${language === "th" ? "" : language}/properties?province=${encodeURIComponent(data.province || province || "")}`,
+    });
+  }
+
+  // 4. District / Area
+  const district = getLocalizedField<string>(data, "district", language) || data.district;
+  const area = getLocalizedField<string>(data, "popular_area", language) || data.popular_area;
+  const subLocation = area || district;
+  
+  if (subLocation && subLocation !== province) {
+    itemListElement.push({
+      "@type": "ListItem",
+      position: province ? 4 : 3,
+      name: subLocation,
+      item: `${siteConfig.url}/${language === "th" ? "" : language}/properties?${area ? 'popular_area' : 'district'}=${encodeURIComponent( (area ? (data.popular_area || area) : (data.district || district)) || "" )}`,
+    });
+  }
+
+  // 5. Current Property
+  itemListElement.push({
+    "@type": "ListItem",
+    position: itemListElement.length + 1,
+    name: title,
+    item: `${siteConfig.url}/properties/${data.slug || data.id}`,
+  });
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement,
+  };
+}
+
+/**
  * Generate Structured Data (JSON-LD)
  * Updated to include more granular details
  */
@@ -708,5 +794,8 @@ export function generatePropertySEO(
     ogImage: data.main_image || siteConfig.ogImage || "/hero-realestate.png",
     structuredData: generateStructuredData(data),
     faqSchema: generateFAQSchema(data, language),
+    breadcrumbSchema: generateBreadcrumbSchema(data, language),
+    ogPriceAmount: data.price || data.rental_price,
+    ogPriceCurrency: "THB",
   };
 }

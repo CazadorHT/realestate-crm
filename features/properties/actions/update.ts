@@ -67,9 +67,11 @@ export async function updatePropertyAction(
       return { success: false, message: "Property not found" };
     }
 
-    // 🧠 Auto-Status Logic: Check Stock
+    // 🧠 Auto-Status Logic: AI Draft Enforcement
     const listingType = safeValues.listing_type || existing.listing_type;
-    if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
+    if (propertyData.requires_ai_review) {
+      propertyData.status = "DRAFT";
+    } else if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
       if (listingType === "RENT") {
         propertyData.status = "RENTED";
       } else {
@@ -392,10 +394,14 @@ export async function updatePropertyStatusAction(input: {
     //ดึงข้อมูลเดิมก่อนอัปเดตเพื่อใช้แจ้งเตือน
     const { data: existing } = await supabase
       .from("properties")
-      .select("id, title, status, listing_type")
+      .select("id, title, status, listing_type, requires_ai_review")
       .eq("id", input.id)
       .eq("tenant_id", tenantId)
       .single();
+
+    if (existing?.requires_ai_review && input.status !== "DRAFT") {
+      return { success: false, message: "กรุณาตรวจสอบข้อมูล AI ในหน้าแก้ไขก่อนเปลี่ยนสถานะ" };
+    }
 
     const { error } = await supabase
       .from("properties")

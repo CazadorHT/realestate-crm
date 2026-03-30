@@ -132,6 +132,7 @@ export function DescriptionSection({
                           ? handleGenerate
                           : undefined
                       }
+                      onAiApply={() => form.setValue("requires_ai_review", true, { shouldDirty: true })}
                       height={
                         typeof window !== "undefined" && window.innerWidth < 640
                           ? 300

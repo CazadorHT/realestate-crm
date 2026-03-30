@@ -47,8 +47,10 @@ export async function createPropertyAction(
 
     const { images, agent_ids, feature_ids, ...propertyData } = safeValues;
 
-    // 🧠 Auto-Status Logic: Check Stock
-    if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
+    // 🧠 Auto-Status Logic: AI Draft Enforcement
+    if (propertyData.requires_ai_review) {
+      propertyData.status = "DRAFT";
+    } else if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
       if (propertyData.listing_type === "RENT") {
         propertyData.status = "RENTED";
       } else {

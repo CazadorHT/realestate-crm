@@ -140,6 +140,7 @@ export function AvmResultDialog({
         shouldDirty: true,
       });
     }
+    form.setValue("requires_ai_review", true, { shouldDirty: true });
     onClose();
   };
 

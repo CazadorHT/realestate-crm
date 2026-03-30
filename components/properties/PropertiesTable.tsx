@@ -32,6 +32,7 @@ import {
   Building2,
   Loader2,
   CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 import {
   Tooltip,
@@ -619,6 +620,20 @@ export function PropertiesTable({
                             NEW
                           </Badge>
                         )}
+                        {property.requires_ai_review && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="absolute top-1 right-1 h-5 w-5 bg-white shadow-md rounded-full flex items-center justify-center border border-amber-200">
+                                  <Sparkles className="h-3 w-3 text-amber-500" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-[11px] font-medium text-amber-600">รอยืนยันข้อมูล AI</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </div>
                       <div className="flex flex-col gap-1 min-w-0 ">
                         <Link
@@ -824,6 +839,11 @@ export function PropertiesTable({
                   href={`/protected/properties/${property.id}`}
                   className="block relative aspect-16/10 overflow-hidden rounded-t-xl"
                 >
+                  {property.requires_ai_review && (
+                    <div className="absolute bottom-3 right-3 z-30 p-1.5 bg-white shadow-md rounded-full flex items-center justify-center border border-amber-200" title="รอยืนยันข้อมูล AI">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                    </div>
+                  )}
                   {property.image_url ? (
                     <img
                       src={property.image_url}

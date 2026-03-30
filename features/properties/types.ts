@@ -60,6 +60,7 @@ export interface PropertyTableData {
   price: number | null;
   rental_price: number | null;
   status: PropertyStatus;
+  requires_ai_review?: boolean;
   leads_count: number;
   updated_at: string;
   created_at: string;

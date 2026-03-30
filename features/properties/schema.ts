@@ -167,6 +167,7 @@ export const FormSchema = z
     is_handicapped_friendly: z.boolean().default(false),
     is_high_floor: z.boolean().default(false),
     is_never_lived_in: z.boolean().default(false),
+    requires_ai_review: z.boolean().default(false),
 
     feature_ids: z.array(z.string()).default([]),
 

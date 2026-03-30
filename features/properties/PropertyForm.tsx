@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, List, Facebook, Instagram, Loader2, CheckCircle2 } from "lucide-react";
+import { ExternalLink, List, Facebook, Instagram, Loader2, CheckCircle2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
@@ -500,6 +500,33 @@ export function PropertyForm({
             e.stopPropagation();
           }}
         >
+          {form.watch("requires_ai_review") && (
+            <div className="mb-6 p-4 rounded-xl border border-amber-200 bg-amber-50 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between animate-in fade-in zoom-in duration-300">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-amber-100 rounded-lg text-amber-600 mt-1 sm:mt-0">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-amber-800">⚠️ ทรัพย์สินนี้ใช้ข้อมูลจาก AI และรอการตรวจสอบ</h4>
+                  <p className="text-sm text-amber-700/80 mt-0.5">
+                    ระบบจะบังคับบันทึกเป็นแบบร่าง (Draft) จนกว่าแอดมินจะกดยืนยันความถูกต้อง
+                  </p>
+                </div>
+              </div>
+              {userRole === "ADMIN" && (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white border-0 shadow-sm"
+                  onClick={() => form.setValue("requires_ai_review", false, { shouldDirty: true })}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  ตรวจสอบและยืนยันข้อมูลแล้ว
+                </Button>
+              )}
+            </div>
+          )}
+
           <ErrorSummary
             errors={form.formState.errors}
             currentStep={currentStep}

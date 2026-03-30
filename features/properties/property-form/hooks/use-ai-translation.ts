@@ -40,6 +40,7 @@ export function useAITranslation(form: UseFormReturn<PropertyFormValues>) {
         shouldTouch: true,
       });
       if (!silent) toast.success("แปลชื่อเรียบร้อยแล้ว ✨", { id: toastId });
+      form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error: any) {
       if (!silent)
@@ -86,6 +87,7 @@ export function useAITranslation(form: UseFormReturn<PropertyFormValues>) {
       });
       if (!silent)
         toast.success("แปลคำบรรยายเรียบร้อยแล้ว ✨", { id: toastId });
+      form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error: any) {
       if (!silent)
@@ -134,6 +136,7 @@ export function useAITranslation(form: UseFormReturn<PropertyFormValues>) {
         toast.success(
           `แปลข้อมูลสถานีรถไฟฟ้าเรียบร้อยแล้ว ${results.length} รายการ ✨`,
         );
+      form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error) {
       if (!silent) toast.error("การแปลสถานีรถไฟฟ้าขัดข้อง");
@@ -180,6 +183,7 @@ export function useAITranslation(form: UseFormReturn<PropertyFormValues>) {
         toast.success(
           `แปลข้อมูลสถานที่ใกล้เคียงเรียบร้อยแล้ว ${results.length} รายการ ✨`,
         );
+      form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error) {
       if (!silent) toast.error("การแปลสถานที่ใกล้เคียงขัดข้อง");
@@ -220,6 +224,7 @@ export function useAITranslation(form: UseFormReturn<PropertyFormValues>) {
         shouldTouch: true,
       });
       if (!silent) toast.success("แปลที่อยู่เรียบร้อยแล้ว ✨", { id: toastId });
+      form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error: any) {
       if (!silent)
@@ -243,6 +248,7 @@ export function useAITranslation(form: UseFormReturn<PropertyFormValues>) {
       const result = await translateTextAction(area, "plain");
       form.setValue("popular_area_en", result.en, { shouldDirty: true });
       form.setValue("popular_area_cn", result.cn, { shouldDirty: true });
+      form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error) {
       return false;

@@ -13,6 +13,7 @@ interface SmartEditorProps {
   placeholder?: string;
   height?: number | string;
   onAiGenerate?: (currentValue: string) => Promise<string>;
+  onAiApply?: () => void;
 }
 
 import {
@@ -39,6 +40,7 @@ export function SmartEditor({
   placeholder,
   height,
   onAiGenerate,
+  onAiApply,
 }: SmartEditorProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [lineHeight, setLineHeight] = useState("leading-relaxed");
@@ -133,6 +135,9 @@ export function SmartEditor({
       editor.commands.setContent(aiDraft);
       setShowAiReview(false);
       setAiDraft(null);
+      if (onAiApply) {
+        onAiApply();
+      }
       toast.success("บันทึกคำบรรยายทรัพย์เรียบร้อยแล้ว ✨");
     }
   };

@@ -1394,6 +1394,7 @@ export type Database = {
           rent_free_period_days: number | null
           rent_price_per_sqm: number | null
           rental_price: number | null
+          requires_ai_review: boolean
           size_sqm: number | null
           slug: string | null
           sold_units: number
@@ -1520,6 +1521,7 @@ export type Database = {
           rent_free_period_days?: number | null
           rent_price_per_sqm?: number | null
           rental_price?: number | null
+          requires_ai_review?: boolean
           size_sqm?: number | null
           slug?: string | null
           sold_units?: number
@@ -1646,6 +1648,7 @@ export type Database = {
           rent_free_period_days?: number | null
           rent_price_per_sqm?: number | null
           rental_price?: number | null
+          requires_ai_review?: boolean
           size_sqm?: number | null
           slug?: string | null
           sold_units?: number
