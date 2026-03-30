@@ -4,6 +4,7 @@ import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { getPropertySocialContent, renderPropertySocialTemplate } from "./social";
 import { refreshTikTokTokenIfNeeded, publishTikTokPhotoPost } from "@/lib/tiktok";
+import { getPublicImageUrl } from "../image-utils";
 
 /**
  * โพสต์รูปภาพไปยัง TikTok (Content Posting API v2)
@@ -33,7 +34,8 @@ export async function postPropertyToTikTokAction(
       .select(`
         *,
         property_images (
-          image_url
+          image_url,
+          storage_path
         )
       `)
       .eq("id", propertyId)
@@ -57,22 +59,17 @@ export async function postPropertyToTikTokAction(
       finalCaption = finalCaption.substring(0, 3997) + "...";
     }
 
-    // 4. เตรียมรูปภาพ (Hardened Absolute URLs for TikTok PULL_FROM_URL)
-    let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-    if (supabaseUrl && !supabaseUrl.startsWith("http")) {
-      supabaseUrl = `https://${supabaseUrl}`;
-    }
-    
+    // 4. เตรียมรูปภาพ (Standardized Logic using storage_path)
     const rawImagesCount = property.property_images?.length || 0;
     
     const rawImages = (property.property_images || [])
       .map((img: any) => {
-        const url = img.image_url;
-        if (!url) return null;
-        if (url.startsWith("http")) return url;
-        // Construct full absolute URL for Supabase storage (Hardened against double slashes)
-        const baseUrl = supabaseUrl.replace(/\/$/, "");
-        return `${baseUrl}/storage/v1/object/public/property-images/${url}`;
+        // Prefer storage_path (absolute path in bucket) over raw image_url
+        const path = img.storage_path || img.image_url;
+        if (!path) return null;
+        if (path.startsWith("http")) return path;
+        
+        return getPublicImageUrl(path);
       })
       .filter(Boolean) as string[];
     
