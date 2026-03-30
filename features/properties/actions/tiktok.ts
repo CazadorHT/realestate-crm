@@ -58,7 +58,11 @@ export async function postPropertyToTikTokAction(
     }
 
     // 4. เตรียมรูปภาพ (Hardened Absolute URLs for TikTok PULL_FROM_URL)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    if (supabaseUrl && !supabaseUrl.startsWith("http")) {
+      supabaseUrl = `https://${supabaseUrl}`;
+    }
+    
     const rawImagesCount = property.property_images?.length || 0;
     
     const rawImages = (property.property_images || [])
@@ -71,13 +75,15 @@ export async function postPropertyToTikTokAction(
       })
       .filter(Boolean) as string[];
     
-    const supportedExtensions = [".jpg", ".jpeg", ".webp", ".png"];
+    const supportedExtensions = [".jpg", ".jpeg", ".png"];
     const imagesToPost = rawImages
       .filter(url => {
         const cleanUrl = url.split("?")[0].toLowerCase();
         return supportedExtensions.some(ext => cleanUrl.endsWith(ext));
       })
       .slice(0, 35);
+
+    console.log(`[TikTok Post] Sending ${imagesToPost.length} images to TikTok:`, imagesToPost);
 
     if (imagesToPost.length === 0) {
       return { 
