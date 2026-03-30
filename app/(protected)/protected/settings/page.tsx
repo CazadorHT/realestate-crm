@@ -39,6 +39,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { CheckCircle2 } from "lucide-react";
 import { getLineBotInfo } from "@/lib/line";
 import { FaUser } from "react-icons/fa6";
+import { getSiteSettings } from "@/features/site-settings/actions";
+import { SiteSettings } from "@/features/site-settings/schema";
 
 export const metadata: Metadata = {
   title: "Settings | CRM",
@@ -54,34 +56,13 @@ export default async function SettingsPage({
   const activeTab = (resolvedParams?.tab as string) || "general";
   const supabase = createAdminClient();
 
-  // Fetch all relevant settings at once
-  const { data: settings } = await supabase
-    .from("site_settings")
-    .select("key, value")
-    .in("key", [
-      "tiktok_auth_token",
-      "meta_page_access_token",
-      "meta_page_name",
-      "google_integration_tokens",
-      "line_channel_access_token",
-    ]);
+  const allSettings = await getSiteSettings();
 
-  const siteSettingsMap: Record<string, any> = {};
-  settings?.forEach((s) => {
-    siteSettingsMap[s.key] = s.value;
-  });
-
-  // For LINE, we also check if there's any profile with a line_id as a fallback for "connected" state
-  const { count: lineProfilesCount } = await supabase
-    .from("profiles")
-    .select("*", { count: "exact", head: true })
-    .not("line_id", "is", null);
-
-  const isTikTokConnected = !!siteSettingsMap["tiktok_auth_token"];
-  const isFacebookConnected = !!siteSettingsMap["meta_page_access_token"];
-  const isGoogleConnected = !!siteSettingsMap["google_integration_tokens"];
+  const isTikTokConnected = !!allSettings.tiktok_auth_token;
+  const isFacebookConnected = !!allSettings.meta_page_access_token;
+  const isGoogleConnected = !!allSettings.google_integration_tokens;
   const isLineConnected =
-    !!process.env.LINE_CHANNEL_ACCESS_TOKEN || (lineProfilesCount || 0) > 0;
+    !!process.env.LINE_CHANNEL_ACCESS_TOKEN || !!allSettings.line_channel_access_token;
 
   let lineBotInfo = null;
   if (isLineConnected) {
@@ -208,10 +189,10 @@ export default async function SettingsPage({
                           <CheckCircle className="h-4 w-4 text-green-500" />
                           เชื่อมต่อแล้ว
                         </div>
-                        {siteSettingsMap["tiktok_auth_token"]?.display_name && (
+                        {allSettings.tiktok_auth_token?.display_name && (
                           <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-slate-800/50 text-white text-[11px] font-bold backdrop-blur-md border border-slate-700 shadow-sm">
                             <FaUser className="h-3 w-3 opacity-80" />
-                            <span>{siteSettingsMap["tiktok_auth_token"].display_name}</span>
+                            <span>{allSettings.tiktok_auth_token.display_name}</span>
                           </div>
                         )}
                       </div>
@@ -276,10 +257,10 @@ export default async function SettingsPage({
                           <CheckCircle className="h-4 w-4 text-green-500" />
                           เชื่อมต่อแล้ว
                         </div>
-                        {siteSettingsMap["meta_page_name"] && (
+                        {allSettings.meta_page_name && (
                           <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-slate-800/50 text-white text-[11px] font-bold backdrop-blur-md border border-slate-700 shadow-sm">
                             <Facebook className="h-3 w-3 opacity-80" />
-                            <span>{siteSettingsMap["meta_page_name"]}</span>
+                            <span>{allSettings.meta_page_name}</span>
                           </div>
                         )}
                       </div>
@@ -360,10 +341,10 @@ export default async function SettingsPage({
                           <CheckCircle className="h-4 w-4 text-green-500" />
                           เชื่อมต่อแล้ว
                         </div>
-                        {siteSettingsMap["google_integration_tokens"]?.email && (
+                        {allSettings.google_integration_tokens?.email && (
                           <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-slate-800/50 text-white text-[11px] font-bold backdrop-blur-md border border-slate-700 shadow-sm">
                             <FaUser className="h-3 w-3 opacity-80" />
-                            <span>{siteSettingsMap["google_integration_tokens"].email}</span>
+                            <span>{allSettings.google_integration_tokens.email}</span>
                           </div>
                         )}
                       </div>
@@ -409,7 +390,10 @@ export default async function SettingsPage({
               </Card>
             </div>
             <div id="social-automation">
-              <SocialAutomationSettings lineBotInfo={lineBotInfo} />
+              <SocialAutomationSettings
+                lineBotInfo={lineBotInfo}
+                initialSettings={allSettings}
+              />
             </div>
           </TabsContent>
 

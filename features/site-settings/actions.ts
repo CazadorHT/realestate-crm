@@ -53,6 +53,11 @@ const DEFAULT_SETTINGS: SiteSettings = {
   google_tag_manager_enabled: true,
   hot_lead_threshold: 80,
   executive_summary_enabled: true,
+  tiktok_auth_token: undefined,
+  google_integration_tokens: undefined,
+  meta_page_access_token: "",
+  line_channel_access_token: "",
+  meta_page_name: "",
 };
 
 /**

@@ -9,7 +9,11 @@ import {
   updateSiteSetting,
   generateSocialAutomationTemplatesAction,
 } from "@/features/site-settings/actions";
-import { SocialKeyword } from "@/features/site-settings/schema";
+import {
+  SiteSettingKey,
+  SocialKeyword,
+  SiteSettings,
+} from "@/features/site-settings/schema";
 
 // Extracted Components
 import { KeywordAutomationCard } from "./social-automation/KeywordAutomationCard";
@@ -17,31 +21,58 @@ import { TemplateEditorCard } from "./social-automation/TemplateEditorCard";
 
 export function SocialAutomationSettings({
   lineBotInfo,
+  initialSettings,
 }: {
   lineBotInfo?: any;
+  initialSettings?: SiteSettings;
 }) {
-  const [keywords, setKeywords] = useState<SocialKeyword[]>([]);
+  const [keywords, setKeywords] = useState<SocialKeyword[]>(
+    initialSettings?.social_automation_keywords || [],
+  );
   const [templates, setTemplates] = useState({
-    facebook: { th: "", en: "", cn: "" },
-    instagram: { th: "", en: "", cn: "" },
-    tiktok: { th: "", en: "", cn: "" },
-    line: { th: "", en: "", cn: "" },
+    facebook: {
+      th: initialSettings?.facebook_post_template || "",
+      en: initialSettings?.facebook_post_template_en || "",
+      cn: initialSettings?.facebook_post_template_cn || "",
+    },
+    instagram: {
+      th: initialSettings?.instagram_post_template || "",
+      en: initialSettings?.instagram_post_template_en || "",
+      cn: initialSettings?.instagram_post_template_cn || "",
+    },
+    tiktok: {
+      th: initialSettings?.tiktok_post_template || "",
+      en: initialSettings?.tiktok_post_template_en || "",
+      cn: initialSettings?.tiktok_post_template_cn || "",
+    },
+    line: {
+      th: initialSettings?.line_post_template || "",
+      en: initialSettings?.line_post_template_en || "",
+      cn: initialSettings?.line_post_template_cn || "",
+    },
   });
 
   const [activeTab, setActiveTab] = useState<"th" | "en" | "cn">("th");
   const [activePlatform, setActivePlatform] = useState<
     "facebook" | "instagram" | "line" | "tiktok"
   >("facebook");
-  
-  const [tiktokConnected, setTiktokConnected] = useState(false);
+
+  const [tiktokConnected, setTiktokConnected] = useState(
+    !!initialSettings?.tiktok_auth_token,
+  );
   const [tiktokMetadata, setTiktokMetadata] = useState<{
     display_name?: string;
     avatar_url?: string;
-  }>({});
-  const [isLoading, setIsLoading] = useState(true);
+  }>({
+    display_name: initialSettings?.tiktok_auth_token?.display_name,
+    avatar_url: initialSettings?.tiktok_auth_token?.avatar_url,
+  });
+  const [isLoading, setIsLoading] = useState(!initialSettings);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [initialData, setInitialData] = useState<any>(null);
+  const [initialData, setInitialData] = useState<SiteSettings | null>(
+    initialSettings || null,
+  );
   
   const templateSectionRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +84,11 @@ export function SocialAutomationSettings({
   };
 
   useEffect(() => {
+    // Only load if initialSettings wasn't provided or we need to refresh
+    if (initialSettings && initialData) {
+      return;
+    }
+    
     async function load() {
       setIsLoading(true);
       try {
@@ -95,7 +131,7 @@ export function SocialAutomationSettings({
       }
     }
     load();
-  }, []);
+  }, [initialSettings, initialData]);
 
   const addRow = () => {
     setKeywords([
@@ -174,21 +210,24 @@ export function SocialAutomationSettings({
 
         if (allSuccess) {
           if (!silent) toast.success("บันทึกการตั้งค่าเรียบร้อย");
-          setInitialData({
-            social_automation_keywords: keywords,
-            facebook_post_template: templates.facebook.th,
-            facebook_post_template_en: templates.facebook.en,
-            facebook_post_template_cn: templates.facebook.cn,
-            instagram_post_template: templates.instagram.th,
-            instagram_post_template_en: templates.instagram.en,
-            instagram_post_template_cn: templates.instagram.cn,
-            line_post_template: templates.line.th,
-            line_post_template_en: templates.line.en,
-            line_post_template_cn: templates.line.cn,
-            tiktok_post_template: templates.tiktok.th,
-            tiktok_post_template_en: templates.tiktok.en,
-            tiktok_post_template_cn: templates.tiktok.cn,
-          });
+          if (initialData) {
+            setInitialData({
+              ...initialData,
+              social_automation_keywords: keywords,
+              facebook_post_template: templates.facebook.th,
+              facebook_post_template_en: templates.facebook.en,
+              facebook_post_template_cn: templates.facebook.cn,
+              instagram_post_template: templates.instagram.th,
+              instagram_post_template_en: templates.instagram.en,
+              instagram_post_template_cn: templates.instagram.cn,
+              line_post_template: templates.line.th,
+              line_post_template_en: templates.line.en,
+              line_post_template_cn: templates.line.cn,
+              tiktok_post_template: templates.tiktok.th,
+              tiktok_post_template_en: templates.tiktok.en,
+              tiktok_post_template_cn: templates.tiktok.cn,
+            });
+          }
         } else if (!silent) {
           toast.error("เกิดข้อผิดพลาดในการบันทึกบางรายการ");
         }
