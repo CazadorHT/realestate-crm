@@ -66,6 +66,9 @@ export async function GET(request: NextRequest) {
       console.warn("[Facebook Callback] No pages found for this user token.");
     }
 
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/(protected)/protected/settings", "page");
+
     return NextResponse.redirect(
       new URL(
         "/protected/settings?tab=social&success=facebook_connected",

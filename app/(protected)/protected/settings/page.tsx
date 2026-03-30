@@ -47,12 +47,15 @@ export const metadata: Metadata = {
   description: "Manage site settings",
 };
 
+import { cookies } from "next/headers";
+
 export default async function SettingsPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const resolvedParams = await searchParams;
+  await cookies(); // Force dynamic rendering
   const activeTab = (resolvedParams?.tab as string) || "general";
   const supabase = createAdminClient();
 

@@ -83,7 +83,6 @@ export function SocialPostDialog({
   const [status, setStatus] = useState<"IDLE" | "POSTING" | "SUCCESS" | "ERROR">("IDLE");
   const [resultMessage, setResultMessage] = useState("");
   const [selectedLangs, setSelectedLangs] = useState<Array<"th" | "en" | "cn">>(["th"]);
-  const [tiktokPostMode, setTiktokPostMode] = useState<"DIRECT_POST" | "MEDIA_UPLOAD">("DIRECT_POST");
   const [isConnected, setIsConnected] = useState(true);
   const [identity, setIdentity] = useState<{ display_name?: string; avatar_url?: string }>({});
 
@@ -168,8 +167,7 @@ export function SocialPostDialog({
         res = await postPropertyToTikTokAction(
           propertyId,
           content,
-          selectedLangs[0] || "th",
-          tiktokPostMode
+          selectedLangs[0] || "th"
         );
       }
 
@@ -312,44 +310,6 @@ export function SocialPostDialog({
                 </div>
               )}
 
-              {platform === "TIKTOK" && (
-                <div className="space-y-3">
-                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-[2px] ml-1">
-                    TikTok Post Options
-                  </Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { id: "DIRECT_POST", label: "โพสต์ทันที", icon: Send },
-                      { id: "MEDIA_UPLOAD", label: "ส่งเป็นแบบร่าง", icon: ImageIcon },
-                    ].map((m) => {
-                      const isActive = tiktokPostMode === m.id;
-                      const MIcon = m.icon;
-                      return (
-                        <button
-                          key={m.id}
-                          onClick={() => setTiktokPostMode(m.id as any)}
-                          className={cn(
-                            "flex flex-col items-center gap-1 py-3 px-2 rounded-xl border transition-all duration-200",
-                            isActive
-                              ? "bg-slate-900 border-slate-900 shadow-sm text-white"
-                              : "bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100"
-                          )}
-                        >
-                          <MIcon
-                            className={cn(
-                              "h-5 w-5 mb-1",
-                              isActive ? "text-white" : "text-slate-400"
-                            )}
-                          />
-                          <span className="text-[10px] uppercase font-bold tracking-wider leading-none">
-                            {m.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Right Column: Preview Area */}
@@ -358,28 +318,60 @@ export function SocialPostDialog({
                 <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-6 animate-in fade-in zoom-in duration-500">
                   <div
                     className={cn(
-                      "h-24 w-24 rounded-full flex items-center justify-center shadow-xl",
+                      "h-20 w-20 rounded-full flex items-center justify-center shadow-xl",
                       status === "SUCCESS" ? "bg-green-50 text-green-500" : "bg-red-50 text-red-500"
                     )}
                   >
                     {status === "SUCCESS" ? (
-                      <CheckCircle2 className="h-12 w-12" />
+                      <CheckCircle2 className="h-10 w-10" />
                     ) : (
-                      <AlertCircle className="h-12 w-12" />
+                      <AlertCircle className="h-10 w-10" />
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <h3
-                      className={cn(
-                        "text-2xl font-bold",
-                        status === "SUCCESS" ? "text-green-600" : "text-red-600"
-                      )}
-                    >
-                      {status === "SUCCESS" ? "ดำเนินการสำเร็จ!" : "เกิดข้อผิดพลาด"}
-                    </h3>
-                    <p className="text-slate-500 leading-relaxed max-w-[280px]">
-                      {resultMessage}
-                    </p>
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <h3
+                        className={cn(
+                          "text-2xl font-bold",
+                          status === "SUCCESS" ? "text-green-600" : "text-red-600"
+                        )}
+                      >
+                        {status === "SUCCESS" ? "ดำเนินการสำเร็จ!" : "เกิดข้อผิดพลาด"}
+                      </h3>
+                      <p className="text-slate-500 leading-relaxed max-w-[320px] text-sm">
+                        {resultMessage}
+                      </p>
+                    </div>
+
+                    {status === "SUCCESS" && platform === "TIKTOK" && (
+                      <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex flex-col items-center gap-3 animate-in slide-in-from-bottom-2 duration-500 delay-200 fill-mode-both">
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col items-center">
+                            <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center mb-1">
+                              <span className="text-xl">📸</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">เปิด App</span>
+                          </div>
+                          <div className="h-px w-4 bg-slate-200" />
+                          <div className="flex flex-col items-center">
+                            <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center mb-1">
+                              <span className="text-xl">📬</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Inbox</span>
+                          </div>
+                          <div className="h-px w-4 bg-slate-200" />
+                          <div className="flex flex-col items-center">
+                            <div className="w-10 h-10 rounded-xl bg-slate-900 shadow-lg border border-slate-800 flex items-center justify-center mb-1">
+                              <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-900 uppercase">Confirm</span>
+                          </div>
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-medium">
+                          เข้าที่ <span className="font-bold text-slate-900">Inbox {" > "} System notifications</span> นะครับ
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : isLoading || status === "POSTING" ? (
@@ -440,12 +432,15 @@ export function SocialPostDialog({
                     )}
 
                     {platform === "TIKTOK" && (
-                      <div className="text-[10px] text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                        <p className="font-bold mb-1 opacity-70">Tips:</p>
-                        <ul className="list-disc pl-3 space-y-0.5 text-[9px]">
-                          <li>หัวข้อจำกัด 80 ตัวอักษร (ระบบจะตัดให้อัตโนมัติ)</li>
-                          <li>Photo Mode เหมาะมากสำหรับอสังหาฯ</li>
-                        </ul>
+                      <div className="text-[10px] text-amber-700 bg-amber-50 p-3 rounded-xl border border-amber-100 flex gap-2">
+                        <AlertCircle className="h-4 w-4 shrink-0 text-amber-500" />
+                        <div className="space-y-1">
+                          <p className="font-bold opacity-90 leading-none">⚠️ ข้อแนะนำสำคัญ:</p>
+                          <ul className="list-disc pl-3 space-y-0.5 text-[9px] opacity-80">
+                            <li>ต้องใช้บัญชี **Public / Business** ถึงจะ "โพสต์ทันที" ได้</li>
+                            <li>หากเป็นบัญชีส่วนตัว (Private) แนะนำให้ใช้ **"ส่งเป็นแบบร่าง"** (แล้วตรวจสอบที่ Inbox ของแอป)</li>
+                          </ul>
+                        </div>
                       </div>
                     )}
 

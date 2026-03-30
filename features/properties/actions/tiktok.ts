@@ -57,18 +57,27 @@ export async function postPropertyToTikTokAction(
       finalCaption = finalCaption.substring(0, 3997) + "...";
     }
 
-    // 4. เตรียมรูปภาพ (Hardened Validation for TikTok Rules)
+    // 4. เตรียมรูปภาพ (Hardened Absolute URLs for TikTok PULL_FROM_URL)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     const rawImagesCount = property.property_images?.length || 0;
-    const rawImages = (property.property_images || []).map((img: any) => img.image_url);
     
-    const supportedExtensions = [".jpg", ".jpeg", ".webp"];
-    const filteredImages = rawImages.filter(url => {
-      if (!url) return false;
-      const cleanUrl = url.split("?")[0].toLowerCase();
-      return supportedExtensions.some(ext => cleanUrl.endsWith(ext));
-    });
-
-    const imagesToPost = filteredImages.slice(0, 35);
+    const rawImages = (property.property_images || [])
+      .map((img: any) => {
+        const url = img.image_url;
+        if (!url) return null;
+        if (url.startsWith("http")) return url;
+        // Construct full absolute URL for Supabase storage
+        return `${supabaseUrl}/storage/v1/object/public/property_images/${url}`;
+      })
+      .filter(Boolean) as string[];
+    
+    const supportedExtensions = [".jpg", ".jpeg", ".webp", ".png"];
+    const imagesToPost = rawImages
+      .filter(url => {
+        const cleanUrl = url.split("?")[0].toLowerCase();
+        return supportedExtensions.some(ext => cleanUrl.endsWith(ext));
+      })
+      .slice(0, 35);
 
     if (imagesToPost.length === 0) {
       return { 
@@ -79,21 +88,23 @@ export async function postPropertyToTikTokAction(
       };
     }
 
-    // 5. ยิง API จริงของ TikTok
+    // 5. ยิง API จริงของ TikTok (บังคับใช้ MEDIA_UPLOAD เท่านั้นเพื่อความเสถียร)
     const tiktokTitle = (property.title || "Real Estate Property").substring(0, 80);
     
     const publishResult = await publishTikTokPhotoPost(accessToken, {
       title: tiktokTitle,
       description: finalCaption,
       images: imagesToPost,
-      postMode: postMode,
+      postMode: "MEDIA_UPLOAD",
     });
 
     if (!publishResult.success) {
-      // Handle specific TikTok error codes if needed
-      const errorMsg = publishResult.error_code === 401 
-        ? "Session หมดอายุ กรุณาตัดการเชื่อมต่อและเชื่อมต่อ TikTok ใหม่อีกครั้ง"
-        : publishResult.error;
+      // Handle specific TikTok error codes & messages
+      let errorMsg = publishResult.error;
+      
+      if (publishResult.error_code === 401) {
+        errorMsg = "Session หมดอายุ กรุณาตัดการเชื่อมต่อและเชื่อมต่อ TikTok ใหม่อีกครั้ง";
+      }
 
       return { 
         success: false, 
@@ -111,9 +122,7 @@ export async function postPropertyToTikTokAction(
 
     return {
       success: true,
-      message: postMode === "DIRECT_POST" 
-        ? "โพสต์ลง TikTok สำเร็จแล้ว! (ระบบกำลังทยอยประมวลผล)" 
-        : "ส่งเป็นแบบร่าง (Draft) ไปที่แอป TikTok ของคุณเรียบร้อยแล้ว",
+      message: "ส่งแบบร่างสำเร็จ! กรุณาเปิดแอป TikTok > Inbox > System Notifications เพื่อกดยืนยันการโพสต์",
       publish_id: publishResult.publish_id
     };
   } catch (err) {
