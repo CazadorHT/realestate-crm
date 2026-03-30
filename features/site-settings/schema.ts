@@ -105,13 +105,13 @@ export interface SiteSettings {
     updated_at?: string;
     display_name?: string;
     avatar_url?: string;
-  };
+  } | null;
   google_integration_tokens?: {
     access_token: string;
     refresh_token?: string;
     expiry_date?: number;
     email?: string;
-  };
+  } | null;
   meta_page_access_token?: string;
   line_channel_access_token?: string;
   meta_page_name?: string;

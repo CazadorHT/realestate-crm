@@ -129,7 +129,7 @@ export function SiteConfigPanel() {
         if (result.success) {
           toast.success("บันทึกการตั้งค่าแบรนด์เรียบร้อย");
           if (initialData) {
-            const newData = { ...initialData, ...values };
+            const newData = { ...initialData, ...values } as SiteSettings;
             setInitialData(newData);
             form.reset(newData as any);
           }
