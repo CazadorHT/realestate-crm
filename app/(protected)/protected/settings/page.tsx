@@ -62,7 +62,7 @@ export default async function SettingsPage({
   const allSettings = await getSiteSettings();
 
   const isTikTokConnected = !!allSettings.tiktok_auth_token;
-  const isFacebookConnected = !!allSettings.meta_page_access_token;
+  const isFacebookConnected = !!process.env.META_PAGE_ACCESS_TOKEN || !!allSettings.meta_page_access_token;
   const isGoogleConnected = !!allSettings.google_integration_tokens;
   const isLineConnected =
     !!process.env.LINE_CHANNEL_ACCESS_TOKEN || !!allSettings.line_channel_access_token;
@@ -242,35 +242,35 @@ export default async function SettingsPage({
               <Card
                 className={
                   isFacebookConnected
-                    ? "bg-slate-900 text-white border-slate-800 transition-colors shadow-lg"
+                    ? "bg-blue-500 bg-linear-to-r from-blue-500 to-pink-500/70 text-white border-slate-800 transition-colors shadow-lg"
                     : ""
                 }
               >
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 ${isFacebookConnected ? "text-white" : "text-slate-900"}`}>
                       <FaMeta
-                        className={`h-5 w-5 ${isFacebookConnected ? "text-[#4dabf7]" : "text-[#1877F2]"}`}
+                        className={`h-5 w-5 ${isFacebookConnected ? "text-white" : "text-[#1877F2]"}`}
                       />
                       Meta Integration
                     </div>
                     {isFacebookConnected && (
                       <div className="flex flex-col items-end gap-1">
-                        <div className="flex gap-2 items-center text-xs text-green-400 bg-slate-700/50 px-3 py-1.5 rounded-full font-bold border border-slate-700">
+                        <div className="flex gap-2 items-center text-xs text-green-700 bg-white px-3 py-1.5 rounded-full font-semibold border border-white">
                           <CheckCircle className="h-4 w-4 text-green-500" />
                           เชื่อมต่อแล้ว
                         </div>
-                        {allSettings.meta_page_name && (
-                          <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-slate-800/50 text-white text-[11px] font-bold backdrop-blur-md border border-slate-700 shadow-sm">
+                        {isFacebookConnected && (
+                          <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-white/20 text-white text-[11px] font-semibold backdrop-blur-md border border-white shadow-sm">
                             <Facebook className="h-3 w-3 opacity-80" />
-                            <span>{allSettings.meta_page_name}</span>
+                            <span>{allSettings.meta_page_name || "System (Environment)"}</span>
                           </div>
                         )}
                       </div>
                     )}
                   </CardTitle>
                   <CardDescription
-                    className={isFacebookConnected ? "text-slate-400" : ""}
+                    className={isFacebookConnected ? "text-white" : "text-slate-500"}
                   >
                     เชื่อมต่อ Facebook , Instagram เพื่อโพสต์ทรัพย์ลง Page โดยอัตโนมัติ
                   </CardDescription>
