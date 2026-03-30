@@ -23,8 +23,11 @@ export function getPublicImageUrl(
     return storagePath.trim();
   }
 
-  // 1. Clean up SUPABASE_URL (ensure no trailing slash)
-  const baseUrl = SUPABASE_URL?.replace(/\/+$/, "");
+  // 1. Clean up SUPABASE_URL (ensure no trailing slash and has protocol)
+  let baseUrl = SUPABASE_URL?.replace(/\/+$/, "");
+  if (baseUrl && !baseUrl.startsWith("http")) {
+    baseUrl = `https://${baseUrl}`;
+  }
 
   // 2. Clean up storagePath (remove leading/trailing slashes and encode special chars)
   const cleanPath = storagePath?.trim().replace(/^\/+|\/+$/g, "") || "";
