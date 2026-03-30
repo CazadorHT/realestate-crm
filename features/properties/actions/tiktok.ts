@@ -70,8 +70,9 @@ export async function postPropertyToTikTokAction(
         const url = img.image_url;
         if (!url) return null;
         if (url.startsWith("http")) return url;
-        // Construct full absolute URL for Supabase storage
-        return `${supabaseUrl}/storage/v1/object/public/property_images/${url}`;
+        // Construct full absolute URL for Supabase storage (Hardened against double slashes)
+        const baseUrl = supabaseUrl.replace(/\/$/, "");
+        return `${baseUrl}/storage/v1/object/public/property-images/${url}`;
       })
       .filter(Boolean) as string[];
     

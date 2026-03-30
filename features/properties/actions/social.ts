@@ -308,8 +308,9 @@ export async function getPropertySocialContent(
     const url = img.image_url;
     if (!url) return null;
     if (url.startsWith("http")) return url;
-    // Fallback for relative paths in Supabase
-    return `${supabaseUrl}/storage/v1/object/public/property_images/${url}`;
+    // Fallback for relative paths in Supabase (Hardened against double slashes)
+    const baseUrl = supabaseUrl?.replace(/\/$/, "");
+    return `${baseUrl}/storage/v1/object/public/property-images/${url}`;
   }).filter(Boolean) as string[] || [];
 
   return { 
