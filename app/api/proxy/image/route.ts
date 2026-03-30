@@ -13,32 +13,53 @@ export async function GET(req: NextRequest) {
     return new NextResponse("Missing URL parameter", { status: 400 });
   }
 
+  const userAgent = req.headers.get("user-agent") || "unknown";
+  console.log(`[Image Proxy Request] URL: ${imageUrl}, User-Agent: ${userAgent}`);
+
   try {
     // 1. Fetch the original image
+    console.log(`[Image Proxy State] Fetching source: ${imageUrl}`);
     const response = await fetch(imageUrl);
     if (!response.ok) {
-      return new NextResponse("Failed to fetch source image", { status: response.status });
+      console.error(`[Image Proxy Error] Source fetch failed: ${response.status} ${response.statusText}`);
+      return new NextResponse(`Failed to fetch source image: ${response.status}`, { status: response.status });
     }
 
     const buffer = await response.arrayBuffer();
+    console.log(`[Image Proxy State] Source fetched. Size: ${buffer.byteLength} bytes. Processing...`);
 
-    // 2. Convert to JPEG using Sharp
-    // Adjust quality as needed (85 is a good balance)
-    const jpegBuffer = await sharp(Buffer.from(buffer))
-      .flatten({ background: { r: 255, g: 255, b: 255 } }) // Handle transparency if PNG/WebP
+    // 2. Identify Metadata and Process using Sharp
+    const image = sharp(Buffer.from(buffer));
+    const metadata = await image.metadata();
+    
+    console.log(`[Image Proxy Metadata] Original: ${metadata.width}x${metadata.height}, Format: ${metadata.format}`);
+
+    // TikTok requires at least 360x360. 
+    // If it's smaller, we upscale. If it's a valid size, we just convert.
+    let pipeline = image;
+    
+    if (metadata.width && metadata.height && (metadata.width < 360 || metadata.height < 360)) {
+      console.log(`[Image Proxy State] Image too small! Upscaling to at least 1080px...`);
+      pipeline = pipeline.resize(1080, 1080, { fit: 'inside', withoutEnlargement: false });
+    }
+
+    const jpegBuffer = await pipeline
+      .flatten({ background: { r: 255, g: 255, b: 255 } })
       .jpeg({ quality: 85 })
       .toBuffer();
+
+    console.log(`[Image Proxy State] Conversion successful. Returning JPG buffer.`);
 
     // 3. Return the JPEG binary (Converted to Uint8Array for Next.js compatibility)
     return new NextResponse(new Uint8Array(jpegBuffer), {
       headers: {
         "Content-Type": "image/jpeg",
-        "Cache-Control": "public, max-age=86400, s-maxage=86400", // Cache for 24 hours
+        "Cache-Control": "public, max-age=86400, s-maxage=86400",
         "Access-Control-Allow-Origin": "*",
       },
     });
-  } catch (error) {
-    console.error("[Image Proxy Error]:", error);
-    return new NextResponse("Error processing image", { status: 500 });
+  } catch (error: any) {
+    console.error("[Image Proxy Exception]:", error);
+    return new NextResponse(`Error processing image: ${error.message}`, { status: 500 });
   }
 }
