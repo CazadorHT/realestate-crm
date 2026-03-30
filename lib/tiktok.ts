@@ -156,6 +156,8 @@ export async function publishTikTokPhotoPost(
     media_type: "PHOTO",
   };
 
+  console.log("[TikTok API Request Body]:", JSON.stringify(body, null, 2));
+
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -167,9 +169,10 @@ export async function publishTikTokPhotoPost(
     });
 
     const data = await response.json();
+    console.log("[TikTok API Response]:", JSON.stringify(data, null, 2));
 
     if (!response.ok) {
-      console.error("TikTok Publish Error:", data);
+      console.error("TikTok Publish Error Data:", data);
       return {
         success: false,
         error: data.error?.message || "Unknown TikTok error",

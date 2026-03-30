@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -85,22 +85,22 @@ export function SocialPostDialog({
   const [selectedLangs, setSelectedLangs] = useState<Array<"th" | "en" | "cn">>(["th"]);
   const [isConnected, setIsConnected] = useState(true);
   const [identity, setIdentity] = useState<{ display_name?: string; avatar_url?: string }>({});
+  const versionRef = useRef(0);
 
-  useEffect(() => {
-    if (isOpen && propertyId) {
-      setStatus("IDLE");
-      setResultMessage("");
-      loadContent();
-    }
-  }, [isOpen, propertyId, selectedLangs.join(",")]);
-
-  const loadContent = async () => {
-    if (selectedLangs.length === 0) return;
+  const loadContent = useCallback(async () => {
+    if (!isOpen || !propertyId || selectedLangs.length === 0) return;
+    
+    // Increment version for this new request
+    const currentVersion = ++versionRef.current;
+    
     setIsLoading(true);
     try {
       const contents = await Promise.all(
         selectedLangs.map((l) => getPropertySocialContent(propertyId, l, platform))
       );
+
+      // If a newer request has started, ignore this one
+      if (currentVersion !== versionRef.current) return;
 
       const combinedContent = contents
         .map((c) => c.content)
@@ -115,11 +115,23 @@ export function SocialPostDialog({
       setIsConnected(firstData.isConnected);
       setIdentity(firstData.identity || {});
     } catch (err) {
-      toast.error("ไม่สามารถโหลดข้อมูลพรีวิวได้");
+      if (currentVersion === versionRef.current) {
+        toast.error("ไม่สามารถโหลดข้อมูลพรีวิวได้");
+      }
     } finally {
-      setIsLoading(false);
+      if (currentVersion === versionRef.current) {
+        setIsLoading(false);
+      }
     }
-  };
+  }, [isOpen, propertyId, selectedLangs, platform]);
+
+  useEffect(() => {
+    if (isOpen && propertyId) {
+      setStatus("IDLE");
+      setResultMessage("");
+      loadContent();
+    }
+  }, [isOpen, propertyId, selectedLangs.join(","), platform, loadContent]);
 
   const toggleLang = (l: "th" | "en" | "cn") => {
     setSelectedLangs((prev) =>
