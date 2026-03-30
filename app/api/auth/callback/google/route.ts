@@ -46,11 +46,27 @@ export async function GET(request: NextRequest) {
     }
 
     // data contains access_token, refresh_token, etc.
+    
+    // Fetch user info to get email
+    let email = null;
+    try {
+      const userRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: { Authorization: `Bearer ${data.access_token}` },
+      });
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        email = userData.email;
+      }
+    } catch (userInfoErr) {
+      console.error("Error fetching Google user info:", userInfoErr);
+    }
+
     const supabase = createAdminClient();
     await supabase.from("site_settings").upsert({
       key: "google_integration_tokens",
       value: {
         ...data,
+        email,
         updated_at: new Date().toISOString(),
       },
     });

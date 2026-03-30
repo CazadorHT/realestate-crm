@@ -37,6 +37,8 @@ import { Button } from "@/components/ui/button";
 import { FaLine, FaTiktok } from "react-icons/fa";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CheckCircle2 } from "lucide-react";
+import { getLineBotInfo } from "@/lib/line";
+import { FaUser } from "react-icons/fa6";
 
 export const metadata: Metadata = {
   title: "Settings | CRM",
@@ -59,6 +61,7 @@ export default async function SettingsPage({
     .in("key", [
       "tiktok_auth_token",
       "meta_page_access_token",
+      "meta_page_name",
       "google_integration_tokens",
       "line_channel_access_token",
     ]);
@@ -79,6 +82,11 @@ export default async function SettingsPage({
   const isGoogleConnected = !!siteSettingsMap["google_integration_tokens"];
   const isLineConnected =
     !!process.env.LINE_CHANNEL_ACCESS_TOKEN || (lineProfilesCount || 0) > 0;
+
+  let lineBotInfo = null;
+  if (isLineConnected) {
+    lineBotInfo = await getLineBotInfo();
+  }
 
   return (
     <div className="space-y-6 max-w-screen-2xl pb-10">
@@ -132,11 +140,17 @@ export default async function SettingsPage({
                       LINE Integration
                     </div>
                     {isLineConnected && (
-                      <div className="flex items-center gap-2">
-                        <p className="flex gap-4 items-center text-xs text-green-400 bg-white p-2 rounded-2xl font-medium">
-                          <CheckCircle className="h-5 w-5 text-green-500" />
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex gap-2 items-center text-xs text-green-400 bg-white px-3 py-1.5 rounded-full font-bold shadow-sm">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
                           เชื่อมต่อแล้ว
-                        </p>
+                        </div>
+                        {lineBotInfo?.displayName && (
+                          <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-white/20 text-white text-xs font-medium backdrop-blur-md border border-white/20 shadow-sm">
+                            <FaUser className="h-3 w-3 opacity-80" />
+                            <span>{lineBotInfo.displayName}</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardTitle>
@@ -189,9 +203,17 @@ export default async function SettingsPage({
                       TikTok Integration
                     </div>
                     {isTikTokConnected && (
-                      <div className="flex gap-4 items-center text-xs text-green-400 bg-slate-700 p-2 rounded-2xl font-medium">
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                        เชื่อมต่อแล้ว
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex gap-2 items-center text-xs text-green-400 bg-slate-700/50 px-3 py-1.5 rounded-full font-bold border border-slate-700">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          เชื่อมต่อแล้ว
+                        </div>
+                        {siteSettingsMap["tiktok_auth_token"]?.display_name && (
+                          <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-slate-800/50 text-white text-[11px] font-bold backdrop-blur-md border border-slate-700 shadow-sm">
+                            <FaUser className="h-3 w-3 opacity-80" />
+                            <span>{siteSettingsMap["tiktok_auth_token"].display_name}</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardTitle>
@@ -249,9 +271,17 @@ export default async function SettingsPage({
                       Facebook Integration
                     </div>
                     {isFacebookConnected && (
-                      <div className="flex gap-4 items-center text-xs text-green-400 bg-slate-700 p-2 rounded-2xl font-medium">
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                        เชื่อมต่อแล้ว
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex gap-2 items-center text-xs text-green-400 bg-slate-700/50 px-3 py-1.5 rounded-full font-bold border border-slate-700">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          เชื่อมต่อแล้ว
+                        </div>
+                        {siteSettingsMap["meta_page_name"] && (
+                          <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-slate-800/50 text-white text-[11px] font-bold backdrop-blur-md border border-slate-700 shadow-sm">
+                            <Facebook className="h-3 w-3 opacity-80" />
+                            <span>{siteSettingsMap["meta_page_name"]}</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardTitle>
@@ -280,8 +310,8 @@ export default async function SettingsPage({
                       {isFacebookConnected && (
                         <IntegrationDisconnectButton
                           provider="facebook"
-                          variant="outline"
-                          className={`w-full md:w-auto font-bold ${isFacebookConnected ? "text-white hover:text-white hover:bg-slate-800" : ""}`}
+                          variant="secondary"
+                          className="w-full md:w-auto font-bold opacity-80 hover:opacity-100"
                         />
                       )}
                       {!isFacebookConnected && (
@@ -325,9 +355,17 @@ export default async function SettingsPage({
                       Google Integration
                     </div>
                     {isGoogleConnected && (
-                      <div className="flex gap-4 items-center text-xs text-green-400 bg-slate-700 p-2 rounded-2xl font-medium">
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                        เชื่อมต่อแล้ว
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex gap-2 items-center text-xs text-green-400 bg-slate-700/50 px-3 py-1.5 rounded-full font-bold border border-slate-700">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          เชื่อมต่อแล้ว
+                        </div>
+                        {siteSettingsMap["google_integration_tokens"]?.email && (
+                          <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-slate-800/50 text-white text-[11px] font-bold backdrop-blur-md border border-slate-700 shadow-sm">
+                            <FaUser className="h-3 w-3 opacity-80" />
+                            <span>{siteSettingsMap["google_integration_tokens"].email}</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardTitle>
@@ -342,19 +380,22 @@ export default async function SettingsPage({
                     <div className="flex items-center gap-4">
                       <Link href="/api/auth/google/login">
                         <Button
-                          variant={isGoogleConnected ? "secondary" : "outline"}
-                          className={`font-bold ${isGoogleConnected ? "" : "border-slate-200"}`}
+                          className={
+                            isGoogleConnected
+                              ? "bg-white text-slate-900 hover:bg-slate-100 font-bold"
+                              : "bg-slate-900 hover:bg-slate-800 text-white font-bold"
+                          }
                         >
                           {isGoogleConnected
                             ? "เชื่อมต่อใหม่"
-                            : "เชื่อมต่อ Google Account"}
+                            : "เชื่อมต่อ Google"}
                         </Button>
                       </Link>
                       {isGoogleConnected && (
                         <IntegrationDisconnectButton
                           provider="google"
-                          variant="outline"
-                          className={`w-full md:w-auto font-bold ${isGoogleConnected ? "text-white hover:text-white hover:bg-slate-800" : ""}`}
+                          variant="secondary"
+                          className="w-full md:w-auto font-bold opacity-80 hover:opacity-100"
                         />
                       )}
                       {!isGoogleConnected && (
@@ -368,7 +409,7 @@ export default async function SettingsPage({
               </Card>
             </div>
             <div id="social-automation">
-              <SocialAutomationSettings />
+              <SocialAutomationSettings lineBotInfo={lineBotInfo} />
             </div>
           </TabsContent>
 

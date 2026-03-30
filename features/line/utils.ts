@@ -11,6 +11,14 @@ const DEFAULT_CONFIGS: Record<string, LineTemplateConfig> = {
   SIGNUP: { headerColor: "#F57C00", headerText: "สมาชิกใหม่ (New User)" },
   LOGIN: { headerColor: "#1E88E5", headerText: "🔓 เข้าสู่ระบบ (Login)" },
   PRICE_DROP: { headerColor: "#E53935", headerText: "📉 ลดราคาพิเศษ!" },
+  DEAL_SOLO: {
+    headerColor: "#2E7D32",
+    headerText: "🎊 💰 ปิดดีลเรียบร้อย! (ขายแล้ว)",
+  },
+  DEAL_RENT: {
+    headerColor: "#1976D2",
+    headerText: "🎊 📝 ปิดดีลเรียบร้อย! (เช่าแล้ว)",
+  },
 };
 
 export async function getTemplateConfig(

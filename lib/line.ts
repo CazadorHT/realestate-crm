@@ -160,6 +160,25 @@ export async function getLineProfile(userId: string) {
 }
 
 /**
+ * ดึงข้อมูลของ Bot (LINE OA)
+ */
+export async function getLineBotInfo() {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token) return null;
+
+  try {
+    const response = await fetch("https://api.line.me/v2/bot/info", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (err) {
+    console.error("Error fetching LINE bot info:", err);
+    return null;
+  }
+}
+
+/**
  * บันทึกข้อความลงในตาราง omni_messages
  */
 export async function saveOmniMessage(data: {

@@ -47,13 +47,23 @@ export async function GET(request: NextRequest) {
       // For now, take the first page as default
       const pageToken = pagesData.data[0].access_token;
       const pageId = pagesData.data[0].id;
+      const pageName = pagesData.data[0].name;
+
+      console.log(`[Facebook Callback] Mapping page: ${pageName} (${pageId})`);
 
       const supabase = createAdminClient();
-      await supabase.from("site_settings").upsert([
+      const updates = [
         { key: "meta_page_access_token", value: pageToken },
         { key: "meta_page_id", value: pageId },
+        { key: "meta_page_name", value: pageName },
         { key: "meta_user_access_token", value: userAccessToken },
-      ]);
+      ];
+
+      for (const update of updates) {
+        await supabase.from("site_settings").upsert(update, { onConflict: "key" });
+      }
+    } else {
+      console.warn("[Facebook Callback] No pages found for this user token.");
     }
 
     return NextResponse.redirect(

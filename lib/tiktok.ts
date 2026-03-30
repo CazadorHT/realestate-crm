@@ -8,6 +8,16 @@ export interface TikTokTokenResponse {
   refresh_expires_in: number;
   open_id: string;
   scope: string;
+  updated_at?: string; // Track when token was last updated
+  display_name?: string;
+  avatar_url?: string;
+}
+
+export interface TikTokUserInfo {
+  display_name: string;
+  avatar_url: string;
+  open_id?: string;
+  union_id?: string;
 }
 
 /**
@@ -32,15 +42,179 @@ export async function exchangeTikTokCode(
       body: params.toString(),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const err = await response.json();
-      console.error("TikTok Token Exchange Error:", err);
+      console.error("TikTok Token Exchange Error:", data);
       return null;
     }
 
-    return await response.json();
+    return data;
   } catch (error) {
     console.error("TikTok Token Exchange Exception:", error);
+    return null;
+  }
+}
+
+/**
+ * Refresh TikTok token using refresh_token
+ */
+export async function refreshTikTokToken(
+  refreshToken: string,
+): Promise<TikTokTokenResponse | null> {
+  const url = "https://open.tiktokapis.com/v2/oauth/token/";
+  const params = new URLSearchParams({
+    client_key: tiktokConfig.clientKey,
+    client_secret: tiktokConfig.clientSecret,
+    refresh_token: refreshToken,
+    grant_type: "refresh_token",
+  });
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("TikTok Token Refresh Error:", data);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("TikTok Token Refresh Exception:", error);
+    return null;
+  }
+}
+
+/**
+ * Check if token is expired and refresh if necessary
+ */
+export async function refreshTikTokTokenIfNeeded(): Promise<string | null> {
+  const token = await getTikTokToken();
+  if (!token) return null;
+
+  const updatedAt = token.updated_at ? new Date(token.updated_at).getTime() : 0;
+  const now = Date.now();
+  const buffer = 300 * 1000; // 5 minutes buffer
+
+  // expires_in is in seconds
+  if (now >= updatedAt + (token.expires_in * 1000) - buffer) {
+    console.log("[TikTok] Token expired or expiring soon, refreshing...");
+    const refreshed = await refreshTikTokToken(token.refresh_token);
+    if (refreshed) {
+      // Ensure we keep existing metadata if not returned in refresh
+      const finalToken = {
+        ...token,
+        ...refreshed,
+        updated_at: new Date().toISOString()
+      };
+      await saveTikTokToken(finalToken);
+      return finalToken.access_token;
+    }
+    return null;
+  }
+
+  return token.access_token;
+}
+
+/**
+ * Publish Photo Mode content to TikTok
+ */
+export async function publishTikTokPhotoPost(
+  accessToken: string,
+  params: {
+    title: string;
+    description: string;
+    images: string[];
+    postMode: "DIRECT_POST" | "MEDIA_UPLOAD";
+    privacyLevel?: "PUBLIC_TO_EVERYONE" | "MUTUAL_FOLLOW_FRIENDS" | "SELF_ONLY";
+  },
+) {
+  const url = "https://open.tiktokapis.com/v2/post/publish/content/init/";
+
+  const body = {
+    post_info: {
+      // TikTok title limit is 80 chars, description limit is 4000
+      title: params.title.substring(0, 80), 
+      description: params.description.substring(0, 4000),
+      privacy_level: params.privacyLevel || "PUBLIC_TO_EVERYONE",
+      disable_comment: false,
+      disable_duet: false,
+      disable_stitch: false,
+    },
+    source_info: {
+      source: "PULL_FROM_URL",
+      photo_cover_index: 0,
+      photo_images: params.images.slice(0, 35), // Max 35 images
+    },
+    post_mode: params.postMode,
+    media_type: "PHOTO",
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("TikTok Publish Error:", data);
+      return {
+        success: false,
+        error: data.error?.message || "Unknown TikTok error",
+        error_code: data.error?.code,
+      };
+    }
+
+    return {
+      success: true,
+      publish_id: data.data?.publish_id,
+    };
+  } catch (error) {
+    console.error("TikTok Publish Exception:", error);
+    return { success: false, error: "Network error calling TikTok API" };
+  }
+}
+
+/**
+ * Fetch basic user info from TikTok
+ */
+export async function getTikTokUserInfo(
+  accessToken: string,
+): Promise<TikTokUserInfo | null> {
+  // Try newer v2 user info field names
+  const url = "https://open.tiktokapis.com/v2/user/info/?fields=display_name,avatar_url,open_id,union_id";
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("TikTok User Info Error:", data);
+      return null;
+    }
+
+    // Standard TikTok v2 response structure is data.user
+    return data.data?.user || data.user || null;
+  } catch (error) {
+    console.error("TikTok User Info Exception:", error);
     return null;
   }
 }

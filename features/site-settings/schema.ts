@@ -40,7 +40,12 @@ export type SiteSettingKey =
   | "google_tag_manager_id"
   | "google_tag_manager_enabled"
   | "hot_lead_threshold"
-  | "executive_summary_enabled";
+  | "executive_summary_enabled"
+  | "tiktok_auth_token"
+  | "google_integration_tokens"
+  | "meta_page_access_token"
+  | "line_channel_access_token"
+  | "meta_page_name";
 
 export interface SocialKeyword {
   keyword: string;
@@ -90,6 +95,26 @@ export interface SiteSettings {
   google_tag_manager_enabled?: boolean;
   hot_lead_threshold?: number;
   executive_summary_enabled?: boolean;
+  tiktok_auth_token?: {
+    access_token: string;
+    refresh_token: string;
+    expires_in: number;
+    refresh_expires_in: number;
+    open_id: string;
+    scope: string;
+    updated_at?: string;
+    display_name?: string;
+    avatar_url?: string;
+  };
+  google_integration_tokens?: {
+    access_token: string;
+    refresh_token?: string;
+    expiry_date?: number;
+    email?: string;
+  };
+  meta_page_access_token?: string;
+  line_channel_access_token?: string;
+  meta_page_name?: string;
 }
 
 export const siteSettingsSchema = z.object({
@@ -140,4 +165,30 @@ export const siteSettingsSchema = z.object({
   google_tag_manager_enabled: z.boolean().optional(),
   hot_lead_threshold: z.number().optional(),
   executive_summary_enabled: z.boolean().optional(),
+  tiktok_auth_token: z
+    .object({
+      access_token: z.string(),
+      refresh_token: z.string(),
+      expires_in: z.number(),
+      refresh_expires_in: z.number(),
+      open_id: z.string(),
+      scope: z.string(),
+      updated_at: z.string().optional(),
+      display_name: z.string().optional(),
+      avatar_url: z.string().optional(),
+    })
+    .optional()
+    .nullable(),
+  google_integration_tokens: z
+    .object({
+      access_token: z.string(),
+      refresh_token: z.string().optional(),
+      expiry_date: z.number().optional(),
+      email: z.string().optional(),
+    })
+    .optional()
+    .nullable(),
+  meta_page_access_token: z.string().optional(),
+  line_channel_access_token: z.string().optional(),
+  meta_page_name: z.string().optional(),
 });

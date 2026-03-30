@@ -15,6 +15,9 @@ import {
   Palette,
   Loader2,
   Save,
+  User,
+  Clock,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -125,7 +128,8 @@ export function LineManagerClient({
           LINE Notification Manager
         </h2>
         <p className="text-muted-foreground">
-          Customize your LINE Flex Message templates and visibility.
+          ปรับแต่งเทมเพลตข้อความ LINE Flex และการแสดงผลของคุณได้ตามต้องการ
+
         </p>
       </div>
 
@@ -273,60 +277,119 @@ export function LineManagerClient({
 
                 {/* Preview Area */}
                 <div className="mt-6 pt-6 border-t border-slate-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-medium text-slate-400">
-                      Flex Message Preview
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] font-normal text-slate-400"
-                    >
-                      Mobile
-                    </Badge>
+                  <div className="flex flex-col items-center justify-between mb-3">
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-xs font-medium text-slate-400">
+                        Flex Message Preview
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] font-normal text-slate-400"
+                      >
+                        Mobile
+                      </Badge>
+                    </div>
                   </div>
 
-                  <div className="relative mx-auto rounded-xl overflow-hidden shadow-lg border border-slate-200 bg-white max-w-[280px]">
-                    {/* Flex Header */}
-                    <div
-                      style={{ backgroundColor: template.config.headerColor }}
-                      className="p-4 flex items-center gap-3 relative overflow-hidden"
-                    >
-                      {/* Add simulated gradient overlay for preview only */}
-                      <div className="absolute inset-0 bg-white/10" />
+                  {/* Real-feel LINE Chat Mockup */}
+                  <div className="relative mx-auto rounded-3xl p-3 bg-[#7488ab] shadow-inner max-w-[280px]">
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-600/30 rounded-full" />
+                    
+                    <div className="mt-4 flex gap-2">
+                       {/* Profile Pic Mock */}
+                       <div className="h-8 w-8 rounded-full bg-slate-200 shrink-0 shadow-sm overflow-hidden border border-white/20">
+                          <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="" className="w-full h-full opacity-80" />
+                       </div>
 
-                      <div className="relative z-10 flex items-center gap-2">
-                        <div className="opacity-90">
-                          {getIcon(template.key)}
-                        </div>
-                        <span className="text-white font-bold text-sm tracking-wide text-shadow-sm">
-                          {template.config.headerText}
-                        </span>
-                      </div>
-                    </div>
+                       <div className="flex flex-col gap-1 max-w-[200px]">
+                          <span className="text-[10px] text-white/70 font-bold ml-1">OA Service</span>
+                          
+                          {/* Flex Bubble Container */}
+                          <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
+                            {/* Flex Header */}
+                            <div
+                              style={{ backgroundColor: template.config.headerColor }}
+                              className="p-3.5 flex items-center gap-2.5 relative overflow-hidden"
+                            >
+                              <div className="absolute inset-0 bg-linear-to-b from-white/10 to-black/10" />
+                              <div className="relative z-10 flex items-center gap-2">
+                                <div className="opacity-90 scale-90">
+                                  {getIcon(template.key)}
+                                </div>
+                                <span className="text-white font-bold text-[13px] tracking-tight leading-tight">
+                                  {template.config.headerText}
+                                </span>
+                              </div>
+                            </div>
 
-                    {/* Flex Body Mock */}
-                    <div className="bg-white">
-                      <div className="h-32 bg-gray-300 w-full object-cover relative">
-                        <img
-                          src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=500&q=60"
-                          alt="Property"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute top-2 right-2 bg-white/90 px-2 py-0.5 rounded text-xs font-bold text-gray-700">
-                          FOR SALE
-                        </div>
-                      </div>
-                      <div className="p-3 space-y-2">
-                        <div className="h-4 bg-slate-100 rounded w-3/4" />
-                        <div className="h-3 bg-slate-50 rounded w-1/2" />
-                        <div className="flex justify-between items-center pt-2">
-                          <div className="h-5 bg-red-50 rounded w-1/3" />
-                          <div className="h-6 w-20 bg-slate-800 rounded text-center text-[10px] text-white leading-6 px-2">
-                            Button
+                            {/* Dynamic Flex Body */}
+                            {(template.key === "LOGIN" || template.key === "SIGNUP" || template.key === "CONTACT") ? (
+                              /* USER/SYSTEM PREVIEW */
+                              <div className="p-4 bg-white space-y-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200">
+                                    <User className="w-5 h-5" />
+                                  </div>
+                                  <div className="flex-1 space-y-1">
+                                    <div className="h-3 w-2/3 bg-slate-100 rounded" />
+                                    <div className="h-2 w-1/3 bg-slate-50 rounded" />
+                                  </div>
+                                </div>
+                                <div className="space-y-2 pt-2 border-t border-slate-50">
+                                  <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                    <Clock className="w-3 h-3" /> 
+                                    <span>{new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                    <Tag className="w-3 h-3" /> 
+                                    <span className="px-1.5 py-0.5 rounded bg-slate-100 text-[9px] font-bold text-slate-500">SYSTEM_ALERT</span>
+                                  </div>
+                                </div>
+                                <div className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-900 rounded-xl text-white text-xs font-bold shadow-md hover:bg-slate-800 transition-colors">
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                  ตรวจสอบสถานะ
+                                </div>
+                              </div>
+                            ) : (
+                              /* PROPERTY PREVIEW */
+                              <div className="bg-white">
+                                <div className="h-32 bg-slate-200 w-full object-cover relative group">
+                                  <img
+                                    src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=500&q=60"
+                                    alt="Property"
+                                    className="w-full h-full object-cover"
+                                  />
+                                  <div className="absolute top-2 right-2 bg-white/95 px-2 py-0.5 rounded-lg text-[9px] font-bold text-slate-800 shadow-sm border border-slate-100">
+                                    {template.key === "DEAL_SOLO" ? "🎉 SOLD OUT" : template.key === "DEAL_RENT" ? "📝 RENTED" : "FOR SALE"}
+                                  </div>
+                                  {template.key === "PRICE_DROP" && (
+                                    <div className="absolute -left-1 top-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-r-md shadow-lg transform -rotate-1 origin-left">
+                                      PRICE DROP!
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="p-4 space-y-3">
+                                  <div className="space-y-1.5">
+                                    <div className="h-3 bg-slate-100 rounded w-full" />
+                                    <div className="h-2.5 bg-slate-50 rounded w-3/4" />
+                                  </div>
+                                  <div className="flex justify-between items-end pt-2 border-t border-slate-50">
+                                    <div className="space-y-1">
+                                      <div className="h-2 w-12 bg-slate-50 rounded" />
+                                      <div className="h-5 bg-red-50 rounded w-20 border border-red-100" />
+                                    </div>
+                                    <div className="h-8 w-24 bg-slate-900 hover:bg-slate-800 rounded-xl text-center text-[11px] text-white font-bold leading-8 px-3 shadow-md transition-all">
+                                      ดูรายละเอียด
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      </div>
+                       </div>
                     </div>
+
+                    {/* Chat Tail Mockup */}
                   </div>
                 </div>
               </div>

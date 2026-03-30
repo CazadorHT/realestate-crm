@@ -15,7 +15,11 @@ import { SocialKeyword } from "@/features/site-settings/schema";
 import { KeywordAutomationCard } from "./social-automation/KeywordAutomationCard";
 import { TemplateEditorCard } from "./social-automation/TemplateEditorCard";
 
-export function SocialAutomationSettings() {
+export function SocialAutomationSettings({
+  lineBotInfo,
+}: {
+  lineBotInfo?: any;
+}) {
   const [keywords, setKeywords] = useState<SocialKeyword[]>([]);
   const [templates, setTemplates] = useState({
     facebook: { th: "", en: "", cn: "" },
@@ -29,6 +33,11 @@ export function SocialAutomationSettings() {
     "facebook" | "instagram" | "line" | "tiktok"
   >("facebook");
   
+  const [tiktokConnected, setTiktokConnected] = useState(false);
+  const [tiktokMetadata, setTiktokMetadata] = useState<{
+    display_name?: string;
+    avatar_url?: string;
+  }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -71,6 +80,13 @@ export function SocialAutomationSettings() {
             cn: settings.line_post_template_cn || "",
           },
         });
+        setTiktokConnected(!!settings.tiktok_auth_token);
+        if (settings.tiktok_auth_token) {
+          setTiktokMetadata({
+            display_name: settings.tiktok_auth_token.display_name,
+            avatar_url: settings.tiktok_auth_token.avatar_url,
+          });
+        }
         setInitialData(settings);
       } catch (err) {
         toast.error("ไม่สามารถโหลดข้อมูลได้");
@@ -308,6 +324,9 @@ export function SocialAutomationSettings() {
         hasChanges={hasChanges}
         handleSave={handleSave}
         templateSectionRef={templateSectionRef}
+        tiktokConnected={tiktokConnected}
+        tiktokMetadata={tiktokMetadata}
+        lineBotInfo={lineBotInfo}
       />
     </div>
   );

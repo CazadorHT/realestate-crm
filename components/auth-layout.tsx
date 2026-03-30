@@ -44,7 +44,7 @@ export function AuthLayout({
           </Link>
         </div>
 
-        <div className="relative z-10 space-y-6 text-white">
+        <div className="relative z-10 space-y-6 text-white mx-auto ">
           <h1 className="text-4xl font-bold leading-tight animate-in slide-in-from-bottom-10 fade-in duration-700 delay-500 fill-mode-backwards">
             {greeting}
           </h1>

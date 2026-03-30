@@ -85,54 +85,46 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 
     for (const row of data || []) {
       const key = row.key as SiteSettingKey;
-      if (key in settings) {
-        if (key === "social_automation_keywords") {
-          // It's an array of objects stored as JSONB
-          (settings as any)[key] = Array.isArray(row.value)
-            ? (row.value as any)
-            : [];
-        } else if (
-          key === "facebook_post_template" ||
-          key === "facebook_post_template_en" ||
-          key === "facebook_post_template_cn" ||
-          key === "instagram_post_template" ||
-          key === "instagram_post_template_en" ||
-          key === "instagram_post_template_cn" ||
-          key === "line_post_template" ||
-          key === "line_post_template_en" ||
-          key === "line_post_template_cn" ||
-          key === "tiktok_post_template" ||
-          key === "tiktok_post_template_en" ||
-          key === "tiktok_post_template_cn" ||
-          key === "site_name" ||
-          key === "company_name" ||
-          key === "site_description" ||
-          key === "contact_phone" ||
-          key === "contact_email" ||
-          key === "contact_address" ||
-          key === "google_maps_url" ||
-          key === "facebook_url" ||
-          key === "instagram_url" ||
-          key === "line_url" ||
-          key === "tiktok_url" ||
-          key === "line_id" ||
-          key === "logo_light" ||
-          key === "logo_dark" ||
-          key === "favicon" ||
-          key === "google_tag_manager_id"
-        ) {
-          (settings as any)[key] =
-            typeof row.value === "string" ? row.value : (settings as any)[key];
-        } else {
-          // Value is stored as JSONB, parse boolean or number
-          // Handle cases where it might be a string "true" or a boolean true
-          if (key === "hot_lead_threshold") {
-            (settings as any)[key] = Number(row.value) || 80;
-          } else {
-            (settings as any)[key] = row.value === true || row.value === "true";
-          }
-        }
+      if (!(key in settings)) continue;
+
+      const val = row.value;
+
+      // 1. Handle Arrays (Keywords)
+      if (key === "social_automation_keywords") {
+        (settings as any)[key] = Array.isArray(val) ? val : [];
+        continue;
       }
+
+      // 2. Handle Objects (Tokens)
+      if (key === "tiktok_auth_token" || key === "google_integration_tokens") {
+        (settings as any)[key] = val && typeof val === "object" ? val : undefined;
+        continue;
+      }
+
+      // 3. Handle Strings (Templates, URLs, Branding)
+      const stringKeys: SiteSettingKey[] = [
+        "site_name", "company_name", "site_description",
+        "contact_phone", "contact_email", "contact_address",
+        "google_maps_url", "facebook_url", "instagram_url", "line_url", "tiktok_url",
+        "line_id", "logo_light", "logo_dark", "favicon",
+        "google_tag_manager_id", "meta_page_access_token", "line_channel_access_token", "meta_page_name"
+      ];
+
+      if (key.includes("_post_template") || stringKeys.includes(key)) {
+        if (typeof val === "string") {
+          (settings as any)[key] = val;
+        }
+        continue;
+      }
+
+      // 4. Handle Numbers
+      if (key === "hot_lead_threshold") {
+        (settings as any)[key] = typeof val === "number" ? val : Number(val) || 80;
+        continue;
+      }
+
+      // 5. Handle Booleans (everything else)
+      (settings as any)[key] = val === true || val === "true";
     }
 
     return settings;
@@ -158,30 +150,33 @@ export async function getSiteSetting(key: SiteSettingKey): Promise<any> {
       return DEFAULT_SETTINGS[key];
     }
 
+    const val = data.value;
+
     if (key === "social_automation_keywords") {
-      return Array.isArray(data.value) ? data.value : [];
+      return Array.isArray(val) ? val : [];
     }
 
-    if (
-      key === "facebook_post_template" ||
-      key === "facebook_post_template_en" ||
-      key === "facebook_post_template_cn" ||
-      key === "instagram_post_template" ||
-      key === "instagram_post_template_en" ||
-      key === "instagram_post_template_cn" ||
-      key === "line_post_template" ||
-      key === "line_post_template_en" ||
-      key === "line_post_template_cn" ||
-      key === "tiktok_post_template" ||
-      key === "tiktok_post_template_en" ||
-      key === "tiktok_post_template_cn"
-    ) {
-      return typeof data.value === "string"
-        ? data.value
-        : DEFAULT_SETTINGS[key];
+    if (key === "tiktok_auth_token" || key === "google_integration_tokens") {
+      return val && typeof val === "object" ? val : DEFAULT_SETTINGS[key];
     }
 
-    return data.value === true || data.value === "true";
+    const stringKeys: SiteSettingKey[] = [
+      "site_name", "company_name", "site_description",
+      "contact_phone", "contact_email", "contact_address",
+      "google_maps_url", "facebook_url", "instagram_url", "line_url", "tiktok_url",
+      "line_id", "logo_light", "logo_dark", "favicon",
+      "google_tag_manager_id", "meta_page_access_token", "line_channel_access_token", "meta_page_name"
+    ];
+
+    if (key.includes("_post_template") || stringKeys.includes(key)) {
+      return typeof val === "string" ? val : DEFAULT_SETTINGS[key];
+    }
+
+    if (key === "hot_lead_threshold") {
+      return typeof val === "number" ? val : Number(val) || 80;
+    }
+
+    return val === true || val === "true";
   } catch (error) {
     console.error(`Error getting setting ${key}:`, error);
     return DEFAULT_SETTINGS[key];
@@ -193,7 +188,7 @@ export async function getSiteSetting(key: SiteSettingKey): Promise<any> {
  */
 export async function updateSiteSetting(
   key: SiteSettingKey,
-  value: boolean | any[] | string,
+  value: boolean | any[] | string | object,
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const ctx = await requireAuthContext();
@@ -201,20 +196,15 @@ export async function updateSiteSetting(
 
     const supabase = ctx.supabase;
 
-    // Basic validation for single key update if it's part of branding
-    if (
-      [
-        "contact_email",
-        "google_maps_url",
-        "facebook_url",
-        "instagram_url",
-        "line_url",
-        "tiktok_url",
-        "logo_light",
-        "logo_dark",
-        "favicon",
-      ].includes(key)
-    ) {
+    // Validation using partial schema
+    const keysToValidate = [
+      "contact_email", "google_maps_url", "facebook_url", 
+      "instagram_url", "line_url", "tiktok_url",
+      "logo_light", "logo_dark", "favicon",
+      "tiktok_auth_token", "google_integration_tokens"
+    ];
+
+    if (keysToValidate.includes(key)) {
       const partialSchema = siteSettingsSchema.partial();
       const result = partialSchema.safeParse({ [key]: value });
       if (!result.success) {
@@ -239,7 +229,7 @@ export async function updateSiteSetting(
     );
 
     if (error) {
-      console.error("Error updating site setting:", error);
+      console.error(`Error updating site setting [${key}]:`, error);
       return { success: false, message: mapDbError(error) };
     }
 
@@ -370,11 +360,11 @@ export async function generateSocialAutomationTemplatesAction(
         3. เน้นจุดเด่นของทรัพย์
         4. ส่งกลับเฉพาะเนื้อหา Template เท่านั้น ไม่ต้องขยายความ
       `;
-    } else if (type === "TIKTOK_POST") {
+    } else if (type = "TIKTOK_POST") {
       const langName = lang === "th" ? "ภาษาไทย" : lang === "en" ? "English" : "Chinese";
       prompt = `
         คุณเป็นครีเอเตอร์ TikTok สายอสังหาริมทรัพย์ที่เก่งมาก
-        ช่วยเขียน Caption สำหรับโพสต์ TikTok เพื่อดึงดูดคนดูคลิป
+        ช่วยเขียน Caption สำหรับโพสต์ TikTok เพื่อดึงดูดคนดูคลิป (Photo Mode)
         โดยให้เขียนเป็น ${langName}
         
         ให้ใช้ "Dynamic Tags" เหล่านี้ประกอบในเนื้อหา:
@@ -384,11 +374,12 @@ export async function generateSocialAutomationTemplatesAction(
         - {{location}}: ทำเล
         - {{link}}: ลิงก์ทรัพย์
         
-        คำแนะนำ:
+        คำแนะนำสำหรับ TikTok:
         1. เขียนให้ดูสนุก เป็นกันเอง และทันสมัย (TikTok Style)
-        2. ใส่ Emoji เยอะๆ และใส่ Hashtag ที่เกี่ยวข้อง
+        2. ใส่ Emoji เยอะๆ และใส่ Hashtag ที่เกี่ยวข้อง (เช่น #vconnectasset #realestate)
         3. เขียนให้สั้น กระชับ แต่อ่านแล้วอยากหยุดดูคลิป
-        4. ส่งกลับเฉพาะเนื้อหา Caption เท่านั้น ไม่ต้องขยายความ
+        4. ใช้ประโยคเปิด (Hook) ที่น่าสนใจใน 3-5 คำแรก
+        5. ส่งกลับเฉพาะเนื้อหา Caption เท่านั้น ไม่ต้องขยายความ
       `;
     } else {
       const langName = lang === "th" ? "ภาษาไทย" : lang === "en" ? "English" : "Chinese";

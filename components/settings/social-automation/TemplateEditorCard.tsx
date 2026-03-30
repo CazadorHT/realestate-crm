@@ -17,6 +17,7 @@ import { TikTokPostPreview } from "./TikTokPostPreview";
 import { LinePostPreview } from "./LinePostPreview";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 import { SMART_TAGS } from "./constants";
 
@@ -44,6 +45,16 @@ interface TemplateEditorCardProps {
   hasChanges: boolean;
   handleSave: () => void;
   templateSectionRef: React.RefObject<HTMLDivElement | null>;
+  tiktokConnected?: boolean;
+  tiktokMetadata?: {
+    display_name?: string;
+    avatar_url?: string;
+  };
+  lineBotInfo?: {
+    displayName?: string;
+    pictureUrl?: string;
+    basicId?: string;
+  };
 }
 
 export function TemplateEditorCard({
@@ -59,20 +70,43 @@ export function TemplateEditorCard({
   hasChanges,
   handleSave,
   templateSectionRef,
+  tiktokConnected,
+  tiktokMetadata,
+  lineBotInfo,
 }: TemplateEditorCardProps) {
-  const isInvalid = activePlatform === "instagram" && 
-    Object.values(templates.instagram).some(text => text.length > 2200);
+  const isInvalid = (activePlatform === "instagram" && 
+    Object.values(templates.instagram).some(text => text.length > 2200)) ||
+    (activePlatform === "tiktok" &&
+    Object.values(templates.tiktok).some(text => text.length > 4000));
 
   return (
     <div ref={templateSectionRef} className="scroll-mt-6">
       <Card className="mt-8 border-slate-200 shadow-sm relative overflow-hidden">
-        {/* Decorative Backgound */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-100/30 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
+        {/* Decorative Background */}
+        <div className={cn(
+          "absolute top-0 right-0 w-64 h-64 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none transition-colors duration-500",
+          activePlatform === "facebook" ? "bg-blue-100/40" :
+          activePlatform === "instagram" ? "bg-pink-100/40" :
+          activePlatform === "tiktok" ? "bg-slate-200/40" :
+          "bg-emerald-100/40"
+        )} />
 
-        <CardHeader className="bg-linear-to-r from-slate-50 to-amber-50 border-b relative">
+        <CardHeader className={cn(
+          "border-b relative transition-colors duration-500",
+          activePlatform === "facebook" ? "bg-linear-to-r from-blue-600 to-indigo-600/50" :
+          activePlatform === "instagram" ? "bg-linear-to-r from-fuchsia-600 to-pink-600/50" :
+          activePlatform === "tiktok" ? "bg-linear-to-r from-slate-800 to-slate-700/80" :
+          "bg-linear-to-r from-green-600 to-emerald-600/50"
+        )}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-xl">
+              <div className={cn(
+                "p-2 rounded-xl transition-colors duration-500",
+                activePlatform === "facebook" ? "bg-blue-100" :
+                activePlatform === "instagram" ? "bg-pink-100" :
+                activePlatform === "tiktok" ? "bg-slate-200" :
+                "bg-emerald-100"
+              )}>
                 {activePlatform === "facebook" ? (
                   <FaMeta className="h-5 w-5 text-blue-600" />
                 ) : activePlatform === "instagram" ? (
@@ -84,7 +118,7 @@ export function TemplateEditorCard({
                 )}
               </div>
               <div>
-                <CardTitle className="text-lg font-bold">
+                <CardTitle className="text-lg font-bold text-white">
                   {activePlatform === "facebook"
                     ? "Facebook Post Template"
                     : activePlatform === "instagram"
@@ -93,7 +127,7 @@ export function TemplateEditorCard({
                         ? "TikTok Post Template"
                         : "Line Flex Template"}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-white">
                   {activePlatform === "facebook"
                     ? "แก้ไขรูปแบบข้อความสำหรับโพสต์ลง Facebook"
                     : activePlatform === "instagram"
@@ -127,7 +161,10 @@ export function TemplateEditorCard({
                 variant={activePlatform === "tiktok" ? "secondary" : "ghost"}
                 size="sm"
                 onClick={() => setActivePlatform("tiktok")}
-                className={`rounded-lg px-4 h-8 transition-all ${activePlatform === "tiktok" ? "bg-white text-pink-600 shadow-xs" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"}`}
+                className={cn(
+                  "rounded-lg px-4 h-8 transition-all",
+                  activePlatform === "tiktok" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
+                )}
               >
                 <FaTiktok className="h-3.5 w-3.5 mr-2" />
                 TikTok
@@ -148,7 +185,7 @@ export function TemplateEditorCard({
             <Button
               variant="outline"
               size="sm"
-              className="border-amber-200! bg-amber-50 text-amber-700 hover:text-amber-100! hover:bg-amber-600! gap-2 font-medium h-8 rounded-lg"
+              className="border-blue-200! bg-blue-50 text-blue-700 hover:text-blue-100! hover:bg-blue-500! gap-2 font-medium h-8 rounded-lg"
               onClick={() =>
                 handleAiGenerate(
                   activePlatform === "facebook" || activePlatform === "instagram"
@@ -171,6 +208,74 @@ export function TemplateEditorCard({
               สร้างด้วย AI ({activeTab.toUpperCase()})
             </Button>
           </div>
+
+          {activePlatform === "tiktok" && (
+            <div className="mt-4 flex items-center justify-between p-3 bg-white/50 border border-slate-200 rounded-xl shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className={cn(
+                  "h-2 w-2 rounded-full animate-pulse mr-1",
+                  tiktokConnected ? "bg-green-500" : "bg-red-500"
+                )} />
+                <span className="text-[11px] font-bold text-slate-600">
+                  {tiktokConnected ? "TikTok Connected" : "TikTok Not Connected"}
+                </span>
+                {tiktokConnected && tiktokMetadata?.display_name && (
+                  <div className="flex items-center gap-1.5 ml-3 px-2 py-0.5 rounded-full bg-slate-900 text-white text-[10px] font-bold border border-slate-700 shadow-sm">
+                    {tiktokMetadata.avatar_url ? (
+                      <img src={tiktokMetadata.avatar_url} alt="" className="h-3.5 w-3.5 rounded-full border border-slate-700" />
+                    ) : (
+                      <div className="h-3.5 w-3.5 rounded-full bg-slate-700 flex items-center justify-center">
+                        <FaTiktok className="h-2 w-2" />
+                      </div>
+                    )}
+                    <span>@{tiktokMetadata.display_name}</span>
+                  </div>
+                )}
+              </div>
+              <Button
+                size="sm"
+                variant={tiktokConnected ? "outline" : "default"}
+                className={cn(
+                  "h-8 rounded-lg text-xs font-bold",
+                  !tiktokConnected && "bg-slate-900 hover:bg-slate-800 text-white"
+                )}
+                onClick={() => window.location.href = "/api/auth/tiktok/login"}
+              >
+                {tiktokConnected ? "Reconnect" : "Connect Account"}
+              </Button>
+            </div>
+          )}
+
+          {activePlatform === "line" && (
+            <div className="mt-4 flex items-center justify-between p-3 bg-white/50 border border-slate-200 rounded-xl shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse mr-1" />
+                <span className="text-[11px] font-bold text-slate-600">
+                  LINE Integrated
+                </span>
+                {lineBotInfo?.displayName && (
+                  <div className="flex items-center gap-1.5 ml-3 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold border border-emerald-500 shadow-sm">
+                    {lineBotInfo.pictureUrl ? (
+                      <img src={lineBotInfo.pictureUrl} alt="" className="h-3.5 w-3.5 rounded-full border border-emerald-500" />
+                    ) : (
+                      <div className="h-3.5 w-3.5 rounded-full bg-emerald-500 flex items-center justify-center">
+                        <FaLine className="h-2 w-2" />
+                      </div>
+                    )}
+                    <span>{lineBotInfo.displayName}</span>
+                    {lineBotInfo.basicId && (
+                      <span className="opacity-70 font-normal ml-0.5">({lineBotInfo.basicId})</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <Link href="/protected/line-manager">
+                <Button size="sm" variant="outline" className="h-8 rounded-lg text-xs font-bold hover:text-emerald-600 border-emerald-200 text-emerald-700 bg-white hover:bg-emerald-50">
+                  Manage Bot
+                </Button>
+              </Link>
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="p-0">
@@ -253,24 +358,61 @@ export function TemplateEditorCard({
                         }
                         className="min-h-[350px] font-mono text-sm border-slate-200 focus:border-amber-500 focus:ring-amber-200 placeholder:text-slate-300 resize-none pb-8"
                       />
-                      <div className="flex justify-between items-center mt-2 px-1">
-                        <div className="text-[11px] text-slate-400 italic">
-                          {activePlatform === "instagram" && 
-                           templates[activePlatform][lang as "th" | "en" | "cn"].length > 2200 && (
-                            <span className="text-red-500 font-bold flex items-center gap-1 animate-pulse">
-                              ⚠️ ยาวเกินกำหนด (จำกัด 2,200)
-                            </span>
-                          )}
+                      <div className="flex flex-col gap-2 mt-2">
+                        <div className="flex justify-between items-center px-1">
+                          <div className="text-[11px] text-slate-400 italic">
+                            {activePlatform === "instagram" && 
+                             templates[activePlatform][lang as "th" | "en" | "cn"].length > 2200 && (
+                              <span className="text-red-500 font-bold flex items-center gap-1 animate-pulse">
+                                ⚠️ ยาวเกินกำหนด IG (จำกัด 2,200)
+                              </span>
+                            )}
+                            {activePlatform === "tiktok" && 
+                             templates[activePlatform][lang as "th" | "en" | "cn"].length > 4000 && (
+                              <span className="text-red-500 font-bold flex items-center gap-1 animate-pulse">
+                                ⚠️ ยาวเกินกำหนด TikTok (จำกัด 4,000)
+                              </span>
+                            )}
+                          </div>
+                          <div className={cn(
+                            "text-[10px] font-medium px-2 py-0.5 rounded-full border bg-white",
+                            (activePlatform === "instagram" && templates[activePlatform][lang as "th" | "en" | "cn"].length > 2200) ||
+                            (activePlatform === "tiktok" && templates[activePlatform][lang as "th" | "en" | "cn"].length > 4000)
+                              ? "text-red-600 border-red-200 bg-red-50"
+                              : "text-slate-400 border-slate-200"
+                          )}>
+                            {templates[activePlatform][lang as "th" | "en" | "cn"].length.toLocaleString()} 
+                            {activePlatform === "instagram" ? " / 2,200" : activePlatform === "tiktok" ? " / 4,000" : ""} ตัวอักษร
+                          </div>
                         </div>
-                        <div className={cn(
-                          "text-[10px] font-medium px-2 py-0.5 rounded-full border bg-white",
-                          activePlatform === "instagram" && templates[activePlatform][lang as "th" | "en" | "cn"].length > 2200
-                            ? "text-red-600 border-red-200 bg-red-50"
-                            : "text-slate-400 border-slate-200"
-                        )}>
-                          {templates[activePlatform][lang as "th" | "en" | "cn"].length.toLocaleString()} 
-                          {activePlatform === "instagram" ? " / 2,200" : ""} ตัวอักษร
-                        </div>
+
+                        {activePlatform === "tiktok" && (
+                          <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col gap-1.5">
+                            <p className="font-bold flex items-center gap-1.5 text-slate-700">
+                              <FaTiktok className="h-3 w-3" />
+                              TikTok Caption Tips:
+                            </p>
+                            <ul className="list-disc pl-4 space-y-0.5 text-[11px] opacity-80">
+                              <li>ควรสั้น กระชับ และใช้ประโยค Hook ที่น่าสนใจใน 3-5 คำแรก</li>
+                              <li>ใส่ Hashtag 3-5 อัน (เช่น #อสังหา #บ้านเช่า)</li>
+                              <li>อิโมจิช่วยให้โพสต์ดูเป็นกันเองและน่าสนใจขึ้น</li>
+                            </ul>
+                          </div>
+                        )}
+
+                        {activePlatform === "instagram" && (
+                          <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col gap-1.5">
+                            <p className="font-bold flex items-center gap-1.5 text-slate-700">
+                              <FaInstagram className="h-3 w-3" />
+                              Instagram Caption Tips:
+                            </p>
+                            <ul className="list-disc pl-4 space-y-0.5 text-[11px] opacity-80">
+                              <li>IG จำกัดที่ 2,200 ตัวอักษร พยายามอย่าให้ยาวจนเกินไป</li>
+                              <li>ใส่รายละเอียดสำคัญ (ห้องนอน, ห้องน้ำ, พื้นที่) ให้ชัดเจน</li>
+                              <li>บรรทัดแรกสำคัญที่สุดคนจะเห็น "ดูเพิ่มเติม..." หลังจาก 125 ตัวอักษร</li>
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </TabsContent>

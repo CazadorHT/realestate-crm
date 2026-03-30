@@ -22,9 +22,10 @@ const formatPrice = (p: any) => {
  */
 export async function renderPropertySocialTemplate(template: string, property: any, lang: string) {
   if (!template) return "";
+  if (!property) return template;
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-  const publicUrl = `${baseUrl}/properties/${property.slug || property.id}`;
+  const publicUrl = `${baseUrl}/properties/${property.slug || property.id || ""}`;
 
   const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : "售价";
   const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : "租金";
@@ -43,7 +44,7 @@ export async function renderPropertySocialTemplate(template: string, property: a
     priceText = property.price ? `${formatPrice(property.price)} ${tBaht}` : "";
   }
 
-  const primaryAgent = property.property_agents?.[0]?.profiles;
+  const primaryAgent = property.property_agents?.[0]?.profiles || {};
   const tTitle = (lang === "th" ? property.title : (property as any)[`title_${lang}`]) || property.title || "";
   const tDescription = (lang === "th" ? property.description : (property as any)[`description_${lang}`]) || property.description || "";
   
@@ -57,30 +58,32 @@ export async function renderPropertySocialTemplate(template: string, property: a
     en: { CONDO: "Condo", HOUSE: "House", TOWNHOUSE: "Townhouse", LAND: "Land", COMMERCIAL: "Commercial", OFFICE: "Office", WAREHOUSE: "Warehouse" },
     cn: { CONDO: "公寓", HOUSE: "别墅", TOWNHOUSE: "联排别墅", LAND: "土地", COMMERCIAL: "商用楼", OFFICE: "办公室", WAREHOUSE: "仓库" }
   };
-  const tPropertyType = PROPERTY_TYPE_LABELS[lang]?.[property.property_type] || property.property_type;
+  const tPropertyType = PROPERTY_TYPE_LABELS[lang]?.[property.property_type] || property.property_type || "";
 
   const LISTING_TYPE_LABELS: Record<string, Record<string, string>> = {
     th: { SALE: "ขาย", RENT: "ให้เช่า", SALE_AND_RENT: "ขาย/เช่า" },
     en: { SALE: "Sale", RENT: "Rent", SALE_AND_RENT: "Sale/Rent" },
     cn: { SALE: "出售", RENT: "出租", SALE_AND_RENT: "出售/出租" }
   };
-  const tListingType = LISTING_TYPE_LABELS[lang]?.[property.listing_type] || property.listing_type;
+  const tListingType = LISTING_TYPE_LABELS[lang]?.[property.listing_type] || property.listing_type || "";
 
   const tAmenities = (property as any).property_features
     ?.map((f: any) => {
       const name = (lang === "th" ? f.features?.name : (f.features?.[`name_${lang}`])) || f.features?.name;
-      return `- ${name}`;
+      return name ? `- ${name}` : null;
     })
     .filter(Boolean)
     .join("\n") || "-";
 
   const nearbyPlaces = (property.nearby_places as any[] || [])
-    ?.map((p: any) => `- ${p.name} (${p.distance || ""})`)
+    ?.map((p: any) => p.name ? `- ${p.name}${p.distance ? ` (${p.distance})` : ""}` : null)
+    .filter(Boolean)
     .slice(0, 5)
     .join("\n") || "-";
 
   const nearbyTransits = (property.nearby_transits as any[] || [])
-    ?.map((p: any) => `- ${p.name} (${p.distance || ""})`)
+    ?.map((p: any) => p.name ? `- ${p.name}${p.distance ? ` (${p.distance})` : ""}` : null)
+    .filter(Boolean)
     .join("\n") || "-";
 
   const closestTransitName = (lang === "th" ? property.transit_station_name : (property as any)[`transit_station_name_${lang}`]) || property.transit_station_name || "";
@@ -175,9 +178,9 @@ export async function renderPropertySocialTemplate(template: string, property: a
     .replace(/{{verified}}/g, property.verified ? "Verified" : "")
     .replace(/{{exclusive}}/g, property.is_exclusive ? "Exclusive" : "")
     .replace(/{{link}}/g, publicUrl)
-    .replace(/{{agent_name}}/g, primaryAgent?.full_name || "")
-    .replace(/{{agent_phone}}/g, primaryAgent?.phone || "")
-    .replace(/{{agent_line}}/g, primaryAgent?.line_id || "");
+    .replace(/{{agent_name}}/g, primaryAgent.full_name || "")
+    .replace(/{{agent_phone}}/g, primaryAgent.phone || "")
+    .replace(/{{agent_line}}/g, primaryAgent.line_id || "");
 }
 
 /**
@@ -214,6 +217,44 @@ export async function getPropertySocialContent(
   const isTikTok = platform === "TIKTOK";
   const isFacebook = platform === "FACEBOOK";
   const isInstagram = platform === "INSTAGRAM";
+  
+  const isTikTokConnected = !!settings.tiktok_auth_token;
+  const isFacebookConnected = !!settings.meta_page_access_token;
+  const isInstagramConnected = !!settings.meta_page_access_token; // Assuming Meta token covers both
+  const isLineConnected = !!(process.env.LINE_CHANNEL_ACCESS_TOKEN || settings.line_channel_access_token);
+
+  const isConnected = isTikTok 
+    ? isTikTokConnected 
+    : isLine 
+      ? isLineConnected 
+      : isFacebook 
+        ? isFacebookConnected 
+        : isInstagram 
+          ? isInstagramConnected 
+          : false;
+
+  // 2. Fetch integration metadata
+  let identity: { display_name?: string; avatar_url?: string } = {};
+
+  if (isTikTok && settings.tiktok_auth_token) {
+    identity = {
+      display_name: settings.tiktok_auth_token.display_name,
+      avatar_url: settings.tiktok_auth_token.avatar_url,
+    };
+  } else if (isLine && isLineConnected) {
+    const { getLineBotInfo } = await import("@/lib/line");
+    const botInfo = await getLineBotInfo();
+    if (botInfo) {
+      identity = {
+        display_name: botInfo.displayName,
+        avatar_url: botInfo.pictureUrl,
+      };
+    }
+  } else if ((isFacebook || isInstagram) && settings.meta_page_name) {
+    identity = {
+      display_name: settings.meta_page_name,
+    };
+  }
 
   let template = "";
   if (isLine) {
@@ -287,7 +328,9 @@ export async function getPropertySocialContent(
     listingType: property.listing_type,
     listingType_label: property.listing_type === "SALE" ? tSale : property.listing_type === "RENT" ? tRent : "Sale/Rent",
     isExclusive: property.is_exclusive,
-    verified: property.verified
+    verified: property.verified,
+    isConnected,
+    identity
   };
 }
 

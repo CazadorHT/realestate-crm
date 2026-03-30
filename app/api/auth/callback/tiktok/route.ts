@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exchangeTikTokCode, saveTikTokToken } from "@/lib/tiktok";
+import { exchangeTikTokCode, saveTikTokToken, getTikTokUserInfo } from "@/lib/tiktok";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -23,7 +23,25 @@ export async function GET(request: NextRequest) {
   const tokenData = await exchangeTikTokCode(code);
 
   if (tokenData) {
-    await saveTikTokToken(tokenData);
+    // 1. Fetch user info to display in settings
+    const userInfo = await getTikTokUserInfo(tokenData.access_token);
+    
+    if (!userInfo) {
+      console.warn("[TikTok Callback] Successfully exchanged token but failed to fetch user info. Persisting token without metadata.");
+    }
+
+    const finalTokenData = {
+      ...tokenData,
+      display_name: userInfo?.display_name || "TikTok User",
+      avatar_url: userInfo?.avatar_url || "",
+      updated_at: new Date().toISOString(),
+    };
+
+    // 2. Save to database
+    await saveTikTokToken(finalTokenData);
+    
+    console.log(`[TikTok Callback] Successfully connected: ${userInfo?.display_name || 'Unknown'}`);
+
     return NextResponse.redirect(
       new URL(
         "/protected/settings?tab=social&success=tiktok_connected",
@@ -31,6 +49,7 @@ export async function GET(request: NextRequest) {
       ),
     );
   } else {
+    console.error("[TikTok Callback] Token exchange returned null/empty.");
     return NextResponse.redirect(
       new URL("/protected/settings?error=token_exchange_failed", request.url),
     );

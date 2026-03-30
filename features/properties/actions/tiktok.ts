@@ -3,43 +3,37 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { getPropertySocialContent, renderPropertySocialTemplate } from "./social";
+import { refreshTikTokTokenIfNeeded, publishTikTokPhotoPost } from "@/lib/tiktok";
 
 /**
- * เตรียมข้อมูลสำหรับโพสต์ไปยัง TikTok (Content Posting API)
- * หมายเหตุ: เนื่องจาก TikTok มีขั้นตอนที่ซับซ้อนกว่า (OAuth -> Upload -> Post)
- * ในเวอร์ชันเบื้องต้นนี้จะเป็นการบันทึกสถานะว่ากำลังเตรียมข้อมูล หรือส่งไปยังคิว
+ * โพสต์รูปภาพไปยัง TikTok (Content Posting API v2)
  */
 export async function postPropertyToTikTokAction(
   propertyId: string,
   caption?: string,
   lang: "th" | "en" | "cn" = "th",
+  postMode: "DIRECT_POST" | "MEDIA_UPLOAD" = "DIRECT_POST",
 ) {
   try {
     const { supabase, role } = await requireAuthContext();
     assertStaff(role);
 
-    // 1. ดึงข้อมูลทรัพย์ พร้อมรูป
+    // 1. ตรวจสอบ Token และ Refresh หากจำเป็น
+    const accessToken = await refreshTikTokTokenIfNeeded();
+    if (!accessToken) {
+      return { 
+        success: false, 
+        message: "ไม่พบการเชื่อมต่อ TikTok หรือ Token หมดอายุ กรุณาเชื่อมต่อบัญชีใหม่ในหน้าตั้งค่า" 
+      };
+    }
+
+    // 2. ดึงข้อมูลทรัพย์ พร้อมรูป
     const { data: property, error: propError } = await supabase
       .from("properties")
       .select(`
         *,
         property_images (
           image_url
-        ),
-        property_agents (
-          profiles (
-            full_name,
-            phone,
-            line_id
-          )
-        ),
-        property_features (
-          features (
-            name,
-            name_en,
-            name_cn,
-            icon_key
-          )
         )
       `)
       .eq("id", propertyId)
@@ -49,41 +43,65 @@ export async function postPropertyToTikTokAction(
       return { success: false, message: "ไม่พบข้อมูลทรัพย์" };
     }
 
-    // 2. จัดเตรียม Caption (Robust Logic)
-    let finalCaption = caption;
+    // 3. จัดเตรียม Caption (Robust Logic)
+    let finalCaption = caption || "";
     if (!finalCaption) {
-      // หากไม่มี caption ส่งมา ให้ใช้ Template จาก Settings
-      const contentData = await getPropertySocialContent(propertyId, lang);
+      const contentData = await getPropertySocialContent(propertyId, lang, "TIKTOK");
       finalCaption = contentData.content;
     } else {
-      // หากมี caption ส่งมา (เช่น แก้ไขจากหน้า UI) ให้ลอง Render Tags เผื่อไว้
       finalCaption = await renderPropertySocialTemplate(finalCaption, property, lang);
     }
 
-    // 3. เตรียมรูปภาพ (Hardened Validation for TikTok Rules)
+    // TikTok Limits: 4000 characters for caption
+    if (finalCaption.length > 4000) {
+      finalCaption = finalCaption.substring(0, 3997) + "...";
+    }
+
+    // 4. เตรียมรูปภาพ (Hardened Validation for TikTok Rules)
+    const rawImagesCount = property.property_images?.length || 0;
     const rawImages = (property.property_images || []).map((img: any) => img.image_url);
     
-    // กรองเฉพาะนามสกุลที่ TikTok Content Posting API รองรับ (JPG, JPEG, WEBP)
     const supportedExtensions = [".jpg", ".jpeg", ".webp"];
     const filteredImages = rawImages.filter(url => {
-      const lowerUrl = url.toLowerCase();
-      return supportedExtensions.some(ext => lowerUrl.endsWith(ext) || lowerUrl.includes(`${ext}?`));
+      if (!url) return false;
+      const cleanUrl = url.split("?")[0].toLowerCase();
+      return supportedExtensions.some(ext => cleanUrl.endsWith(ext));
     });
 
-    // จำกัด 35 รูปตามมาตรฐาน Photo Mode
     const imagesToPost = filteredImages.slice(0, 35);
 
-    if (imagesToPost.length === 0 && rawImages.length > 0) {
+    if (imagesToPost.length === 0) {
       return { 
         success: false, 
-        message: "ไม่พบรูปภาพที่รองรับโดย TikTok (ต้องเป็น .jpg, .jpeg หรือ .webp เท่านั้น)" 
+        message: rawImagesCount > 0 
+          ? "ไม่พบรูปภาพที่ TikTok รองรับ (.jpg, .jpeg, .webp) กรุณาตรวจสอบไฟล์รูปภาพของคุณ" 
+          : "ไม่พบรูปภาพในทรัพย์สินนี้ กรุณาเพิ่มรูปภาพก่อนโพสต์"
       };
     }
 
-    // 4. จำลองการโพสต์ (หรือส่งเข้า Queue สำหรับ Video Processing)
-    // สำหรับสถานะการสาธิต (Demo) เราจะตอบกลับด้วยข้อความที่ TikTok กำหนด
-    console.log(`TikTok Demo Post with ${imagesToPost.length} validated images and caption:`, finalCaption);
+    // 5. ยิง API จริงของ TikTok
+    const tiktokTitle = (property.title || "Real Estate Property").substring(0, 80);
+    
+    const publishResult = await publishTikTokPhotoPost(accessToken, {
+      title: tiktokTitle,
+      description: finalCaption,
+      images: imagesToPost,
+      postMode: postMode,
+    });
 
+    if (!publishResult.success) {
+      // Handle specific TikTok error codes if needed
+      const errorMsg = publishResult.error_code === 401 
+        ? "Session หมดอายุ กรุณาตัดการเชื่อมต่อและเชื่อมต่อ TikTok ใหม่อีกครั้ง"
+        : publishResult.error;
+
+      return { 
+        success: false, 
+        message: `เกิดข้อผิดพลาดจาก TikTok: ${errorMsg}` 
+      };
+    }
+
+    // 6. บันทึกสถานะ
     await supabase
       .from("properties")
       .update({ posted_to_tiktok_at: new Date().toISOString() })
@@ -93,11 +111,13 @@ export async function postPropertyToTikTokAction(
 
     return {
       success: true,
-      message: `Successfully prepared ${imagesToPost.length} images for TikTok!`,
-      data: { share_url: "https://www.tiktok.com" } // Demo placeholder
+      message: postMode === "DIRECT_POST" 
+        ? "โพสต์ลง TikTok สำเร็จแล้ว! (ระบบกำลังทยอยประมวลผล)" 
+        : "ส่งเป็นแบบร่าง (Draft) ไปที่แอป TikTok ของคุณเรียบร้อยแล้ว",
+      publish_id: publishResult.publish_id
     };
   } catch (err) {
     console.error("postPropertyToTikTokAction → error:", err);
-    return { success: false, message: "เกิดข้อผิดพลาดในการโพสต์ลง TikTok" };
+    return { success: false, message: "เกิดข้อผิดพลาดในการเชื่อมต่อกับ TikTok" };
   }
 }
