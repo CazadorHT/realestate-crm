@@ -28,32 +28,45 @@ type CacheData = {
   subDistrictsByDistrict: Map<number, SubDistrict[]> | null;
 };
 
-const cache: CacheData = {
-  provinces: null,
-  districts: null,
-  subDistricts: null,
-  districtsByProvince: null,
-  subDistrictsByDistrict: null,
-};
-
-// Promise deduplication
-const pendingRequests: Record<string, Promise<any>> = {};
-
 export class ThaiAddressService {
+  private static cache: CacheData = {
+    provinces: null,
+    districts: null,
+    subDistricts: null,
+    districtsByProvince: null,
+    subDistrictsByDistrict: null,
+  };
+
+  private static pendingRequests: Record<string, Promise<any>> = {};
+
+  /**
+   * Validates a sample of the data array to ensure structure is correct.
+   * Checks first, middle, and last items.
+   */
+  private static validateSample<T>(data: T[], schema: z.ZodSchema<T>) {
+    if (!Array.isArray(data) || data.length === 0) return;
+    
+    // Sample indexes
+    const indexes = [0, Math.floor(data.length / 2), data.length - 1];
+    indexes.forEach(idx => {
+      if (data[idx]) {
+        schema.parse(data[idx]);
+      }
+    });
+  }
+
   private static async fetchWithFallback<T>(
     endpoint: string,
     schema: z.ZodSchema<T>,
   ): Promise<T[]> {
-    // 1. Try Direct GitHub
     try {
       const response = await fetch(`${GITHUB_BASE_URL}/${endpoint}`);
       if (!response.ok) throw new Error("GitHub Direct Fetch Failed");
       const data = await response.json();
-      // Validate first item to be reasonably sure it's correct data without parsing exact schema of 7k items
-      if (Array.isArray(data) && data.length > 0) {
-        // Optional: validate a sample in dev mode?
-        // schema.parse(data[0]);
-      }
+      
+      // Hardening: Sampling Validation
+      this.validateSample(data, schema);
+      
       return data as T[];
     } catch (error) {
       console.warn(
@@ -61,11 +74,14 @@ export class ThaiAddressService {
         error,
       );
 
-      // 2. Fallback to Proxy
       try {
         const response = await fetch(`${PROXY_BASE_URL}/${endpoint}`);
         if (!response.ok) throw new Error("Proxy Fetch Failed");
         const data = await response.json();
+        
+        // Hardening: Sampling Validation even on proxy
+        this.validateSample(data, schema);
+        
         return data as T[];
       } catch (proxyError) {
         console.error(
@@ -78,107 +94,147 @@ export class ThaiAddressService {
   }
 
   static async getProvinces(): Promise<Province[]> {
-    if (cache.provinces) return cache.provinces;
-    const pending = pendingRequests["provinces"];
+    if (ThaiAddressService.cache.provinces) return ThaiAddressService.cache.provinces;
+    const pending = ThaiAddressService.pendingRequests["provinces"];
     if (pending) return pending;
 
     const promise = this.fetchWithFallback(
       ENDPOINTS.provinces,
       provinceSchema,
     ).then((data) => {
-      cache.provinces = data;
-      delete pendingRequests["provinces"];
+      ThaiAddressService.cache.provinces = data;
+      delete ThaiAddressService.pendingRequests["provinces"];
       return data;
     });
 
-    pendingRequests["provinces"] = promise;
+    ThaiAddressService.pendingRequests["provinces"] = promise;
     return promise;
   }
 
   static async getDistricts(ensureLoaded = false): Promise<District[]> {
-    if (cache.districts) return cache.districts;
-    const pending = pendingRequests["districts"];
+    if (ThaiAddressService.cache.districts) return ThaiAddressService.cache.districts;
+    const pending = ThaiAddressService.pendingRequests["districts"];
     if (pending) return pending;
-
-    if (!ensureLoaded) {
-      // Optimisation: If we don't strictly need them yet, we could delay.
-      // But for now, simple implementation is to just fetch.
-    }
 
     const promise = this.fetchWithFallback(
       ENDPOINTS.districts,
       districtSchema,
     ).then((data) => {
-      cache.districts = data;
-      // Build Index Map
+      ThaiAddressService.cache.districts = data;
       const map = new Map<number, District[]>();
       data.forEach((d) => {
         const list = map.get(d.province_id) || [];
         list.push(d);
         map.set(d.province_id, list);
       });
-      cache.districtsByProvince = map;
-
-      delete pendingRequests["districts"];
+      ThaiAddressService.cache.districtsByProvince = map;
+      delete ThaiAddressService.pendingRequests["districts"];
       return data;
     });
 
-    pendingRequests["districts"] = promise;
+    ThaiAddressService.pendingRequests["districts"] = promise;
     return promise;
   }
 
   static async getSubDistricts(): Promise<SubDistrict[]> {
-    if (cache.subDistricts) return cache.subDistricts;
-    const pending = pendingRequests["subDistricts"];
+    if (ThaiAddressService.cache.subDistricts) return ThaiAddressService.cache.subDistricts;
+    const pending = ThaiAddressService.pendingRequests["subDistricts"];
     if (pending) return pending;
 
     const promise = this.fetchWithFallback(
       ENDPOINTS.subDistricts,
       subDistrictSchema,
     ).then((data) => {
-      cache.subDistricts = data;
-      // Build Index Map
+      ThaiAddressService.cache.subDistricts = data;
       const map = new Map<number, SubDistrict[]>();
       data.forEach((s) => {
         const list = map.get(s.district_id) || [];
         list.push(s);
         map.set(s.district_id, list);
       });
-      cache.subDistrictsByDistrict = map;
-
-      delete pendingRequests["subDistricts"];
+      ThaiAddressService.cache.subDistrictsByDistrict = map;
+      delete ThaiAddressService.pendingRequests["subDistricts"];
       return data;
     });
 
-    pendingRequests["subDistricts"] = promise;
+    ThaiAddressService.pendingRequests["subDistricts"] = promise;
     return promise;
   }
 
-  // --- Synchronous Accessors (must call fetch methods first) ---
+  // --- Synchronous Accessors ---
 
   static getDistrictsByProvinceId(provinceId: number): District[] {
-    if (!cache.districtsByProvince) return [];
-    return cache.districtsByProvince.get(provinceId) || [];
+    if (!ThaiAddressService.cache.districtsByProvince) return [];
+    return ThaiAddressService.cache.districtsByProvince.get(provinceId) || [];
   }
 
   static getSubDistrictsByDistrictId(districtId: number): SubDistrict[] {
-    if (!cache.subDistrictsByDistrict) return [];
-    return cache.subDistrictsByDistrict.get(districtId) || [];
+    if (!ThaiAddressService.cache.subDistrictsByDistrict) return [];
+    return ThaiAddressService.cache.subDistrictsByDistrict.get(districtId) || [];
+  }
+
+  /**
+   * Verifies if the hierarchical relationship between names is valid.
+   */
+  static async validateHierarchy(provinceName: string, districtName: string, subDistrictName: string): Promise<boolean> {
+    await this.ensureAllLoaded();
+    
+    const province = ThaiAddressService.cache.provinces?.find((p: Province) => p.name_th === provinceName || p.name_en === provinceName);
+    if (!province) return false;
+
+    const district = ThaiAddressService.cache.districts?.find((d: District) => 
+      (d.name_th === districtName || d.name_en === districtName) && 
+      d.province_id === province.id
+    );
+    if (!district) return false;
+
+    const subDistrict = ThaiAddressService.cache.subDistricts?.find((s: SubDistrict) => 
+      (s.name_th === subDistrictName || s.name_en === subDistrictName) && 
+      s.district_id === district.id
+    );
+    
+    return !!subDistrict;
+  }
+
+  /**
+   * Resolves ID triplet to a full address object.
+   */
+  static async resolveFullAddress(provinceId: number, districtId: number, subDistrictId: number) {
+    await this.ensureAllLoaded();
+    const p = ThaiAddressService.cache.provinces?.find((x: Province) => x.id === provinceId);
+    const d = ThaiAddressService.cache.districts?.find((x: District) => x.id === districtId);
+    const s = ThaiAddressService.cache.subDistricts?.find((x: SubDistrict) => x.id === subDistrictId);
+    
+    return {
+      province: p?.name_th || null,
+      district: d?.name_th || null,
+      subDistrict: s?.name_th || null,
+      zipCode: s?.zip_code || null,
+      fullTh: `${s?.name_th || ""} ${d?.name_th || ""} ${p?.name_th || ""} ${s?.zip_code || ""}`.trim()
+    };
+  }
+
+  private static async ensureAllLoaded() {
+    if (ThaiAddressService.cache.provinces && ThaiAddressService.cache.districts && ThaiAddressService.cache.subDistricts) return;
+    await Promise.all([
+      this.getProvinces(),
+      this.getDistricts(true),
+      this.getSubDistricts(),
+    ]);
   }
 
   static getZipCode(subDistrictId: number): string | null {
-    if (!cache.subDistricts) return null;
-    const found = cache.subDistricts.find((s) => s.id === subDistrictId);
+    if (!ThaiAddressService.cache.subDistricts) return null;
+    const found = ThaiAddressService.cache.subDistricts.find((s: SubDistrict) => s.id === subDistrictId);
     return found ? String(found.zip_code) : null;
   }
 
   static reset() {
-    // Useful for testing reload
-    cache.provinces = null;
-    cache.districts = null;
-    cache.subDistricts = null;
-    cache.districtsByProvince = null;
-    cache.subDistrictsByDistrict = null;
+    ThaiAddressService.cache.provinces = null;
+    ThaiAddressService.cache.districts = null;
+    ThaiAddressService.cache.subDistricts = null;
+    ThaiAddressService.cache.districtsByProvince = null;
+    ThaiAddressService.cache.subDistrictsByDistrict = null;
   }
 
   static async searchByZipCode(zipCode: string): Promise<
@@ -188,47 +244,34 @@ export class ThaiAddressService {
       province: Province;
     }[]
   > {
-    // Ensure all data is loaded
-    await Promise.all([
-      this.getProvinces(),
-      this.getDistricts(true),
-      this.getSubDistricts(),
-    ]);
+    await this.ensureAllLoaded();
 
-    if (!cache.subDistricts || !cache.districts || !cache.provinces) {
+    if (!ThaiAddressService.cache.subDistricts || !ThaiAddressService.cache.districts || !ThaiAddressService.cache.provinces) {
       return [];
     }
 
     const query = Number(zipCode);
     if (isNaN(query)) return [];
 
-    const matches = cache.subDistricts.filter((s) => s.zip_code === query);
+    const matches = ThaiAddressService.cache.subDistricts.filter((s: SubDistrict) => s.zip_code === query);
 
-    const results = matches
+    return matches
       .map((sub) => {
-        const dist = cache.districts?.find((d) => d.id === sub.district_id);
-        const prov = dist
-          ? cache.provinces?.find((p) => p.id === dist.province_id)
-          : undefined;
-
+        const dist = ThaiAddressService.cache.districts?.find((d: District) => d.id === sub.district_id);
+        const prov = dist ? ThaiAddressService.cache.provinces?.find((p: Province) => p.id === dist.province_id) : undefined;
         if (sub && dist && prov) {
-          return {
-            subDistrict: sub,
-            district: dist,
-            province: prov,
-          };
+          return { subDistrict: sub, district: dist, province: prov };
         }
         return null;
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
-
-    return results;
   }
+
   static isDistrictsLoaded(): boolean {
-    return !!cache.districts;
+    return !!ThaiAddressService.cache.districts;
   }
 
   static isSubDistrictsLoaded(): boolean {
-    return !!cache.subDistricts;
+    return !!ThaiAddressService.cache.subDistricts;
   }
 }

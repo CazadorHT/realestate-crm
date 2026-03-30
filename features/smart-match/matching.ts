@@ -1,6 +1,23 @@
 import { SearchCriteria, ScoreBreakdown } from "./types";
 import { Database } from "@/lib/database.types";
 
+type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
+
+// --- Constants & Config ---
+const SCORE_WEIGHTS = {
+  PRICE: 40,
+  PURPOSE: 20,
+  AREA: 30,
+  TRANSIT: 10,
+  TYPE_BONUS: 30,
+  TYPE_PENALTY: -20,
+};
+
+const PRICE_BUFFERS = {
+  NEAR_MATCH: 1.15, // 15% over budget is still a "near" match
+  SLIGHTLY_OVER: 1.1, // 10% over budget
+};
+
 // Mapping of Popular Areas (ย่าน) to Database Keywords (Subdistricts/Districts)
 const AREA_MAPPING: Record<string, string[]> = {
   อ่อนนุช: ["อ่อนนุช", "พระโขนงเหนือ", "สวนหลวง", "Phra Khanong"],
@@ -31,7 +48,97 @@ const AREA_MAPPING: Record<string, string[]> = {
   อโศก: ["คลองเตยเหนือ", "วัฒนา", "Asoke", "Sukhumvit 21"],
 };
 
-type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
+// --- Pure Helper Functions ---
+
+/**
+ * Resolves the final comparison price for a property based on criteria purpose.
+ * Handles fallback between rental/sale prices and office building sqm logic.
+ */
+function resolvePropertyPrice(property: PropertyRow, purpose: string): number {
+  let price = 0;
+
+  if (purpose === "RENT") {
+    price = property.rental_price || property.original_rental_price || property.price || 0;
+  } else {
+    // BUY or INVEST
+    price = property.price || property.original_price || property.rental_price || 0;
+  }
+
+  // Office Building Special Case: Calculate total price if only per-sqm is available
+  if (price === 0 && property.property_type === "OFFICE_BUILDING") {
+    const sqmPrice = purpose === "RENT" ? property.rent_price_per_sqm : property.price_per_sqm;
+    if (sqmPrice && property.size_sqm) {
+      price = sqmPrice * property.size_sqm;
+    }
+  }
+
+  return price;
+}
+
+/**
+ * Calculates score based on budget criteria. Enforces logical boundaries.
+ */
+function calculatePriceScore(
+  effectivePrice: number,
+  criteria: SearchCriteria,
+): { points: number; reason?: string } {
+  if (effectivePrice <= 0) return { points: 0 };
+
+  let { budgetMin, budgetMax } = criteria;
+
+  // Hardening: Handle inverted ranges (min > max) by swapping
+  if (budgetMin && budgetMax && budgetMin > budgetMax) {
+    [budgetMin, budgetMax] = [budgetMax, budgetMin];
+  }
+
+  if (budgetMin && budgetMax) {
+    if (effectivePrice >= budgetMin && effectivePrice <= budgetMax) {
+      return { points: SCORE_WEIGHTS.PRICE, reason: "budget_ok" };
+    }
+    if (effectivePrice <= budgetMax * PRICE_BUFFERS.NEAR_MATCH) {
+      return { points: SCORE_WEIGHTS.PRICE * 0.75, reason: "budget_near" };
+    }
+  } else if (budgetMax) {
+    if (effectivePrice <= budgetMax) {
+      return { points: SCORE_WEIGHTS.PRICE, reason: "budget_ok" };
+    }
+    if (effectivePrice <= budgetMax * PRICE_BUFFERS.SLIGHTLY_OVER) {
+      return { points: SCORE_WEIGHTS.PRICE * 0.625, reason: "budget_slightly_over" };
+    }
+  }
+
+  return { points: 0 };
+}
+
+/**
+ * Calculates area matching score using mappings and content search.
+ */
+function calculateAreaScore(property: PropertyRow, targetArea?: string): { points: number; reason?: string } {
+  if (!targetArea) return { points: 0 };
+
+  if (property.popular_area === targetArea) {
+    return { points: SCORE_WEIGHTS.AREA, reason: "area_exact" };
+  }
+
+  const searchTerms = AREA_MAPPING[targetArea] || [targetArea];
+  const propertyText = `${property.popular_area || ""} ${property.district || ""} ${
+    property.subdistrict || ""
+  } ${property.title} ${property.description}`.toLowerCase();
+
+  const isMatch = searchTerms.some((term) => propertyText.includes(term.toLowerCase()));
+
+  if (isMatch) {
+    return { points: SCORE_WEIGHTS.AREA * 0.83, reason: "area_near" };
+  }
+
+  if (property.province?.includes("กรุงเทพ") || property.province?.includes("Bangkok")) {
+    return { points: SCORE_WEIGHTS.AREA * 0.33, reason: "area_bkk" };
+  }
+
+  return { points: 0 };
+}
+
+// --- Main Engine ---
 
 export function calculateMatchScore(
   property: PropertyRow,
@@ -40,143 +147,51 @@ export function calculateMatchScore(
   let score = 0;
   const reasons: string[] = [];
   const scoreBreakdown: ScoreBreakdown[] = [];
-  const lang = criteria.language || "th";
-
-  // Helper to get translated string (mock since we are on server)
-  // In a real app we might use a server-side i18n lib,
-  // but here we can just use the language to select the right string or key.
-  // Note: These should match the keys in our JSON locale files.
 
   // 1. Price Matching (40%)
-  // ... (price logic same)
-  let price =
-    criteria.purpose === "RENT"
-      ? property.rental_price || property.original_rental_price
-      : property.price || property.original_price;
-
-  if (!price && property.property_type === "OFFICE_BUILDING") {
-    const sqmPrice =
-      criteria.purpose === "RENT"
-        ? property.rent_price_per_sqm
-        : property.price_per_sqm;
-
-    if (sqmPrice && property.size_sqm) {
-      price = sqmPrice * property.size_sqm;
-    } else {
-      price = 0;
-    }
-  }
-
-  if (!price) {
-    price =
-      criteria.purpose === "RENT"
-        ? property.price || property.rental_price
-        : property.rental_price || property.price;
-  }
-
-  const effectivePrice = price || 0;
-  let pricePoints = 0;
-
-  if (effectivePrice > 0) {
-    if (criteria.budgetMin && criteria.budgetMax) {
-      if (
-        effectivePrice >= criteria.budgetMin &&
-        effectivePrice <= criteria.budgetMax
-      ) {
-        pricePoints = 40;
-        reasons.push("budget_ok");
-      } else if (effectivePrice <= criteria.budgetMax * 1.15) {
-        pricePoints = 30;
-        reasons.push("budget_near");
-      }
-    } else if (criteria.budgetMax) {
-      if (effectivePrice <= criteria.budgetMax) {
-        pricePoints = 40;
-        reasons.push("budget_ok");
-      } else if (effectivePrice <= criteria.budgetMax * 1.1) {
-        pricePoints = 25;
-        reasons.push("budget_slightly_over");
-      }
-    }
-  }
-
-  if (pricePoints > 0) {
-    score += pricePoints;
-    scoreBreakdown.push({ label: "budget", points: pricePoints });
+  const effectivePrice = resolvePropertyPrice(property, criteria.purpose);
+  const priceResult = calculatePriceScore(effectivePrice, criteria);
+  if (priceResult.points > 0) {
+    score += priceResult.points;
+    scoreBreakdown.push({ label: "budget", points: priceResult.points });
+    if (priceResult.reason) reasons.push(priceResult.reason);
   }
 
   // 2. Purpose Match (20%)
   const listingType = property.listing_type;
   let purposePoints = 0;
-  if (
-    criteria.purpose === "BUY" &&
-    (listingType === "SALE" || listingType === "SALE_AND_RENT")
-  ) {
-    purposePoints = 20;
-  } else if (
-    criteria.purpose === "RENT" &&
-    (listingType === "RENT" || listingType === "SALE_AND_RENT")
-  ) {
-    purposePoints = 20;
-  } else if (
-    criteria.purpose === "INVEST" &&
-    (listingType === "SALE" || listingType === "SALE_AND_RENT")
-  ) {
-    purposePoints = 20;
-    reasons.push("investment");
+  const isDirectMatch =
+    (criteria.purpose === "BUY" && (listingType === "SALE" || listingType === "SALE_AND_RENT")) ||
+    (criteria.purpose === "RENT" && (listingType === "RENT" || listingType === "SALE_AND_RENT")) ||
+    (criteria.purpose === "INVEST" && (listingType === "SALE" || listingType === "SALE_AND_RENT"));
+
+  if (isDirectMatch) {
+    purposePoints = SCORE_WEIGHTS.PURPOSE;
+    if (criteria.purpose === "INVEST") reasons.push("investment");
   }
+
   if (purposePoints > 0) {
     score += purposePoints;
     scoreBreakdown.push({ label: "purpose", points: purposePoints });
   }
 
   // 3. Area Match (30%)
-  let areaPoints = 0;
-  if (criteria.area) {
-    const searchTerms = AREA_MAPPING[criteria.area] || [criteria.area];
-
-    if (property.popular_area === criteria.area) {
-      areaPoints = 30;
-      reasons.push("area_exact");
-    } else {
-      const propertyText = `${property.popular_area || ""} ${
-        property.district || ""
-      } ${property.subdistrict || ""} ${property.title} ${
-        property.description
-      }`.toLowerCase();
-
-      const isMatch = searchTerms.some((term) =>
-        propertyText.includes(term.toLowerCase()),
-      );
-
-      if (isMatch) {
-        areaPoints = 25;
-        reasons.push("area_near");
-      } else {
-        if (
-          property.province?.includes("กรุงเทพ") ||
-          property.province?.includes("Bangkok")
-        ) {
-          areaPoints = 10;
-          reasons.push("area_bkk");
-        }
-      }
-    }
-  }
-  if (areaPoints > 0) {
-    score += areaPoints;
-    scoreBreakdown.push({ label: "location", points: areaPoints });
+  const areaResult = calculateAreaScore(property, criteria.area);
+  if (areaResult.points > 0) {
+    score += areaResult.points;
+    scoreBreakdown.push({ label: "location", points: areaResult.points });
+    if (areaResult.reason) reasons.push(areaResult.reason);
   }
 
   // 4. Transit Match (10%)
   let transitPoints = 0;
   if (criteria.nearTransit) {
     if (property.near_transit) {
-      transitPoints = 10;
+      transitPoints = SCORE_WEIGHTS.TRANSIT;
       reasons.push("transit_requested");
     }
   } else if (property.near_transit) {
-    transitPoints = 5;
+    transitPoints = SCORE_WEIGHTS.TRANSIT * 0.5;
     reasons.push("transit_bonus");
   }
   if (transitPoints > 0) {
@@ -184,23 +199,20 @@ export function calculateMatchScore(
     scoreBreakdown.push({ label: "transit", points: transitPoints });
   }
 
-  // 5. Property Type Match (Bonus)
-  let typePoints = 0;
+  // 5. Property Type Match (Bonus/Penalty)
   if (criteria.propertyType) {
     if (property.property_type === criteria.propertyType) {
-      typePoints = 30;
+      score += SCORE_WEIGHTS.TYPE_BONUS;
+      scoreBreakdown.push({ label: "type", points: SCORE_WEIGHTS.TYPE_BONUS });
       reasons.push("type_match");
     } else {
-      typePoints = -20;
+      score += SCORE_WEIGHTS.TYPE_PENALTY;
+      scoreBreakdown.push({ label: "type", points: SCORE_WEIGHTS.TYPE_PENALTY });
     }
   }
-  if (typePoints !== 0) {
-    score += typePoints;
-    scoreBreakdown.push({ label: "type", points: typePoints });
-  }
 
-  if (score > 100) score = 100;
-  if (score < 0) score = 0;
+  // Final Normalization: Always [0, 100]
+  score = Math.max(0, Math.min(100, Math.round(score)));
 
-  return { score, reasons, scoreBreakdown };
+  return { score, reasons: Array.from(new Set(reasons)), scoreBreakdown };
 }

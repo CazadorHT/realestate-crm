@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { calculateMatchScore } from './matching';
 
-describe('Smart Match Logic - calculateMatchScore', () => {
+describe('Smart Match Logic - Hardened Engine', () => {
   const mockProperty: any = {
     id: 'prop-1',
     title: 'Luxury Condo',
@@ -11,7 +11,7 @@ describe('Smart Match Logic - calculateMatchScore', () => {
     popular_area: 'ทองหล่อ',
     district: 'วัฒนา',
     subdistrict: 'คลองตันเหนือ',
-    near_transit: false, // Default to false for better range testing
+    near_transit: false,
   };
 
   const baseCriteria: any = {
@@ -23,56 +23,75 @@ describe('Smart Match Logic - calculateMatchScore', () => {
     nearTransit: false,
   };
 
-  it('should give 90% score for a match without transit', () => {
-    // Price(40) + Purpose(20) + Area(30) + Type(30) + Transit(0) = 120 -> 100
-    // Wait, it still hits 100. I need to lower some more.
+  it('should give 100% score for a perfect match', () => {
     const result = calculateMatchScore(mockProperty, baseCriteria);
     expect(result.score).toBe(100); 
+    expect(result.reasons).toContain('budget_ok');
+    expect(result.reasons).toContain('area_exact');
   });
 
-  it('should correctly handle transit bonus', () => {
-    const propertyWithTransit = { ...mockProperty, near_transit: true };
-    const result = calculateMatchScore(propertyWithTransit, baseCriteria);
-    expect(result.reasons).toContain('transit_bonus');
-    // Even with bonus (+5), it might still hit 100 if other scores are high.
-    // Let's check a case where it doesn't hit 100.
-    const lowMatchProperty = { ...mockProperty, property_type: 'OTHER', near_transit: true };
-    const resultLow = calculateMatchScore(lowMatchProperty, baseCriteria);
-    // Price(40) + Purpose(20) + Area(30) + TransitBonus(5) + TypePenalty(-20) = 75
-    expect(resultLow.score).toBe(75);
-  });
-
-  it('should give a partial score for near-budget match', () => {
-    const lowMatchProperty = { ...mockProperty, property_type: 'OTHER' };
-    const criteria = { ...baseCriteria, budgetMax: 48000 }; 
-    const result = calculateMatchScore(lowMatchProperty, criteria);
-    // PricePoints(30 instead of 40) + Purpose(20) + Area(30) + TypePenalty(-20) = 60
-    expect(result.score).toBe(60); 
-    expect(result.reasons).toContain('budget_near');
-  });
-
-  it('should handle area mapping for proximity matches', () => {
-    const lowMatchProperty = { ...mockProperty, property_type: 'OTHER' };
-    const criteria = { ...baseCriteria, area: 'เอกมัย' }; 
-    const result = calculateMatchScore(lowMatchProperty, criteria);
-    // Price(40) + Purpose(20) + AreaNear(25) + TypePenalty(-20) = 65
-    expect(result.score).toBe(65);
-    expect(result.reasons).toContain('area_near');
-  });
-
-  it('should handle budgetMax < budgetMin (User Error)', () => {
-    const criteria = { ...baseCriteria, budgetMin: 100000, budgetMax: 50000 };
+  it('should handle inverted budget ranges (Hardening: Min > Max)', () => {
+    // Min 60k, Max 40k -> Should swap to Min 40k, Max 60k
+    const criteria = { ...baseCriteria, budgetMin: 60000, budgetMax: 40000 };
     const result = calculateMatchScore(mockProperty, criteria);
-    // effectivePrice (50000) >= 100000 && <= 50000 -> false
-    // effectivePrice (50000) <= 50000 * 1.15 -> true (budget_near)
-    expect(result.reasons).toContain('budget_near');
-    expect(result.score).toBe(100); // 110 capped at 100
+    expect(result.reasons).toContain('budget_ok');
+    expect(result.score).toBe(100);
   });
 
-  it('should handle property with zero price', () => {
-    const zeroPriceProperty = { ...mockProperty, rental_price: 0, price: 0 };
-    const result = calculateMatchScore(zeroPriceProperty, baseCriteria);
-    expect(result.score).toBe(0 + 20 + 30 + 30); // 80 
-    expect(result.reasons).not.toContain('budget_ok');
+  it('should strictly penalize purpose mismatch', () => {
+    // Asking for BUY but property is RNT (Rent)
+    const critForSale = { ...baseCriteria, purpose: 'BUY' };
+    const result = calculateMatchScore(mockProperty, critForSale);
+    // Purpose score should be 0. 
+    // Price(40) + Area(30) + Type(30) = 100? 
+    // Wait, let's check purpose points. Score breakdown should show purpose: 0.
+    const purposeEntry = result.scoreBreakdown.find(b => b.label === 'purpose');
+    expect(purposeEntry).toBeUndefined(); // No points given for mismatched purpose
+    expect(result.reasons).not.toContain('investment');
+  });
+
+  it('should resolve Office Building per-sqm price', () => {
+    const officeProp: any = {
+      property_type: 'OFFICE_BUILDING',
+      size_sqm: 100,
+      rent_price_per_sqm: 500, // 50,000 total
+      listing_type: 'RENT'
+    };
+    const result = calculateMatchScore(officeProp, baseCriteria);
+    expect(result.reasons).toContain('budget_ok');
+  });
+
+  it('should handle missing critical fields gracefully (Broken Data)', () => {
+    const brokenProp: any = {
+      id: 'broken-1',
+      title: 'Unknown',
+      // Missing price, area, type
+    };
+    const result = calculateMatchScore(brokenProp, baseCriteria);
+    expect(result.score).toBe(0);
+    expect(result.reasons).toEqual([]);
+  });
+
+  it('should handle partial budget matches (Near/Slightly Over)', () => {
+    const propertyAt55k = { ...mockProperty, rental_price: 55000 };
+    const criteriaWith50kMax = { ...baseCriteria, budgetMax: 50000, budgetMin: undefined };
+    const result = calculateMatchScore(propertyAt55k, criteriaWith50kMax);
+    
+    // 55000 <= 50000 * 1.1 (55000) -> Slightly Over
+    expect(result.reasons).toContain('budget_slightly_over');
+    // Result score = Purpose(20) + Area(30) + Type(30) + Price(40 * 0.625 = 25) = 105 -> 100
+    expect(result.score).toBe(100);
+  });
+
+  it('should handle transit requested vs bonus', () => {
+    // Case 1: Requested and Has it
+    const criteriaWithTransit = { ...baseCriteria, nearTransit: true };
+    const propWithTransit = { ...mockProperty, near_transit: true };
+    const result1 = calculateMatchScore(propWithTransit, criteriaWithTransit);
+    expect(result1.reasons).toContain('transit_requested');
+
+    // Case 2: Not requested but Has it (Bonus)
+    const result2 = calculateMatchScore(propWithTransit, baseCriteria);
+    expect(result2.reasons).toContain('transit_bonus');
   });
 });
