@@ -156,7 +156,7 @@ export function SocialPostDialog({
     try {
       const res = await getTikTokPostStatusAction(publishId);
       setTiktokStatus(res);
-      if (res.success && (res as any).status === "SUCCESS") {
+      if (res.success && res.status === "SUCCESS") {
         toast.success("โพสต์สำเร็จเรียบร้อยแล้ว!");
       }
     } catch (err) {

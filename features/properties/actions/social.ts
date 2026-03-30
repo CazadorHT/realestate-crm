@@ -24,7 +24,7 @@ export async function renderPropertySocialTemplate(template: string, property: a
   if (!template) return "";
   if (!property) return template;
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
   const publicUrl = `${baseUrl}/properties/${property.slug || property.id || ""}`;
 
   const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : "售价";

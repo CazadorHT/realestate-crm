@@ -182,22 +182,33 @@ export async function publishTikTokPhotoPost(
 
     return {
       success: true,
+      status: "PROCESSING",
       publish_id: data.data?.publish_id,
       data: data.data
     };
   } catch (error) {
     console.error("TikTok Publish Exception:", error);
-    return { success: false, error: "Network error calling TikTok API" };
+    return { success: false, status: "FAILED", error: error instanceof Error ? error.message : String(error) };
   }
 }
 
+export interface TikTokPublishStatusResponse {
+  success: boolean;
+  status: "PROCESSING" | "FAILED" | "SUCCESS" | "UNKNOWN";
+  publish_id?: string;
+  fail_reason?: string;
+  public_url?: string;
+  error?: string;
+  data?: any;
+}
+
 /**
- * Check the status of a TikTok post by publish_id
+ * Fetch the status of a TikTok publish task
  */
 export async function getTikTokPublishStatus(
   accessToken: string,
   publishId: string
-) {
+): Promise<TikTokPublishStatusResponse> {
   const url = "https://open.tiktokapis.com/v2/post/publish/status/fetch/";
   
   try {
@@ -213,23 +224,23 @@ export async function getTikTokPublishStatus(
     const data = await response.json();
     console.log("[TikTok Status Response]:", JSON.stringify(data, null, 2));
 
-    if (!response.ok) {
-      return {
-        success: false,
-        error: data.error?.message || "Failed to fetch status",
-        data: data
-      };
+    if (response.status === 401) {
+      return { success: false, status: "FAILED", error: "Unauthorized" };
+    }
+
+    if (!data.data) {
+      return { success: false, status: "FAILED", error: data.error?.message || "Invalid response", data: data };
     }
 
     return {
       success: true,
-      status: data.data?.status,
+      status: data.data?.status || "UNKNOWN",
       fail_reason: data.data?.fail_reason,
       public_url: data.data?.public_url,
       data: data.data
     };
   } catch (error) {
-    return { success: false, error: "Network error checking TikTok status" };
+    return { success: false, status: "FAILED", error: "Network error checking TikTok status" };
   }
 }
 

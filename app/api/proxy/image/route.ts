@@ -8,9 +8,17 @@ import sharp from "sharp";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const imageUrl = searchParams.get("url");
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const supabaseDomain = supabaseUrl ? new URL(supabaseUrl).hostname : "";
 
   if (!imageUrl) {
     return new NextResponse("Missing URL parameter", { status: 400 });
+  }
+
+  // Security Check: Only allow requests targeting our own Supabase domain
+  if (supabaseDomain && !imageUrl.includes(supabaseDomain)) {
+    console.warn(`[Image Proxy Security] Blocked unauthorized URL: ${imageUrl}`);
+    return new NextResponse("Unauthorized URL domain", { status: 403 });
   }
 
   const userAgent = req.headers.get("user-agent") || "unknown";
