@@ -1,12 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
 
-export async function proxy(request: NextRequest) {
-  // 1. Supabase Auth & Session Refresh
-  const response = await updateSession(request);
-
-  // 2. Security Headers
-  // Security Headers with proper CSP for Maps, Supabase, and external assets
+/**
+ * Apply Premium Security Headers & Content Security Policy (CSP)
+ */
+export function applySecurityHeaders(request: NextRequest, response: NextResponse) {
+  // 1. Content Security Policy (CSP)
+  // Hardened for Maps, Supabase, Google Tag Manager, and Meta Assets
   const contentSecurityPolicyHeaderValue = `
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net;
@@ -27,6 +26,7 @@ export async function proxy(request: NextRequest) {
     contentSecurityPolicyHeaderValue.replace(/\s{2,}/g, " ").trim(),
   );
 
+  // 2. Standard Security Hardening
   response.headers.set(
     "Strict-Transport-Security",
     "max-age=63072000; includeSubDomains; preload",
@@ -35,7 +35,7 @@ export async function proxy(request: NextRequest) {
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "origin-when-cross-origin");
 
-  // Permissions Policy (Restrict sensitive features)
+  // 3. Permissions Policy (Block sensitive device access)
   response.headers.set(
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=(), browsing-topics=()",
@@ -43,16 +43,3 @@ export async function proxy(request: NextRequest) {
 
   return response;
 }
-
-export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder images
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
-};

@@ -47,6 +47,8 @@
     "@tiptap/extension-link": "^3.17.1",
     "@tiptap/react": "^3.17.1",
     "@tiptap/starter-kit": "^3.17.1",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.37.0",
     "aos": "^2.3.4",
     "browser-image-compression": "^2.0.2",
     "canvas-confetti": "^1.9.4",
