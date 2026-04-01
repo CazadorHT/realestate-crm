@@ -168,6 +168,7 @@ export const FormSchema = z
     is_high_floor: z.boolean().default(false),
     is_never_lived_in: z.boolean().default(false),
     requires_ai_review: z.boolean().default(false),
+    version: z.number().default(1).optional(),
 
     feature_ids: z.array(z.string()).default([]),
 

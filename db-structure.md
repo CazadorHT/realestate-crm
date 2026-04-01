@@ -749,6 +749,20 @@
     "column_default": null
   },
   {
+    "table_name": "documents",
+    "column_name": "ai_verified_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "documents",
+    "column_name": "ai_verified_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "faqs",
     "column_name": "id",
     "data_type": "uuid",
@@ -2665,6 +2679,62 @@
     "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "is_cbd",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "properties",
+    "column_name": "is_smart_home",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "properties",
+    "column_name": "has_private_elevator",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "properties",
+    "column_name": "is_handicapped_friendly",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "properties",
+    "column_name": "is_high_floor",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "properties",
+    "column_name": "is_never_lived_in",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "properties",
+    "column_name": "requires_ai_review",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
+  },
+  {
+    "table_name": "properties",
+    "column_name": "version",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "1"
   },
   {
     "table_name": "property_agents",

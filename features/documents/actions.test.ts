@@ -49,7 +49,7 @@ describe('AI Hallucination Mitigation Logic', () => {
       // Verify that it still returns data for UI review
       if (result.success) {
         expect(result.data).toBeDefined();
-        expect(result.data.summary).toBeDefined();
+        expect(result.data?.summary).toBeDefined();
       }
     });
   });
@@ -71,7 +71,7 @@ describe('AI Hallucination Mitigation Logic', () => {
       });
 
       const mockSummary = "Verified Summary content";
-      const mockAnalysis = { risks: ["Risk A"], key_dates: [] };
+      const mockAnalysis: any = { summary: mockSummary, risks: ["Risk A"], key_dates: [] };
 
       const result = await verifyAiAnalysisAction(mockDocumentId, mockSummary, mockAnalysis);
 

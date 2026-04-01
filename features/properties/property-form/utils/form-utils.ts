@@ -111,6 +111,9 @@ export const EMPTY_VALUES: PropertyFormValues = {
   // Stock Management
   total_units: 1,
   sold_units: 0,
+  
+  // Versioning
+  version: 1,
 };
 
 export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
@@ -443,5 +446,8 @@ export function mapRowToFormValues(
     // Stock Management
     total_units: (row as any).total_units ?? 1,
     sold_units: (row as any).sold_units ?? 0,
+    
+    // Versioning
+    version: (row as any).version ?? 1,
   };
 }

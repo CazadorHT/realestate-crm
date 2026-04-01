@@ -1413,6 +1413,7 @@ export type Database = {
           transit_type: string | null
           updated_at: string
           verified: boolean | null
+          version: number
           view_count: number | null
           water_charge: string | null
           zoning: string | null
@@ -1540,6 +1541,7 @@ export type Database = {
           transit_type?: string | null
           updated_at?: string
           verified?: boolean | null
+          version?: number
           view_count?: number | null
           water_charge?: string | null
           zoning?: string | null
@@ -1667,6 +1669,7 @@ export type Database = {
           transit_type?: string | null
           updated_at?: string
           verified?: boolean | null
+          version?: number
           view_count?: number | null
           water_charge?: string | null
           zoning?: string | null

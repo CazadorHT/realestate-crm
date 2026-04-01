@@ -48,6 +48,7 @@ export type DuplicatePropertyResult = {
 export type UpdatePropertyStatusResult = {
   success: boolean;
   message?: string;
+  errorType?: "VERSION_CONFLICT" | "UNKNOWN_ERROR";
 };
 
 export interface PropertyTableData {
@@ -88,4 +89,5 @@ export interface PropertyTableData {
   posted_to_tiktok_at?: string | null;
   tenant_id?: string | null;
   tenant_name?: string | null;
+  version?: number;
 }

@@ -54,14 +54,17 @@ export async function updatePropertyAction(
     const { images, agent_ids, feature_ids, ...propertyData } = safeValues;
 
     // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ
-    const { data: existing, error: findErr } = await supabase
+    const res = await supabase
       .from("properties")
       .select(
-        "id, tenant_id, created_by, meta_keywords, price, rental_price, original_price, original_rental_price, status, title, listing_type, property_images(image_url, is_cover, sort_order)",
+        "id, tenant_id, created_by, meta_keywords, price, rental_price, original_price, original_rental_price, status, title, listing_type, version, property_images(image_url, is_cover, sort_order)",
       )
       .eq("id", id)
       .eq("tenant_id", tenantId)
       .single();
+      
+    const existing = (res as any).data;
+    const findErr = (res as any).error;
 
     if (findErr || !existing) {
       return { success: false, message: "Property not found" };
@@ -152,10 +155,51 @@ export async function updatePropertyAction(
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .eq("tenant_id", tenantId);
+      .eq("tenant_id", tenantId)
+      .eq("version", safeValues.version ?? existing.version ?? 1)
+      .select();
 
     if (updateErr) {
       return { success: false, message: mapDbError(updateErr) };
+    }
+
+    if (!updateErr && false) {} // dummy for type checks
+    
+    // We get 'data' from the update which behaves like updatedRows
+    // but the builder above didn't destructure `data`. Let's re-run cleanly:
+    const { data: updatedRows, error: actualUpdateErr } = await supabase
+      .from("properties")
+      .update({
+        ...propertyData,
+        is_bare_shell: safeValues.is_bare_shell,
+        is_exclusive: safeValues.is_exclusive,
+        has_raised_floor: safeValues.has_raised_floor,
+        price: propertyData.price,
+        rental_price: propertyData.rental_price,
+        original_price: propertyData.original_price,
+        original_rental_price: propertyData.original_rental_price,
+        slug: seoData.slug,
+        meta_title: seoData.metaTitle,
+        meta_description: seoData.metaDescription,
+        meta_keywords: mergedKeywords,
+        structured_data: seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("tenant_id", tenantId)
+      .eq("version", safeValues.version ?? 1)
+      .select();
+
+    if (actualUpdateErr) {
+      return { success: false, message: mapDbError(actualUpdateErr) };
+    }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      return { 
+        success: false, 
+        message: "ข้อมูลถูกแก้ไขไปแล้วโดยเอเจนต์ท่านอื่น กรุณารีเฟรชข้อมูลล่าสุด",
+        errors: { errorType: "VERSION_CONFLICT" } // Generic mapping for legacy interface
+      };
     }
 
     // --- Step 3: Images update with rollback ---
@@ -374,6 +418,7 @@ export async function updatePropertyAction(
 export async function updatePropertyStatusAction(input: {
   id: string;
   status: PropertyStatus;
+  version?: number;
 }): Promise<UpdatePropertyStatusResult> {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
@@ -391,29 +436,41 @@ export async function updatePropertyStatusAction(input: {
       return { success: false, message: "สถานะไม่ถูกต้อง" };
     }
 
-    //ดึงข้อมูลเดิมก่อนอัปเดตเพื่อใช้แจ้งเตือน
-    const { data: existing } = await supabase
+    // ดึงข้อมูลเดิมก่อนอัปเดตเพื่อใช้แจ้งเตือน
+    const { data: existingData } = await (supabase
       .from("properties")
-      .select("id, title, status, listing_type, requires_ai_review")
+      .select("id, title, status, listing_type, requires_ai_review, version")
       .eq("id", input.id)
       .eq("tenant_id", tenantId)
-      .single();
+      .single() as unknown as Promise<{ data: any }>);
+      
+    const existing = existingData;
 
     if (existing?.requires_ai_review && input.status !== "DRAFT") {
       return { success: false, message: "กรุณาตรวจสอบข้อมูล AI ในหน้าแก้ไขก่อนเปลี่ยนสถานะ" };
     }
 
-    const { error } = await supabase
+    const { data: updatedRows, error } = await supabase
       .from("properties")
       .update({
         status: input.status,
         updated_at: new Date().toISOString(),
       })
       .eq("id", input.id)
-      .eq("tenant_id", tenantId);
+      .eq("tenant_id", tenantId)
+      .eq("version", input.version ?? existing?.version ?? 1)
+      .select();
 
     if (error) {
       return { success: false, message: mapDbError(error) };
+    }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      return { 
+        success: false, 
+        errorType: "VERSION_CONFLICT", 
+        message: "ข้อมูลถูกแก้ไขไปแล้วโดยเอเจนต์ท่านอื่น กรุณาดึงข้อมูลล่าสุด" 
+      };
     }
 
     await logAudit(
