@@ -82,7 +82,7 @@ export function NumberInput({
       ref={inputRef}
       type="text"
       name={name}
-      inputMode="numeric"
+      inputMode="decimal"
       value={display}
       aria-invalid={ariaInvalid}
       className={className}

@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -85,77 +78,80 @@ export function TransferLeadsDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] rounded-2xl border-slate-100">
-        <DialogHeader>
-          <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
-            <ArrowRight className="h-6 w-6 text-blue-600" />
+    <ResponsiveDialog
+      open={isOpen}
+      onOpenChange={onClose}
+      title={
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
+            <ArrowRight className="h-5 w-5 text-blue-600" />
           </div>
-          <DialogTitle className="text-xl font-bold">
-            โอนย้าย Lead (Transfer)
-          </DialogTitle>
-          <DialogDescription>
-            เลือก Agent หรือ Manager ที่คุณต้องการโอนย้าย Lead ทั้งหมด{" "}
-            <span className="font-bold text-blue-600">
-              {selectedIds.length} รายการ
-            </span>{" "}
-            นี้ไปให้ดูแลต่อ
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="py-6 space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="agent-select" className="text-slate-700 font-bold">
-              ผู้รับงานคนใหม่
-            </Label>
-            <Select
-              value={targetAgentId}
-              onValueChange={setTargetAgentId}
-              disabled={isLoading}
-            >
-              <SelectTrigger
-                id="agent-select"
-                className="rounded-xl border-slate-200 h-12 focus:ring-blue-500/10"
-              >
-                <SelectValue placeholder="ค้นหาชื่อ Agent/Manager..." />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-slate-200 max-h-[300px]">
-                {agents.map((agent) => (
-                  <SelectItem key={agent.id} value={agent.id} className="py-3">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-slate-400" />
-                      <span className="font-medium">
-                        {agent.full_name || "ไม่มีชื่อ"}
-                      </span>
-                      <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-500 uppercase font-bold">
-                        {agent.role}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <span className="text-xl font-bold">โอนย้าย Lead (Transfer)</span>
         </div>
-
-        <DialogFooter className="gap-2 sm:gap-0">
+      }
+      description={
+        <>
+          เลือก Agent หรือ Manager ที่คุณต้องการโอนย้าย Lead ทั้งหมด{" "}
+          <span className="font-bold text-blue-600">
+            {selectedIds.length} รายการ
+          </span>{" "}
+          นี้ไปให้ดูแลต่อ
+        </>
+      }
+      footer={
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
           <Button
             variant="outline"
             onClick={onClose}
-            className="rounded-xl h-11"
+            className="flex-1 sm:flex-none rounded-xl h-11"
             disabled={isLoading}
           >
             ยกเลิก
           </Button>
           <Button
             onClick={handleTransfer}
-            className="bg-blue-600 hover:bg-blue-700 rounded-xl h-11 px-8 shadow-md shadow-blue-100"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 rounded-xl h-11 px-8 shadow-md shadow-blue-100"
             disabled={isLoading || !targetAgentId}
           >
             {isLoading ? "กำลังโอนย้าย..." : "ยืนยันการโอนย้าย"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      }
+    >
+      <div className="py-6 space-y-4">
+        <div className="space-y-2 text-left">
+          <Label htmlFor="agent-select" className="text-slate-700 font-bold">
+            ผู้รับงานคนใหม่
+          </Label>
+          <Select
+            value={targetAgentId}
+            onValueChange={setTargetAgentId}
+            disabled={isLoading}
+          >
+            <SelectTrigger
+              id="agent-select"
+              className="rounded-xl border-slate-200 h-12 focus:ring-blue-500/10"
+            >
+              <SelectValue placeholder="ค้นหาชื่อ Agent/Manager..." />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-slate-200 max-h-[300px]">
+              {agents.map((agent) => (
+                <SelectItem key={agent.id} value={agent.id} className="py-3 text-left">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-slate-400" />
+                    <span className="font-medium text-slate-700">
+                      {agent.full_name || "ไม่มีชื่อ"}
+                    </span>
+                    <span className="text-[9px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 uppercase font-bold tracking-tight">
+                      {agent.role}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </ResponsiveDialog>
   );
 }

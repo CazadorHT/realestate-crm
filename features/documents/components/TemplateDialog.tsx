@@ -9,15 +9,7 @@ import {
 import { createDocumentRecordAction, searchOwnerAction } from "../actions";
 import { DOC_TYPE_LABELS, DocumentOwnerType } from "../schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -39,6 +31,7 @@ import {
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface TemplateDialogProps {
   ownerId?: string;
@@ -344,413 +337,364 @@ export function TemplateDialog({
     activeTemplate?.type === "RESERVATION_DOCUMENT";
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline" size="lg" className="gap-2">
-            <FileText className="h-4 w-4" />
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      className="sm:max-w-[800px]"
+      trigger={
+        trigger || (
+          <Button variant="outline" size="lg" className="gap-2 rounded-2xl font-bold h-12 shadow-sm border-slate-200">
+            <FileText className="h-4.5 w-4.5 text-blue-600" />
             สร้างจาก Template
           </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-            <Wand2 className="h-6 w-6 text-blue-600" />
-            สร้างเอกสารอัตโนมัติ (A4 Layout)
-          </DialogTitle>
-          <DialogDescription>
-            เลือกต้นแบบและข้อมูลที่ต้องการ ระบบจะสร้างไฟล์ PDF/HTML ขนาด A4
-            ให้ทันที
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="grid gap-5 py-4">
-          {/* Owner Selection - Only show if not fixed via props */}
-          {!initialOwnerId && (
-            <div className="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
-              <div className="flex items-center gap-2 mb-1">
-                <Search className="h-4 w-4 text-slate-500" />
-                <Label className="font-bold">
-                  ข้อมูลอ้างอิง (Reference Owner)
-                </Label>
+        )
+      }
+      title={
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
+            <Wand2 className="h-6 w-6" />
+          </div>
+          <span className="text-xl font-black text-slate-900 tracking-tight">สร้างเอกสารอัตโนมัติ</span>
+        </div>
+      }
+      description="เลือกต้นแบบและข้อมูลที่ต้องการ ระบบจะสร้างไฟล์เอกสารให้ทันที"
+      footer={
+        <div className="flex flex-col sm:flex-row gap-3 w-full shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+            className="flex-1 h-12 rounded-2xl font-bold border-slate-200 text-slate-500 order-2 sm:order-1"
+          >
+            ยกเลิก
+          </Button>
+          <Button
+            onClick={handleGenerate}
+            disabled={loading}
+            className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-200 transition-all active:scale-95 order-1 sm:order-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                กำลังสร้างเอกสาร...
+              </>
+            ) : (
+              "สร้างเอกสาร (Generate)"
+            )}
+          </Button>
+        </div>
+      }
+    >
+      <div className="py-2 space-y-8">
+        {/* Owner Selection - Only show if not fixed via props */}
+        {!initialOwnerId && (
+          <div className="space-y-4 p-5 rounded-3xl border border-slate-100 bg-slate-50/50 shadow-sm">
+            <div className="flex items-center gap-2.5 mb-1">
+              <div className="p-1.5 bg-white rounded-lg border border-slate-100 text-slate-400">
+                <Search className="h-4 w-4" />
               </div>
+              <Label className="text-sm font-black text-slate-700 uppercase tracking-widest">
+                ข้อมูลอ้างอิง (Reference)
+              </Label>
+            </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                {(["DEAL", "LEAD", "PROPERTY"] as const).map((type) => (
-                  <Button
-                    key={type}
-                    type="button"
-                    variant={targetOwnerType === type ? "default" : "outline"}
-                    size="sm"
-                    className="h-8 text-xs font-bold"
-                    onClick={() => {
-                      setTargetOwnerType(type);
-                      setOwnerSearch("");
-                      setOwnerResults([]);
-                      setSelectedOwnerId("");
-                    }}
-                  >
-                    {type === "DEAL"
-                      ? "ดีล"
-                      : type === "LEAD"
-                        ? "ลูกค้า"
-                        : "ทรัพย์สิน"}
-                  </Button>
-                ))}
-              </div>
+            <div className="grid grid-cols-3 gap-2 p-1.5 bg-white rounded-2xl border border-slate-100">
+              {(["DEAL", "LEAD", "PROPERTY"] as const).map((type) => (
+                <Button
+                  key={type}
+                  type="button"
+                  variant={targetOwnerType === type ? "default" : "ghost"}
+                  size="sm"
+                  className={cn(
+                    "h-9 text-xs font-black rounded-xl transition-all",
+                    targetOwnerType === type ? "bg-slate-900 text-white shadow-md" : "text-slate-400"
+                  )}
+                  onClick={() => {
+                    setTargetOwnerType(type);
+                    setOwnerSearch("");
+                    setOwnerResults([]);
+                    setSelectedOwnerId("");
+                  }}
+                >
+                  {type === "DEAL"
+                    ? "ดีล"
+                    : type === "LEAD"
+                      ? "ลูกค้า"
+                      : "ทรัพย์สิน"}
+                </Button>
+              ))}
+            </div>
 
-              <div className="relative">
-                <Input
-                  placeholder={`พิมพ์ค้นหาชื่อ ${targetOwnerType === "DEAL" ? "ลูกค้าหรือทรัพย์สินในดีล" : targetOwnerType === "LEAD" ? "ลูกค้า" : "ทรัพย์สิน"}...`}
-                  value={ownerSearch}
-                  onChange={(e) => setOwnerSearch(e.target.value)}
-                  className="pl-9"
-                />
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                {isSearching && (
-                  <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-slate-400" />
-                )}
-              </div>
-
-              {ownerResults.length > 0 && !selectedOwnerId && (
-                <div className="border rounded-md bg-white max-h-[150px] overflow-y-auto shadow-sm">
-                  {ownerResults.map((r) => (
-                    <div
-                      key={r.id}
-                      className="p-2 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-0 flex items-center justify-between"
-                      onClick={() => {
-                        setSelectedOwnerId(r.id);
-                        setOwnerSearch(r.label);
-                        setOwnerResults([]);
-                      }}
-                    >
-                      <span className="font-medium">{r.label}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 text-[10px] text-blue-600"
-                      >
-                        เลือก
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {selectedOwnerId && (
-                <div className="flex items-center justify-between bg-blue-50 p-2 rounded-md border border-blue-200">
-                  <span className="text-sm font-bold text-blue-700 truncate mr-2">
-                    {ownerSearch}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-blue-400 hover:text-blue-600"
-                    onClick={() => {
-                      setSelectedOwnerId("");
-                      setOwnerSearch("");
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
+            <div className="relative">
+              <Input
+                placeholder={`ค้นหาชื่อ ${targetOwnerType === "DEAL" ? "ลูกค้าหรือทรัพย์สินในดีล" : targetOwnerType === "LEAD" ? "ลูกค้า" : "ทรัพย์สิน"}...`}
+                value={ownerSearch}
+                onChange={(e) => setOwnerSearch(e.target.value)}
+                className="pl-11 h-12 rounded-2xl border-slate-100 bg-white focus:border-blue-500 shadow-xs"
+              />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400" />
+              {isSearching && (
+                <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 animate-spin text-blue-500" />
               )}
             </div>
-          )}
 
-          <Tabs
-            value={templateSource}
-            onValueChange={(v: any) => setTemplateSource(v)}
-          >
-            <TabsList className="grid w-full grid-cols-2 mb-4 h-10">
-              <TabsTrigger value="standard" className="text-xs font-bold">
-                เลือกจากที่มีในระบบ (HTML)
-              </TabsTrigger>
-              <TabsTrigger value="custom" className="text-xs font-bold">
-                อัปโหลดไฟล์ Word (.docx)
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="standard" className="mt-0">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="template"
-                    className="font-bold text-slate-700"
+            {ownerResults.length > 0 && !selectedOwnerId && (
+              <div className="border border-slate-100 rounded-2xl bg-white max-h-[200px] overflow-y-auto shadow-xl animate-in fade-in slide-in-from-top-2">
+                {ownerResults.map((r) => (
+                  <div
+                    key={r.id}
+                    className="p-3.5 hover:bg-blue-50 cursor-pointer text-sm border-b border-slate-50 last:border-0 flex items-center justify-between group"
+                    onClick={() => {
+                      setSelectedOwnerId(r.id);
+                      setOwnerSearch(r.label);
+                      setOwnerResults([]);
+                    }}
                   >
-                    ต้นแบบเอกสาร
-                  </Label>
-                  <Select
-                    value={selectedTemplateId}
-                    onValueChange={setSelectedTemplateId}
-                    disabled={loading}
-                  >
-                    <SelectTrigger id="template" className="bg-white">
-                      <SelectValue placeholder="เลือกต้นแบบ..." />
-                    </SelectTrigger>
-                    <SelectContent className="z-200">
-                      {templates.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="language"
-                    className="font-bold text-slate-700"
-                  >
-                    ภาษา (Language)
-                  </Label>
-                  <Select
-                    value={language}
-                    onValueChange={setLanguage}
-                    disabled={loading}
-                  >
-                    <SelectTrigger id="language" className="bg-white">
-                      <SelectValue placeholder="เลือกภาษา..." />
-                    </SelectTrigger>
-                    <SelectContent className="z-200">
-                      <SelectItem value="th">ภาษาไทย</SelectItem>
-                      <SelectItem value="en">English (US)</SelectItem>
-                      <SelectItem value="cn">中文 (简体)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <span className="font-bold text-slate-700 group-hover:text-blue-700 transition-colors">{r.label}</span>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black text-blue-600 bg-blue-50 rounded-lg">เลือก</Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </TabsContent>
+            )}
 
-            <TabsContent value="custom" className="mt-0 space-y-4">
-              <div className="p-4 border-2 border-dashed rounded-xl bg-slate-50 border-blue-200">
-                <Label className="font-bold flex items-center gap-2 mb-2 text-blue-800">
-                  <FileText className="h-4 w-4" />
-                  อัปโหลดเทมเพลต .docx ของท่าน
-                </Label>
-                <Input
-                  type="file"
-                  accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  onChange={(e) => setCustomFile(e.target.files?.[0] || null)}
-                  className="bg-white cursor-pointer"
-                />
-
-                <div className="mt-4 p-3 bg-white rounded-md border text-xs text-slate-600 shadow-sm">
-                  <p className="font-bold text-slate-800 mb-2">
-                    คู่มือการใส่ตัวแปร (ผูกข้อมูลอัตโนมัติ):
-                  </p>
-                  <p className="mb-2 text-slate-500">
-                    พิมพ์ตัวแปรเหล่านี้ลงใน Word ของท่าน
-                    ระบบจะแทนที่ให้เมื่อกดออกเอกสาร
-                  </p>
-                  <ul className="list-disc pl-4 space-y-1.5 font-mono text-[11px] bg-slate-50 p-2 rounded">
-                    <li>
-                      <span className="text-blue-700">
-                        {"{{lead.full_name}}"}
-                      </span>{" "}
-                      <span className="font-sans text-slate-500">
-                        - ชื่อลูกค้า
-                      </span>
-                    </li>
-                    <li>
-                      <span className="text-blue-700">
-                        {"{{property.name}}"}
-                      </span>{" "}
-                      <span className="font-sans text-slate-500">
-                        - ชื่อทรัพย์
-                      </span>
-                    </li>
-                    <li>
-                      <span className="text-blue-700">
-                        {"{{deal.formatted_price}}"}
-                      </span>{" "}
-                      <span className="font-sans text-slate-500">
-                        - ราคา ฟอร์แมตตัดลูกน้ำ
-                      </span>
-                    </li>
-                    <li>
-                      <span className="text-blue-700">
-                        {"{{deal.amount_in_words}}"}
-                      </span>{" "}
-                      <span className="font-sans text-slate-500">
-                        - ราคาเป็นข้อความ (เช่น หนึ่งแสนถ้วน)
-                      </span>
-                    </li>
-                    <li>
-                      <span className="text-blue-700">{"{{date.today}}"}</span>{" "}
-                      <span className="font-sans text-slate-500">
-                        - วันที่วันนี้
-                      </span>
-                    </li>
-                    <li>
-                      <span className="text-blue-700">
-                        {"{{deal.payment_period}}"}
-                      </span>{" "}
-                      <span className="font-sans text-slate-500">
-                        - กำหนดชำระงวดแรก
-                      </span>
-                    </li>
-                    <li>
-                      <span className="text-blue-700">{"{{bank_name}}"}</span>{" "}
-                      <span className="font-sans text-slate-500">
-                        - ธนาคารที่โอน
-                      </span>
-                    </li>
-                    <li>
-                      <span className="text-blue-700">
-                        {"{{bank_account_no}}"}
-                      </span>{" "}
-                      <span className="font-sans text-slate-500">
-                        - เลขที่ธนาคารที่โอน
-                      </span>
-                    </li>
-                  </ul>
-                  <p className="mt-3 text-[10.5px] text-blue-600 font-sans italic flex items-center gap-1">
-                    💡 ทริค: จัดหน้า Word ให้สวยตามต้องการได้เลย Layout
-                    จะไม่พังเหมือนแปลง PDF ทั่วไป
-                  </p>
+            {selectedOwnerId && (
+              <div className="flex items-center justify-between bg-blue-600 p-3 rounded-2xl border border-blue-700 shadow-lg shadow-blue-100 animate-in zoom-in-95">
+                <div className="flex items-center gap-2 min-w-0">
+                   <div className="h-6 w-6 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
+                      <FileText className="h-3.5 w-3.5 text-white" />
+                   </div>
+                   <span className="text-sm font-black text-white truncate pr-2">
+                    {ownerSearch}
+                  </span>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-white/60 hover:text-white hover:bg-white/10 rounded-lg shrink-0"
+                  onClick={() => {
+                    setSelectedOwnerId("");
+                    setOwnerSearch("");
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
+            )}
+          </div>
+        )}
 
+        <Tabs
+          value={templateSource}
+          onValueChange={(v: any) => setTemplateSource(v)}
+          className="w-full"
+        >
+          <TabsList className="grid w-full grid-cols-2 mb-6 h-12 p-1.5 bg-slate-100 rounded-2xl border border-slate-200/50">
+            <TabsTrigger value="standard" className="text-xs font-black rounded-xl data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">
+              Standard HTML
+            </TabsTrigger>
+            <TabsTrigger value="custom" className="text-xs font-black rounded-xl data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">
+              Upload .docx
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="standard" className="mt-0 space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-2">
                 <Label
-                  htmlFor="customLanguage"
-                  className="font-bold text-slate-700"
+                  htmlFor="template"
+                  className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1"
                 >
-                  ภาษาข้อมูลอัตโนมัติ (Language Localization)
+                  เลือกต้นแบบ
+                </Label>
+                <Select
+                  value={selectedTemplateId}
+                  onValueChange={setSelectedTemplateId}
+                  disabled={loading}
+                >
+                  <SelectTrigger id="template" className="h-12 rounded-2xl border-slate-200 bg-white font-bold">
+                    <SelectValue placeholder="เลือกต้นแบบ..." />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl shadow-2xl">
+                    {templates.map((t) => (
+                      <SelectItem key={t.id} value={t.id} className="rounded-xl">
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="language"
+                  className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1"
+                >
+                  ภาษาที่แสดง (Localization)
                 </Label>
                 <Select
                   value={language}
                   onValueChange={setLanguage}
                   disabled={loading}
                 >
-                  <SelectTrigger id="customLanguage" className="bg-white">
+                  <SelectTrigger id="language" className="h-12 rounded-2xl border-slate-200 bg-white font-bold">
                     <SelectValue placeholder="เลือกภาษา..." />
                   </SelectTrigger>
-                  <SelectContent className="z-200">
-                    <SelectItem value="th">
-                      ภาษาไทย (แปลตัวเลขเป็นภาษาไทย)
-                    </SelectItem>
-                    <SelectItem value="en">
-                      English (Translate numbers to English)
-                    </SelectItem>
+                  <SelectContent className="rounded-2xl shadow-2xl">
+                    <SelectItem value="th" className="rounded-xl">ภาษาไทย</SelectItem>
+                    <SelectItem value="en" className="rounded-xl">English (US)</SelectItem>
+                    <SelectItem value="cn" className="rounded-xl">中文 (简体)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+          </TabsContent>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bankName" className="font-bold text-slate-700">
-                ชื่อธนาคาร
+          <TabsContent value="custom" className="mt-0 space-y-4">
+            <div className="p-6 border-2 border-dashed rounded-3xl bg-blue-50/30 border-blue-200 transition-colors group hover:border-blue-400">
+              <Label className="font-black flex items-center gap-2 mb-3 text-blue-900 uppercase tracking-widest text-[10px]">
+                <FileText className="h-4 w-4" />
+                อัปโหลดไฟล์ Word ของท่าน
               </Label>
               <Input
-                id="bankName"
-                placeholder="เช่น กสิกรไทย"
-                value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
+                type="file"
+                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={(e) => setCustomFile(e.target.files?.[0] || null)}
+                className="h-11 bg-white cursor-pointer rounded-xl border-blue-100 shadow-sm"
               />
-            </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="bankAccountNo"
-                className="font-bold text-slate-700"
-              >
-                เลขที่บัญชี
-              </Label>
-              <Input
-                id="bankAccountNo"
-                placeholder="000-0-00000-0"
-                value={bankAccountNo}
-                onChange={(e) => setBankAccountNo(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label
-                htmlFor="paymentPeriod"
-                className="font-bold text-slate-700"
-              >
-                รอบการชำระ (Payment Period)
-              </Label>
-              <Input
-                id="paymentPeriod"
-                placeholder="เช่น 7th, February 2026"
-                value={paymentPeriod}
-                onChange={(e) => setPaymentPeriod(e.target.value)}
-              />
+              <div className="mt-5 p-5 bg-white rounded-2xl border border-blue-100 text-xs text-slate-600 shadow-sm">
+                <p className="font-black text-blue-900 mb-3 border-b border-blue-50 pb-2">
+                  คู่มือการใส่ตัวแปร (Smart Tags):
+                </p>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 font-mono text-[10px] p-1">
+                  <li className="flex items-center justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                    <span className="text-blue-700 font-bold">{"{{lead.full_name}}"}</span>
+                    <span className="font-sans text-slate-400 text-[9px] font-bold">ชื่อลูกค้า</span>
+                  </li>
+                  <li className="flex items-center justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                    <span className="text-blue-700 font-bold">{"{{property.name}}"}</span>
+                    <span className="font-sans text-slate-400 text-[9px] font-bold">ชื่อทรัพย์</span>
+                  </li>
+                  <li className="flex items-center justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                    <span className="text-blue-700 font-bold">{"{{deal.formatted_price}}"}</span>
+                    <span className="font-sans text-slate-400 text-[9px] font-bold">ราคาดีล</span>
+                  </li>
+                  <li className="flex items-center justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                    <span className="text-blue-700 font-bold">{"{{date.today}}"}</span>
+                    <span className="font-sans text-slate-400 text-[9px] font-bold">วันนี้</span>
+                  </li>
+                </ul>
+                <p className="mt-4 text-[10px] text-emerald-600 font-bold flex items-center gap-1.5 bg-emerald-50 p-2 rounded-xl border border-emerald-100">
+                  <Wand2 className="h-3.5 w-3.5" />
+                  ทริค: จัดหน้า Word ให้สวยตามต้องการ ระบบจะแทนที่ข้อมูลให้ทันที
+                </p>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="paymentMethod"
-                className="font-bold text-slate-700"
-              >
-                วิธีชำระ (Payment Method)
+          </TabsContent>
+        </Tabs>
+
+        <div className="space-y-5">
+           <div className="flex items-center gap-2 mb-1">
+              <div className="p-1.5 bg-slate-50 rounded-lg text-slate-400">
+                <Search className="h-4 w-4" />
+              </div>
+              <Label className="text-xs font-black text-slate-700 uppercase tracking-widest">
+                ข้อมูลการเงิน (Financial Info)
               </Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger id="paymentMethod">
-                  <SelectValue placeholder="เลือกวิธีชำระ..." />
-                </SelectTrigger>
-                <SelectContent className="z-200">
-                  <SelectItem value="Transfer">Transfer (โอนเงิน)</SelectItem>
-                  <SelectItem value="Cash">Cash (เงินสด)</SelectItem>
-                  <SelectItem value="Cheque">Cheque (เช็ค)</SelectItem>
-                  <SelectItem value="Credit Card">
-                    Credit Card (บัตรเครดิต)
-                  </SelectItem>
-                </SelectContent>
-              </Select>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="accountName" className="font-bold text-slate-700">
-              ชื่อบัญชี (Account Name / Owner Name)
-            </Label>
-            <Input
-              id="accountName"
-              placeholder="กรอกชื่อเจ้าของบัญชี หรือชื่อผู้รับเงิน"
-              value={accountName}
-              onChange={(e) => setAccountName(e.target.value)}
-            />
-          </div>
-
-          <div className="p-4 rounded-xl border border-blue-100 bg-blue-50/30 space-y-3">
-            <Label className="font-bold text-blue-800 flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              ข้อมูลผู้รับเอกสาร (Client Overrides)
-            </Label>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-[11px] text-slate-500">
-                  ชื่อ-นามสกุล
-                </Label>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <Label htmlFor="bankName" className="text-xs font-bold text-slate-500 ml-1">ธนาคารที่รับเงิน</Label>
                 <Input
-                  size={1}
-                  className="h-8 text-sm"
+                  id="bankName"
+                  placeholder="เช่น กสิกรไทย"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  className="h-11 rounded-xl border-slate-200 bg-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bankAccountNo" className="text-xs font-bold text-slate-500 ml-1">เลขที่บัญชี</Label>
+                <Input
+                  id="bankAccountNo"
+                  placeholder="000-0-00000-0"
+                  value={bankAccountNo}
+                  onChange={(e) => setBankAccountNo(e.target.value)}
+                  className="h-11 rounded-xl border-slate-200 bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <Label htmlFor="paymentPeriod" className="text-xs font-bold text-slate-500 ml-1">รอบการชำระ</Label>
+                <Input
+                  id="paymentPeriod"
+                  placeholder="เช่น 7th of April 2026"
+                  value={paymentPeriod}
+                  onChange={(e) => setPaymentPeriod(e.target.value)}
+                  className="h-11 rounded-xl border-slate-200 bg-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="paymentMethod" className="text-xs font-bold text-slate-500 ml-1">วิธีชำระเงิน</Label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger id="paymentMethod" className="h-11 rounded-xl border-slate-200 bg-white">
+                    <SelectValue placeholder="เลือกวิธีชำระ..." />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    <SelectItem value="Transfer" className="rounded-xl">โอนเงิน (Transfer)</SelectItem>
+                    <SelectItem value="Cash" className="rounded-xl">เงินสด (Cash)</SelectItem>
+                    <SelectItem value="Cheque" className="rounded-xl">เช็ค (Cheque)</SelectItem>
+                    <SelectItem value="Credit Card" className="rounded-xl">บัตรเครดิต (Credit Card)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="accountName" className="text-xs font-bold text-slate-500 ml-1">ชื่อบัญชีผู้รับเงิน</Label>
+              <Input
+                id="accountName"
+                placeholder="กรอกชื่อเจ้าของบัญชี"
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+                className="h-11 rounded-xl border-slate-200 bg-white"
+              />
+            </div>
+        </div>
+
+        <div className="p-6 rounded-3xl border border-blue-100 bg-blue-50/20 space-y-4 relative overflow-hidden">
+            <div className="absolute -right-4 -bottom-4 opacity-5 pointer-events-none">
+              <FileText className="h-24 w-24 text-blue-900" />
+            </div>
+            <Label className="text-xs font-black text-blue-900 flex items-center gap-2 uppercase tracking-widest">
+              <Wand2 className="h-4 w-4" />
+              แก้ไขข้อมูลผู้รับ (Client Overrides)
+            </Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-bold text-slate-400 uppercase ml-1">ชื่อ-นามสกุล</Label>
+                <Input
+                  className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
                 />
               </div>
-              <div className="space-y-1">
-                <Label className="text-[11px] text-slate-500">Line ID</Label>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Line ID</Label>
                 <Input
-                  size={1}
-                  className="h-8 text-sm"
+                  className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
                   value={clientLine}
                   onChange={(e) => setClientLine(e.target.value)}
                 />
               </div>
             </div>
-            <div className="space-y-1">
-              <Label className="text-[11px] text-slate-500">Email</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Email Address</Label>
               <Input
-                size={1}
-                className="h-8 text-sm"
+                className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
                 value={clientEmail}
                 onChange={(e) => setClientEmail(e.target.value)}
               />
@@ -798,64 +742,40 @@ export function TemplateDialog({
             </div>
           )}
 
-          <div className="rounded-xl bg-blue-50 p-4 border border-blue-100">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-2 w-2 rounded-full bg-blue-600"></div>
-              <p className="font-bold text-sm text-blue-800">
-                ข้อมูลที่ระบบกำลังเตรียม:
+          <div className="rounded-xl bg-blue-50/50 p-5 border border-blue-100/50">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+              <p className="font-black text-[10px] text-blue-900 uppercase tracking-widest leading-none">
+                ระบบเตรียมข้อมูลอัตโนมัติ:
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-y-1 gap-x-4 text-[11px] text-blue-700 font-medium">
-              <div className="flex items-center gap-1.5 opacity-80">
-                ✅ ข้อมูลลูกค้าและที่อยู่
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-[10px] text-blue-700/80 font-bold">
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 rounded-lg bg-white border border-blue-50 flex items-center justify-center text-[8px]">✅</div>
+                ข้อมูลลูกค้าและที่อยู่
               </div>
-              <div className="flex items-center gap-1.5 opacity-80">
-                ✅ รายละเอียดทรัพย์
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 rounded-lg bg-white border border-blue-50 flex items-center justify-center text-[8px]">✅</div>
+                รายละเอียดทรัพย์
               </div>
-              <div className="flex items-center gap-1.5 opacity-80">
-                ✅ ราคา (แปลงเป็นตัวอักษร)
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 rounded-lg bg-white border border-blue-50 flex items-center justify-center text-[8px]">✅</div>
+                ราคา (แปลงเป็นตัวอักษร)
               </div>
-              <div className="flex items-center gap-1.5 opacity-80">
-                ✅ วันที่ปัจจุบัน (Localization)
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 rounded-lg bg-white border border-blue-50 flex items-center justify-center text-[8px]">✅</div>
+                วันที่ปัจจุบัน (Localization)
               </div>
               {slipFile && (
-                <div className="flex items-center gap-1.5 text-emerald-700">
-                  ✅ รูปภาพสลิปการโอน
+                <div className="flex items-center gap-2 text-emerald-700">
+                  <div className="h-4 w-4 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[8px]">✅</div>
+                  รูปภาพสลิปการโอน
                 </div>
               )}
             </div>
           </div>
         </div>
-
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button
-            variant="ghost"
-            onClick={() => setOpen(false)}
-            disabled={loading}
-            className="font-bold"
-          >
-            ยกเลิก
-          </Button>
-          <Button
-            onClick={handleGenerate}
-            disabled={
-              loading ||
-              !selectedTemplateId ||
-              (!initialOwnerId && !selectedOwnerId)
-            }
-            className="px-8 font-bold bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-200"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                กำลังสร้างเอกสาร...
-              </>
-            ) : (
-              "ยืนยันและสร้างไฟล์"
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      
+    </ResponsiveDialog>
   );
 }

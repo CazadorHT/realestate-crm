@@ -273,8 +273,9 @@ export async function duplicatePropertyAction(
       meta_description: _meta_description,
       meta_keywords: _meta_keywords,
       structured_data: _structured_data,
+      property_images: _property_images, // Explicitly exclude joined data
       ...rest
-    } = src as PropertyRow;
+    } = src as any;
 
     const { data: inserted, error: insErr } = await supabase
       .from("properties")
@@ -300,7 +301,7 @@ export async function duplicatePropertyAction(
       };
     }
     const newPropertyId = inserted.id;
-    // ✅ Step 4.2: copy images rows & files (ต้อง copy ไฟล์จริงใน storage ด้วย - เพื่ออิสระในการลบตัวต้นฉบับ)
+    // ✅ Step 4.2: copy images rows & files
     const { data: imgs } = await supabase
       .from("property_images")
       .select("image_url, storage_path, is_cover, sort_order")
@@ -310,10 +311,7 @@ export async function duplicatePropertyAction(
     if (imgs?.length) {
       const copyPromises = imgs.map(async (img) => {
         if (!img.storage_path) return null;
-
-        // แยกนามสกุลไฟล์
         const ext = img.storage_path.split(".").pop() || "webp";
-        // สร้าง path ใหม่: properties/<user_id>/dup-<uuid>.<ext>
         const newPath = `properties/${user.id}/dup-${randomUUID()}.${ext}`;
 
         const { error: copyErr } = await supabase.storage
@@ -322,8 +320,6 @@ export async function duplicatePropertyAction(
 
         if (copyErr) {
           console.error("duplicatePropertyAction: storage copy failed", copyErr);
-          // ถ้าก๊อปปี้ไม่ได้ อาจจะใช้ตัวเดิมไปก่อน (แต่ถ้าลบต้นฉบับจะพังเหมือนเดิม)
-          // ในที่นี้เราจะข้ามใบที่ก๊อปปี้ไม่สำเร็จ
           return null;
         }
 
@@ -341,14 +337,36 @@ export async function duplicatePropertyAction(
       );
 
       if (newRows.length > 0) {
-        const { error: imgErr } = await supabase
-          .from("property_images")
-          .insert(newRows);
-
-        if (imgErr) {
-          console.warn("duplicatePropertyAction: copy image rows failed", imgErr);
-        }
+        await supabase.from("property_images").insert(newRows);
       }
+    }
+
+    // ✅ Step 4.3: copy agents
+    const { data: agents } = await supabase
+      .from("property_agents")
+      .select("agent_id")
+      .eq("property_id", id);
+
+    if (agents?.length) {
+      const agentRows = agents.map(a => ({
+        property_id: newPropertyId,
+        agent_id: a.agent_id
+      }));
+      await supabase.from("property_agents").insert(agentRows);
+    }
+
+    // ✅ Step 4.4: copy features (amenities)
+    const { data: features } = await supabase
+      .from("property_features")
+      .select("feature_id")
+      .eq("property_id", id);
+
+    if (features?.length) {
+      const featureRows = features.map(f => ({
+        property_id: newPropertyId,
+        feature_id: f.feature_id
+      }));
+      await supabase.from("property_features").insert(featureRows);
     }
 
     await logAudit(

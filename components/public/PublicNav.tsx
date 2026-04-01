@@ -24,7 +24,7 @@ import {
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { DepositWizard } from "./deposit/DepositWizard";
 import { CheckCircle } from "lucide-react";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
@@ -360,14 +360,13 @@ export function PublicNav() {
                     </Button>
                   </Link>
 
-                  <Dialog
+                  <ResponsiveDialog
                     open={isDepositOpen}
                     onOpenChange={(open) => {
                       setIsDepositOpen(open);
                       if (!open) setIsDepositSuccess(false);
                     }}
-                  >
-                    <DialogTrigger asChild>
+                    trigger={
                       <Button
                         size="lg"
                         className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md font-medium outline-none ring-0 border-0 text-white"
@@ -375,64 +374,41 @@ export function PublicNav() {
                         <Key className="h-4 w-4 mr-1" />
                         {t("nav.deposit")}
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent
-                      onOpenAutoFocus={(e) => e.preventDefault()}
-                      overlayClassName="z-150 backdrop-blur-xs bg-black/10 transition-all duration-500"
-                      className="flex flex-col fixed z-150 w-full gap-0 p-0 border-0 duration-500
-                      data-[state=open]:animate-in data-[state=closed]:animate-out
-                      data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
-                      bg-white
-                      bottom-0 top-auto left-0 right-0 translate-x-0 translate-y-0
-                      rounded-t-[28px] rounded-b-none
-                      h-auto max-h-[82dvh] max-w-none
-                      data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
-                      data-[state=open]:cubic-bezier(0.32,0.72,0,1)
-                      shadow-2xl
-                      sm:bottom-auto sm:top-[40%] lg:top-[50%] sm:left-[50%]
-                      sm:translate-x-[-50%] sm:translate-y-[-50%]
-                      sm:h-auto sm:max-h-[80vh] lg:max-h-[90vh]
-                      sm:rounded-2xl sm:shadow-2xl
-                      sm:max-w-[680px] lg:max-w-[800px]
-                      sm:data-[state=closed]:slide-out-to-bottom-4 sm:data-[state=open]:slide-in-from-bottom-4
-                      sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:zoom-out-95
-                      [&>button]:top-4 [&>button]:right-4 [&>button]:z-50
-                      [&>button]:text-slate-400 [&>button]:hover:text-slate-600
-                      sm:[&>button]:text-white/60 sm:[&>button]:hover:text-white"
-                    >
-                      {isDepositSuccess ? (
-                        <div className="text-center py-20 px-6 space-y-8 animate-in fade-in zoom-in duration-500">
-                          <div className="w-24 h-24 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                            <CheckCircle className="h-12 w-12" />
-                          </div>
-                          <div className="space-y-3">
-                            <h3 className="text-3xl font-bold text-slate-900">
-                              {t("deposit.success.title")}
-                            </h3>
-                            <p className="text-slate-500 text-lg max-w-sm mx-auto">
-                              {t("deposit.success.message")}
-                            </p>
-                          </div>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setIsDepositSuccess(false);
-                              setIsDepositOpen(false);
-                            }}
-                            className="mt-6 border-slate-200 hover:bg-slate-50 rounded-2xl px-12 py-7 text-base font-bold transition-all hover:scale-105 active:scale-95 shadow-sm"
-                          >
-                            {t("common.close")}
-                          </Button>
+                    }
+                    className="sm:max-w-[720px] lg:max-w-[800px]"
+                  >
+                    {isDepositSuccess ? (
+                      <div className="text-center py-20 px-6 space-y-8 animate-in fade-in zoom-in duration-500">
+                        <div className="w-24 h-24 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                          <CheckCircle className="h-12 w-12" />
                         </div>
-                      ) : (
-                        <DepositWizard
-                          onSuccess={() => setIsDepositSuccess(true)}
-                          onCancel={() => setIsDepositOpen(false)}
-                          location="Navbar"
-                        />
-                      )}
-                    </DialogContent>
-                  </Dialog>
+                        <div className="space-y-3">
+                          <h3 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
+                            {t("deposit.success.title")}
+                          </h3>
+                          <p className="text-slate-500 text-base md:text-lg max-w-sm mx-auto">
+                            {t("deposit.success.message")}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setIsDepositSuccess(false);
+                            setIsDepositOpen(false);
+                          }}
+                          className="mt-6 border-slate-200 hover:bg-slate-50 rounded-2xl px-12 py-7 text-base font-bold transition-all hover:scale-105 active:scale-95 shadow-sm"
+                        >
+                          {t("common.close")}
+                        </Button>
+                      </div>
+                    ) : (
+                      <DepositWizard
+                        onSuccess={() => setIsDepositSuccess(true)}
+                        onCancel={() => setIsDepositOpen(false)}
+                        location="Navbar"
+                      />
+                    )}
+                  </ResponsiveDialog>
                 </div>
               </div>
 

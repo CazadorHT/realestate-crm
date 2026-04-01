@@ -55,6 +55,10 @@
   button {
     @apply cursor-pointer;
   }
+  input,
+  textarea {
+    scroll-margin-top: 100px;
+  }
 }
 
 /* Production CSS Fixes - Force gradient and text color rendering */

@@ -21,12 +21,12 @@ export function FacebookPreview({
   lang,
 }: FacebookPreviewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const maxLength = 500;
+  const maxLength = 200;
   const isTooLong = content?.length > maxLength;
   const displayContent = isTooLong && !isExpanded ? content.slice(0, maxLength).trim() + "..." : content;
 
   return (
-    <div className="bg-white  border border-slate-200 rounded-xl shadow-sm overflow-hidden w-full transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 max-w-[300px] mx-auto">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden w-full transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 max-w-[300px] xs:max-w-[340px] sm:max-w-[380px] mx-auto">
       {/* Header */}
       <div className="p-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -66,7 +66,7 @@ export function FacebookPreview({
       {/* Media Grid */}
       <div
         className={cn(
-          "grid gap-0.5 bg-slate-100 min-h-[100px] max-w-[300px] relative",
+          "grid gap-0.5 bg-slate-100 min-h-[100px]  relative",
           images.length === 1
             ? "grid-cols-1"
             : images.length === 2

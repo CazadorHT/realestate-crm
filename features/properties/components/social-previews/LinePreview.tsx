@@ -13,7 +13,7 @@ export function LinePreview({ images, previewData, lang }: LinePreviewProps) {
 
   return (
     <div className="bg-[#EBEEF5] p-4 rounded-2xl border border-slate-200 shadow-inner">
-      <div className="bg-white rounded-[20px] overflow-hidden shadow-sm border border-slate-100 max-w-[320px] mx-auto">
+      <div className="bg-white rounded-[20px] overflow-hidden shadow-sm border border-slate-100 max-w-[280px] xs:max-w-[320px] sm:max-w-[360px] mx-auto">
         {/* Header (Exact Match) */}
         <div className="px-5 pt-5 pb-0 space-y-0.5">
           <div className="text-[17px] font-bold text-[#1E3A5F] leading-tight line-clamp-2">

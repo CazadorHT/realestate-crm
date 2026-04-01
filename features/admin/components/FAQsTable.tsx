@@ -21,16 +21,7 @@ import { bulkDeleteFaqsAction } from "@/features/admin/faqs-bulk-actions";
 import { deleteFaq } from "@/features/admin/faqs-actions";
 import { toast } from "sonner";
 import { useState } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Loader2 } from "lucide-react";
 import { EditFAQDialog } from "./EditFAQDialog";
 import { cn } from "@/lib/utils";
@@ -353,30 +344,35 @@ export function FAQsTable({ faqs, totalCount, currentPage }: FAQsTableProps) {
         )}
       </div>
 
-      <AlertDialog
+      <ResponsiveDialog
         open={!!deleteConfirmFaq}
         onOpenChange={(open) => !open && setDeleteConfirmFaq(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบคำถาม</AlertDialogTitle>
-            <AlertDialogDescription>
-              คุณแน่ใจหรือไม่ว่าต้องการลบคำถาม{" "}
-              <strong className="text-foreground">
-                "{deleteConfirmFaq?.question}"
-              </strong>
-              ? การดำเนินการนี้ไม่สามารถย้อนกลับได้
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction
+        title="ยืนยันการลบคำถาม"
+        description={
+          deleteConfirmFaq ? (
+            <div className="flex flex-col gap-2">
+              <p>คุณแน่ใจหรือไม่ว่าต้องการลบคำถามนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+              <p className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 font-bold text-sm italic">
+                "{deleteConfirmFaq.question}"
+              </p>
+            </div>
+          ) : ""
+        }
+        footer={
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <Button
+              variant="ghost"
+              onClick={() => setDeleteConfirmFaq(null)}
               disabled={isDeleting}
-              onClick={(e) => {
-                e.preventDefault();
-                if (deleteConfirmFaq) handleDelete(deleteConfirmFaq);
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="flex-1 h-12 rounded-xl font-bold text-slate-500"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              onClick={() => deleteConfirmFaq && handleDelete(deleteConfirmFaq)}
+              disabled={isDeleting}
+              variant="destructive"
+              className="flex-1 h-12 rounded-xl font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200"
             >
               {isDeleting ? (
                 <>
@@ -384,12 +380,12 @@ export function FAQsTable({ faqs, totalCount, currentPage }: FAQsTableProps) {
                   กำลังลบ...
                 </>
               ) : (
-                "ยืนยันการลบ"
+                "ยืนยันการลบคำถาม"
               )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </div>
+        }
+      />
 
       <EditFAQDialog
         faq={editingFaq}

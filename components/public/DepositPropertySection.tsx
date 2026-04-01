@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Home, Key, CheckCircle, User, Phone, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
@@ -37,7 +37,7 @@ export function DepositPropertySection({ className }: { className?: string }) {
   return (
     <section
       id="deposit-section"
-      className="py-16 md:py-18 lg:py-20 px-4 md:px-6 lg:px-8 relative overflow-hidden z-0"
+      className="py-20 md:py-32 lg:py-40 px-4 md:px-6 lg:px-8 relative overflow-hidden z-0"
     >
       {/* Schema.org Structured Data */}
       <script
@@ -45,25 +45,32 @@ export function DepositPropertySection({ className }: { className?: string }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-linear-to-br from-slate-50 via-blue-50/40 to-indigo-50/30" />
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-200/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-200/20 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/4" />
+      {/* Modern Mesh Gradient Background */}
+      <div className="absolute inset-0 bg-slate-50/50" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(59,130,246,0.12),transparent_50%),radial-gradient(ellipse_at_bottom_left,rgba(99,102,241,0.08),transparent_50%)]" />
+      
+      {/* Dynamic Blurs */}
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-400/10 rounded-full blur-[140px] -translate-y-1/2 translate-x-1/4" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-400/10 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/3" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('/images/grid.svg')] bg-center mask-[radial-gradient(white,transparent_85%)] opacity-[0.03] pointer-events-none" />
 
-      <div className="max-w-7xl px-4 md:px-6 lg:px-8 mx-auto relative z-10">
+      {/* Subtle Top Border */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent" />
+
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <div
-          className="text-center space-y-5 md:space-y-6 mb-12 md:mb-16"
+          className="text-center space-y-4 md:space-y-6 mb-12 md:mb-20"
           data-aos="fade-up"
         >
-          <div className="inline-flex items-center rounded-full border border-blue-200/60 bg-white/80 backdrop-blur-sm px-4 py-2 text-sm font-semibold shadow-sm">
-            <Key className="mr-2 h-4 w-4 text-blue-600" />
-            <span className="text-blue-600 font-semibold">
+          <div className="inline-flex items-center rounded-full border border-blue-200/60 bg-white/80 backdrop-blur-sm px-4 py-2 text-[11px] md:text-sm font-bold uppercase tracking-widest shadow-sm">
+            <Key className="mr-2 h-3.5 w-3.5 text-blue-600" />
+            <span className="text-blue-600">
               {t("deposit.title")}
             </span>
           </div>
 
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight text-slate-900">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-slate-900 max-w-4xl mx-auto">
             {t("deposit.subtitle")
               .split(" ")
               .map((word: string, i: number) => (
@@ -71,8 +78,8 @@ export function DepositPropertySection({ className }: { className?: string }) {
                   key={i}
                   className={
                     i >= 2
-                      ? "text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-600"
-                      : ""
+                      ? "text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600"
+                      : "inline-block"
                   }
                 >
                   {word}{" "}
@@ -80,7 +87,7 @@ export function DepositPropertySection({ className }: { className?: string }) {
               ))}
           </h2>
 
-          <p className="text-lg md:text-xl text-slate-500 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-base md:text-xl text-slate-500 leading-relaxed max-w-2xl mx-auto font-medium opacity-80">
             {t("deposit.description")}
           </p>
         </div>
@@ -163,8 +170,11 @@ export function DepositPropertySection({ className }: { className?: string }) {
               </div>
             </div>
 
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-              <DialogTrigger asChild>
+            <ResponsiveDialog
+              open={isOpen}
+              onOpenChange={setIsOpen}
+              title={t("deposit.form.submit_btn")}
+              trigger={
                 <Button
                   size="lg"
                   className="w-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-7 text-lg font-bold rounded-2xl shadow-lg shadow-blue-200/50 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all group"
@@ -172,71 +182,41 @@ export function DepositPropertySection({ className }: { className?: string }) {
                   {t("deposit.form.submit_btn")}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </DialogTrigger>
-              <DialogContent
-                onOpenAutoFocus={(e) => e.preventDefault()}
-                overlayClassName="z-150 backdrop-blur-xs bg-black/10 transition-all duration-500"
-                className="fixed z-150 w-full flex flex-col gap-0 p-0 border-0 duration-500
-                data-[state=open]:animate-in data-[state=closed]:animate-out
-                data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
-
-                // ── Mobile: Bottom Sheet ──
-                bg-white
-                bottom-0 top-auto left-0 right-0 translate-x-0 translate-y-0
-                rounded-t-[28px] rounded-b-none
-                h-auto max-h-[82dvh] max-w-none
-                data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
-                data-[state=open]:cubic-bezier(0.32,0.72,0,1)
-                shadow-2xl
-
-                // ── Desktop/Tablet: Centered Dialog ──
-                sm:bottom-auto sm:top-[50%] sm:left-[50%]
-                sm:translate-x-[-50%] sm:translate-y-[-50%]
-                sm:h-auto sm:max-h-[90vh]
-                sm:rounded-2xl sm:shadow-2xl
-                sm:max-w-[720px]
-                sm:data-[state=closed]:slide-out-to-bottom-4 sm:data-[state=open]:slide-in-from-bottom-4
-                sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:zoom-out-95
-
-                // ── Close Button ──
-                [&>button]:top-4 [&>button]:right-4 [&>button]:z-50
-                [&>button]:text-slate-400 [&>button]:hover:text-slate-600
-                sm:[&>button]:text-white/60 sm:[&>button]:hover:text-white
-              "
-              >
-                {isSuccess ? (
-                  <div className="text-center py-20 px-6 space-y-8 animate-in fade-in zoom-in duration-500">
-                    <div className="w-24 h-24 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                      <CheckCircle className="h-12 w-12" />
-                    </div>
-                    <div className="space-y-3">
-                      <h3 className="text-3xl font-bold text-slate-900">
-                        {t("deposit.success.title")}
-                      </h3>
-                      <p className="text-slate-500 text-lg max-w-sm mx-auto">
-                        {t("deposit.success.message")}
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIsSuccess(false);
-                        setIsOpen(false);
-                      }}
-                      className="mt-6 border-slate-200 hover:bg-slate-50 rounded-2xl px-12 py-7 text-base font-bold transition-all hover:scale-105 active:scale-95 shadow-sm"
-                    >
-                      {t("common.close")}
-                    </Button>
+              }
+              className="sm:max-w-[720px]"
+            >
+              {isSuccess ? (
+                <div className="text-center py-20 px-6 space-y-8 animate-in fade-in zoom-in duration-500">
+                  <div className="w-24 h-24 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                    <CheckCircle className="h-12 w-12" />
                   </div>
-                ) : (
-                  <DepositWizard
-                    onSuccess={() => setIsSuccess(true)}
-                    onCancel={() => setIsOpen(false)}
-                    location="Deposit Section"
-                  />
-                )}
-              </DialogContent>
-            </Dialog>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
+                      {t("deposit.success.title")}
+                    </h3>
+                    <p className="text-slate-500 text-base md:text-lg max-w-sm mx-auto">
+                      {t("deposit.success.message")}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsSuccess(false);
+                      setIsOpen(false);
+                    }}
+                    className="mt-6 border-slate-200 hover:bg-slate-50 rounded-2xl px-12 py-7 text-base font-bold transition-all hover:scale-105 active:scale-95 shadow-sm"
+                  >
+                    {t("common.close")}
+                  </Button>
+                </div>
+              ) : (
+                <DepositWizard
+                  onSuccess={() => setIsSuccess(true)}
+                  onCancel={() => setIsOpen(false)}
+                  location="Deposit Section"
+                />
+              )}
+            </ResponsiveDialog>
           </div>
         </div>
       </div>

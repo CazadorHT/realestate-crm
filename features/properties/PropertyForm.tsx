@@ -6,13 +6,8 @@ import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+
 import { Button } from "@/components/ui/button";
 import { ExternalLink, List, Facebook, Instagram, Loader2, CheckCircle2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -43,6 +38,7 @@ import { PropertyFormNavigation } from "./property-form/components/PropertyFormN
 import { ErrorSummary } from "./property-form/components/ErrorSummary";
 import { TikTokPostButton } from "./components/TikTokPostButton";
 import { FaTiktok } from "react-icons/fa";
+import { TopLoader } from "@/components/ui/top-loader";
 
 // Step components (Memoized for performance)
 import { Step1BasicInfo } from "./property-form/steps/Step1BasicInfo";
@@ -82,10 +78,9 @@ export function PropertyForm({
   const [persistImages, setPersistImages] = React.useState(false);
 
   // Success Dialog State
-  const [successData, setSuccessData] = React.useState<{
-    id: string;
-    slug?: string;
-  } | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = React.useState(false);
+  const [successData, setSuccessData] = React.useState<{ id: string; title: string; slug?: string } | null>(null);
+  const [shareStatus, setShareStatus] = React.useState<Record<string, { loading: boolean; success: boolean; url?: string | null }>>({});
 
   // Redirect if not staff
   const [currentStep, setCurrentStep] = React.useState(1);
@@ -103,9 +98,6 @@ export function PropertyForm({
   const [isAddingArea, setIsAddingArea] = React.useState(false);
   const [isQuickInfoOpen, setIsQuickInfoOpen] = React.useState(false);
   const [isActuallySubmitting, setIsActuallySubmitting] = React.useState(false);
-  const [shareStatus, setShareStatus] = React.useState<{
-    [key: string]: { loading: boolean; success: boolean; url?: string | null };
-  }>({});
 
   const uploadSessionId = useRef<string>(
     typeof crypto !== "undefined" ? crypto.randomUUID() : "fallback",
@@ -342,15 +334,17 @@ export function PropertyForm({
 
         setSuccessData({
           id: propertyId,
+          title: values.title,
           slug: result.slug,
         });
       } else {
         toast.error(result.message || "เกิดข้อผิดพลาด");
         console.error(result.message);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Error submitting property form:", e);
-      toast.error(e.message || "เกิดข้อผิดพลาดไม่ทราบสาเหตุ");
+      const msg = e instanceof Error ? e.message : "เกิดข้อผิดพลาดไม่ทราบสาเหตุ";
+      toast.error(msg);
     } finally {
       setIsActuallySubmitting(false);
     }
@@ -380,14 +374,16 @@ export function PropertyForm({
 
         setSuccessData({
           id: result.propertyId!,
+          title: pendingSubmit.title,
           slug: result.slug,
         });
       } else {
         toast.error(result.message || "เกิดข้อผิดพลาด");
         console.error(result.message);
       }
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "เกิดข้อผิดพลาดในการยืนยันข้อมูลซ้ำ";
+      toast.error(msg);
     } finally {
       setIsActuallySubmitting(false);
     }
@@ -471,7 +467,8 @@ export function PropertyForm({
   };
 
   return (
-    <div className="relative pb-24 sm:pb-0  lg:px-8 max-w-screen-2xl mx-auto">
+    <div className="relative pb-32 sm:pb-0 lg:px-8 max-w-screen-2xl mx-auto">
+      <TopLoader isLoading={isActuallySubmitting} />
       {/* 1. Header */}
       <PropertyFormHeader
         mode={mode}
@@ -605,72 +602,71 @@ export function PropertyForm({
         />
 
         {/* Success Navigation Dialog */}
-        <Dialog
+        <ResponsiveDialog
           open={!!successData}
           onOpenChange={(open) => {
             if (!open) {
               setSuccessData(null);
-              // Always go back to list when closing success dialog manually
-              // Adding #table to focus on the table section
               router.push("/protected/properties?success=true#table");
             }
           }}
+          title={
+            <div className="flex items-center gap-3 text-emerald-600 text-xl font-bold">
+              <div className="p-2 bg-emerald-100 rounded-full shrink-0">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              บันทึกข้อมูลสำเร็จ
+            </div>
+          }
+          description="คุณต้องการทำรายการใดต่อ?"
+          className="sm:max-w-md"
         >
-          <DialogContent className="sm:max-w-md bg-white border-0 shadow-xl rounded-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-3 text-emerald-600 text-xl">
-                <div className="p-2 bg-emerald-100 rounded-full">
-                  <ExternalLink className="w-6 h-6" />
-                </div>
-                บันทึกข้อมูลสำเร็จ
-              </DialogTitle>
-              <DialogDescription className="text-base text-slate-600 pt-2">
-                คุณต้องการทำรายการใดต่อ?
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-3 py-4">
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200  rounded-xl group:hover:bg-blue-600 group:hover:border-blue-600 cursor-pointer"
-                onClick={() => {
-                  if (successData?.slug) {
-                    window.open(`/properties/${successData.slug}`, "_blank");
-                    router.push("/protected/properties?success=true#table"); // Go back to list in current tab logic
-                  } else {
-                    toast.error("ไม่พบข้อมูล Slug สำหรับเปิดหน้าเว็บ");
-                  }
-                }}
-              >
-                <ExternalLink className="w-5 h-5 " />
-                <div className="flex flex-col items-start">
-                  <span className="">ดูหน้าเว็บไซต์ (Public Page)</span>
-                  <span className="text-xs font-normal">
-                    เปิดแท็บใหม่เพื่อดูตัวอย่าง
-                  </span>
-                </div>
-              </Button>
+          <div className="flex flex-col gap-3 py-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-4 h-16 text-base font-medium border-slate-200 rounded-2xl hover:border-emerald-200 hover:bg-emerald-50/50 transition-all group"
+              onClick={() => {
+                if (successData?.slug) {
+                  window.open(`/properties/${successData.slug}`, "_blank");
+                  router.push("/protected/properties?success=true#table");
+                } else {
+                  toast.error("ไม่พบข้อมูล Slug สำหรับเปิดหน้าเว็บ");
+                }
+              }}
+            >
+              <div className="bg-slate-100 p-2 rounded-xl group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
+                <ExternalLink className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col items-start leading-tight">
+                <span>ดูหน้าเว็บไซต์</span>
+                <span className="text-[11px] font-normal text-slate-500">เปิดแท็บใหม่เพื่อดูตัวอย่าง</span>
+              </div>
+            </Button>
 
-              <Button
-                className="w-full justify-start gap-3 h-14 text-base font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-xl"
-                onClick={() => router.push("/protected/properties?success=true#table")}
-              >
-                <List className="w-5 h-5" />
-                <div className="flex flex-col items-start">
-                  <span>กลับหน้ารายการ (CRM)</span>
-                  <span className="text-xs text-slate-400/80 font-normal">
-                    จัดการทรัพย์อื่นต่อ
-                  </span>
-                </div>
-              </Button>
+            <Button
+              className="w-full justify-start gap-4 h-16 text-base font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-2xl shadow-lg shadow-slate-200"
+              onClick={() => router.push("/protected/properties?success=true#table")}
+            >
+              <div className="bg-white/10 p-2 rounded-xl">
+                <List className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex flex-col items-start leading-tight">
+                <span>กลับหน้ารายการ</span>
+                <span className="text-[11px] font-normal text-slate-400">จัดการทรัพย์อื่นต่อใน CRM</span>
+              </div>
+            </Button>
 
-              <div className="pt-2 border-t border-slate-100 mt-2 grid grid-cols-3 gap-4">
+            <div className="pt-4 border-t border-slate-100 mt-2">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-3">แชร์ไปยังโซเชียลมีเดีย</span>
+              <div className="grid grid-cols-3 gap-3">
+                {/* Facebook */}
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full flex-col justify-center items-center gap-2 h-24 text-sm font-medium rounded-xl transition-all hover:text-blue-100 hover:bg-blue-500! relative",
+                    "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
                     shareStatus["FACEBOOK"]?.success 
-                      ? "text-emerald-600 border-emerald-100 bg-emerald-50/50" 
-                      : "text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50"
+                      ? "text-emerald-700 border-emerald-100 bg-emerald-50/50" 
+                      : "text-blue-600 border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/50"
                   )}
                   disabled={shareStatus["FACEBOOK"]?.loading}
                   onClick={async () => {
@@ -685,7 +681,7 @@ export function PropertyForm({
                       toast.success("โพสต์ลง Facebook สำเร็จ!");
                     } else {
                       setShareStatus(prev => ({ ...prev, FACEBOOK: { loading: false, success: false } }));
-                      toast.error(res.message);
+                      toast.error(res.message || "เกิดข้อผิดพลาด");
                     }
                   }}
                 >
@@ -696,32 +692,66 @@ export function PropertyForm({
                   ) : (
                     <Facebook className="w-6 h-6" />
                   )}
-                  <div className="flex flex-col items-center text-center">
-                    <span className="leading-tight">{shareStatus["FACEBOOK"]?.success ? "สำเร็จแล้ว" : "Facebook"}</span>
-                    <span className="text-[10px] font-light opacity-80">
-                      {shareStatus["FACEBOOK"]?.success ? "ดูโพสต์" : "แชร์ทันที"}
-                    </span>
-                  </div>
+                  <span className="leading-tight">{shareStatus["FACEBOOK"]?.success ? "แชร์แล้ว" : "Facebook"}</span>
                   {shareStatus["FACEBOOK"]?.success && shareStatus["FACEBOOK"]?.url && (
                     <div 
-                      className="absolute top-1 right-1 p-1.5 hover:bg-emerald-100 rounded-lg text-emerald-700"
+                      className="absolute -top-1 -right-1 p-1 bg-emerald-500 rounded-full text-white shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         window.open(shareStatus["FACEBOOK"]!.url!, "_blank");
                       }}
                     >
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <ExternalLink className="w-2.5 h-2.5" />
                     </div>
                   )}
                 </Button>
 
+                {/* TikTok */}
+                <TikTokPostButton 
+                  propertyId={successData?.id || ""}
+                  onLoading={(loading) => setShareStatus(prev => ({ ...prev, TIKTOK: { ...prev["TIKTOK"], loading } }))}
+                  onSuccess={(url) => setShareStatus(prev => ({ ...prev, TIKTOK: { loading: false, success: true, url } }))}
+                >
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
+                      shareStatus["TIKTOK"]?.success 
+                        ? "text-emerald-700 border-emerald-100 bg-emerald-50/50" 
+                        : "text-slate-900 border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                    )}
+                    disabled={shareStatus["TIKTOK"]?.loading}
+                  >
+                    {shareStatus["TIKTOK"]?.loading ? (
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : shareStatus["TIKTOK"]?.success ? (
+                      <CheckCircle2 className="w-6 h-6" />
+                    ) : (
+                      <FaTiktok className="w-6 h-6" />
+                    )}
+                    <span className="leading-tight">{shareStatus["TIKTOK"]?.success ? "แชร์แล้ว" : "TikTok"}</span>
+                    {shareStatus["TIKTOK"]?.success && shareStatus["TIKTOK"]?.url && (
+                      <div 
+                        className="absolute -top-1 -right-1 p-1 bg-emerald-500 rounded-full text-white shadow-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(shareStatus["TIKTOK"]!.url!, "_blank");
+                        }}
+                      >
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </div>
+                    )}
+                  </Button>
+                </TikTokPostButton>
+
+                {/* Instagram */}
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full flex-col justify-center items-center gap-2 h-24 text-sm font-medium rounded-xl transition-all hover:text-pink-100 hover:bg-pink-700!",
+                    "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
                     shareStatus["INSTAGRAM"]?.success 
-                      ? "text-emerald-600 border-emerald-100 bg-emerald-50/50" 
-                      : "text-pink-600 border-pink-100 bg-pink-50/50 hover:bg-pink-50"
+                      ? "text-emerald-700 border-emerald-100 bg-emerald-50/50" 
+                      : "text-pink-600 border-slate-200 bg-white hover:border-pink-200 hover:bg-pink-50/50"
                   )}
                   disabled={shareStatus["INSTAGRAM"]?.loading}
                   onClick={async () => {
@@ -747,59 +777,13 @@ export function PropertyForm({
                   ) : (
                     <Instagram className="w-6 h-6" />
                   )}
-                  <div className="flex flex-col items-center text-center">
-                    <span className="leading-tight">{shareStatus["INSTAGRAM"]?.success ? "สำเร็จแล้ว" : "Instagram"}</span>
-                    <span className="text-[10px] font-light opacity-80">
-                      {shareStatus["INSTAGRAM"]?.success ? "แชร์แล้ว" : "แชร์ทันที"}
-                    </span>
-                  </div>
+                  <span className="leading-tight">{shareStatus["INSTAGRAM"]?.success ? "แชร์แล้ว" : "Instagram"}</span>
                 </Button>
-
-                <TikTokPostButton 
-                  propertyId={successData?.id || ""}
-                  onLoading={(loading) => setShareStatus(prev => ({ ...prev, TIKTOK: { ...prev["TIKTOK"], loading } }))}
-                  onSuccess={(url) => setShareStatus(prev => ({ ...prev, TIKTOK: { loading: false, success: true, url } }))}
-                >
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full flex-col justify-center items-center gap-2 h-24 text-sm font-medium rounded-xl transition-all hover:text-slate-100 hover:border-slate-300 hover:bg-slate-900! relative",
-                      shareStatus["TIKTOK"]?.success 
-                        ? "text-emerald-600 border-emerald-100 bg-emerald-50/50" 
-                        : "text-slate-900 border-slate-200 hover:border-slate-300 bg-slate-50/50 hover:bg-slate-50"
-                    )}
-                    disabled={shareStatus["TIKTOK"]?.loading}
-                  >
-                    {shareStatus["TIKTOK"]?.loading ? (
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                    ) : shareStatus["TIKTOK"]?.success ? (
-                      <CheckCircle2 className="w-6 h-6" />
-                    ) : (
-                      <FaTiktok className="w-6 h-6" />
-                    )}
-                    <div className="flex flex-col items-center text-center">
-                      <span className="leading-tight">{shareStatus["TIKTOK"]?.success ? "สำเร็จแล้ว" : "TikTok"}</span>
-                      <span className="text-[10px] font-light opacity-80">
-                        {shareStatus["TIKTOK"]?.success ? "ดูวิดีโอ" : "แชร์วิดีโอ"}
-                      </span>
-                    </div>
-                    {shareStatus["TIKTOK"]?.success && shareStatus["TIKTOK"]?.url && (
-                      <div 
-                        className="absolute top-1 right-1 p-1.5 hover:bg-emerald-100 rounded-lg text-emerald-700"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(shareStatus["TIKTOK"]!.url!, "_blank");
-                        }}
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </div>
-                    )}
-                  </Button>
-                </TikTokPostButton>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        </ResponsiveDialog>
+
       </Form>
     </div>
   );

@@ -338,34 +338,44 @@ export function LeadsTable({
         </div>
 
         {/* Mobile/Tablet Card View */}
-        <div className="lg:hidden divide-y divide-slate-100">
+        <div className="lg:hidden divide-y divide-slate-100 bg-white">
           {leads.map((l) => (
             <div
               key={l.id}
-              className={`p-4 transition-colors ${
+              className={`p-3 min-[400px]:p-4 min-[500px]:p-5 transition-colors ${
                 isSelected(l.id)
                   ? "bg-blue-50/50"
                   : "hover:bg-slate-50"
               }`}
             >
-              <div className="flex gap-4">
-                <div className="flex flex-col gap-3 shrink-0 py-1">
-                  <Checkbox
-                    checked={isSelected(l.id)}
-                    onCheckedChange={() => toggleSelect(l.id)}
-                  />
-                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                    <User className="h-5 w-5 text-slate-400" />
+              <div className="flex gap-3 min-[400px]:gap-4">
+                <div 
+                  className="flex flex-col gap-3 shrink-0 py-1 px-0.5 cursor-pointer group/check"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleSelect(l.id);
+                  }}
+                >
+                  <div className="p-2 -m-2">
+                    <Checkbox
+                      checked={isSelected(l.id)}
+                      onCheckedChange={() => toggleSelect(l.id)}
+                      className="h-5 w-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 transition-all group-hover/check:scale-110"
+                    />
+                  </div>
+                  <div className="h-8 w-8 min-[400px]:h-10 min-[400px]:w-10 rounded-xl bg-slate-100 flex items-center justify-center border border-slate-200 shadow-xs">
+                    <User className="h-4 w-4 min-[400px]:h-5 min-[400px]:w-5 text-slate-400" />
                   </div>
                 </div>
-
+ 
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start gap-2">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-1.5 min-[400px]:gap-2 overflow-hidden">
                         <Link
                           href={`/protected/leads/${l.id}`}
-                          className="font-bold text-slate-900 text-[11px] hover:underline"
+                          className="font-bold text-slate-900 text-sm min-[400px]:text-base hover:underline truncate"
                         >
                           {l.full_name}
                         </Link>
@@ -374,19 +384,19 @@ export function LeadsTable({
                             new Date(),
                             new Date(l.created_at),
                           ) < 24 && (
-                            <Badge className="h-5 px-1.5 text-[11px] bg-amber-500 hover:bg-amber-600 border-0">
+                            <Badge className="h-4 min-[400px]:h-5 px-1 min-[400px]:px-1.5 text-[9px] min-[400px]:text-[11px] bg-amber-500 hover:bg-amber-600 border-0 shrink-0">
                               NEW
                             </Badge>
                           )}
                       </div>
-                      <div className="flex items-center gap-3 mt-1">
+                      <div className="flex flex-wrap items-center gap-1.5 min-[400px]:gap-3 mt-1">
                         <Badge
                           variant="outline"
-                          className="h-5 text-[11px] px-1.5 font-bold border-slate-200 text-slate-600"
+                          className="h-4 min-[400px]:h-5 text-[9px] min-[400px]:text-[11px] px-1 min-[400px]:px-1.5 font-bold border-slate-200 text-slate-600 bg-white"
                         >
                           {safeEnumLabel(LEAD_STAGE_LABELS as any, l.stage)}
                         </Badge>
-                        <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                        <span className="text-[10px] min-[400px]:text-[11px] text-slate-400 flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {l.created_at
                             ? format(new Date(l.created_at), "d MMM yy", {
@@ -395,7 +405,7 @@ export function LeadsTable({
                             : "-"}
                         </span>
                         {(l as any).tenants?.name && (
-                          <Badge variant="secondary" className="h-5 text-[11px] px-1.5 bg-slate-100 text-slate-600 border-0">
+                          <Badge variant="secondary" className="h-4 min-[400px]:h-5 text-[9px] min-[400px]:text-[11px] px-1 min-[400px]:px-1.5 bg-slate-100 text-slate-600 border-0">
                             {(l as any).tenants.name}
                           </Badge>
                         )}
@@ -403,21 +413,21 @@ export function LeadsTable({
                     </div>
                     <LeadRowActions id={l.id} fullName={l.full_name} />
                   </div>
-
-                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div className="flex items-center gap-2 text-xs text-slate-600">
-                      <Phone className="h-3.5 w-3.5 text-slate-400" />
-                      {l.phone || "-"}
+ 
+                  <div className="mt-3 grid grid-cols-1 min-[500px]:grid-cols-2 gap-x-4 gap-y-1.5">
+                    <div className="flex items-center gap-2 text-[11px] min-[400px]:text-xs text-slate-600">
+                      <Phone className="h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 text-slate-400 shrink-0" />
+                      <span className="truncate">{l.phone || "-"}</span>
                     </div>
                     {l.email && (
-                      <div className="flex items-center gap-2 text-xs text-slate-600 truncate">
-                        <Mail className="h-3.5 w-3.5 text-slate-400" />
-                        {l.email}
+                      <div className="flex items-center gap-2 text-[11px] min-[400px]:text-xs text-slate-600 truncate">
+                        <Mail className="h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{l.email}</span>
                       </div>
                     )}
                     {(l as any).property && (
-                      <div className="flex items-center gap-2 text-xs text-blue-600 sm:col-span-2">
-                        <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                      <div className="flex items-center gap-2 text-[11px] min-[400px]:text-xs text-blue-600 min-[500px]:col-span-2 mt-0.5">
+                        <Building2 className="h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 text-slate-400 shrink-0" />
                         <Link
                           href={`/properties/${(l as any).property.id}`}
                           target="_blank"
@@ -428,10 +438,10 @@ export function LeadsTable({
                       </div>
                     )}
                   </div>
-
+ 
                   {l.note && (
-                    <div className="mt-2 p-2 bg-slate-50 rounded-lg text-xs text-slate-500 italic flex gap-2">
-                      <MessageSquare className="h-3.5 w-3.5 text-slate-300 shrink-0" />
+                    <div className="mt-2.5 p-2 bg-slate-50/80 rounded-lg text-[11px] min-[400px]:text-xs text-slate-500 italic flex gap-2">
+                      <MessageSquare className="h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 text-slate-300 shrink-0 mt-0.5" />
                       <span className="line-clamp-2">{l.note}</span>
                     </div>
                   )}

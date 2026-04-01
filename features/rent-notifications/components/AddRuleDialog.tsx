@@ -3,15 +3,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import {
@@ -31,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Plus, Check, ChevronsUpDown } from "lucide-react";
+import { Plus, Check, ChevronsUpDown, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Command,
@@ -151,41 +143,56 @@ export function AddRuleDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={updateOpen}>
-      {!isEdit && (
-        <DialogTrigger asChild>
-          <Button className="gap-2 bg-linear-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-md">
-            <Plus className="w-4 h-4" />
-            สร้างการแจ้งเตือน
-          </Button>
-        </DialogTrigger>
-      )}
-      <DialogContent className="sm:max-w-[650px]">
-        <DialogHeader>
-          <DialogTitle>
-            {isEdit ? "แก้ไขการแจ้งเตือน" : "สร้างการแจ้งเตือนใหม่"}
-          </DialogTitle>
-          <DialogDescription>
-            ระบุทรัพย์และกลุ่มไลน์ที่ต้องการให้แจ้งเตือนค่าเช่า
-          </DialogDescription>
-        </DialogHeader>
-
+    <>
+      <ResponsiveDialog
+        open={isOpen}
+        onOpenChange={updateOpen}
+        trigger={
+          !isEdit ? (
+            <Button className="gap-2 bg-linear-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-md rounded-xl h-11 font-bold">
+              <Plus className="w-4 h-4" />
+              สร้างการแจ้งเตือน
+            </Button>
+          ) : undefined
+        }
+        title={
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+              <Bell className="w-5 h-5" />
+            </div>
+            <span>{isEdit ? "แก้ไขการแจ้งเตือน" : "สร้างการแจ้งเตือนใหม่"}</span>
+          </div>
+        }
+        description="ระบุทรัพย์และกลุ่มไลน์ที่ต้องการให้แจ้งเตือนค่าเช่า"
+        footer={
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => updateOpen(false)}
+              className="flex-1 rounded-xl h-12 font-bold order-2 sm:order-1 border-slate-200 text-slate-500"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              type="button"
+              onClick={form.handleSubmit(onSubmit)}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-emerald-500/10 order-1 sm:order-2"
+            >
+              {isEdit ? "บันทึกการเปลี่ยนแปลง" : "สร้างการแจ้งเตือน"}
+            </Button>
+          </div>
+        }
+      >
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4 py-4"
-          >
+          <form className="space-y-6 py-4">
             {/* 1. Property Select (Combobox) */}
             <FormField
               control={form.control}
               name="property_id"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>เลือกทรัพย์ (Property)</FormLabel>
-                  <FormDescription className="text-xs text-rose-500">
-                    * เลือกทรัพย์ที่ต้องการแจ้งเตือนค่าเช่า
-                    (เฉพาะทรัพย์ที่มีสัญญาเช่าแล้ว)
-                  </FormDescription>
+                  <FormLabel className="text-sm font-bold text-slate-700 ml-1">เลือกทรัพย์ (Property)</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -193,8 +200,8 @@ export function AddRuleDialog({
                           variant="outline"
                           role="combobox"
                           className={cn(
-                            "w-full justify-between",
-                            !field.value && "text-muted-foreground",
+                            "w-full justify-between h-11 rounded-xl border-slate-200 bg-slate-50/50",
+                            !field.value && "text-slate-400"
                           )}
                         >
                           {field.value
@@ -207,11 +214,11 @@ export function AddRuleDialog({
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[450px] p-0">
+                    <PopoverContent className="w-[450px] p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="พิมพ์ชื่อทรัพย์..." />
+                        <CommandInput placeholder="พิมพ์ชื่อทรัพย์..." className="h-11" />
                         <CommandList>
-                          <CommandEmpty>
+                          <CommandEmpty className="p-4 text-center text-sm text-slate-500">
                             ไม่พบทรัพย์ และ ไม่สามารถเลือกทรัพย์เดิมซ้ำได้
                           </CommandEmpty>
                           <CommandGroup>
@@ -222,18 +229,19 @@ export function AddRuleDialog({
                                 onSelect={() => {
                                   form.setValue("property_id", property.id);
                                 }}
+                                className="p-2.5 cursor-pointer"
                               >
                                 <Check
                                   className={cn(
-                                    "mr-2 h-4 w-4",
+                                    "mr-2 h-4 w-4 text-emerald-600",
                                     property.id === field.value
                                       ? "opacity-100"
-                                      : "opacity-0",
+                                      : "opacity-0"
                                   )}
                                 />
-                                <div className="flex flex-col">
-                                  <span>{property.title}</span>
-                                  <span className="text-xs text-muted-foreground">
+                                <div className="flex flex-col min-w-0">
+                                  <span className="font-medium text-slate-900 truncate">{property.title}</span>
+                                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                                     {property.code}
                                   </span>
                                 </div>
@@ -244,104 +252,102 @@ export function AddRuleDialog({
                       </Command>
                     </PopoverContent>
                   </Popover>
+                  <FormDescription className="text-[11px] text-rose-500 font-medium ml-1">
+                    * เฉพาะทรัพย์ที่มีสัญญาเช่าแล้ว
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* 2. LINE Group Select */}
-            <FormField
-              control={form.control}
-              name="line_group_id"
-              render={({ field }) => (
-                <FormItem className="w-full flex flex-col">
-                  <FormLabel>กลุ่มไลน์ (LINE Group)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full h-11">
-                        <SelectValue placeholder="เลือกกลุ่มไลน์..." />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {groups.length === 0 && (
-                        <div className="p-2 text-sm text-center text-muted-foreground">
-                          ยังไม่มีกลุ่มไลน์ในระบบ <br />
-                          (เชิญบอทเข้ากลุ่มก่อนนะครับ)
-                        </div>
-                      )}
-                      {groups.map((group: any) => (
-                        <SelectItem key={group.group_id} value={group.group_id}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* 2. LINE Group Select */}
+              <FormField
+                control={form.control}
+                name="line_group_id"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="text-sm font-bold text-slate-700 ml-1">กลุ่มไลน์ (LINE Group)</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full h-11 rounded-xl border-slate-200 bg-slate-50/50">
+                          <SelectValue placeholder="เลือกกลุ่มไลน์..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded-xl">
+                        {groups.length === 0 && (
+                          <div className="p-4 text-sm text-center text-slate-400">
+                            ยังไม่มีกลุ่มไลน์ในระบบ <br />
+                            (เชิญบอทเข้ากลุ่มก่อนนะครับ)
+                          </div>
+                        )}
+                        {groups.map((group: any) => (
+                          <SelectItem key={group.group_id} value={group.group_id} className="rounded-lg p-2.5">
+                            <div className="flex items-center gap-2.5">
+                              {group.picture_url && (
+                                <img
+                                  src={group.picture_url}
+                                  className="w-6 h-6 rounded-full border border-slate-100"
+                                  alt=""
+                                />
+                              )}
+                              <span className="font-medium text-slate-700">{group.group_name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="language"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-bold text-slate-700 ml-1">ภาษาที่แจ้งเตือน</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-slate-50/50">
+                          <SelectValue placeholder="เลือกภาษา" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="th" className="rounded-lg">
                           <div className="flex items-center gap-2">
-                            {group.picture_url && (
-                              <img
-                                src={group.picture_url}
-                                className="w-5 h-5 rounded-full"
-                                alt=""
-                              />
-                            )}
-                            <span>{group.group_name}</span>
+                            <span className="fi fi-th h-3.5 w-5 shadow-sm rounded-sm" />
+                            <span>ไทย</span>
                           </div>
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription className="text-xs">
-                    * หากไม่พบกลุ่ม โปรดเชิญบอทเข้ากลุ่มไลน์นั้นก่อน แล้ว
-                    Refresh หน้านี้
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="language"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ภาษาที่แจ้งเตือน (Language)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="เลือกภาษา" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="th">
-                        <div className="flex items-center gap-2">
-                          <span className="fi fi-th h-4 w-6 shadow-sm rounded-sm" />
-                          <span>ไทย (Thai)</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="en">
-                        <div className="flex items-center gap-2">
-                          <span className="fi fi-us h-4 w-6 shadow-sm rounded-sm" />
-                          <span>อังกฤษ (English)</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="cn">
-                        <div className="flex items-center gap-2">
-                          <span className="fi fi-cn h-4 w-6 shadow-sm rounded-sm" />
-                          <span>จีน (Chinese)</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    ข้อความแจ้งเตือนจะถูกส่งเป็นภาษานี้
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                        <SelectItem value="en" className="rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <span className="fi fi-us h-3.5 w-5 shadow-sm rounded-sm" />
+                            <span>อังกฤษ</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="cn" className="rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <span className="fi fi-cn h-3.5 w-5 shadow-sm rounded-sm" />
+                            <span>จีน</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* 3. Notification Day */}
             <FormField
@@ -349,39 +355,29 @@ export function AddRuleDialog({
               name="notification_day"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>วันที่แจ้งเตือน (1-31)</FormLabel>
+                  <FormLabel className="text-sm font-bold text-slate-700 ml-1">วันที่แจ้งเตือน (1-31)</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={31}
-                      {...field}
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                    />
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={31}
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        className="h-11 rounded-xl pr-16 border-slate-200 bg-slate-50/50"
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">
+                        ของทุกเดือน
+                      </div>
+                    </div>
                   </FormControl>
-                  <FormDescription>
-                    ระบบจะแจ้งเตือนในวันที่กำหนดของทุกเดือน
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <DialogFooter className="mt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => updateOpen(false)}
-              >
-                ยกเลิก
-              </Button>
-              <Button type="submit">
-                {isEdit ? "บันทึกการเปลี่ยนแปลง" : "สร้างการแจ้งเตือน"}
-              </Button>
-            </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ResponsiveDialog>
 
       <ConfirmDialog
         open={isConfirming}
@@ -398,8 +394,9 @@ export function AddRuleDialog({
           }
         }}
       />
-    </Dialog>
+    </>
   );
 }
+
 
 export default AddRuleDialog;

@@ -19,22 +19,7 @@ import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeletePartnersAction } from "@/features/admin/partners-bulk-actions";
 import { deletePartner } from "@/features/admin/partners-actions";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Loader2 } from "lucide-react";
 import { PartnerForm } from "./PartnerForm";
 import { cn } from "@/lib/utils";
@@ -394,30 +379,38 @@ export function PartnersTable({ partners }: PartnersTableProps) {
         )}
       </div>
 
-      <AlertDialog
+      <ResponsiveDialog
         open={!!deleteConfirmPartner}
-        onOpenChange={(open) => !open && setDeleteConfirmPartner(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบพาร์ทเนอร์</AlertDialogTitle>
-            <AlertDialogDescription>
+        onOpenChange={(open: boolean) => !open && setDeleteConfirmPartner(null)}
+        title="ยืนยันการลบพาร์ทเนอร์"
+        description={
+          deleteConfirmPartner ? (
+            <p>
               คุณแน่ใจหรือไม่ว่าต้องการลบพาร์ทเนอร์{" "}
-              <strong className="text-foreground">
-                "{deleteConfirmPartner?.name}"
-              </strong>
-              ? การดำเนินการนี้ไม่สามารถย้อนกลับได้
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction
+              <strong className="text-slate-900 leading-relaxed">
+                "{deleteConfirmPartner.name}"
+              </strong>{" "}
+              การดำเนินการนี้ไม่สามารถย้อนกลับได้
+            </p>
+          ) : ""
+        }
+        footer={
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <Button
+              variant="outline"
               disabled={isDeleting}
-              onClick={(e) => {
+              onClick={() => setDeleteConfirmPartner(null)}
+              className="flex-1 rounded-xl h-11 font-bold text-slate-500 border-slate-200"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              disabled={isDeleting}
+              onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 if (deleteConfirmPartner) handleDelete(deleteConfirmPartner);
               }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="flex-1 rounded-xl h-11 px-8 font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-100 transition-all active:scale-95"
             >
               {isDeleting ? (
                 <>
@@ -427,30 +420,28 @@ export function PartnersTable({ partners }: PartnersTableProps) {
               ) : (
                 "ยืนยันการลบ"
               )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <Dialog
-        open={!!editingPartner}
-        onOpenChange={(open) => !open && setEditingPartner(null)}
-      >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>แก้ไขข้อมูลพาร์ทเนอร์</DialogTitle>
-          </DialogHeader>
-          <div className="pt-4">
-            {editingPartner && (
-              <PartnerForm
-                initialData={editingPartner}
-                onSuccess={handleEditSuccess}
-                onCancel={() => setEditingPartner(null)}
-              />
-            )}
+            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        }
+      />
+
+      <ResponsiveDialog
+        open={!!editingPartner}
+        onOpenChange={(open: boolean) => !open && setEditingPartner(null)}
+        title="แก้ไขข้อมูลพาร์ทเนอร์"
+        description="ปรับปรุงข้อมูลพื้นฐานและสถานะการแสดงผลของพาร์ทเนอร์"
+        className="md:max-w-2xl"
+      >
+        <div className="pt-4">
+          {editingPartner && (
+            <PartnerForm
+              initialData={editingPartner}
+              onSuccess={handleEditSuccess}
+              onCancel={() => setEditingPartner(null)}
+            />
+          )}
+        </div>
+      </ResponsiveDialog>
     </div>
   );
 }

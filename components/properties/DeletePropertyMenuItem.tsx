@@ -5,28 +5,23 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { softDeleteProperty } from "@/features/properties/actions/property-trash";
-import {
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
-export function DeletePropertyMenuItem({ id }: { id: string }) {
+export function DeletePropertyMenuItem({ 
+  id,
+  onDeleteStart 
+}: { 
+  id: string;
+  onDeleteStart?: () => void;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
+  const [isConfirmed, setIsConfirmed] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleSuccessFeedback = () => {
@@ -36,52 +31,70 @@ export function DeletePropertyMenuItem({ id }: { id: string }) {
     router.refresh();
   };
 
-  const onConfirm = () =>
-    startTransition(async () => {
-      try {
-        const res = await softDeleteProperty(id);
-        if (res.success) {
-          toast.success("ย้ายทรัพย์ลงถังขยะเรียบร้อยแล้ว");
-          setOpen(false);
-          handleSuccessFeedback();
-        } else {
-          toast.error(res.error || "เกิดข้อผิดพลาดในการลบ");
-        }
-      } catch (e: any) {
-        toast.error(e?.message || "ลบไม่สำเร็จ");
-      }
-    });
+  const onConfirm = async () => {
+    const res = await softDeleteProperty(id);
+    if (res.success) {
+      toast.success("ย้ายทรัพย์ลงถังขยะเรียบร้อยแล้ว");
+      handleSuccessFeedback();
+    } else {
+      toast.error(res.error || "เกิดข้อผิดพลาดในการลบ");
+      throw new Error(res.error || "เกิดข้อผิดพลาดในการลบ");
+    }
+  };
 
   return (
     <>
-      <DropdownMenuItem
-        className="text-red-600 focus:text-red-600 cursor-pointer"
-        onSelect={(e) => {
-          e.preventDefault(); // กันเมนูปิดก่อนเปิด dialog
-          setOpen(true);
+      <Button
+        variant="ghost"
+        className="w-full justify-start h-11 px-4 text-[15px] font-medium text-destructive hover:text-destructive hover:bg-destructive/5 transition-colors"
+        onClick={() => {
+          onDeleteStart?.();
+          setTimeout(() => {
+            setOpen(true);
+            setIsConfirmed(false); // Reset on open
+          }, 150);
         }}
       >
-        <Trash2 className="mr-2 h-4 w-4" />
+        <Trash2 className="mr-3 h-5 w-5" />
         ลบ (ย้ายลงถังขยะ)
-      </DropdownMenuItem>
+      </Button>
 
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบ</AlertDialogTitle>
-            <AlertDialogDescription>
-              คุณต้องการย้ายทรัพย์นี้ลงถังขยะใช่หรือไม่?
-              คุณสามารถกู้คืนได้ภายหลังในหน้าถังขยะ (Trash)
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction onClick={onConfirm} disabled={isPending}>
-              {isPending ? "กำลังลบ..." : "ลบ"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={(val) => {
+          setOpen(val);
+          if (!val) setIsConfirmed(false); // Reset on close
+        }}
+        title="ยืนยันการลบ"
+        description={
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p>คุณต้องการย้ายทรัพย์นี้ลงถังขยะใช่หรือไม่? คุณสามารถกู้คืนได้ภายหลังในหน้าถังขยะ (Trash)</p>
+              <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 font-medium leading-relaxed">
+                ⚠️ หมายเหตุ: รายการที่มีสถานะ ขายแล้ว/เช่าแล้ว หรือมีดีลที่ปิดแล้ว ไม่สามารถลบได้
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-2 pt-2 border-t border-slate-100">
+              <Checkbox 
+                id={`confirm-delete-${id}`}
+                checked={isConfirmed}
+                onCheckedChange={(checked) => setIsConfirmed(checked === true)}
+              />
+              <Label 
+                htmlFor={`confirm-delete-${id}`}
+                className="text-sm font-medium text-slate-700 cursor-pointer select-none"
+              >
+                ยืนยันความต้องการที่จะลบรายการนี้จริงๆ
+              </Label>
+            </div>
+          </div>
+        }
+        confirmText="ย้ายลงถังขยะ"
+        confirmDisabled={!isConfirmed}
+        variant="destructive"
+        onConfirm={onConfirm}
+      />
     </>
   );
 }

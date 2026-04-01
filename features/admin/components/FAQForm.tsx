@@ -377,7 +377,7 @@ export function FAQForm({
 
                 {/* Right Column: Settings & Meta (30%) */}
                 <div className="lg:col-span-1 space-y-6">
-                  <div className="bg-slate-50/50 rounded-xl border border-slate-100 p-6 space-y-6">
+                  <div className="bg-slate-200/60 rounded-xl border border-slate-100 p-6 space-y-6">
                     <FormField
                       control={form.control}
                       name="category"

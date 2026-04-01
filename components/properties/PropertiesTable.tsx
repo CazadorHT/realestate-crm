@@ -423,37 +423,29 @@ export function PropertiesTable({
   };
 
   const handleBulkDelete = async () => {
-    return new Promise<void>((resolve) => {
-      startTransition(async () => {
-        const ids = Array.from(selectedIds);
-        const result = await bulkDeletePropertiesAction(ids);
-        if (result.success) {
-          toast.success(result.message);
-          clearSelection();
-          handleSuccessFeedback();
-        } else {
-          toast.error(result.message || "เกิดข้อผิดพลาด");
-        }
-        resolve();
-      });
-    });
+    const ids = Array.from(selectedIds);
+    const result = await bulkDeletePropertiesAction(ids);
+    if (result.success) {
+      toast.success(result.message);
+      clearSelection();
+      handleSuccessFeedback();
+    } else {
+      toast.error(result.message || "เกิดข้อผิดพลาด");
+      throw new Error(result.message || "เกิดข้อผิดพลาด");
+    }
   };
 
   const handleBulkMove = async () => {
-    return new Promise<void>((resolve) => {
-      startTransition(async () => {
-        const ids = Array.from(selectedIds);
-        const result = await bulkMovePropertiesToTenantAction(ids);
-        if (result.success) {
-          toast.success(result.message);
-          clearSelection();
-          handleSuccessFeedback();
-        } else {
-          toast.error(result.message || "เกิดข้อผิดพลาด");
-        }
-        resolve();
-      });
-    });
+    const ids = Array.from(selectedIds);
+    const result = await bulkMovePropertiesToTenantAction(ids);
+    if (result.success) {
+      toast.success(result.message);
+      clearSelection();
+      handleSuccessFeedback();
+    } else {
+      toast.error(result.message || "เกิดข้อผิดพลาด");
+      throw new Error(result.message || "เกิดข้อผิดพลาด");
+    }
   };
 
   return (
@@ -523,16 +515,18 @@ export function PropertiesTable({
               {/* Rest of the table header content ... */}
               <TableRow className="bg-muted/50 hover:bg-muted/50 ">
                 <TableHead className="w-[40px] px-2">
-                  <Checkbox
-                    checked={isAllSelected}
-                    onCheckedChange={() => toggleSelectAll(allIds)}
-                    aria-label="เลือกทั้งหมด"
-                    className={
-                      isPartialSelected
-                        ? "data-[state=checked]:bg-primary/50"
-                        : ""
-                    }
-                  />
+                  <div className="p-2 -m-2">
+                    <Checkbox
+                      checked={isAllSelected}
+                      onCheckedChange={() => toggleSelectAll(allIds)}
+                      aria-label="เลือกทั้งหมด"
+                      className={
+                        isPartialSelected
+                          ? "data-[state=checked]:bg-primary/50"
+                          : ""
+                      }
+                    />
+                  </div>
                 </TableHead>
                 <TableHead className="w-[280px] px-2">
                   <SortableHead label="ทรัพย์" sortKey="created_at" />
@@ -801,30 +795,36 @@ export function PropertiesTable({
         </div>
 
         {/* Mobile/Tablet Card View - Premium Responsive Grid */}
-        <div className="lg:hidden p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="lg:hidden p-3 min-[400px]:p-4 min-[500px]:p-6">
+          <div className="grid grid-cols-1 gap-3 min-[400px]:gap-4 min-[500px]:gap-6">
             {data.map((property) => (
               <div
                 key={property.id}
                 className={cn(
-                  "relative group bg-white rounded-xl border transition-all duration-300 shadow-sm hover:shadow-md",
+                  "relative group bg-white rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden",
                   isSelected(property.id)
-                    ? "border-blue-500 ring-1 ring-blue-500/20"
+                    ? "border-blue-500 ring-2 ring-blue-500/10"
                     : "border-slate-200",
                 )}
               >
-                {/* Checkbox Overlay */}
-                <div className="absolute top-3 left-3 z-30">
+                <div 
+                  className="absolute top-0 left-0 p-3 min-[400px]:p-4 z-30 cursor-pointer group/check"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleSelect(property.id);
+                  }}
+                >
                   <Checkbox
                     checked={isSelected(property.id)}
                     onCheckedChange={() => toggleSelect(property.id)}
-                    className="h-5 w-5 bg-white/80 backdrop-blur-sm border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                    className="h-6 w-6 bg-white/90 backdrop-blur-sm border-slate-300 shadow-sm data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 transition-all group-hover/check:scale-110"
                   />
                 </div>
 
                 {/* Card Header/Actions Button */}
-                <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">
-                  <div className="p-1 bg-white/80 backdrop-blur-sm rounded-lg border border-slate-200 shadow-sm">
+                <div className="absolute top-2.5 right-2.5 min-[400px]:top-3 min-[400px]:right-3 z-30 flex items-center gap-1.5">
+                  <div className="p-1 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm">
                     <PropertyRowActions
                       id={property.id}
                       title={property.title}
@@ -837,10 +837,10 @@ export function PropertiesTable({
 
                 <Link
                   href={`/protected/properties/${property.id}`}
-                  className="block relative aspect-16/10 overflow-hidden rounded-t-xl"
+                  className="block relative aspect-16/10 overflow-hidden"
                 >
                   {property.requires_ai_review && (
-                    <div className="absolute bottom-3 right-3 z-30 p-1.5 bg-white shadow-md rounded-full flex items-center justify-center border border-amber-200" title="รอยืนยันข้อมูล AI">
+                    <div className="absolute bottom-2.5 right-2.5 z-30 p-1.5 bg-white shadow-md rounded-full flex items-center justify-center border border-amber-200" title="รอยืนยันข้อมูล AI">
                       <Sparkles className="h-4 w-4 text-amber-500" />
                     </div>
                   )}
@@ -848,54 +848,54 @@ export function PropertiesTable({
                     <img
                       src={property.image_url}
                       alt={property.title}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="h-full w-full flex items-center justify-center bg-slate-50">
-                      <ImageIcon className="h-10 w-10 text-slate-200" />
+                    <div className="h-full w-full flex items-center justify-center bg-slate-100">
+                      <ImageIcon className="h-10 w-10 text-slate-300" />
                     </div>
                   )}
 
                   {/* Status Badges Overlay */}
-                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
+                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2 overflow-hidden">
+                    <div className="flex items-center gap-1.5">
                       <PropertyTypeBadge
                         type={property.property_type}
-                        className="h-5 text-[11px] px-2 bg-white/90 backdrop-blur-sm shadow-sm border-none font-medium text-white"
+                        className="h-5 text-[11px] min-[400px]:text-[11px] px-1.5 min-[400px]:px-2 bg-white/90 backdrop-blur-sm shadow-sm border-none font-bold "
                       />
                       {property.is_new && (
-                        <Badge className="h-5 text-[11px] px-2 bg-blue-600 text-white border-none shadow-sm font-bold">
+                        <Badge className="h-5 text-[11px] min-[400px]:text-[11px] px-1.5 min-[400px]:px-2 bg-blue-600 text-white border-none shadow-sm font-bold">
                           NEW
                         </Badge>
                       )}
                     </div>
                     <PropertyStatusBadge
                       status={property.status}
-                      className="h-5 text-[10px] px-2 font-bold shadow-md backdrop-blur-sm"
+                      className="h-5 text-[11px] min-[400px]:text-[11px] px-1.5 min-[400px]:px-2 font-bold shadow-md backdrop-blur-sm"
                     />
                   </div>
                 </Link>
 
                 {/* Property Details */}
-                <div className="p-4 space-y-3">
+                <div className="p-3 min-[400px]:p-4 space-y-2.5 min-[400px]:space-y-3">
                   <div className="space-y-1">
-                    <div className="flex justify-between items-start gap-2">
+                    <div className="flex justify-between items-start gap-2 min-w-0">
                       <Link
                         href={`/protected/properties/${property.id}`}
-                        className="font-bold text-slate-900 text-base leading-snug line-clamp-1 hover:text-blue-600 transition-colors"
+                        className="font-bold text-slate-900 text-sm min-[400px]:text-base leading-snug line-clamp-1 hover:text-blue-600 transition-colors"
                       >
                         {property.title || "ไม่ระบุชื่อ"}
                       </Link>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                      <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                    <div className="flex items-center gap-1 text-[10px] min-[400px]:text-xs text-slate-500">
+                      <MapPin className="h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 shrink-0 text-slate-400" />
                       <span className="truncate">
                         {property.popular_area || "-"}
                       </span>
                     </div>
                   </div>
 
-                  <div className="py-2.5 border-y border-slate-100">
+                  <div className="py-2 border-y border-slate-100">
                     <PropertyPrice
                       variant="card"
                       listingType={property.listing_type}
@@ -907,14 +907,14 @@ export function PropertiesTable({
                   </div>
 
                   {/* Meta Stats & Agent */}
-                  <div className="flex items-center justify-between gap-2 pt-1 flex-col">
+                  <div className="flex flex-col gap-2.5 pt-0.5">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-slate-600">
-                        <Users className="h-3.5 w-3.5 text-blue-500" />
+                      <div className="flex items-center gap-1 text-[10px] min-[400px]:text-[11px] font-bold text-slate-600">
+                        <Users className="h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 text-blue-500" />
                         {property.leads_count}
                       </div>
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-slate-600">
-                        <Eye className="h-3.5 w-3.5 text-slate-400" />
+                      <div className="flex items-center gap-1 text-[10px] min-[400px]:text-[11px] font-bold text-slate-600">
+                        <Eye className="h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 text-slate-400" />
                         {property.view_count || 0}
                       </div>
 
@@ -932,7 +932,7 @@ export function PropertiesTable({
                       <div className="flex items-center gap-1.5 w-full">
                         <Badge
                           variant="secondary"
-                          className="w-full justify-center bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100 text-[11px] font-bold h-7"
+                          className="w-full justify-center bg-blue-50/50 text-blue-700 hover:bg-blue-100 border-blue-100/50 text-[10px] min-[400px]:text-[11px] font-bold h-7 rounded-lg"
                         >
                           สาขา: {property.tenant_name || "ไม่มีสาขา"}
                         </Badge>
@@ -943,14 +943,14 @@ export function PropertiesTable({
                       <PropertyStatusSelect
                         id={property.id}
                         value={property.status as PropertyStatus}
-                        className="h-7 w-full text-[11px] font-bold shadow-xs transition-shadow hover:shadow-md border-slate-200"
+                        className="h-8 w-full text-[10px] min-[400px]:text-[11px] font-bold shadow-xs transition-shadow hover:shadow-md border-slate-200 rounded-lg bg-white"
                       />
                     </div>
                   </div>
 
                   {/* Card Actions Footer */}
-                  <div className="flex items-center justify-between gap-2 pt-2">
-                    <span className="text-[11px] text-slate-400 font-medium">
+                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-50 mt-1">
+                    <span className="text-[10px] min-[400px]:text-[11px] text-slate-400 font-medium">
                       อัปเดต{" "}
                       {formatDistanceToNow(new Date(property.updated_at), {
                         addSuffix: true,
@@ -962,22 +962,22 @@ export function PropertiesTable({
                         asChild
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                        className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                       >
                         <Link href={`/protected/properties/${property.id}`}>
-                          <Eye className="h-4.5 w-4.5" />
+                          <Eye className="h-4 w-4" />
                         </Link>
                       </Button>
                       <Button
                         asChild
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50"
+                        className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
                       >
                         <Link
                           href={`/protected/properties/${property.id}/edit`}
                         >
-                          <Edit3 className="h-4.5 w-4.5" />
+                          <Edit3 className="h-4 w-4" />
                         </Link>
                       </Button>
                     </div>

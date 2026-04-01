@@ -25,21 +25,24 @@ export function UserDeleteDialog({
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const handleDelete = () => {
-    startTransition(async () => {
-      try {
-        const result = await deleteUserAction(userId);
-        if (result.success) {
-          toast.success("ลบผู้ใช้สำเร็จ");
-          setIsOpen(false);
-          router.refresh();
-        } else {
-          toast.error(result.message || "เกิดข้อผิดพลาดในการลบผู้ใช้");
+  const handleDelete = async () => {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        try {
+          const result = await deleteUserAction(userId);
+          if (result.success) {
+            toast.success("ลบผู้ใช้สำเร็จ");
+            router.refresh();
+          } else {
+            toast.error(result.message || "เกิดข้อผิดพลาดในการลบผู้ใช้");
+          }
+        } catch (error) {
+          console.error(error);
+          toast.error("เกิดข้อผิดพลาดในการลบผู้ใช้");
+        } finally {
+          resolve();
         }
-      } catch (error) {
-        console.error(error);
-        toast.error("เกิดข้อผิดพลาดในการลบผู้ใช้");
-      }
+      });
     });
   };
 

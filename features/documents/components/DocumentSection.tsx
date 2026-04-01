@@ -5,13 +5,7 @@ import { DocumentOwnerType } from "../schema";
 import { DocumentList } from "./DocumentList";
 import { DocumentUpload } from "./DocumentUpload";
 import { TemplateDialog } from "./TemplateDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Upload, FileText, Wand2 } from "lucide-react";
 
@@ -55,31 +49,32 @@ export function DocumentSection({ ownerId, ownerType }: Props) {
               </Button>
             }
           />
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+          <ResponsiveDialog
+            open={open}
+            onOpenChange={(val: boolean) => setOpen(val)}
+            title="อัปโหลดเอกสาร"
+            description="เลือกไฟล์เอกสารที่ต้องการแนบในระบบ (รองรับ PDF, รูปภาพ, และเอกสารทั่วไป)"
+            trigger={
               <Button
                 size="sm"
                 variant="outline"
-                className="w-full sm:w-auto h-9 sm:h-8 font-bold sm:font-semibold"
+                className="w-full sm:w-auto h-9 sm:h-8 font-bold sm:font-semibold transition-all active:scale-95"
               >
                 <Upload className="mr-2 h-4 w-4 shrink-0" /> อัปโหลด
               </Button>
-            </DialogTrigger>
-            <DialogContent className="w-[calc(100vw-1.5rem)] rounded-2xl sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Upload Document</DialogTitle>
-              </DialogHeader>
+            }
+          >
+            <div className="p-4 sm:p-6 text-left">
               <DocumentUpload
                 ownerId={ownerId}
                 ownerType={ownerType}
                 onUploadComplete={() => {
                   setRefreshKey((k) => k + 1);
-                  // close dialog after success
                   setOpen(false);
                 }}
               />
-            </DialogContent>
-          </Dialog>
+            </div>
+          </ResponsiveDialog>
         </div>
       </div>
 

@@ -51,10 +51,25 @@ export default function PropertyDistributionCharts({
   handleTypeClick,
   handleStatusClick,
 }: PropertyDistributionChartsProps) {
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="h-[400px] animate-pulse bg-slate-50" />
+        <Card className="h-[400px] animate-pulse bg-slate-50" />
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Type Distribution - Pie Chart */}
-      <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-linear-to-br from-white to-slate-50">
+      <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-linear-to-br from-white to-slate-50 min-w-0">
         <CardHeader className="pb-2 border-b border-slate-100/60">
           <div className="flex items-center justify-between">
             <div>
@@ -71,13 +86,10 @@ export default function PropertyDistributionCharts({
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="h-[300px] w-full">
+          <div className="h-[300px] w-full relative">
             <ResponsiveContainer
-              width="100%"
-              height="100%"
-              minWidth={0}
-              minHeight={0}
-              debounce={50}
+              width="99%"
+              height={300}
             >
               <PieChart>
                 <defs>
@@ -163,7 +175,7 @@ export default function PropertyDistributionCharts({
       </Card>
 
       {/* Status Distribution - Bar Chart */}
-      <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-linear-to-br from-white to-slate-50">
+      <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-linear-to-br from-white to-slate-50 min-w-0">
         <CardHeader className="pb-2 border-b border-slate-100/60">
           <div className="flex items-center justify-between">
             <div>
@@ -180,13 +192,10 @@ export default function PropertyDistributionCharts({
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="h-[300px] w-full">
+          <div className="h-[300px] w-full relative">
             <ResponsiveContainer
-              width="100%"
-              height="100%"
-              minWidth={0}
-              minHeight={0}
-              debounce={50}
+              width="99%"
+              height={300}
             >
               <BarChart
                 data={statusData}

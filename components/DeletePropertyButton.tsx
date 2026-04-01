@@ -13,24 +13,26 @@ export function DeletePropertyButton({ id }: { id: string }) {
   const [isPending, startTransition] = useTransition();
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const onDelete = () => {
-    startTransition(async () => {
-      try {
-        const formData = new FormData();
-        formData.append("id", id);
-        const res = await deletePropertyAction(formData);
+  const onDelete = async () => {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        try {
+          const formData = new FormData();
+          formData.append("id", id);
+          const res = await deletePropertyAction(formData);
 
-        if (res.success) {
-          toast.success(res.message || "ลบข้อมูลทรัพย์เรียบร้อยแล้ว");
-          router.refresh();
-        } else {
-          toast.error(res.message || "เกิดข้อผิดพลาดในการลบข้อมูล");
+          if (res.success) {
+            toast.success(res.message || "ลบข้อมูลทรัพย์เรียบร้อยแล้ว");
+            router.refresh();
+          } else {
+            toast.error(res.message || "เกิดข้อผิดพลาดในการลบข้อมูล");
+          }
+        } catch (e: any) {
+          toast.error(e.message || "เกิดข้อผิดพลาดในการลบข้อมูล");
+        } finally {
+          resolve();
         }
-      } catch (e: any) {
-        toast.error(e.message || "เกิดข้อผิดพลาดในการลบข้อมูล");
-      } finally {
-        setShowConfirm(false);
-      }
+      });
     });
   };
 

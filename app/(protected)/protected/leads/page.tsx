@@ -20,6 +20,8 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { requireAuthContext } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
+import { MobileFloatingAction } from "@/components/ui/mobile-floating-action";
+import { UserPlus } from "lucide-react";
 
 export default async function LeadsPage({
   searchParams,
@@ -152,6 +154,12 @@ export default async function LeadsPage({
           <LeadsKanban initialLeads={kanbanLeads} />
         </div>
       )}
+
+      <MobileFloatingAction 
+        href="/protected/leads/new" 
+        icon={<UserPlus className="h-6 w-6" />}
+        label="สร้างลูกค้าใหม่" 
+      />
     </div>
   );
 }

@@ -31,14 +31,7 @@ import { ImageItem, PropertyImageUploaderProps } from "./types";
 import { IMAGE_UPLOAD_POLICY } from "./constants";
 import { normalizeImageFileName } from "./utils";
 import { SortableImageItem } from "./SortableImageItem";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Info } from "lucide-react";
 
@@ -510,44 +503,37 @@ export function PropertyImageUploader({
         </div>
       )}
 
-      <Dialog
+      <ResponsiveDialog
         open={!!errorDialog}
         onOpenChange={(open) => !open && setErrorDialog(null)}
+        title={errorDialog?.title || "เกิดข้อผิดพลาด"}
+        description={errorDialog?.description}
+        className="sm:max-w-md"
       >
-        <DialogContent className="sm:max-w-md bg-white border-0 shadow-xl rounded-2xl">
-          <DialogHeader>
-            <DialogTitle
-              className={cn(
-                "flex items-center gap-3 text-xl",
-                errorDialog?.type === "error"
-                  ? "text-red-600"
-                  : "text-amber-600",
-              )}
-            >
-              <div
-                className={cn(
-                  "p-2 rounded-full",
-                  errorDialog?.type === "error"
-                    ? "bg-red-50"
-                    : "bg-amber-50",
-                )}
-              >
-                {errorDialog?.type === "error" ? (
-                  <AlertTriangle className="w-6 h-6" />
-                ) : (
-                  <Info className="w-6 h-6" />
-                )}
-              </div>
-              {errorDialog?.title}
-            </DialogTitle>
-            <DialogDescription className="text-base text-slate-600 pt-2">
-              {errorDialog?.description}
-            </DialogDescription>
-          </DialogHeader>
+        <div className="flex flex-col gap-4 py-2">
+          <div className="flex items-center gap-3">
+             <div
+               className={cn(
+                 "p-3 rounded-full shrink-0",
+                 errorDialog?.type === "error"
+                   ? "bg-red-50 text-red-600"
+                   : "bg-amber-50 text-amber-600",
+               )}
+             >
+               {errorDialog?.type === "error" ? (
+                 <AlertTriangle className="w-6 h-6" />
+               ) : (
+                 <Info className="w-6 h-6" />
+               )}
+             </div>
+             <p className="text-sm font-semibold text-slate-800">
+               {errorDialog?.type === "error" ? "พบปัญหาขัดข้อง" : "คำแนะนำเพิ่มเติม"}
+             </p>
+          </div>
 
           {errorDialog?.errors && errorDialog.errors.length > 0 && (
-            <div className="max-h-[200px] overflow-y-auto bg-slate-50 rounded-xl p-3 border border-slate-100 mt-2">
-              <ul className="list-disc list-inside space-y-1 text-sm text-slate-500">
+            <div className="max-h-[200px] overflow-y-auto bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <ul className="list-disc list-inside space-y-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
                 {errorDialog.errors.map((err, i) => (
                   <li key={i}>{err}</li>
                 ))}
@@ -555,16 +541,14 @@ export function PropertyImageUploader({
             </div>
           )}
 
-          <DialogFooter className="mt-4">
-            <Button
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-11"
-              onClick={() => setErrorDialog(null)}
-            >
-              ตกลง
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <Button
+            className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-12 font-bold shadow-lg"
+            onClick={() => setErrorDialog(null)}
+          >
+            ตกลง
+          </Button>
+        </div>
+      </ResponsiveDialog>
     </div>
   );
 }

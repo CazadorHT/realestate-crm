@@ -3,13 +3,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { ServiceForm } from "./ServiceForm";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
@@ -32,8 +26,12 @@ export function CreateServiceDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      title="สร้างบริการใหม่"
+      className="md:max-w-6xl"
+      trigger={
         <Button
           size="lg"
           className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25"
@@ -41,13 +39,9 @@ export function CreateServiceDialog() {
           <Plus className="h-5 w-5 mr-2" />
           สร้างบริการใหม่
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-7xl! max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>สร้างบริการใหม่</DialogTitle>
-        </DialogHeader>
-        <ServiceForm onSuccess={handleSuccess} onCancel={() => setOpen(false)} />
-      </DialogContent>
-    </Dialog>
+      }
+    >
+      <ServiceForm onSuccess={handleSuccess} onCancel={() => setOpen(false)} />
+    </ResponsiveDialog>
   );
 }

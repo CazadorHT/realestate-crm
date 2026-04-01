@@ -13,28 +13,13 @@ import { Edit, Trash2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { deleteService, type ServiceRow } from "@/features/services/actions";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { ServiceForm } from "./ServiceForm";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+
+import { Badge } from "@/components/ui/badge";
 
 interface ServicesTableProps {
   services: ServiceRow[];
@@ -174,38 +159,14 @@ export function ServicesTable({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Dialog
-                          open={
-                            !!editingService && editingService.id === service.id
-                          }
-                          onOpenChange={(open) =>
-                            !open && setEditingService(null)
-                          }
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-blue-600 hover:bg-blue-50 md:opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => setEditingService(service)}
                         >
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 text-blue-600 hover:bg-blue-50 md:opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={() => setEditingService(service)}
-                            >
-                              <Edit className="h-4.5 w-4.5" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-7xl! max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle>แก้ไขข้อมูลบริการ</DialogTitle>
-                            </DialogHeader>
-                            {editingService && (
-                              <ServiceForm
-                                initialData={editingService}
-                                onSuccess={handleEditSuccess}
-                                onCancel={() => setEditingService(null)}
-                              />
-                            )}
-                          </DialogContent>
-                        </Dialog>
-
+                          <Edit className="h-4.5 w-4.5" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -284,41 +245,19 @@ export function ServicesTable({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Dialog
-                      open={
-                        !!editingService && editingService.id === service.id
-                      }
-                      onOpenChange={(open) => !open && setEditingService(null)}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 px-3 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50 font-bold rounded-xl"
+                      onClick={() => setEditingService(service)}
                     >
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9 px-3 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50"
-                          onClick={() => setEditingService(service)}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          แก้ไข
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-7xl! max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>แก้ไขข้อมูลบริการ</DialogTitle>
-                        </DialogHeader>
-                        {editingService && (
-                          <ServiceForm
-                            initialData={editingService}
-                            onSuccess={handleEditSuccess}
-                            onCancel={() => setEditingService(null)}
-                          />
-                        )}
-                      </DialogContent>
-                    </Dialog>
-
+                      <Edit className="h-4 w-4 mr-2" />
+                      แก้ไข
+                    </Button>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-9 w-9 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-50"
+                      className="h-9 w-9 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-50 rounded-xl"
                       onClick={() => setDeletingId(service.id)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -340,29 +279,28 @@ export function ServicesTable({
         </div>
       </div>
 
-      <AlertDialog
+      <ResponsiveDialog
         open={!!deletingId}
-        onOpenChange={(open) => !open && setDeletingId(null)}
-      >
-        <AlertDialogContent className="w-[95%] rounded-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>คุณแน่ใจหรือไม่?</AlertDialogTitle>
-            <AlertDialogDescription>
-              การดำเนินการนี้ไม่สามารถย้อนกลับได้
-              ข้อมูลบริการนี้จะถูกลบออกอย่างถาวร
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2 mt-4">
-            <AlertDialogCancel className="w-full sm:w-auto rounded-xl" disabled={isDeleting}>
+        onOpenChange={(open: boolean) => !open && setDeletingId(null)}
+        title="คุณแน่ใจหรือไม่ที่จะลบบริการนี้?"
+        description="การดำเนินการนี้ไม่สามารถย้อนกลับได้ ข้อมูลบริการนี้จะถูกลบออกอย่างถาวร"
+        footer={
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <Button
+              variant="outline"
+              disabled={isDeleting}
+              onClick={() => setDeletingId(null)}
+              className="flex-1 rounded-xl h-11 font-bold text-slate-500 border-slate-200"
+            >
               ยกเลิก
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
+            </Button>
+            <Button
+              disabled={isDeleting}
+              onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 handleDelete();
               }}
-              disabled={isDeleting}
-              className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 rounded-xl"
+              className="flex-1 rounded-xl h-11 px-8 font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-100 transition-all active:scale-95"
             >
               {isDeleting ? (
                 <>
@@ -372,10 +310,28 @@ export function ServicesTable({
               ) : (
                 "ยืนยันการลบ"
               )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </div>
+        }
+      />
+
+      <ResponsiveDialog
+        open={!!editingService}
+        onOpenChange={(open: boolean) => !open && setEditingService(null)}
+        title="แก้ไขข้อมูลบริการ"
+        description="ปรับปรุงรายละเอียดบริการและรูปภาพหน้าปก"
+        className="md:max-w-7xl"
+      >
+        <div className="max-h-[80vh] overflow-y-auto px-1 py-4">
+          {editingService && (
+            <ServiceForm
+              initialData={editingService}
+              onSuccess={handleEditSuccess}
+              onCancel={() => setEditingService(null)}
+            />
+          )}
+        </div>
+      </ResponsiveDialog>
     </>
   );
 }

@@ -219,8 +219,8 @@ export async function getPropertySocialContent(
   const isInstagram = platform === "INSTAGRAM";
   
   const isTikTokConnected = !!settings.tiktok_auth_token;
-  const isFacebookConnected = !!settings.meta_page_access_token;
-  const isInstagramConnected = !!settings.meta_page_access_token; // Assuming Meta token covers both
+  const isFacebookConnected = !!process.env.META_PAGE_ACCESS_TOKEN || !!settings.meta_page_access_token;
+  const isInstagramConnected = !!process.env.META_PAGE_ACCESS_TOKEN || !!settings.meta_page_access_token;
   const isLineConnected = !!(process.env.LINE_CHANNEL_ACCESS_TOKEN || settings.line_channel_access_token);
 
   const isConnected = isTikTok 

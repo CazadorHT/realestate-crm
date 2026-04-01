@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,7 +49,7 @@ export function TeamDialog({
   }, [team, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!name.trim()) {
       toast.error("กรุณาระบุชื่อทีม");
       return;
@@ -97,8 +90,6 @@ export function TeamDialog({
 
         if (result.success) {
           toast.success("สร้างทีมสำเร็จ");
-          // Re-fetch ข้อมูลใหม่ผ่านการ refresh หรือส่งข้อมูลกลับ
-          // ในกรณีนี้จะส่งผลลัพธ์จาก action กลับไป
           const managerObj =
             managerId === "none"
               ? null
@@ -121,69 +112,69 @@ export function TeamDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] rounded-2xl border-slate-100">
-        <DialogHeader>
-          <DialogTitle>{team ? "แก้ไขข้อมูลทีม" : "สร้างทีมใหม่"}</DialogTitle>
-          <DialogDescription>
-            ระบุชื่อทีมและเลือกหัวหน้าทีมที่ต้องการมอบหมาย
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">ชื่อทีม</Label>
-            <Input
-              id="name"
-              placeholder="เช่น Team Silom, Team Sukhumvit"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="rounded-xl border-slate-200 h-11"
-              disabled={isLoading}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="manager">หัวหน้าทีม (Manager)</Label>
-            <Select
-              value={managerId}
-              onValueChange={setManagerId}
-              disabled={isLoading}
-            >
-              <SelectTrigger className="rounded-xl border-slate-200 h-11">
-                <SelectValue placeholder="เลือกหัวหน้าทีม" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-slate-200">
-                <SelectItem value="none">--- ไม่ระบุ ---</SelectItem>
-                {potentialManagers.map((manager) => (
-                  <SelectItem key={manager.id} value={manager.id}>
-                    {manager.full_name || "ไม่มีชื่อ"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-[10px] text-slate-400">
-              * เฉพาะผู้ที่มีบทบาท ADMIN หรือ MANAGER เท่านั้นที่เลือกได้
-            </p>
-          </div>
-          <DialogFooter className="pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="rounded-xl h-11"
-              disabled={isLoading}
-            >
-              ยกเลิก
-            </Button>
-            <Button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 rounded-xl h-11 px-8"
-              disabled={isLoading}
-            >
-              {isLoading ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <ResponsiveDialog
+      open={isOpen}
+      onOpenChange={(val) => !val && onClose()}
+      title={team ? "แก้ไขข้อมูลทีม" : "สร้างทีมใหม่"}
+      description="ระบุชื่อทีมและเลือกหัวหน้าทีมที่ต้องการมอบหมาย"
+      footer={
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="flex-1 sm:flex-none rounded-xl h-11 font-bold border-slate-200 text-slate-500"
+            disabled={isLoading}
+          >
+            ยกเลิก
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            className="flex-1 rounded-xl h-11 px-8 font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-95"
+            disabled={isLoading}
+          >
+            {isLoading ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-6 py-2 text-left">
+        <div className="space-y-2">
+          <Label htmlFor="name" className="text-slate-700 font-bold">ชื่อทีม</Label>
+          <Input
+            id="name"
+            placeholder="เช่น Team Silom, Team Sukhumvit"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="rounded-xl border-slate-200 h-11 focus:ring-indigo-500/10 placeholder:text-slate-300"
+            disabled={isLoading}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="manager" className="text-slate-700 font-bold">หัวหน้าทีม (Manager)</Label>
+          <Select
+            value={managerId}
+            onValueChange={setManagerId}
+            disabled={isLoading}
+          >
+            <SelectTrigger className="rounded-xl border-slate-200 h-11 bg-white">
+              <SelectValue placeholder="เลือกหัวหน้าทีม" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-slate-200">
+              <SelectItem value="none" className="py-3">--- ไม่ระบุ ---</SelectItem>
+              {potentialManagers.map((manager) => (
+                <SelectItem key={manager.id} value={manager.id} className="py-3">
+                  {manager.full_name || "ไม่มีชื่อ"}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[10px] text-slate-400 font-medium mt-1">
+            * เฉพาะผู้ที่มีบทบาท ADMIN หรือ MANAGER เท่านั้นที่เลือกได้
+          </p>
+        </div>
+      </div>
+    </ResponsiveDialog>
   );
 }

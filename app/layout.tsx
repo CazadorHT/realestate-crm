@@ -101,7 +101,7 @@ export default async function RootLayout({
   const settings = await getSiteSettings();
 
   return (
-    <html lang={lang} suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         {/* Google Tag Manager - Unified */}
         {settings.google_tag_manager_enabled && settings.google_tag_manager_id && (
@@ -133,7 +133,7 @@ export default async function RootLayout({
             ></iframe>
           </noscript>
         )}
-        <GTMScrollTracker /> {/* Added GTMScrollTracker */}
+        <GTMScrollTracker />
 
         <LanguageProvider initialLanguage={lang as any}>
           <SiteConfigProvider initialSettings={settings}>

@@ -38,7 +38,6 @@ export function DocumentList({
 }: DocumentListProps) {
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchDocs = async () => {
     setLoading(true);
@@ -61,16 +60,14 @@ export function DocumentList({
   };
 
   const handleDelete = async (id: string, storagePath: string) => {
-    setLoading(true);
     const res = await deleteDocumentAction(id, storagePath);
     if (res.success) {
       toast.success("ลบไฟล์สำเร็จ");
       fetchDocs();
     } else {
       toast.error("ลบไฟล์ไม่สำเร็จ");
-      setLoading(false);
+      throw new Error("ลบไฟล์ไม่สำเร็จ");
     }
-    setDeletingId(null);
   };
 
   if (loading)

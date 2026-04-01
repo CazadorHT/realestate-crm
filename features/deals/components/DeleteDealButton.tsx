@@ -4,17 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { deleteDealAction } from "@/features/deals/actions";
 
@@ -66,46 +56,49 @@ export function DeleteDealButton({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
-        {iconOnly ? (
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      title="ยืนยันการลบดีล"
+      description="การดำเนินการนี้ไม่สามารถย้อนกลับได้ ข้อมูลดีลและเอกสารที่เกี่ยวข้องจะถูกลบออกจากระบบถาวร"
+      trigger={
+        iconOnly ? (
           <Button
             variant="ghost"
-            className="h-11 w-11 bg-slate-100 text-slate-500 hover:text-red-600 hover:bg-red-50 border-0 cursor-pointer transition-all hover:scale-105 active:scale-95"
+            className="h-11 w-11 bg-slate-100 text-slate-500 hover:text-red-600 hover:bg-red-50 border-0 cursor-pointer transition-all hover:scale-105 active:scale-95 rounded-xl"
           >
             <Trash2 className="h-5 w-5" />
           </Button>
         ) : (
           <Button
             variant="ghost"
-            className="bg-slate-100 text-slate-600 hover:text-red-600 hover:bg-red-50 cursor-pointer transition-all hover:scale-105 active:scale-95"
+            className="bg-slate-100 text-slate-600 hover:text-red-600 hover:bg-red-50 cursor-pointer transition-all hover:scale-105 active:scale-95 rounded-xl px-4"
           >
-            <Trash2 className="h-5 w-5" />
+            <Trash2 className="h-5 w-5 mr-2" />
+            ลบดีล
           </Button>
-        )}
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>คุณแน่ใจหรือไม่?</AlertDialogTitle>
-          <AlertDialogDescription>
-            การดำเนินการนี้ไม่สามารถย้อนกลับได้
-            ข้อมูลดีลและเอกสารที่เกี่ยวข้องจะถูกลบออกจากระบบ
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>ยกเลิก</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={(e) => {
-              e.preventDefault();
-              handleDelete();
-            }}
+        )
+      }
+      footer={
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <Button
+            variant="ghost"
+            onClick={() => setOpen(false)}
             disabled={isDeleting}
-            className="bg-red-600 hover:bg-red-700 font-medium"
+            className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
+          >
+            ยกเลิก
+          </Button>
+          <Button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            variant="destructive"
+            className="flex-1 h-12 rounded-xl font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 transition-all active:scale-95"
           >
             {isDeleting ? "กำลังลบ..." : "ยืนยันการลบ"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </div>
+      }
+    />
   );
 }

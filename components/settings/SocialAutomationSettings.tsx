@@ -67,6 +67,12 @@ export function SocialAutomationSettings({
     display_name: initialSettings?.tiktok_auth_token?.display_name,
     avatar_url: initialSettings?.tiktok_auth_token?.avatar_url,
   });
+  const [metaConnected, setMetaConnected] = useState(
+    !!initialSettings?.meta_page_access_token,
+  );
+  const [metaPageName, setMetaPageName] = useState(
+    initialSettings?.meta_page_name || "",
+  );
   const [isLoading, setIsLoading] = useState(!initialSettings);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -123,6 +129,8 @@ export function SocialAutomationSettings({
             avatar_url: settings.tiktok_auth_token.avatar_url,
           });
         }
+        setMetaConnected(!!settings.meta_page_access_token);
+        setMetaPageName(settings.meta_page_name || "");
         setInitialData(settings);
       } catch (err) {
         toast.error("ไม่สามารถโหลดข้อมูลได้");
@@ -366,6 +374,8 @@ export function SocialAutomationSettings({
         tiktokConnected={tiktokConnected}
         tiktokMetadata={tiktokMetadata}
         lineBotInfo={lineBotInfo}
+        metaConnected={metaConnected}
+        metaPageName={metaPageName}
       />
     </div>
   );

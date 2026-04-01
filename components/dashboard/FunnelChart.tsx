@@ -39,11 +39,8 @@ export function FunnelChart({ data }: FunnelChartProps) {
             <div className="flex-1 min-w-0">
               {mounted ? (
                 <ResponsiveContainer
-                  width="100%"
-                  height="100%"
-                  minWidth={0}
-                  minHeight={0}
-                  debounce={50}
+                  width="99%"
+                  height={250}
                 >
                   <BarChart
                     data={data}

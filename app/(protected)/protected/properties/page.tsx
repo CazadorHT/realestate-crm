@@ -11,6 +11,7 @@ import { PropertiesEmptyState } from "./_components/PropertiesEmptyState";
 import { PropertyFilters } from "@/components/properties/PropertyFilters";
 import { requireAuthContext } from "@/lib/authz";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
+import { MobileFloatingAction } from "@/components/ui/mobile-floating-action";
 
 export const metadata: Metadata = {
   title: "จัดการทรัพย์",
@@ -144,6 +145,11 @@ export default async function PropertiesPage({
           </>
         )}
       </div>
+
+      <MobileFloatingAction 
+        href="/protected/properties/new" 
+        label="เพิ่มทรัพย์ใหม่" 
+      />
     </div>
   );
 }

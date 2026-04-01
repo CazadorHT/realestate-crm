@@ -27,18 +27,10 @@ import {
 import { TeamWithManager, deleteTeamAction } from "../actions/teamActions";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { Loader2 } from "lucide-react";
 import { TeamDialog } from "./TeamDialog";
 import { TeamMembersDialog } from "./TeamMembersDialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface TeamsTableProps {
   teams: TeamWithManager[];
@@ -52,6 +44,7 @@ export function TeamsTable({
   const [teams, setTeams] = useState(initialTeams);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<TeamWithManager | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<TeamWithManager | null>(
     null,
   );
@@ -63,6 +56,7 @@ export function TeamsTable({
   const handleDelete = async () => {
     if (!teamToDelete) return;
 
+    setIsDeleting(true);
     const result = await deleteTeamAction(teamToDelete.id);
     if (result.success) {
       toast.success(`ลบทีม ${teamToDelete.name} เรียบร้อยแล้ว`);
@@ -70,6 +64,7 @@ export function TeamsTable({
     } else {
       toast.error(result.message || "ไม่สามารถลบทีมได้");
     }
+    setIsDeleting(false);
     setTeamToDelete(null);
   };
 
@@ -253,30 +248,48 @@ export function TeamsTable({
         teamName={viewingTeam?.name || ""}
       />
 
-      <AlertDialog
+      <ResponsiveDialog
         open={!!teamToDelete}
-        onOpenChange={() => setTeamToDelete(null)}
-      >
-        <AlertDialogContent className="rounded-2xl border-slate-100">
-          <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบทีม?</AlertDialogTitle>
-            <AlertDialogDescription>
-              คุณกำลังจะลบทีม <strong>{teamToDelete?.name}</strong>{" "}
-              ระบบจะทำการถอดพนักงานทุกคนออกจากทีมนี้โดยอัตโนมัติ
-              การกระทำนี้ไม่สามารถย้อนกลับได้
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700 rounded-xl"
+        onOpenChange={(open) => !open && setTeamToDelete(null)}
+        title="ยืนยันการลบทีม"
+        description={
+          teamToDelete ? (
+            <div className="flex flex-col gap-2">
+              <p>คุณกำลังจะลบทีม <strong className="text-slate-900">{teamToDelete.name}</strong> ใช่หรือไม่?</p>
+              <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-[11px] text-amber-700 font-bold leading-relaxed">
+                ⚠️ พนักงานทุกคนในทีมจะถูกปลดออกจากสังกัดทีมนี้โดยอัตโนมัติ การดำเนินการนี้ไม่สามารถย้อนกลับได้
+              </div>
+            </div>
+          ) : ""
+        }
+        footer={
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <Button
+              variant="ghost"
+              onClick={() => setTeamToDelete(null)}
+              disabled={isDeleting}
+              className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
             >
-              ลบทีม
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              ยกเลิก
+            </Button>
+            <Button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              variant="destructive"
+              className="flex-1 h-12 rounded-xl font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  กำลังลบ...
+                </>
+              ) : (
+                "ยืนยันการลบทีม"
+              )}
+            </Button>
+          </div>
+        }
+      />
     </div>
   );
 }

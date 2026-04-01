@@ -126,6 +126,7 @@ export function DocumentsGrid({
       handleSuccessFeedback();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
+      throw new Error(result.message || "เกิดข้อผิดพลาด");
     }
   };
 
@@ -138,6 +139,7 @@ export function DocumentsGrid({
       handleSuccessFeedback();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
+      throw new Error(result.message || "เกิดข้อผิดพลาด");
     }
   };
 

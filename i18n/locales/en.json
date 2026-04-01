@@ -873,7 +873,7 @@
       "phone_required": "Please enter your phone number",
       "step1_label": "Your Name",
       "step1_desc": "Tell us your name",
-      "step2_label": "Contact Info",
+      "step2_label": "Contact",
       "step2_desc": "Phone & Line ID",
       "step3_label": "Message",
       "step3_desc": "Send us a message",

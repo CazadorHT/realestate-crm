@@ -3,18 +3,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, X, Loader2, Download } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface BulkActionToolbarProps {
   selectedCount: number;
@@ -52,26 +43,13 @@ export function BulkActionToolbar({
   actionableCount,
   onDeleteLabel,
 }: BulkActionToolbarProps) {
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [isPulling, setIsPulling] = useState(false);
-  const [showPullDialog, setShowPullDialog] = useState(false);
 
   // Use actionableCount if provided, otherwise fallback to selectedCount
   const countToDelete = actionableCount ?? selectedCount;
 
   if (selectedCount === 0) return null;
 
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await onDelete();
-      setShowDeleteDialog(false);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   const handleExport = async () => {
     if (!onExport) return;
@@ -114,12 +92,12 @@ export function BulkActionToolbar({
     <>
       <div
         className={cn(
-          "inline-flex w-full items-center justify-between gap-4 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg animate-in slide-in-from-top-2 duration-200 shadow-sm",
+          "inline-flex w-full items-center justify-between gap-4 px-4 py-3 md:py-2 bg-blue-600 md:bg-blue-50 border border-blue-700 md:border-blue-200 rounded-xl md:rounded-lg animate-in slide-in-from-top-2 duration-300 shadow-lg md:shadow-sm",
           className,
         )}
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-blue-700">
+          <span className="text-sm font-bold md:font-medium text-white md:text-blue-700">
             เลือก {selectedCount} {entityName}
           </span>
         </div>
@@ -141,22 +119,36 @@ export function BulkActionToolbar({
               Export Excel
             </Button>
           )}
+
           {onPull && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPullDialog(true)}
-              disabled={isPulling}
-              className="h-8 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium"
-            >
-              {isPulling ? (
-                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-              ) : (
-                <Download className="h-3.5 w-3.5 mr-1 rotate-180" />
-              )}
-              {onPullLabel}
-            </Button>
+            <ConfirmDialog
+              title="ยืนยันการดึงข้อมูล"
+              description={
+                onPullConfirmMessage || (
+                  <>
+                    คุณกำลังจะดึง{" "}
+                    <strong className="text-foreground">
+                      {selectedCount} {entityName}
+                    </strong>{" "}
+                    มายังสาขาของคุณ
+                  </>
+                )
+              }
+              confirmText={onPullLabel}
+              onConfirm={onPull}
+              trigger={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium"
+                >
+                  <Download className="h-3.5 w-3.5 mr-1 rotate-180" />
+                  {onPullLabel}
+                </Button>
+              }
+            />
           )}
+
           {onTransfer && (
             <Button
               variant="outline"
@@ -164,14 +156,11 @@ export function BulkActionToolbar({
               onClick={onTransfer}
               className="h-8 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium"
             >
-              <Loader2
-                className="h-3.5 w-3.5 mr-1 hidden"
-                id="transfer-loader"
-              />
               <Download className="h-3.5 w-3.5 mr-1 rotate-180" />
               โอนย้าย {entityName}
             </Button>
           )}
+
           <Button
             variant="outline"
             size="sm"
@@ -181,78 +170,11 @@ export function BulkActionToolbar({
             <X className="h-3.5 w-3.5 mr-1" />
             ยกเลิก
           </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setShowDeleteDialog(true)}
-            className="h-8 text-xs"
-          >
-            <Trash2 className="h-3.5 w-3.5 mr-1" />
-            {onDeleteLabel || "ลบทั้งหมด"}
-          </Button>
-        </div>
-      </div>
 
-      <AlertDialog open={showPullDialog} onOpenChange={setShowPullDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการดึงข้อมูล</AlertDialogTitle>
-            <AlertDialogDescription>
-              {onPullConfirmMessage ? (
-                onPullConfirmMessage
-              ) : (
-                <>
-                  คุณกำลังจะดึง{" "}
-                  <strong className="text-foreground">
-                    {selectedCount} {entityName}
-                  </strong>{" "}
-                  มายังสาขาของคุณ
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPulling}>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async (e) => {
-                e.preventDefault();
-                setIsPulling(true);
-                try {
-                  await onPull?.();
-                  setShowPullDialog(false);
-                } finally {
-                  setIsPulling(false);
-                }
-              }}
-              disabled={isPulling}
-              className="bg-blue-600 text-white hover:bg-blue-700"
-            >
-              {isPulling ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  กำลังดึงข้อมูล...
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4 mr-2 rotate-180" />
-                  ดึง {selectedCount} {entityName}
-                </>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {onDeleteLabel ? "ยืนยันการย้ายลงถังขยะ" : "ยืนยันการลบ"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmMessage ? (
-                confirmMessage
-              ) : (
+          <ConfirmDialog
+            title={onDeleteLabel ? "ยืนยันการย้ายลงถังขยะ" : "ยืนยันการลบ"}
+            description={
+              confirmMessage || (
                 <>
                   คุณกำลังจะ{onDeleteLabel ? "ย้าย" : "ลบ"}{" "}
                   <strong className="text-foreground">
@@ -262,33 +184,24 @@ export function BulkActionToolbar({
                     ? "ไปที่ถังขยะ (คุณสามารถกู้คืนได้ภายหลังหน้าถังขยะ)"
                     : "การดำเนินการนี้ไม่สามารถย้อนกลับได้"}
                 </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {onDeleteLabel ? "กำลังย้าย..." : "กำลังลบ..."}
-                </>
-              ) : (
-                <>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  {onDeleteLabel
-                    ? `${onDeleteLabel} ${countToDelete} รายการ`
-                    : `ลบ ${countToDelete} ${entityName}`}
-                </>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              )
+            }
+            confirmText={
+              onDeleteLabel
+                ? `${onDeleteLabel} ${countToDelete} รายการ`
+                : `ลบ ${countToDelete} ${entityName}`
+            }
+            variant="destructive"
+            onConfirm={onDelete}
+            trigger={
+              <Button variant="destructive" size="sm" className="h-8 text-xs">
+                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                {onDeleteLabel || "ลบทั้งหมด"}
+              </Button>
+            }
+          />
+        </div>
+      </div>
     </>
   );
 }

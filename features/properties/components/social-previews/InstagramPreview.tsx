@@ -23,7 +23,7 @@ export function InstagramPreview({
   const displayContent = isTooLong && !isExpanded ? content.slice(0, maxLength).trim() + "..." : content;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden w-full transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 max-w-[360px] mx-auto">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden w-full transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 max-w-[300px] xs:max-w-[340px] sm:max-w-[380px] mx-auto">
       {/* Header */}
       <div className="p-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2">

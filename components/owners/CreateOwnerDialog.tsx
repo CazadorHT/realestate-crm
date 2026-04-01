@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { OwnerForm } from "@/features/owners/OwnerForm";
 import { UserPlus } from "lucide-react";
 
@@ -16,28 +10,27 @@ export function CreateOwnerDialog() {
   const [open, setOpen] = useState(false);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      title="เพิ่มเจ้าของทรัพย์ใหม่"
+      trigger={
         <Button
           size="lg"
-          className="bg-white text-slate-800 hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+          className="bg-white text-slate-800 hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold h-12 rounded-2xl border border-slate-100"
         >
-          <UserPlus className="h-5 w-5 mr-2" />
+          <UserPlus className="h-5 w-5 mr-2 text-indigo-600" />
           เพิ่มเจ้าของ
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-h-[85vh] sm:max-h-[90vh] overflow-y-auto max-w-[95vw] sm:max-w-xl lg:max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>เพิ่มเจ้าของทรัพย์ใหม่</DialogTitle>
-        </DialogHeader>
-        <div className="mt-4">
-          <OwnerForm
-            mode="create"
-            onSuccess={() => setOpen(false)}
-            onCancel={() => setOpen(false)}
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+      }
+    >
+      <div className="mt-2 pb-6">
+        <OwnerForm
+          mode="create"
+          onSuccess={() => setOpen(false)}
+          onCancel={() => setOpen(false)}
+        />
+      </div>
+    </ResponsiveDialog>
   );
 }

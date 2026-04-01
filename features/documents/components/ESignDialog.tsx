@@ -2,15 +2,7 @@
 
 import { useState } from "react";
 import { markAsSignedAction } from "../esign-actions";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import {
   PenTool,
@@ -19,6 +11,7 @@ import {
   AlertCircle,
   FileCheck,
   Loader2,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -36,11 +29,9 @@ export function ESignDialog({
   currentStatus,
 }: ESignDialogProps) {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(currentStatus);
 
   const handleManualSign = async () => {
-    setLoading(true);
     try {
       const res = await markAsSignedAction(documentId);
       if (res.success) {
@@ -53,18 +44,15 @@ export function ESignDialog({
           toast.success("อัปเดตสถานะเป็นเซ็นชื่อเรียบร้อยแล้ว");
         }
         setStatus(res.status);
-        // We might want to close the dialog on success, but since it has a 'Signed' state, 
-        // maybe it stays open to show the new status. 
-        // Based on current code, it just updates local status.
       } else {
         toast.error("ไม่สามารถอัปเดตสถานะได้", {
           description: res.message,
         });
+        throw new Error(res.message || "ไม่สามารถอัปเดตสถานะได้");
       }
-    } catch (err) {
+    } catch (err: any) {
       toast.error("เกิดข้อผิดพลาดในการบันทึก");
-    } finally {
-      setLoading(false);
+      throw err;
     }
   };
 
@@ -72,14 +60,14 @@ export function ESignDialog({
     switch (s) {
       case "SIGNED":
         return (
-          <Badge className="bg-green-500 text-white border-green-600 shadow-sm">
+          <Badge className="bg-emerald-500 text-white border-emerald-600 shadow-sm rounded-lg font-bold">
             <CheckCircle className="h-3 w-3 mr-1" />
             เซ็นสัญญาแล้ว
           </Badge>
         );
       default:
         return (
-          <Badge variant="outline" className="text-slate-500 border-slate-300">
+          <Badge variant="outline" className="text-slate-500 border-slate-200 rounded-lg font-bold bg-slate-50">
             <Clock className="h-3 w-3 mr-1" />
             รอการเซ็นสัญญา
           </Badge>
@@ -88,124 +76,120 @@ export function ESignDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      trigger={
         <Button
           variant="ghost"
           size="icon"
-          className={`h-8 w-8 transition-colors ${
+          className={`h-9 w-9 rounded-xl transition-all ${
             status === "SIGNED"
-              ? "text-green-600 hover:text-green-700 hover:bg-green-50"
+              ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
               : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
           }`}
         >
-          <PenTool className="h-4 w-4" />
+          <PenTool className="h-4.5 w-4.5" />
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[400px] rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl text-slate-800">
-            <FileCheck className="h-6 w-6 text-blue-600" />
-            สถานะการเซ็นสัญญา
-          </DialogTitle>
-          <DialogDescription className="text-slate-500">
-            จัดการสถานะสัญญาหลังจากลูกค้าลงนามหน้างานหรือทางกระดาษแล้ว
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="grid gap-6 py-4">
-          <div className="p-4 border rounded-xl border-slate-200 bg-slate-50/50 shadow-sm">
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-2">
-              ชื่อเอกสาร
-            </p>
-            <p className="text-sm text-slate-800 break-all">{documentName}</p>
-            <div className="mt-4 flex items-center justify-between">
-              <span className="text-xs text-slate-500">สถานะปัจจุบัน:</span>
-              {statusBadge(status)}
-            </div>
+      }
+      title={
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
+            <FileCheck className="h-6 w-6" />
           </div>
-
-          <div className="space-y-4">
-            {status !== "SIGNED" ? (
-              <div className="p-4 border border-blue-100 bg-blue-50 rounded-2xl space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-600 rounded-lg text-white shadow-md shadow-blue-200">
-                    <PenTool className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-900">ยืนยันการเซ็นชื่อ</p>
-                    <p className="text-xs text-blue-700 leading-relaxed">
-                      หากลูกค้าเซ็นเอกสารเรียบร้อยแล้ว
-                      คุณสามารถกดยืนยันเพื่อบันทึกลงระบบได้ทันที
-                    </p>
-                  </div>
-                </div>
-                <ConfirmDialog
-                  title="ยืนยันการเซ็นสัญญา"
-                  description={
-                    documentName.toLowerCase().includes("contract") ||
-                    documentName.toLowerCase().includes("lease") ||
-                    documentName.toLowerCase().includes("sale") ||
-                    documentName.toLowerCase().includes("reservation")
-                      ? "คุณแน่ใจหรือไม่ว่าลูกค้าได้เซ็นสัญญานี้เรียบร้อยแล้ว? ระบบจะบันทึกสถานะว่า 'เซ็นแล้ว' และจะปรับสถานะดีลนี้เป็น 'สำเร็จ' พร้อมตัดสต็อกทรัพย์สินให้โดยอัตโนมัติ"
-                      : "คุณแน่ใจหรือไม่ว่าลูกค้าได้เซ็นเอกสารนี้เรียบร้อยแล้ว? ระบบจะบันทึกสถานะว่า 'เซ็นแล้ว' และไม่สามารถย้อนกลับได้"
-                  }
-                  onConfirm={handleManualSign}
-                  trigger={
-                    <Button
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white h-10 shadow-lg shadow-blue-200 rounded-xl transition-all active:scale-95"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        "ยืนยันว่าลูกค้าเซ็นแล้ว"
-                      )}
-                    </Button>
-                  }
-                />
-              </div>
-            ) : (
-              <div className="p-4 border border-green-100 bg-green-50 rounded-2xl flex flex-col items-center text-center space-y-2">
-                <div className="h-12 w-12 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-green-200 mb-2">
-                  <CheckCircle className="h-7 w-7" />
-                </div>
-                <p className="text-sm text-green-800">
-                  ดำเนินการเซ็นสัญญาเรียบร้อย
-                </p>
-                <p className="text-xs text-green-600">
-                  เอกสารนี้ได้รับการยืนยันการลงนามในระบบแล้ว
-                </p>
-              </div>
-            )}
-
-            {/* Warning if not a contract-like document */}
-            {status !== "SIGNED" &&
-              !documentName.toLowerCase().includes("contract") &&
-              !documentName.toLowerCase().includes("lease") &&
-              !documentName.toLowerCase().includes("sale") &&
-              !documentName.toLowerCase().includes("reservation") && (
-                <div className="flex items-start gap-2 p-3 bg-slate-100 rounded-xl text-[10px] text-slate-600 border border-slate-200">
-                  <AlertCircle className="h-4 w-4 shrink-0 text-slate-400" />
-                  <span>
-                    หมายเหตุ: ระบบจะบันทึก Log ว่าผู้ใช้เป็นคน Manual
-                    สถานะนี้ด้วยตนเองเพื่อความโปร่งใส
-                  </span>
-                </div>
-              )}
+          <span className="text-xl font-black text-slate-900 tracking-tight">สถานะการเซ็นสัญญา</span>
+        </div>
+      }
+      description="จัดการสถานะสัญญาหลังจากลูกค้าลงนามหน้างานหรือทางกระดาษแล้ว"
+      footer={
+        <Button
+          variant="ghost"
+          onClick={() => setOpen(false)}
+          className="w-full text-slate-400 font-bold hover:bg-slate-100 rounded-xl h-12"
+        >
+          ปิดหน้าต่าง
+        </Button>
+      }
+    >
+      <div className="py-2 space-y-6">
+        <div className="p-5 border rounded-2xl border-slate-100 bg-slate-50/50 shadow-sm relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 opacity-5">
+            <FileCheck className="h-20 w-20" />
+          </div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 relative z-10">
+            ชื่อเอกสาร
+          </p>
+          <p className="text-sm font-bold text-slate-800 break-all relative z-10 leading-relaxed">{documentName}</p>
+          <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 relative z-10">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">สถานะปัจจุบัน</span>
+            {statusBadge(status)}
           </div>
         </div>
 
-        <DialogFooter>
-          <Button
-            variant="ghost"
-            onClick={() => setOpen(false)}
-            className="w-full text-slate-500 hover:bg-slate-100 rounded-xl"
-          >
-            ปิดหน้าต่าง
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <div className="space-y-4">
+          {status !== "SIGNED" ? (
+            <div className="p-5 border border-blue-100 bg-blue-50/50 rounded-3xl space-y-4 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-200 shrink-0">
+                  <PenTool className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-blue-900 mb-1">ยืนยันการเซ็นชื่อ</p>
+                  <p className="text-xs text-blue-700 leading-relaxed font-medium">
+                    หากลูกค้าเซ็นเอกสารเรียบร้อยแล้ว
+                    คุณสามารถกดยืนยันเพื่อบันทึกลงระบบได้ทันที
+                  </p>
+                </div>
+              </div>
+              <ConfirmDialog
+                title="ยืนยันการเซ็นสัญญา"
+                description={
+                  documentName.toLowerCase().includes("contract") ||
+                  documentName.toLowerCase().includes("lease") ||
+                  documentName.toLowerCase().includes("sale") ||
+                  documentName.toLowerCase().includes("reservation")
+                    ? "คุณแน่ใจหรือไม่ว่าลูกค้าได้เซ็นสัญญานี้เรียบร้อยแล้ว? ระบบจะบันทึกสถานะว่า 'เซ็นแล้ว' และจะปรับสถานะดีลนี้เป็น 'สำเร็จ' พร้อมตัดสต็อกทรัพย์สินให้โดยอัตโนมัติ"
+                    : "คุณแน่ใจหรือไม่ว่าลูกค้าได้เซ็นเอกสารนี้เรียบร้อยแล้ว? ระบบจะบันทึกสถานะว่า 'เซ็นแล้ว' และไม่สามารถย้อนกลับได้"
+                }
+                onConfirm={handleManualSign}
+                trigger={
+                  <Button
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 shadow-xl shadow-blue-200/50 rounded-2xl font-black transition-all active:scale-95"
+                  >
+                    ยืนยันว่าลูกค้าเซ็นแล้ว
+                  </Button>
+                }
+              />
+            </div>
+          ) : (
+            <div className="p-6 border border-emerald-100 bg-emerald-50/50 rounded-3xl flex flex-col items-center text-center space-y-3 shadow-sm">
+              <div className="h-16 w-16 bg-emerald-500 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-emerald-200 mb-2 rotate-3 hover:rotate-0 transition-transform duration-500">
+                <CheckCircle className="h-10 w-10" />
+              </div>
+              <p className="text-base font-black text-emerald-900 leading-tight">
+                ดำเนินการเซ็นสัญญาเรียบร้อย
+              </p>
+              <p className="text-xs font-bold text-emerald-600/80">
+                เอกสารนี้ได้รับการยืนยันการลงนามในระบบแล้ว
+              </p>
+            </div>
+          )}
+
+          {/* Warning if not a contract-like document */}
+          {status !== "SIGNED" &&
+            !documentName.toLowerCase().includes("contract") &&
+            !documentName.toLowerCase().includes("lease") &&
+            !documentName.toLowerCase().includes("sale") &&
+            !documentName.toLowerCase().includes("reservation") && (
+              <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl text-[10px] text-slate-500 font-bold border border-slate-100">
+                <AlertCircle className="h-4 w-4 shrink-0 text-slate-400" />
+                <span className="leading-normal italic">
+                  * หมายเหตุ: ระบบจะบันทึก Log การอัปเดตสถานะด้วยตนเองเพื่อความโปร่งใสในการตรวจสอบย้อนหลัง
+                </span>
+              </div>
+            )}
+        </div>
+      </div>
+    </ResponsiveDialog>
   );
 }

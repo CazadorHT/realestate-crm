@@ -47,7 +47,7 @@ export function CommissionLeaderboard({
   };
 
   return (
-    <Card className="h-full border-none shadow-2xl bg-white/80 backdrop-blur-md overflow-hidden relative group">
+    <Card className="h-full border-none shadow-sm bg-white/80 backdrop-blur-md overflow-hidden relative group">
       {/* Decorative gradients */}
       <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors duration-700" />
       <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-colors duration-700" />
@@ -55,7 +55,7 @@ export function CommissionLeaderboard({
       <CardHeader className="pb-4 px-6 relative z-10 border-b border-slate-100/50">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <CardTitle className="text-xl font-black text-slate-800 flex items-center gap-2 tracking-tight">
+            <CardTitle className="text-xl font-semibold text-slate-800 flex items-center gap-2 tracking-tight">
               <span className="p-2 bg-indigo-50 text-indigo-600 rounded-xl shadow-sm border border-indigo-100">
                 <Trophy className="h-5 w-5" />
               </span>
@@ -162,7 +162,7 @@ export function CommissionLeaderboard({
                 <Trophy className="h-10 w-10" />
               </div>
               <div>
-                <p className="text-lg font-black text-slate-300">
+                <p className="text-lg font-semibold text-slate-300">
                   ยังไม่มีข้อมูลยอดขาย
                 </p>
                 <p className="text-xs text-slate-400 uppercase tracking-widest">

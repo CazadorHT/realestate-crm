@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { CalendarEvent } from "../queries";
@@ -36,21 +31,10 @@ import {
   deleteLeadActivityAction,
   updateLeadActivityAction,
 } from "@/features/leads/actions";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { DialogFooter } from "@/components/ui/dialog";
 import { LeadActivityDialog } from "@/components/leads/LeadActivityDialog";
 import { LeadActivityFormValues } from "@/lib/types/leads";
+import { Loader2 } from "lucide-react";
 
 // Helper for formatting Thai currency
 const formatThaiCurrency = (value: number): string => {
@@ -135,163 +119,27 @@ export function EventDetailsDialog({
     event.type === "early_termination";
 
   return (
-    <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="flex items-center gap-2 mb-2">
-            <Badge variant="outline" className={getEventColor(event.type)}>
-              {getEventLabel(event.type)}
-            </Badge>
-          </div>
-          <DialogTitle className="text-xl leading-relaxed">
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={(val) => !val && onClose()}
+      title={
+        <div className="space-y-1 text-left">
+          <Badge variant="outline" className={getEventColor(event.type)}>
+            {getEventLabel(event.type)}
+          </Badge>
+          <div className="text-xl font-bold leading-tight">
             {event.title}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin">
-          {/* 1. Time Section */}
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-indigo-50 rounded-lg shrink-0">
-              <Calendar className="h-5 w-5 text-indigo-600" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">วันและเวลา</p>
-              <div className="flex flex-col gap-1 mt-1">
-                <p className="text-sm text-slate-600 flex items-center gap-2">
-                  {formatDate(startDate)}
-                </p>
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Clock className="h-3 w-3" />
-                  {format(startDate, "HH:mm")} น.
-                </div>
-              </div>
-            </div>
           </div>
-
-          <div className="h-px bg-slate-100 my-2" />
-
-          {/* 2. Contract Details */}
-          {isContractEvent && event.meta && (
-            <>
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-slate-100 rounded-lg shrink-0">
-                  <FileText className="h-5 w-5 text-slate-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-900">รายละเอียดสัญญา</p>
-                  <div className="mt-2 space-y-2 text-sm text-slate-600">
-                    {event.meta.contractNumber && (
-                      <div className="flex justify-between">
-                        <span>เลขที่สัญญา:</span>
-                        <span className="font-medium text-slate-900">{event.meta.contractNumber}</span>
-                      </div>
-                    )}
-                    {event.meta.leaseTermMonths && (
-                      <div className="flex justify-between">
-                        <span>ระยะสัญญา:</span>
-                        <span className="font-medium text-slate-900">{event.meta.leaseTermMonths} เดือน</span>
-                      </div>
-                    )}
-                    {event.meta.rentPrice && (
-                      <div className="flex justify-between">
-                        <span>ค่าเช่า:</span>
-                        <span className="font-semibold text-emerald-600">{formatThaiCurrency(event.meta.rentPrice)}</span>
-                      </div>
-                    )}
-                    {event.meta.startDate && event.meta.endDate && (
-                      <div className="mt-2 p-2 bg-slate-50 rounded-lg">
-                        <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
-                          <PlayCircle className="h-3 w-3 text-emerald-500" />
-                          เริ่ม: {formatDate(new Date(event.meta.startDate))}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <StopCircle className="h-3 w-3 text-red-500" />
-                          สิ้นสุด: {formatDate(new Date(event.meta.endDate))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="h-px bg-slate-100 my-2" />
-            </>
-          )}
-
-          {/* 3. Lead Info */}
-          {event.meta?.leadId && (
-            <>
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-50 rounded-lg shrink-0">
-                  <User className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">ลูกค้า (Lead)</p>
-                  <p className="text-sm text-slate-600 mt-0.5">{event.meta?.leadName || event.title.replace("นัดชม: ", "")}</p>
-                </div>
-              </div>
-              <div className="h-px bg-slate-100 my-2" />
-            </>
-          )}
-
-          {/* 4. Property Info */}
-          {event.meta?.propertyTitle && (
-            <div className="flex items-start gap-3 mt-4">
-              <div className="p-2 bg-orange-50 rounded-lg shrink-0">
-                <Building2 className="h-5 w-5 text-orange-600" />
-              </div>
-              <div className="w-full">
-                <p className="text-sm font-semibold text-slate-900">ทรัพย์สิน</p>
-                <div className="mt-2 rounded-lg border border-slate-200 overflow-hidden bg-slate-50">
-                  {event.meta.propertyImage && (
-                    <div className="relative h-32 w-full">
-                      <img src={event.meta.propertyImage} className="w-full h-full object-cover" alt="Property" />
-                    </div>
-                  )}
-                  <div className="p-3">
-                    <p className="text-sm font-medium text-slate-800 line-clamp-2">{event.meta.propertyTitle}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 5. Notes */}
-          {event.meta?.note && (
-            <>
-              <div className="h-px bg-slate-100 my-2" />
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-yellow-50 rounded-lg shrink-0">
-                  <FileText className="h-5 w-5 text-yellow-600" />
-                </div>
-                <div className="text-sm w-full">
-                  <p className="font-semibold text-slate-900">บันทึกช่วยจำ (Note)</p>
-                  <div className="mt-1 p-3 bg-slate-50 rounded-lg text-slate-600 text-sm whitespace-pre-wrap">{event.meta.note}</div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* 6. Deal Type (for deal_closing) */}
-          {event.type === "deal_closing" && event.meta?.type && (
-            <div className="flex items-start gap-3 mt-4">
-              <div className="p-2 bg-purple-50 rounded-lg">
-                <Banknote className="h-5 w-5 text-purple-600" />
-              </div>
-              <div className="text-sm">
-                <p className="font-semibold text-slate-900">ประเภทดีล</p>
-                <p className="text-slate-600 mt-0.5">{event.meta.type === "RENT" ? "เช่า" : "ขาย"}</p>
-              </div>
-            </div>
-          )}
         </div>
-
-        <DialogFooter className="flex flex-col sm:flex-row gap-2 border-t border-slate-100 pt-4 mt-2">
-          <div className="flex flex-1 gap-2">
+      }
+      footer={
+        <div className="flex flex-col gap-3 w-full">
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
             <Button
               variant="outline"
               size="sm"
               onClick={handleAddToGoogleCalendar}
-              className="text-slate-600 hover:text-indigo-600 border-slate-200 hover:bg-slate-50 font-semibold"
+              className="flex-1 sm:flex-none text-slate-600 hover:text-indigo-600 border-slate-200 hover:bg-slate-50 font-semibold"
             >
               <Calendar className="h-4 w-4 mr-2 text-indigo-600" />
               Google Cal
@@ -304,7 +152,7 @@ export function EventDetailsDialog({
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full">
             {isLeadActivity && event.meta?.leadId ? (
               <EventActions
                 eventId={event.id}
@@ -313,14 +161,153 @@ export function EventDetailsDialog({
                 meta={event.meta}
               />
             ) : (
-              <Button variant="outline" size="sm" onClick={onClose} className="font-semibold">
+              <Button variant="outline" size="sm" onClick={onClose} className="w-full font-semibold">
                 ปิดหน้าต่าง
               </Button>
             )}
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      }
+    >
+      <div className="space-y-4 py-2 text-left">
+        {/* 1. Time Section */}
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-indigo-50 rounded-lg shrink-0">
+            <Calendar className="h-5 w-5 text-indigo-600" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-slate-700">วันและเวลา</p>
+            <div className="flex flex-col gap-1 mt-1">
+              <p className="text-sm text-slate-600">
+                {formatDate(startDate)}
+              </p>
+              <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                <Clock className="h-3 w-3" />
+                {format(startDate, "HH:mm")} น.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-px bg-slate-100 my-2" />
+
+        {/* 2. Contract Details */}
+        {isContractEvent && event.meta && (
+          <>
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-slate-100 rounded-lg shrink-0">
+                <FileText className="h-5 w-5 text-slate-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-slate-700">รายละเอียดสัญญา</p>
+                <div className="mt-2 space-y-2 text-sm text-slate-600">
+                  {event.meta.contractNumber && (
+                    <div className="flex justify-between">
+                      <span>เลขที่สัญญา:</span>
+                      <span className="font-bold text-slate-900">{event.meta.contractNumber}</span>
+                    </div>
+                  )}
+                  {event.meta.leaseTermMonths && (
+                    <div className="flex justify-between">
+                      <span>ระยะสัญญา:</span>
+                      <span className="font-bold text-slate-900">{event.meta.leaseTermMonths} เดือน</span>
+                    </div>
+                  )}
+                  {event.meta.rentPrice && (
+                    <div className="flex justify-between">
+                      <span>ค่าเช่า:</span>
+                      <span className="font-bold text-emerald-600">{formatThaiCurrency(event.meta.rentPrice)}</span>
+                    </div>
+                  )}
+                  {event.meta.startDate && event.meta.endDate && (
+                    <div className="mt-2 p-2 bg-slate-50 rounded-lg border border-slate-100">
+                      <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                        <PlayCircle className="h-3 w-3 text-emerald-500" />
+                        เริ่ม: {formatDate(new Date(event.meta.startDate))}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <StopCircle className="h-3 w-3 text-red-500" />
+                        สิ้นสุด: {formatDate(new Date(event.meta.endDate))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="h-px bg-slate-100 my-2" />
+          </>
+        )}
+
+        {/* 3. Lead Info */}
+        {event.meta?.leadId && (
+          <>
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-blue-50 rounded-lg shrink-0">
+                <User className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-700">ลูกค้า (Lead)</p>
+                <p className="text-sm text-slate-600 mt-0.5">{event.meta?.leadName || event.title.replace("นัดชม: ", "")}</p>
+              </div>
+            </div>
+            <div className="h-px bg-slate-100 my-2" />
+          </>
+        )}
+
+        {/* 4. Property Info */}
+        {event.meta?.propertyTitle && (
+          <div className="flex items-start gap-3 mt-4">
+            <div className="p-2 bg-orange-50 rounded-lg shrink-0">
+              <Building2 className="h-5 w-5 text-orange-600" />
+            </div>
+            <div className="w-full">
+              <p className="text-sm font-bold text-slate-700">ทรัพย์สิน</p>
+              <div className="mt-2 rounded-xl border border-slate-200 overflow-hidden bg-slate-50 shadow-sm">
+                {event.meta.propertyImage && (
+                  <div className="relative h-32 w-full border-b border-slate-100">
+                    <img src={event.meta.propertyImage} className="w-full h-full object-cover" alt="Property" />
+                  </div>
+                )}
+                <div className="p-4">
+                  <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-relaxed">{event.meta.propertyTitle}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 5. Notes */}
+        {event.meta?.note && (
+          <>
+            <div className="h-px bg-slate-100 my-2" />
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-amber-50 rounded-lg shrink-0">
+                <FileText className="h-5 w-5 text-amber-600" />
+              </div>
+              <div className="text-sm w-full">
+                <p className="font-bold text-slate-700">บันทึกช่วยจำ (Note)</p>
+                <div className="mt-2 p-4 bg-amber-50/50 rounded-xl border border-amber-100 text-slate-700 text-sm whitespace-pre-wrap leading-relaxed italic">
+                  "{event.meta.note}"
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* 6. Deal Type (for deal_closing) */}
+        {event.type === "deal_closing" && event.meta?.type && (
+          <div className="flex items-start gap-3 mt-4">
+            <div className="p-2 bg-purple-50 rounded-lg">
+              <Banknote className="h-5 w-5 text-purple-600" />
+            </div>
+            <div className="text-sm">
+              <p className="font-bold text-slate-700">ประเภทดีล</p>
+              <p className="text-slate-600 mt-0.5">{event.meta.type === "RENT" ? "เช่า" : "ขาย"}</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </ResponsiveDialog>
   );
 }
 
@@ -378,36 +365,48 @@ function EventActions({
 
   return (
     <div className="flex w-full justify-between gap-2">
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogTrigger asChild>
+      <ResponsiveDialog
+        open={showDeleteConfirm}
+        onOpenChange={(val) => !val && setShowDeleteConfirm(false)}
+        title="ยืนยันการลบนัดหมาย"
+        description="การดำเนินการนี้จะลบนัดหมายนี้ออกจากระบบอย่างถาวรและไม่สามารถกู้คืนได้"
+        trigger={
           <Button
             variant="destructive"
             size="sm"
-            className="bg-red-50 text-red-600 hover:bg-red-100 border-0 shadow-none"
+            className="bg-red-50 text-red-600 hover:bg-red-100 border-0 shadow-none rounded-xl font-bold"
           >
             <Trash2 className="h-4 w-4 mr-2" />
             ลบนัดหมาย
           </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบ?</AlertDialogTitle>
-            <AlertDialogDescription>การดำเนินการนี้จะลบรายการนัดหมายนี้ออกจากระบบอย่างถาวร</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                handleDelete();
-              }}
-              className="bg-red-600"
+        }
+        footer={
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={isDeleting}
+              className="flex-1 rounded-xl h-12 font-bold text-slate-500 border-slate-200"
             >
-              {isDeleting ? "กำลังลบ..." : "ยืนยันลบ"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              ยกเลิก
+            </Button>
+            <Button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="flex-1 rounded-xl h-12 font-bold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-100 transition-all active:scale-95"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  กำลังลบ...
+                </>
+              ) : (
+                "ยืนยันลบ"
+              )}
+            </Button>
+          </div>
+        }
+      />
 
       <div className="flex gap-2">
         <LeadActivityDialog

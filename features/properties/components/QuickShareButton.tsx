@@ -9,14 +9,7 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Languages } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { siteConfig } from "@/lib/site-config";
 import Image from "next/image";
 
@@ -134,95 +127,94 @@ ${L.link} ${publicUrl}
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
+    <ResponsiveDialog
+      trigger={
         <Button
           variant="outline"
           className={cn(
-            "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 rounded-xl gap-2 font-semibold shadow-sm transition-all hover:shadow-md",
+            "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 rounded-xl gap-2 font-semibold shadow-sm transition-all hover:shadow-md h-12",
             className,
           )}
         >
           <Share2 className="w-4 h-4" />
           ส่งข้อมูลให้ลูกค้า
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md sm:max-h-[80vh] overflow-y-auto custom-scrollbar rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between text-xl">
-            <div className="flex items-center gap-2">
-              <MessageCircle className="w-5 h-5 text-blue-600" />
-              แชร์ข้อมูลทรัพย์แบบด่วน
-            </div>
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="mt-4 space-y-4">
-          {/* Language Selector */}
-          <div className="space-y-2">
-            <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-              <Languages className="w-3 h-3" /> เลือกภาษาสำหรับแชร์
-            </Label>
-            <Tabs 
-              value={lang} 
-              onValueChange={(v) => setLang(v as any)}
-              className="w-full"
+      }
+      title={
+        <div className="flex items-center justify-between text-xl">
+          <div className="flex items-center gap-2">
+            <MessageCircle className="w-5 h-5 text-blue-600" />
+            แชร์ข้อมูลทรัพย์แบบด่วน
+          </div>
+        </div>
+      }
+      className="sm:max-w-md"
+      footer={
+        <div className="flex flex-col w-full gap-2 px-2">
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <Button
+              variant="outline"
+              className="h-12 rounded-xl gap-2 font-bold border-slate-200"
+              onClick={handleCopy}
             >
-              <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-lg">
-                <TabsTrigger value="th" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">ไทย (TH)</TabsTrigger>
-                <TabsTrigger value="en" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">EN</TabsTrigger>
-                <TabsTrigger value="cn" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">CN</TabsTrigger>
-              </TabsList>
-            </Tabs>
+              {copied ? (
+                <Check className="w-4 h-4 text-emerald-600" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
+              {copied ? "คัดลอกแล้ว" : "คัดลอกข้อความ"}
+            </Button>
+            <Button
+              className="h-12 rounded-xl gap-2 font-bold bg-[#00B900] hover:bg-[#00A000] text-white"
+              onClick={handleLineShare}
+            >
+              <FaLine className="w-5 h-5" />
+              ส่งเข้า LINE
+            </Button>
           </div>
-
-          <div className="flex flex-col gap-4">
-            {property.cover_image_url && (
-              <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-100 shadow-sm">
-                <Image
-                  src={property.cover_image_url}
-                  alt={property.title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            )}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <pre className="whitespace-pre-wrap text-sm text-slate-700 font-sans leading-relaxed">
-                {shareMessage}
-              </pre>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 mt-4">
-          <Button
-            variant="outline"
-            className="h-12 rounded-xl gap-2 font-bold border-slate-200 hover:bg-slate-50"
-            onClick={handleCopy}
-          >
-            {copied ? (
-              <Check className="w-4 h-4 text-emerald-600" />
-            ) : (
-              <Copy className="w-4 h-4" />
-            )}
-            {copied ? "คัดลอกแล้ว" : "คัดลอกข้อความ"}
-          </Button>
-          <Button
-            className="h-12 rounded-xl gap-2 font-bold bg-[#00B900] hover:bg-[#00A000] text-white shadow-lg shadow-green-200"
-            onClick={handleLineShare}
-          >
-            <FaLine className="w-5 h-5" />
-            ส่งเข้า LINE
-          </Button>
-        </div>
-        <DialogFooter className="sm:justify-center border-t border-slate-100 pt-4 mt-2">
-          <p className="text-[10px] text-slate-400 text-center font-medium">
-            * ระบบจะทำการสร้างข้อความสรุปพร้อมลิงก์ที่ระบุตัวตน Agent
-            เพื่อใช้แชร์ให้ลูกค้าได้ทันที
+          <p className="text-[10px] text-slate-400 text-center font-medium mt-4">
+            * ระบบจะทำการสร้างข้อความสรุปพร้อมลิงก์ที่ระบุตัวตน Agent เพื่อใช้แชร์ให้ลูกค้าได้ทันที
           </p>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      }
+    >
+      <div className="space-y-4 py-2">
+        {/* Language Selector */}
+        <div className="space-y-2">
+          <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+            <Languages className="w-3 h-3" /> เลือกภาษาสำหรับแชร์
+          </Label>
+          <Tabs 
+            value={lang} 
+            onValueChange={(v) => setLang(v as any)}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-lg">
+              <TabsTrigger value="th" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">ไทย (TH)</TabsTrigger>
+              <TabsTrigger value="en" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">EN</TabsTrigger>
+              <TabsTrigger value="cn" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">CN</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          {property.cover_image_url && (
+            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-100 shadow-sm">
+              <Image
+                src={property.cover_image_url}
+                alt={property.title}
+                fill
+                className="object-cover"
+              />
+            </div>
+          )}
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <pre className="whitespace-pre-wrap text-sm text-slate-700 font-sans leading-relaxed">
+              {shareMessage}
+            </pre>
+          </div>
+        </div>
+      </div>
+    </ResponsiveDialog>
   );
 }

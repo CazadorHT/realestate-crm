@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -80,69 +73,75 @@ export function TransferLeadDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ArrowRightLeft className="h-5 w-5 text-blue-600" />
-            ส่งต่อลูกค้า (Lead Referral)
-          </DialogTitle>
-          <DialogDescription>
-            เลือกสาขาปลายทางที่ต้องการส่งต่อคุณ{" "}
-            <span className="font-bold text-slate-900">{leadName}</span>{" "}
-            ให้ดูแลต่อ
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="tenant">สาขาปลายทาง</Label>
-            <Select
-              value={targetTenantId}
-              onValueChange={setTargetTenantId}
-              disabled={isLoading || isTransferring}
-            >
-              <SelectTrigger id="tenant">
-                <SelectValue
-                  placeholder={isLoading ? "กำลังโหลดสาขา..." : "เลือกสาขา"}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {tenants.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-                {tenants.length === 0 && !isLoading && (
-                  <p className="p-2 text-xs text-center text-slate-400">
-                    ไม่พบสาขาอื่น
-                  </p>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+    <ResponsiveDialog
+      open={isOpen}
+      onOpenChange={onOpenChange}
+      title={
+        <div className="flex items-center gap-2">
+          <ArrowRightLeft className="h-5 w-5 text-blue-600" />
+          ส่งต่อลูกค้า (Lead Referral)
         </div>
-
-        <DialogFooter>
+      }
+      description={
+        <>
+          เลือกสาขาปลายทางที่ต้องการส่งต่อคุณ{" "}
+          <span className="font-bold text-slate-900">{leadName}</span>{" "}
+          ให้ดูแลต่อ
+        </>
+      }
+      footer={
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isTransferring}
+            className="flex-1 sm:flex-none"
           >
             ยกเลิก
           </Button>
           <Button
             onClick={handleTransfer}
             disabled={!targetTenantId || isTransferring}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-100"
           >
             {isTransferring && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
             ยืนยันการส่งต่อ
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      }
+    >
+      <div className="grid gap-4 py-4">
+        <div className="grid gap-2 text-left">
+          <Label htmlFor="tenant" className="text-slate-700 font-bold">
+            สาขาปลายทาง
+          </Label>
+          <Select
+            value={targetTenantId}
+            onValueChange={setTargetTenantId}
+            disabled={isLoading || isTransferring}
+          >
+            <SelectTrigger id="tenant" className="h-12 rounded-xl border-slate-200">
+              <SelectValue
+                placeholder={isLoading ? "กำลังโหลดสาขา..." : "เลือกสาขา"}
+              />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-slate-200">
+              {tenants.map((t) => (
+                <SelectItem key={t.id} value={t.id} className="py-3">
+                  {t.name}
+                </SelectItem>
+              ))}
+              {tenants.length === 0 && !isLoading && (
+                <p className="p-2 text-xs text-center text-slate-400">
+                  ไม่พบสาขาอื่น
+                </p>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </ResponsiveDialog>
   );
 }

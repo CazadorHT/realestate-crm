@@ -12,16 +12,11 @@ import {
   Phone,
   MessageCircle,
   Eye,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -79,188 +74,199 @@ export function CreateEventDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      title="สร้างนัดหมายใหม่"
+      trigger={
+        <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm rounded-xl">
           <Plus className="h-4 w-4" />
           <span className="hidden sm:inline">เพิ่มนัดหมาย</span>
           <span className="sm:hidden">เพิ่ม</span>
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>สร้างนัดหมายใหม่</DialogTitle>
-        </DialogHeader>
-
-        <form action={handleSubmit} className="space-y-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="leadId" className="flex items-center gap-2">
-              <User className="h-4 w-4 text-blue-500" /> ลูกค้า (Lead)
-            </Label>
-            <Select name="leadId" required>
-              <SelectTrigger>
-                <SelectValue placeholder="เลือกลูกค้า..." />
-              </SelectTrigger>
-              <SelectContent
-                align="start"
-                className="w-[--radix-select-trigger-width] max-h-[200px] overflow-y-auto"
-              >
-                {leads.map((lead) => (
-                  <SelectItem key={lead.id} value={lead.id}>
-                    <span className="truncate block max-w-[300px]">
-                      {lead.full_name}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="propertyId" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-orange-500" /> ทรัพย์สิน
-              (Optional)
-            </Label>
-            <Select name="propertyId" defaultValue="none">
-              <SelectTrigger>
-                <SelectValue placeholder="เลือกทรัพย์สิน..." />
-              </SelectTrigger>
-              <SelectContent
-                align="start"
-                className="w-[--radix-select-trigger-width] max-h-[200px] overflow-y-auto"
-              >
-                <SelectItem value="none">ไม่ระบุ</SelectItem>
-                {properties.map((prop) => (
-                  <SelectItem key={prop.id} value={prop.id}>
-                    <span className="truncate block max-w-[300px]">
-                      {prop.title}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="activityType" className="flex items-center gap-2">
-              <Briefcase className="h-4 w-4 text-indigo-500" /> ประเภทนัดหมาย
-            </Label>
-            <Select name="activityType" defaultValue="VIEWING">
-              <SelectTrigger>
-                <SelectValue placeholder="เลือกประเภท..." />
-              </SelectTrigger>
-              <SelectContent
-                align="start"
-                className="w-[--radix-select-trigger-width]"
-              >
-                <SelectItem value="VIEWING">
-                  <div className="flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-blue-500" />
-                    <span>เยี่ยมชมทรัพย์ (Viewing)</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="FOLLOW_UP">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="h-4 w-4 text-amber-500" />
-                    <span>ติดตามผล / เจรจา (Follow up / Deal)</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="CALL">
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-green-500" />
-                    <span>โทรศัพท์ (Call)</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="LINE_CHAT">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4 text-green-600" />
-                    <span>ไลน์ (Line Chat)</span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-green-500" /> วันที่
-              </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground",
-                    )}
-                  >
-                    {date ? formatDate(date) : <span>เลือกวันที่</span>}
-                    <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <CalendarComponent
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <input
-                type="hidden"
-                name="date"
-                value={date ? format(date, "yyyy-MM-dd") : ""}
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="time" className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-purple-500" /> เวลา
-              </Label>
-              <Select name="time" required>
-                <SelectTrigger>
-                  <SelectValue placeholder="เลือกเวลา..." />
-                </SelectTrigger>
-                <SelectContent className="max-h-[200px] overflow-y-auto">
-                  {timeOptions.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time} น.
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="note" className="flex items-center gap-2">
-              <StickyNote className="h-4 w-4 text-slate-500" /> บันทึกเพิ่มเติม
-            </Label>
-            <Textarea name="note" placeholder="รายละเอียดนัดหมาย..." />
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
+      }
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.currentTarget);
+          handleSubmit(formData);
+        }}
+        className="space-y-4 py-4 text-left"
+      >
+        <div className="grid gap-2">
+          <Label htmlFor="leadId" className="flex items-center gap-2 text-slate-700 font-bold">
+            <User className="h-4 w-4 text-blue-500" /> ลูกค้า (Lead)
+          </Label>
+          <Select name="leadId" required>
+            <SelectTrigger className="h-10 rounded-xl border-slate-200">
+              <SelectValue placeholder="เลือกลูกค้า..." />
+            </SelectTrigger>
+            <SelectContent
+              align="start"
+              className="w-[--radix-select-trigger-width] max-h-[200px] overflow-y-auto rounded-xl"
             >
-              ยกเลิก
-            </Button>
-            <SubmitButton isPending={isPending} />
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+              {leads.map((lead) => (
+                <SelectItem key={lead.id} value={lead.id} className="py-2.5">
+                  <span className="truncate block max-w-[280px] sm:max-w-[400px]">
+                    {lead.full_name}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-function SubmitButton({ isPending }: { isPending: boolean }) {
-  return (
-    <Button type="submit" disabled={isPending}>
-      {isPending ? "กำลังบันทึก..." : "บันทึกนัดหมาย"}
-    </Button>
+        <div className="grid gap-2">
+          <Label htmlFor="propertyId" className="flex items-center gap-2 text-slate-700 font-bold">
+            <Building2 className="h-4 w-4 text-orange-500" /> ทรัพย์สิน
+            (Optional)
+          </Label>
+          <Select name="propertyId" defaultValue="none">
+            <SelectTrigger className="h-10 rounded-xl border-slate-200">
+              <SelectValue placeholder="เลือกทรัพย์สิน..." />
+            </SelectTrigger>
+            <SelectContent
+              align="start"
+              className="w-[--radix-select-trigger-width] max-h-[200px] overflow-y-auto rounded-xl"
+            >
+              <SelectItem value="none">ไม่ระบุ</SelectItem>
+              {properties.map((prop) => (
+                <SelectItem key={prop.id} value={prop.id} className="py-2.5">
+                  <span className="truncate block max-w-[280px] sm:max-w-[400px]">
+                    {prop.title}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="activityType" className="flex items-center gap-2 text-slate-700 font-bold">
+            <Briefcase className="h-4 w-4 text-indigo-500" /> ประเภทนัดหมาย
+          </Label>
+          <Select name="activityType" defaultValue="VIEWING">
+            <SelectTrigger className="h-10 rounded-xl border-slate-200">
+              <SelectValue placeholder="เลือกประเภท..." />
+            </SelectTrigger>
+            <SelectContent
+              align="start"
+              className="w-[--radix-select-trigger-width] rounded-xl"
+            >
+              <SelectItem value="VIEWING" className="py-2.5">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-blue-500" />
+                  <span>เยี่ยมชมทรัพย์ (Viewing)</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="FOLLOW_UP" className="py-2.5">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-amber-500" />
+                  <span>ติดตามผล / เจรจา (Follow up / Deal)</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="CALL" className="py-2.5">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-green-500" />
+                  <span>โทรศัพท์ (Call)</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="LINE_CHAT" className="py-2.5">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4 text-green-600" />
+                  <span>ไลน์ (Line Chat)</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <Label className="flex items-center gap-2 text-slate-700 font-bold">
+              <Calendar className="h-4 w-4 text-green-500" /> วันที่
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal h-10 rounded-xl border-slate-200",
+                    !date && "text-muted-foreground",
+                  )}
+                >
+                  {date ? formatDate(date) : <span className="text-sm">เลือกวันที่</span>}
+                  <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            <input
+              type="hidden"
+              name="date"
+              value={date ? format(date, "yyyy-MM-dd") : ""}
+              required
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="time" className="flex items-center gap-2 text-slate-700 font-bold">
+              <Clock className="h-4 w-4 text-purple-500" /> เวลา
+            </Label>
+            <Select name="time" required>
+              <SelectTrigger className="h-10 rounded-xl border-slate-200">
+                <SelectValue placeholder="เลือกเวลา..." />
+              </SelectTrigger>
+              <SelectContent className="max-h-[200px] overflow-y-auto rounded-xl">
+                {timeOptions.map((time) => (
+                  <SelectItem key={time} value={time} className="py-2.5">
+                    {time} น.
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid gap-2 pb-4">
+          <Label htmlFor="note" className="flex items-center gap-2 text-slate-700 font-bold">
+            <StickyNote className="h-4 w-4 text-slate-500" /> บันทึกเพิ่มเติม
+          </Label>
+          <Textarea name="note" placeholder="รายละเอียดนัดหมาย..." className="rounded-xl border-slate-300 focus:ring-blue-500/10 min-h-[100px]" />
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+            className="flex-1 rounded-xl h-11 font-bold text-slate-500"
+          >
+            ยกเลิก
+          </Button>
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl h-11 shadow-lg shadow-blue-100 transition-all active:scale-95"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                กำลังบันทึก...
+              </>
+            ) : (
+              "บันทึกนัดหมาย"
+            )}
+          </Button>
+        </div>
+      </form>
+    </ResponsiveDialog>
   );
 }

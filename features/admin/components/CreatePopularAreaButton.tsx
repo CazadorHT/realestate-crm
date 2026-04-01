@@ -4,14 +4,8 @@ import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Plus, Loader2 } from "lucide-react";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { Plus, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { createPopularAreaAction } from "@/features/admin/popular-areas-actions";
 import { ProvinceSelector } from "./ProvinceSelector";
@@ -61,73 +55,81 @@ export function CreatePopularAreaButton() {
   };
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogTrigger asChild>
+    <ResponsiveDialog
+      open={isDialogOpen}
+      onOpenChange={(open: boolean) => setIsDialogOpen(open)}
+      title="เพิ่มทำเลใหม่"
+      description="ระบุชื่อทำเลและจังหวัดให้ถูกต้องเพื่อการแสดงผลในระบบ"
+      className="md:max-w-md"
+      trigger={
         <Button
           size="lg"
-          className="bg-white text-slate-800 hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+          className="bg-white text-slate-800 hover:bg-slate-50 shadow-lg hover:shadow-xl transition-all duration-300 font-bold rounded-2xl h-12 border border-slate-100"
         >
-          <Plus className="mr-2 h-5 w-5" />
+          <Plus className="mr-2 h-5 w-5 text-indigo-600" />
           เพิ่มทำเลใหม่
         </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>เพิ่มทำเลใหม่</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">จังหวัด</label>
-              <ProvinceSelector
-                value={itemProvince}
-                onChange={setItemProvince}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">ชื่อทำเล (ไทย)</label>
-              <Input
-                value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
-                placeholder="เช่น สุขุมวิท, ทองหล่อ"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Name (English)</label>
-              <Input
-                value={itemNameEn}
-                onChange={(e) => setItemNameEn(e.target.value)}
-                placeholder="e.g. Sukhumvit, Thong Lo"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">名称 (Chinese)</label>
-              <Input
-                value={itemNameCn}
-                onChange={(e) => setItemNameCn(e.target.value)}
-                placeholder="例如：素坤逸, 通罗"
-              />
-            </div>
+      }
+    >
+      <div className="space-y-5 py-4">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700">จังหวัด</label>
+            <ProvinceSelector
+              value={itemProvince}
+              onChange={setItemProvince}
+            />
           </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
-              ยกเลิก
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={isLoading || !itemName.trim() || !itemProvince.trim()}
-              className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed px-8"
-            >
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="mr-2 h-4 w-4" />
-              )}
-              บันทึก
-            </Button>
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700">ชื่อทำเล (ไทย)</label>
+            <Input
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
+              placeholder="เช่น สุขุมวิท, ทองหล่อ"
+              className="h-12 rounded-xl border-slate-200 focus:ring-indigo-500/10 transition-all font-medium"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700">Name (English)</label>
+            <Input
+              value={itemNameEn}
+              onChange={(e) => setItemNameEn(e.target.value)}
+              placeholder="e.g. Sukhumvit, Thong Lo"
+              className="h-12 rounded-xl border-slate-200 focus:ring-indigo-500/10 transition-all text-sm"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700">名称 (Chinese)</label>
+            <Input
+              value={itemNameCn}
+              onChange={(e) => setItemNameCn(e.target.value)}
+              placeholder="例如：素坤逸, 通罗"
+              className="h-12 rounded-xl border-slate-200 focus:ring-indigo-500/10 transition-all text-sm"
+            />
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+        <div className="flex flex-col sm:flex-row gap-2 pt-2">
+          <Button 
+            variant="ghost" 
+            onClick={() => setIsDialogOpen(false)}
+            className="flex-1 rounded-xl h-11 font-bold text-slate-500 hover:bg-slate-100"
+          >
+            ยกเลิก
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={isLoading || !itemName.trim() || !itemProvince.trim()}
+            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 transition-all active:scale-95 px-8 rounded-xl h-11 font-bold"
+          >
+            {isLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="mr-2 h-4 w-4" />
+            )}
+            บันทึกข้อมูล
+          </Button>
+        </div>
+      </div>
+    </ResponsiveDialog>
   );
 }

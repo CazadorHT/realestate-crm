@@ -7,16 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet";
+import { ResponsiveDialog, DialogClose, DrawerClose } from "@/components/ui/responsive-dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -294,8 +285,12 @@ export function AdvancedFilters({
   const [showAllAreas, setShowAllAreas] = useState(false);
   const ITEMS_LIMIT = 8;
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      title="ตัวกรองขั้นสูง"
+      description="ปรับแต่งการค้นหาตามความต้องการของคุณ"
+      trigger={
         <Button variant={activeFilterCount > 0 ? "default" : "outline"}
           className="hover:bg-blue-500! hover:text-white">
           <SlidersHorizontal className="h-4 w-4 mr-2" />
@@ -306,22 +301,28 @@ export function AdvancedFilters({
             </span>
           )}
         </Button>
-      </SheetTrigger>
-
-      <SheetContent
-        side="right"
-        className="w-full sm:max-w-md flex flex-col p-0 bg-slate-50 border-white/20 backdrop-blur-xl"
-      >
-        <SheetHeader className="px-6 py-6 border-b border-slate-200 bg-white">
-          <SheetTitle className="text-xl font-bold text-slate-900">
-            ตัวกรองขั้นสูง
-          </SheetTitle>
-          <SheetDescription className="text-slate-500">
-            ปรับแต่งการค้นหาตามความต้องการของคุณ
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
+      }
+      footer={
+        <div className="grid grid-cols-2 gap-3 w-full">
+          <DialogClose asChild>
+            <Button
+              variant="outline"
+              className="h-12 rounded-xl font-bold border-slate-200"
+              onClick={clearFilters}
+            >
+              ล้างทั้งหมด
+            </Button>
+          </DialogClose>
+          <Button
+            className="h-12 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200"
+            onClick={applyFilters}
+          >
+            แสดง {liveFilteredCount} รายการ
+          </Button>
+        </div>
+      }
+    >
+      <div className="flex-1 overflow-y-auto px-0 py-0 space-y-8">
           <Accordion
             type="multiple"
             defaultValue={[
@@ -1176,27 +1177,6 @@ export function AdvancedFilters({
           </Accordion>
         </div>
 
-        <SheetFooter className="p-6 border-t border-slate-200 bg-white flex-col gap-3 sm:flex-col shrink-0">
-          <div className="flex gap-3 w-full">
-            <Button
-              onClick={clearFilters}
-              variant="outline"
-              className="flex-1 h-12 rounded-xl border-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold"
-            >
-              <X className="h-4 w-4 mr-2" />
-              ล้างทั้งหมด
-            </Button>
-            <SheetClose asChild>
-              <Button
-                onClick={applyFilters}
-                className="flex-2 h-12 rounded-xl bg-linear-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-bold shadow-lg shadow-blue-200"
-              >
-                ดูทรัพย์ ({liveFilteredCount}) รายการ
-              </Button>
-            </SheetClose>
-          </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+    </ResponsiveDialog>
   );
 }

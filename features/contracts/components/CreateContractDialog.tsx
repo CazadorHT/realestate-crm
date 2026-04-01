@@ -19,14 +19,9 @@ import { useRouter } from "next/navigation";
 import { format, parse, isValid, addMonths } from "date-fns";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  DialogClose as ResponsiveDialogClose,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -129,323 +124,257 @@ export function CreateContractDialog() {
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(val) => !val && handleClose()}>
-        <DialogTrigger asChild>
+      <ResponsiveDialog
+        open={open}
+        onOpenChange={(val) => !val && handleClose()}
+        trigger={
           <Button
             onClick={() => setOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 shadow-md"
+            className="bg-blue-600 hover:bg-blue-700 shadow-md h-12 rounded-xl font-bold"
           >
             <Plus className="mr-2 h-4 w-4" /> สร้างสัญญาใหม่
           </Button>
-        </DialogTrigger>
-
-        <DialogContent className="sm:max-w-[750px] w-[calc(100vw-1.5rem)] max-h-[92vh] p-0 overflow-hidden border-none shadow-2xl bg-slate-50 flex flex-col rounded-2xl sm:rounded-xl">
-          <DialogHeader className="p-4 sm:p-6 pb-4 bg-white border-b border-slate-200 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-50 rounded-lg text-blue-600 shrink-0">
-                <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <DialogTitle className="text-lg sm:text-xl font-bold text-slate-900 truncate">
-                  สร้างสัญญาใหม่
-                </DialogTitle>
-                <DialogDescription className="text-xs sm:text-sm text-slate-500">
-                  รายละเอียดสัญญาสำหรับดีลที่ปิดการขายแล้ว
-                </DialogDescription>
-              </div>
+        }
+        title={
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+              <FileText className="h-6 w-6" />
             </div>
-          </DialogHeader>
-
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="flex flex-col flex-1 min-h-0 md:max-h-[600px] lg:max-h-full overflow-hidden"
+            <span>สร้างสัญญาใหม่</span>
+          </div>
+        }
+        description="รายละเอียดสัญญาสำหรับดีลที่ปิดการขายหรือเช่าแล้ว"
+        className="sm:max-w-[750px]"
+        footer={
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="flex-1 rounded-xl h-12 font-bold border-slate-200 text-slate-500 order-2 sm:order-1"
             >
-              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-6 min-h-0">
-                {/* Deal Selection Section */}
-                <div className="space-y-4">
+              ยกเลิก
+            </Button>
+            <Button
+              type="button"
+              onClick={form.handleSubmit(onSubmit)}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-emerald-500/10 order-1 sm:order-2"
+              disabled={isSubmitting || !selectedDealId}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  กำลังบันทึก...
+                </>
+              ) : (
+                "สร้างสัญญา"
+              )}
+            </Button>
+          </div>
+        }
+      >
+        <Form {...form}>
+          <form className="space-y-8 py-4">
+            {/* Deal Selection Section */}
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="deal_id"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-sm font-bold text-slate-700 ml-1">
+                      ดีลที่เกี่ยวข้อง
+                    </FormLabel>
+                    <FormControl>
+                      <DealCombobox
+                        value={field.value}
+                        status="CLOSED_WIN"
+                        onChange={(val, picked) => {
+                          field.onChange(val);
+                          setSelectedDeal(picked);
+                          if (picked) {
+                            const price =
+                              picked.deal_type === "RENT"
+                                ? picked.rental_price ??
+                                  picked.original_rental_price
+                                : picked.price ?? picked.original_price;
+
+                            const newDefaults: any = {
+                              deal_id: val,
+                              start_date: todayStr,
+                              end_date: defaultEndDate,
+                              rent_price: price ?? 0,
+                              lease_term_months: 12,
+                              deposit_amount: 0,
+                              advance_payment_amount: 0,
+                            };
+
+                            if (picked.deal_type === "RENT") {
+                              newDefaults.deposit_amount = price ? price * 2 : 0;
+                              newDefaults.advance_payment_amount = price ?? 0;
+                              newDefaults.lease_term_months = picked.duration_months || 12;
+                            } else if (picked.deal_type === "SALE") {
+                              newDefaults.lease_term_months = 1;
+                              newDefaults.deposit_amount = 0;
+                              newDefaults.advance_payment_amount = 0;
+                            }
+
+                            form.reset(newDefaults);
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormDescription className="text-xs text-slate-400 ml-1">
+                      เฉพาะดีลที่ปิดการขาย/เช่าแล้วเท่านั้น
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {selectedDeal && (
+                <div className="flex flex-row gap-4 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="relative w-24 h-24 sm:w-32 sm:h-32 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-100 shadow-inner">
+                    {selectedDeal.cover_image_url ? (
+                      <img
+                        src={selectedDeal.cover_image_url}
+                        alt={selectedDeal.property_title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-300">
+                        <Plus className="w-8 h-8 opacity-40" />
+                      </div>
+                    )}
+                    <div
+                      className={cn(
+                        "absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shadow-sm",
+                        selectedDeal.deal_type === "RENT"
+                          ? "bg-blue-600 text-white"
+                          : "bg-emerald-600 text-white",
+                      )}
+                    >
+                      {selectedDeal.deal_type === "RENT" ? "เช่า" : "ขาย"}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                    <div className="space-y-1.5">
+                      <h4 className="font-bold text-slate-900 text-base sm:text-lg leading-tight line-clamp-2">
+                        {selectedDeal.property_title}
+                      </h4>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                        <MapPin className="w-3.5 h-3.5 text-blue-500" />
+                        <span className="truncate">{selectedDeal.location || "ไม่ระบุทำเล"}</span>
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium flex items-center gap-2">
+                        <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold">ลูกค้า:</span>
+                        <span className="text-blue-600 font-bold truncate">{selectedDeal.lead_name}</span>
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-2 mt-2 border-t border-slate-50">
+                      {selectedDeal.deal_type === "RENT" ? (
+                        <div className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg border border-blue-100 flex items-center gap-2">
+                          <span className="text-[10px] font-bold opacity-60">PRICE:</span>
+                          <span className="text-xs font-bold">฿{(selectedDeal.rental_price ?? selectedDeal.original_rental_price ?? 0).toLocaleString()}</span>
+                        </div>
+                      ) : (
+                        <div className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-100 flex items-center gap-2">
+                          <span className="text-[10px] font-bold opacity-60">PRICE:</span>
+                          <span className="text-xs font-bold">฿{(selectedDeal.price ?? selectedDeal.original_price ?? 0).toLocaleString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {selectedDeal && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-in fade-in duration-500">
+                <FormField
+                  control={form.control}
+                  name="start_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2 text-sm font-bold text-slate-700 ml-1">
+                        <CalendarIcon className="h-4 w-4 text-blue-500" />
+                        วันที่เริ่มสัญญา
+                      </FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          value={field.value}
+                          onChange={(val) => field.onChange(val)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="end_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2 text-sm font-bold text-slate-700 ml-1">
+                        <Clock className="h-4 w-4 text-blue-500" />
+                        {isSale ? "วันที่โอน" : "วันที่สิ้นสุดสัญญา"}
+                      </FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          value={field.value}
+                          onChange={(val) => field.onChange(val)}
+                          placeholder={isSale ? "วว/ดด/ปปปป" : "คำนวณอัตโนมัติ"}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="rent_price"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-2 lg:col-span-1">
+                      <FormLabel className="flex items-center gap-2 text-sm font-bold text-slate-700 ml-1">
+                        <Wallet className="h-4 w-4 text-emerald-500" />
+                        {isSale ? "ราคาขายสุทธิ" : "ราคาค่าเช่าต่อเดือน"}
+                      </FormLabel>
+                      <FormControl>
+                        <PriceInput
+                          value={field.value}
+                          onChange={(val) => field.onChange(val)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {!isSale && (
                   <FormField
                     control={form.control}
-                    name="deal_id"
+                    name="lease_term_months"
                     render={({ field }) => (
-                      <FormItem className="space-y-2 min-w-0">
-                        <FormLabel className="text-sm font-bold text-slate-700">
-                          ดีลที่เกี่ยวข้อง
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold text-slate-700 ml-1">
+                          ระยะสัญญา (เดือน)
                         </FormLabel>
-                        <FormDescription className="text-xs text-slate-400">
-                          * เลือกได้เฉพาะดีลที่ปิดการขาย/เช่าแล้วเท่านั้น
-                        </FormDescription>
                         <FormControl>
-                          <DealCombobox
-                            value={field.value}
-                            status="CLOSED_WIN"
-                            onChange={(val, picked) => {
-                              field.onChange(val);
-                              setSelectedDeal(picked);
-                              if (picked) {
-                                // Fallback logic for price auto-fill
-                                const price =
-                                  picked.deal_type === "RENT"
-                                    ? (picked.rental_price ??
-                                      picked.original_rental_price)
-                                    : (picked.price ?? picked.original_price);
-
-                                const newDefaults: any = {
-                                  deal_id: val,
-                                  start_date: todayStr,
-                                  end_date: defaultEndDate,
-                                  rent_price: price ?? 0,
-                                  lease_term_months: 12,
-                                  deposit_amount: 0,
-                                  advance_payment_amount: 0,
-                                };
-
-                                if (picked.deal_type === "RENT") {
-                                  newDefaults.deposit_amount = price
-                                    ? price * 2
-                                    : 0;
-                                  newDefaults.advance_payment_amount =
-                                    price ?? 0;
-                                  newDefaults.lease_term_months =
-                                    picked.duration_months || 12;
-                                } else if (picked.deal_type === "SALE") {
-                                  newDefaults.lease_term_months = 1;
-                                  newDefaults.deposit_amount = 0;
-                                  newDefaults.advance_payment_amount = 0;
-                                }
-
-                                // Reset form with new defaults (clears dirty state)
-                                form.reset(newDefaults);
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {selectedDeal && (
-                    <div className="flex flex-row gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-2xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 max-w-full overflow-hidden">
-                      <div className="relative w-20 h-20 sm:w-32 sm:h-32 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200 shadow-inner">
-                        {selectedDeal.cover_image_url ? (
-                          <img
-                            src={selectedDeal.cover_image_url}
-                            alt={selectedDeal.property_title}
-                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-300">
-                            <Plus className="w-8 h-8 opacity-40" />
-                          </div>
-                        )}
-                        <div
-                          className={cn(
-                            "absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium uppercase tracking-widest shadow-sm",
-                            selectedDeal.deal_type === "RENT"
-                              ? "bg-blue-600 text-white"
-                              : "bg-emerald-600 text-white",
-                          )}
-                        >
-                          {selectedDeal.deal_type === "RENT" ? "เช่า" : "ขาย"}
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5 space-y-2">
-                        <div className="space-y-1">
-                          <h4 className="font-medium text-slate-900 text-base sm:text-lg leading-tight sm:leading-snug line-clamp-2">
-                            {selectedDeal.property_title}
-                          </h4>
-                          <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
-                            <MapPin className="w-3 h-3 shrink-0 text-blue-500" />
-                            <span className="truncate">
-                              {selectedDeal.location || "ไม่ระบุทำเล"}
-                            </span>
-                          </div>
-                          <p className="text-xs sm:text-sm text-slate-500 font-medium truncate flex items-center gap-1.5">
-                            <span className="shrink-0 bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-xs">
-                              ลูกค้า :
-                            </span>
-                            <span className="truncate text-blue-500 font-medium">
-                              {selectedDeal.lead_name}
-                            </span>
-                          </p>
-                        </div>
-
-                        <div className="flex flex-wrap items-end gap-2 pt-1 border-t border-slate-100">
-                          {/* Display Rental Price with Fallback */}
-                          {(selectedDeal.rental_price ||
-                            selectedDeal.original_rental_price) && (
-                            <div className="flex flex-col">
-                              {selectedDeal.original_rental_price &&
-                                selectedDeal.rental_price &&
-                                selectedDeal.original_rental_price >
-                                  selectedDeal.rental_price && (
-                                  <span className="text-[9px] text-slate-400 line-through mb-0.5">
-                                    ฿
-                                    {(
-                                      selectedDeal.original_rental_price || 0
-                                    ).toLocaleString()}
-                                  </span>
-                                )}
-                              <div className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-lg border border-blue-100">
-                                <span className="text-[10px] font-medium opacity-70">
-                                  เช่า:
-                                </span>
-                                <span className="text-xs font-medium">
-                                  ฿
-                                  {(
-                                    selectedDeal.rental_price ??
-                                    selectedDeal.original_rental_price
-                                  ).toLocaleString()}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                          {/* Display Sale Price with Fallback */}
-                          {(selectedDeal.price ||
-                            selectedDeal.original_price) && (
-                            <div className="flex flex-col">
-                              {selectedDeal.original_price &&
-                                selectedDeal.price &&
-                                selectedDeal.original_price >
-                                  selectedDeal.price && (
-                                  <span className="text-[10px] text-slate-400 line-through mb-0.5">
-                                    ฿
-                                    {(
-                                      selectedDeal.original_price || 0
-                                    ).toLocaleString()}
-                                  </span>
-                                )}
-                              <div className="flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg border border-emerald-100">
-                                <span className="text-[10px] font-medium opacity-70">
-                                  ขาย:
-                                </span>
-                                <span className="text-xs font-medium">
-                                  ฿
-                                  {(
-                                    selectedDeal.price ??
-                                    selectedDeal.original_price
-                                  ).toLocaleString()}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {selectedDeal && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 animate-in fade-in duration-500">
-                    {/* Date 1 */}
-                    <FormField
-                      control={form.control}
-                      name="start_date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                            <CalendarIcon className="h-4 w-4 text-blue-500" />
-                            วันที่เริ่มสัญญา
-                          </FormLabel>
-                          <FormControl>
-                            <DatePicker
-                              value={field.value}
-                              onChange={(val) => field.onChange(val)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Date 2 */}
-                    <FormField
-                      control={form.control}
-                      name="end_date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                            <Clock className="h-4 w-4 text-blue-500" />
-                            {isSale ? "วันที่โอน" : "วันที่สิ้นสุดสัญญา"}
-                          </FormLabel>
-                          <FormControl>
-                            <DatePicker
-                              value={field.value}
-                              onChange={(val) => field.onChange(val)}
-                              placeholder={
-                                isSale ? "วว/ดด/ปปปป" : "คำนวณอัตโนมัติ"
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Price */}
-                    <FormField
-                      control={form.control}
-                      name="rent_price"
-                      render={({ field }) => (
-                        <FormItem className="sm:col-span-2 lg:col-span-1">
-                          <FormLabel className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                            <Wallet className="h-4 w-4 text-emerald-500" />
-                            {isSale ? "ราคาขายสุทธิ" : "ราคาค่าเช่าต่อเดือน"}
-                          </FormLabel>
-                          <FormControl>
-                            <PriceInput
-                              value={field.value}
-                              onChange={(val) => field.onChange(val)}
-                            />
-                          </FormControl>
-                          {(() => {
-                            const isRV = selectedDeal.deal_type === "RENT";
-                            const curr = isRV
-                              ? selectedDeal.rental_price
-                              : selectedDeal.price;
-                            const orig = isRV
-                              ? selectedDeal.original_rental_price
-                              : selectedDeal.original_price;
-                            if (orig && curr && orig > curr) {
-                              return (
-                                <p className="text-[10px] text-amber-700 mt-1 font-bold italic">
-                                  * ราคาโปรโมชั่น (ปกติ {orig.toLocaleString()}{" "}
-                                  บาท)
-                                </p>
-                              );
-                            }
-                            return null;
-                          })()}
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Rental Term (only for RENT) */}
-                    {!isSale && (
-                      <FormField
-                        control={form.control}
-                        name="lease_term_months"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-semibold text-slate-700">
-                              ระยะสัญญา (เดือน)
-                            </FormLabel>
-                            <div className="flex gap-1.5 mb-2">
+                          <div className="space-y-3">
+                            <div className="flex gap-2">
                               {[12, 24, 36].map((v) => (
                                 <Button
                                   key={v}
                                   type="button"
-                                  variant={
-                                    field.value === v ? "default" : "outline"
-                                  }
+                                  variant={field.value === v ? "default" : "outline"}
                                   size="sm"
                                   className={cn(
-                                    "h-8 text-[11px] flex-1 font-bold tracking-tight",
-                                    field.value === v
-                                      ? "bg-blue-600 shadow-sm"
-                                      : "text-slate-500",
+                                    "flex-1 h-9 rounded-xl font-bold transition-all",
+                                    field.value === v ? "bg-blue-600 text-white border-blue-600" : "text-slate-500"
                                   )}
                                   onClick={() => field.onChange(v)}
                                 >
@@ -453,140 +382,46 @@ export function CreateContractDialog() {
                                 </Button>
                               ))}
                             </div>
-                            <FormControl>
-                              <Input type="number" {...field} className="h-9" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                            <Input type="number" {...field} className="h-11 rounded-xl" />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
+                  />
+                )}
 
-                    {/* Deposit & Advance (only for RENT) */}
-                    {!isSale && (
-                      <>
-                        <FormField
-                          control={form.control}
-                          name="deposit_amount"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="flex items-center justify-between text-sm font-semibold text-slate-700">
-                                <span>เงินประกัน / มัดจำ</span>
-                                {rentPrice > 0 && (
-                                  <div className="flex gap-1">
-                                    {[1, 2, 3].map((m) => (
-                                      <button
-                                        key={m}
-                                        type="button"
-                                        onClick={() =>
-                                          field.onChange(m * rentPrice)
-                                        }
-                                        className={cn(
-                                          "px-2 py-0.5 rounded text-[10px] font-bold transition-all",
-                                          field.value === m * rentPrice
-                                            ? "bg-blue-600 text-white shadow-sm scale-110"
-                                            : "bg-slate-100 text-slate-500 hover:bg-slate-200",
-                                        )}
-                                      >
-                                        {m} ด.
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-                              </FormLabel>
-                              <FormControl>
-                                <PriceInput
-                                  value={field.value || 0}
-                                  onChange={field.onChange}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="advance_payment_amount"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="flex items-center justify-between text-sm font-semibold text-slate-700">
-                                <span>เงินล่วงหน้า</span>
-                                {rentPrice > 0 && (
-                                  <div className="flex gap-1">
-                                    {[1, 2, 3].map((m) => (
-                                      <button
-                                        key={m}
-                                        type="button"
-                                        onClick={() =>
-                                          field.onChange(m * rentPrice)
-                                        }
-                                        className={cn(
-                                          "px-2 py-0.5 rounded text-[10px] font-bold transition-all",
-                                          field.value === m * rentPrice
-                                            ? "bg-blue-600 text-white shadow-sm scale-110"
-                                            : "bg-slate-100 text-slate-500 hover:bg-slate-200",
-                                        )}
-                                      >
-                                        {m} ด.
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-                              </FormLabel>
-                              <FormControl>
-                                <PriceInput
-                                  value={field.value || 0}
-                                  onChange={field.onChange}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </>
-                    )}
-
-                    {/* Other Terms */}
+                {!isSale && (
+                  <>
                     <FormField
                       control={form.control}
-                      name="other_terms"
+                      name="deposit_amount"
                       render={({ field }) => (
-                        <FormItem className="sm:col-span-2">
-                          <div className="flex items-center justify-between mb-1.5">
-                            <FormLabel className="text-sm font-semibold text-slate-700">
-                              {isSale ? "เงื่อนไขการโอน" : "ข้อกำหนดอื่นๆ"}
-                            </FormLabel>
-                            {isSale && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2"
-                                onClick={() => {
-                                  const term = "ค่าธรรมเนียมการโอน 50/50";
-                                  if (!(field.value || "").includes(term)) {
-                                    field.onChange(
-                                      field.value
-                                        ? `${field.value}, ${term}`
-                                        : term,
-                                    );
-                                  }
-                                }}
-                              >
-                                + โอน 50/50
-                              </Button>
-                            )}
-                          </div>
+                        <FormItem>
+                          <FormLabel className="flex items-center justify-between text-sm font-bold text-slate-700 ml-1">
+                            <span>เงินประกัน / มัดจำ</span>
+                            <div className="flex gap-1.5">
+                              {[1, 2, 3].map((m) => (
+                                <button
+                                  key={m}
+                                  type="button"
+                                  onClick={() => field.onChange(m * (rentPrice || 0))}
+                                  className={cn(
+                                    "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all",
+                                    field.value === m * (rentPrice || 0)
+                                      ? "bg-blue-600 text-white shadow-sm"
+                                      : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                  )}
+                                >
+                                  {m} ด.
+                                </button>
+                              ))}
+                            </div>
+                          </FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder={
-                                isSale
-                                  ? "ระบุค่าใช้จ่ายการโอน..."
-                                  : "เช่น จ่ายล่วงหน้า 1 เดือน"
-                              }
-                              {...field}
-                              className="bg-white border-slate-200"
+                            <PriceInput
+                              value={field.value || 0}
+                              onChange={field.onChange}
                             />
                           </FormControl>
                           <FormMessage />
@@ -594,135 +429,160 @@ export function CreateContractDialog() {
                       )}
                     />
 
-                    {/* Total Initial Payment Summary */}
-                    {!isSale && (
-                      <div className="sm:col-span-2 bg-slate-50 border border-slate-200 rounded-lg p-4 mt-2">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-semibold text-slate-600">
-                            เงินประกัน
-                          </span>
-                          <span className="text-sm font-medium">
-                            {(
-                              form.watch("deposit_amount") || 0
-                            ).toLocaleString()}{" "}
-                            บาท
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-200">
-                          <span className="text-sm font-semibold text-slate-600">
-                            เงินล่วงหน้า
-                          </span>
-                          <span className="text-sm font-medium">
-                            {(
-                              form.watch("advance_payment_amount") || 0
-                            ).toLocaleString()}{" "}
-                            บาท
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-base font-bold text-slate-800">
-                            รวมยอดชำระแรกเข้า
-                          </span>
-                          <span className="text-lg font-bold text-blue-600">
-                            {(
-                              (form.watch("deposit_amount") || 0) +
-                              (form.watch("advance_payment_amount") || 0)
-                            ).toLocaleString()}{" "}
-                            บาท
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                    <FormField
+                      control={form.control}
+                      name="advance_payment_amount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center justify-between text-sm font-bold text-slate-700 ml-1">
+                            <span>เงินล่วงหน้า</span>
+                            <div className="flex gap-1.5">
+                              {[1, 2, 3].map((m) => (
+                                <button
+                                  key={m}
+                                  type="button"
+                                  onClick={() => field.onChange(m * (rentPrice || 0))}
+                                  className={cn(
+                                    "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all",
+                                    field.value === m * (rentPrice || 0)
+                                      ? "bg-blue-600 text-white shadow-sm"
+                                      : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                  )}
+                                >
+                                  {m} ด.
+                                </button>
+                              ))}
+                            </div>
+                          </FormLabel>
+                          <FormControl>
+                            <PriceInput
+                              value={field.value || 0}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
                 )}
 
-                {!selectedDeal && (
-                  <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-100">
-                    <Info className="h-8 w-8 mb-2 opacity-20" />
-                    <p className="text-sm font-medium">
-                      รอการเลือกดีลเพื่อแสดงข้อมูลฟอร์ม
-                    </p>
+                <FormField
+                  control={form.control}
+                  name="other_terms"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-2">
+                      <div className="flex items-center justify-between mb-1.5 ml-1">
+                        <FormLabel className="text-sm font-bold text-slate-700">
+                          {isSale ? "เงื่อนไขการโอน" : "ข้อกำหนดอื่นๆ"}
+                        </FormLabel>
+                        {isSale && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg"
+                            onClick={() => {
+                              const term = "ค่าธรรมเนียมการโอน 50/50";
+                              if (!(field.value || "").includes(term)) {
+                                field.onChange(field.value ? `${field.value}, ${term}` : term);
+                              }
+                            }}
+                          >
+                            + โอน 50/50
+                          </Button>
+                        )}
+                      </div>
+                      <FormControl>
+                        <Input
+                          placeholder={isSale ? "ระบุค่าใช้จ่ายการโอน..." : "เช่น จ่ายล่วงหน้า 1 เดือน"}
+                          {...field}
+                          className="h-11 rounded-xl"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {!isSale && (
+                  <div className="sm:col-span-2 bg-slate-50 border border-slate-100 rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center justify-between text-slate-500">
+                      <span className="text-sm font-medium">เงินประกัน</span>
+                      <span className="text-sm font-bold">฿{(form.watch("deposit_amount") || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-500 pb-3 border-b border-slate-200/50">
+                      <span className="text-sm font-medium">เงินล่วงหน้า</span>
+                      <span className="text-sm font-bold">฿{(form.watch("advance_payment_amount") || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-base font-bold text-slate-800">รวมยอดชำระแรกเข้า</span>
+                      <span className="text-xl font-black text-blue-600">
+                        ฿{((form.watch("deposit_amount") || 0) + (form.watch("advance_payment_amount") || 0)).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
+            )}
 
-              <DialogFooter className="p-4 sm:p-6 bg-white border-t border-slate-200 flex-col sm:flex-row gap-3">
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={handleClose}
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto text-slate-500 font-semibold px-10 h-11 cursor-pointer order-2 sm:order-1"
-                >
-                  ยกเลิก
-                </Button>
-                <Button
-                  type="submit"
-                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 font-bold px-10 h-11 shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer rounded-xl order-1 sm:order-2"
-                  disabled={isSubmitting || !selectedDealId}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      กำลังบันทึก
-                    </>
-                  ) : (
-                    "สร้างสัญญา"
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+            {!selectedDeal && (
+              <div className="flex flex-col items-center justify-center py-16 text-slate-400 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-100">
+                <Info className="h-10 w-10 mb-3 opacity-20" />
+                <p className="text-sm font-bold">กรุณาเลือกดีลที่ต้องการสร้างสัญญา</p>
+              </div>
+            )}
+          </form>
+        </Form>
+      </ResponsiveDialog>
 
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md bg-white border-none shadow-2xl rounded-2xl">
-          <div className="flex flex-col items-center text-center p-6 space-y-4">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2">
-              <CheckCircle2 className="w-8 h-8 text-green-600" />
-            </div>
+      <ResponsiveDialog
+        open={showSuccessDialog}
+        onOpenChange={setShowSuccessDialog}
+        className="sm:max-w-md"
+      >
+        <div className="flex flex-col items-center text-center py-6 space-y-6">
+          <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
+            <CheckCircle2 className="w-10 h-10 text-green-600 shadow-sm" />
+          </div>
 
-            <div className="space-y-2">
-              <DialogTitle className="text-xl font-bold text-slate-900">
-                สร้างสัญญาเรียบร้อย
-              </DialogTitle>
-              <DialogDescription className="text-slate-500">
-                สัญญาถูกสร้างและสถานะ Active แล้ว
-              </DialogDescription>
-            </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight">สร้างสัญญาเรียบร้อยแล้ว</h3>
+            <p className="text-slate-500 text-sm font-medium px-4">
+              สัญญาถูกบันทึกเข้าระบบเรียบร้อย คุณสามารถจัดการแจ้งเตือนหรือพิมพ์เอกสารได้ทันที
+            </p>
+          </div>
 
-            <div className="flex flex-col gap-3 w-full pt-4">
-              {isRental && (
-                <Button
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold h-11 rounded-xl shadow-lg shadow-blue-500/20"
-                  onClick={() => {
-                    handleClose(); // ensure clear state
-                    setShowSuccessDialog(false);
-                    router.push("/protected/rent-notifications");
-                  }}
-                >
-                  ไปตั้งค่าแจ้งเตือนค่าเช่า
-                </Button>
-              )}
-
+          <div className="flex flex-col gap-3 w-full px-2">
+            {isRental && (
               <Button
-                variant="outline"
-                className="w-full h-11 rounded-xl font-semibold text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-100"
                 onClick={() => {
                   handleClose();
                   setShowSuccessDialog(false);
-                  const url = new URL(window.location.href);
-                  url.searchParams.set("success", "true");
-                  router.push(url.pathname + url.search);
+                  router.push("/protected/rent-notifications");
                 }}
               >
-                อยู่ในหน้านี้ต่อ
+                ไปตั้งค่าแจ้งเตือนค่าเช่า
               </Button>
-            </div>
+            )}
+
+            <Button
+              variant="outline"
+              className="w-full h-11 rounded-xl font-bold border-slate-200 text-slate-600"
+              onClick={() => {
+                handleClose();
+                setShowSuccessDialog(false);
+                const url = new URL(window.location.href);
+                url.searchParams.set("success", "true");
+                router.push(url.pathname + url.search);
+              }}
+            >
+              ตกลง
+            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </ResponsiveDialog>
     </>
   );
 }

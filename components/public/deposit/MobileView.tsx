@@ -83,9 +83,8 @@ export function DepositMobileView({
   return (
     <>
       {/* ── Mobile Header (Fixed Pull Handle) ── */}
-      <div className="sm:hidden bg-white rounded-t-[32px] flex flex-col items-center sticky top-0 z-30 shrink-0">
-        <div className="w-10 h-1.5 bg-slate-100 rounded-full mt-3 mb-2" />
-      </div>
+      {/* ── Mobile Header (Fixed Pull Handle) ── */}
+     
 
       {/* ── Mobile Form Content Area ── */}
       <div className="sm:hidden flex-1 flex flex-col min-h-0 bg-white overflow-hidden max-h-full">
@@ -103,55 +102,71 @@ export function DepositMobileView({
             <div className="flex-1 overflow-y-auto no-scrollbar">
               <div className="flex flex-col min-h-full">
                 {/* Scrollable Header Section */}
-                <motion.div variants={itemVariants} className="flex flex-col items-center pt-2">
+                <motion.div variants={itemVariants} className="flex flex-col items-center pt-4 pb-2">
                   {/* Title */}
-                  <div className="px-6 text-center mb-1">
+                  <div className="px-6 text-center mb-6">
                     <motion.h2
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-xl font-semibold bg-linear-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent tracking-tight leading-tight"
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-xl md:text-2xl font-bold bg-linear-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent tracking-tight leading-tight"
                     >
                       {t("deposit.dialog.title")}
                     </motion.h2>
-                    <p className="text-[9px] text-slate-400 mt-1 font-semibold uppercase tracking-[0.12em] opacity-80">
-                      {t("deposit.dialog.subtitle")}
-                    </p>
+                    <div className="flex items-center justify-center gap-2 mt-1.5">
+                      <div className="h-px w-4 bg-slate-200" />
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.15em] opacity-80">
+                        {t("deposit.dialog.subtitle")}
+                      </p>
+                      <div className="h-px w-4 bg-slate-200" />
+                    </div>
                   </div>
 
                   {/* Step Indicator */}
-                  <div className="w-full px-4 xs:px-8 pb-3">
-                    <div className="flex items-center justify-between relative px-2">
-                      <div className="absolute top-5 left-[10%] right-[10%] h-px bg-slate-100 z-0" />
-                      <motion.div
-                        className="absolute top-5 left-[10%] h-1.5px bg-linear-to-r from-blue-500 to-indigo-500 z-0 shadow-[0_0_8px_rgba(59,130,246,0.3)]"
-                        initial={{ width: "0%" }}
-                        animate={{
-                          width:
-                            currentStep === 1 ? "0%" : currentStep === 2 ? "40%" : "80%",
-                        }}
-                        transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                      />
+                  <div className="w-full px-6 xs:px-10 mb-4">
+                    <div className="relative flex items-center justify-between">
+                      {/* Progress Track Container (Bounded by icons) */}
+                      <div className="absolute top-4 left-0 right-0 h-[1.5px] z-0 mx-8 xs:mx-10">
+                        {/* Background Track */}
+                        <div className="absolute inset-0 bg-slate-100" />
+                        
+                        {/* Active Progress Fill */}
+                        <motion.div
+                          className="absolute top-0 left-0 h-full bg-linear-to-r from-blue-500 to-indigo-500 shadow-[0_0_8px_rgba(59,130,246,0.15)]"
+                          initial={{ width: "0%" }}
+                          animate={{
+                            width:
+                              currentStep === 1 ? "0%" : currentStep === 2 ? "50%" : "100%",
+                          }}
+                          transition={{ type: "spring", stiffness: 80, damping: 20 }}
+                        />
+                      </div>
 
                       {STEPS.map((step) => (
                         <div
                           key={step.id}
-                          className="flex flex-col items-center z-10 w-20 xs:w-24 relative"
+                          className="flex flex-col items-center z-10 relative w-12"
                         >
                           <StepIcon stepNum={step.id} currentStep={currentStep} />
-                          <motion.span
-                            animate={{
-                              opacity: currentStep === step.id ? 1 : 0.6,
-                              color: currentStep === step.id ? "#2563eb" : "#94a3b8",
-                            }}
-                            className="text-[8.5px] xs:text-[10px] mt-3 font-semibold uppercase tracking-wider transition-colors duration-300 text-center leading-tight px-1"
-                          >
-                            {step.label}
-                          </motion.span>
+                          <div className="absolute top-10 left-1/2 -translate-x-1/2 w-20 pointer-events-none">
+                            <motion.span
+                              animate={{
+                                opacity: currentStep === step.id ? 1 : 0.5,
+                                scale: currentStep === step.id ? 1 : 0.95,
+                                color: currentStep === step.id ? "#2563eb" : "#94a3b8",
+                              }}
+                              className={cn(
+                                "text-[9px] xs:text-[11px] font-bold uppercase tracking-wider text-center leading-tight block w-full",
+                                currentStep === step.id ? "opacity-100" : "opacity-60"
+                              )}
+                            >
+                              {step.label.split(" ")[0]}
+                            </motion.span>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
-                  <div className="w-full h-px bg-slate-50" />
+                  <div className="w-full h-px bg-slate-50/80" />
                 </motion.div>
 
                 {/* Form Fields Section */}

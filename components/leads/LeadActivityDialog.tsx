@@ -4,13 +4,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { LeadActivityForm } from "@/components/leads/LeadActivityForm";
 import { LeadActivityFormValues } from "@/lib/types/leads";
 
@@ -53,32 +47,31 @@ export function LeadActivityDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      title={title}
+      trigger={
+        trigger || (
           <Button
             variant={triggerVariant}
-            className={cn("gap-2", triggerClassName)}
+            className={cn("gap-2 h-11 rounded-xl font-bold transition-all active:scale-95", triggerClassName)}
           >
             <Plus className="h-4 w-4" />
             บันทึกกิจกรรม
           </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
-        <div className="py-2">
-          <LeadActivityForm
-            onSubmitAction={handleSubmit}
-            defaultValues={defaultValues}
-            title={title}
-            submitLabel={submitLabel}
-            initialProperty={initialProperty}
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+        )
+      }
+    >
+      <div className="py-2 pb-8">
+        <LeadActivityForm
+          onSubmitAction={handleSubmit}
+          defaultValues={defaultValues}
+          title={title}
+          submitLabel={submitLabel}
+          initialProperty={initialProperty}
+        />
+      </div>
+    </ResponsiveDialog>
   );
 }

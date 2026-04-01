@@ -41,6 +41,8 @@ import { getLineBotInfo } from "@/lib/line";
 import { FaFacebook, FaMeta, FaUser } from "react-icons/fa6";
 import { getSiteSettings } from "@/features/site-settings/actions";
 import { SiteSettings } from "@/features/site-settings/schema";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
   title: "Settings | CRM",
@@ -101,216 +103,199 @@ export default async function SettingsPage({
           </TabsContent>
 
           <TabsContent value="social" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* LINE Card */}
               <Card
-                className={
+                className={cn(
+                  "transition-all duration-300 shadow-sm hover:shadow-md",
                   isLineConnected
-                    ? "bg-green-500 text-white border-slate-800 transition-colors shadow-lg"
-                    : ""
-                }
+                    ? "bg-emerald-500 text-white border-emerald-600 shadow-emerald-100"
+                    : "bg-white border-slate-200"
+                )}
               >
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center justify-between">
-                    <div
-                      className={
-                        isLineConnected
-                          ? "flex items-center gap-2 text-white"
-                          : "flex items-center gap-2"
-                      }
-                    >
-                      <FaLine
-                        className={`h-10 w-10 ${isLineConnected ? "text-white" : "text-green-500"}`}
-                      />
-                      LINE Integration
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "p-2 rounded-2xl",
+                        isLineConnected ? "bg-white/20 backdrop-blur-md" : "bg-emerald-50"
+                      )}>
+                        <FaLine className={cn("h-8 w-8", isLineConnected ? "text-white" : "text-emerald-500")} />
+                      </div>
+                      <div>
+                        <CardTitle className={cn("text-lg font-bold", isLineConnected ? "text-white" : "text-slate-900")}>LINE</CardTitle>
+                        <CardDescription className={isLineConnected ? "text-emerald-50" : "text-slate-500"}>
+                          Official Account & Notifications
+                        </CardDescription>
+                      </div>
                     </div>
                     {isLineConnected && (
-                      <div className="flex flex-col items-end gap-1">
-                        <div className="flex gap-2 items-center text-xs text-green-400 bg-white px-3 py-1.5 rounded-full font-bold shadow-sm">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
+                      <div className="flex flex-col items-start sm:items-end gap-2">
+                        <Badge className="bg-white text-emerald-600 border-none hover:bg-white/90 font-bold px-3 py-1 scale-90 sm:scale-100 origin-left sm:origin-right">
+                          <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
                           เชื่อมต่อแล้ว
-                        </div>
+                        </Badge>
                         {lineBotInfo?.displayName && (
-                          <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-white/20 text-white text-xs font-medium backdrop-blur-md border border-white/20 shadow-sm">
-                            <FaUser className="h-3 w-3 opacity-80" />
-                            <span>{lineBotInfo.displayName}</span>
+                          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/10 text-white text-[10px] font-medium border border-white/10">
+                            <FaUser className="h-2.5 w-2.5 opacity-70" />
+                            <span className="truncate max-w-[120px]">{lineBotInfo.displayName}</span>
                           </div>
                         )}
                       </div>
                     )}
-                  </CardTitle>
-                  <CardDescription
-                    className={isLineConnected ? "text-white" : ""}
-                  >
-                    จัดการการเชื่อมต่อ LINE Official Account และการแจ้งเตือน
-                  </CardDescription>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-4">
-                      <Link href="/protected/line-manager">
-                        <Button
-                          variant={isLineConnected ? "secondary" : "outline"}
-                          className="w-full md:w-auto font-bold"
-                        >
-                          {isLineConnected
-                            ? "จัดการ Line Manager"
-                            : "เปิด Line Manager"}
-                        </Button>
-                      </Link>
-                      {isLineConnected && (
-                        <IntegrationDisconnectButton
-                          provider="line"
-                          variant="secondary"
-                          className="w-full md:w-auto font-bold opacity-80 hover:opacity-100"
-                        />
-                      )}
-                    </div>
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <Link href="/protected/line-manager" className="w-full sm:w-auto">
+                      <Button
+                        variant={isLineConnected ? "secondary" : "outline"}
+                        className="w-full font-bold h-10 rounded-xl"
+                      >
+                        {isLineConnected ? "จัดการ Line Manager" : "เชื่อมต่อ Line"}
+                      </Button>
+                    </Link>
+                    {isLineConnected && (
+                      <IntegrationDisconnectButton
+                        provider="line"
+                        variant="secondary"
+                        className="w-full sm:w-auto font-bold h-10 rounded-xl bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                      />
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
+              {/* TikTok Card */}
               <Card
-                className={
+                className={cn(
+                  "transition-all duration-300 shadow-sm hover:shadow-md",
                   isTikTokConnected
-                    ? "bg-slate-900 text-white border-slate-800 transition-colors shadow-lg"
-                    : ""
-                }
+                    ? "bg-slate-900 text-white border-slate-800 shadow-slate-200"
+                    : "bg-white border-slate-200"
+                )}
               >
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center justify-between">
-                    <div
-                      className={`flex items-center gap-2 ${isTikTokConnected ? "text-white" : "text-slate-900"}`}
-                    >
-                      <FaTiktok
-                        className={`h-6 w-6 ${isTikTokConnected ? "text-white" : "text-slate-900"}`}
-                      />
-                      TikTok Integration
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "p-2 rounded-2xl",
+                        isTikTokConnected ? "bg-white/10 backdrop-blur-md" : "bg-slate-100"
+                      )}>
+                        <FaTiktok className={cn("h-7 w-7", isTikTokConnected ? "text-white" : "text-slate-900")} />
+                      </div>
+                      <div>
+                        <CardTitle className={cn("text-lg font-bold", isTikTokConnected ? "text-white" : "text-slate-900")}>TikTok</CardTitle>
+                        <CardDescription className={isTikTokConnected ? "text-slate-400" : "text-slate-500"}>
+                          Short Video Marketing
+                        </CardDescription>
+                      </div>
                     </div>
                     {isTikTokConnected && (
-                      <div className="flex flex-col items-end gap-1">
-                        <div className="flex gap-2 items-center text-xs text-green-400 bg-slate-700/50 px-3 py-1.5 rounded-full font-bold border border-slate-700">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
+                      <div className="flex flex-col items-start sm:items-end gap-2">
+                        <Badge className="bg-emerald-500 text-white border-none font-bold px-3 py-1 scale-90 sm:scale-100 origin-left sm:origin-right">
+                          <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
                           เชื่อมต่อแล้ว
-                        </div>
+                        </Badge>
                         {allSettings.tiktok_auth_token?.display_name && (
-                          <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-slate-800/50 text-white text-[11px] font-bold backdrop-blur-md border border-slate-700 shadow-sm">
-                            <FaUser className="h-3 w-3 opacity-80" />
-                            <span>{allSettings.tiktok_auth_token.display_name}</span>
+                          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 text-slate-300 text-[10px] font-medium border border-white/5">
+                            <FaUser className="h-2.5 w-2.5 opacity-70" />
+                            <span className="truncate max-w-[120px]">{allSettings.tiktok_auth_token.display_name}</span>
                           </div>
                         )}
                       </div>
                     )}
-                  </CardTitle>
-                  <CardDescription
-                    className={isTikTokConnected ? "text-slate-400" : ""}
-                  >
-                    เชื่อมต่อ TikTok เพื่อโพสต์วิดีโอทรัพย์โดยตรงจาก CRM
-                  </CardDescription>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-4">
-                      <Link href="/api/auth/tiktok/login">
-                        <Button
-                          className={
-                            isTikTokConnected
-                              ? "bg-white text-slate-900 hover:bg-slate-100 font-bold"
-                              : "bg-slate-900 hover:bg-slate-800 text-white font-bold"
-                          }
-                        >
-                          {isTikTokConnected
-                            ? "เชื่อมต่อใหม่"
-                            : "เชื่อมต่อ TikTok"}
-                        </Button>
-                      </Link>
-                      {isTikTokConnected && (
-                        <IntegrationDisconnectButton
-                          provider="tiktok"
-                          className={`w-full md:w-auto font-bold ${isTikTokConnected ? "text-white hover:text-white hover:bg-slate-800" : ""}`}
-                        />
-                      )}
-                      {!isTikTokConnected && (
-                        <p className={`text-xs text-slate-500`}>
-                          ลงชื่อเข้าใช้เพื่อขอสิทธิ์การโพสต์วิดีโอ
-                        </p>
-                      )}
-                    </div>
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <Link href="/api/auth/tiktok/login" className="w-full sm:w-auto">
+                      <Button
+                        className={cn(
+                          "w-full font-bold h-10 rounded-xl",
+                          isTikTokConnected ? "bg-white text-slate-900 hover:bg-slate-100" : "bg-slate-900 text-white hover:bg-slate-800"
+                        )}
+                      >
+                        {isTikTokConnected ? "เชื่อมต่อใหม่" : "เชื่อมต่อ TikTok"}
+                      </Button>
+                    </Link>
+                    {isTikTokConnected && (
+                      <IntegrationDisconnectButton
+                        provider="tiktok"
+                        className="w-full sm:w-auto font-bold h-10 rounded-xl bg-slate-800 text-white border-slate-700"
+                      />
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Meta Card */}
               <Card
-                className={
+                className={cn(
+                  "transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden relative",
                   isFacebookConnected
-                    ? "bg-blue-500 bg-linear-to-r from-blue-500 to-pink-500/70 text-white border-slate-800 transition-colors shadow-lg"
-                    : ""
-                }
+                    ? "bg-linear-to-br from-blue-600 via-indigo-600 to-pink-500 text-white border-none"
+                    : "bg-white border-slate-200"
+                )}
               >
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center justify-between">
-                    <div className={`flex items-center gap-2 ${isFacebookConnected ? "text-white" : "text-slate-900"}`}>
-                      <FaMeta
-                        className={`h-5 w-5 ${isFacebookConnected ? "text-white" : "text-[#1877F2]"}`}
-                      />
-                      Meta Integration
+                {isFacebookConnected && (
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl pointer-events-none" />
+                )}
+                <CardHeader className="pb-4 relative z-10">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "p-2 rounded-2xl",
+                        isFacebookConnected ? "bg-white/20 backdrop-blur-md" : "bg-blue-50"
+                      )}>
+                        <FaMeta className={cn("h-7 w-7", isFacebookConnected ? "text-white" : "text-blue-600")} />
+                      </div>
+                      <div>
+                        <CardTitle className={cn("text-lg font-bold", isFacebookConnected ? "text-white" : "text-slate-900")}>Meta</CardTitle>
+                        <CardDescription className={isFacebookConnected ? "text-blue-50" : "text-slate-500"}>
+                          Facebook & Instagram
+                        </CardDescription>
+                      </div>
                     </div>
                     {isFacebookConnected && (
-                      <div className="flex flex-col items-end gap-1">
-                        <div className="flex gap-2 items-center text-xs text-green-700 bg-white px-3 py-1.5 rounded-full font-semibold border border-white">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
+                      <div className="flex flex-col items-start sm:items-end gap-2">
+                        <Badge className="bg-white text-indigo-600 border-none hover:bg-white/90 font-bold px-3 py-1 scale-90 sm:scale-100 origin-left sm:origin-right">
+                          <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
                           เชื่อมต่อแล้ว
+                        </Badge>
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/10 text-white text-[10px] font-medium border border-white/10">
+                          <Facebook className="h-2.5 w-2.5 opacity-70" />
+                          <span className="truncate max-w-[120px]">{allSettings.meta_page_name || "System (Env)"}</span>
                         </div>
-                        {isFacebookConnected && (
-                          <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-white/20 text-white text-[11px] font-semibold backdrop-blur-md border border-white shadow-sm">
-                            <Facebook className="h-3 w-3 opacity-80" />
-                            <span>{allSettings.meta_page_name || "System (Environment)"}</span>
-                          </div>
-                        )}
                       </div>
                     )}
-                  </CardTitle>
-                  <CardDescription
-                    className={isFacebookConnected ? "text-white" : "text-slate-500"}
-                  >
-                    เชื่อมต่อ Facebook , Instagram เพื่อโพสต์ทรัพย์ลง Page โดยอัตโนมัติ
-                  </CardDescription>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-4">
-                      <Link href="/api/auth/facebook/login">
-                        <Button
-                          className={
-                            isFacebookConnected
-                              ? "bg-white text-slate-900 hover:bg-slate-100 font-bold"
-                              : "bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold"
-                          }
-                        >
-                          {isFacebookConnected
-                            ? "เชื่อมต่อใหม่"
-                            : "เชื่อมต่อ Facebook Page"}
-                        </Button>
-                      </Link>
-                      {isFacebookConnected && (
-                        <IntegrationDisconnectButton
-                          provider="facebook"
-                          variant="secondary"
-                          className="w-full md:w-auto font-bold opacity-80 hover:opacity-100"
-                        />
-                      )}
-                      {!isFacebookConnected && (
-                        <p className={`text-xs text-slate-500`}>
-                          ดึงข้อมูล Page และขอสิทธิ์การโพสต์
-                        </p>
-                      )}
-                    </div>
+                <CardContent className="relative z-10">
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <Link href="/api/auth/facebook/login" className="w-full sm:w-auto">
+                      <Button
+                        className={cn(
+                          "w-full font-bold h-10 rounded-xl",
+                          isFacebookConnected ? "bg-white text-indigo-600 hover:bg-slate-50" : "bg-blue-600 text-white hover:bg-blue-700"
+                        )}
+                      >
+                        {isFacebookConnected ? "เชื่อมต่อใหม่" : "เชื่อมต่อ Facebook"}
+                      </Button>
+                    </Link>
+                    {isFacebookConnected && (
+                      <IntegrationDisconnectButton
+                        provider="facebook"
+                        variant="secondary"
+                        className="w-full sm:w-auto font-bold h-10 rounded-xl bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                      />
+                    )}
                   </div>
                 </CardContent>
               </Card>
-
-
             </div>
-            <div id="social-automation">
+
+            <div id="social-automation" className="mt-8">
               <SocialAutomationSettings
                 lineBotInfo={lineBotInfo}
                 initialSettings={allSettings}

@@ -7,14 +7,7 @@ import { toast } from "sonner";
 import { Plus, Search, X, Settings, Loader2, Box } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
   Form,
   FormControl,
@@ -88,6 +81,8 @@ export function FeaturesManagementDialog({
       icon_key: "box",
     },
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -103,6 +98,7 @@ export function FeaturesManagementDialog({
   }, [isOpen]);
 
   const onSubmit = async (values: FeatureFormValues) => {
+    setIsSubmitting(true);
     try {
       let result;
       if (editingFeature) {
@@ -115,24 +111,21 @@ export function FeaturesManagementDialog({
         toast.success(result.message);
 
         if (editingFeature) {
-          // If editing, close the dialog
           setIsFormOpen(false);
           setEditingFeature(null);
         } else {
-          // If adding new, keep dialog open but reset form
-          // Don't close setIsFormOpen(false)
-          // Just reset to defaults
-          form.reset({ name: "", category: values.category, icon_key: "box" });
-          // Note: preserving category might be helpful for bulk entry
+          form.reset({ name: "", name_en: "", name_cn: "", category: values.category, icon_key: "box" });
         }
 
-        loadData(); // Reload local list
-        onUpdate?.(); // Notify parent
+        loadData();
+        onUpdate?.();
       } else {
         toast.error(result.message || "เกิดข้อผิดพลาด");
       }
     } catch (error) {
       toast.error("บันทึกข้อมูลไม่สำเร็จ");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -161,13 +154,18 @@ export function FeaturesManagementDialog({
   };
 
   const handleDelete = async (id: string, name: string) => {
-    const result = await deleteFeatureAction(id);
-    if (result.success) {
-      toast.success(result.message);
-      loadData();
-      onUpdate?.();
-    } else {
-      toast.error(result.message || "ลบข้อมูลไม่สำเร็จ");
+    setDeletingId(id);
+    try {
+      const result = await deleteFeatureAction(id);
+      if (result.success) {
+        toast.success(result.message);
+        loadData();
+        onUpdate?.();
+      } else {
+        toast.error(result.message || "ลบข้อมูลไม่สำเร็จ");
+      }
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -179,8 +177,13 @@ export function FeaturesManagementDialog({
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
+    <ResponsiveDialog
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      title="จัดการรายการสิ่งอำนวยความสะดวก"
+      description="เพิ่ม ลบ หรือแก้ไขรายการ Features ที่ใช้ในระบบ"
+      className="sm:max-w-[800px]"
+      trigger={
         <Button
           variant="outline"
           size="sm"
@@ -189,29 +192,11 @@ export function FeaturesManagementDialog({
           <Settings className="w-4 h-4" />
           จัดการสิ่งอำนวยความสะดวก
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[60vw] h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
-        <DialogHeader className="p-6 pb-4 border-b bg-white z-10">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <DialogTitle className="text-xl">
-                จัดการรายการสิ่งอำนวยความสะดวก
-              </DialogTitle>
-              <DialogDescription className="mt-1 text-slate-500">
-                เพิ่ม ลบ หรือแก้ไขรายการ Features ที่ใช้ในระบบ
-              </DialogDescription>
-            </div>
-            <Button
-              onClick={handleAddNew}
-              size="sm"
-              className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              เพิ่มรายการใหม่
-            </Button>
-          </div>
-
-          <div className="relative">
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder="ค้นหา (ชื่อ, หมวดหมู่)..."
@@ -220,7 +205,15 @@ export function FeaturesManagementDialog({
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-        </DialogHeader>
+          <Button
+            onClick={handleAddNew}
+            size="sm"
+            className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            เพิ่มรายการใหม่
+          </Button>
+        </div>
 
         <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
           {loading ? (
@@ -299,132 +292,132 @@ export function FeaturesManagementDialog({
         </div>
 
         {/* Nested Dialog for Add/Edit */}
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogContent className="sm:max-w-[450px]">
-            <DialogHeader>
-              <DialogTitle>
-                {editingFeature ? "แก้ไขรายการ" : "เพิ่มรายการใหม่"}
-              </DialogTitle>
-            </DialogHeader>
+        <ResponsiveDialog
+          open={isFormOpen}
+          onOpenChange={setIsFormOpen}
+          title={editingFeature ? "แก้ไขรายการ" : "เพิ่มรายการใหม่"}
+          className="sm:max-w-[450px]"
+        >
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4 py-4"
+            >
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ชื่อรายการ (ไทย)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="เช่น สระว่ายน้ำ, ฟิตเนส"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="name_en"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ชื่อรายการ (ไทย)</FormLabel>
+                      <FormLabel>English Name</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="เช่น สระว่ายน้ำ, ฟิตเนส"
-                          {...field}
-                        />
+                        <Input placeholder="Swimming Pool" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="name_en"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>English Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Swimming Pool" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="name_cn"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>中文名称</FormLabel>
-                        <FormControl>
-                          <Input placeholder="游泳池" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
                 <FormField
                   control={form.control}
-                  name="category"
+                  name="name_cn"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>หมวดหมู่</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value || undefined}
-                        value={field.value || undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="เลือกหมวดหมู่..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {CATEGORIES.map((c) => (
-                            <SelectItem key={c} value={c}>
-                              {c}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="icon_key"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ไอคอน</FormLabel>
+                      <FormLabel>中文名称</FormLabel>
                       <FormControl>
-                        <IconPicker
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
+                        <Input placeholder="游泳池" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
 
-                <div className="flex justify-end gap-2 pt-4 border-t mt-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setIsFormOpen(false)}
-                  >
-                    ยกเลิก
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {editingFeature ? "บันทึกการแก้ไข" : "สร้างรายการ"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </DialogContent>
-    </Dialog>
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>หมวดหมู่</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value || undefined}
+                      value={field.value || undefined}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="เลือกหมวดหมู่..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CATEGORIES.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="icon_key"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ไอคอน</FormLabel>
+                    <FormControl>
+                      <IconPicker
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t mt-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-12 rounded-xl text-slate-500 font-medium"
+                  onClick={() => setIsFormOpen(false)}
+                >
+                  ยกเลิก
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold gap-2 shadow-lg shadow-blue-100"
+                >
+                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {editingFeature ? "บันทึกการแก้ไข" : "สร้างรายการ"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </ResponsiveDialog>
+      </div>
+    </ResponsiveDialog>
   );
 }

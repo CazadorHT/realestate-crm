@@ -1,13 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Calculator } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -45,57 +39,60 @@ export function CommissionCalculator() {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
+    <ResponsiveDialog
+      title={
+        <div className="flex items-center gap-2">
+          <Calculator className="h-5 w-5 text-blue-500" />
+          คำนวณค่าคอมมิชชั่น
+        </div>
+      }
+      description="ประมาณการค่าคอมมิชชั่นแบบรวดเร็วตามเกณฑ์ขั้นบันได"
+      trigger={
         <Button
           variant="outline"
-          className="gap-2 border-slate-200 bg-white/50 hover:bg-white shadow-sm"
+          className="gap-2 border-slate-200 bg-white/50 hover:bg-white shadow-sm font-bold transition-all active:scale-95"
         >
           <Calculator className="h-4 w-4 text-blue-500" />
-          เครื่องคำนวณเบื้องต้น (Quick Calculator)
+          เครื่องคำนวณเบื้องต้น
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5 text-blue-500" />
-            คำนวณค่าคอมมิชชั่นแบบรวดเร็ว
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6 pt-4">
-          <div className="space-y-2">
-            <Label>ราคาอสังหาริมทรัพย์ (฿)</Label>
-            <PriceInput
-              value={price}
-              onChange={(val) => setPrice(val)}
-              placeholder="ระบุราคา..."
-              className="text-lg font-bold"
-              showSuffix={false}
-            />
-          </div>
-
-          <Button
-            onClick={performCalc}
-            className="w-full bg-blue-600 hover:bg-blue-700"
-          >
-            เริ่มคำนวณ
-          </Button>
-
-          {result !== null && (
-            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-2 animate-in fade-in zoom-in-95">
-              <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">
-                ประมาณการค่าคอมมิชชั่น (Estimate)
-              </p>
-              <h3 className="text-3xl font-black text-blue-600">
-                {formatThaiCurrency(result)}
-              </h3>
-              <p className="text-[10px] text-slate-400">
-                คำนวณจากเกณฑ์ขั้นบันไดที่ตั้งค่าไว้ในระบบปัจจุบัน
-              </p>
-            </div>
-          )}
+      }
+    >
+      <div className="space-y-6 p-4 sm:p-6 text-left">
+        <div className="space-y-2">
+          <Label className="text-slate-700 font-bold">
+            ราคาอสังหาริมทรัพย์ (฿)
+          </Label>
+          <PriceInput
+            value={price}
+            onChange={(val) => setPrice(val)}
+            placeholder="ระบุราคา..."
+            className="text-lg font-bold rounded-xl h-12 border-slate-200"
+            showSuffix={false}
+          />
         </div>
-      </DialogContent>
-    </Dialog>
+
+        <Button
+          onClick={performCalc}
+          disabled={!price || price <= 0}
+          className="w-full bg-blue-600 hover:bg-blue-700 h-12 rounded-xl font-bold text-white shadow-lg shadow-blue-100 transition-all active:scale-95"
+        >
+          เริ่มคำนวณ
+        </Button>
+
+        {result !== null && (
+          <div className="p-6 bg-slate-50/80 backdrop-blur-sm rounded-2xl border border-blue-100 space-y-2 animate-in fade-in zoom-in-95 duration-500">
+            <p className="text-[10px] text-blue-500 uppercase font-black tracking-widest">
+              ประมาณการค่าคอมมิชชั่น
+            </p>
+            <h3 className="text-3xl font-black text-slate-900">
+              {formatThaiCurrency(result)}
+            </h3>
+            <p className="text-[10px] text-slate-400 font-medium">
+              * คำนวณจากเกณฑ์ 3-5% ตามราคาประเมินในระบบ
+            </p>
+          </div>
+        )}
+      </div>
+    </ResponsiveDialog>
   );
 }

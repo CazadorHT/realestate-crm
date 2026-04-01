@@ -13,23 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import {
   Pencil,
@@ -626,29 +610,41 @@ export function PopularAreasTable({
         )}
       </div>
 
-      <AlertDialog
+      <ResponsiveDialog
         open={!!deleteConfirmId}
-        onOpenChange={(open) => !open && setDeleteConfirmId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบทำเล</AlertDialogTitle>
-            <AlertDialogDescription>
+        onOpenChange={(open: boolean) => !open && setDeleteConfirmId(null)}
+        title="ยืนยันการลบทำเล"
+        description={
+          deleteConfirmName ? (
+            <p>
               คุณแน่ใจหรือไม่ว่าต้องการลบทำเล "
-              <strong className="text-foreground">{deleteConfirmName}</strong>"?
-              การดำเนินการนี้ไม่สามารถย้อนกลับได้
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoading}>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction
+              <strong className="text-slate-900 leading-relaxed">
+                {deleteConfirmName}
+              </strong>
+              "? การดำเนินการนี้ไม่สามารถย้อนกลับได้
+            </p>
+          ) : (
+            ""
+          )
+        }
+        footer={
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <Button
+              variant="outline"
               disabled={isLoading}
-              onClick={(e) => {
+              onClick={() => setDeleteConfirmId(null)}
+              className="flex-1 rounded-xl h-11 font-bold text-slate-500 border-slate-200"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              disabled={isLoading}
+              onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 if (deleteConfirmId) handleDelete(deleteConfirmId);
                 setDeleteConfirmId(null);
               }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="flex-1 rounded-xl h-11 px-8 font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-100 transition-all active:scale-95"
             >
               {isLoading ? (
                 <>
@@ -658,90 +654,93 @@ export function PopularAreasTable({
               ) : (
                 "ยืนยันการลบ"
               )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <PaginationControls
-        totalCount={filteredData.length}
-        pageSize={pageSize}
-        currentPage={page}
+            </Button>
+          </div>
+        }
       />
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {editingItem ? "แก้ไขทำเล" : "เพิ่มทำเลใหม่"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">จังหวัด</label>
-                <ShadcnProvinceSelector
-                  value={itemProvince}
-                  onChange={setItemProvince}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">ชื่อทำเล (ไทย)</label>
-                <Input
-                  value={itemName}
-                  onChange={(e) => setItemName(e.target.value)}
-                  placeholder="เช่น สุขุมวิท, ทองหล่อ"
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Name (English)</label>
-                <Input
-                  value={itemNameEn}
-                  onChange={(e) => setItemNameEn(e.target.value)}
-                  placeholder="Sukhumvit, Thong Lo"
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">名称 (Chinese)</label>
-                <Input
-                  value={itemNameCn}
-                  onChange={(e) => setItemNameCn(e.target.value)}
-                  placeholder="素坤逸, 通罗"
-                  className="h-11"
-                />
-              </div>
+      <ResponsiveDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        title={editingItem ? "แก้ไขทำเล" : "เพิ่มทำเลใหม่"}
+        description="ระบุชื่อทำเลและจังหวัดให้ถูกต้องเพื่อการแสดงผลที่แม่นยำ"
+        className="md:max-w-md"
+      >
+        <div className="space-y-4 py-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700">จังหวัด</label>
+              <ShadcnProvinceSelector
+                value={itemProvince}
+                onChange={setItemProvince}
+              />
             </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
-                ยกเลิก
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={
-                  isLoading ||
-                  !itemName.trim() ||
-                  !itemProvince.trim() ||
-                  (editingItem !== null &&
-                    itemName.trim() === editingItem.name &&
-                    itemProvince === editingItem.province &&
-                    itemNameEn.trim() === (editingItem.name_en || "") &&
-                    itemNameCn.trim() === (editingItem.name_cn || ""))
-                }
-                className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed px-8"
-              >
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Check className="mr-2 h-4 w-4" />
-                )}
-                บันทึก
-              </Button>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700">
+                ชื่อทำเล (ไทย)
+              </label>
+              <Input
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                placeholder="เช่น สุขุมวิท, ทองหล่อ"
+                className="h-11 rounded-xl border-slate-200 focus:ring-indigo-500/10 transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700">
+                Name (English)
+              </label>
+              <Input
+                value={itemNameEn}
+                onChange={(e) => setItemNameEn(e.target.value)}
+                placeholder="Sukhumvit, Thong Lo"
+                className="h-11 rounded-xl border-slate-200 focus:ring-indigo-500/10 transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700">
+                名称 (Chinese)
+              </label>
+              <Input
+                value={itemNameCn}
+                onChange={(e) => setItemNameCn(e.target.value)}
+                placeholder="素坤逸, 通罗"
+                className="h-11 rounded-xl border-slate-200 focus:ring-indigo-500/10 transition-all"
+              />
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              variant="ghost"
+              onClick={() => setIsDialogOpen(false)}
+              className="flex-1 rounded-xl h-11 font-bold text-slate-500"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={
+                isLoading ||
+                !itemName.trim() ||
+                !itemProvince.trim() ||
+                (editingItem !== null &&
+                  itemName.trim() === editingItem.name &&
+                  itemProvince === editingItem.province &&
+                  itemNameEn.trim() === (editingItem.name_en || "") &&
+                  itemNameCn.trim() === (editingItem.name_cn || ""))
+              }
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 transition-all active:scale-95 px-8 rounded-xl h-11 font-bold"
+            >
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="mr-2 h-4 w-4" />
+              )}
+              บันทึกข้อมูล
+            </Button>
+          </div>
+        </div>
+      </ResponsiveDialog>
     </div>
   );
 }

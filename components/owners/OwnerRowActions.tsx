@@ -8,8 +8,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { deleteOwnerAction } from "@/features/owners/actions";
 import { transferOwnerBranchAction } from "@/lib/actions/transfer-branch-action";
 import { TransferBranchDialog } from "@/components/shared/TransferBranchDialog";
-import { Edit, Trash2, Eye, ArrowRightLeft } from "lucide-react";
+import { Edit, Trash2, Eye, ArrowRightLeft, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type OwnerRowActionsProps = {
   id: string;
@@ -33,88 +35,122 @@ export function OwnerRowActions({
 
   const showTransferButton = isAdmin && isMultiTenant;
 
-  const onDelete = () =>
-    startTransition(async () => {
-      try {
-        const res = await deleteOwnerAction(id);
-        if (!res?.success) throw new Error(res?.message || "Delete failed");
-        toast.success("ลบข้อมูลเจ้าของเรียบร้อยแล้ว");
-        router.refresh();
-      } catch (e: any) {
-        toast.error(e.message || "เกิดข้อผิดพลาดในการลบข้อมูล");
-      } finally {
-        setShowDeleteDialog(false);
-      }
+  const onDelete = async () => {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        try {
+          const res = await deleteOwnerAction(id);
+          if (!res?.success) throw new Error(res?.message || "Delete failed");
+          toast.success("ลบข้อมูลเจ้าของเรียบร้อยแล้ว");
+          router.refresh();
+        } catch (e: any) {
+          toast.error(e.message || "เกิดข้อผิดพลาดในการลบข้อมูล");
+        } finally {
+          resolve();
+        }
+      });
     });
+  };
+
+  const isMobile = useIsMobile();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const actions = (
+    <div className={isMobile ? "grid gap-2" : "flex justify-end gap-2"}>
+      <Button
+        variant="ghost"
+        className={isMobile ? "w-full justify-start h-12 px-4 text-[15px] font-bold rounded-xl" : "h-9 w-9"}
+        size={isMobile ? "default" : "icon"}
+        asChild
+        onClick={() => isMobile && setIsMenuOpen(false)}
+      >
+        <Link href={`/protected/owners/${id}`}>
+          <Eye className={isMobile ? "mr-3 h-5 w-5 text-slate-400" : "h-4 w-4"} />
+          {isMobile && "ดูรายละเอียด"}
+        </Link>
+      </Button>
+
+      <Button
+        variant="ghost"
+        className={isMobile ? "w-full justify-start h-12 px-4 text-[15px] font-bold rounded-xl" : "h-9 w-9"}
+        size={isMobile ? "default" : "icon"}
+        asChild
+        onClick={() => isMobile && setIsMenuOpen(false)}
+      >
+        <Link href={`/protected/owners/${id}/edit`}>
+          <Edit className={isMobile ? "mr-3 h-5 w-5 text-slate-400" : "h-4 w-4"} />
+          {isMobile && "แก้ไขข้อมูล"}
+        </Link>
+      </Button>
+
+      {showTransferButton && (
+        <Button
+          variant="ghost"
+          className={isMobile ? "w-full justify-start h-12 px-4 text-[15px] font-bold rounded-xl text-blue-600" : "h-9 w-9"}
+          size={isMobile ? "default" : "icon"}
+          onClick={() => {
+            setIsMenuOpen(false);
+            setShowTransferDialog(true);
+          }}
+        >
+          <ArrowRightLeft className={isMobile ? "mr-3 h-5 w-5" : "h-4 w-4 text-blue-600"} />
+          {isMobile && "ย้ายสาขา"}
+        </Button>
+      )}
+
+      {isMobile && <div className="h-px bg-slate-100 my-1 mx-2" />}
+
+      <Button
+        variant="ghost"
+        className={isMobile ? "w-full justify-start h-12 px-4 text-[15px] font-bold rounded-xl text-destructive hover:bg-destructive/5" : "h-9 w-9"}
+        size={isMobile ? "default" : "icon"}
+        disabled={isPending}
+        onClick={() => {
+          setIsMenuOpen(false);
+          setShowDeleteDialog(true);
+        }}
+      >
+        <Trash2 className={isMobile ? "mr-3 h-5 w-5" : "h-4 w-4 text-destructive"} />
+        {isMobile && "ลบเจ้าของ"}
+      </Button>
+    </div>
+  );
 
   return (
     <>
-      <div className="flex justify-end gap-2">
-        {/* View */}
-        <Button
-          variant="ghost"
-          size="icon"
-          asChild
-          aria-label="View owner"
-          title="View"
+      {!isMobile ? actions : (
+        <ResponsiveDialog
+          open={isMenuOpen}
+          onOpenChange={setIsMenuOpen}
+          title={fullName || "จัดการเจ้าของ"}
+          trigger={
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-slate-100">
+              <MoreHorizontal className="h-5 w-5 text-slate-500" />
+            </Button>
+          }
         >
-          <Link href={`/protected/owners/${id}`}>
-            <Eye className="h-4 w-4" />
-          </Link>
-        </Button>
-
-        {/* Edit */}
-        <Button
-          variant="ghost"
-          size="icon"
-          asChild
-          aria-label="Edit owner"
-          title="Edit"
-        >
-          <Link href={`/protected/owners/${id}/edit`}>
-            <Edit className="h-4 w-4" />
-          </Link>
-        </Button>
-
-        {/* Transfer Branch — Admin + Multi-tenant only */}
-        {showTransferButton && (
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Transfer branch"
-            title="ย้ายสาขา"
-            onClick={() => setShowTransferDialog(true)}
-          >
-            <ArrowRightLeft className="h-4 w-4 text-blue-600" />
-          </Button>
-        )}
-
-        {/* Delete */}
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled={isPending}
-          aria-label="Delete owner"
-          title="Delete"
-          onClick={() => setShowDeleteDialog(true)}
-        >
-          <Trash2 className="h-4 w-4 text-destructive" />
-        </Button>
-      </div>
+          <div className="pb-8">
+            {actions}
+          </div>
+        </ResponsiveDialog>
+      )}
 
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         title="ยืนยันการลบ"
         description={
-          <>
-            คุณแน่ใจหรือไม่ว่าต้องการลบ{" "}
-            {fullName ? `"${fullName}"` : "เจ้าของรายนี้"}?
-            <br />
-            ทรัพย์ที่เชื่อมโยงกับเจ้าของท่านนี้จะไม่ถูกลบ แต่จะไม่มีเจ้าของระบุ
-          </>
+          <div className="space-y-3">
+            <p className="font-medium text-slate-600">
+              คุณแน่ใจหรือไม่ว่าต้องการลบ{" "}
+              <span className="font-bold text-slate-900">{fullName ? `"${fullName}"` : "เจ้าของรายนี้"}</span>?
+            </p>
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 text-xs text-amber-700 leading-relaxed italic">
+              * ทรัพย์ที่เชื่อมโยงกับเจ้าของท่านนี้จะไม่ถูกลบ แต่จะไม่มีเจ้าของระบุในระบบ
+            </div>
+          </div>
         }
-        confirmText={isPending ? "กำลังลบ..." : "ลบ"}
+        confirmText={isPending ? "กำลังลบ..." : "ลบข้อมูล"}
         cancelText="ยกเลิก"
         variant="destructive"
         onConfirm={onDelete}

@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -100,139 +93,139 @@ export function BranchOnboardingDialog({ isOpen, onClose }: BranchOnboardingDial
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && step === 2 ? null : onClose()}>
-      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-0 shadow-2xl">
-        {step === 1 ? (
-          <form onSubmit={handleCreateBranch} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-linear-to-br from-blue-600 to-indigo-700 p-8 text-white relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-4 opacity-10">
-                <Building2 className="h-24 w-24 rotate-12" />
-              </div>
-              <DialogHeader className="relative z-10">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4 backdrop-blur-md">
-                  <Sparkles className="h-6 w-6 text-white" />
-                </div>
-                <DialogTitle className="text-2xl font-black mb-2">ยินดีต้อนรับสู่ระบบบริหารจัดการ!</DialogTitle>
-                <DialogDescription className="text-blue-100/80 font-medium">
-                  ดูเหมือนคุณจะเปิดโหมด Multi-tenant เป็นครั้งแรก มาเริ่มสร้างสาขาหลักของคุณกันครับ
-                </DialogDescription>
-              </DialogHeader>
+    <ResponsiveDialog
+      open={isOpen}
+      onOpenChange={(open) => !open && step === 2 ? null : onClose()}
+      title={
+        step === 1 ? (
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
+              <Sparkles className="h-6 w-6" />
             </div>
-
-            <div className="p-8 space-y-6 bg-white">
-              <div className="space-y-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="branch-name" className="text-slate-700 font-bold">ชื่อสาขา / แฟรนไชส์</Label>
-                  <Input
-                    id="branch-name"
-                    placeholder="เช่น สาขาสำนักงานใหญ่, Real Estate Group"
-                    value={newBranch.name}
-                    onChange={(e) =>
-                      setNewBranch({ ...newBranch, name: e.target.value })
-                    }
-                    className="h-12 border-slate-200 focus:border-blue-500 transition-all rounded-xl"
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="branch-slug" className="text-slate-700 font-bold">Slug Name (URL)</Label>
-                  <Input
-                    id="branch-slug"
-                    placeholder="เช่น head-office (ภาษาอังกฤษเท่านั้น)"
-                    value={newBranch.slug}
-                    onChange={(e) => {
-                      setNewBranch({
-                        ...newBranch,
-                        slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
-                      });
-                      setSlugError(null); // Clear error on type
-                    }}
-                    className={cn(
-                      "h-12 transition-all rounded-xl",
-                      slugError ? "border-red-500 focus-visible:ring-red-500" : "border-slate-200 focus:border-blue-500"
-                    )}
-                    required
-                  />
-                  {slugError && (
-                    <p className="text-sm text-red-500 font-medium">{slugError}</p>
-                  )}
-                </div>
-              </div>
-
-              <DialogFooter className="pt-2">
-                <Button 
-                  type="submit" 
-                  disabled={isProcessing}
-                  className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all group"
-                >
-                  {isProcessing ? (
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  ) : (
-                    <>
-                      สร้างสาขาและถัดไป
-                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </Button>
-              </DialogFooter>
-            </div>
-          </form>
-        ) : (
-          <div className="animate-in fade-in zoom-in-95 duration-500">
-            <div className="bg-linear-to-br from-emerald-500 to-teal-600 p-8 text-white relative overflow-hidden text-center">
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <DatabaseIcon className="h-24 w-24" />
-              </div>
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-md">
-                <CheckCircle2 className="h-10 w-10 text-white" />
-              </div>
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-black mb-2">สร้างสาขาสมบูรณ์!</DialogTitle>
-                <DialogDescription className="text-emerald-50/80 font-medium">
-                  ย้ายข้อมูลเดิมของคุณเข้าสู่สาขาใหม่นี้หรือไม่?
-                </DialogDescription>
-              </DialogHeader>
-            </div>
-
-            <div className="p-8 space-y-6 bg-white">
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  ระบบตรวจสอบพบข้อมูลที่ยังไม่ระบุสาขา (ทรัพย์สิน, ลูกค้า, รายชื่อผู้ติดต่อ) คุณต้องการนำข้อมูลเหล่านี้มาใส่ในสาขา <span className="font-bold text-slate-900">"{createdTenant?.name}"</span> ที่พึ่งสร้างขึ้นมาเลยไหมครับ?
-                </p>
-                <div className="flex items-center gap-2 text-xs text-amber-600 font-bold bg-amber-50 p-2 rounded-lg">
-                  <DatabaseIcon className="h-4 w-4" />
-                   ข้อมูลเดิมทั้งหมดจะถูกเชื่อมโยงกับสาขานี้ทันที
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  variant="outline"
-                  className="h-12 font-bold rounded-xl border-slate-200"
-                  onClick={() => handleMigrateData(false)}
-                  disabled={isProcessing}
-                >
-                  ไว้ทีหลัง
-                </Button>
-                <Button
-                  className="h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 transition-all"
-                  onClick={() => handleMigrateData(true)}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    "ตกลง ย้ายข้อมูลเลย"
-                  )}
-                </Button>
-              </div>
-              <p className="text-center text-[11px] text-slate-400">
-                หากคุณมีหลายสาขาในอนาคต สามารถเลือกย้ายข้อมูลแยกทีละรายการได้ภายหลัง
-              </p>
+            <div className="flex flex-col">
+              <span className="text-xl font-black text-slate-900 leading-tight">ยินดีต้อนรับ!</span>
+              <span className="text-xs font-bold text-blue-600/80 uppercase tracking-wider">โหมด Multi-tenant</span>
             </div>
           </div>
-        )}
-      </DialogContent>
-    </Dialog>
+        ) : (
+          <div className="flex items-center gap-3 text-emerald-600">
+            <div className="p-2.5 bg-emerald-50 rounded-xl">
+              <CheckCircle2 className="h-6 w-6" />
+            </div>
+            <span className="text-xl font-black leading-tight">สร้างสาขาสมบูรณ์!</span>
+          </div>
+        )
+      }
+      description={
+        step === 1 
+          ? "มาเริ่มสร้างสาขาหลักของคุณเพื่อแยกการจัดการข้อมูลครับ"
+          : `ย้ายข้อมูลเดิมของคุณเข้าสู่สาขาใหม่ "${createdTenant?.name}" หรือไม่?`
+      }
+      footer={
+        step === 1 ? (
+          <Button 
+            onClick={handleCreateBranch}
+            disabled={isProcessing}
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all group shrink-0"
+          >
+            {isProcessing ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <>
+                สร้างสาขาและถัดไป
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
+          </Button>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 w-full shrink-0">
+            <Button
+              variant="outline"
+              className="h-12 font-bold rounded-xl border-slate-200 text-slate-500"
+              onClick={() => handleMigrateData(false)}
+              disabled={isProcessing}
+            >
+              ไว้ทีหลัง
+            </Button>
+            <Button
+              className="h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 transition-all"
+              onClick={() => handleMigrateData(true)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                "ตกลง ย้ายข้อมูล"
+              )}
+            </Button>
+          </div>
+        )
+      }
+    >
+      {step === 1 ? (
+        <div className="space-y-6 py-2">
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="branch-name" className="text-sm font-bold text-slate-700 ml-1">ชื่อสาขา / แฟรนไชส์</Label>
+              <Input
+                id="branch-name"
+                placeholder="เช่น สำนักงานใหญ่, Real Estate Group"
+                value={newBranch.name}
+                onChange={(e) =>
+                  setNewBranch({ ...newBranch, name: e.target.value })
+                }
+                className="h-12 border-slate-200 focus:border-blue-500 transition-all rounded-xl bg-slate-50/50"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="branch-slug" className="text-sm font-bold text-slate-700 ml-1">Slug Name (URL Extension)</Label>
+              <Input
+                id="branch-slug"
+                placeholder="เช่น head-office (ภาษาอังกฤษเท่านั้น)"
+                value={newBranch.slug}
+                onChange={(e) => {
+                  setNewBranch({
+                    ...newBranch,
+                    slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                  });
+                  setSlugError(null);
+                }}
+                className={cn(
+                  "h-12 transition-all rounded-xl bg-slate-50/50",
+                  slugError ? "border-red-500 focus-visible:ring-red-500" : "border-slate-200 focus:border-blue-500"
+                )}
+                required
+              />
+              {slugError ? (
+                <p className="text-xs text-red-500 font-bold ml-1">{slugError}</p>
+              ) : (
+                <p className="text-[10px] text-slate-400 font-medium ml-1">
+                  ตัวอย่าง: crm-real-estate.com/branch/<span className="text-blue-600 font-bold">{newBranch.slug || "slug-name"}</span>
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6 py-2">
+          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-4 relative overflow-hidden">
+            <div className="absolute -right-4 -top-4 opacity-5">
+              <DatabaseIcon className="h-20 w-20" />
+            </div>
+            <p className="text-sm text-slate-600 leading-relaxed relative z-10">
+              ระบบตรวจสอบพบข้อมูลที่ยังไม่ระบุสาขา (ทรัพย์สิน, ลูกค้า, รายชื่อผู้ติดต่อ) คุณต้องการนำข้อมูลเหล่านี้มาใส่ในสาขา <span className="font-bold text-slate-900">"{createdTenant?.name}"</span> เลยไหมครับ?
+            </p>
+            <div className="flex items-center gap-2 text-[10px] text-amber-600 font-black bg-amber-50 p-2.5 rounded-xl border border-amber-100">
+              <DatabaseIcon className="h-3.5 w-3.5" />
+              ข้อมูลเดิมทั้งหมดจะถูกเชื่อมโยงกับสาขานี้ทันที
+            </div>
+          </div>
+          <p className="text-center text-[11px] text-slate-400 leading-tight">
+            หากคุณมีหลายสาขาในอนาคต <br />สามารถเลือกย้ายข้อมูลแยกทีละรายการได้ภายหลัง
+          </p>
+        </div>
+      )}
+    </ResponsiveDialog>
   );
 }

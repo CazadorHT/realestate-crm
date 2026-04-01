@@ -12,13 +12,7 @@ import { format } from "date-fns";
 import { AuditLogWithUser } from "../queries";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import Link from "next/link";
@@ -100,54 +94,60 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <Eye className="h-4 w-4" />
+                  <ResponsiveDialog
+                    title="รายละเอียดประวัติการใช้งาน (Audit Log)"
+                    description="ข้อมูลทางเทคนิคและสถานะของกิจกรรมที่เกิดขึ้นในระบบ"
+                    trigger={
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg">
+                        <Eye className="h-4 w-4 text-slate-500" />
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-xl">
-                      <DialogHeader>
-                        <DialogTitle>รายละเอียด Log</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="font-semibold text-muted-foreground">
-                              Action:
-                            </span>{" "}
-                            {log.action}
-                          </div>
-                          <div>
-                            <span className="font-semibold text-muted-foreground">
-                              Entity:
-                            </span>{" "}
-                            {log.entity}
-                          </div>
-                          <div>
-                            <span className="font-semibold text-muted-foreground">
-                              User:
-                            </span>{" "}
-                            {log.user?.full_name} ({log.user?.role})
-                          </div>
-                          <div>
-                            <span className="font-semibold text-muted-foreground">
-                              Time:
-                            </span>{" "}
-                            {format(
-                              new Date(log.created_at),
-                              "dd/MM/yyyy HH:mm:ss",
-                            )}
-                          </div>
+                    }
+                  >
+                    <div className="space-y-6 pt-4">
+                      {/* Condensed Meta Info */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Action</span>
+                          <span className="text-sm font-bold text-slate-700">{log.action}</span>
                         </div>
-                        <div className="rounded-md bg-slate-950 p-4 overflow-x-auto">
-                          <pre className="text-xs text-slate-50 font-mono">
-                            {JSON.stringify(log.metadata, null, 2)}
-                          </pre>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Entity</span>
+                          <span className="text-sm font-bold text-slate-700">{log.entity}</span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">User</span>
+                          <span className="text-sm font-bold text-slate-700">{log.user?.full_name} ({log.user?.role})</span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Timestamp</span>
+                          <span className="text-sm font-bold text-slate-700">
+                            {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss")}
+                          </span>
                         </div>
                       </div>
-                    </DialogContent>
-                  </Dialog>
+
+                      {/* Technical Raw Data */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 px-1">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Raw Metadata</span>
+                          <div className="h-px flex-1 bg-slate-100" />
+                        </div>
+                        <div className="rounded-2xl bg-slate-950 p-5 shadow-inner overflow-hidden">
+                          <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                            <pre className="text-[11px] text-emerald-400 font-mono leading-relaxed">
+                              {JSON.stringify(log.metadata, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end pt-2">
+                        <p className="text-[10px] text-slate-400 font-medium italic">
+                          ID: {log.id}
+                        </p>
+                      </div>
+                    </div>
+                  </ResponsiveDialog>
                 </TableCell>
               </TableRow>
             ))

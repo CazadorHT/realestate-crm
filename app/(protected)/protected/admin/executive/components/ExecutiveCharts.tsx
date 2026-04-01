@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   AreaChart,
   Area,
@@ -16,15 +17,17 @@ interface ExecutiveChartsProps {
 }
 
 export function ExecutiveLeadsChart({ data }: ExecutiveChartsProps) {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <div className="h-[350px] w-full animate-pulse bg-slate-50 rounded-xl" />;
+
   return (
-    <div className="h-[350px] w-full">
-      <ResponsiveContainer
-        width="100%"
-        height="100%"
-        minWidth={0}
-        minHeight={0}
-        debounce={50}
-      >
+    <div className="h-[350px] w-full relative">
+      <ResponsiveContainer width="99%" height={350}>
         <AreaChart data={data}>
           <defs>
             <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
@@ -73,15 +76,17 @@ export function ExecutiveLeadsChart({ data }: ExecutiveChartsProps) {
 }
 
 export function ExecutiveDealsChart({ data }: ExecutiveChartsProps) {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <div className="h-[350px] w-full animate-pulse bg-slate-50 rounded-xl" />;
+
   return (
-    <div className="h-[350px] w-full">
-      <ResponsiveContainer
-        width="100%"
-        height="100%"
-        minWidth={0}
-        minHeight={0}
-        debounce={50}
-      >
+    <div className="h-[350px] w-full relative">
+      <ResponsiveContainer width="99%" height={350}>
         <AreaChart data={data}>
           <defs>
             <linearGradient id="colorDeals" x1="0" y1="0" x2="0" y2="1">

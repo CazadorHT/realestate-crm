@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
-import { applySecurityHeaders } from "./proxy";
+import { applySecurityHeaders } from "@/lib/security";
 import { 
   getClientIp, 
   isWhitelisted, 

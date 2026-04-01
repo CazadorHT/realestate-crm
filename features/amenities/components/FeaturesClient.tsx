@@ -27,12 +27,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
   Form,
   FormControl,
@@ -155,6 +150,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
       router.refresh();
     } else {
       toast.error(result.message || "ลบไม่สำเร็จ");
+      throw new Error(result.message || "ลบไม่สำเร็จ");
     }
   };
 
@@ -195,6 +191,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
       router.refresh();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
+      throw new Error(result.message || "เกิดข้อผิดพลาด");
     }
   };
 
@@ -444,115 +441,123 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
       </div>
 
       {/* Form Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>
-              {editingFeature ? "แก้ไขรายการ" : "เพิ่มรายการใหม่"}
-            </DialogTitle>
-          </DialogHeader>
+      <ResponsiveDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        title={editingFeature ? "แก้ไขรายการ" : "เพิ่มรายการใหม่"}
+        description="กรอกข้อมูลสิ่งอำนวยความสะดวก หมวดหมู่ และไอคอนที่ต้องการแสดง"
+        footer={
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              className="flex-1 sm:flex-none rounded-xl h-11 font-bold border-slate-200 text-slate-500"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              type="button"
+              onClick={form.handleSubmit(onSubmit)}
+              className="flex-1 rounded-xl h-11 px-8 font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100 transition-all hover:scale-[1.02] active:scale-95"
+            >
+              {editingFeature ? "บันทึกการแก้ไข" : "สร้างรายการใหม่"}
+            </Button>
+          </div>
+        }
+      >
+        <Form {...form}>
+          <form className="space-y-6 py-2 text-left">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-slate-700 font-bold">ชื่อสิ่งอำนวยความสะดวก</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="เช่น สระว่ายน้ำ, ฟิตเนส"
+                      className="rounded-xl border-slate-200 h-11 focus:ring-blue-500/10"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="name"
+                name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ชื่อสิ่งอำนวยความสะดวก</FormLabel>
+                    <FormLabel className="text-slate-700 font-bold">หมวดหมู่</FormLabel>
                     <FormControl>
-                      <Input placeholder="เช่น สระว่ายน้ำ, ฟิตเนส" {...field} />
+                      <div className="relative">
+                        <Input
+                          placeholder="เลือกหรือพิมพ์..."
+                          className="rounded-xl border-slate-200 h-11 focus:ring-blue-500/10"
+                          {...field}
+                          value={field.value || ""}
+                          list="categories"
+                        />
+                        <datalist id="categories">
+                          {CATEGORIES.map((c) => (
+                            <option key={c} value={c} />
+                          ))}
+                        </datalist>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>หมวดหมู่</FormLabel>
+              <FormField
+                control={form.control}
+                name="icon_key"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-700 font-bold">ไอคอน</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
-                        <div className="relative">
-                          <Input
-                            placeholder="เลือกหรือพิมพ์..."
-                            {...field}
-                            value={field.value || ""}
-                            list="categories"
-                          />
-                          <datalist id="categories">
-                            {CATEGORIES.map((c) => (
-                              <option key={c} value={c} />
-                            ))}
-                          </datalist>
-                        </div>
+                        <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
+                          <SelectValue placeholder="เลือกไอคอน" />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="icon_key"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ไอคอน</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="h-10">
-                            <SelectValue placeholder="เลือกไอคอน" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="max-h-[300px]">
-                          <div className="grid grid-cols-4 gap-2 p-2">
-                            {Object.entries(ICON_MAP).map(
-                              ([key, IconComponent]) => (
-                                <SelectItem
-                                  key={key}
-                                  value={key}
-                                  className="flex justify-center cursor-pointer rounded-md p-2 hover:bg-slate-100 focus:bg-slate-100 data-[state=checked]:bg-blue-50 data-[state=checked]:border-blue-200 border border-transparent transition-all"
-                                >
-                                  <div className="flex flex-col items-center gap-1">
-                                    <IconComponent className="w-5 h-5 text-slate-600" />
-                                    <span className="text-[9px] text-slate-400 truncate w-full text-center">
-                                      {key}
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ),
-                            )}
-                          </div>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  ยกเลิก
-                </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                  {editingFeature ? "บันทึกการแก้ไข" : "สร้างรายการใหม่"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+                      <SelectContent className="max-h-[300px] rounded-xl border-slate-200 shadow-xl">
+                        <div className="grid grid-cols-4 gap-2 p-2">
+                          {Object.entries(ICON_MAP).map(
+                            ([key, IconComponent]) => (
+                              <SelectItem
+                                key={key}
+                                value={key}
+                                className="flex justify-center cursor-pointer rounded-md p-2 hover:bg-slate-100 focus:bg-slate-100 data-[state=checked]:bg-blue-50 data-[state=checked]:border-blue-200 border border-transparent transition-all"
+                              >
+                                <div className="flex flex-col items-center gap-1">
+                                  <IconComponent className="w-5 h-5 text-slate-600" />
+                                  <span className="text-[9px] text-slate-400 truncate w-full text-center">
+                                    {key}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ),
+                          )}
+                        </div>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </form>
+        </Form>
+      </ResponsiveDialog>
     </div>
   );
 }

@@ -1,12 +1,8 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { FAQForm } from "./FAQForm";
+import { FaQuestion } from "react-icons/fa6";
 
 interface FAQ {
   id: string;
@@ -33,30 +29,32 @@ export function EditFAQDialog({
   if (!faq) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="md:max-w-2xl lg:max-w-4xl p-0 overflow-hidden bg-slate-50 border-0 shadow-2xl rounded-2xl">
-        <DialogHeader className="bg-linear-to-r from-slate-800 to-slate-900 p-6">
-          <DialogTitle className="text-xl font-bold text-white flex items-center gap-3">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <span className="text-blue-400">?</span>
-            </div>
-            แก้ไขคำถาม (FAQs)
-          </DialogTitle>
-        </DialogHeader>
-        <div className="p-6 max-h-[85vh] overflow-y-auto">
-          <FAQForm
-            isNew={false}
-            faqId={faq.id}
-            initialData={faq}
-            isStandalone={true}
-            onSuccess={() => {
-              onOpenChange(false);
-              if (onSuccess) onSuccess();
-            }}
-            onCancel={() => onOpenChange(false)}
-          />
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      className="p-0 overflow-hidden bg-slate-50 border-0 shadow-2xl rounded-2xl md:max-w-4xl"
+      title={
+        <div className="flex items-center gap-3 mt-6 px-4">
+          <div className="p-2 bg-blue-500/10 rounded-lg">
+            <FaQuestion className="h-5 w-5 text-blue-500" />
+          </div>
+          <span className="text-xl font-bold text-slate-800">แก้ไขคำถาม (FAQs)</span>
         </div>
-      </DialogContent>
-    </Dialog>
+      }
+    >
+      <div className="p-6">
+        <FAQForm
+          isNew={false}
+          faqId={faq.id}
+          initialData={faq}
+          isStandalone={true}
+          onSuccess={() => {
+            onOpenChange(false);
+            if (onSuccess) onSuccess();
+          }}
+          onCancel={() => onOpenChange(false)}
+        />
+      </div>
+    </ResponsiveDialog>
   );
 }
