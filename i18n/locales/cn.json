@@ -385,6 +385,16 @@
       "title": "感谢您的提交",
       "message": "团队已收到您的房源信息。我们将尽快与您联系。",
       "more_info_btn": "提交更多信息"
+    },
+    "wizard": {
+      "step1_desc": "请提供您的信息以开始委托房产",
+      "step2_desc": "选择工作人员与您联系最方便的方式",
+      "step3_desc": "初步房产信息以便快速评估",
+      "currently_editing": "正在编辑",
+      "completed": "已完成",
+      "pending": "待处理",
+      "press_enter": "按回车键继续",
+      "property_portal": "房地产门户"
     }
   },
   "contact_page": {
@@ -880,13 +890,13 @@
       "error": "发送信息失败",
       "name_required": "请输入您的姓名",
       "phone_required": "请输入您的电话号码",
-      "step1_label": "您的姓名",
-      "step1_desc": "告诉我们您的名字",
+      "step1_label": "联系信息",
+      "step1_desc": "请提供您的信息以开始委托房产",
       "step2_label": "联系方式",
-      "step2_desc": "电话和 Line ID",
-      "step3_label": "留言",
-      "step3_desc": "给我们留言",
-      "step_of": "步骤 {current}/{total}",
+      "step2_desc": "选择工作人员与您联系最方便的方式",
+      "step3_label": "房产详情",
+      "step3_desc": "初步房产信息以便快速评估",
+      "step_of": "第 {current} 步，共 {total} 步",
       "cancel": "取消",
       "back": "返回",
       "next": "下一步",

@@ -11,27 +11,27 @@ import { TransferBranchDialog } from "@/components/shared/TransferBranchDialog";
 import { Edit, Trash2, Eye, ArrowRightLeft, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { EditOwnerDialog } from "@/components/owners/EditOwnerDialog";
+import { Owner } from "@/features/owners/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type OwnerRowActionsProps = {
-  id: string;
-  fullName?: string | null;
-  tenantId?: string | null;
+  owner: Owner;
   isAdmin?: boolean;
   isMultiTenant?: boolean;
 };
 
 export function OwnerRowActions({
-  id,
-  fullName,
-  tenantId,
+  owner,
   isAdmin,
   isMultiTenant,
 }: OwnerRowActionsProps) {
+  const { id, full_name: fullName, tenant_id: tenantId } = owner;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const showTransferButton = isAdmin && isMultiTenant;
 
@@ -72,15 +72,23 @@ export function OwnerRowActions({
 
       <Button
         variant="ghost"
-        className={isMobile ? "w-full justify-start h-12 px-4 text-[15px] font-bold rounded-xl" : "h-9 w-9"}
+        className={
+          isMobile
+            ? "w-full justify-start h-12 px-4 text-[15px] font-bold rounded-xl"
+            : "h-9 w-9"
+        }
         size={isMobile ? "default" : "icon"}
-        asChild
-        onClick={() => isMobile && setIsMenuOpen(false)}
+        onClick={() => {
+          if (isMobile) {
+            setIsMenuOpen(false);
+          }
+          setShowEditDialog(true);
+        }}
       >
-        <Link href={`/protected/owners/${id}/edit`}>
-          <Edit className={isMobile ? "mr-3 h-5 w-5 text-slate-400" : "h-4 w-4"} />
-          {isMobile && "แก้ไขข้อมูล"}
-        </Link>
+        <Edit
+          className={isMobile ? "mr-3 h-5 w-5 text-slate-400" : "h-4 w-4"}
+        />
+        {isMobile && "แก้ไขข้อมูล"}
       </Button>
 
       {showTransferButton && (
@@ -154,6 +162,12 @@ export function OwnerRowActions({
         cancelText="ยกเลิก"
         variant="destructive"
         onConfirm={onDelete}
+      />
+
+      <EditOwnerDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        owner={owner}
       />
 
       {showTransferButton && (

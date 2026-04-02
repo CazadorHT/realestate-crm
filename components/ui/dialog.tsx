@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import * as VisuallyHiddenPrimitive from "@radix-ui/react-visually-hidden";
 import { XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -62,7 +63,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-150 grid w-full max-w-[calc(100%-2rem)] sm:max-w-md lg:max-w-3xl xl:max-w-5xl translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border border-slate-200 p-6 shadow-lg duration-200 outline-none",
+          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-150 grid w-full max-w-[calc(100%-2rem)] sm:max-w-md lg:max-w-3xl xl:max-w-5xl translate-x-[-50%] translate-y-[-50%] rounded-lg gap-4 border border-slate-200 p-6 shadow-lg duration-200 outline-none",
           className,
         )}
         {...props}
@@ -112,7 +113,10 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg leading-none font-semibold  line-clamp-3", className)}
+      className={cn(
+        "text-lg leading-none font-semibold  line-clamp-3",
+        className,
+      )}
       {...props}
     />
   );
@@ -131,15 +135,22 @@ function DialogDescription({
   );
 }
 
+function VisuallyHidden({
+  ...props
+}: React.ComponentProps<typeof VisuallyHiddenPrimitive.Root>) {
+  return <VisuallyHiddenPrimitive.Root {...props} />;
+}
+
 export {
   Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogTrigger,
   DialogClose,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
-  DialogOverlay,
-  DialogPortal,
+  DialogFooter,
   DialogTitle,
-  DialogTrigger,
+  DialogDescription,
+  VisuallyHidden,
 };

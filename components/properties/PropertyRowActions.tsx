@@ -134,7 +134,7 @@ export function PropertyRowActions({
           </Button>
         }
       >
-        <div className="grid gap-4 py-2">
+        <div className="grid gap-4 py-2 px-4">
           {/* Management Section */}
           <div className="grid grid-cols-2 gap-2 p-1">
             <p className="col-span-2 text-xs font-medium text-slate-400 uppercase tracking-wider px-1 mb-1">

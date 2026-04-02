@@ -44,15 +44,15 @@ export function DepositMobileView({
   const STEPS = [
     {
       id: 1,
-      label: t("property.contact_dialog.step1_label") || "ข้อมูลผู้ติดต่อ",
+      label: t("property.contact_dialog.step1_label"),
     },
     {
       id: 2,
-      label: t("property.contact_dialog.step2_label") || "ช่องทางติดต่อ",
+      label: t("property.contact_dialog.step2_label"),
     },
     {
       id: 3,
-      label: t("property.contact_dialog.step3_label") || "ข้อมูลอสังหาฯ",
+      label: t("property.contact_dialog.step3_label"),
     },
   ];
 

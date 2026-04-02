@@ -15,17 +15,32 @@ import {
   Loader2,
   Save,
   X,
+  ChevronRight,
+  ChevronLeft,
+  Building2,
 } from "lucide-react";
 import { FaFacebook, FaLine } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import type { Owner, OwnerFormValues } from "@/features/owners/types";
 
 import {
   createOwnerAction,
   updateOwnerAction,
 } from "@/features/owners/actions";
+import { OwnerMobileView } from "./components/OwnerMobileView";
+import { OwnerDesktopView } from "./components/OwnerDesktopView";
 
 const ownerSchema = z.object({
   full_name: z.string().min(1, "กรุณากรอกชื่อเจ้าของ"),
@@ -63,17 +78,18 @@ type Props =
       onCancel?: () => void;
     };
 
-// ... constants ...
-
 function toNull(v: string | null | undefined) {
   const t = (v ?? "").trim();
   return t.length ? t : null;
 }
 
 export function OwnerForm(props: Props) {
+  const isMobile = useIsMobile();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 3;
 
   const form = useForm<FormShape>({
     resolver: zodResolver(ownerSchema),
@@ -85,7 +101,7 @@ export function OwnerForm(props: Props) {
       facebook_url: props.initialValues?.facebook_url ?? "",
       other_contact: props.initialValues?.other_contact ?? "",
       company_name: props.initialValues?.company_name ?? "",
-      owner_type: props.initialValues?.owner_type ?? "",
+      owner_type: props.initialValues?.owner_type ?? "individual",
     },
   });
 
@@ -139,155 +155,45 @@ export function OwnerForm(props: Props) {
     }
   };
 
+  const nextStep = async () => {
+    let fields: (keyof FormShape)[] = [];
+    if (currentStep === 1) fields = ["full_name", "owner_type", "company_name"];
+    if (currentStep === 2) fields = ["phone", "line_id"];
+
+    const isValid = await form.trigger(fields);
+    if (isValid) {
+      setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+    }
+  };
+
+  const prevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  };
+
+  if (isMobile) {
+    return (
+      <OwnerMobileView
+        form={form}
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        isPending={isPending}
+        mode={props.mode}
+        nextStep={nextStep}
+        prevStep={prevStep}
+        handleCancel={handleCancel}
+        onSubmit={form.handleSubmit(onSubmit)}
+      />
+    );
+  }
+
   return (
-    <form className="space-y-8" onSubmit={form.handleSubmit(onSubmit)}>
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 font-medium flex items-center gap-2">
-          <X className="h-4 w-4" /> {error}
-        </div>
-      )}
-
-      <div className="space-y-6 pb-24">
-        {/* Main Info Card */}
-        <div className="bg-slate-50/50 p-4 sm:p-5 rounded-2xl border border-slate-100 space-y-4">
-          <div className="flex items-center gap-2 text-slate-800 font-semibold border-b border-slate-200/60 pb-2 mb-2">
-            <User className="h-4 w-4 text-blue-600" />
-            ข้อมูลทั่วไป
-          </div>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
-                ชื่อเจ้าของ <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="เช่น คุณสมชาย ใจดี"
-                  className="pl-9 h-11 bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all rounded-xl"
-                  {...form.register("full_name")}
-                />
-              </div>
-              {form.formState.errors.full_name && (
-                <p className="text-xs text-red-500 font-medium ml-1">
-                  {form.formState.errors.full_name.message}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Contact Info Card */}
-        <div className="bg-slate-50/50 p-4 sm:p-5 rounded-2xl border border-slate-100 space-y-4">
-          <div className="flex items-center gap-2 text-slate-800 font-semibold border-b border-slate-200/60 pb-2 mb-2">
-            <Phone className="h-4 w-4 text-emerald-600" />
-            ข้อมูลการติดต่อ
-          </div>
-
-          <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
-            {/* Phone */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                เบอร์โทร
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="089-xxx-xxxx"
-                  className="pl-9 h-11 bg-white border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all rounded-xl"
-                  {...form.register("phone")}
-                />
-              </div>
-            </div>
-
-            {/* Line ID */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                Line ID
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <FaLine className="h-4 w-4 text-[#06C755]" />
-                </div>
-                <Input
-                  placeholder="@lineid"
-                  className="pl-9 h-11 bg-white border-slate-200 focus:border-[#06C755] focus:ring-[#06C755]/20 transition-all rounded-xl"
-                  {...form.register("line_id")}
-                />
-              </div>
-            </div>
-
-            {/* Facebook */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                Facebook URL
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <FaFacebook className="h-4 w-4 text-[#1877F2]" />
-                </div>
-                <Input
-                  placeholder="facebook.com/..."
-                  className="pl-9 h-11 bg-white border-slate-200 focus:border-[#1877F2] focus:ring-[#1877F2]/20 transition-all rounded-xl"
-                  {...form.register("facebook_url")}
-                />
-              </div>
-              {form.formState.errors.facebook_url && (
-                <p className="text-xs text-red-500 font-medium ml-1">
-                  {form.formState.errors.facebook_url.message}
-                </p>
-              )}
-            </div>
-
-            {/* Other Contact */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                ช่องทางอื่นๆ
-              </label>
-              <div className="relative">
-                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="WhatsApp, WeChat..."
-                  className="pl-9 h-11 bg-white border-slate-200 focus:border-slate-400 focus:ring-slate-400/20 transition-all rounded-xl"
-                  {...form.register("other_contact")}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Action Buttons (Sticky Bottom) */}
-      <div className="sticky bottom-0 z-40 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 flex items-center justify-end gap-3 rounded-b-xl">
-        <Button
-          type="button"
-          variant="ghost"
-          disabled={isPending}
-          onClick={handleCancel}
-          className="h-15 px-10 text-muted-foreground hover:text-foreground cursor-pointer"
-        >
-          ยกเลิก
-        </Button>
-
-        <Button
-          type="submit"
-          disabled={
-            isPending || !form.formState.isValid || !form.formState.isDirty
-          }
-          className="h-15 px-10 rounded-xl bg-linear-to-r shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 text-white shadow-lg  hover:shadow-xl hover:shadow-emerald-500/30 transition-all gap-2 font-medium cursor-pointer disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
-        >
-          {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
-          {isPending
-            ? "กำลังบันทึก..."
-            : props.mode === "create"
-              ? "เพิ่มเจ้าของ"
-              : "บันทึกข้อมูล"}
-        </Button>
-      </div>
-    </form>
+    <OwnerDesktopView
+      form={form}
+      isPending={isPending}
+      error={error}
+      mode={props.mode}
+      handleCancel={handleCancel}
+      onSubmit={form.handleSubmit(onSubmit)}
+    />
   );
 }

@@ -12,6 +12,7 @@ import {
   DialogFooter,
   DialogTrigger,
   DialogClose,
+  VisuallyHidden,
 } from "@/components/ui/dialog";
 import {
   Drawer,
@@ -83,18 +84,24 @@ export function ResponsiveDialog({
         {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
         <DrawerContent className={cn("max-h-[96vh]", className)}>
           <DrawerHeader className="text-left px-6 py-4 shrink-0 border-b border-slate-50">
-            {title && <DrawerTitle>{title}</DrawerTitle>}
+            {title ? (
+              <DrawerTitle>{title}</DrawerTitle>
+            ) : (
+              <VisuallyHidden>
+                <DrawerTitle>Dialog</DrawerTitle>
+              </VisuallyHidden>
+            )}
             {description && (
               <DrawerDescription className="mt-1" asChild>
                 <div>{description}</div>
               </DrawerDescription>
             )}
           </DrawerHeader>
-          <div className=" py-4 overflow-y-auto grow">
+          <div className=" py-4 overflow-y-auto grow bg-white">
             {children}
           </div>
           {footer && (
-            <DrawerFooter className="shrink-0 pb-10 border-t border-slate-50 bg-slate-50/50">
+            <DrawerFooter className="shrink-0 pb-10 border-t border-slate-50 bg-white">
               {footer}
             </DrawerFooter>
           )}
@@ -108,14 +115,20 @@ export function ResponsiveDialog({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className={cn("max-w-lg", className)}>
         <DialogHeader>
-          {title && <DialogTitle>{title}</DialogTitle>}
+          {title ? (
+            <DialogTitle>{title}</DialogTitle>
+          ) : (
+            <VisuallyHidden>
+              <DialogTitle>Dialog</DialogTitle>
+            </VisuallyHidden>
+          )}
           {description && (
             <DialogDescription asChild>
               <div>{description}</div>
             </DialogDescription>
           )}
         </DialogHeader>
-        <div className="overflow-y-auto max-h-[80vh] py-2">
+        <div className="overflow-y-auto max-h-[80vh]">
           {children}
         </div>
         {footer && <DialogFooter className="pt-2">{footer}</DialogFooter>}

@@ -375,9 +375,7 @@ export function OwnersTable({
                   {/* จัดการ */}
                   <TableCell className="text-right">
                     <OwnerRowActions
-                      id={owner.id}
-                      fullName={owner.full_name}
-                      tenantId={owner.tenant_id}
+                      owner={owner}
                       isAdmin={isAdmin}
                       isMultiTenant={isMultiTenant}
                     />
@@ -438,9 +436,7 @@ export function OwnersTable({
                       )}
                     </div>
                     <OwnerRowActions
-                      id={owner.id}
-                      fullName={owner.full_name}
-                      tenantId={owner.tenant_id}
+                      owner={owner}
                       isAdmin={isAdmin}
                       isMultiTenant={isMultiTenant}
                     />

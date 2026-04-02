@@ -397,7 +397,7 @@ export function ContactForm() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="relative group">
-                    <Mail className="absolute left-4 top-12 h-5 w-5 text-white/30 group-focus-within:text-blue-400 transition-colors" />
+                    <Mail className="absolute left-4 top-1/2 h-5 w-5 text-white/30 group-focus-within:text-blue-400 transition-colors" />
                     <Label htmlFor="email" className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1 mb-2 block">
                       {t("contact.email_label")}
                     </Label>
@@ -414,7 +414,7 @@ export function ContactForm() {
 
                 <div className="space-y-2">
                   <div className="relative group">
-                    <FaLine className="absolute left-4 top-12 h-5 w-5 text-white/30 group-focus-within:text-blue-400 transition-colors" />
+                    <FaLine className="absolute left-4 top-1/2 h-5 w-5 text-white/30 group-focus-within:text-blue-400 transition-colors" />
                     <Label htmlFor="lineId" className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1 mb-2 block">
                       {t("contact.line_id_label")}
                     </Label>
@@ -434,7 +434,7 @@ export function ContactForm() {
                   {t("contact.more_details_label")}
                 </Label>
                 <div className="relative group">
-                  <MessageSquare className="absolute left-4 top-4 h-5 w-5 text-white/30 group-focus-within:text-blue-400 transition-colors" />
+                  <MessageSquare className="absolute left-4 top-2 h-5 w-5 text-white/30 group-focus-within:text-blue-400 transition-colors" />
                   <Textarea
                     id="message"
                     name="message"

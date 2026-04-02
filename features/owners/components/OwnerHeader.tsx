@@ -2,12 +2,11 @@ import Link from "next/link";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
+import { EditOwnerDialog } from "@/components/owners/EditOwnerDialog";
+import { Owner } from "@/features/owners/types";
 
 interface OwnerHeaderProps {
-  owner: {
-    id: string;
-    full_name: string | null;
-  };
+  owner: Owner;
   propertyCount: number;
 }
 
@@ -27,12 +26,15 @@ export function OwnerHeader({ owner, propertyCount }: OwnerHeaderProps) {
             </p>
           </div>
         </div>
-        <Button asChild variant="secondary" className="gap-2 shadow-lg">
-          <Link href={`/protected/owners/${owner.id}/edit`}>
-            <Edit className="h-4 w-4" />
-            แก้ไขข้อมูล
-          </Link>
-        </Button>
+        <EditOwnerDialog
+          owner={owner}
+          trigger={
+            <Button variant="secondary" className="gap-2 shadow-lg">
+              <Edit className="h-4 w-4" />
+              แก้ไขข้อมูล
+            </Button>
+          }
+        />
       </div>
     </div>
   );

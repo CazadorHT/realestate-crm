@@ -380,6 +380,16 @@
       "title": "Thank you for the info",
       "message": "Our team has received your property info. We will contact you back shortly.",
       "more_info_btn": "Send more info"
+    },
+    "wizard": {
+      "step1_desc": "Please provide your information to start depositing property",
+      "step2_desc": "Choose the most convenient way for our staff to contact you back",
+      "step3_desc": "Initial property info for faster evaluation",
+      "currently_editing": "Currently Editing",
+      "completed": "Completed",
+      "pending": "Pending",
+      "press_enter": "Press Enter to continue",
+      "property_portal": "Property Portal"
     }
   },
   "contact_page": {
@@ -871,12 +881,12 @@
       "error": "Failed to send information",
       "name_required": "Please enter your name",
       "phone_required": "Please enter your phone number",
-      "step1_label": "Your Name",
-      "step1_desc": "Tell us your name",
-      "step2_label": "Contact",
-      "step2_desc": "Phone & Line ID",
-      "step3_label": "Message",
-      "step3_desc": "Send us a message",
+      "step1_label": "Contact Info",
+      "step1_desc": "Please provide your information to start depositing property",
+      "step2_label": "Contact Method",
+      "step2_desc": "Choose the most convenient way for our staff to contact you back",
+      "step3_label": "Property Details",
+      "step3_desc": "Initial property info for faster evaluation",
       "step_of": "Step {current} of {total}",
       "cancel": "Cancel",
       "back": "Back",

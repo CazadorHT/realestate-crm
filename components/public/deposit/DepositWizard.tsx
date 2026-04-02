@@ -184,7 +184,11 @@ export function DepositWizard({
         <DepositDesktopView
           form={form}
           currentStep={currentStep}
+          totalSteps={totalSteps}
           isLoading={isLoading}
+          nextStep={nextStep}
+          prevStep={prevStep}
+          onCancel={onCancel}
           onSubmit={onSubmit}
           onInvalid={onInvalid}
           onFormStart={handleFormStart}

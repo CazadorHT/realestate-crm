@@ -1,19 +1,20 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
-  MoreHorizontal,
   MapPin,
-  Calendar,
-  Building,
   ImageIcon,
   Eye,
   Edit3,
+  Users,
+  Clock,
+  Building2,
+  Sparkles,
 } from "lucide-react";
-import type { Database } from "@/lib/database.types";
-import { format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
 import {
   Dialog,
@@ -22,24 +23,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { PropertyStatusBadge } from "@/components/properties/PropertyStatusBadge";
+import { PropertyTypeBadge } from "@/components/properties/PropertyTypeBadge";
+import { PropertyPrice } from "@/components/properties/PropertyPrice";
 import { PropertyRowActions } from "@/components/properties/PropertyRowActions";
 import { DuplicatePropertyButton } from "@/components/properties/DuplicatePropertyButton";
-import {
-  PROPERTY_TYPE_LABELS,
-  PROPERTY_STATUS_LABELS,
-} from "@/features/properties/labels";
+import { PropertyStatusSelect } from "@/components/properties/PropertyStatusDropdown";
+import { SocialStatusBadges } from "@/components/properties/SocialStatusBadges";
+import { PropertyStatus } from "@/features/properties/types";
+import { cn } from "@/lib/utils";
 
-type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
-
-type PropertyWithRelations = PropertyRow & {
-  property_images?:
-    | {
-        image_url: string;
-        storage_path: string;
-        is_cover: boolean | null;
-      }[]
-    | null;
-};
+type PropertyWithRelations = any;
 
 export function RecentPropertiesTable({
   properties,
@@ -71,63 +73,41 @@ export function RecentPropertiesTable({
         </Button>
       </div>
 
-      <Card className="shadow-lg border-none bg-transparent overflow-visible">
+      <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
         {/* Desktop Table View */}
-        <div className="hidden lg:block overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-xs font-semibold tracking-wider">
-              <tr>
-                <th className="px-6 py-4 w-[40%]">รายละเอียดทรัพย์</th>
-                <th className="px-6 py-4">ประเภท/สถานะ</th>
-                <th className="px-6 py-4">ราคา</th>
-                <th className="px-6 py-4">วันที่ลงประกาศ</th>
-                <th className="px-6 py-4 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+        <div className="hidden lg:block overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
+                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[350px]">ทรัพย์</TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[100px] text-[11px]">ชนิด</TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[150px] text-[11px]">ทำเล</TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[120px] text-[11px]">ราคา</TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[90px] text-[11px]">Leads</TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[110px] text-[11px]">Update</TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[120px] text-[11px]">สถานะ</TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[100px] text-[11px]">Social</TableHead>
+                <TableHead className="px-2 py-4 text-right font-bold text-slate-700 pr-6 w-[120px] text-[11px]">จัดการ</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {properties.map((property) => (
-                <tr
+                <TableRow
                   key={property.id}
-                  className="hover:bg-slate-50 transition-colors group"
+                  className="group hover:bg-slate-50/50 transition-colors"
                 >
-                  <td className="px-6 py-4 ">
+                  <TableCell className="px-2 py-4">
                     <div className="flex items-start gap-4">
-                      {/* Image Thumbnail */}
-                      <div className="relative h-[60px] w-[80px] shrink-0 overflow-hidden rounded-lg bg-slate-100 group/image cursor-zoom-in">
+                      {/* Image Thumbnail with Dialog Zoom */}
+                      <div className="relative h-[65px] w-[90px] shrink-0 overflow-hidden rounded-xl bg-slate-100 group/image cursor-zoom-in">
+                        {property.requires_ai_review && (
+                          <div className="absolute top-1 right-1 z-20 p-1 bg-white/90 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center border border-amber-200">
+                             <Sparkles className="h-3 w-3 text-amber-500" />
+                          </div>
+                        )}
                         {(() => {
-                          const {
-                            getPublicImageUrl,
-                          } = require("@/features/properties/image-utils");
-
-                          // Best image: Cover or the first image in property_images
-                          const bestImageFromTable =
-                            property.property_images?.find(
-                              (img: any) => img.is_cover,
-                            ) || property.property_images?.[0];
-
-                          let rawImageUrl =
-                            bestImageFromTable?.image_url ||
-                            bestImageFromTable?.storage_path ||
-                            null;
-
-                          // Fallback to legacy images if new table is empty
-                          if (!rawImageUrl && property.images) {
-                            const legacyImages = property.images as any;
-                            if (
-                              Array.isArray(legacyImages) &&
-                              legacyImages.length > 0
-                            ) {
-                              rawImageUrl =
-                                typeof legacyImages[0] === "string"
-                                  ? legacyImages[0]
-                                  : legacyImages[0]?.url ||
-                                    legacyImages[0]?.image_url;
-                            }
-                          }
-
-                          const imageUrl = rawImageUrl
-                            ? getPublicImageUrl(rawImageUrl)
-                            : null;
+                          const coverImg = property.property_images?.find((img: any) => img.is_cover) || property.property_images?.[0];
+                          const imageUrl = coverImg?.image_url;
 
                           return imageUrl ? (
                             <Dialog>
@@ -135,10 +115,10 @@ export function RecentPropertiesTable({
                                 <div className="w-full h-full overflow-hidden relative">
                                   <Image
                                     src={imageUrl}
-                                    alt={property.title || "Property Image"}
+                                    alt={property.title || "Property"}
                                     fill
-                                    sizes="100px"
-                                    className="object-cover transition-transform duration-300 group-hover/image:scale-110"
+                                    sizes="90px"
+                                    className="object-cover transition-transform duration-500 group-hover/image:scale-110"
                                   />
                                 </div>
                               </DialogTrigger>
@@ -154,228 +134,121 @@ export function RecentPropertiesTable({
                                     alt={property.title || "Property Image"}
                                     fill
                                     sizes="100vw"
-                                    className="object-contain shadow-2xl rounded-lg"
+                                    className="object-contain shadow-2xl rounded-2xl"
                                   />
                                 </div>
                               </DialogContent>
                             </Dialog>
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-slate-100">
-                              <ImageIcon className="h-5 w-5 text-slate-300" />
+                            <div className="flex h-full w-full items-center justify-center bg-slate-50">
+                              <ImageIcon className="h-6 w-6 text-slate-300" />
                             </div>
                           );
                         })()}
                       </div>
 
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1 min-w-0">
                         <Link
                           href={`/protected/properties/${property.id}`}
-                          className="font-semibold text-slate-900 hover:text-blue-600 transition-colors line-clamp-1 max-w-xs"
+                          className="block font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm leading-snug"
                         >
-                          {property.title || "ไม่ระบุชื่อ"}
+                          <span className="line-clamp-2 overflow-hidden w-[310px]">
+                            {property.title || "ไม่ระบุชื่อ"}
+                          </span>
                         </Link>
-                        <div className="flex items-center gap-3 text-xs text-slate-500">
-                          {property.district && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              <span>
-                                {property.district}
-                                {property.province
-                                  ? `, ${property.province}`
-                                  : ""}
-                              </span>
-                            </div>
+                        <span className="text-[11px] text-slate-500 line-clamp-1 opacity-90 leading-tight">
+                          {property.popular_area || property.description || "-"}
+                        </span>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          <span className="text-[11px] text-slate-400 flex items-center gap-1 bg-slate-50 px-1 py-0.5 rounded border border-slate-100 shrink-0">
+                            <Clock className="h-2.5 w-2.5" />
+                            {formatDistanceToNow(new Date(property.created_at), { addSuffix: true, locale: th })}
+                          </span>
+                          {property.tenant_name && (
+                            <span className="text-[11px] text-blue-600 font-bold flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 max-w-[100px] truncate shrink-0" title={property.tenant_name}>
+                              <Building2 className="h-2.5 w-2.5 shrink-0" />
+                              <span className="truncate">{property.tenant_name}</span>
+                            </span>
                           )}
-                          <span className="text-slate-300">|</span>
-                          <div className="flex items-center gap-1">
-                            <Building className="h-3 w-3" />
-                            <span>Code: {property.id.slice(0, 8)}</span>
-                          </div>
                         </div>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col items-start gap-2">
-                      <Badge
-                        variant="secondary"
-                        className="bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      >
-                        {PROPERTY_TYPE_LABELS[
-                          property.property_type as keyof typeof PROPERTY_TYPE_LABELS
-                        ] || property.property_type}
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className={`
-                          ${
-                            property.status === "ACTIVE"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              : property.status === "SOLD" ||
-                                  property.status === "RENTED"
-                                ? "bg-blue-50 text-blue-700 border-blue-200"
-                                : "bg-slate-50 text-slate-600 border-slate-200"
-                          }
-                        `}
-                      >
-                        {PROPERTY_STATUS_LABELS[
-                          property.status as keyof typeof PROPERTY_STATUS_LABELS
-                        ] || property.status}
-                      </Badge>
+                  </TableCell>
+                  <TableCell className="px-2 py-4">
+                    <div className="flex flex-col items-start gap-1">
+                      <PropertyTypeBadge type={property.property_type} className="h-5 text-[10px] font-bold" />
+                      <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
+                        {property.listing_type === "SALE" ? "ขาย" : property.listing_type === "RENT" ? "เช่า" : "ขาย/เช่า"}
+                      </span>
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col gap-2">
-                      {(() => {
-                        const isSale =
-                          property.listing_type === "SALE" ||
-                          (property.listing_type as string) === "SALE_RENT" ||
-                          property.listing_type === "SALE_AND_RENT";
-                        const isRent =
-                          property.listing_type === "RENT" ||
-                          (property.listing_type as string) === "SALE_RENT" ||
-                          property.listing_type === "SALE_AND_RENT";
-
-                        const salePrice = property.price;
-                        const originalSalePrice = property.original_price;
-                        const hasSaleDiscount =
-                          originalSalePrice &&
-                          salePrice &&
-                          originalSalePrice > salePrice;
-
-                        const rentPrice = property.rental_price;
-                        const originalRentPrice =
-                          property.original_rental_price;
-                        const hasRentDiscount =
-                          originalRentPrice &&
-                          rentPrice &&
-                          originalRentPrice > rentPrice;
-
-                        if (
-                          !salePrice &&
-                          !rentPrice &&
-                          !originalSalePrice &&
-                          !originalRentPrice
-                        ) {
-                          return (
-                            <span className="text-sm text-slate-300">-</span>
-                          );
-                        }
-
-                        return (
-                          <>
-                            {isSale && (
-                              <div className="flex flex-col">
-                                {hasSaleDiscount ? (
-                                  <div className="flex flex-col items-start gap-0.5">
-                                    <span className="text-xs text-slate-400 line-through decoration-slate-300">
-                                      ฿
-                                      {originalSalePrice?.toLocaleString(
-                                        "th-TH",
-                                        {
-                                          maximumFractionDigits: 0,
-                                        },
-                                      )}
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-[10px] text-red-500 font-bold bg-red-50 px-1 rounded border border-red-100">
-                                        ลดขาย
-                                      </span>
-                                      <span className="font-bold text-sm text-red-600">
-                                        ฿
-                                        {salePrice?.toLocaleString("th-TH", {
-                                          maximumFractionDigits: 0,
-                                        })}
-                                      </span>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="flex flex-col">
-                                    {isRent && (
-                                      <span className="text-[10px] text-slate-400 font-medium mb-0.5">
-                                        ราคาขาย
-                                      </span>
-                                    )}
-                                    <span className="font-bold text-sm text-slate-900">
-                                      ฿
-                                      {(
-                                        salePrice || originalSalePrice
-                                      )?.toLocaleString("th-TH", {
-                                        maximumFractionDigits: 0,
-                                      })}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {isRent && (
-                              <div className="flex flex-col">
-                                {hasRentDiscount ? (
-                                  <div className="flex flex-col items-start gap-0.5">
-                                    <span className="text-xs text-slate-400 line-through decoration-slate-300">
-                                      ฿
-                                      {originalRentPrice?.toLocaleString(
-                                        "th-TH",
-                                        {
-                                          maximumFractionDigits: 0,
-                                        },
-                                      )}
-                                      /ด
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-[10px] text-orange-500 font-bold bg-orange-50 px-1 rounded border border-orange-100">
-                                        ลดเช่า
-                                      </span>
-                                      <span className="font-bold text-sm text-orange-600">
-                                        ฿
-                                        {rentPrice?.toLocaleString("th-TH", {
-                                          maximumFractionDigits: 0,
-                                        })}
-                                        /ด
-                                      </span>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="flex flex-col mt-1">
-                                    <span className="font-semibold text-xs text-slate-600">
-                                      เช่า: ฿
-                                      {(
-                                        rentPrice || originalRentPrice
-                                      )?.toLocaleString("th-TH", {
-                                        maximumFractionDigits: 0,
-                                      })}
-                                      /ด
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </>
-                        );
-                      })()}
+                  </TableCell>
+                  <TableCell className="px-2 py-4">
+                    <div className="flex flex-col gap-0.5">
+                      <div className="font-medium text-[11px] text-slate-700 line-clamp-1">
+                        {property.popular_area || property.district || "-"}
+                      </div>
+                      <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
+                        {property.size_sqm ? <span className="shrink-0">{property.size_sqm} m²</span> : null}
+                        {property.land_size_sqwah ? <span className="shrink-0">{property.land_size_sqwah} w²</span> : null}
+                      </div>
+                      <div className="text-[10px] text-slate-400 flex gap-1.5">
+                        {property.bedrooms ? <span>{property.bedrooms}น</span> : null}
+                        {property.bathrooms ? <span>{property.bathrooms}น้ำ</span> : null}
+                      </div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-slate-500">
-                    <div className="flex items-center gap-2 text-xs">
-                      <Calendar className="h-3 w-3" />
-                      {format(new Date(property.created_at), "d MMM yyyy", {
-                        locale: th,
-                      })}
+                  </TableCell>
+                  <TableCell className="px-2 py-4">
+                    <PropertyPrice
+                      variant="table"
+                      listingType={property.listing_type}
+                      price={property.price}
+                      originalPrice={property.original_price}
+                      rentalPrice={property.rental_price}
+                      originalRentalPrice={property.original_rental_price}
+                    />
+                  </TableCell>
+                  <TableCell className="px-2 py-4">
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1 text-[11px] font-medium text-slate-700">
+                        <Users className="h-2.5 w-2.5 text-blue-500" />
+                        <span>{property.leads_count || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                        <Eye className="h-2.5 w-2.5" />
+                        <span>{property.view_count || 0}</span>
+                      </div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end items-center gap-1">
+                  </TableCell>
+                  <TableCell className="px-2 py-4">
+                    <div className="text-[11px] text-slate-500 line-clamp-1 opacity-80 max-w-[80px] truncate" title={new Date(property.updated_at).toLocaleString("th-TH")}>
+                      {formatDistanceToNow(new Date(property.updated_at), { addSuffix: true, locale: th })}
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-2 py-4">
+                    <PropertyStatusSelect
+                      id={property.id}
+                      value={property.status as PropertyStatus}
+                      className="h-7 w-full max-w-[120px] text-[11px] px-2 font-bold"
+                    />
+                  </TableCell>
+                  <TableCell className="px-2 py-4">
+                    <SocialStatusBadges
+                      facebookAt={property.posted_to_facebook_at}
+                      instagramAt={property.posted_to_instagram_at}
+                      lineAt={property.posted_to_line_at}
+                      tiktokAt={property.posted_to_tiktok_at}
+                    />
+                  </TableCell>
+                  <TableCell className="px-2 py-4 text-right pr-6">
+                    <div className="flex justify-end items-center gap-0.5">
                       <Button
                         asChild
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 cursor-pointer hover:text-blue-700 hover:bg-blue-50"
-                        title="ดู"
-                        aria-label="ดู"
+                        className="h-7 w-7 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                       >
                         <Link href={`/protected/properties/${property.id}`}>
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5" />
                         </Link>
                       </Button>
 
@@ -383,294 +256,180 @@ export function RecentPropertiesTable({
                         asChild
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 cursor-pointer hover:text-amber-700 hover:bg-amber-50"
-                        title="แก้ไข"
-                        aria-label="แก้ไข"
+                        className="h-7 w-7 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
                       >
-                        <Link
-                          href={`/protected/properties/${property.id}/edit`}
-                        >
-                          <Edit3 className="h-4 w-4" />
+                        <Link href={`/protected/properties/${property.id}/edit`}>
+                          <Edit3 className="h-3.5 w-3.5" />
                         </Link>
                       </Button>
 
                       <DuplicatePropertyButton
                         id={property.id}
-                        className="cursor-pointer hover:text-purple-600 hover:bg-purple-50"
+                        className="h-7 w-7 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg"
                       />
 
-                      <PropertyRowActions id={property.id} />
+                      <PropertyRowActions 
+                        id={property.id} 
+                        title={property.title} 
+                        className="h-7 w-7 text-slate-400 hover:bg-slate-100 rounded-lg"
+                      />
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-              {properties.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="text-center py-20 text-slate-500 bg-slate-50/30"
-                  >
-                    <div className="flex flex-col items-center gap-4 max-w-sm mx-auto">
-                      <div className="p-4 bg-white rounded-full shadow-sm border border-slate-100">
-                        <Building className="h-10 w-10 text-slate-300" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-semibold text-slate-900">
-                          ยังไม่มีทรัพย์ในระบบ
-                        </p>
-                        <p className="text-sm text-slate-500">
-                          เริ่มเพิ่มทรัพย์พเพื่อจัดการข้อมูลและประกาศขาย/เช่าได้ทันที
-                        </p>
-                      </div>
-                      <Button
-                        asChild
-                        className="rounded-full px-8 bg-blue-600 hover:bg-blue-700 font-bold shadow-lg shadow-blue-100 transition-all hover:scale-105"
-                      >
-                        <Link href="/protected/properties/new">
-                          เพิ่มทรัพย์รายการแรก +
-                        </Link>
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
 
-        {/* Mobile & Tablet Grid View */}
-        <div className="lg:hidden grid grid-cols-1 gap-4 sm:gap-6 ">
-          {properties.map((property) => (
-            <Card
-              key={property.id}
-              className="group relative flex flex-col overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-500 bg-white rounded-lg sm:rounded-xl"
-            >
-              {/* Image Section (Vertical Stack) */}
-              <div className="relative aspect-4/3 w-full shrink-0 overflow-hidden bg-slate-100 shadow-inner">
-                {(() => {
-                  const coverImg =
-                    property.property_images?.find((img) => img.is_cover) ||
-                    property.property_images?.[0];
-                  const imageUrl = coverImg?.image_url;
-
-                  return imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={property.title || "Property"}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+        {/* Mobile & Tablet Premium Card View */}
+        <div className="lg:hidden p-3 min-[400px]:p-4 bg-slate-50/30">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {properties.map((property) => (
+              <div
+                key={property.id}
+                className="relative group bg-white rounded-2xl border border-slate-200 transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden flex flex-col"
+              >
+                {/* Actions Button Overlay */}
+                <div className="absolute top-2.5 right-2.5 z-30 flex items-center gap-1.5">
+                  <div className="p-1 bg-white/80 backdrop-blur-md rounded-xl border border-slate-200 shadow-sm">
+                    <PropertyRowActions
+                      id={property.id}
+                      title={property.title}
                     />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-50">
-                      <ImageIcon className="h-8 w-8 text-slate-300" />
-                    </div>
-                  );
-                })()}
-
-                {/* Floating Badges on Image */}
-                <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1.5">
-                  <Badge className="text-[9px] px-2 py-0.5 h-5 font-bold bg-white/90 backdrop-blur-md text-blue-600 border-none shadow-sm uppercase tracking-tight">
-                    {PROPERTY_TYPE_LABELS[
-                      property.property_type as keyof typeof PROPERTY_TYPE_LABELS
-                    ] || property.property_type}
-                  </Badge>
-                  <Badge
-                    className={`text-[9px] px-2 py-0.5 h-5 font-bold border-0 shadow-sm ${
-                      property.status === "ACTIVE"
-                        ? "bg-emerald-500 text-white"
-                        : property.status === "SOLD" ||
-                            property.status === "RENTED"
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-500 text-white"
-                    }`}
-                  >
-                    {property.status === "ACTIVE"
-                      ? "ใช้งาน"
-                      : PROPERTY_STATUS_LABELS[
-                          property.status as keyof typeof PROPERTY_STATUS_LABELS
-                        ] || property.status}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Content Section */}
-              <div className="flex-1 p-3 sm:p-4 flex flex-col">
-                <div className="space-y-1.5 mb-3">
-                  <Link
-                    href={`/protected/properties/${property.id}`}
-                    className="font-semibold text-slate-900 hover:text-blue-600 transition-colors line-clamp-1 text-sm sm:text-base leading-tight"
-                  >
-                    {property.title || "ไม่ระบุชื่อ"}
-                  </Link>
-
-                  <div className="flex items-center gap-1 text-[10px] sm:text-xs text-slate-500 font-semibold truncate opacity-80">
-                    <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-slate-400 shrink-0" />
-                    <span className="truncate">
-                      {property.district}, {property.province}
-                    </span>
                   </div>
                 </div>
 
-                <div className="mt-auto pt-3 border-t border-slate-50 flex items-start justify-between gap-1">
-                  <div className="flex flex-col min-w-0 flex-1">
-                    <div className="space-y-1">
-                      {(() => {
-                        const listingType = String(
-                          property.listing_type,
-                        ).toUpperCase();
-                        const isSale =
-                          listingType === "SALE" ||
-                          listingType === "SALE_RENT" ||
-                          listingType === "SALE_AND_RENT";
-                        const isRent =
-                          listingType === "RENT" ||
-                          listingType === "SALE_RENT" ||
-                          listingType === "SALE_AND_RENT";
-
-                        const salePrice = property.price;
-                        const originalSalePrice = property.original_price;
-                        const hasSaleDiscount =
-                          originalSalePrice &&
-                          salePrice &&
-                          originalSalePrice > salePrice;
-
-                        const rentPrice = property.rental_price;
-                        const originalRentPrice =
-                          property.original_rental_price;
-                        const hasRentDiscount =
-                          originalRentPrice &&
-                          rentPrice &&
-                          originalRentPrice > rentPrice;
-
-                        if (
-                          !salePrice &&
-                          !rentPrice &&
-                          !originalSalePrice &&
-                          !originalRentPrice
-                        ) {
-                          return (
-                            <p className="text-[11px] sm:text-[13px] font-bold text-slate-400">
-                              ติดต่อสอบถาม
-                            </p>
-                          );
-                        }
-
-                        return (
-                          <div className="flex flex-col gap-1">
-                            {isSale && (
-                              <div className="flex flex-col">
-                                {hasSaleDiscount ? (
-                                  <div className="flex flex-col items-start">
-                                    <span className="text-[9px] text-slate-400 line-through decoration-slate-300 leading-none">
-                                      ฿
-                                      {originalSalePrice?.toLocaleString(
-                                        "th-TH",
-                                      )}
-                                    </span>
-                                    <div className="flex items-center gap-1 mt-0.5">
-                                      <span className="text-[8px] text-red-500 font-semibold bg-red-50 px-1 rounded border border-red-100">
-                                        ลดขาย
-                                      </span>
-                                      <span className="font-semibold text-[12px] sm:text-[14px] text-red-600 leading-tight">
-                                        ฿{salePrice?.toLocaleString("th-TH")}
-                                      </span>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <span className="font-black text-[12px] sm:text-[14px] text-slate-900 leading-tight wrap-break-word">
-                                    ฿
-                                    {(
-                                      salePrice || originalSalePrice
-                                    )?.toLocaleString("th-TH")}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-
-                            {isRent && (
-                              <div className="flex flex-col">
-                                {hasRentDiscount ? (
-                                  <div className="flex flex-col items-start">
-                                    <span className="text-[9px] text-slate-400 line-through decoration-slate-300 leading-none">
-                                      ฿
-                                      {originalRentPrice?.toLocaleString(
-                                        "th-TH",
-                                      )}
-                                      /ด
-                                    </span>
-                                    <div className="flex items-center gap-1 mt-0.5">
-                                      <span className="text-[8px] text-orange-500 font-bold bg-orange-50 px-1 rounded border border-orange-100">
-                                        ลดเช่า
-                                      </span>
-                                      <span className="font-semibold text-[10px] sm:text-[12px] text-orange-600 leading-tight">
-                                        ฿{rentPrice?.toLocaleString("th-TH")}/ด
-                                      </span>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <span className="font-semibold text-[10px] sm:text-[12px] text-orange-600 leading-tight wrap-break-word">
-                                    เช่า: ฿
-                                    {(
-                                      rentPrice || originalRentPrice
-                                    )?.toLocaleString("th-TH")}
-                                    /ด
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
+                <Link
+                  href={`/protected/properties/${property.id}`}
+                  className="block relative aspect-16/10 overflow-hidden"
+                >
+                  {property.requires_ai_review && (
+                    <div className="absolute top-2.5 left-2.5 z-30 p-1.5 bg-white/90 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center border border-amber-200">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
                     </div>
-                    <p className="text-[9px] text-slate-400 font-bold tracking-tight lowercase mt-1">
-                      {format(new Date(property.created_at), "d MMM yy", {
-                        locale: th,
-                      })}
+                  )}
+                  {(() => {
+                    const coverImg = property.property_images?.find((img: any) => img.is_cover) || property.property_images?.[0];
+                    const imageUrl = coverImg?.image_url;
+
+                    return imageUrl ? (
+                      <Image
+                        src={imageUrl}
+                        alt={property.title || "Property"}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center bg-slate-100">
+                        <ImageIcon className="h-10 w-10 text-slate-300" />
+                      </div>
+                    );
+                  })()}
+
+                  {/* Status Badges Overlay */}
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 overflow-hidden">
+                    <div className="flex items-center gap-1.5">
+                      <PropertyTypeBadge
+                        type={property.property_type}
+                        className="h-5 text-[10px] px-2 bg-white/95 backdrop-blur-sm shadow-sm border-none font-bold"
+                      />
+                    </div>
+                    <PropertyStatusBadge
+                      status={property.status}
+                      className="h-5 text-[10px] px-2 font-bold shadow-md backdrop-blur-sm"
+                    />
+                  </div>
+                </Link>
+
+                {/* Property Details */}
+                <div className="p-3 min-[400px]:p-4 space-y-3 flex-1 flex flex-col">
+                  <div className="space-y-1">
+                    <Link
+                      href={`/protected/properties/${property.id}`}
+                      className="font-bold text-slate-900 text-sm min-[400px]:text-base leading-snug line-clamp-1 hover:text-blue-600 transition-colors"
+                    >
+                      {property.title || "ไม่ระบุชื่อ"}
+                    </Link>
+                    <div className="flex items-center gap-1 text-[10px] min-[400px]:text-xs text-slate-500 font-medium">
+                      <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
+                      <span className="truncate">
+                        {property.popular_area || property.district || "-"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="py-2 border-y border-slate-100">
+                    <PropertyPrice
+                      variant="card"
+                      listingType={property.listing_type}
+                      price={property.price}
+                      originalPrice={property.original_price}
+                      rentalPrice={property.rental_price}
+                      originalRentalPrice={property.original_rental_price}
+                    />
+                  </div>
+
+                  {/* Meta Stats & Social */}
+                  <div className="flex flex-col gap-2.5 pt-0.5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 text-[10px] min-[400px]:text-[11px] font-bold text-slate-600">
+                        <Users className="h-3 w-3 text-blue-500" />
+                        {property.leads_count || 0}
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] min-[400px]:text-[11px] font-bold text-slate-600">
+                        <Eye className="h-3 w-3 text-slate-400" />
+                        {property.view_count || 0}
+                      </div>
+
+                      <SocialStatusBadges
+                        facebookAt={property.posted_to_facebook_at}
+                        instagramAt={property.posted_to_instagram_at}
+                        lineAt={property.posted_to_line_at}
+                        tiktokAt={property.posted_to_tiktok_at}
+                        className="ml-auto"
+                      />
+                    </div>
+                    
+                    <PropertyStatusSelect
+                      id={property.id}
+                      value={property.status as PropertyStatus}
+                      className="h-8 w-full text-[10px] min-[400px]:text-[11px] font-bold shadow-xs transition-shadow hover:shadow-md border-slate-200 rounded-lg bg-white"
+                    />
+
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 mt-auto">
+                      <span className="text-[10px] text-slate-400 font-bold tracking-tight lowercase">
+                        {formatDistanceToNow(new Date(property.updated_at), { addSuffix: true, locale: th })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {properties.length === 0 && (
+              <div className="col-span-full py-20 text-center text-slate-500 bg-white rounded-2xl border border-dashed border-slate-200">
+                <div className="flex flex-col items-center gap-4 max-w-xs mx-auto">
+                  <div className="p-4 bg-slate-50 rounded-full">
+                    <Building2 className="h-10 w-10 text-slate-300" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="font-bold text-slate-900">ยังไม่มีทรัพย์ในระบบ</p>
+                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                      เริ่มสร้างทรัพย์รายการแรกของคุณวันนี้เพื่อจัดการข้อมูลทรัพย์สิน
                     </p>
                   </div>
-
-                  <div className="flex items-center gap-0.5 shrink-0 pt-0.5">
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-slate-50 hover:bg-blue-50 hover:text-blue-600"
-                    >
-                      <Link href={`/protected/properties/${property.id}`}>
-                        <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      </Link>
-                    </Button>
-                    <PropertyRowActions id={property.id} />
-                  </div>
+                  <Button
+                    asChild
+                    size="sm"
+                    className="mt-2 rounded-xl bg-blue-600 font-bold shadow-md h-10 px-6"
+                  >
+                    <Link href="/protected/properties/new">เพิ่มทรัพย์ใหม่</Link>
+                  </Button>
                 </div>
               </div>
-            </Card>
-          ))}
-          {properties.length === 0 && (
-            <div className="col-span-full p-16 text-center text-slate-500 bg-white rounded-3xl border border-dashed border-slate-200">
-              <div className="flex flex-col items-center gap-4">
-                <div className="p-3 bg-slate-50 rounded-full">
-                  <Building className="h-10 w-10 text-slate-300" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-slate-900">
-                    ยังไม่มีทรัพย์ในระบบ
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    เริ่มสร้างทรัพย์รายการแรกของคุณวันนี้
-                  </p>
-                </div>
-                <Button
-                  asChild
-                  size="sm"
-                  className="rounded-full bg-blue-600 font-bold"
-                >
-                  <Link href="/protected/properties/new">เพิ่มทรัพย์ใหม่</Link>
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

@@ -7,7 +7,9 @@ import { DepositLeadInput } from "@/features/public/types";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   AnimatedClock,
   AnimatedShield,
@@ -20,19 +22,28 @@ import {
   renderPropertyTypeField,
   renderMessageField,
 } from "./FormFields";
-import { SubmitButton } from "./SharedComponents";
+import { SubmitButton, StepIcon } from "./SharedComponents";
+import { cn } from "@/lib/utils";
 
 export function DepositDesktopView({
   form,
   currentStep,
+  totalSteps,
   isLoading,
+  nextStep,
+  prevStep,
+  onCancel,
   onSubmit,
   onInvalid,
   onFormStart,
 }: {
   form: UseFormReturn<DepositLeadInput>;
   currentStep: number;
+  totalSteps: number;
   isLoading: boolean;
+  nextStep: () => Promise<void>;
+  prevStep: () => void;
+  onCancel: () => void;
   onSubmit: (values: DepositLeadInput) => Promise<void>;
   onInvalid?: (errors: any) => void;
   onFormStart: () => void;
@@ -42,125 +53,213 @@ export function DepositDesktopView({
   const siteName = settings.site_name || siteConfig.name;
   const companyName = settings.company_name || siteConfig.company;
 
-  return (
-    <div className="hidden sm:flex sm:flex-row h-full min-h-[500px]">
-      {/* ── Left Panel: Branding & Trust ── */}
-      <div className="w-[280px] shrink-0 bg-linear-to-b from-blue-800 via-sky-600 to-indigo-700 text-white p-7 flex flex-col justify-between relative overflow-hidden sm:rounded-l-2xl">
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-24 -mt-24 blur-xs" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400/10 rounded-full -ml-16 -mb-16 blur-xs" />
-        <div className="absolute top-1/2 left-1/2 w-20 h-20 bg-blue-400/10 rounded-full blur-xl" />
+  const STEPS = [
+    {
+      id: 1,
+      label: t("property.contact_dialog.step1_label"),
+    },
+    {
+      id: 2,
+      label: t("property.contact_dialog.step2_label"),
+    },
+    {
+      id: 3,
+      label: t("property.contact_dialog.step3_label"),
+    },
+  ];
 
-        <div className="relative z-10 space-y-8">
-          {/* Logo / Icon */}
+  // Logic to determine if a step is completed for micro-interactions
+  const isStep1Done = !!form.watch("fullName");
+  const isStep2Done = !!form.watch("phone");
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      if (currentStep < totalSteps) {
+        e.preventDefault();
+        nextStep();
+      }
+    }
+  };
+
+  return (
+    <div className="hidden sm:flex sm:flex-row h-full min-h-[580px] overflow-hidden rounded-2xl">
+      {/* ── Left Panel: Branding & Steps ── */}
+      <div className="w-[300px] shrink-0 bg-[#0c1e4c] text-white p-8 flex flex-col justify-between relative overflow-hidden">
+        {/* Advanced Mesh Gradient Background */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-linear-to-br from-blue-700/20 via-transparent to-indigo-900/40" />
+          <div className="absolute top-[-20%] right-[-10%] w-80 h-80 bg-blue-500/20 rounded-full blur-[100px] animate-pulse" />
+          <div className="absolute bottom-[-10%] left-[-20%] w-64 h-64 bg-indigo-600/20 rounded-full blur-[80px]" />
+          <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/grid.svg')] bg-center mask-[radial-gradient(white,transparent_85%)] opacity-[0.04] pointer-events-none" />
+        </div>
+
+        <div className="relative z-10 space-y-12">
+          {/* Logo Section */}
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="w-20 h-20 bg-white/15 rounded-xl flex items-center justify-center border border-white/20 shadow-2xl relative group"
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="flex items-center gap-3"
           >
-            <div className="absolute inset-0 bg-white/5 rounded-2xl animate-pulse group-hover:bg-white/10 transition-colors" />
-            <div className="relative z-10 w-16 h-16 flex items-center justify-center overflow-hidden">
+            <div className="w-20 h-20 bg-white rounded-xl p-1 shadow-xl shadow-blue-900/20">
               <Image
-                src={siteConfig.logoDark}
+                src={siteConfig.logo}
                 alt={siteName}
-                width={80}
-                height={80}
-                className="object-contain"
+                width={60}
+                height={60}
+                className="object-contain w-full h-full"
               />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-base font-bold tracking-tight leading-none">
+                {siteName}
+              </span>
+              <span className="text-[9px] text-blue-200/60 uppercase tracking-widest mt-1 font-semibold">
+                {t("deposit.wizard.property_portal") || "Property Portal"}
+              </span>
             </div>
           </motion.div>
 
-          {/* Title */}
-          <div className="space-y-3">
-            <DialogTitle className="text-2xl font-bold tracking-tight leading-tight">
-              {t("deposit.dialog.title")}
-            </DialogTitle>
-            <p className="text-blue-100/70 text-sm leading-relaxed">
+          {/* Vertical Step Indicator */}
+          <div className="space-y-8 pt-4">
+            {STEPS.map((step) => {
+              const isCompleted = currentStep > step.id || (step.id === 1 && isStep1Done) || (step.id === 2 && isStep2Done);
+              const isActive = currentStep === step.id;
+              
+              return (
+                <div key={step.id} className="flex items-center gap-4 group cursor-default">
+                  <StepIcon 
+                    stepNum={step.id} 
+                    currentStep={isCompleted && !isActive ? step.id + 1 : currentStep} 
+                    isDesktop 
+                  />
+                  <div>
+                    <p className={cn(
+                      "text-sm font-bold transition-all duration-300",
+                      isActive ? "text-white" : isCompleted ? "text-emerald-400" : "text-blue-200/50"
+                    )}>
+                      {step.label}
+                    </p>
+                    <p className="text-[10px] text-blue-200/40 uppercase tracking-wider font-semibold mt-0.5">
+                      {isActive 
+                        ? (t("deposit.wizard.currently_editing") || "Currently Editing") 
+                        : isCompleted 
+                          ? (t("deposit.wizard.completed") || "Completed") 
+                          : (t("deposit.wizard.pending") || "Pending")}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-white/5">
+            <p className="text-[11px] text-blue-100/60 font-medium leading-relaxed">
               {t("deposit.dialog.subtitle")}
             </p>
           </div>
-
-          {/* Divider */}
-          <div className="h-px bg-white/10 w-12" />
-
-          {/* Trust Signals */}
-          <div className="space-y-6">
-            <div className="flex items-start gap-4 group/item">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-white/20 transition-colors">
-                <AnimatedClock size={16} className="text-blue-200" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white/95 group-hover/item:text-white transition-colors">
-                  {t("property.contact_dialog.trust_response") ||
-                    "ตอบเร็วทันใจ"}
-                </p>
-                <p className="text-xs text-blue-200/60 leading-relaxed mt-0.5 group-hover/item:text-blue-100/80 transition-colors">
-                  {t("property.contact_dialog.trust_response_desc") ||
-                    "เจ้าหน้าที่พร้อมดูแลภายใน 24 ชม."}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4 group/item">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-white/20 transition-colors">
-                <AnimatedShield size={16} className="text-blue-200" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white/95 group-hover/item:text-white transition-colors">
-                  {t("property.contact_dialog.trust_safe") ||
-                    "ปลอดภัย มั่นใจได้"}
-                </p>
-                <p className="text-xs text-blue-200/60 leading-relaxed mt-0.5 group-hover/item:text-blue-100/80 transition-colors">
-                  {t("property.contact_dialog.trust_safe_desc") ||
-                    "รับประกันความเป็นส่วนตัวของข้อมูล"}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4 group/item">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-white/20 transition-colors">
-                <AnimatedHeadset size={16} className="text-blue-200" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white/95 group-hover/item:text-white transition-colors">
-                  {t("property.contact_dialog.trust_free") ||
-                    "ไม่มีค่าใช้จ่ายล่วงหน้า"}
-                </p>
-                <p className="text-xs text-blue-200/60 leading-relaxed mt-0.5 group-hover/item:text-blue-100/80 transition-colors">
-                  {t("property.contact_dialog.trust_free_desc") ||
-                    "ฝากทรัพย์ได้ฟรี ไม่มีข้อผูกมัด"}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Footer info */}
+        {/* Footer Branding */}
         <div className="relative z-10 pt-6 border-t border-white/10">
-          <p className="text-[10px] text-blue-200/40 text-center uppercase tracking-widest font-bold">
+          <p className="text-[9px] text-blue-200/30 uppercase tracking-[0.2em] font-bold">
             {companyName}
           </p>
         </div>
       </div>
 
-      {/* ── Right Panel: Form ── */}
-      <div className="flex-1 p-7 overflow-y-auto bg-slate-50 sm:rounded-r-2xl">
-        <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-6">
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-            {renderNameField(form, false, t, onFormStart)}
+      {/* ── Right Panel: Form Wizard ── */}
+      <div className="flex-1 bg-white flex flex-col min-h-0">
+        {/* Horizontal Progress Bar */}
+        <div className="h-1.5 w-full bg-slate-50 relative shrink-0">
+          <motion.div
+            className="absolute inset-y-0 left-0 bg-linear-to-r from-blue-600 to-indigo-600 shadow-[2px_0_8px_rgba(37,99,235,0.3)]"
+            initial={{ width: "0%" }}
+            animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            transition={{ type: "spring", stiffness: 50, damping: 20 }}
+          />
+        </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {renderPhoneField(form, false, t, onFormStart)}
-              {renderLineField(form, false, t, onFormStart)}
+        <div className="flex-1 overflow-y-auto no-scrollbar p-10">
+          <form
+            onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+            onKeyDown={handleKeyDown}
+            className="h-full flex flex-col"
+          >
+            <div className="flex-1 min-h-[350px]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep}
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: -20, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="space-y-8"
+                >
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold text-slate-800 tracking-tight">
+                      {STEPS[currentStep - 1].label}
+                    </h3>
+                    <p className="text-xs text-slate-400 font-medium">
+                      {currentStep === 1 && t("deposit.wizard.step1_desc")}
+                      {currentStep === 2 && t("deposit.wizard.step2_desc")}
+                      {currentStep === 3 && t("deposit.wizard.step3_desc")}
+                    </p>
+                  </div>
+
+                  <div className="pt-2">
+                    {currentStep === 1 && renderNameField(form, false, t, onFormStart)}
+                    {currentStep === 2 && (
+                      <div className="grid grid-cols-1 gap-6">
+                        {renderPhoneField(form, false, t, onFormStart)}
+                        {renderLineField(form, false, t, onFormStart)}
+                      </div>
+                    )}
+                    {currentStep === 3 && (
+                      <div className="space-y-6">
+                        {renderPropertyTypeField(form, false, t, onFormStart)}
+                        {renderMessageField(form, false, t, onFormStart)}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
 
-            {renderPropertyTypeField(form, false, t, onFormStart)}
-            {renderMessageField(form, false, t, onFormStart)}
-          </div>
-
-          <div className="pt-4">
-            <SubmitButton isLoading={isLoading} />
-          </div>
-        </form>
+            {/* Navigation Controls */}
+            <div className="pt-10 mt-auto flex items-center gap-4">
+              {currentStep > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={prevStep}
+                  className="h-11 px-6 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-500 font-bold text-xs"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  {t("common.back") || "ย้อนกลับ"}
+                </Button>
+              )}
+              
+              <div className="flex-1">
+                {currentStep === totalSteps ? (
+                  <SubmitButton isLoading={isLoading} />
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={nextStep}
+                    className="w-full h-11 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-lg transition-all"
+                  >
+                    {t("common.next") || "ถัดไป"}
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <p className="text-center text-[10px] text-slate-400 mt-6 font-medium italic opacity-60">
+              {t("deposit.wizard.press_enter") || "Press Enter to continue"}
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   );

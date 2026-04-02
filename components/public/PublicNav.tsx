@@ -353,7 +353,7 @@ export function PublicNav() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="hover:bg-blue-600!"
+                      className="hover:bg-blue-500! hover:border-blue-500! hover:text-white "
                     >
                       <Search className="h-4 w-4 mr-1" />
                       {t("home.search_btn")}
@@ -375,7 +375,7 @@ export function PublicNav() {
                         {t("nav.deposit")}
                       </Button>
                     }
-                    className="sm:max-w-[720px] lg:max-w-[800px]"
+                    className="sm:max-w-[720px] lg:max-w-[800px] p-0 border-0 gap-0 rounded-3xl"
                   >
                     {isDepositSuccess ? (
                       <div className="text-center py-20 px-6 space-y-8 animate-in fade-in zoom-in duration-500">
@@ -406,6 +406,7 @@ export function PublicNav() {
                         onSuccess={() => setIsDepositSuccess(true)}
                         onCancel={() => setIsDepositOpen(false)}
                         location="Navbar"
+                        
                       />
                     )}
                   </ResponsiveDialog>

@@ -132,7 +132,7 @@ export function HeroSection() {
                       {t("home.hero.cta_deposit")}
                     </Button>
                   }
-                  className="sm:max-w-[720px]"
+                  className="sm:max-w-[720px]  p-0 border-0 gap-0 rounded-3xl"
                 >
                   {isDepositSuccess ? (
                     <div className="text-center py-20 px-6 space-y-8 animate-in fade-in zoom-in duration-500">

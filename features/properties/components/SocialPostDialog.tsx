@@ -455,7 +455,7 @@ export function SocialPostDialog({
       open={isOpen}
       onOpenChange={onOpenChange}
       className={cn(
-        "sm:max-w-[95vw] md:max-w-[850px] lg:max-w-[1000px] xl:max-w-[1150px]",
+        "sm:max-w-[95vw] md:max-w-[850px] lg:max-w-[1000px] xl:max-w-[1150px] ",
         className
       )}
       snapPoints={["0.7", "0.95"]}
