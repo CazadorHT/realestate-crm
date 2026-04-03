@@ -139,7 +139,7 @@ export async function getPropertiesForSelect() {
   let query = supabase
     .from("properties")
     .select(
-      `id, title, price, original_price, rental_price, original_rental_price, commission_sale_percentage, commission_rent_months, popular_area, province, property_images(image_url, is_cover)`,
+      `id, title, price, original_price, rental_price, original_rental_price, listing_type, commission_sale_percentage, commission_rent_months, popular_area, province, property_images(image_url, is_cover)`,
     )
     .is("deleted_at", null);
 
@@ -155,7 +155,7 @@ export async function getPropertiesForSelect() {
   return (data ?? []).map((p) => ({
     ...p,
     cover_image:
-      p.property_images?.find((img: any) => img.is_cover)?.image_url ||
+      p.property_images?.find((img) => img.is_cover)?.image_url ||
       p.property_images?.[0]?.image_url ||
       null,
   }));
@@ -398,10 +398,17 @@ export async function getPropertiesTableData(params: {
   // Single-tenant mode: show everything (permissive)
 
   // Search
-  if (q) {
-    query = query.or(
-      `title.ilike.%${q}%,description.ilike.%${q}%,address_line1.ilike.%${q}%`,
-    );
+  if (q && q.trim()) {
+    const isHexFragment = /^[0-9a-fA-F-]{4,}$/.test(q);
+    const conditions = [
+      `title.ilike.%${q}%`,
+      `description.ilike.%${q}%`,
+      `address_line1.ilike.%${q}%`,
+    ];
+    if (isHexFragment) {
+      conditions.unshift(`id.ilike.%${q}%`);
+    }
+    query = query.or(conditions.join(","));
   }
 
   // Filters
@@ -570,9 +577,14 @@ export async function getPropertiesTableData(params: {
   });
 
   const closedLeadNameMap = new Map<string, string>();
-  closedLeadsResult.data?.forEach((d: any) => {
-    const pid = d?.property_id;
-    const name = d?.lead?.full_name;
+  closedLeadsResult.data?.forEach((d) => {
+    // Correctly type the lead object from the joined query
+    const deal = d as unknown as {
+      property_id: string;
+      lead: { full_name: string } | null;
+    };
+    const pid = deal?.property_id;
+    const name = deal?.lead?.full_name;
     if (pid && !closedLeadNameMap.has(pid) && name) {
       closedLeadNameMap.set(pid, name);
     }
@@ -587,14 +599,13 @@ export async function getPropertiesTableData(params: {
       p.address_line1 ||
       "";
 
-    let rawImageUrl = bestImageMap.get(p.id) || null;
-    if (!rawImageUrl && (p as any).images) {
-      const legacyImages = (p as any).images as any;
+    let rawImageUrl: string | null = bestImageMap.get(p.id) || null;
+    const legacyImages = (p as unknown as { images?: string[] | { url?: string; image_url?: string }[] }).images;
+    if (!rawImageUrl && legacyImages) {
       if (Array.isArray(legacyImages) && legacyImages.length > 0) {
-        rawImageUrl =
-          typeof legacyImages[0] === "string"
-            ? legacyImages[0]
-            : legacyImages[0]?.url || legacyImages[0]?.image_url;
+        const first = legacyImages[0];
+        const extracted = typeof first === "string" ? first : first?.url || first?.image_url;
+        if (extracted) rawImageUrl = extracted;
       }
     }
 
@@ -676,7 +687,7 @@ export async function getRecommendedProperties(
   return (data || []).map((p) => ({
     ...p,
     cover_image:
-      p.property_images?.find((img: any) => img.is_cover)?.image_url ||
+      p.property_images?.find((img) => img.is_cover)?.image_url ||
       p.property_images?.[0]?.image_url ||
       null,
   }));
@@ -740,9 +751,16 @@ export async function getAllPropertyIdsQuery(params: {
   }
 
   if (q) {
-    query = query.or(
-      `title.ilike.%${q}%,description.ilike.%${q}%,address_line1.ilike.%${q}%`,
-    );
+    const isHexFragment = /^[0-9a-fA-F-]+$/.test(q);
+    const conditions = [
+      `title.ilike.%${q}%`,
+      `description.ilike.%${q}%`,
+      `address_line1.ilike.%${q}%`,
+    ];
+    if (isHexFragment) {
+      conditions.unshift(`id.ilike.%${q}%`);
+    }
+    query = query.or(conditions.join(","));
   }
 
   if (status && status !== "ALL") {

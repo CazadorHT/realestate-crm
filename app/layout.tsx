@@ -118,6 +118,7 @@ export default async function RootLayout({
       <body
         className={`${prompt.className} ${notoThai.variable} antialiased`}
         suppressHydrationWarning
+        style={{ scrollbarGutter: "stable" }}
       >
         <Suspense fallback={null}>
           <AnalyticsTracker />
@@ -138,7 +139,9 @@ export default async function RootLayout({
         <LanguageProvider initialLanguage={lang as any}>
           <SiteConfigProvider initialSettings={settings}>
             <TenantProvider>
-              {children}
+              <div vaul-drawer-wrapper="" className="min-h-screen bg-white">
+                {children}
+              </div>
               <NavigationProgressBar />
               <Toaster />
               <CookieConsent />

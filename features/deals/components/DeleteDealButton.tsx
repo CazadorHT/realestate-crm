@@ -7,6 +7,7 @@ import { Trash2 } from "lucide-react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { deleteDealAction } from "@/features/deals/actions";
+import { cn } from "@/lib/utils";
 
 interface DeleteDealButtonProps {
   dealId: string;
@@ -17,6 +18,8 @@ interface DeleteDealButtonProps {
   redirectPath?: string;
   /** Show only icon without text (for compact inline use) */
   iconOnly?: boolean;
+  children?: React.ReactNode;
+  className?: string;
 }
 
 export function DeleteDealButton({
@@ -25,6 +28,8 @@ export function DeleteDealButton({
   onSuccess,
   redirectPath,
   iconOnly,
+  children,
+  className,
 }: DeleteDealButtonProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -62,17 +67,25 @@ export function DeleteDealButton({
       title="ยืนยันการลบดีล"
       description="การดำเนินการนี้ไม่สามารถย้อนกลับได้ ข้อมูลดีลและเอกสารที่เกี่ยวข้องจะถูกลบออกจากระบบถาวร"
       trigger={
-        iconOnly ? (
+        children ? (
+          <div className={className}>{children}</div>
+        ) : iconOnly ? (
           <Button
             variant="ghost"
-            className="h-11 w-11 bg-slate-100 text-slate-500 hover:text-red-600 hover:bg-red-50 border-0 cursor-pointer transition-all hover:scale-105 active:scale-95 rounded-xl"
+            className={cn(
+              "h-11 w-11 bg-slate-100 text-slate-500 hover:text-red-600 hover:bg-red-50 border-0 cursor-pointer transition-all hover:scale-105 active:scale-95 rounded-xl",
+              className
+            )}
           >
             <Trash2 className="h-5 w-5" />
           </Button>
         ) : (
           <Button
             variant="ghost"
-            className="bg-slate-100 text-slate-600 hover:text-red-600 hover:bg-red-50 cursor-pointer transition-all hover:scale-105 active:scale-95 rounded-xl px-4"
+            className={cn(
+              "bg-slate-100 text-slate-600 hover:text-red-600 hover:bg-red-50 cursor-pointer transition-all hover:scale-105 active:scale-95 rounded-xl px-4",
+              className
+            )}
           >
             <Trash2 className="h-5 w-5 mr-2" />
             ลบดีล

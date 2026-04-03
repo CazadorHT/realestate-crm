@@ -1,22 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Check, ChevronsUpDown, Building2, CalendarDays } from "lucide-react";
+import { Check, ChevronsUpDown, Building2, Search, X, MapPin } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 
 import { searchPropertiesAction } from "@/features/leads/actions";
@@ -39,6 +28,7 @@ type Props = {
   value: string | null;
   onChange: (value: string | null, picked?: PropertyPickItem | null) => void;
   placeholder?: string;
+  className?: string;
   initialProperty?: {
     id: string;
     title: string;
@@ -47,37 +37,81 @@ type Props = {
   } | null;
 };
 
-const renderPriceBlock = (
-  price: number | null | undefined,
-  original_price: number | null | undefined,
-  label: string,
-  isRent: boolean,
-) => {
-  if (!price && !original_price) return null;
+function ListingTypeBadge({ type }: { type: string | null }) {
+  const config = {
+    RENT: { label: "เช่า", className: "bg-blue-600 text-white" },
+    SALE: { label: "ขาย", className: "bg-emerald-600 text-white" },
+    SALE_RENT: { label: "ขาย/เช่า", className: "bg-amber-500 text-white" },
+    SALE_AND_RENT: { label: "ขาย/เช่า", className: "bg-amber-500 text-white" },
+  } as const;
+
+  const matched = type ? (config as any)[type] : null;
+  if (!matched) return null;
+
   return (
-    <div className="flex items-center gap-1 justify-end">
-      <span className="text-[10px] text-slate-400 font-medium">{label}:</span>
-      {original_price && price && original_price > price && (
-        <span className="text-[9px] text-slate-400 line-through hidden sm:inline">
-          ฿{original_price.toLocaleString()}
-        </span>
-      )}
-      <span
-        className={cn(
-          "font-bold text-xs whitespace-nowrap",
-          isRent ? "text-blue-600" : "text-emerald-600",
-        )}
-      >
-        ฿{(price ?? original_price)?.toLocaleString()}
-      </span>
-    </div>
+    <span className={cn(
+      "text-xs px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide shadow-sm",
+      matched.className
+    )}>
+      {matched.label}
+    </span>
   );
-};
+}
+
+function PriceDisplay({ item }: { item: PropertyPickItem }) {
+  const isSaleRent = item.listing_type === "SALE_RENT" || item.listing_type === "SALE_AND_RENT";
+  const isRent = item.listing_type === "RENT";
+  const isSale = item.listing_type === "SALE";
+
+  const rentalPrice = item.rental_price ?? item.original_rental_price;
+  const salePrice = item.price ?? item.original_price;
+
+  if (isSaleRent) {
+    return (
+      <div className="flex flex-col gap-1">
+        {salePrice ? (
+          <div className="inline-flex items-center bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-lg border border-emerald-100 w-fit">
+            <span className="text-[11px] font-semibold">฿{salePrice.toLocaleString()}</span>
+          </div>
+        ) : null}
+        {rentalPrice ? (
+          <div className="inline-flex items-center bg-blue-50 text-blue-700 px-2 py-0.5 rounded-lg border border-blue-100 w-fit">
+            <span className="text-[11px] font-semibold">
+              ฿{rentalPrice.toLocaleString()}
+              <span className="font-normal text-[9px] opacity-70 ml-0.5">/ด.</span>
+            </span>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+  if (isRent && rentalPrice) {
+    return (
+      <div className="inline-flex items-center bg-blue-50 text-blue-700 px-2 py-1 rounded-lg border border-blue-100 shadow-sm">
+        <span className="text-sm font-semibold">
+          ฿{rentalPrice.toLocaleString()}
+          <span className="text-[10px] font-normal opacity-70 ml-0.5">/ด.</span>
+        </span>
+      </div>
+    );
+  }
+  if (isSale && salePrice) {
+    return (
+      <div className="inline-flex items-center bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg border border-emerald-100 shadow-sm">
+        <span className="text-sm font-black">
+          ฿{salePrice.toLocaleString()}
+        </span>
+      </div>
+    );
+  }
+  return <span className="text-xs text-slate-300 italic px-1">ไม่ระบุราคา</span>;
+}
 
 export function PropertyCombobox({
   value,
   onChange,
-  placeholder = "เลือกทรัพย์ (พิมพ์เพื่อค้นหา)",
+  placeholder = "เลือกทรัพย์...",
+  className,
   initialProperty,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -90,288 +124,247 @@ export function PropertyCombobox({
     return items.find((x) => x.id === value) ?? null;
   }, [items, value, initialProperty]);
 
+  // Debounced search when query changes
   useEffect(() => {
     if (!open) return;
-
     const handle = setTimeout(() => {
       startTransition(async () => {
         const res = await searchPropertiesAction({ q });
         if (res.success) setItems(res.data || []);
       });
-    }, 250);
-
+    }, 200);
     return () => clearTimeout(handle);
   }, [open, q, startTransition]);
 
-  // โหลด list ล่าสุดตอนเปิดครั้งแรก
+  // Load fresh list when dialog opens
   useEffect(() => {
     if (!open) return;
-
-    // Reset search input and always load a fresh first page when opening so the user
-    // can "see all" after making a selection.
     setQ("");
-
     startTransition(async () => {
       const res = await searchPropertiesAction({ q: "" });
       if (res.success) setItems(res.data || []);
     });
   }, [open, startTransition]);
 
+  const handleSelect = (item: PropertyPickItem) => {
+    onChange(item.id, item);
+    setOpen(false);
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange(null, null);
+  };
+
+  // --- Trigger Button ---
+  const trigger = (
+    <button
+      type="button"
+      className={cn(
+        "w-full  flex items-center gap-3 text-left rounded-xl border px-3 py-2.5 transition-all duration-200 shadow-sm group",
+        "hover:border-blue-400 hover:bg-blue-50/20 hover:shadow-md",
+        selected
+          ? "border-blue-200 bg-blue-50/30 "
+          : "border-slate-200 bg-white",
+        className,
+      )}
+    >
+      {/* Thumbnail */}
+      <div className={cn(
+        "shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center transition-all",
+        selected ? "h-10 w-10 sm:h-12 sm:w-12" : "h-9 w-9"
+      )}>
+        {selected?.cover_image_url ? (
+          <img
+            src={selected.cover_image_url}
+            alt={selected.title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <Building2 className="h-4 w-4 text-slate-300" />
+        )}
+      </div>
+
+      {/* Text */}
+      <div className="flex-1 min-w-0 pr-2 overflow-hidden">
+        {selected ? (
+          <>
+            <p className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-tight wrap-break-words ">
+              {selected.title}
+            </p>
+            <div className="flex items-center gap-1.5 mt-1 min-w-0">
+              <div className="shrink-0">
+                <ListingTypeBadge type={selected.listing_type} />
+              </div>
+              {(selected.popular_area || selected.district) && (
+                <span className="text-[10px] sm:text-xs text-slate-400 truncate flex-1 min-w-0 flex items-center gap-0.5 opacity-80">
+                  <MapPin className="h-2.5 w-2.5 shrink-0" />
+                  <span className="truncate">{selected.popular_area || selected.district}</span>
+                </span>
+              )}
+            </div>
+          </>
+        ) : (
+          <span className="text-slate-400 text-sm font-normal">{placeholder}</span>
+        )}
+      </div>
+
+      {/* Right controls */}
+      <div className="flex items-center gap-1 shrink-0">
+        {selected ? (
+          <span
+            role="button"
+            onClick={handleClear}
+            className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </span>
+        ) : null}
+        <ChevronsUpDown className="h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors" />
+      </div>
+    </button>
+  );
+
+  // --- Dialog Content ---
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={true}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          className={cn(
-            "w-full justify-between h-auto py-2 px-3 text-left border-slate-200 hover:border-blue-400 hover:bg-blue-50/30! transition-all duration-200 shadow-sm",
-            value && "pr-10 border-blue-200 bg-blue-50/20",
-          )}
-        >
-          <div className="flex items-center gap-3 truncate overflow-hidden flex-1">
-            {selected ? (
-              <>
-                <div className="hidden md:block h-10 w-10 shrink-0 overflow-hidden  rounded-md bg-slate-100 border border-slate-200 shadow-inner">
-                  {selected.cover_image_url ? (
-                    <img
-                      src={selected.cover_image_url}
-                      alt={selected.title}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center text-slate-300">
-                      <Building2 className="h-5 w-5 opacity-40" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col items-start min-w-0">
-                  <span className="font-medium text-slate-900 block line-clamp-2 text-wrap leading-tight max-w-md">
-                    {selected.title}
-                  </span>
-                  <div className="flex items-center gap-2 text-xs mt-1 text-slate-500 font-medium truncate w-full">
-                    <span>
-                      ย่าน :
-                      {selected.popular_area ||
-                        selected.district ||
-                        "ไม่ระบุย่าน"}
-                    </span>
-                    <span className="opacity-30">•</span>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span
-                        className={cn(
-                          "text-[10px] px-1.5 py-0.5 rounded font-bold uppercase",
-                          selected.listing_type === "RENT"
-                            ? "bg-blue-100 text-blue-700"
-                            : selected.listing_type === "SALE"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-amber-100 text-amber-700",
-                        )}
-                      >
-                        {selected.listing_type === "RENT"
-                          ? "เช่า"
-                          : selected.listing_type === "SALE"
-                            ? "ขาย"
-                            : "ขาย/เช่า"}
-                      </span>
-                      <div className="flex items-center gap-2 ml-auto">
-                        {(() => {
-                          if (
-                            selected.listing_type === "SALE_RENT" ||
-                            selected.listing_type === "SALE_AND_RENT"
-                          ) {
-                            return (
-                              <>
-                                {renderPriceBlock(
-                                  selected.price,
-                                  selected.original_price,
-                                  "ขาย",
-                                  false,
-                                )}
-                                {renderPriceBlock(
-                                  selected.rental_price,
-                                  selected.original_rental_price,
-                                  "เช่า",
-                                  true,
-                                )}
-                              </>
-                            );
-                          }
-
-                          if (selected.listing_type === "RENT") {
-                            return renderPriceBlock(
-                              selected.rental_price,
-                              selected.original_rental_price,
-                              "เช่า",
-                              true,
-                            );
-                          }
-
-                          return renderPriceBlock(
-                            selected.price,
-                            selected.original_price,
-                            "ขาย",
-                            false,
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <ChevronsUpDown className="h-4 w-4 opacity-40 shrink-0 ml-auto text-slate-500" />
-              </>
-            ) : (
-              <span className="text-slate-400 font-normal">{placeholder}</span>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      title="เลือกทรัพย์"
+      description="ค้นหาและเลือกทรัพย์ที่ต้องการสร้างดีล"
+      className="sm:max-w-[860px]"
+      trigger={trigger}
+    >
+      <div className="flex flex-col h-[60vh]">
+        {/* Search bar */}
+        <div className="px-4 pb-3 border-b border-slate-100">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            <Input
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="ค้นหาชื่อทรัพย์, ย่าน, อำเภอ..."
+              className="pl-9 pr-4 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 text-sm"
+            />
+            {q && (
+              <button
+                onClick={() => setQ("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             )}
           </div>
-          {!value && (
-            <ChevronsUpDown className="h-4 w-4 opacity-40 shrink-0 ml-auto text-slate-500" />
-          )}
-        </Button>
-      </PopoverTrigger>
+        </div>
 
-      <PopoverContent
-        className="w-[calc(100vw-1.5rem)] sm:w-[700px] p-0 bg-white shadow-xl border border-slate-200"
-        align="start"
-      >
-        <Command>
-          <CommandInput
-            className="p-2 "
-            placeholder="ค้นหาชื่อทรัพย์..."
-            value={q}
-            onValueChange={setQ}
-          />
-          <CommandList>
-            <CommandEmpty>
-              {isPending ? "กำลังค้นหา..." : "ไม่พบทรัพย์"}
-            </CommandEmpty>
-
-            {/* ตัวเลือก: แสดงทั้งหมด */}
-            <CommandItem
-              value="__all__"
-              onSelect={() => {
-                // select 'all' -> clear filter (undefined) so caller can treat as no filter
-                onChange(null, null);
-                setOpen(false);
-              }}
-            >
-              <Check
-                className={cn(
-                  "mr-2 h-4 w-4 shrink-0",
-                  value === undefined || value === null
-                    ? "opacity-100"
-                    : "opacity-0",
-                )}
-              />
-              (ทั้งหมด) แสดงทรัพย์ทั้งหมด
-            </CommandItem>
-
-            {/* รายการทรัพย์สิน */}
-            {items.map((item) => (
-              <CommandItem
-                key={item.id}
-                value={`${item.title} ${item.id}`}
-                onSelect={() => {
-                  onChange(item.id, item);
-                  setOpen(false);
-                }}
-                className="flex items-start py-3 cursor-pointer"
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4 mt-1 shrink-0",
-                    value === item.id
-                      ? "opacity-100 text-blue-600"
-                      : "opacity-0",
-                  )}
-                />
-                <div className="flex items-center gap-3 flex-1 min-w-0 mr-2">
-                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-200 shadow-sm">
-                    {item.cover_image_url ? (
-                      <img
-                        src={item.cover_image_url}
-                        alt={item.title}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-slate-300">
-                        <Building2 className="h-6 w-6 opacity-40" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col min-w-0 flex-1 gap-0.5">
-                    <span className="font-medium text-slate-900 block max-w-sm line-clamp-2 leading-tight">
-                      {item.title}
-                    </span>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-500">
-                      <span className="text-xs font-medium truncate max-w-[150px]">
-                        ย่าน : {item.popular_area || "ไม่ระบุย่าน"}
-                      </span>
-                      <span
-                        className={cn(
-                          "text-[10px] px-1.5 py-0.5 rounded font-bold uppercase",
-                          item.listing_type === "RENT"
-                            ? "bg-blue-100 text-blue-700"
-                            : item.listing_type === "SALE"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-amber-100 text-amber-700",
-                        )}
-                      >
-                        {item.listing_type === "RENT"
-                          ? "เช่า"
-                          : item.listing_type === "SALE"
-                            ? "ขาย"
-                            : "ขาย/เช่า"}
-                      </span>
-                      <div className="flex flex-col items-end gap-1 ml-auto">
-                        {(() => {
-                          if (
-                            item.listing_type === "SALE_RENT" ||
-                            item.listing_type === "SALE_AND_RENT"
-                          ) {
-                            return (
-                              <>
-                                {renderPriceBlock(
-                                  item.price,
-                                  item.original_price,
-                                  "ขาย",
-                                  false,
-                                )}
-                                {renderPriceBlock(
-                                  item.rental_price,
-                                  item.original_rental_price,
-                                  "เช่า",
-                                  true,
-                                )}
-                              </>
-                            );
-                          }
-
-                          if (item.listing_type === "RENT") {
-                            return renderPriceBlock(
-                              item.rental_price,
-                              item.original_rental_price,
-                              "เช่า",
-                              true,
-                            );
-                          }
-
-                          return renderPriceBlock(
-                            item.price,
-                            item.original_price,
-                            "ขาย",
-                            false,
-                          );
-                        })()}
-                      </div>
-                    </div>
+        {/* Card Grid */}
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
+          {isPending ? (
+            /* Loading Skeleton */
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="animate-pulse rounded-2xl border border-slate-100 bg-slate-50 overflow-hidden"
+                >
+                  <div className="h-32 bg-slate-200" />
+                  <div className="p-3 space-y-2">
+                    <div className="h-3.5 bg-slate-200 rounded w-3/4" />
+                    <div className="h-3 bg-slate-100 rounded w-1/2" />
                   </div>
                 </div>
-              </CommandItem>
-            ))}
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+              <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+                <Building2 className="h-8 w-8 text-slate-300" />
+              </div>
+              <div>
+                <p className="font-bold text-slate-500">ไม่พบทรัพย์</p>
+                <p className="text-xs text-slate-400 mt-1">ลองค้นหาด้วยคำอื่น</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+              {items.map((item) => {
+                const isSelected = value === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleSelect(item)}
+                    className={cn(
+                      "text-left rounded-2xl border overflow-hidden transition-all duration-200 group relative",
+                      "hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm",
+                      isSelected
+                        ? "border-blue-400 ring-2 ring-blue-400/20 shadow-md shadow-blue-100"
+                        : "border-slate-200 hover:border-blue-300",
+                    )}
+                  >
+                    {/* Cover Image */}
+                    <div className="relative h-44 sm:h-55 bg-slate-100 overflow-hidden">
+                      {item.cover_image_url ? (
+                        <img
+                          src={item.cover_image_url}
+                          alt={item.title}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center">
+                          <Building2 className="h-10 w-10 text-slate-300" />
+                        </div>
+                      )}
+
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent" />
+
+                      {/* Badges on image */}
+                      <div className="absolute top-2.5 left-2.5">
+                        <ListingTypeBadge type={item.listing_type} />
+                      </div>
+
+                      {/* Selected check */}
+                      {isSelected && (
+                        <div className="absolute top-2.5 right-2.5 h-6 w-6 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
+                          <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+                        </div>
+                      )}
+
+                      {/* Price on image bottom */}
+                      <div className="absolute bottom-2.5 left-2.5 right-2.5">
+                        <PriceDisplay item={item} />
+                      </div>
+                    </div>
+
+                    {/* Card Body */}
+                    <div className={cn(
+                      "px-3 py-2.5 transition-colors",
+                      isSelected ? "bg-blue-50/50" : "bg-white"
+                    )}>
+                      <p className={cn(
+                        "font-bold text-sm leading-snug line-clamp-2 transition-colors",
+                        isSelected ? "text-blue-700" : "text-slate-900 group-hover:text-blue-700"
+                      )}>
+                        {item.title}
+                      </p>
+                      {(item.popular_area || item.district || item.province) && (
+                        <p className="flex items-center gap-1 text-xs text-slate-400 mt-1.5 font-medium">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          <span className="truncate">
+                            {item.popular_area || item.district || item.province}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </ResponsiveDialog>
   );
 }

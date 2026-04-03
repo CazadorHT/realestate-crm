@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, useCallback } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { differenceInHours } from "date-fns";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -32,7 +32,6 @@ import {
   MessageSquare,
   Calendar,
   User,
-  Eye,
   Building2,
   Loader2,
   CheckCircle2,
@@ -206,7 +205,7 @@ export function LeadsTable({
                 <TableHead>สถานะ</TableHead>
                 <TableHead>AI Score</TableHead>
                 <TableHead>ที่มา / UTM</TableHead>
-                <TableHead>สาขา</TableHead>
+                {isMultiTenant && <TableHead>สาขา</TableHead>}
                 <TableHead className="text-center">ดีลที่เกี่ยวข้อง</TableHead>
                 <TableHead className="text-right">จัดการ</TableHead>
               </TableRow>
@@ -310,15 +309,17 @@ export function LeadsTable({
                     </div>
                   </TableCell>
                   {/* Branch */}
-                  <TableCell className="text-[11px] font-medium text-slate-500">
-                    {(l as any).tenants?.name || "-"}
-                  </TableCell>
+                  {isMultiTenant && (
+                    <TableCell className="text-[11px] font-medium text-slate-500">
+                      {(l as any).tenants?.name || "-"}
+                    </TableCell>
+                  )}
                   {/* Action */}
                   <TableCell className="text-center">
                     {(l as any).deals_count ?? 0}
                   </TableCell>
                   <TableCell className="text-right">
-                    <LeadRowActions id={l.id} fullName={l.full_name} />
+                    <LeadRowActions id={l.id} fullName={l.full_name} phone={l.phone} email={l.email} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -326,7 +327,7 @@ export function LeadsTable({
               {leads.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={9}
+                    colSpan={11}
                     className="py-10 text-center text-sm text-muted-foreground"
                   >
                     ไม่พบ Leads
@@ -404,14 +405,14 @@ export function LeadsTable({
                               })
                             : "-"}
                         </span>
-                        {(l as any).tenants?.name && (
+                        {isMultiTenant && (l as any).tenants?.name && (
                           <Badge variant="secondary" className="h-4 min-[400px]:h-5 text-[9px] min-[400px]:text-[11px] px-1 min-[400px]:px-1.5 bg-slate-100 text-slate-600 border-0">
                             {(l as any).tenants.name}
                           </Badge>
                         )}
                       </div>
                     </div>
-                    <LeadRowActions id={l.id} fullName={l.full_name} />
+                    <LeadRowActions id={l.id} fullName={l.full_name} phone={l.phone} email={l.email} />
                   </div>
  
                   <div className="mt-3 grid grid-cols-1 min-[500px]:grid-cols-2 gap-x-4 gap-y-1.5">
@@ -451,7 +452,7 @@ export function LeadsTable({
           ))}
           {leads.length === 0 && (
             <div className="p-10 text-center text-sm text-slate-400">
-              ไม่พบ Leads
+              ไม่พบ ลีด
             </div>
           )}
         </div>

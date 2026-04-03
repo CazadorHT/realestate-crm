@@ -74,7 +74,7 @@ export function DashboardHeader({ email, name }: DashboardHeaderProps) {
       </div>
 
       <div className="relative w-full md:w-auto md:min-w-[320px] lg:min-w-[400px] z-10">
-        <GlobalSearch />
+        <GlobalSearch variant="bar" className="w-full" />
       </div>
     </div>
   );

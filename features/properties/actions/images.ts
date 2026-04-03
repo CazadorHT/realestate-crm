@@ -11,6 +11,7 @@ import {
   UPLOAD_RATE_WINDOW_MS,
   validatePropertyImagePaths,
 } from "../logic/images";
+import { mapDbError } from "@/lib/db-error";
 
 export type UploadedImageResult = {
   path: string; // storage_path เช่น "properties/xxxx.jpg"
@@ -125,9 +126,12 @@ export async function uploadPropertyImageAction(formData: FormData) {
       .getPublicUrl(path);
 
     return { path, publicUrl: data.publicUrl };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("uploadPropertyImageAction → error:", error);
-    throw error;
+    if (error && typeof error === "object" && "code" in error && error.code === "AUTHZ_ERROR") {
+      return authzFail(error as any);
+    }
+    return { success: false, message: mapDbError(error) };
   }
 }
 

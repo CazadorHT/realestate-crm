@@ -1,16 +1,32 @@
 "use client";
 
 import { DealWithProperty, DealPropertyOption } from "../types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { format, differenceInMonths } from "date-fns";
 import { th } from "date-fns/locale";
 import Link from "next/link";
-import { Home, Eye, Edit2, Trash2 } from "lucide-react";
+import {
+  Home,
+  Eye,
+  Edit2,
+  Calendar,
+  LayoutDashboard,
+  ArrowRight,
+  Wallet,
+  MoreHorizontal,
+  Trash2,
+  Copy,
+} from "lucide-react";
 import { DealFormDialog } from "./DealFormDialog";
 import { DeleteDealButton } from "./DeleteDealButton";
+import { DealStatusBadge } from "./DealStatusBadge";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { FaClock } from "react-icons/fa6";
+import { toast } from "sonner";
 
 interface DealListProps {
   deals: DealWithProperty[];
@@ -22,155 +38,273 @@ export function DealList({ deals, properties = [] }: DealListProps) {
 
   if (deals.length === 0) {
     return (
-      <div className="text-center py-6 text-muted-foreground border rounded-md border-dashed">
-        ยังไม่มีดีลสำหรับลีดนี้
+      <div className="flex flex-col items-center justify-center py-12 px-6 border-2 border-dashed border-slate-100 rounded-[32px] bg-slate-50/30">
+        <div className="h-16 w-16 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mb-4">
+          <LayoutDashboard className="h-8 w-8 text-slate-300" />
+        </div>
+        <h3 className="text-sm font-bold text-slate-900">ยังไม่มีข้อมูลดีล</h3>
+        <p className="text-[11px] text-slate-400 font-medium max-w-[200px] text-center mt-1">
+          เริ่มบันทึกดีลของคุณโดยเลือกทรัพย์ที่ลูกค้าสนใจ
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {deals.map((deal) => (
-        <Card key={deal.id} className="overflow-hidden border border-slate-200">
-          <CardContent className="p-3 flex flex-col md:flex-row gap-4 items-start md:items-center">
-            {/* Property Cover Image */}
-            <div className="shrink-0">
-              {deal.property?.property_images?.[0]?.image_url ? (
-                <img
-                  src={
-                    deal.property.property_images.find((img) => img.is_cover)
-                      ?.image_url || deal.property.property_images[0].image_url
-                  }
-                  alt={deal.property.title || "Property"}
-                  className="h-16 w-16 rounded-lg object-cover border transition-all duration-300 border-slate-100"
-                />
-              ) : (
-                <div className="h-14 w-14 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 text-slate-400">
-                  <Home className="h-6 w-6" />
-                </div>
-              )}
-            </div>
+    <div className="relative">
+      {/* 📜 Scrollable Container: Pure vertical scroll instead of pagination */}
+      <div 
+        className="max-h-[520px] overflow-y-auto pr-3 sm:pr-4 -mr-3 sm:-mr-4  scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent hover:scrollbar-thumb-slate-300 transition-colors"
+        style={{ scrollbarWidth: 'thin' }} // 🛡️ Native thin scrollbar fallback
+      >
+        <div className="grid grid-cols-1 gap-4 pb-4">
+          {deals.map((deal, index) => (
+            <Card
+              key={deal.id}
+              className="group overflow-hidden border-none rounded-2xl bg-white shadow-sm ring-1 ring-slate-100 hover:shadow-lg hover:shadow-blue-900/5 transition-all duration-300"
+            >
+              <CardContent className="p-0 flex flex-col md:flex-row h-full">
+                {/* Image Section: Compact Sidebar */}
+                <div className="relative w-full aspect-video md:w-32 lg:w-40 md:aspect-auto shrink-0 overflow-hidden bg-slate-50 border-r border-slate-100/50">
+                  {deal.property?.property_images?.[0]?.image_url ? (
+                    <img
+                      src={
+                        deal.property.property_images.find((img) => img.is_cover)
+                          ?.image_url || deal.property.property_images[0].image_url
+                      }
+                      alt={deal.property.title || "Property"}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-slate-200">
+                      <Home className="h-8 w-8" />
+                    </div>
+                  )}
 
-            {/* Info */}
-            <div className="flex-1 min-w-0 space-y-1">
-              <Link
-                href={`/protected/properties/${deal.property_id}`}
-                className="font-semibold text-sm hover:underline text-primary break-all line-clamp-2"
-                title={deal.property?.title || "ทรัพย์ไม่ระบุชื่อ"}
-              >
-                {deal.property?.title || "ทรัพย์ไม่ระบุชื่อ"}
-              </Link>
-              <div className="text-sm text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 items-center">
-                <Badge
-                  variant="secondary"
-                  className="font-medium text-xs px-1.5 py-0 h-5"
-                >
-                  {deal.deal_type === "RENT" ? "เช่า" : "ซื้อ-ขาย"}
-                </Badge>
-                {deal.transaction_date && (
-                  <span className="flex items-center gap-1 text-xs">
-                    {deal.deal_type === "RENT" ? "เริ่ม: " : "โอน: "}
-                    {format(new Date(deal.transaction_date), "d MMM yy", {
-                      locale: th,
-                    })}
-                  </span>
-                )}
-                {deal.deal_type === "RENT" && deal.transaction_end_date && (
-                  <span className="flex items-center gap-1 text-xs">
-                    ถึง:{" "}
-                    {format(new Date(deal.transaction_end_date), "d MMM yy", {
-                      locale: th,
-                    })}
-                  </span>
-                )}
-              </div>
-            </div>
+                  {/* Index & Type Overlay (Mini) */}
+                  <div className="absolute top-2 right-2 z-10 flex gap-1">
+                    <div className="h-6 px-2 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 text-[9px] font-bold text-white flex items-center justify-center">
+                      #{index + 1}
+                    </div>
+                  </div>
 
-            {/* Right: Status & Actions */}
-            <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center w-full md:w-auto gap-3 md:pl-4 md:border-l border-slate-100 ml-0 md:ml-auto shrink-0">
-              <div className="flex items-center gap-2 order-2 md:order-1">
-                <StatusBadge status={deal.status} />
-              </div>
-
-              <div className="flex items-center gap-1 order-3 md:order-2">
-                {/* View Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 text-muted-foreground hover:text-primary p-0"
-                  asChild
-                >
-                  <Link href={`/protected/deals/${deal.id}`}>
-                    <Eye className="h-4 w-4" />
-                  </Link>
-                </Button>
-
-                <DealFormDialog
-                  leadId={deal.lead_id}
-                  deal={deal}
-                  properties={properties}
-                  refreshOnSuccess
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 text-muted-foreground hover:text-blue-600 p-0"
+                  <div className="absolute top-2 left-2 z-10">
+                    <Badge
+                      className={cn(
+                        "text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg shadow-lg border border-white/20",
+                        deal.deal_type === "RENT"
+                          ? "bg-blue-600 text-white"
+                          : "bg-orange-500 text-white",
+                      )}
                     >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  }
-                />
+                      {deal.deal_type === "RENT" ? "เช่า" : "ขาย"}
+                    </Badge>
+                  </div>
 
-                <DeleteDealButton
-                  dealId={deal.id}
-                  leadId={deal.lead_id}
-                  iconOnly
-                  onSuccess={() => router.refresh()}
-                />
-              </div>
+                  {/* Status Badge Overlay */}
+                  <div className="absolute bottom-2 left-2 z-10 scale-90 origin-bottom-left">
+                    <DealStatusBadge status={deal.status} />
+                  </div>
 
-              {deal.commission_amount && deal.commission_amount > 0 && (
-                <div className="order-1 md:order-3 md:mt-1">
-                  <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">
-                    ค่าคอม + {deal.commission_amount.toLocaleString()}
-                  </span>
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/20 to-transparent pointer-events-none" />
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+
+                {/* Content Section (Compact) */}
+                <div className="flex-1 p-3.5 sm:p-4 flex flex-col justify-between gap-3">
+                  <div className="space-y-2">
+                    {/* Header: Reference */}
+                    <div className="flex items-center justify-between">
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const refCode = deal.property_id.slice(0, 8);
+                          navigator.clipboard.writeText(refCode);
+                          toast.success(`คัดลอกรหัส ${refCode} แล้ว`, {
+                            description: "คุณสามารถนำไปวางในช่องค้นหาได้ทันที",
+                            icon: <Copy className="h-4 w-4 text-blue-500" />,
+                          });
+                        }}
+                        className="text-[9px] font-bold text-blue-500 uppercase tracking-widest leading-none bg-blue-50 px-1.5 py-1 rounded-md border border-blue-100/50 hover:bg-blue-100 hover:border-blue-200 transition-all active:scale-95 flex items-center gap-1 group"
+                        title="คลิกเพื่อคัดลอกรหัสอ้างอิง"
+                      >
+                        REF: #{deal.property_id.slice(0, 8)}
+                        <Copy className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    </div>
+                    
+                    {/* Title: Compact font */}
+                    <Link
+                      href={`/protected/properties/${deal.property_id}`}
+                      className="font-bold text-sm lg:text-base text-slate-800 hover:text-blue-600 transition-colors block line-clamp-1 leading-normal"
+                      title={deal.property?.title || "Property"}
+                    >
+                      🔥 {deal.property?.title || "ทรัพย์ไม่ระบุชื่อ"}
+                    </Link>
+
+                    {/* Metadata: Dates & Duration */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {(!deal.transaction_date || deal.undetermined_date) && (
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50/50 rounded-lg border border-amber-100 text-[10px] font-bold text-amber-600">
+                          <Calendar className="h-3 w-3 text-amber-400" />
+                          <span>ยังไม่ระบุวันที่</span>
+                        </div>
+                      )}
+
+                      {deal.transaction_date && !deal.undetermined_date && (
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50/50 rounded-lg border border-slate-100 text-[10px] font-bold text-slate-500">
+                          <Calendar className="h-3 w-3 text-slate-400" />
+                          <span className="text-slate-800">
+                            {format(new Date(deal.transaction_date), "d MMM yy", {
+                              locale: th,
+                            })}
+                          </span>
+                        </div>
+                      )}
+
+                      {deal.deal_type === "RENT" && deal.transaction_end_date && (
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50/50 rounded-lg border border-slate-100 text-[10px] font-bold text-slate-500">
+                          <ArrowRight className="h-3 w-3 text-slate-300" />
+                          <span className="text-slate-800">
+                            {format(
+                              new Date(deal.transaction_end_date),
+                              "d MMM yy",
+                              { locale: th },
+                            )}
+                          </span>
+                        </div>
+                      )}
+
+                      {(() => {
+                        // Priority 1: Use stored duration_months
+                        // Priority 2: Calculate from transaction_date and transaction_end_date
+                        let duration = deal.duration_months;
+                        
+                        if (!duration && deal.transaction_date && deal.transaction_end_date) {
+                          duration = differenceInMonths(
+                            new Date(deal.transaction_end_date),
+                            new Date(deal.transaction_date)
+                          );
+                        }
+
+                        if (duration && duration > 0) {
+                          return (
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50/30 rounded-lg border border-blue-100/50 text-[10px] font-bold text-blue-600">
+                              <FaClock className="h-3 w-3" />
+                              <span>
+                                {duration >= 12 && duration % 12 === 0
+                                  ? `${Math.floor(duration / 12)} ปี`
+                                  : `${duration} เดือน`}
+                              </span>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Footer: Commission & Menu */}
+                  <div className="pt-2.5 border-t border-slate-50 flex items-center justify-between gap-4">
+                    
+                    {/* Commission Badge */}
+                    {deal.commission_amount && deal.commission_amount > 0 ? (
+                      <div className="flex items-center gap-2 px-2.5 py-1 bg-emerald-50/50 rounded-xl border border-emerald-100/20">
+                        <div className="h-5 w-5 bg-emerald-500 rounded-lg flex items-center justify-center text-white shadow-sm">
+                          <Wallet className="h-3 w-3" />
+                        </div>
+                        <div className="flex flex-col leading-none">
+                          <span className="text-xs text-emerald-600/70 uppercase font-medium mb-0.5 tracking-relaxed">ค่าคอมมิชชั่น</span>
+                          <span className="text-sm font-semibold text-emerald-900">
+                            ฿{deal.commission_amount.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 text-slate-300 px-2 py-1">
+                        <Wallet className="h-3 w-3" />
+                        <span className="text-[9px] font-bold uppercase tracking-tighter">no commission</span>
+                      </div>
+                    )}
+
+                    {/* Actions Trigger */}
+                    <ResponsiveDialog
+                      title="จัดการดีล"
+                      description="เลือกคำสั่งสำหรับดีลนี้"
+                      className="bg-white md:max-w-72!"
+                      shouldScaleBackground={false}
+                      onOpenAutoFocus={(e) => e.preventDefault()}
+                      onCloseAutoFocus={(e) => e.preventDefault()}
+                      trigger={
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-100 active:scale-95 bg-white shadow-sm"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      }
+                    >
+                      <div className="p-4 space-y-2">
+                        <Link href={`/protected/deals/${deal.id}`} className="block w-full">
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
+                          >
+                            <div className="h-8 w-8 rounded-lg bg-blue-100/50 flex items-center justify-center">
+                              <Eye className="h-4 w-4" />
+                            </div>
+                            ดูรายละเอียดดีล
+                          </Button>
+                        </Link>
+
+                        <DealFormDialog
+                          leadId={deal.lead_id}
+                          deal={deal}
+                          properties={properties}
+                          refreshOnSuccess
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-600 transition-all border border-transparent hover:border-amber-100"
+                            >
+                              <div className="h-8 w-8 rounded-lg bg-amber-100/50 flex items-center justify-center">
+                                <Edit2 className="h-4 w-4" />
+                              </div>
+                              แก้ไขข้อมูลดีล
+                            </Button>
+                          }
+                        />
+
+                        <div className="h-px bg-slate-100 my-2" />
+
+                        <DeleteDealButton
+                          dealId={deal.id}
+                          leadId={deal.lead_id}
+                          onSuccess={() => router.refresh()}
+                          className="w-full"
+                        >
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all border border-transparent hover:border-rose-100 group"
+                          >
+                            <div className="h-8 w-8 rounded-lg bg-rose-100/50 flex items-center justify-center group-hover:bg-rose-100">
+                              <Trash2 className="h-4 w-4" />
+                            </div>
+                            ลบดีลนี้
+                          </Button>
+                        </DeleteDealButton>
+                      </div>
+                    </ResponsiveDialog>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const styleMap: Record<string, string> = {
-    NEGOTIATING: "bg-blue-100 text-blue-800",
-    SIGNED: "bg-purple-100 text-purple-800",
-    CLOSED_WIN: "bg-green-100 text-green-800",
-    CLOSED_LOSS: "bg-red-100 text-red-800",
-    CANCELLED: "bg-gray-100 text-gray-800",
-  };
-
-  const labelMap: Record<string, string> = {
-    NEGOTIATING: "กำลังต่อรอง",
-    SIGNED: "เซ็นสัญญา",
-    CLOSED_WIN: "สำเร็จ",
-    CLOSED_LOSS: "ไม่สำเร็จ",
-    CANCELLED: "ยกเลิก",
-  };
-
-  const badgeClass = styleMap[status] || "bg-gray-100";
-  const label = labelMap[status] || status;
-
-  return (
-    <Badge
-      variant="outline"
-      className={`border-0 ${badgeClass}`}
-      title={status}
-    >
-      {label}
-    </Badge>
   );
 }

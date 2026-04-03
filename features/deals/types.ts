@@ -36,6 +36,7 @@ export type DealWithProperty = Deal & {
   } | null;
   co_agent_online?: string | null;
   duration_months?: number | null;
+  undetermined_date?: boolean | null;
 };
 
 // Type for property options in Deal forms
@@ -51,6 +52,7 @@ export type DealPropertyOption = {
   commission_sale_percentage?: number | null;
   commission_rent_months?: number | null;
   cover_image?: string | null;
+  listing_type?: string | null;
 };
 
 export type DealCommission = {

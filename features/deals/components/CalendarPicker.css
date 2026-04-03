@@ -1,0 +1,143 @@
+.react-calendar-dealform {
+  width: 100% !important;
+  border: none !important;
+  font-family: inherit !important;
+  background: white !important;
+  padding: 10px !important;
+}
+
+/* Navigation */
+.react-calendar-dealform .react-calendar__navigation {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 20px !important;
+}
+
+.react-calendar-dealform .react-calendar__navigation button {
+  min-width: 44px !important;
+  background: none !important;
+  border-radius: 12px !important;
+  padding: 8px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-calendar-dealform .react-calendar__navigation button:enabled:hover,
+.react-calendar-dealform .react-calendar__navigation button:enabled:focus {
+  background-color: #f1f5f9 !important;
+  color: #2563eb !important;
+}
+
+.react-calendar-dealform .react-calendar__navigation button[disabled] {
+  background-color: transparent !important;
+  opacity: 0.3 !important;
+}
+
+/* Month/Week Labels */
+.react-calendar-dealform .react-calendar__month-view__weekdays {
+  text-align: center !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  font-size: 10px !important;
+  color: #94a3b8 !important;
+  letter-spacing: 0.1em !important;
+  margin-bottom: 8px !important;
+}
+
+.react-calendar-dealform .react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none !important;
+}
+
+/* Day Tiles */
+.react-calendar-dealform .react-calendar__tile {
+  padding: 12px 6px !important;
+  background: none !important;
+  border-radius: 14px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.react-calendar-dealform .react-calendar__tile:enabled:hover,
+.react-calendar-dealform .react-calendar__tile:enabled:focus {
+  background-color: #eff6ff !important;
+  color: #2563eb !important;
+  transform: scale(0.95) !important;
+}
+
+.react-calendar-dealform .react-calendar__tile--now {
+  background: #f8fafc !important;
+  color: #2563eb !important;
+  font-weight: 800 !important;
+}
+
+.react-calendar-dealform .react-calendar__tile--now:after {
+  content: "" !important;
+  position: absolute !important;
+  bottom: 6px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 4px !important;
+  height: 4px !important;
+  background-color: #2563eb !important;
+  border-radius: 50% !important;
+}
+
+/* Active/Selected State */
+.react-calendar-dealform .react-calendar__tile--active {
+  background: #2563eb !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+}
+
+.react-calendar-dealform .react-calendar__tile--active:enabled:hover,
+.react-calendar-dealform .react-calendar__tile--active:enabled:focus {
+  background: #1d4ed8 !important;
+  color: white !important;
+}
+
+/* Range Selection Styling */
+.react-calendar-dealform .react-calendar__tile--rangeBetween {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border-radius: 0 !important;
+}
+
+.react-calendar-dealform .react-calendar__tile--rangeStart {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  background: #2563eb !important;
+  color: white !important;
+}
+
+.react-calendar-dealform .react-calendar__tile--rangeEnd {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  background: #2563eb !important;
+  color: white !important;
+}
+
+/* Neighboring Months */
+.react-calendar-dealform .react-calendar__month-view__days__day--neighboringMonth {
+  color: #cbd5e1 !important;
+  opacity: 0.5 !important;
+}
+
+.react-calendar-dealform .react-calendar__month-view__days__day--weekend {
+  color: #e11d48 !important;
+}
+
+.react-calendar-dealform .react-calendar__month-view__days__day--weekend.react-calendar__tile--active {
+  color: white !important;
+}
+
+/* General Layout Fixes */
+.react-calendar-dealform abbr[title] {
+  text-decoration: none !important;
+}

@@ -32,7 +32,7 @@ export function LeadSummaryCard({ leadId }: LeadSummaryCardProps) {
 
   return (
     <Card className="overflow-hidden border-slate-200/70 bg-white shadow-sm ring-1 ring-slate-200/50">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-5 pb-3 border-b border-slate-50 bg-slate-50/30">
+      <CardHeader className="flex flex-row items-center gap-4 justify-between space-y-0 p-5 pb-3 border-b border-slate-50 bg-slate-50/30">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-violet-500 to-fuchsia-500 text-white shadow-sm">
             <Sparkles

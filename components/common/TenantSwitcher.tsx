@@ -93,11 +93,11 @@ export function TenantSwitcher() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
              <Button
-          className="h-10 min-w-[200px] justify-between border-slate-200 bg-white  hover:bg-slate-100 rounded-xl shadow-sm px-3"
+          className="h-10 w-full max-w-[160px] justify-between border-slate-200 bg-white hover:bg-slate-100 rounded-xl shadow-sm px-3"
         >
           <div className="flex items-center overflow-hidden gap-2">
             <FaUser className="h-4 w-4 shrink-0 text-blue-400" />
-            <div className="flex flex-col items-start min-w-0 leading-tight">
+            <div className="flex flex-col items-start min-w-0 leading-tight truncate">
               <span className="truncate text-xs font-medium text-slate-900">
                 {activeTenant?.name || "เลือกสาขา"}
               </span>

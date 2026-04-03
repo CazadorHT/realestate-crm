@@ -22,7 +22,7 @@ export function LeadTransferButton({
     <>
       <Button
         variant="outline"
-        className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 py-2 px-3 text-sm font-medium text-white hover:bg-white/20 transition-colors shadow-sm"
+        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/10 h-10 px-4 text-sm font-bold text-white hover:bg-white/20 transition-all active:scale-95 shadow-sm"
         onClick={() => setIsOpen(true)}
       >
         <ArrowRightLeft className="h-4 w-4" />

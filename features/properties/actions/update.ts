@@ -63,9 +63,7 @@ export async function updatePropertyAction(
       .eq("tenant_id", tenantId)
       .single();
       
-    const existing = (res as any).data;
-    const findErr = (res as any).error;
-
+    const { data: existing, error: findErr } = res;
     if (findErr || !existing) {
       return { success: false, message: "Property not found" };
     }
@@ -110,7 +108,7 @@ export async function updatePropertyAction(
     // 4) SEO metadata
     // Determine the main cover image URL for OG tags
     const newCoverPath = images?.[0];
-    const existingCover = (existing.property_images as any[])?.find(
+    const existingCover = (existing.property_images as unknown as { is_cover: boolean; image_url: string }[])?.find(
       (img) => img.is_cover,
     )?.image_url;
     const mainImageUrl = newCoverPath
@@ -407,8 +405,12 @@ export async function updatePropertyAction(
     revalidatePath("/(public)/properties/[slug]", "page");
 
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
-  } catch (err) {
-    return authzFail(err);
+  } catch (err: unknown) {
+    console.error("updatePropertyAction → error:", err);
+    if (err && typeof err === "object" && "code" in err && (err as any).code === "AUTHZ_ERROR") {
+      return authzFail(err as any);
+    }
+    return { success: false, message: mapDbError(err) };
   }
 }
 
@@ -436,15 +438,16 @@ export async function updatePropertyStatusAction(input: {
       return { success: false, message: "สถานะไม่ถูกต้อง" };
     }
 
-    // ดึงข้อมูลเดิมก่อนอัปเดตเพื่อใช้แจ้งเตือน
-    const { data: existingData } = await (supabase
+    const { data: existing, error: fetchErr } = await supabase
       .from("properties")
       .select("id, title, status, listing_type, requires_ai_review, version")
       .eq("id", input.id)
       .eq("tenant_id", tenantId)
-      .single() as unknown as Promise<{ data: any }>);
-      
-    const existing = existingData;
+      .single();
+
+    if (fetchErr || !existing) {
+      return { success: false, message: "ไม่พบข้อมูลทรัพย์" };
+    }
 
     if (existing?.requires_ai_review && input.status !== "DRAFT") {
       return { success: false, message: "กรุณาตรวจสอบข้อมูล AI ในหน้าแก้ไขก่อนเปลี่ยนสถานะ" };

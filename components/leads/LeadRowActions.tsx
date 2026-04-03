@@ -14,9 +14,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 type LeadRowActionsProps = {
   id: string;
   fullName?: string | null;
+  phone?: string | null;
+  email?: string | null;
 };
 
-export function LeadRowActions({ id, fullName }: LeadRowActionsProps) {
+export function LeadRowActions({ id, fullName, phone, email }: LeadRowActionsProps) {
   const isMobile = useIsMobile();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -50,49 +52,76 @@ export function LeadRowActions({ id, fullName }: LeadRowActionsProps) {
         open={isMenuOpen}
         onOpenChange={setIsMenuOpen}
         title={fullName || "จัดการ Lead"}
+        description={
+          <div className="flex flex-col gap-0.5 mt-1">
+             <div className="text-slate-500 font-medium">{phone || email || "ข้อมูลลูกค้า"}</div>
+          </div>
+        }
+        className="sm:max-w-sm!"
         trigger={
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-slate-100" title="เปิดเมนู">
             <MoreHorizontal className="h-5 w-5 text-slate-500" />
           </Button>
         }
       >
-        <div className="grid gap-2 pb-8">
+        <div className="flex flex-col gap-1.5 p-2 pb-6 ">
+          <div className="px-3 mb-2">
+            <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">
+              ตัวเลือกการจัดการ
+            </p>
+          </div>
+
           <Button
-            variant="ghost"
-            className="w-full justify-start h-12 px-4 text-[15px] font-bold rounded-xl hover:bg-slate-100 transition-colors"
+            variant="outline"
+            className="w-full justify-start h-auto py-4 px-4 rounded-2xl border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center gap-4 group"
             asChild
             onClick={() => setIsMenuOpen(false)}
           >
             <Link href={`/protected/leads/${id}`}>
-              <Eye className="mr-3 h-5 w-5 text-slate-400" />
-              ดูรายละเอียด
+              <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <Eye className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col items-start text-left">
+                <span className="text-[15px] font-bold text-slate-800">ดูรายละเอียด</span>
+                <span className="text-xs text-slate-500 font-medium mt-0.5">ข้อมูลเชิงลึกและประวัติกิจกรรม</span>
+              </div>
             </Link>
           </Button>
 
           <Button
-            variant="ghost"
-            className="w-full justify-start h-12 px-4 text-[15px] font-bold rounded-xl hover:bg-slate-100 transition-colors"
+            variant="outline"
+            className="w-full justify-start h-auto py-4 px-4 rounded-2xl border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center gap-4 group"
             asChild
             onClick={() => setIsMenuOpen(false)}
           >
             <Link href={`/protected/leads/${id}/edit`}>
-              <Edit className="mr-3 h-5 w-5 text-slate-400" />
-              แก้ไขข้อมูล
+              <div className="h-10 w-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <Edit className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col items-start text-left">
+                <span className="text-[15px] font-bold text-slate-800">แก้ไขข้อมูล</span>
+                <span className="text-xs text-slate-500 font-medium mt-0.5">ปรับปรุงข้อมูลลูกค้าและสถานะ</span>
+              </div>
             </Link>
           </Button>
 
-          <div className="h-px bg-slate-100 my-1 mx-2" />
+          <div className="h-px bg-slate-100 my-2 mx-4" />
 
           <Button
             variant="ghost"
-            className="w-full justify-start h-12 px-4 text-[15px] font-bold rounded-xl text-destructive hover:text-destructive hover:bg-destructive/5 transition-colors"
+            className="w-full justify-start h-auto py-4 px-4 rounded-2xl text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-all flex items-center gap-4 group"
             onClick={() => {
               setIsMenuOpen(false);
               setShowDeleteDialog(true);
             }}
           >
-            <Trash2 className="mr-3 h-5 w-5" />
-            ลบรายงานนี้
+            <div className="h-10 w-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <Trash2 className="h-5 w-5" />
+            </div>
+            <div className="flex flex-col items-start text-left">
+              <span className="text-[15px] font-bold text-rose-600">ลบรายงานนี้</span>
+              <span className="text-xs text-rose-400 font-medium mt-0.5">การกระทำนี้ไม่สามารถกู้คืนได้</span>
+            </div>
           </Button>
         </div>
       </ResponsiveDialog>

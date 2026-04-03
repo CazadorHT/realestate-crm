@@ -39,6 +39,8 @@ export default async function LeadDetailPage({
   const { tenantId } = await requireAuthContext();
 
   if (!tenantId) return notFound();
+  
+  const { multi_tenant_enabled } = await (await import("@/lib/actions/system-config")).getSystemConfig();
 
   const lead = await getLeadWithActivitiesQuery(id);
 
@@ -54,7 +56,7 @@ export default async function LeadDetailPage({
       c
         .from("properties")
         .select(
-          "id, title, price, original_price, rental_price, original_rental_price, district, popular_area, commission_sale_percentage, commission_rent_months, property_images(image_url, is_cover)",
+          "id, title, price, original_price, rental_price, original_rental_price, listing_type, district, popular_area, commission_sale_percentage, commission_rent_months, property_images(image_url, is_cover)",
         )
         .eq("status", "ACTIVE")
         .order("created_at", { ascending: false })
@@ -68,6 +70,7 @@ export default async function LeadDetailPage({
     original_price: p.original_price,
     rental_price: p.rental_price,
     original_rental_price: p.original_rental_price,
+    listing_type: p.listing_type,
     popular_area: p.popular_area,
     commission_sale_percentage: p.commission_sale_percentage,
     commission_rent_months: p.commission_rent_months,
@@ -89,7 +92,7 @@ export default async function LeadDetailPage({
   const propertiesById = await getPropertySummariesByIdsQuery(propertyIds);
 
   return (
-    <div className="space-y-6 max-w-full mx-auto">
+    <div className="space-y-6 max-w-full mx-auto pb-20">
       <SuccessAnimation />
       {/* Breadcrumb Navigation */}
       <Breadcrumb
@@ -115,23 +118,25 @@ export default async function LeadDetailPage({
           </div>
         </div>
 
-        <div className="flex gap-3 ">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
           <Link
-            className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 py-2 px-3 text-sm font-medium text-white hover:bg-white/20 transition-colors shadow-sm"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/10 h-10 px-4 text-sm font-bold text-white hover:bg-white/20 transition-all active:scale-95 shadow-sm"
             href={`/protected/leads/${id}/edit`}
           >
             ✏️ แก้ไข
           </Link>
-          <LeadTransferButton
-            leadId={id}
-            leadName={lead.full_name ?? "Unknown"}
-            currentTenantId={tenantId}
-          />
+          {multi_tenant_enabled && (
+            <LeadTransferButton
+              leadId={id}
+              leadName={lead.full_name ?? "Unknown"}
+              currentTenantId={tenantId}
+            />
+          )}
           <LeadActivityDialog
             leadId={id}
             leadName={lead.full_name ?? "Unknown"}
             onSubmitAction={onCreateActivity}
-            triggerClassName="bg-blue-600 hover:bg-blue-500 text-white shadow-sm border-0"
+            triggerClassName="bg-blue-600 hover:bg-blue-500 text-white shadow-md border-0 h-10 rounded-xl font-bold flex-1 sm:flex-none"
           />
         </div>
       </div>

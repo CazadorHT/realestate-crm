@@ -26,6 +26,12 @@ import {
 } from "@/components/ui/drawer";
 
 /**
+ * 🛰️ ResponsiveDialog Context:
+ * Helps detect nested dialogs to prevent scroll conflicts.
+ */
+const ResponsiveDialogContext = React.createContext(false);
+
+/**
  * 📱 ResponsiveDialog:
  * Automatically switches between Radix Dialog (Desktop) 
  * and Vaul Drawer (Mobile) based on viewport width.
@@ -43,6 +49,10 @@ interface ResponsiveDialogProps {
   snapPoints?: (string | number)[];
   activeSnapPoint?: string | number | null;
   onSnapPointChange?: (value: string | number | null) => void;
+  shouldScaleBackground?: boolean;
+  modal?: boolean;
+  onOpenAutoFocus?: (event: Event) => void;
+  onCloseAutoFocus?: (event: Event) => void;
 }
 
 export function ResponsiveDialog({
@@ -57,9 +67,18 @@ export function ResponsiveDialog({
   snapPoints,
   activeSnapPoint,
   onSnapPointChange,
+  shouldScaleBackground,
+  modal,
+  onOpenAutoFocus,
+  onCloseAutoFocus,
 }: ResponsiveDialogProps) {
   const isMobile = useIsMobile();
   const [mounted, setMounted] = React.useState(false);
+  const isNested = React.useContext(ResponsiveDialogContext);
+
+  // 🛡️ Auto-Logic: Disable scaling and modal locking if nested
+  const finalModal = modal ?? !isNested;
+  const finalScale = shouldScaleBackground ?? !isNested;
 
   React.useEffect(() => {
     setMounted(true);
@@ -80,9 +99,15 @@ export function ResponsiveDialog({
         snapPoints={snapPoints}
         activeSnapPoint={activeSnapPoint}
         setActiveSnapPoint={onSnapPointChange}
+        shouldScaleBackground={finalScale}
+        modal={finalModal}
       >
         {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
-        <DrawerContent className={cn("max-h-[96vh]", className)}>
+        <DrawerContent 
+          className={cn("max-h-[96vh]", className)}
+          onOpenAutoFocus={onOpenAutoFocus}
+          onCloseAutoFocus={onCloseAutoFocus}
+        >
           <DrawerHeader className="text-left px-6 py-4 shrink-0 border-b border-slate-50">
             {title ? (
               <DrawerTitle>{title}</DrawerTitle>
@@ -97,8 +122,10 @@ export function ResponsiveDialog({
               </DrawerDescription>
             )}
           </DrawerHeader>
-          <div className=" py-4 overflow-y-auto grow bg-white">
-            {children}
+          <div className="py-2 overflow-y-auto grow bg-white w-full">
+            <ResponsiveDialogContext.Provider value={true}>
+              {children}
+            </ResponsiveDialogContext.Provider>
           </div>
           {footer && (
             <DrawerFooter className="shrink-0 pb-10 border-t border-slate-50 bg-white">
@@ -111,9 +138,13 @@ export function ResponsiveDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={finalModal}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className={cn("max-w-lg", className)}>
+      <DialogContent 
+        className={cn("max-w-lg", className)}
+        onOpenAutoFocus={onOpenAutoFocus}
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         <DialogHeader>
           {title ? (
             <DialogTitle>{title}</DialogTitle>
@@ -128,8 +159,10 @@ export function ResponsiveDialog({
             </DialogDescription>
           )}
         </DialogHeader>
-        <div className="overflow-y-auto max-h-[80vh]">
-          {children}
+        <div className="overflow-y-auto max-h-[80vh] w-full">
+          <ResponsiveDialogContext.Provider value={true}>
+            {children}
+          </ResponsiveDialogContext.Provider>
         </div>
         {footer && <DialogFooter className="pt-2">{footer}</DialogFooter>}
       </DialogContent>

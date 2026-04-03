@@ -210,9 +210,12 @@ export async function createPropertyAction(
       propertyId: property.id, 
       slug: seoData.slug 
     };
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("createPropertyAction → error:", err);
-    return authzFail(err);
+    if (err && typeof err === "object" && "code" in err && err.code === "AUTHZ_ERROR") {
+      return authzFail(err as any);
+    }
+    return { success: false, message: mapDbError(err) };
   }
 }
 
@@ -257,7 +260,7 @@ export async function duplicatePropertyAction(
       address_line1: src.address_line1 ?? undefined,
       postal_code: src.postal_code ?? undefined,
       description: src.description ?? undefined,
-      main_image: (src as any).property_images?.find((img: any) => img.is_cover)?.image_url || undefined, // Carry over cover image if available
+      main_image: (src.property_images as unknown as { is_cover: boolean; image_url: string }[])?.find((img) => img.is_cover)?.image_url || undefined, // Carry over cover image if available
     });
 
     const uniqueSlug = `${seoData.slug}-${randomUUID().slice(0, 8)}`;
@@ -273,7 +276,7 @@ export async function duplicatePropertyAction(
       meta_description: _meta_description,
       meta_keywords: _meta_keywords,
       structured_data: _structured_data,
-      property_images: _property_images, // Explicitly exclude joined data
+      property_images: _property_images, 
       ...rest
     } = src as any;
 
@@ -289,7 +292,7 @@ export async function duplicatePropertyAction(
         meta_title: seoData.metaTitle,
         meta_description: seoData.metaDescription,
         meta_keywords: seoData.metaKeywords,
-        structured_data: seoData.structuredData as any,
+        structured_data: seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
       })
       .select("id")
       .single();
@@ -381,8 +384,11 @@ export async function duplicatePropertyAction(
 
     revalidatePath("/protected/properties");
     return { success: true, message: "คัดลอกทรัพย์สำเร็จ", propertyId: newPropertyId };
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("duplicatePropertyAction → error:", err);
-    return authzFail(err);
+    if (err && typeof err === "object" && "code" in err && (err as any).code === "AUTHZ_ERROR") {
+      return authzFail(err as any);
+    }
+    return { success: false, message: mapDbError(err) };
   }
 }

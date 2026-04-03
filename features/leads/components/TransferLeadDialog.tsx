@@ -112,7 +112,7 @@ export function TransferLeadDialog({
         </div>
       }
     >
-      <div className="grid gap-4 py-4">
+      <div className="grid gap-4 py-4 px-4">
         <div className="grid gap-2 text-left">
           <Label htmlFor="tenant" className="text-slate-700 font-bold">
             สาขาปลายทาง

@@ -110,7 +110,7 @@ export function LeadsFilters() {
               </div>
             }
           >
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 p-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
                   สถานะของลีด

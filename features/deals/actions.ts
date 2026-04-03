@@ -171,15 +171,15 @@ export async function createDealAction(input: CreateDealInput) {
     revalidatePath(`/protected/leads/${validated.lead_id}`);
     revalidatePath("/protected/deals");
     return { success: true, message: "สร้างดีลสำเร็จ", data };
-  } catch (error: any) {
-    if (error.code === "AUTHZ_ERROR") return authzFail(error);
+  } catch (error: unknown) {
+    if (error && typeof error === "object" && "code" in error && error.code === "AUTHZ_ERROR") {
+      return authzFail(error as any);
+    }
     console.error("Create Deal Error:", error);
-    return { 
-      success: false, 
-      message: error instanceof z.ZodError 
-        ? error.issues[0].message 
-        : mapDbError(error) 
-    };
+    const message = error instanceof z.ZodError 
+      ? error.issues[0].message 
+      : mapDbError(error);
+    return { success: false, message };
   }
 }
 
@@ -224,8 +224,7 @@ export async function updateDealAction(input: UpdateDealInput) {
       ).toISOString();
     }
     // Cleanup virtual field
-    const updateData: any = { ...dealData };
-    delete updateData.duration_months;
+    const { duration_months: _unused, ...updateData } = dealData;
 
     // Clean empty-string fields before update (keep `null` to explicitly clear DB columns)
     const _updateCleanKeys = [
@@ -237,15 +236,17 @@ export async function updateDealAction(input: UpdateDealInput) {
       "source",
     ] as const;
     _updateCleanKeys.forEach((k) => {
-      if (updateData[k] === "") {
-        delete updateData[k];
+      const key = k as keyof typeof updateData;
+      if (updateData[key] === "") {
+        delete updateData[key];
       }
     });
 
     // Remove explicit undefined keys
     Object.keys(updateData).forEach((k) => {
-      if (updateData[k] === undefined) {
-        delete updateData[k];
+      const key = k as keyof typeof updateData;
+      if (updateData[key] === undefined) {
+        delete updateData[key];
       }
     });
 
@@ -325,15 +326,15 @@ export async function updateDealAction(input: UpdateDealInput) {
 
     revalidatePath("/protected/deals");
     return { success: true, message: "อัปเดตดีลสำเร็จ" };
-  } catch (error: any) {
-    if (error.code === "AUTHZ_ERROR") return authzFail(error);
+  } catch (error: unknown) {
+    if (error && typeof error === "object" && "code" in error && error.code === "AUTHZ_ERROR") {
+      return authzFail(error as any);
+    }
     console.error("Update Deal Error:", error);
-    return { 
-      success: false, 
-      message: error instanceof z.ZodError 
-        ? error.issues[0].message 
-        : mapDbError(error) 
-    };
+    const message = error instanceof z.ZodError 
+      ? error.issues[0].message 
+      : mapDbError(error);
+    return { success: false, message };
   }
 }
 
@@ -384,18 +385,17 @@ export async function deleteDealAction(dealId: string, leadId: string) {
         tenantId,
         existingDeal.property_id,
         -1,
-        (existingDeal as any).deal_type,
+        existingDeal.deal_type as "RENT" | "SALE",
       );
     }
 
     return { success: true, message: "ลบดีลสำเร็จ" };
-  } catch (error: any) {
-    return { 
-      success: false, 
-      message: error instanceof z.ZodError 
-        ? error.issues[0].message 
-        : mapDbError(error) 
-    };
+  } catch (error: unknown) {
+    console.error("Delete Deal Error:", error);
+    const message = error instanceof z.ZodError 
+      ? error.issues[0].message 
+      : mapDbError(error);
+    return { success: false, message };
   }
 }
 
@@ -492,13 +492,11 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     revalidatePath("/protected/deals/[id]"); // Update specifically if in detail view
     return { success: true, message: "คำนวณและบันทึกค่าคอมมิชชั่นสำเร็จ" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Calculate Commissions Error:", error);
-    return { 
-      success: false, 
-      message: error instanceof z.ZodError 
-        ? error.issues[0].message 
-        : mapDbError(error) 
-    };
+    const message = error instanceof z.ZodError 
+      ? error.issues[0].message 
+      : mapDbError(error);
+    return { success: false, message };
   }
 }

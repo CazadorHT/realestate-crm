@@ -335,6 +335,7 @@ export type Database = {
           tenant_id: string | null
           transaction_date: string | null
           transaction_end_date: string | null
+          undetermined_date: boolean | null
           updated_at: string
         }
         Insert: {
@@ -355,6 +356,7 @@ export type Database = {
           tenant_id?: string | null
           transaction_date?: string | null
           transaction_end_date?: string | null
+          undetermined_date?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -375,6 +377,7 @@ export type Database = {
           tenant_id?: string | null
           transaction_date?: string | null
           transaction_end_date?: string | null
+          undetermined_date?: boolean | null
           updated_at?: string
         }
         Relationships: [
