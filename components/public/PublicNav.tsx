@@ -353,7 +353,7 @@ export function PublicNav() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="hover:bg-blue-500! hover:border-blue-500! hover:text-white "
+                      className="hover:bg-blue-500! hover:border-blue-500! hover:text-white! "
                     >
                       <Search className="h-4 w-4 mr-1" />
                       {t("home.search_btn")}

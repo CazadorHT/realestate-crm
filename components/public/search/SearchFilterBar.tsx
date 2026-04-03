@@ -430,8 +430,11 @@ export function SearchFilterBar({
           setCompanyRegistered={setCompanyRegistered}
           isHotDeal={isHotDeal}
           setIsHotDeal={setIsHotDeal}
+          availableBedrooms={availableBedrooms}
           availableProvinces={availableProvinces}
           availableTypes={availableTypes}
+          availableListingTypes={availableListingTypes}
+          availableQuickFilters={availableQuickFilters}
           availableAreas={availableAreas}
           area={area}
           setArea={setArea}

@@ -61,8 +61,11 @@ interface DesktopFiltersProps {
   setCompanyRegistered: (v: boolean) => void;
   isHotDeal: boolean;
   setIsHotDeal: (v: boolean) => void;
+  availableBedrooms: Record<string, number>;
   availableProvinces: { name: string; count: number }[];
   availableTypes: Record<string, number>;
+  availableListingTypes: Record<string, number>;
+  availableQuickFilters: Record<string, number>;
   availableAreas: any[];
   area: string;
   setArea: (v: string) => void;
@@ -115,8 +118,11 @@ export function DesktopFilters({
   setCompanyRegistered,
   isHotDeal,
   setIsHotDeal,
+  availableBedrooms,
   availableProvinces,
   availableTypes,
+  availableListingTypes,
+  availableQuickFilters,
   availableAreas,
   area,
   setArea,
@@ -161,7 +167,7 @@ export function DesktopFilters({
             <SelectContent align="start">
               <SelectItem value="ALL">{t("search.all_provinces")}</SelectItem>
               {availableProvinces.map((p) => (
-                <SelectItem key={p.name} value={p.name}>
+                <SelectItem key={p.name} value={p.name} disabled={p.count === 0}>
                   <div className="flex items-center justify-between w-full gap-4">
                     <span className={p.count === 0 ? "text-slate-400" : ""}>
                       {getProvinceName(p.name, language)}
@@ -184,8 +190,9 @@ export function DesktopFilters({
             <SelectContent align="start">
               {PROPERTY_TYPES.map((pt) => {
                 const count = availableTypes[pt.value] || 0;
+                const isDisabled = count === 0 && pt.value !== "ALL";
                 return (
-                  <SelectItem key={pt.value} value={pt.value}>
+                  <SelectItem key={pt.value} value={pt.value} disabled={isDisabled}>
                     <div className="flex items-center justify-between w-full gap-4">
                       <span className={pt.value !== "ALL" && count === 0 ? "text-slate-400" : ""}>
                         {pt.label}
@@ -210,17 +217,26 @@ export function DesktopFilters({
               { val: "SALE", label: t("search.buy"), active: "bg-green-600 border-green-600" },
               { val: "RENT", label: t("search.rent"), active: "bg-orange-600 border-orange-600" },
               { val: "SALE_AND_RENT", label: t("search.rent_buy"), active: "bg-blue-600 border-blue-600" },
-            ].map((opt) => (
-              <button
-                key={opt.val}
-                onClick={() => setListingType(opt.val)}
-                className={`rounded-lg transition-all font-medium text-xs ${
-                  listingType === opt.val ? `${opt.active} text-white shadow-sm` : "text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+            ].map((opt) => {
+              const count = availableListingTypes[opt.val] || 0;
+              const isDisabled = count === 0 && opt.val !== "ALL";
+              return (
+                <button
+                  key={opt.val}
+                  disabled={isDisabled}
+                  onClick={() => setListingType(opt.val)}
+                  className={`rounded-lg transition-all font-medium text-xs ${
+                    listingType === opt.val 
+                      ? `${opt.active} text-white shadow-sm` 
+                      : isDisabled
+                        ? "text-slate-300 bg-slate-50 cursor-not-allowed opacity-60"
+                        : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
         </div>
         
@@ -291,17 +307,32 @@ export function DesktopFilters({
 
         <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 shadow-sm h-12">
           <span className="text-xs text-slate-500 font-medium px-2">{t("search.bedrooms")}</span>
-          {["ALL", "1", "2", "3", "4+"].map((bed) => (
-            <button
-              key={bed}
-              onClick={() => setBedrooms(bed)}
-              className={`h-9 px-3 rounded-lg transition-all font-medium text-sm ${
-                bedrooms === bed ? "bg-indigo-600 text-white shadow-sm" : "text-slate-600 hover:bg-indigo-50"
-              }`}
-            >
-              {bed === "ALL" ? t("common.all") : bed}
-            </button>
-          ))}
+          {["ALL", "1", "2", "3", "4+"].map((bed) => {
+            const count = availableBedrooms[bed] || 0;
+            const isDisabled = count === 0 && bed !== "ALL";
+            
+            return (
+              <button
+                key={bed}
+                disabled={isDisabled}
+                onClick={() => setBedrooms(bed)}
+                className={`h-9 px-3 rounded-lg transition-all font-medium text-sm flex items-center gap-1.5 ${
+                  bedrooms === bed 
+                    ? "bg-indigo-600 text-white shadow-sm" 
+                    : isDisabled
+                      ? "text-slate-300 bg-slate-50 cursor-not-allowed opacity-60"
+                      : "text-slate-600 hover:bg-indigo-50"
+                }`}
+              >
+                <span>{bed === "ALL" ? t("common.all") : bed}</span>
+                {/* {bed !== "ALL" && count > 0 && (
+                  <span className={`text-[10px] ${bedrooms === bed ? "text-indigo-200" : "text-blue-400"}`}>
+                    ({count})
+                  </span>
+                )} */}
+              </button>
+            );
+          })}
         </div>
 
         <QuickFeatureFilters
@@ -317,6 +348,7 @@ export function DesktopFilters({
           setCompanyRegistered={setCompanyRegistered}
           isHotDeal={isHotDeal}
           setIsHotDeal={setIsHotDeal}
+          availableQuickFilters={availableQuickFilters}
           t={t}
         />
 
@@ -354,13 +386,18 @@ export function DesktopFilters({
               {availableAreas.slice(0, isExpanded ? undefined : 12).map((a) => (
                 <button
                   key={a.name}
+                  disabled={a.count === 0}
                   onClick={() => setArea(a.name)}
                   className={`text-sm transition-colors flex items-center gap-1.5 ${
-                    area === a.name ? "font-bold text-blue-600" : "text-slate-400 hover:text-blue-600"
+                    area === a.name 
+                      ? "font-bold text-blue-600" 
+                      : a.count === 0
+                        ? "text-slate-300 cursor-not-allowed opacity-60"
+                        : "text-slate-400 hover:text-blue-600"
                   }`}
                 >
                   {getLocaleValue({ name: a.name, name_en: a.name_en, name_cn: a.name_cn }, "name", language)}
-                  <span className="text-sm opacity-60 text-blue-600">({a.count})</span>
+                  <span className={`text-sm ${a.count === 0 ? "opacity-30" : "opacity-60 text-blue-600"}`}>({a.count})</span>
                 </button>
               ))}
               {availableAreas.length > 12 && (

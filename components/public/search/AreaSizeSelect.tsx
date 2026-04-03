@@ -51,7 +51,7 @@ export function AreaSizeSelect({
           const key = `${opt.min}-${opt.max}`;
           const count = opt.min || opt.max ? sizeCounts.get(key) || 0 : null;
           return (
-            <SelectItem key={key} value={key}>
+            <SelectItem key={key} value={key} disabled={count === 0}>
               <span className="flex items-center justify-between w-full gap-2">
                 <span className={count === 0 ? "text-slate-400" : ""}>
                   {opt.label}

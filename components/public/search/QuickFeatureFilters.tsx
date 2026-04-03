@@ -26,6 +26,7 @@ interface QuickFeatureFiltersProps {
   setCompanyRegistered: (v: boolean) => void;
   isHotDeal: boolean;
   setIsHotDeal: (v: boolean) => void;
+  availableQuickFilters: Record<string, number>;
   t: (key: string) => string;
 }
 
@@ -42,52 +43,67 @@ export function QuickFeatureFilters({
   setCompanyRegistered,
   isHotDeal,
   setIsHotDeal,
+  availableQuickFilters,
   t,
 }: QuickFeatureFiltersProps) {
   const features = [
-    { state: nearTrain, setState: setNearTrain, icon: FaTrainSubway, label: "near_train", color: "blue" },
-    { state: petFriendly, setState: setPetFriendly, icon: MdOutlinePets, label: "pet_allowed", color: "orange" },
-    { state: fullyFurnished, setState: setFullyFurnished, icon: RiArmchairFill, label: "fully_furnished", color: "emerald" },
-    { state: isForeigner, setState: setIsForeigner, icon: GiEarthAmerica, label: "foreigner", color: "purple" },
-    { state: companyRegistered, setState: setCompanyRegistered, icon: MdWork, label: "company_registered", color: "indigo" },
-    { state: isHotDeal, setState: setIsHotDeal, icon: FaFire, label: "hot_deal", color: "rose" },
+    { key: "nearTrain", state: nearTrain, setState: setNearTrain, icon: FaTrainSubway, label: "near_train", color: "blue" },
+    { key: "petFriendly", state: petFriendly, setState: setPetFriendly, icon: MdOutlinePets, label: "pet_allowed", color: "orange" },
+    { key: "fullyFurnished", state: fullyFurnished, setState: setFullyFurnished, icon: RiArmchairFill, label: "fully_furnished", color: "emerald" },
+    { key: "isForeigner", state: isForeigner, setState: setIsForeigner, icon: GiEarthAmerica, label: "foreigner", color: "purple" },
+    { key: "companyRegistered", state: companyRegistered, setState: setCompanyRegistered, icon: MdWork, label: "company_registered", color: "indigo" },
+    { key: "isHotDeal", state: isHotDeal, setState: setIsHotDeal, icon: FaFire, label: "hot_deal", color: "rose" },
   ];
 
   return (
     <div className="flex items-center gap-2">
       <TooltipProvider delayDuration={100}>
-        {features.map((f) => (
-          <Tooltip key={f.label}>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => f.setState(!f.state)}
-                className={cn(
-                  "flex items-center justify-center w-12 h-12 rounded-xl border-2 transition-all duration-200 font-medium text-sm",
-                  f.state
-                    ? `bg-${f.color}-600 border-${f.color}-600 text-white shadow-md shadow-${f.color}-500/20`
-                    : `bg-white border-slate-100 text-slate-400 hover:border-${f.color}-200 hover:text-${f.color}-600`
-                )}
-              >
-                <f.icon 
+        {features.map((f) => {
+          const count = availableQuickFilters?.[f.key] || 0;
+          const isDisabled = !f.state && count === 0;
+
+          return (
+            <Tooltip key={f.label}>
+              <TooltipTrigger asChild>
+                <button
+                  disabled={isDisabled}
+                  onClick={() => !isDisabled && f.setState(!f.state)}
                   className={cn(
-                    "transition-transform",
-                    f.label === "near_train" ? "h-5 w-5" : 
-                    f.label === "hot_deal" ? "h-[22px] w-[22px]" :
-                    f.label === "fully_furnished" ? "h-6 w-6" :
-                    "h-[22px] w-[22px]"
-                  )} 
-                />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent
-              className={f.state 
-                ? `bg-${f.color}-600 border-${f.color}-600 text-white` 
-                : `bg-${f.color}-50 border-${f.color}-200 text-${f.color}-700`}
-            >
-              {t(`search.${f.label}`)}
-            </TooltipContent>
-          </Tooltip>
-        ))}
+                    "flex items-center justify-center w-12 h-12 rounded-xl border-2 transition-all duration-200 font-medium text-sm relative",
+                    f.state
+                      ? `bg-${f.color}-600 border-${f.color}-600 text-white shadow-md shadow-${f.color}-500/20`
+                      : isDisabled
+                        ? "bg-slate-50 border-transparent text-slate-200 cursor-not-allowed opacity-50"
+                        : `bg-white border-slate-100 text-slate-400 hover:border-${f.color}-200 hover:text-${f.color}-600`
+                  )}
+                >
+                  <f.icon 
+                    className={cn(
+                      "transition-transform",
+                      f.label === "near_train" ? "h-5 w-5" : 
+                      f.label === "hot_deal" ? "h-[22px] w-[22px]" :
+                      f.label === "fully_furnished" ? "h-6 w-6" :
+                      "h-[22px] w-[22px]",
+                      f.state ? "text-white" : isDisabled ? "text-slate-200" : `text-${f.color}-500`
+                    )} 
+                  />
+                  {!isDisabled && count > 0 && !f.state && (
+                    <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-emerald-500 text-white px-1 py-0.5 rounded-full shadow-sm">
+                      {count}
+                    </span>
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                className={f.state 
+                  ? `bg-${f.color}-600 border-${f.color}-600 text-white` 
+                  : `bg-${f.color}-50 border-${f.color}-200 text-${f.color}-700`}
+              >
+                {t(`search.${f.label}`)} {count > 0 ? `(${count})` : ""}
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
       </TooltipProvider>
     </div>
   );

@@ -69,7 +69,7 @@ export function PriceRangeSelect({
                   const key = `${subOpt.min}-${subOpt.max}-${subOpt.type || "ALL"}`;
                   const count = priceCounts.get(key) || 0;
                   return (
-                    <SelectItem key={key} value={key}>
+                    <SelectItem key={key} value={key} disabled={count === 0}>
                       <span className="flex items-center justify-between w-full gap-2">
                         <span className={count === 0 ? "text-slate-400" : ""}>
                           {subOpt.label}
@@ -92,7 +92,7 @@ export function PriceRangeSelect({
           const optCount =
             opt.min || opt.max ? priceCounts.get(optKey) || 0 : null;
           return (
-            <SelectItem key={optKey} value={optKey}>
+            <SelectItem key={optKey} value={optKey} disabled={optCount === 0}>
               <span className="flex items-center justify-between w-full gap-2">
                 <span className={optCount === 0 ? "text-slate-400" : ""}>
                   {opt.label}
