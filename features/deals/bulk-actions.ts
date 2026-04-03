@@ -5,6 +5,8 @@ import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
 
+import { DealStatus, DealType } from "./types";
+
 export type BulkDeleteResult = {
   success: boolean;
   deletedCount: number;
@@ -77,9 +79,12 @@ export async function bulkDeleteDealsAction(
 export async function getAllDealIdsAction(args: {
   timeRange?: string;
   q?: string;
-  status?: string;
+  status?: DealStatus;
   property_id?: string;
   lead_id?: string;
+  deal_type?: DealType;
+  property_type?: string;
+  listing_type?: string;
 }) {
   try {
     const { getAllDealIdsQuery } = await import("./queries.getDeals");

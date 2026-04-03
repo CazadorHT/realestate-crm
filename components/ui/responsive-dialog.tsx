@@ -33,7 +33,7 @@ const ResponsiveDialogContext = React.createContext(false);
 
 /**
  * 📱 ResponsiveDialog:
- * Automatically switches between Radix Dialog (Desktop) 
+ * Automatically switches between Radix Dialog (Desktop)
  * and Vaul Drawer (Mobile) based on viewport width.
  */
 
@@ -53,6 +53,7 @@ interface ResponsiveDialogProps {
   modal?: boolean;
   onOpenAutoFocus?: (event: Event) => void;
   onCloseAutoFocus?: (event: Event) => void;
+  scrollable?: boolean;
 }
 
 export function ResponsiveDialog({
@@ -71,24 +72,26 @@ export function ResponsiveDialog({
   modal,
   onOpenAutoFocus,
   onCloseAutoFocus,
+  scrollable = true,
 }: ResponsiveDialogProps) {
   const isMobile = useIsMobile();
   const [mounted, setMounted] = React.useState(false);
   const isNested = React.useContext(ResponsiveDialogContext);
 
-  // 🛡️ Auto-Logic: Disable scaling and modal locking if nested
-  const finalModal = modal ?? !isNested;
-  const finalScale = shouldScaleBackground ?? !isNested;
+  // 🛡️ Auto-Logic: Default to modal behavior unless explicitly disabled
+  // Radix UI and Vaul already handle nested modals correctly by stacking them.
+  const finalModal = modal ?? true;
+  const finalScale = shouldScaleBackground ?? true;
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  // For the initial SSR and first client-side pass, 
+  // For the initial SSR and first client-side pass,
   // we return only the trigger (if exists) or null.
   // This avoids Radix UI generating mismatching internal IDs during hydration.
   if (!mounted) {
-     return trigger || null;
+    return trigger || null;
   }
 
   if (isMobile) {
@@ -103,8 +106,8 @@ export function ResponsiveDialog({
         modal={finalModal}
       >
         {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
-        <DrawerContent 
-          className={cn("max-h-[96vh]", className)}
+        <DrawerContent
+          className={cn("max-h-[96vh] flex flex-col overflow-hidden", className)}
           onOpenAutoFocus={onOpenAutoFocus}
           onCloseAutoFocus={onCloseAutoFocus}
         >
@@ -122,7 +125,7 @@ export function ResponsiveDialog({
               </DrawerDescription>
             )}
           </DrawerHeader>
-          <div className="py-2 overflow-y-auto grow bg-white w-full">
+          <div className="flex-1 min-h-0 overflow-y-auto py-2 bg-white w-full">
             <ResponsiveDialogContext.Provider value={true}>
               {children}
             </ResponsiveDialogContext.Provider>
@@ -140,12 +143,12 @@ export function ResponsiveDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange} modal={finalModal}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent 
-        className={cn("max-w-lg", className)}
+      <DialogContent
+        className={cn("max-w-lg flex flex-col max-h-[85vh] overflow-hidden", className)}
         onOpenAutoFocus={onOpenAutoFocus}
         onCloseAutoFocus={onCloseAutoFocus}
       >
-        <DialogHeader>
+        <DialogHeader className="shrink-0 pb-4 border-b border-slate-50">
           {title ? (
             <DialogTitle>{title}</DialogTitle>
           ) : (
@@ -159,12 +162,12 @@ export function ResponsiveDialog({
             </DialogDescription>
           )}
         </DialogHeader>
-        <div className="overflow-y-auto max-h-[80vh] w-full">
+        <div className="flex-1 min-h-0 overflow-y-auto w-full">
           <ResponsiveDialogContext.Provider value={true}>
             {children}
           </ResponsiveDialogContext.Provider>
         </div>
-        {footer && <DialogFooter className="pt-2">{footer}</DialogFooter>}
+        {footer && <DialogFooter className="shrink-0 pt-4 border-t border-slate-50 mt-2">{footer}</DialogFooter>}
       </DialogContent>
     </Dialog>
   );

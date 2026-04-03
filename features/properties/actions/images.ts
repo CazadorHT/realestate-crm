@@ -18,7 +18,11 @@ export type UploadedImageResult = {
   publicUrl: string; // public URL สำหรับแสดงผล
 };
 
-export async function uploadPropertyImageAction(formData: FormData) {
+export type UploadImageActionResponse = 
+  | (UploadedImageResult & { success?: true })
+  | { success: false; message: string };
+
+export async function uploadPropertyImageAction(formData: FormData): Promise<UploadImageActionResponse> {
   try {
     const { supabase, user, role } = await requireAuthContext();
     assertStaff(role);
@@ -129,7 +133,7 @@ export async function uploadPropertyImageAction(formData: FormData) {
   } catch (error: unknown) {
     console.error("uploadPropertyImageAction → error:", error);
     if (error && typeof error === "object" && "code" in error && error.code === "AUTHZ_ERROR") {
-      return authzFail(error as any);
+      return { success: false, message: "Unauthorized" };
     }
     return { success: false, message: mapDbError(error) };
   }

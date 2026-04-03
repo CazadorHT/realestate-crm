@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useTransition } from "react";
 import {
   Table,
   TableHeader,
@@ -9,8 +9,9 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Handshake } from "lucide-react";
+import { Handshake, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { DealWithProperty, DealPropertyOption } from "./types";
@@ -18,14 +19,10 @@ import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteDealsAction, getAllDealIdsAction } from "@/features/deals/bulk-actions";
 import { exportDealsAction } from "@/features/deals/export-action";
-import { useState } from "react";
-import { Loader2, CheckCircle2 } from "lucide-react";
-
 import { useDealsTable } from "./hooks/useDealsTable";
 import { DealsFilters } from "./components/DealsFilters";
 import { DealsTableRow } from "./components/DealsTableRow";
 import { DealsMobileCard } from "./components/DealsMobileCard";
-import { useTransition } from "react";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface DealsTableProps {
@@ -35,6 +32,26 @@ interface DealsTableProps {
   pageSize?: number;
   properties?: DealPropertyOption[];
   timeRange?: string;
+}
+
+function DealsCardSkeleton() {
+  return (
+    <div className="border border-slate-100 rounded-2xl bg-white p-0 overflow-hidden shadow-sm animate-in fade-in duration-500">
+      <Skeleton className="aspect-6/3 w-full rounded-none" />
+      <div className="p-3 space-y-4">
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-16 rounded-lg opacity-60" />
+          <Skeleton className="h-4 w-full rounded-lg" />
+          <Skeleton className="h-4 w-2/3 rounded-lg opacity-80" />
+        </div>
+        <div className="h-px bg-slate-50" />
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-10 w-[120px] rounded-2xl" />
+          <Skeleton className="h-10 w-10 rounded-2xl" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function DealsTable({
@@ -57,14 +74,27 @@ export function DealsTable({
     setSelectedPropertyId,
     selectedLeadId,
     setSelectedLeadId,
+    dealType,
+    setDealType,
+    dealStatus,
+    setDealStatus,
+    propertyType,
+    setPropertyType,
+    listingType,
+    setListingType,
     totalPages,
     hasActiveFilters,
     refresh,
     timeRange,
     debouncedQ,
+    stats,
+    orderBy,
+    setOrderBy,
+    orderDirection,
+    setOrderDirection,
   } = useDealsTable(initialData, initialCount, initialPage, pageSize, initialTimeRange);
 
-  const allIds = useMemo(() => data.map((d) => d.id), [data]);
+  const allIds = useMemo(() => data.map((d: DealWithProperty) => d.id), [data]);
   const {
     toggleSelect,
     toggleSelectAll,
@@ -85,6 +115,10 @@ export function DealsTable({
         q: debouncedQ,
         property_id: selectedPropertyId,
         lead_id: selectedLeadId,
+        deal_type: dealType,
+        status: dealStatus,
+        property_type: propertyType,
+        listing_type: listingType,
         timeRange,
       });
       if (result.success && result.ids) {
@@ -138,7 +172,7 @@ export function DealsTable({
           <button
             onClick={handleSelectAllGlobal}
             disabled={isGlobalLoading}
-            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2"
+            className="text-sm font-semibold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2"
           >
             {isGlobalLoading ? (
               <Loader2 className="h-3 w-3 animate-spin" />
@@ -156,7 +190,7 @@ export function DealsTable({
           </div>
           <button
             onClick={clearSelection}
-            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all"
+            className="text-sm font-semibold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all"
           >
             ยกเลิกการเลือก
           </button>
@@ -166,12 +200,28 @@ export function DealsTable({
       <DealsFilters
         q={q}
         setQ={setQ}
-        selectedPropertyId={selectedPropertyId}
-        setSelectedPropertyId={setSelectedPropertyId}
-        selectedLeadId={selectedLeadId}
-        setSelectedLeadId={setSelectedLeadId}
+        dealType={dealType}
+        setDealType={setDealType}
+        dealStatus={dealStatus}
+        setDealStatus={setDealStatus}
+        propertyType={propertyType}
+        setPropertyType={setPropertyType}
         hasActiveFilters={hasActiveFilters}
-        onFilterChange={() => setPage((p) => 1)}
+        totalCount={count}
+        stats={stats}
+        orderBy={orderBy}
+        setOrderBy={setOrderBy}
+        orderDirection={orderDirection}
+        setOrderDirection={setOrderDirection}
+        onFilterChange={refresh}
+        onClearAll={() => {
+          setQ("");
+          setDealType(undefined);
+          setDealStatus(undefined);
+          setPropertyType(undefined);
+          setPage(1);
+          refresh();
+        }}
       />
 
       <div className="relative">
@@ -181,12 +231,12 @@ export function DealsTable({
           </div>
         )}
 
-        <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
-          <div className="hidden lg:block overflow-x-auto">
+        <div className="lg:border lg:border-slate-200 lg:rounded-lg lg:overflow-hidden lg:bg-white lg:shadow-sm">
+          <div className="hidden xl:block overflow-x-auto">
             <Table>
               <TableHeader className="bg-slate-50">
                 <TableRow>
-                  <TableHead className="w-[50px] text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <TableHead className="w-[50px] text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                     <Checkbox
                       checked={isAllSelected}
                       onCheckedChange={() => toggleSelectAll(allIds)}
@@ -198,34 +248,34 @@ export function DealsTable({
                       }
                     />
                   </TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                  <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     ประเภท
                   </TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                  <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     ทรัพย์
                   </TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                  <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     ลีด
                   </TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                  <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     ราคา{" "}
                     <span className="text-[9px] font-normal text-slate-400">
                       (เดิม)
                     </span>
                   </TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                  <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     ค่าคอม
                   </TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                  <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     ระยะสัญญา
                   </TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                  <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     วันที่
                   </TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                  <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     สถานะ
                   </TableHead>
-                  <TableHead className="text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                  <TableHead className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -243,7 +293,7 @@ export function DealsTable({
                             </div>
                           </div>
                           <div className="space-y-2 max-w-md">
-                            <h3 className="text-2xl font-bold text-slate-800">
+                            <h3 className="text-2xl font-semibold text-slate-800">
                               {hasActiveFilters
                                 ? "ไม่พบดีลที่ค้นหา"
                                 : "ยังไม่มีดีลในระบบ"}
@@ -259,7 +309,7 @@ export function DealsTable({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  data.map((deal) => (
+                  data.map((deal: DealWithProperty) => (
                     <DealsTableRow
                       key={deal.id}
                       deal={deal}
@@ -274,23 +324,24 @@ export function DealsTable({
             </Table>
           </div>
 
-          <div className="lg:hidden divide-y divide-slate-100">
-            {data.length === 0 ? (
-              <div className="p-12 text-center text-slate-500">
-                {hasActiveFilters ? "ไม่พบดีลที่ค้นหา" : "ยังไม่มีดีลในระบบ"}
-              </div>
-            ) : (
-              data.map((deal) => (
-                <DealsMobileCard
-                  key={deal.id}
-                  deal={deal}
-                  isSelected={isSelected(deal.id)}
-                  onToggleSelect={toggleSelect}
-                  properties={properties}
-                  onRefresh={refresh}
-                />
+          <div className="xl:hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 h-auto overflow-y-scroll p-1 no-scrollbar min-h-[400px]">
+            {loading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <DealsCardSkeleton key={i} />
               ))
-            )}
+              ) : (
+                data.map((deal: DealWithProperty, index: number) => (
+                  <DealsMobileCard
+                    key={deal.id}
+                    index={index + 1}
+                    deal={deal}
+                    isSelected={isSelected(deal.id)}
+                    onToggleSelect={toggleSelect}
+                    properties={properties}
+                    onRefresh={refresh}
+                  />
+                ))
+              )}
           </div>
         </div>
       </div>

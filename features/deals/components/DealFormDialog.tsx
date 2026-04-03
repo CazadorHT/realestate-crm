@@ -46,14 +46,22 @@ export function DealFormDialog({
 
   const isEditing = !!deal;
 
-  const getInitialValues = () => {
+  const getInitialValues = (): CreateDealInput => {
     if (deal) {
-      const sanitized: any = { ...deal, deal_type: deal.deal_type ?? "RENT" };
-      ["co_agent_name", "co_agent_contact", "co_agent_online", "source"].forEach(
-        (k) => {
-          if (sanitized[k] === null) sanitized[k] = undefined;
-        },
-      );
+      const sanitized = { ...deal, deal_type: (deal.deal_type as "RENT" | "SALE") ?? "RENT" };
+      const cleanupKeys = [
+        "co_agent_name", 
+        "co_agent_contact", 
+        "co_agent_online", 
+        "source",
+        "commission_amount",
+        "commission_percent"
+      ] as const;
+      
+      cleanupKeys.forEach((k) => {
+        if ((sanitized as any)[k] === null) (sanitized as any)[k] = undefined;
+      });
+
       if (sanitized.transaction_date)
         sanitized.transaction_date = sanitized.transaction_date.split("T")[0];
       if (sanitized.transaction_end_date)
@@ -68,7 +76,18 @@ export function DealFormDialog({
           : 12;
 
       return {
-        ...sanitized,
+        lead_id: sanitized.lead_id,
+        property_id: sanitized.property_id,
+        deal_type: sanitized.deal_type,
+        status: (sanitized.status as CreateDealInput["status"]) ?? "NEGOTIATING",
+        commission_amount: sanitized.commission_amount as number | undefined,
+        commission_percent: sanitized.commission_percent as number | undefined,
+        co_agent_name: sanitized.co_agent_name as string | undefined,
+        co_agent_contact: sanitized.co_agent_contact as string | undefined,
+        co_agent_online: sanitized.co_agent_online as string | undefined,
+        source: sanitized.source as string | undefined,
+        transaction_date: sanitized.transaction_date as string | undefined,
+        transaction_end_date: sanitized.transaction_end_date as string | undefined,
         duration_months: duration,
         undetermined_date: !sanitized.transaction_date,
       };
@@ -90,7 +109,7 @@ export function DealFormDialog({
   };
 
   const form = useForm<CreateDealInput>({
-    resolver: zodResolver(createDealSchema) as unknown as Resolver<any>,
+    resolver: zodResolver(createDealSchema) as unknown as Resolver<CreateDealInput>,
     mode: "onChange",
     defaultValues: getInitialValues(),
   });
@@ -105,7 +124,7 @@ export function DealFormDialog({
 
 
   const handleNext = async () => {
-    let fieldsToValidate: any[] = [];
+    let fieldsToValidate: (keyof CreateDealInput)[] = [];
     if (currentStep === 1) {
       fieldsToValidate = ["property_id"];
       if (!leadId) fieldsToValidate.push("lead_id");
@@ -113,7 +132,7 @@ export function DealFormDialog({
       fieldsToValidate = ["deal_type", "status", "commission_amount"];
     }
 
-    const isValid = await form.trigger(fieldsToValidate as any);
+    const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
       setCurrentStep((prev) => prev + 1);
     } else {
@@ -130,7 +149,7 @@ export function DealFormDialog({
     if (!pendingData) return;
     setIsSubmitting(true);
     try {
-      const result: any = isEditing && deal
+      const result: Awaited<ReturnType<typeof createDealAction>> = isEditing && deal
         ? await updateDealAction({ ...pendingData, id: deal.id })
         : await createDealAction(pendingData);
 

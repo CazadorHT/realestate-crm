@@ -215,21 +215,84 @@ export const updateLeadStageAction = createSafeAction(
 );
 
 export const searchPropertiesAction = createSafeAction(
-  z.object({ q: z.string().optional() }),
-  async ({ q }, { supabase, tenantId }) => {
+  z.object({
+    q: z.string().optional(),
+    listing_type: z.string().optional(),
+    property_type: z.string().optional(),
+    popular_area: z.string().optional(),
+    status: z.union([z.string(), z.array(z.string())]).optional(),
+  }),
+  async (
+    { q, listing_type, property_type, popular_area, status },
+    { supabase, tenantId },
+  ) => {
     const queryTerm = (q ?? "").trim();
 
+    // 1. Fetch counts for ALL matching properties (ignoring facet-specific filters, but respecting search q)
+    let facetSb = supabase
+      .from("properties")
+      .select("listing_type, property_type, status")
+      .eq("tenant_id", tenantId)
+      .is("deleted_at", null);
+
+    if (queryTerm) facetSb = facetSb.ilike("title", `%${queryTerm}%`);
+
+    const { data: facetData } = await facetSb;
+    const counts = {
+      listing_type: {} as Record<string, number>,
+      property_type: {} as Record<string, number>,
+      status: {} as Record<string, number>,
+    };
+
+    if (facetData) {
+      facetData.forEach((x: { listing_type: string | null; property_type: string | null; status: string | null }) => {
+        if (x.listing_type)
+          counts.listing_type[x.listing_type] =
+            (counts.listing_type[x.listing_type] || 0) + 1;
+        if (x.property_type)
+          counts.property_type[x.property_type] =
+            (counts.property_type[x.property_type] || 0) + 1;
+        if (x.status)
+          counts.status[x.status] = (counts.status[x.status] || 0) + 1;
+      });
+    }
+
+    // 2. Fetch actually filtered property results
     let sb = supabase
       .from("properties")
       .select(
-        "id, title, price, original_price, rental_price, original_rental_price, listing_type, province, district, popular_area, property_images(image_url, is_cover)",
+        "id, title, price, original_price, rental_price, original_rental_price, listing_type, property_type, province, district, popular_area, status, property_images(image_url, is_cover)",
       )
       .eq("tenant_id", tenantId) // Search only tenant's properties
       .is("deleted_at", null)
       .order("updated_at", { ascending: false })
-      .limit(10);
+      .limit(30);
 
     if (queryTerm) sb = sb.ilike("title", `%${queryTerm}%`);
+
+    if (listing_type) {
+      if (listing_type === "SALE") {
+        sb = sb.in("listing_type", ["SALE", "SALE_RENT", "SALE_AND_RENT"]);
+      } else if (listing_type === "RENT") {
+        sb = sb.in("listing_type", ["RENT", "SALE_RENT", "SALE_AND_RENT"]);
+      }
+    }
+
+    if (property_type) {
+      sb = sb.eq("property_type", property_type);
+    }
+
+    if (popular_area) {
+      sb = sb.ilike("popular_area", `%${popular_area}%`);
+    }
+
+    if (status) {
+      if (Array.isArray(status)) {
+        sb = sb.in("status", status);
+      } else {
+        sb = sb.eq("status", status);
+      }
+    }
 
     const { data, error } = await sb;
     if (error) throw new Error(mapDbError(error));
@@ -242,32 +305,39 @@ export const searchPropertiesAction = createSafeAction(
       rental_price: number | null;
       original_rental_price: number | null;
       listing_type: string | null;
+      property_type: string | null;
       province: string | null;
       district: string | null;
       popular_area: string | null;
+      status: string | null;
       property_images: { image_url: string; is_cover: boolean }[];
     }
 
     const properties = (data as unknown as PropertyWithImages[]) ?? [];
 
-    return properties.map((x: PropertyWithImages) => ({
-      id: x.id,
-      title: x.title,
-      price: x.price,
-      original_price: x.original_price,
-      rental_price: x.rental_price,
-      original_rental_price: x.original_rental_price,
-      listing_type: x.listing_type,
-      cover_image_url:
-        x.property_images?.find(
-          (img: { image_url: string; is_cover: boolean }) => img.is_cover,
-        )?.image_url ||
-        x.property_images?.[0]?.image_url ||
-        null,
-      province: x.province,
-      district: x.district,
-      popular_area: x.popular_area,
-    }));
+    return {
+      properties: properties.map((x: PropertyWithImages) => ({
+        id: x.id,
+        title: x.title,
+        price: x.price,
+        original_price: x.original_price,
+        rental_price: x.rental_price,
+        original_rental_price: x.original_rental_price,
+        listing_type: x.listing_type,
+        property_type: x.property_type,
+        cover_image_url:
+          x.property_images?.find(
+            (img: { image_url: string; is_cover: boolean }) => img.is_cover,
+          )?.image_url ||
+          x.property_images?.[0]?.image_url ||
+          null,
+        province: x.province,
+        district: x.district,
+        popular_area: x.popular_area,
+        status: x.status,
+      })),
+      counts,
+    };
   },
 );
 

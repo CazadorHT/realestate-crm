@@ -139,7 +139,7 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 px-2 text-xs font-bold text-slate-400 hover:text-slate-600"
+                className="h-8 px-2 mr-6 text-xs font-bold text-slate-400 hover:text-slate-600"
                 onClick={() => setQuery("")}
               >
                 ล้างข้อมูล

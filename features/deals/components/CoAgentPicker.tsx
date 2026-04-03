@@ -153,21 +153,21 @@ export function CoAgentPicker() {
         {/* Input Cards */}
         {[
           {
-            name: "co_agent_name",
+            name: "co_agent_name" as const,
             label: "ชื่อ Co-Agent",
             placeholder: "ระบุชื่อผู้ประสานงาน",
             icon: <User className="h-4 w-4" />,
             color: "blue",
           },
           {
-            name: "co_agent_contact",
+            name: "co_agent_contact" as const,
             label: "เบอร์โทรศัพท์",
             placeholder: "081-xxx-xxxx",
             icon: <Phone className="h-4 w-4" />,
             color: "cyan",
           },
           {
-            name: "co_agent_online",
+            name: "co_agent_online" as const,
             label: "Facebook / LINE",
             placeholder: "LINE:@id หรือ FB Name",
             icon: <Globe className="h-4 w-4" />,
@@ -177,7 +177,7 @@ export function CoAgentPicker() {
           <FormField
             key={item.name}
             control={form.control}
-            name={item.name as any}
+            name={item.name}
             render={({ field }) => (
               <FormItem className="space-y-0 relative group">
                 <div
@@ -204,7 +204,7 @@ export function CoAgentPicker() {
                   <FormControl>
                     <Input
                       {...field}
-                      value={field.value ?? ""}
+                      value={(field.value as string) ?? ""}
                       placeholder={item.placeholder}
                       className="h-9 border-none bg-transparent p-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 placeholder:font-medium focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
                       onChange={(e) =>

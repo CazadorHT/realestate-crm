@@ -78,22 +78,31 @@ export function LineManagerClient({
     }
   };
 
-  const handleUpdate = async (key: string, field: string, value: any) => {
+  const handleUpdate = async (
+    key: string,
+    field: "is_active" | "config.headerColor" | "config.headerText",
+    value: string | boolean,
+  ) => {
+    // Validation for header text
+    if (field === "config.headerText" && typeof value === "string" && value.length > 50) {
+      toast.error("Header text is too long (max 50 chars)");
+      return;
+    }
+
     // Optimistic Update
     const updatedTemplates = templates.map((t) => {
       if (t.key === key) {
-        if (field === "is_active") return { ...t, is_active: value };
+        if (field === "is_active") return { ...t, is_active: value as boolean };
         if (field === "config.headerColor")
-          return { ...t, config: { ...t.config, headerColor: value } };
+          return { ...t, config: { ...t.config, headerColor: value as string } };
         if (field === "config.headerText")
-          return { ...t, config: { ...t.config, headerText: value } };
+          return { ...t, config: { ...t.config, headerText: value as string } };
       }
       return t;
     });
     setTemplates(updatedTemplates);
 
-    // If it's just text input, don't auto-save immediately to avoid spamming (debounce ideally, but explicit save for now is safer or just background save)
-    // For Toggles/Colors, likely safe to save immediately
+    // If it's just text input, don't auto-save immediately to avoid spamming
     if (field === "is_active" || field === "config.headerColor") {
       saveChanges(key, updatedTemplates);
     }
@@ -196,9 +205,9 @@ export function LineManagerClient({
                 {/* Controls */}
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                       Header Text
-                    </label>
+                    </span>
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -229,9 +238,9 @@ export function LineManagerClient({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
                       <Palette className="w-3 h-3" /> Theme Color
-                    </label>
+                    </span>
                     <div className="flex flex-wrap gap-2">
                       {COLOR_PRESETS.map((p) => (
                         <button

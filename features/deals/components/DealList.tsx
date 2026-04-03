@@ -66,20 +66,28 @@ export function DealList({ deals, properties = [] }: DealListProps) {
               <CardContent className="p-0 flex flex-col md:flex-row h-full">
                 {/* Image Section: Compact Sidebar */}
                 <div className="relative w-full aspect-video md:w-32 lg:w-40 md:aspect-auto shrink-0 overflow-hidden bg-slate-50 border-r border-slate-100/50">
-                  {deal.property?.property_images?.[0]?.image_url ? (
-                    <img
-                      src={
-                        deal.property.property_images.find((img) => img.is_cover)
-                          ?.image_url || deal.property.property_images[0].image_url
-                      }
-                      alt={deal.property.title || "Property"}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center text-slate-200">
-                      <Home className="h-8 w-8" />
-                    </div>
-                  )}
+                  {(() => {
+                    const property = deal.property;
+                    const images = property?.images;
+                    const hasImage = images?.[0]?.image_url;
+                    
+                    if (hasImage && images) {
+                      const coverImage = images.find((img) => img.is_cover)?.image_url || images[0].image_url;
+                      return (
+                        <img
+                          src={coverImage}
+                          alt={deal.property?.title || "Property"}
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      );
+                    }
+
+                    return (
+                      <div className="h-full w-full flex items-center justify-center text-slate-200">
+                        <Home className="h-8 w-8" />
+                      </div>
+                    );
+                  })()}
 
                   {/* Index & Type Overlay (Mini) */}
                   <div className="absolute top-2 right-2 z-10 flex gap-1">

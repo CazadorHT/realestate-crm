@@ -18,7 +18,7 @@ export type DealWithProperty = Deal & {
     original_rental_price: number | null;
     province?: string | null;
     popular_area?: string | null;
-    property_images?: {
+    images?: {
       image_url: string;
       is_cover: boolean;
     }[];
@@ -73,3 +73,13 @@ export type DealCommission = {
     avatar_url: string | null;
   } | null;
 };
+
+export type DealListingType = "SALE" | "RENT" | "SALE_AND_RENT";
+
+export interface DealStats {
+  deal_type: Record<string, number>;
+  status: Record<string, number>;
+  property_type: Record<string, number>;
+  listing_type: Record<string, number>;
+  total: number;
+}

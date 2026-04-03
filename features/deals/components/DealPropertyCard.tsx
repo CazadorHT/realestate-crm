@@ -2,9 +2,10 @@ import Link from "next/link";
 import { MapPin, ArrowRight } from "lucide-react";
 import { RiHome4Line } from "react-icons/ri";
 import { Button } from "@/components/ui/button";
+import { DealWithProperty } from "../types";
 
 interface DealPropertyCardProps {
-  property: any; // Using any for simplicity as strictly typing property relations can be verbose, but ideally should be typed
+  property: DealWithProperty["property"];
   isRent: boolean;
 }
 
@@ -27,11 +28,11 @@ export function DealPropertyCard({ property, isRent }: DealPropertyCardProps) {
         <div className="p-0">
           {/* Property Image */}
           <div className="aspect-4/3 bg-slate-100 relative overflow-hidden">
-            {property.property_images?.[0]?.image_url ? (
+            {property.images?.[0]?.image_url ? (
               <img
                 src={
-                  property.property_images.find((img: any) => img.is_cover)
-                    ?.image_url || property.property_images[0].image_url
+                  property.images.find((img) => img.is_cover)
+                    ?.image_url || property.images[0].image_url
                 }
                 alt={property.title}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"

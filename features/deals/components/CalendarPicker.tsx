@@ -138,7 +138,7 @@ export function CalendarPicker({ type }: CalendarPickerProps) {
           <div className="w-full bg-white rounded-3xl p-2 shadow-inner border border-slate-50 overflow-hidden">
             <Calendar
               onChange={handleDateChange}
-              value={value as any}
+              value={value}
               selectRange={type === "RENT"}
               className="react-calendar-dealform"
               locale="th-TH"

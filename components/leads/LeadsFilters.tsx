@@ -112,9 +112,9 @@ export function LeadsFilters() {
           >
             <div className="space-y-4 p-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
                   สถานะของลีด
-                </label>
+                </span>
                 <div className="grid grid-cols-1 gap-2">
                   <button
                     onClick={() => setStage("ALL")}

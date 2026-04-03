@@ -33,7 +33,7 @@ export function LeadSelect({ value, onChange }: LeadSelectProps) {
       if (res.ok) {
         const payload = await res.json();
         setOpts(
-          (payload.data ?? []).map((l: any) => ({
+          (payload.data ?? []).map((l: { id: string; full_name: string }) => ({
             id: l.id,
             full_name: l.full_name,
           }))

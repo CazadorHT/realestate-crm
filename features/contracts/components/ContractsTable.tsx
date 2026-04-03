@@ -355,13 +355,13 @@ export function ContractsTable({
               id="select-all-mobile"
               checked={isAllSelected}
               onCheckedChange={() => toggleSelectAll(allIds)}
+              aria-label="เลือกสัญญาในหน้านี้ทั้งหมด"
             />
-            <label
-              htmlFor="select-all-mobile"
+            <span
               className="text-xs font-bold text-slate-500 uppercase tracking-wider"
             >
               เลือกทั้งหมด
-            </label>
+            </span>
           </div>
           <p className="text-[10px] font-medium text-slate-400">
             Displaying {contracts.length} contracts

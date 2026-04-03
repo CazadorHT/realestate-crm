@@ -118,28 +118,28 @@ export function DealForm({
                     onChange={(id) => field.onChange(id)}
                     placeholder="ค้นหาตามชื่อทรัพย์ ย่าน หรือรหัส..."
                     className="max-w-full sm:max-w-2xl"
-                    initialProperty={(() => {
-                      // 1. Try finding in the currently passed properties list
-                      const found = properties.find((p) => p.id === field.value);
-                      if (found)
-                        return {
-                          id: found.id,
-                          title: found.title,
-                          cover_image_url: found.cover_image,
-                        };
-                      // 2. Fallback to the deal's original property data
-                      if (deal?.property && deal.property.id === field.value)
-                        return {
-                          id: deal.property.id,
-                          title: deal.property.title,
-                          cover_image_url:
-                            deal.property.property_images?.find(
-                              (i) => i.is_cover,
-                            )?.image_url ||
-                            deal.property.property_images?.[0]?.image_url,
-                        };
-                      return null;
-                    })()}
+                      initialProperty={(() => {
+                        // 1. Try finding in the currently passed properties list
+                        const found = properties.find((p) => p.id === field.value);
+                        if (found)
+                          return {
+                            id: found.id,
+                            title: found.title,
+                            cover_image_url: found.cover_image,
+                          };
+                        // 2. Fallback to the deal's original property data
+                        if (deal?.property && deal.property.id === field.value)
+                          return {
+                            id: deal.property.id,
+                            title: deal.property.title,
+                            cover_image_url:
+                              deal.property.images?.find(
+                                (i) => i.is_cover,
+                              )?.image_url ||
+                              deal.property.images?.[0]?.image_url,
+                          };
+                        return null;
+                      })()}
                   />
                 </FormControl>
                 <FormMessage className="text-xs font-bold" />

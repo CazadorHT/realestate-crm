@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { Check, ChevronsUpDown, X, Building2 } from "lucide-react";
+import { DealWithProperty } from "../types";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -72,7 +73,7 @@ export function DealCombobox({
       }
 
       const payload = await res.json();
-      const pageItems: DealItem[] = (payload.data ?? []).map((x: any) => ({
+      const pageItems: DealItem[] = (payload.data ?? []).map((x: DealWithProperty) => ({
         id: x.id,
         property_title: x.property?.title ?? "ไม่ระบุทรัพย์",
         lead_name: x.lead?.full_name ?? "ไม่ระบุลูกค้า",
@@ -83,7 +84,7 @@ export function DealCombobox({
         original_rental_price: x.property?.original_rental_price,
         duration_months: x.duration_months,
         cover_image_url:
-          x.property?.images?.find((img: any) => img.is_cover)?.image_url ||
+          x.property?.images?.find((img) => img.is_cover)?.image_url ||
           x.property?.images?.[0]?.image_url,
         location:
           x.property?.popular_area || x.property?.province || "ไม่ระบุทำเล",

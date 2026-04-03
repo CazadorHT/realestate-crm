@@ -322,7 +322,7 @@ export function AdvancedFilters({
         </div>
       }
     >
-      <div className="flex-1 overflow-y-auto px-0 py-0 space-y-8">
+      <div className="flex-1 h-[calc(80vh-200px)] overflow-y-auto px-0 py-0 space-y-8">
           <Accordion
             type="multiple"
             defaultValue={[
@@ -625,9 +625,9 @@ export function AdvancedFilters({
                 <div className="space-y-6">
                   {/* Sale Price Section */}
                   <div className="space-y-3">
-                    <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                       ช่วงราคาขาย (บาท)
-                    </Label>
+                    </span>
                     <div className="grid grid-cols-2 gap-2">
                       {[
                         { min: "0", max: "3000000", label: "< 3 ล้าน" },
@@ -697,9 +697,9 @@ export function AdvancedFilters({
 
                   {/* Rent Price Section */}
                   <div className="space-y-3">
-                    <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                       ช่วงราคาเช่า (บาท / เดือน)
-                    </Label>
+                    </span>
                     <div className="grid grid-cols-2 gap-2">
                       {[
                         { min: "0", max: "15000", label: "< 15,000" },
@@ -774,9 +774,9 @@ export function AdvancedFilters({
 
                 <div className="space-y-4">
                   <div className="space-y-3">
-                    <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                       ห้องนอน
-                    </Label>
+                    </span>
                     <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                       <button
                         onClick={() =>
@@ -850,9 +850,9 @@ export function AdvancedFilters({
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                       ห้องน้ำ
-                    </Label>
+                    </span>
                     <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                       <button
                         onClick={() =>
@@ -926,9 +926,9 @@ export function AdvancedFilters({
                   </div>
 
                   <div className="space-y-3 pt-2">
-                    <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                       ความต้องการพิเศษ
-                    </Label>
+                    </span>
                     <div className="flex flex-wrap gap-2">
                       {[
                         {
@@ -1011,9 +1011,9 @@ export function AdvancedFilters({
               <AccordionContent className="pb-6 space-y-6">
                 {/* Provinces */}
                 <div className="space-y-3">
-                  <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     จังหวัด
-                  </Label>
+                  </span>
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() =>
@@ -1094,9 +1094,9 @@ export function AdvancedFilters({
 
                 {/* Areas (Districts) */}
                 <div className="space-y-3">
-                  <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     ทำเล
-                  </Label>
+                  </span>
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() =>

@@ -1,17 +1,18 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { differenceInMonths } from "date-fns";
-import type { DealWithProperty } from "./types";
-
-import { Deal, DealStatus } from "./types";
+import { Deal, DealStatus, DealType, DealStats, DealWithProperty } from "./types";
 
 type ListArgs = {
   q?: string;
   property_id?: string;
   lead_id?: string;
   status?: DealStatus;
+  deal_type?: DealType;
+  property_type?: string;
+  listing_type?: string;
   page?: number;
   pageSize?: number;
-  order?: "created_at" | "transaction_date";
+  order?: "created_at" | "transaction_date" | "commission_amount" | "updated_at";
   ascending?: boolean;
   timeRange?: string;
 };
@@ -54,6 +55,9 @@ export async function getDeals({
   property_id,
   lead_id,
   status,
+  deal_type,
+  property_type,
+  listing_type,
   page = 1,
   pageSize = 20,
   order = "created_at",
@@ -72,7 +76,7 @@ export async function getDeals({
       `
       *,
       tenants(id, name),
-      property:properties!inner ( id, title, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
+      property:properties!inner ( id, title, listing_type, property_type, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
       lead:leads ( id, full_name, phone )
     `,
       { count: "exact" },
@@ -128,6 +132,9 @@ export async function getDeals({
   if (property_id) query = query.eq("property_id", property_id);
   if (lead_id) query = query.eq("lead_id", lead_id);
   if (status) query = query.eq("status", status);
+  if (deal_type) query = query.eq("deal_type", deal_type);
+  if (listing_type) query = query.eq("property.listing_type", listing_type);
+  if (property_type) query = query.eq("property.property_type", property_type);
 
   const from = (pageSafe - 1) * size;
   const to = from + size - 1;
@@ -177,7 +184,7 @@ export async function getDeals({
             `
       *,
       tenants(id, name),
-      property:properties!inner ( id, title, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
+      property:properties!inner ( id, title, listing_type, property_type, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images ( id, property_id, image_url, is_cover, sort_order ) ),
       lead:leads ( id, full_name, phone )
     `,
             { count: "exact" },
@@ -258,12 +265,18 @@ export async function getAllDealIdsQuery({
   status,
   property_id,
   lead_id,
+  deal_type,
+  property_type,
+  listing_type,
 }: {
   timeRange?: string;
   q?: string;
-  status?: string;
+  status?: DealStatus;
   property_id?: string;
   lead_id?: string;
+  deal_type?: DealType;
+  property_type?: string;
+  listing_type?: string;
 } = {}) {
   const { supabase, tenantId } = await requireAuthContext();
 
@@ -315,11 +328,97 @@ export async function getAllDealIdsQuery({
     }
   }
 
-  if (status) query = query.eq("status", status as any);
+  if (status) query = query.eq("status", status);
   if (property_id) query = query.eq("property_id", property_id);
   if (lead_id) query = query.eq("lead_id", lead_id);
+  if (deal_type) query = query.eq("deal_type", deal_type);
+
+  // For property filters in ID fetch, we need to join properties
+  if (listing_type || property_type) {
+    // If we need property-level filtering just for IDs, we filter by the joined relation
+    // Note: Supabase allows filtering on joined tables even in simple select if properly joined
+    // but for ID fetch we'll just join 'properties' as well
+    const { data: filteredIds } = await supabase
+      .from("deals")
+      .select("id, property:properties!inner(listing_type, property_type)")
+      .match({
+        ...(listing_type ? { "property.listing_type": listing_type } : {}),
+        ...(property_type ? { "property.property_type": property_type } : {}),
+      })
+      .eq("tenant_id", tenantId || "");
+    
+    if (filteredIds) {
+      query = query.in("id", filteredIds.map(f => f.id));
+    }
+  }
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data || []).map((d) => d.id);
+}
+
+/**
+ * Fetch counts for various deal categories (facets)
+ */
+export async function getDealStats(): Promise<DealStats | null> {
+  const { supabase, tenantId } = await requireAuthContext();
+
+  let query = supabase.from("deals").select(`
+    deal_type, 
+    status, 
+    property:properties!inner(listing_type, property_type)
+  `);
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    console.error("getDealStats error:", error);
+    return null;
+  }
+
+  const stats: DealStats = {
+    deal_type: {},
+    status: {},
+    property_type: {},
+    listing_type: {},
+    total: data.length,
+  };
+
+  type StatsRecord = {
+    deal_type: string | null;
+    status: string | null;
+    property: {
+      listing_type: string | null;
+      property_type: string | null;
+    } | null;
+  };
+
+  const records = data as unknown as StatsRecord[];
+
+  records.forEach((d) => {
+    // Deal Type
+    if (d.deal_type) {
+      stats.deal_type[d.deal_type] = (stats.deal_type[d.deal_type] || 0) + 1;
+    }
+    // Status
+    if (d.status) {
+      stats.status[d.status] = (stats.status[d.status] || 0) + 1;
+    }
+    // Nested Property Stats
+    if (d.property) {
+      if (d.property.property_type) {
+        stats.property_type[d.property.property_type] =
+          (stats.property_type[d.property.property_type] || 0) + 1;
+      }
+      if (d.property.listing_type) {
+        stats.listing_type[d.property.listing_type] =
+          (stats.listing_type[d.property.listing_type] || 0) + 1;
+      }
+    }
+  });
+
+  return stats;
 }

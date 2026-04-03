@@ -269,14 +269,21 @@ export function PropertyImageUploader({
 
           const result = await uploadPropertyImageAction(formData);
 
+          if ("success" in result && result.success === false) {
+            throw new Error(result.message || "Upload failed");
+          }
+
+          // Successfully uploaded
+          const uploadedResult = result as { path: string; publicUrl: string };
+
           // Update state for this specific item
           setImages((prev) =>
             prev.map((img) =>
               img.id === item.id
                 ? {
                     ...img,
-                    storage_path: result.path,
-                    preview_url: result.publicUrl,
+                    storage_path: uploadedResult.path,
+                    preview_url: uploadedResult.publicUrl,
                     is_uploading: false,
                     file: undefined, // Clear file reference after success
                   }

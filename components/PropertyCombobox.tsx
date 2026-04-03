@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Check, ChevronsUpDown, Building2, Search, X, MapPin } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  Building2,
+  Search,
+  X,
+  MapPin,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +29,8 @@ export type PropertyPickItem = {
   province: string | null;
   district: string | null;
   popular_area: string | null;
+  status: string | null;
+  property_type: string | null;
 };
 
 type Props = {
@@ -33,11 +42,20 @@ type Props = {
     id: string;
     title: string;
     cover_image_url?: string | null;
-    [key: string]: any;
+    listing_type?: string | null;
+    popular_area?: string | null;
+    district?: string | null;
   } | null;
 };
 
-function ListingTypeBadge({ type }: { type: string | null }) {
+export interface PropertyStats {
+  listing_type?: Record<string, number>;
+  property_type?: Record<string, number>;
+  status?: Record<string, number>;
+  total?: number;
+}
+
+function ListingTypeBadge({ type }: { type: string | null | undefined }) {
   const config = {
     RENT: { label: "เช่า", className: "bg-blue-600 text-white" },
     SALE: { label: "ขาย", className: "bg-emerald-600 text-white" },
@@ -49,17 +67,20 @@ function ListingTypeBadge({ type }: { type: string | null }) {
   if (!matched) return null;
 
   return (
-    <span className={cn(
-      "text-xs px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide shadow-sm",
-      matched.className
-    )}>
+    <span
+      className={cn(
+        "text-xs px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide shadow-sm",
+        matched.className,
+      )}
+    >
       {matched.label}
     </span>
   );
 }
 
 function PriceDisplay({ item }: { item: PropertyPickItem }) {
-  const isSaleRent = item.listing_type === "SALE_RENT" || item.listing_type === "SALE_AND_RENT";
+  const isSaleRent =
+    item.listing_type === "SALE_RENT" || item.listing_type === "SALE_AND_RENT";
   const isRent = item.listing_type === "RENT";
   const isSale = item.listing_type === "SALE";
 
@@ -71,14 +92,18 @@ function PriceDisplay({ item }: { item: PropertyPickItem }) {
       <div className="flex flex-col gap-1">
         {salePrice ? (
           <div className="inline-flex items-center bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-lg border border-emerald-100 w-fit">
-            <span className="text-[11px] font-semibold">฿{salePrice.toLocaleString()}</span>
+            <span className="text-[11px] font-semibold">
+              ฿{salePrice.toLocaleString()}
+            </span>
           </div>
         ) : null}
         {rentalPrice ? (
           <div className="inline-flex items-center bg-blue-50 text-blue-700 px-2 py-0.5 rounded-lg border border-blue-100 w-fit">
             <span className="text-[11px] font-semibold">
               ฿{rentalPrice.toLocaleString()}
-              <span className="font-normal text-[9px] opacity-70 ml-0.5">/ด.</span>
+              <span className="font-normal text-[9px] opacity-70 ml-0.5">
+                /ด.
+              </span>
             </span>
           </div>
         ) : null}
@@ -104,7 +129,32 @@ function PriceDisplay({ item }: { item: PropertyPickItem }) {
       </div>
     );
   }
-  return <span className="text-xs text-slate-300 italic px-1">ไม่ระบุราคา</span>;
+  return (
+    <span className="text-xs text-slate-300 italic px-1">ไม่ระบุราคา</span>
+  );
+}
+
+function StatusBadge({ status }: { status: string | null }) {
+  if (!status) return null;
+
+  const config: Record<string, { label: string; dot: string; bg: string; text: string }> = {
+    ACTIVE: { label: "ว่าง", dot: "bg-emerald-500", bg: "bg-emerald-50", text: "text-emerald-700" },
+    RESERVED: { label: "จองแล้ว", dot: "bg-amber-500", bg: "bg-amber-50", text: "text-amber-700" },
+    UNDER_OFFER: { label: "ติดมัดจำ", dot: "bg-orange-500", bg: "bg-orange-50", text: "text-orange-700" },
+    SOLD: { label: "ขายแล้ว", dot: "bg-slate-400", bg: "bg-slate-100", text: "text-slate-600" },
+    RENTED: { label: "เช่าแล้ว", dot: "bg-slate-400", bg: "bg-slate-100", text: "text-slate-600" },
+    DRAFT: { label: "ฉบับร่าง", dot: "bg-slate-300", bg: "bg-slate-100", text: "text-slate-500" },
+    ARCHIVED: { label: "เก็บถาวร", dot: "bg-rose-400", bg: "bg-rose-50", text: "text-rose-700" },
+  };
+
+  const matched = config[status] || { label: status, dot: "bg-slate-400", bg: "bg-slate-50", text: "text-slate-600" };
+
+  return (
+    <div className={cn("inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border font-bold text-[10px] tracking-wide", matched.bg, matched.text, "border-current/10")}>
+      <div className={cn("h-1.5 w-1.5 rounded-full shadow-sm", matched.dot)} />
+      {matched.label}
+    </div>
+  );
 }
 
 export function PropertyCombobox({
@@ -117,7 +167,11 @@ export function PropertyCombobox({
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [items, setItems] = useState<PropertyPickItem[]>([]);
+  const [counts, setCounts] = useState<PropertyStats | null>(null);
   const [q, setQ] = useState("");
+  const [listingType, setListingType] = useState<string | null>(null);
+  const [propertyType, setPropertyType] = useState<string | null>(null);
+  const [status, setStatus] = useState<string[] | null>(null);
 
   const selected = useMemo(() => {
     if (initialProperty && initialProperty.id === value) return initialProperty;
@@ -129,20 +183,39 @@ export function PropertyCombobox({
     if (!open) return;
     const handle = setTimeout(() => {
       startTransition(async () => {
-        const res = await searchPropertiesAction({ q });
-        if (res.success) setItems(res.data || []);
+        const res = await searchPropertiesAction({ 
+          q, 
+          listing_type: listingType || undefined,
+          property_type: propertyType || undefined,
+          status: status || undefined
+        });
+        if (res.success) {
+          setItems(res.data.properties || []);
+          setCounts(res.data.counts || null);
+        }
       });
     }, 200);
     return () => clearTimeout(handle);
-  }, [open, q, startTransition]);
+  }, [open, q, listingType, propertyType, status, startTransition]);
 
   // Load fresh list when dialog opens
   useEffect(() => {
     if (!open) return;
     setQ("");
+    setListingType(null);
+    setPropertyType(null);
+    setStatus(null);
     startTransition(async () => {
-      const res = await searchPropertiesAction({ q: "" });
-      if (res.success) setItems(res.data || []);
+      const res = await searchPropertiesAction({ 
+        q: "", 
+        listing_type: undefined,
+        property_type: undefined,
+        status: undefined
+      });
+      if (res.success) {
+        setItems(res.data.properties || []);
+        setCounts(res.data.counts || null);
+      }
     });
   }, [open, startTransition]);
 
@@ -170,10 +243,12 @@ export function PropertyCombobox({
       )}
     >
       {/* Thumbnail */}
-      <div className={cn(
-        "shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center transition-all",
-        selected ? "h-10 w-10 sm:h-12 sm:w-12" : "h-9 w-9"
-      )}>
+      <div
+        className={cn(
+          "shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center transition-all",
+          selected ? "h-10 w-10 sm:h-12 sm:w-12" : "h-9 w-9",
+        )}
+      >
         {selected?.cover_image_url ? (
           <img
             src={selected.cover_image_url}
@@ -199,13 +274,17 @@ export function PropertyCombobox({
               {(selected.popular_area || selected.district) && (
                 <span className="text-[10px] sm:text-xs text-slate-400 truncate flex-1 min-w-0 flex items-center gap-0.5 opacity-80">
                   <MapPin className="h-2.5 w-2.5 shrink-0" />
-                  <span className="truncate">{selected.popular_area || selected.district}</span>
+                  <span className="truncate">
+                    {(selected.popular_area || selected.district) ?? ""}
+                  </span>
                 </span>
               )}
             </div>
           </>
         ) : (
-          <span className="text-slate-400 text-sm font-normal">{placeholder}</span>
+          <span className="text-slate-400 text-sm font-normal">
+            {placeholder}
+          </span>
         )}
       </div>
 
@@ -235,31 +314,90 @@ export function PropertyCombobox({
       className="sm:max-w-[860px]"
       trigger={trigger}
     >
-      <div className="flex flex-col h-[60vh]">
-        {/* Search bar */}
-        <div className="px-4 pb-3 border-b border-slate-100">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-            <Input
-              autoFocus
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="ค้นหาชื่อทรัพย์, ย่าน, อำเภอ..."
-              className="pl-9 pr-4 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 text-sm"
-            />
-            {q && (
-              <button
-                onClick={() => setQ("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
+      <div className="flex flex-col">
+        {/* Sticky Search bar */}
+        <div className="sticky top-0 z-30 bg-white px-4 pt-3 pb-3 border-b border-slate-100/80 shadow-sm sm:shadow-none">
+          <div className="flex flex-col gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+              <Input
+                autoFocus
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="ค้นหาชื่อทรัพย์, ย่าน, อำเภอ..."
+                className="pl-9 pr-4 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 text-sm"
+              />
+              {q && (
+                <button
+                  onClick={() => setQ("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+              {/* Listing Type Filter */}
+              <FilterSelector
+                label="ประเภทประกาศ"
+                value={listingType}
+                counts={counts?.listing_type}
+                options={[
+                  { id: null, label: "ประกาศทั้งหมด" },
+                  { id: "SALE", label: "ขาย", ids: ["SALE", "SALE_RENT", "SALE_AND_RENT"] },
+                  { id: "RENT", label: "เช่า", ids: ["RENT", "SALE_RENT", "SALE_AND_RENT"] },
+                  { id: "SALE_AND_RENT", label: "ขาย/เช่า", ids: ["SALE_RENT", "SALE_AND_RENT"] },
+                ]}
+                onSelect={setListingType}
+              />
+
+              {/* Property Type Filter */}
+              <FilterSelector
+                label="ประเภททรัพย์"
+                value={propertyType}
+                counts={counts?.property_type}
+                options={[
+                  { id: null, label: "ทรัพย์ทุกประเภท" },
+                  { id: "CONDO", label: "คอนโด" },
+                  { id: "HOUSE", label: "บ้านเดี่ยว" },
+                  { id: "TOWNHOME", label: "ทาวน์โฮม" },
+                  { id: "VILLA", label: "วิลล่า" },
+                  { id: "POOL_VILLA", label: "พูลวิลล่า" },
+                  { id: "LAND", label: "ที่ดิน" },
+                  { id: "COMMERCIAL_BUILDING", label: "อาคารพาณิชย์" },
+                  { id: "OFFICE_BUILDING", label: "ออฟฟิศ" },
+                  { id: "WAREHOUSE", label: "โกดัง" },
+                  { id: "OTHER", label: "อื่นๆ" },
+                ]}
+                onSelect={setPropertyType}
+              />
+
+              {/* Status Filter */}
+              <FilterSelector
+                label="สถานะทรัพย์"
+                value={status}
+                counts={counts?.status}
+                options={[
+                  { id: null, label: "สถานะทั้งหมด" },
+                  { id: ["ACTIVE"], label: "ว่าง", color: "bg-emerald-500", ids: ["ACTIVE"] },
+                  { id: ["RESERVED", "UNDER_OFFER"], label: "จอง/มัดจำ", color: "bg-amber-500", ids: ["RESERVED", "UNDER_OFFER"] },
+                  { id: ["SOLD", "RENTED"], label: "ปิดแล้ว", color: "bg-slate-400", ids: ["SOLD", "RENTED"] },
+                ]}
+                onSelect={setStatus}
+                renderLabel={(val) => {
+                  if (!val) return "สถานะทั้งหมด";
+                  if (JSON.stringify(val) === JSON.stringify(["ACTIVE"])) return "สถานะ: ว่าง";
+                  if (JSON.stringify(val) === JSON.stringify(["RESERVED", "UNDER_OFFER"])) return "สถานะ: จองแล้ว";
+                  return "สถานะ: ปิดแล้ว";
+                }}
+              />
+            </div>
           </div>
         </div>
 
         {/* Card Grid */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
+        <div className="px-4 pb-4 mt-4">
           {isPending ? (
             /* Loading Skeleton */
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
@@ -283,7 +421,9 @@ export function PropertyCombobox({
               </div>
               <div>
                 <p className="font-bold text-slate-500">ไม่พบทรัพย์</p>
-                <p className="text-xs text-slate-400 mt-1">ลองค้นหาด้วยคำอื่น</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  ลองค้นหาด้วยคำอื่น
+                </p>
               </div>
             </div>
           ) : (
@@ -328,7 +468,10 @@ export function PropertyCombobox({
                       {/* Selected check */}
                       {isSelected && (
                         <div className="absolute top-2.5 right-2.5 h-6 w-6 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
-                          <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+                          <Check
+                            className="h-3.5 w-3.5 text-white"
+                            strokeWidth={3}
+                          />
                         </div>
                       )}
 
@@ -339,23 +482,38 @@ export function PropertyCombobox({
                     </div>
 
                     {/* Card Body */}
-                    <div className={cn(
-                      "px-3 py-2.5 transition-colors",
-                      isSelected ? "bg-blue-50/50" : "bg-white"
-                    )}>
-                      <p className={cn(
-                        "font-bold text-sm leading-snug line-clamp-2 transition-colors",
-                        isSelected ? "text-blue-700" : "text-slate-900 group-hover:text-blue-700"
-                      )}>
+                    <div
+                      className={cn(
+                        "px-3 py-2.5 transition-colors",
+                        isSelected ? "bg-blue-50/50" : "bg-white",
+                      )}
+                    >
+                      <p
+                        className={cn(
+                          "font-bold text-sm leading-snug line-clamp-2 transition-colors",
+                          isSelected
+                            ? "text-blue-700"
+                            : "text-slate-900 group-hover:text-blue-700",
+                        )}
+                      >
                         {item.title}
                       </p>
-                      {(item.popular_area || item.district || item.province) && (
+                      {(item.popular_area ||
+                        item.district ||
+                        item.province) && (
                         <p className="flex items-center gap-1 text-xs text-slate-400 mt-1.5 font-medium">
                           <MapPin className="h-3 w-3 shrink-0" />
-                          <span className="truncate">
-                            {item.popular_area || item.district || item.province}
-                          </span>
-                        </p>
+                        {item.status && (
+                          <div className="shrink-0">
+                            <StatusBadge status={item.status} />
+                          </div>
+                        )}
+                        <span className="truncate">
+                          {item.popular_area ||
+                            item.district ||
+                            item.province}
+                        </span>
+                      </p>
                       )}
                     </div>
                   </button>
@@ -364,6 +522,126 @@ export function PropertyCombobox({
             </div>
           )}
         </div>
+      </div>
+    </ResponsiveDialog>
+  );
+}
+
+/**
+ * 🛰️ FilterSelector:
+ * Specialized button that opens a ResponsiveDialog for filter selection.
+ */
+function FilterSelector<T>({
+  label,
+  value,
+  options,
+  onSelect,
+  renderLabel,
+  counts,
+}: {
+  label: string;
+  value: T;
+  options: { id: T; label: string; color?: string; ids?: string[] }[];
+  onSelect: (val: T) => void;
+  renderLabel?: (val: T) => string;
+  counts?: Record<string, number>;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const currentLabel = useMemo(() => {
+    if (renderLabel) return renderLabel(value);
+    if (value === null || value === undefined) return label;
+    return options.find((o) => o.id === value)?.label || label;
+  }, [value, options, label, renderLabel]);
+
+  const isActive = value !== null && value !== undefined;
+
+  return (
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      title={label}
+      trigger={
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "h-9 rounded-xl px-4 text-[11px] font-bold transition-all border-slate-200 shadow-xs gap-2 shrink-0",
+            isActive
+              ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100 hover:bg-blue-700 hover:text-white"
+              : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-700",
+          )}
+        >
+          <span>{currentLabel}</span>
+          <ChevronsUpDown className={cn("h-3 w-3 opacity-50", isActive && "opacity-100")} />
+        </Button>
+      }
+    >
+      <div className="grid grid-cols-1 gap-2 p-6 mb-10">
+        {options.map((opt) => {
+          const selected = JSON.stringify(opt.id) === JSON.stringify(value);
+          // Calculate sum of counts for the ids list, or use the id itself
+          const effectiveIds = opt.ids || (opt.id ? [String(opt.id)] : []);
+          let count: number | undefined = undefined;
+          if (counts) {
+            if (opt.id === null) {
+              // "All" option: show total sum of all items in this category
+              count = (counts.total as unknown) as number;
+            } else {
+              // Map label to field name (narrowing to fields that are Records)
+              const fieldName = (label === "ประเภทประกาศ" ? "listing_type" : label === "ประเภททรัพย์" ? "property_type" : "status") as "listing_type" | "property_type" | "status";
+              const facetCounts = (counts[fieldName] as unknown) as Record<string, number> | undefined;
+              if (facetCounts) {
+                count = effectiveIds.reduce((sum, id) => sum + (facetCounts[id] || 0), 0);
+              } else {
+                count = 0;
+              }
+            }
+          }
+          
+          const hasData = count === undefined || count > 0 || opt.id === null;
+
+          return (
+            <button
+              key={String(opt.id)}
+              type="button"
+              disabled={!hasData}
+              onClick={() => {
+                onSelect(opt.id);
+                setOpen(false);
+              }}
+              className={cn(
+                "w-full flex items-center justify-between p-4 rounded-2xl transition-all active:scale-[0.98] border",
+                selected
+                  ? "bg-blue-50 border-blue-100 shadow-sm text-blue-700"
+                  : "hover:bg-slate-50 border-transparent text-slate-700",
+                !hasData && "opacity-50 grayscale cursor-not-allowed",
+              )}
+            >
+              <div className="flex items-center gap-3">
+                {opt.color && (
+                  <div className={cn("h-2 w-2 rounded-full", opt.color)} />
+                )}
+                <div className="flex items-baseline gap-2">
+                  <span className="text-sm font-bold">{opt.label}</span>
+                  {count !== undefined && (
+                    <span className={cn(
+                      "text-[10px] font-medium",
+                      selected ? "text-blue-500" : "text-slate-400"
+                    )}>
+                      ({count})
+                    </span>
+                  )}
+                </div>
+              </div>
+              {selected && (
+                <div className="bg-blue-600 rounded-full p-1">
+                  <Check className="h-3 w-3 text-white" />
+                </div>
+              )}
+            </button>
+          );
+        })}
       </div>
     </ResponsiveDialog>
   );

@@ -20,7 +20,7 @@ export async function getDealsByLeadId(
         original_price,
         rental_price,
         original_rental_price,
-        property_images(image_url, is_cover)
+        images:property_images(image_url, is_cover)
       )
     `,
     )
@@ -38,7 +38,7 @@ export async function getDealsByLeadId(
     return [];
   }
 
-  return data as unknown as DealWithProperty[];
+  return (data || []) as unknown as DealWithProperty[];
 }
 
 export async function getDealById(
@@ -59,7 +59,7 @@ export async function getDealById(
         original_price,
         rental_price,
         original_rental_price,
-        property_images(image_url, is_cover)
+        images:property_images(image_url, is_cover)
       ),
       lead:leads (
         id,
@@ -115,7 +115,7 @@ export async function getDealCommissions(dealId: string) {
     return [];
   }
 
-  return data;
+  return (data || []) as any;
 }
 
 export async function getDealsPageStats(timeRange: string = "all") {
