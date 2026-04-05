@@ -483,3 +483,36 @@ export const transferLeadAction = createSafeAction(
     return { success: true };
   },
 );
+
+export const searchLeadsAction = createSafeAction(
+  z.object({
+    q: z.string().optional(),
+    tenantId: z.string().uuid().optional(),
+  }),
+  async ({ q, tenantId: inputTenantId }, { supabase, tenantId: contextTenantId }) => {
+    const queryTerm = (q ?? "").trim();
+    const effectiveTenantId = inputTenantId || contextTenantId;
+
+    let sb = supabase
+      .from("leads")
+      .select("id, full_name, phone, email")
+
+    if (effectiveTenantId) {
+      sb = sb.eq("tenant_id", effectiveTenantId);
+    }
+
+    if (queryTerm) {
+      sb = sb.or(`full_name.ilike.%${queryTerm}%,phone.ilike.%${queryTerm}%`);
+    }
+
+    sb = sb.order("updated_at", { ascending: false }).limit(20);
+
+    const { data, error } = await sb;
+    if (error) {
+      console.error("Search lead error:", error);
+      throw new Error(mapDbError(error));
+    }
+
+    return { leads: data ?? [] };
+  }
+);

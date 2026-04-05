@@ -64,6 +64,33 @@ export function CalendarGrid({
         initialDate={initialDate}
         headerToolbar={false} // We handle toolbar in CalendarView
         events={formattedEvents}
+        eventContent={(eventInfo) => {
+          const isAllDay = eventInfo.event.allDay;
+          const type = eventInfo.event.extendedProps.type;
+          
+          if (isAllDay) {
+            return (
+              <div className="w-full px-1.5 py-0.5 text-[10px] font-semibold truncate leading-tight">
+                {eventInfo.event.title}
+              </div>
+            );
+          }
+
+          return (
+            <div className="flex items-center gap-1.5 w-full overflow-hidden px-1 py-0.5 group/event">
+              <div 
+                className="w-1.5 h-1.5 rounded-full shrink-0 shadow-sm" 
+                style={{ backgroundColor: eventInfo.event.backgroundColor }}
+              />
+              <span className="text-[10px] font-semibold text-slate-700 truncate">
+                {eventInfo.timeText}
+              </span>
+              <span className="text-[10px] text-slate-500 truncate hidden sm:inline">
+                {eventInfo.event.title}
+              </span>
+            </div>
+          );
+        }}
         eventClick={(info) => {
           const eventId = info.event.id;
           const originalEvent = events.find((e) => e.id === eventId);

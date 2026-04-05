@@ -6,6 +6,7 @@ import {
   setMonth,
   addMonths,
   subMonths,
+  addYears,
 } from "date-fns";
 import { th } from "date-fns/locale";
 import {
@@ -15,19 +16,17 @@ import {
   Calendar as CalendarIcon,
   LayoutList,
   Columns as ColumnsIcon,
+  ChevronDown,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CalendarEvent } from "../queries";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Search, User, Building2, Check, X } from "lucide-react";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { Input } from "@/components/ui/input";
 
 import { EventDetailsDialog } from "./EventDetailsDialog";
 import { CalendarGrid } from "./CalendarGrid";
@@ -36,12 +35,14 @@ interface CalendarViewProps {
   initialDate: Date;
   events: CalendarEvent[];
   properties: { id: string; title: string }[];
+  leads: { id: string; full_name: string }[];
 }
 
 export function CalendarView({
   initialDate,
   events,
   properties,
+  leads,
 }: CalendarViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -70,26 +71,44 @@ export function CalendarView({
 
   // Filter State
   const selectedProperty = searchParams.get("propertyId") || "ALL";
+  const selectedLead = searchParams.get("leadId") || "ALL";
 
   const navigate = (direction: "prev" | "next") => {
     setIsLoading(true);
     const newDate = direction === "prev" 
       ? subMonths(currentDate, 1) 
       : addMonths(currentDate, 1);
-    updateUrl(newDate, selectedProperty, viewMode);
+    updateUrl(newDate, selectedProperty, selectedLead, viewMode);
   };
 
   const handlePropertyChange = (val: string) => {
     setIsLoading(true);
-    updateUrl(currentDate, val, viewMode);
+    updateUrl(currentDate, val, selectedLead, viewMode);
+  };
+
+  const handleLeadChange = (val: string) => {
+    setIsLoading(true);
+    updateUrl(currentDate, selectedProperty, val, viewMode);
   };
 
   const handleViewChange = (newView: "dayGridMonth" | "timeGridWeek" | "listMonth") => {
     setViewMode(newView);
-    updateUrl(currentDate, selectedProperty, newView);
+    updateUrl(currentDate, selectedProperty, selectedLead, newView);
   };
 
-  const updateUrl = (date: Date, propId: string, view: string) => {
+  const handleMonthSelect = (monthIndex: number) => {
+    setIsLoading(true);
+    const newDate = setMonth(currentDate, monthIndex);
+    updateUrl(newDate, selectedProperty, selectedLead, viewMode);
+  };
+
+  const handleYearChange = (delta: number) => {
+    setIsLoading(true);
+    const newDate = addYears(currentDate, delta);
+    updateUrl(newDate, selectedProperty, selectedLead, viewMode);
+  };
+
+  const updateUrl = (date: Date, propId: string, lId: string, view: string) => {
     const params = new URLSearchParams(searchParams);
     params.set("month", format(date, "yyyy-MM"));
     
@@ -97,6 +116,12 @@ export function CalendarView({
       params.set("propertyId", propId);
     } else {
       params.delete("propertyId");
+    }
+
+    if (lId && lId !== "ALL") {
+      params.set("leadId", lId);
+    } else {
+      params.delete("leadId");
     }
 
     if (view && view !== (isMobile ? "listMonth" : "dayGridMonth")) {
@@ -121,9 +146,84 @@ export function CalendarView({
         {/* Left: Navigation & Title */}
         <div className="flex items-center justify-between w-full lg:w-auto lg:gap-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-800">
-              {format(currentDate, "MMMM yyyy", { locale: th })}
-            </h2>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  className="h-auto p-0 hover:bg-transparent flex items-center gap-2 group/btn"
+                >
+                  <h2 className="text-xl font-semibold text-slate-800 group-hover/btn:text-indigo-600 transition-colors">
+                    {format(currentDate, "MMMM yyyy", { locale: th })}
+                  </h2>
+                  <ChevronDown className="h-4 w-4 text-slate-400 group-hover/btn:text-indigo-600 transition-colors" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-3 rounded-2xl shadow-xl border-slate-100" align="start">
+                {/* Year Navigation */}
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-lg text-slate-400 hover:text-indigo-600"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      handleYearChange(-1);
+                    }}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <div className="text-sm font-semibold text-slate-900">
+                    ปี {format(currentDate, "yyyy", { locale: th })}
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-lg text-slate-400 hover:text-indigo-600"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      handleYearChange(1);
+                    }}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {[...Array(12)].map((_, i) => {
+                    const count = events.filter(e => {
+                      const d = new Date(e.start);
+                      return d.getMonth() === i && d.getFullYear() === currentDate.getFullYear();
+                    }).length;
+                    
+                    return (
+                      <Button
+                        key={i}
+                        variant={currentDate.getMonth() === i ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => handleMonthSelect(i)}
+                        className={cn(
+                          "text-xs font-semibold h-11 rounded-xl relative",
+                          currentDate.getMonth() === i ? "bg-indigo-600 shadow-lg shadow-indigo-100" : "text-slate-600"
+                        )}
+                      >
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span>{format(new Date(2000, i, 1), "MMM", { locale: th })}</span>
+                          {count > 0 && (
+                            <div className="flex items-center gap-1">
+                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                               <span className={cn("text-[9px]", currentDate.getMonth() === i ? "text-indigo-100" : "text-slate-400")}>
+                                 {count}
+                               </span>
+                            </div>
+                          )}
+                        </div>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
+            
             {isLoading && (
               <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
             )}
@@ -151,34 +251,36 @@ export function CalendarView({
 
         {/* Right: Filters & View Toggle */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-          {/* Property Filter */}
-          <Select value={selectedProperty} onValueChange={handlePropertyChange}>
-            <SelectTrigger className="w-full sm:w-[280px] rounded-xl border-slate-200 h-10">
-              <span className="truncate">
-                {selectedProperty === "ALL"
-                  ? "ทรัพย์สินทั้งหมด"
-                  : properties.find((p) => p.id === selectedProperty)?.title ||
-                    "Select Property"}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="max-h-[300px] overflow-y-auto rounded-xl shadow-xl border-slate-100">
-              <SelectItem value="ALL">ทรัพย์สินทั้งหมด</SelectItem>
-              {properties.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  <span className="truncate block max-w-[300px] ">
-                    {p.title}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Property Filter (Responsive Dialog) */}
+          <FilterDialog
+            title="เลือกทรัพย์สิน"
+            placeholder="ค้นหาทรัพย์สิน..."
+            items={properties.map(p => ({ id: p.id, title: p.title }))}
+            value={selectedProperty}
+            onSelect={handlePropertyChange}
+            icon={<Building2 className="h-4 w-4" />}
+            allLabel="ทรัพย์สินทั้งหมด"
+            indicator={(id) => events.some(e => e.meta?.propertyId === id)}
+          />
 
-          {/* View Mode Toggle - Only show icons on small screens to save space */}
-          <div className="flex bg-slate-100/50 p-1 rounded-xl h-10">
+          {/* Lead Filter (Responsive Dialog) */}
+          <FilterDialog
+            title="เลือกลูกค้า"
+            placeholder="ค้นหาชื่อลูกค้า..."
+            items={leads.map(l => ({ id: l.id, title: l.full_name }))}
+            value={selectedLead}
+            onSelect={handleLeadChange}
+            icon={<User className="h-4 w-4" />}
+            allLabel="ลูกค้าทั้งหมด"
+            indicator={(id) => events.some(e => e.meta?.leadId === id)}
+          />
+
+          {/* View Mode Toggle */}
+          <div className="flex bg-slate-100/50 gap-4 rounded-xl h-10">
             <button
               onClick={() => handleViewChange("dayGridMonth")}
               className={cn(
-                "flex-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2",
+                "flex-1 px-3 py-1.5  text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2",
                 viewMode === "dayGridMonth"
                   ? "bg-white text-indigo-600 shadow-sm"
                   : "text-slate-500 hover:text-slate-700",
@@ -186,7 +288,7 @@ export function CalendarView({
               title="ตารางรายเดือน"
             >
               <CalendarIcon className="h-4 w-4" />
-              <span className="hidden lg:inline">เดือน</span>
+              <span className=" ">เดือน</span>
             </button>
             <button
               onClick={() => handleViewChange("timeGridWeek")}
@@ -199,7 +301,7 @@ export function CalendarView({
               title="ตารางรายสัปดาห์"
             >
               <ColumnsIcon className="h-4 w-4" />
-              <span className="hidden lg:inline">สัปดาห์</span>
+              <span className=" ">สัปดาห์</span>
             </button>
             <button
               onClick={() => handleViewChange("listMonth")}
@@ -212,7 +314,7 @@ export function CalendarView({
               title="มุมมองแบบรายการ"
             >
               <LayoutList className="h-4 w-4" />
-              <span className="hidden lg:inline">รายการ</span>
+              <span className="">รายการ</span>
             </button>
           </div>
         </div>
@@ -255,5 +357,187 @@ export function CalendarView({
         onClose={() => setSelectedEvent(null)}
       />
     </div>
+  );
+}
+
+/**
+ * 🛰️ Internal Helper: FilterDialog
+ * A reusable responsive dialog for selection with search and activity indicators.
+ */
+interface FilterItem {
+  id: string;
+  title: string;
+}
+
+interface FilterDialogProps {
+  title: string;
+  placeholder: string;
+  items: FilterItem[];
+  value: string;
+  onSelect: (id: string) => void;
+  icon: React.ReactNode;
+  allLabel: string;
+  indicator?: (id: string) => boolean;
+}
+
+function FilterDialog({
+  title,
+  placeholder,
+  items,
+  value,
+  onSelect,
+  icon,
+  allLabel,
+  indicator
+}: FilterDialogProps) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showOnlyActive, setShowOnlyActive] = useState(false);
+
+  const selectedItem = items.find(i => i.id === value);
+  
+  const filteredItems = items.filter(i => {
+    const matchesSearch = i.title.toLowerCase().includes(search.toLowerCase());
+    if (showOnlyActive && indicator) {
+      return matchesSearch && indicator(i.id);
+    }
+    return matchesSearch;
+  });
+
+  return (
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      title={title}
+      trigger={
+        <Button 
+          variant="outline" 
+          className="w-full sm:w-[180px] rounded-xl border-slate-200 h-10 justify-between px-3 font-semibold text-slate-700"
+        >
+          <div className="flex items-center gap-2 truncate text-inherit">
+            {icon}
+            <span className="truncate">
+              {value === "ALL" ? allLabel : selectedItem?.title || "ไม่ทราบข้อมูล"}
+            </span>
+          </div>
+          <ChevronDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+        </Button>
+      }
+    >
+      <div className="flex flex-col h-full bg-white">
+        {/* Search Header */}
+        <div className="px-4 py-3 border-b border-slate-50 sticky top-0 bg-white/80 backdrop-blur-md z-10 space-y-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder={placeholder}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-indigo-500"
+              autoFocus
+            />
+            {search && (
+              <button 
+                 onClick={() => setSearch("")}
+                 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <button
+               onClick={() => setShowOnlyActive(!showOnlyActive)}
+               className={cn(
+                 "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border",
+                 showOnlyActive 
+                   ? "bg-emerald-50 border-emerald-100 text-emerald-700 shadow-sm" 
+                   : "bg-white border-slate-100 text-slate-500 hover:bg-slate-50"
+               )}
+            >
+              <div className={cn(
+                "w-1.5 h-1.5 rounded-full shrink-0",
+                showOnlyActive ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
+              )} />
+              แสดงเฉพาะที่มีกิจกรรม
+            </button>
+            
+            {search && (
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                พบ {filteredItems.length} รายการ
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* List Content */}
+        <div className="flex-1 overflow-y-auto max-h-[400px] lg:max-h-[500px]">
+          <div className="p-2 space-y-1">
+            <button
+              onClick={() => {
+                onSelect("ALL");
+                setOpen(false);
+              }}
+              className={cn(
+                "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-left",
+                value === "ALL" ? "bg-indigo-50 text-indigo-700 font-semibold" : "hover:bg-slate-50 text-slate-600"
+              )}
+            >
+              <span>{allLabel}</span>
+              {value === "ALL" && <Check className="h-4 w-4" />}
+            </button>
+
+            {filteredItems.map((item) => {
+              const active = indicator?.(item.id);
+              const isSelected = value === item.id;
+              
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    onSelect(item.id);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-left group",
+                    isSelected ? "bg-indigo-50 text-indigo-700 font-semibold" : "hover:bg-slate-50 text-slate-600",
+                    !active && !isSelected && "opacity-50" // หรี่สีลงหากไม่มีกิจกรรม
+                  )}
+                >
+                  <div className="flex items-center gap-3 min-w-0 text-inherit">
+                    <div className="relative shrink-0">
+                      {active && (
+                         <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                      )}
+                      <div className={cn(
+                        "h-8 w-8 rounded-lg flex items-center justify-center transition-colors",
+                        isSelected ? "bg-indigo-100 text-indigo-600" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200",
+                        !active && !isSelected && "grayscale" // ทำให้ไอคอนเป็นสีเทาหากไม่มีกิจกรรม
+                      )}>
+                        {title.includes("ทรัพย์สิน") ? <Building2 className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                      </div>
+                    </div>
+                    <span className={cn(
+                      "truncate transition-colors",
+                      !active && !isSelected ? "text-slate-400" : ""
+                    )}>
+                      {item.title}
+                    </span>
+                  </div>
+                  {isSelected && <Check className="h-4 w-4 shrink-0" />}
+                </button>
+              );
+            })}
+            
+            {filteredItems.length === 0 && (
+              <div className="py-12 text-center">
+                <p className="text-sm text-slate-400 italic">ไม่พบข้อมูลที่ค้นหา</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </ResponsiveDialog>
   );
 }

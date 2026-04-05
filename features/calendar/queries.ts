@@ -45,6 +45,7 @@ export const getCalendarEvents = cache(async (
   startDate: Date,
   endDate: Date,
   propertyId?: string,
+  leadId?: string,
 ): Promise<CalendarEvent[]> => {
   const { supabase, tenantId, role } = await requireAuthContext();
   const config = await getSystemConfig();
@@ -80,6 +81,10 @@ export const getCalendarEvents = cache(async (
 
   if (propertyId && propertyId !== "ALL") {
     viewingsQuery = viewingsQuery.eq("property_id", propertyId);
+  }
+
+  if (leadId && leadId !== "ALL") {
+    viewingsQuery = viewingsQuery.eq("lead_id", leadId);
   }
 
   const { data: viewings } = await viewingsQuery;
@@ -156,6 +161,10 @@ export const getCalendarEvents = cache(async (
     contractStartQuery = contractStartQuery.eq("deals.property_id", propertyId);
   }
 
+  if (leadId && leadId !== "ALL") {
+    contractStartQuery = contractStartQuery.eq("deals.lead_id", leadId);
+  }
+
   const { data: contractStarts } = await contractStartQuery;
 
   if (contractStarts) {
@@ -213,6 +222,10 @@ export const getCalendarEvents = cache(async (
 
   if (propertyId && propertyId !== "ALL") {
     contractsQuery = contractsQuery.eq("deals.property_id", propertyId);
+  }
+
+  if (leadId && leadId !== "ALL") {
+    contractsQuery = contractsQuery.eq("deals.lead_id", leadId);
   }
 
   const { data: contracts } = await contractsQuery;
@@ -276,6 +289,10 @@ export const getCalendarEvents = cache(async (
     terminatedQuery = terminatedQuery.eq("deals.property_id", propertyId);
   }
 
+  if (leadId && leadId !== "ALL") {
+    terminatedQuery = terminatedQuery.eq("deals.lead_id", leadId);
+  }
+
   const { data: terminated } = await terminatedQuery;
 
   if (terminated) {
@@ -327,6 +344,10 @@ export const getCalendarEvents = cache(async (
 
   if (propertyId && propertyId !== "ALL") {
     dealsQuery = dealsQuery.eq("property_id", propertyId);
+  }
+
+  if (leadId && leadId !== "ALL") {
+    dealsQuery = dealsQuery.eq("lead_id", leadId);
   }
 
   const { data: deals } = await dealsQuery;

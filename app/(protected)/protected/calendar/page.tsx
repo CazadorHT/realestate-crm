@@ -25,7 +25,7 @@ export const metadata = {
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; propertyId?: string; mode?: string }>;
+  searchParams: Promise<{ month?: string; propertyId?: string; leadId?: string; mode?: string }>;
 }) {
   // 1. Auth Check (Protect Route)
   const { supabase, tenantId } = await requireAuthContext();
@@ -47,6 +47,7 @@ export default async function CalendarPage({
   const now = new Date();
   let currentMonth = now;
   const propertyId = params.propertyId;
+  const leadId = params.leadId;
 
   if (params.month) {
     const [year, month] = params.month.split("-").map(Number);
@@ -55,15 +56,15 @@ export default async function CalendarPage({
     }
   }
 
-  // 3. Calculate Query Range (Align with FullCalendar Monday start)
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(monthStart);
-  let queryStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-  let queryEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  // 3. Calculate Query Range (Fetch results for the entire year to support month picker counts)
+  const yearStart = startOfYear(currentMonth);
+  const yearEnd = endOfYear(currentMonth);
+  let queryStart = startOfWeek(yearStart, { weekStartsOn: 1 });
+  let queryEnd = endOfWeek(yearEnd, { weekStartsOn: 1 });
 
   // 4. Fetch Events, Properties, and Leads
   const [events, properties, leads] = await Promise.all([
-    getCalendarEvents(queryStart, queryEnd, propertyId),
+    getCalendarEvents(queryStart, queryEnd, propertyId, leadId),
     getCompactProperties(),
     getCompactLeads(),
   ]);
@@ -99,6 +100,7 @@ export default async function CalendarPage({
         initialDate={currentMonth}
         events={events}
         properties={properties}
+        leads={leads}
       />
     </div>
   );

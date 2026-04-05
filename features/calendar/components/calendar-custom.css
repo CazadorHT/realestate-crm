@@ -53,12 +53,21 @@
   }
 
   /* Event Styling */
-  .fc-v-event, .fc-h-event {
-    @apply rounded-lg border-none px-1.5 py-0.5 shadow-sm cursor-pointer transition-transform duration-100;
+  .fc-daygrid-event {
+    @apply rounded-md border-none px-0 py-0 shadow-none cursor-pointer overflow-hidden flex items-center w-full min-w-0;
+    background: transparent !important;
   }
 
-  .fc-event:hover {
-    @apply scale-[1.02] brightness-95;
+  .fc-daygrid-event-dot {
+    display: none !important; /* Hide default dot, we use custom in eventContent */
+  }
+
+  .fc-daygrid-block-event {
+    @apply bg-indigo-600 text-white shadow-sm;
+  }
+
+  .fc-v-event, .fc-h-event {
+    @apply border-none shadow-sm cursor-pointer transition-transform duration-100;
   }
 
   .fc-event-title {

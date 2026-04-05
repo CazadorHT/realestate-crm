@@ -47,6 +47,8 @@ type Props = {
     district?: string | null;
   } | null;
   tenantId?: string | null;
+  name?: string;
+  required?: boolean;
 };
 
 export interface PropertyStats {
@@ -165,6 +167,8 @@ export function PropertyCombobox({
   className,
   initialProperty,
   tenantId,
+  name,
+  required,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -304,6 +308,7 @@ export function PropertyCombobox({
         ) : null}
         <ChevronsUpDown className="h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors" />
       </div>
+      <input type="hidden" name={name} value={value ?? ""} required={required} />
     </button>
   );
 
