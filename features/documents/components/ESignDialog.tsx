@@ -21,12 +21,14 @@ interface ESignDialogProps {
   documentId: string;
   documentName: string;
   currentStatus?: string | null;
+  trigger?: React.ReactNode;
 }
 
 export function ESignDialog({
   documentId,
   documentName,
   currentStatus,
+  trigger,
 }: ESignDialogProps) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState(currentStatus);
@@ -80,17 +82,19 @@ export function ESignDialog({
       open={open}
       onOpenChange={setOpen}
       trigger={
-        <Button
-          variant="ghost"
-          size="icon"
-          className={`h-9 w-9 rounded-xl transition-all ${
-            status === "SIGNED"
-              ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-              : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-          }`}
-        >
-          <PenTool className="h-4.5 w-4.5" />
-        </Button>
+        trigger || (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-9 w-9 rounded-xl transition-all ${
+              status === "SIGNED"
+                ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+            }`}
+          >
+            <PenTool className="h-4.5 w-4.5" />
+          </Button>
+        )
       }
       title={
         <div className="flex items-center gap-3">

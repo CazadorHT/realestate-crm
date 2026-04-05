@@ -23,18 +23,23 @@ const markAsSignedSchema = z.object({
  */
 export async function markAsSignedAction(documentId: string) {
   try {
-    const { supabase, role } = await requireAuthContext();
+    const { supabase, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     // 1. Validate Input
     const validated = markAsSignedSchema.parse({ documentId });
 
     // 2. Fetch document metadata to check owner and type
-    const { data: doc, error: fetchErr } = await supabase
+    let fetchQuery = supabase
       .from("documents")
       .select("id, owner_id, owner_type, document_type, esign_status")
-      .eq("id", validated.documentId)
-      .single();
+      .eq("id", validated.documentId);
+
+    if (tenantId && tenantId !== "ALL") {
+      fetchQuery = fetchQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: doc, error: fetchErr } = await fetchQuery.single();
 
     if (fetchErr) throw new Error(mapDbError(fetchErr));
     if (!doc) throw new Error("หาเอกสารไม่พบ");
@@ -45,13 +50,19 @@ export async function markAsSignedAction(documentId: string) {
     }
 
     // 4. Update document status
-    const { error: updateErr } = await supabase
+    let updateQuery = supabase
       .from("documents")
       .update({
         esign_status: "SIGNED",
         esign_signed_at: new Date().toISOString(),
       })
       .eq("id", validated.documentId);
+
+    if (tenantId && tenantId !== "ALL") {
+      updateQuery = updateQuery.eq("tenant_id", tenantId);
+    }
+
+    const { error: updateErr } = await updateQuery;
 
     if (updateErr) throw new Error(mapDbError(updateErr));
 

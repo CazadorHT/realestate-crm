@@ -25,6 +25,7 @@ interface LeadActivityDialogProps {
   title?: string;
   submitLabel?: string;
   initialProperty?: { id: string; title: string } | null;
+  tenantId?: string | null;
 }
 
 export function LeadActivityDialog({
@@ -38,6 +39,7 @@ export function LeadActivityDialog({
   title = "บันทึกกิจกรรมใหม่",
   submitLabel,
   initialProperty,
+  tenantId,
 }: LeadActivityDialogProps) {
   const [open, setOpen] = useState(false);
 
@@ -55,10 +57,14 @@ export function LeadActivityDialog({
         trigger || (
           <Button
             variant={triggerVariant}
-            className={cn("gap-2 h-11 rounded-xl font-bold transition-all active:scale-95", triggerClassName)}
+            className={cn(
+              "gap-2 h-11 px-5 rounded-xl font-semibold transition-all active:scale-[0.98] shadow-sm hover:shadow-md", 
+              triggerVariant === "default" && "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100",
+              triggerClassName
+            )}
           >
             <Plus className="h-4 w-4" />
-            บันทึกกิจกรรม
+            <span>บันทึกกิจกรรม</span>
           </Button>
         )
       }
@@ -70,6 +76,7 @@ export function LeadActivityDialog({
           title={title}
           submitLabel={submitLabel}
           initialProperty={initialProperty}
+          tenantId={tenantId}
         />
       </div>
     </ResponsiveDialog>

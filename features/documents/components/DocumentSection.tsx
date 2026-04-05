@@ -12,25 +12,26 @@ import { Upload, FileText, Wand2 } from "lucide-react";
 type Props = {
   ownerId: string;
   ownerType: DocumentOwnerType;
+  tenantId?: string | null;
 };
 
-export function DocumentSection({ ownerId, ownerType }: Props) {
+export function DocumentSection({ ownerId, ownerType, tenantId }: Props) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 border-b border-slate-200">
+    <div className="rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-100 flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-teal-900/5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 border-b border-slate-50 bg-slate-50/20">
         <div className="flex items-center gap-4">
-          <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
-            <FileText className="h-5 w-5 text-teal-600" />
+          <div className="h-10 w-10 rounded-xl bg-teal-500 flex items-center justify-center shrink-0 shadow-lg shadow-teal-100 text-white">
+            <FileText className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-bold text-base sm:text-lg text-slate-800">
+            <h3 className="font-bold text-lg text-slate-800 tracking-tight">
               เอกสาร
             </h3>
-            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
-              เอกสารที่เกี่ยวข้อง
+            <p className="text-[11px] text-slate-400 font-medium">
+              จัดการเอกสารและสัญญาที่เกี่ยวข้อง
             </p>
           </div>
         </div>
@@ -43,9 +44,9 @@ export function DocumentSection({ ownerId, ownerType }: Props) {
               <Button
                 size="sm"
                 variant="outline"
-                className="w-full sm:w-auto h-9 sm:h-8 font-bold sm:font-semibold text-blue-600 border-blue-200 hover:bg-blue-50"
+                className="flex-1 sm:w-auto h-9 sm:h-11 font-semibold text-blue-600! border-blue-200 hover:bg-blue-50"
               >
-                <Wand2 className="mr-2 h-4 w-4 shrink-0" /> สร้างจากแบบ
+                <Wand2 className="mr-1.5 h-3.5 w-3.5 shrink-0" /> สร้าง
               </Button>
             }
           />
@@ -58,9 +59,9 @@ export function DocumentSection({ ownerId, ownerType }: Props) {
               <Button
                 size="sm"
                 variant="outline"
-                className="w-full sm:w-auto h-9 sm:h-8 font-bold sm:font-semibold transition-all active:scale-95"
+                className="flex-1 sm:w-auto h-9 sm:h-11 font-semibold transition-all active:scale-95"
               >
-                <Upload className="mr-2 h-4 w-4 shrink-0" /> อัปโหลด
+                <Upload className="mr-1.5 h-3.5 w-3.5 shrink-0" /> อัปโหลด
               </Button>
             }
           >
@@ -68,6 +69,7 @@ export function DocumentSection({ ownerId, ownerType }: Props) {
               <DocumentUpload
                 ownerId={ownerId}
                 ownerType={ownerType}
+                tenantId={tenantId}
                 onUploadComplete={() => {
                   setRefreshKey((k) => k + 1);
                   setOpen(false);

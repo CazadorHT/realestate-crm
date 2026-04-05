@@ -15,15 +15,20 @@ export async function analyzeDocumentAction(
   documentId: string,
 ): Promise<ActionResponse<AIAnalysisResult>> {
   try {
-    const { supabase, role } = await requireAuthContext();
+    const { supabase, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     // 1. Fetch document metadata
-    const { data: doc, error: dError } = await supabase
+    let query = supabase
       .from("documents")
       .select("*")
-      .eq("id", documentId)
-      .single();
+      .eq("id", documentId);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data: doc, error: dError } = await query.single();
 
     if (dError || !doc) throw new Error("ไม่พบเอกสารในระบบ");
 

@@ -1,5 +1,6 @@
 "use server";
 
+import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import {
   createDocumentSchema,
@@ -191,10 +192,16 @@ export async function getDocumentVersionsAction(documentId: string) {
     assertStaff(role);
 
     // 1. Get current document to find its parent_id and owner
-    const { data: currentDoc, error: cError } = await (tenantId && tenantId !== "ALL"
-      ? supabase.from("documents").select("id, parent_id, owner_id").eq("id", documentId).eq("tenant_id", tenantId)
-      : supabase.from("documents").select("id, parent_id, owner_id").eq("id", documentId)
-    ).single();
+    let qInitial = supabase
+      .from("documents")
+      .select("id, parent_id, owner_id")
+      .eq("id", documentId);
+
+    if (tenantId && tenantId !== "ALL") {
+      qInitial = qInitial.eq("tenant_id", tenantId);
+    }
+
+    const { data: currentDoc, error: cError } = await qInitial.single();
 
     if (cError || !currentDoc) throw new Error("ไม่พบเอกสารที่ระบุ");
 
@@ -218,11 +225,16 @@ export async function getDocumentVersionsAction(documentId: string) {
       const MAX_DEPTH = 20; // Safety limit
 
       while (current.parent_id && depth < MAX_DEPTH) {
-        const { data: parent } = await supabase
+        let qParent = supabase
           .from("documents")
           .select("id, parent_id, owner_id")
-          .eq("id", current.parent_id)
-          .single();
+          .eq("id", current.parent_id);
+
+        if (tenantId && tenantId !== "ALL") {
+          qParent = qParent.eq("tenant_id", tenantId);
+        }
+
+        const { data: parent } = await qParent.single();
         if (!parent) break;
         current = parent;
         depth++;
@@ -339,19 +351,25 @@ export async function searchOwnerAction(
     assertStaff(role);
 
     const q = query.trim();
-    if (!q) return [];
+    // If empty query, we return the 10 most recent items of that type
+    const isInitialFetch = !q;
 
     if (type === "LEAD") {
       let qry = supabase
         .from("leads")
-        .select("id, full_name, email")
-        .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`);
+        .select("id, full_name, email");
+
+      if (!isInitialFetch) {
+        qry = qry.or(`full_name.ilike.%${q}%,email.ilike.%${q}%`);
+      }
 
       if (tenantId && tenantId !== "ALL") {
         qry = qry.eq("tenant_id", tenantId);
       }
 
-      const { data, error } = await qry.limit(10);
+      const { data, error } = await qry
+        .order("created_at", { ascending: false })
+        .limit(10);
       if (error) throw error;
       return (data || []).map((l) => ({
         id: l.id,
@@ -361,14 +379,19 @@ export async function searchOwnerAction(
       let qry = supabase
         .from("properties")
         .select("id, title")
-        .ilike("title", `%${q}%`)
         .is("deleted_at", null);
+
+      if (!isInitialFetch) {
+        qry = qry.ilike("title", `%${q}%`);
+      }
 
       if (tenantId && tenantId !== "ALL") {
         qry = qry.eq("tenant_id", tenantId);
       }
 
-      const { data, error } = await qry.limit(10);
+      const { data, error } = await qry
+        .order("created_at", { ascending: false })
+        .limit(10);
       if (error) throw error;
       return (data || []).map((p) => ({
         id: p.id,
@@ -377,14 +400,19 @@ export async function searchOwnerAction(
     } else if (type === "DEAL") {
       let qry = supabase
         .from("deals")
-        .select("id, leads(full_name), properties(title)")
-        .or(`leads.full_name.ilike.%${q}%,properties.title.ilike.%${q}%`);
+        .select("id, leads(full_name), properties(title)");
+
+      if (!isInitialFetch) {
+        qry = qry.or(`leads.full_name.ilike.%${q}%,properties.title.ilike.%${q}%`);
+      }
 
       if (tenantId && tenantId !== "ALL") {
         qry = qry.eq("tenant_id", tenantId);
       }
 
-      const { data, error } = await qry.limit(10);
+      const { data, error } = await qry
+        .order("created_at", { ascending: false })
+        .limit(10);
       if (error) throw error;
       return (data || []).map((d: any) => ({
         id: d.id,
@@ -432,7 +460,7 @@ export async function verifyAiAnalysisAction(
   analysis: AIAnalysisResult,
 ): Promise<ActionResponse> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     // Final Validation before save (Hardening)
@@ -441,7 +469,7 @@ export async function verifyAiAnalysisAction(
       summary,
     });
 
-    const { error } = await supabase
+    let updateQuery = supabase
       .from("documents")
       .update({
         ai_summary: validatedData.summary,
@@ -450,6 +478,12 @@ export async function verifyAiAnalysisAction(
         ai_verified_by: user.id,
       })
       .eq("id", documentId);
+
+    if (tenantId && tenantId !== "ALL") {
+      updateQuery = updateQuery.eq("tenant_id", tenantId);
+    }
+
+    const { error } = await updateQuery;
 
     if (error) throw new Error(mapDbError(error));
 

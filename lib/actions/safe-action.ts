@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { getSystemConfig } from "./system-config";
 import { mapDbError } from "@/lib/db-error";
+import { isStaff } from "@/lib/auth-shared";
 
 export type ActionState<TOutput> =
   | { success: true; data: TOutput }
@@ -22,9 +23,14 @@ export function createSafeAction<TInput, TOutput>(
       // 1. Validate Input
       const validation = schema.safeParse(input);
       if (!validation.success) {
+        // Extract a helpful error message from Zod issues
+        const errorMessage = validation.error.issues
+          .map((issue) => issue.message)
+          .join(", ");
+
         return {
           success: false,
-          error: "ข้อมูลที่ส่งมาไม่ถูกต้อง",
+          error: errorMessage || "ข้อมูลที่ส่งมาไม่ถูกต้อง",
           variant: "warning",
         };
       }
@@ -40,7 +46,17 @@ export function createSafeAction<TInput, TOutput>(
         return { success: false, error: "กรุณาเข้าสู่ระบบก่อนดำเนินการ" };
       }
 
-      // 3. Tenant Check
+      // 3. Role Check
+      // Get role from profile to ensure security
+      let role: any = "USER";
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      if (profile) role = profile.role;
+
+      // 4. Tenant Check
       const config = await getSystemConfig();
       let tenantId = (input as any).tenantId;
 
@@ -49,7 +65,7 @@ export function createSafeAction<TInput, TOutput>(
         tenantId = config.default_tenant_id;
       }
 
-      if (!tenantId) {
+      if (!tenantId && !isStaff(role)) {
         return {
           success: false,
           error:
@@ -57,9 +73,9 @@ export function createSafeAction<TInput, TOutput>(
         };
       }
 
-      // If multi-tenant is enabled, we MUST verify membership
-      let role = "USER";
-      if (config.multi_tenant_enabled) {
+      // If multi-tenant is enabled and we have a tenantId, we MUST verify membership
+      // Staff members bypass branch membership checks
+      if (config.multi_tenant_enabled && tenantId && !isStaff(role)) {
         const { data: member, error: memberError } = await supabase
           .from("tenant_members")
           .select("role")
@@ -74,17 +90,9 @@ export function createSafeAction<TInput, TOutput>(
           };
         }
         role = member.role;
-      } else {
-        // In single tenant mode, we might want to get the global role from the profile
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-        if (profile) role = profile.role;
       }
 
-      // 4. Execute Handler
+      // 5. Execute Handler
       const result = await handler(validation.data, {
         supabase,
         userId: user.id,

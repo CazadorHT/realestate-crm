@@ -18,6 +18,7 @@ type Props = {
   defaultRent?: number | null;
   defaultLeaseTerm?: number | null;
   dealStatus?: string;
+  tenantId?: string | null;
 };
 import {
   contractFormSchema,
@@ -84,6 +85,7 @@ export function RentalContractSection({
   defaultRent,
   defaultLeaseTerm,
   dealStatus,
+  tenantId,
 }: Props) {
   const canCreateContract =
     dealStatus === "CLOSED_WIN" || dealStatus === "SIGNED";
@@ -272,7 +274,7 @@ export function RentalContractSection({
                     size="sm"
                     variant={contract ? "outline" : "default"}
                     className={cn(
-                      "flex-1 sm:flex-initial gap-1.5 transition-all active:scale-95 shadow-xs h-9 sm:h-8 font-bold",
+                      "flex-1 sm:flex-initial gap-1.5 transition-all active:scale-95 shadow-xs h-9 sm:h-8 font-semibold",
                       !contract && "bg-slate-900 hover:bg-slate-800 text-white",
                     )}
                   >
@@ -295,7 +297,7 @@ export function RentalContractSection({
                       disabled={
                         !["DRAFT", "TERMINATED"].includes(contract.status)
                       }
-                      className={`flex-1 sm:flex-initial gap-1.5 transition-all active:scale-95 h-9 sm:h-8 font-bold ${
+                      className={`flex-1 sm:flex-initial gap-1.5 transition-all active:scale-95 h-9 sm:h-8 font-semibold ${
                         ["DRAFT", "TERMINATED"].includes(contract.status)
                           ? "text-red-500 hover:text-red-600 hover:bg-red-50"
                           : "text-muted-foreground opacity-50 cursor-not-allowed"
@@ -314,13 +316,13 @@ export function RentalContractSection({
                     variant="ghost"
                     onClick={() => setOpen(false)}
                     type="button"
-                    className="flex-1 rounded-xl h-11 font-bold text-slate-500 hover:bg-slate-100"
+                    className="flex-1 rounded-xl h-11 font-semibold text-slate-500 hover:bg-slate-100"
                   >
                     ยกเลิก
                   </Button>
                   <Button
                     onClick={form.handleSubmit(handleSubmit)}
-                    className="flex-1 rounded-xl h-11 px-8 font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-lg active:scale-95 transition-all"
+                    className="flex-1 rounded-xl h-11 px-8 font-semibold bg-slate-900 hover:bg-slate-800 text-white shadow-lg active:scale-95 transition-all"
                   >
                     บันทึกสัญญา
                   </Button>
@@ -351,7 +353,7 @@ export function RentalContractSection({
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                      <Label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                         <CalendarIcon className="h-4 w-4 text-slate-500" />
                         {dealType === "RENT"
                           ? "วันที่สิ้นสุด"
@@ -369,7 +371,7 @@ export function RentalContractSection({
                     </div>
 
                     <div className="md:col-span-2 space-y-2">
-                      <Label className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                      <Label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                         <Wallet className="h-4 w-4 text-emerald-500" />
                         {dealType === "RENT" ? "ราคาค่าเช่า" : "ราคาซื้อขาย"}
                       </Label>
@@ -385,7 +387,7 @@ export function RentalContractSection({
 
                     {dealType === "RENT" && (
                       <div className="space-y-2">
-                        <Label className="flex items-center justify-between text-sm font-bold text-slate-700">
+                        <Label className="flex items-center justify-between text-sm font-semibold text-slate-700">
                           <span>เงินประกัน</span>
                           {rentPrice > 0 && (
                             <div className="flex gap-1">
@@ -402,7 +404,7 @@ export function RentalContractSection({
                                       },
                                     )
                                   }
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all ${
                                     form.watch("deposit_amount") ===
                                     m * rentPrice
                                       ? "bg-blue-600 text-white shadow-sm scale-110"
@@ -428,7 +430,7 @@ export function RentalContractSection({
 
                     {dealType === "RENT" && (
                       <div className="space-y-2">
-                        <Label className="flex items-center justify-between text-sm font-bold text-slate-700">
+                        <Label className="flex items-center justify-between text-sm font-semibold text-slate-700">
                           <span>เงินล่วงหน้า</span>
                           {rentPrice > 0 && (
                             <div className="flex gap-1">
@@ -443,7 +445,7 @@ export function RentalContractSection({
                                       { shouldDirty: true },
                                     )
                                   }
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all ${
                                     form.watch("advance_payment_amount") ===
                                     m * rentPrice
                                       ? "bg-blue-600 text-white shadow-sm scale-110"
@@ -469,7 +471,7 @@ export function RentalContractSection({
 
                     {dealType === "RENT" && (
                       <div className="space-y-2">
-                        <Label className="text-sm font-bold text-slate-700">
+                        <Label className="text-sm font-semibold text-slate-700">
                           ระยะเวลาสัญญา (เดือน)
                         </Label>
                         <Input
@@ -484,7 +486,7 @@ export function RentalContractSection({
                     )}
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-bold text-slate-700">
+                      <Label className="text-sm font-semibold text-slate-700">
                         สถานะสัญญา
                       </Label>
                       <Select
@@ -511,7 +513,7 @@ export function RentalContractSection({
                     </div>
 
                     <div className="md:col-span-2 space-y-2">
-                      <Label className="text-sm font-bold text-slate-700">
+                      <Label className="text-sm font-semibold text-slate-700">
                         เงื่อนไขอื่นๆ
                       </Label>
                       <Input
@@ -524,10 +526,10 @@ export function RentalContractSection({
                     {dealType === "RENT" && (
                       <div className="md:col-span-2 bg-slate-50 border border-slate-200 rounded-2xl p-4 mt-2 shadow-inner">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-bold text-slate-500">
+                          <span className="text-sm font-semibold text-slate-500">
                             เงินประกัน
                           </span>
-                          <span className="text-sm font-bold text-slate-700">
+                          <span className="text-sm font-semibold text-slate-700">
                             {(
                               form.watch("deposit_amount") || 0
                             ).toLocaleString()}{" "}
@@ -535,10 +537,10 @@ export function RentalContractSection({
                           </span>
                         </div>
                         <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-200">
-                          <span className="text-sm font-bold text-slate-500">
+                          <span className="text-sm font-semibold text-slate-500">
                             เงินล่วงหน้า
                           </span>
-                          <span className="text-sm font-bold text-slate-700">
+                          <span className="text-sm font-semibold text-slate-700">
                             {(
                               form.watch("advance_payment_amount") || 0
                             ).toLocaleString()}{" "}
@@ -546,10 +548,10 @@ export function RentalContractSection({
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-base font-black text-slate-800">
+                          <span className="text-base font-semibold text-slate-800">
                             รวมยอดชำระแรกเข้า
                           </span>
-                          <span className="text-lg font-black text-blue-600">
+                          <span className="text-lg font-semibold text-blue-600">
                             {(
                               (form.watch("deposit_amount") || 0) +
                               (form.watch("advance_payment_amount") || 0)
@@ -577,7 +579,7 @@ export function RentalContractSection({
                 <div className="text-xs sm:text-sm text-muted-foreground font-medium">
                   หมายเลขสัญญา: {contract.contract_number ?? "-"}
                 </div>
-                <div className="text-sm font-bold">
+                <div className="text-sm font-semibold">
                   {contract.start_date
                     ? `${contract.start_date} — ${contract.end_date ?? ""}`
                     : "ยังไม่ได้กำหนดวันที่"}
@@ -591,7 +593,7 @@ export function RentalContractSection({
                 {contract.status === "DRAFT" && (
                   <Button
                     size="sm"
-                    className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all active:scale-95 font-bold h-9 sm:h-8"
+                    className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all active:scale-95 font-semibold h-9 sm:h-8"
                     onClick={() => handleStatusChange(contract.id, "ACTIVE")}
                   >
                     <PenLine className="h-3.5 w-3.5" />
@@ -602,7 +604,7 @@ export function RentalContractSection({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex-1 sm:flex-initial gap-1.5 h-9 sm:h-8 font-bold"
+                  className="flex-1 sm:flex-initial gap-1.5 h-9 sm:h-8 font-semibold"
                   onClick={() => setShowDetails(contract)}
                 >
                   <Eye className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
@@ -613,7 +615,7 @@ export function RentalContractSection({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 sm:flex-initial text-amber-600 border-amber-200 hover:bg-amber-100 hover:text-amber-700 gap-1.5 transition-all active:scale-95 font-bold h-9 sm:h-8"
+                    className="flex-1 sm:flex-initial text-amber-600 border-amber-200 hover:bg-amber-100 hover:text-amber-700 gap-1.5 transition-all active:scale-95 font-semibold h-9 sm:h-8"
                     onClick={() => setShowTerminateDialog(contract)}
                   >
                     <Ban className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
@@ -627,6 +629,7 @@ export function RentalContractSection({
               <DocumentSection
                 ownerId={contract.id}
                 ownerType={"RENTAL_CONTRACT" as any}
+                tenantId={tenantId}
               />
             </div>
           </div>
@@ -644,49 +647,49 @@ export function RentalContractSection({
         <div className="p-4 sm:p-6 space-y-6 text-left">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 สถานะ
               </p>
               <ContractStatusBadge status={showDetails?.status || ""} />
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 ประเภทดีล
               </p>
-              <p className="font-bold text-slate-700">
+              <p className="font-semibold text-slate-700">
                 {dealType === "RENT" ? "เช่าอสังหาริมทรัพย์" : "ซื้อ-ขาย"}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 {dealType === "RENT" ? "วันที่เริ่มสัญญา" : "วันที่จดสัญญา"}
               </p>
-              <p className="font-bold text-slate-700">
+              <p className="font-semibold text-slate-700">
                 {showDetails?.start_date
                   ? new Date(showDetails.start_date).toLocaleDateString("th-TH")
                   : "-"}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 {dealType === "RENT" ? "วันที่สิ้นสุด" : "วันโอนกรรมสิทธิ์"}
               </p>
-              <p className="font-bold text-slate-700">
+              <p className="font-semibold text-slate-700">
                 {showDetails?.end_date
                   ? new Date(showDetails.end_date).toLocaleDateString("th-TH")
                   : "-"}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 {dealType === "RENT" ? "ราคาค่าเช่า" : "ราคาซื้อขาย"}
               </p>
-              <p className="font-black text-blue-600 text-lg">
+              <p className="font-semibold text-blue-600 text-lg">
                 {formatThaiCurrency(showDetails?.rent_price || 0)}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 เงื่อนไขอื่นๆ
               </p>
               <p className="text-slate-600 font-medium">
@@ -703,7 +706,7 @@ export function RentalContractSection({
                   setShowTerminateDialog(showDetails);
                   setShowDetails(null);
                 }}
-                className="w-full justify-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 font-bold h-11 rounded-xl"
+                className="w-full justify-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 font-semibold h-11 rounded-xl"
               >
                 <AlertCircle className="h-4 w-4" />
                 ยุติสัญญาก่อนกำหนด (Terminate)
@@ -723,7 +726,7 @@ export function RentalContractSection({
             <Button
               variant="ghost"
               onClick={() => setShowTerminateDialog(null)}
-              className="flex-1 rounded-xl h-11 font-bold text-slate-500"
+              className="flex-1 rounded-xl h-11 font-semibold text-slate-500"
             >
               ยกเลิก
             </Button>
@@ -734,7 +737,7 @@ export function RentalContractSection({
                   setShowTerminateDialog(null);
                 }
               }}
-              className="flex-1 rounded-xl h-11 px-8 font-bold bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-100 transition-all active:scale-95"
+              className="flex-1 rounded-xl h-11 px-8 font-semibold bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-100 transition-all active:scale-95"
             >
               ยืนยันการยุติสัญญา
             </Button>
@@ -747,7 +750,7 @@ export function RentalContractSection({
           </div>
           <p className="text-slate-600 font-medium leading-relaxed">
             คุณต้องการยุติสัญญาเลขที่{" "}
-            <span className="font-bold text-slate-900">
+            <span className="font-semibold text-slate-900">
               #{showTerminateDialog?.id.slice(0, 8)}
             </span>{" "}
             ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้
@@ -765,7 +768,7 @@ export function RentalContractSection({
             <Button
               variant="ghost"
               onClick={() => setShowDeleteDialog(false)}
-              className="flex-1 rounded-xl h-11 font-bold text-slate-500"
+              className="flex-1 rounded-xl h-11 font-semibold text-slate-500"
             >
               ยกเลิก
             </Button>
@@ -776,7 +779,7 @@ export function RentalContractSection({
                   setShowDeleteDialog(false);
                 }
               }}
-              className="flex-1 rounded-xl h-11 px-8 font-bold bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-100 transition-all active:scale-95"
+              className="flex-1 rounded-xl h-11 px-8 font-semibold bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-100 transition-all active:scale-95"
             >
               ยืนยันการลบ
             </Button>

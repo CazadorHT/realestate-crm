@@ -32,11 +32,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  MoreVertical,
+  MoreHorizontal,
   Pencil,
   Trash2,
   Calendar,
   Building2,
+  Phone,
+  MessageSquare,
+  Mail,
+  Eye,
+  Repeat,
+  FileText,
+  Settings,
 } from "lucide-react";
 import {
   deleteLeadActivityAction,
@@ -45,6 +52,48 @@ import {
 import { LeadActivityForm } from "@/components/leads/LeadActivityForm";
 import type { LeadActivityFormValues } from "@/lib/types/leads";
 import { toast } from "sonner";
+import { Card, CardContent } from "@/components/ui/card";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { cn } from "@/lib/utils";
+import { th } from "date-fns/locale";
+import { format } from "date-fns";
+
+const ACTIVITY_CONFIG: Record<
+  string,
+  { icon: any; color: string; label: string }
+> = {
+  CALL: {
+    icon: Phone,
+    color: "bg-emerald-50 text-emerald-600",
+    label: "โทรศัพท์",
+  },
+  LINE_CHAT: {
+    icon: MessageSquare,
+    color: "bg-green-50 text-green-600",
+    label: "LINE",
+  },
+  EMAIL: { icon: Mail, color: "bg-blue-50 text-blue-600", label: "อีเมล" },
+  VIEWING: {
+    icon: Eye,
+    color: "bg-purple-50 text-purple-600",
+    label: "พาชมทรัพย์",
+  },
+  FOLLOW_UP: {
+    icon: Repeat,
+    color: "bg-amber-50 text-amber-600",
+    label: "ติดตามผล",
+  },
+  NOTE: {
+    icon: FileText,
+    color: "bg-slate-50 text-slate-600",
+    label: "บันทึก",
+  },
+  SYSTEM: {
+    icon: Settings,
+    color: "bg-slate-100 text-slate-400",
+    label: "ระบบ",
+  },
+};
 
 function fmt(dt: string) {
   try {
@@ -193,142 +242,184 @@ export function LeadTimeline({
 
   return (
     <>
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 gap-4">
         {activities.map((a: any) => {
           const pid = a.property_id as string | null;
           const p = pid ? propertiesById[pid] : null;
-          const { date, time } = fmt(a.created_at);
+          const config =
+            ACTIVITY_CONFIG[a.activity_type] || ACTIVITY_CONFIG.NOTE;
+          const Icon = config.icon;
 
           return (
-            <div
+            <Card
               key={a.id}
-              className="group relative rounded-lg border border-slate-100 bg-slate-50/50 p-3 hover:bg-slate-50 transition-colors"
+              className="group overflow-hidden border-none rounded-2xl bg-white shadow-sm ring-1 ring-slate-100 hover:shadow-lg hover:shadow-blue-900/5 transition-all duration-300"
             >
-              {/* Header - Date/Time + Actions */}
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Calendar className="h-3.5 w-3.5" />
-                  <span>{date}</span>
-                  {time && (
-                    <span className="text-muted-foreground/60">{time}</span>
+              <CardContent className="p-0 flex flex-row h-full min-h-[90px]">
+                {/* 🖼️ Sidebar: Property Image or Category Icon */}
+                <div
+                  className={cn(
+                    "relative w-20 md:w-24 shrink-0 overflow-hidden border-r border-slate-100 flex items-center justify-center transition-colors duration-300",
+                    config.color,
+                  )}
+                >
+                  {p?.cover_url ? (
+                    <img
+                      src={p.cover_url}
+                      alt={p.title}
+                      className="absolute inset-0 h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  ) : (
+                    <Icon className="h-6 w-6 opacity-80 group-hover:scale-110 transition-transform duration-500" />
                   )}
                 </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      className="gap-2"
-                      onClick={() => setEditActivity(a)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      แก้ไข
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="gap-2 text-red-600 focus:text-red-600"
-                      onClick={() => setDeleteId(a.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      ลบ
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* Note */}
-              {a.note && (
-                <p className="text-sm text-slate-700 mb-2 line-clamp-2">
-                  {a.note}
-                </p>
-              )}
-
-              {/* Property Card (Compact) */}
-              {p && (
-                <Link
-                  href={`/protected/properties/${p.id}`}
-                  className="flex items-center gap-2 rounded-md border border-slate-200 bg-white p-2 hover:bg-slate-50 transition-colors"
-                >
-                  <div className="h-10 w-10 overflow-hidden rounded border bg-muted shrink-0">
-                    {p.cover_url ? (
-                      <img
-                        src={p.cover_url}
-                        alt={p.title}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center">
-                        <Building2 className="h-5 w-5 text-muted-foreground/50" />
+                {/* 📝 Content Section */}
+                <div className="flex-1 p-3 flex items-center justify-between gap-3 min-w-0">
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          "text-[9px] md:text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded-sm border",
+                          config.color,
+                          "border-current/10",
+                        )}
+                      >
+                        {config.label}
+                      </span>
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+                        <Calendar className="h-3 w-3 opacity-50" />
+                        {format(new Date(a.created_at), "d MMM yy • HH:mm", {
+                          locale: th,
+                        })}
                       </div>
+                      {/* Action Menu */}
+                      <div className="shrink-0 flex items-center ">
+                        <ResponsiveDialog
+                          title="จัดการกิจกรรม"
+                          description="เลือกการดำเนินการสำหรับรายการนี้"
+                          className="bg-white md:max-w-md"
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-100 active:scale-95 bg-white shadow-xs"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          }
+                        >
+                          <div className="p-4 space-y-3">
+                            <Button
+                              variant="ghost"
+                              onClick={() => {
+                                setEditActivity(a);
+                              }}
+                              className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 border border-transparent hover:border-blue-100"
+                            >
+                              <div className="h-8 w-8 rounded-lg bg-blue-100/50 flex items-center justify-center">
+                                <Pencil className="h-4 w-4" />
+                              </div>
+                              แก้ไขกิจกรรม
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              onClick={() => {
+                                setDeleteId(a.id);
+                              }}
+                              className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 border border-transparent hover:border-rose-100 group"
+                            >
+                              <div className="h-8 w-8 rounded-lg bg-rose-100/50 flex items-center justify-center group-hover:bg-rose-100">
+                                <Trash2 className="h-4 w-4" />
+                              </div>
+                              ลบกิจกรรมนี้
+                            </Button>
+                          </div>
+                        </ResponsiveDialog>
+                      </div>
+                    </div>
+
+                    {a.note && (
+                      <p className="font-semibold text-xs md:text-sm text-slate-700 group-hover:text-blue-600 transition-colors line-clamp-2 pr-4 leading-relaxed">
+                        {a.note}
+                      </p>
+                    )}
+
+                    {/* Property Card (Compact) */}
+                    {p && (
+                      <Link
+                        href={`/protected/properties/${p.id}`}
+                        className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-2 hover:bg-white hover:border-blue-100 hover:shadow-xs transition-all mt-2 max-w-sm"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold  text-slate-600 line-clamp-2!">
+                            {p.title}
+                          </p>
+                          {/* <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                             <PriceDisplay p={p} />
+                          </div> */}
+                        </div>
+                      </Link>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium truncate">{p.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{propertyTypeLabel(p.property_type)}</span>
-                      <span>•</span>
-                      <span>{listingTypeLabel(p.listing_type)}</span>
-                      <span>•</span>
-                      <PriceDisplay p={p} />
-                    </div>
-                  </div>
-                </Link>
-              )}
-            </div>
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={!!editActivity} onOpenChange={() => setEditActivity(null)}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>แก้ไขกิจกรรม</DialogTitle>
-          </DialogHeader>
-          <div className="py-2">
-            {editActivity && (
-              <LeadActivityForm
-                onSubmitAction={handleEdit}
-                defaultValues={{
-                  activity_type: editActivity.activity_type as any,
-                  note: editActivity.note ?? "",
-                  property_id: editActivity.property_id ?? null,
-                }}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ResponsiveDialog 
+        open={!!editActivity} 
+        onOpenChange={() => setEditActivity(null)} 
+        title="แก้ไขกิจกรรม"
+        className="bg-white md:max-w-lg"
+      >
+        <div className="p-4 md:p-6">
+          {editActivity && (
+            <LeadActivityForm
+              onSubmitAction={handleEdit}
+              defaultValues={{
+                activity_type: editActivity.activity_type as any,
+                note: editActivity.note ?? "",
+                property_id: editActivity.property_id ?? null,
+              }}
+            />
+          )}
+        </div>
+      </ResponsiveDialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบ</AlertDialogTitle>
-            <AlertDialogDescription>
-              คุณต้องการลบกิจกรรมนี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteId && handleDelete(deleteId)}
-              disabled={isPending}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {isPending ? "กำลังลบ..." : "ลบ"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ResponsiveDialog 
+        open={!!deleteId} 
+        onOpenChange={() => setDeleteId(null)}
+        title="ยืนยันการลบ"
+        description="คุณต้องการลบกิจกรรมนี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
+        className="bg-white md:max-w-md"
+      >
+        <div className="p-4 md:p-6 space-y-4">
+          <div className="flex flex-col-reverse md:flex-row md:justify-end gap-3">
+             <Button
+                variant="outline"
+                disabled={isPending}
+                onClick={() => setDeleteId(null)}
+                className="w-full md:w-auto h-12 rounded-xl px-6 font-semibold text-slate-600 border-slate-200"
+              >
+                ยกเลิก
+              </Button>
+              <Button
+                onClick={() => deleteId && handleDelete(deleteId)}
+                disabled={isPending}
+                variant="destructive"
+                className="w-full md:w-auto h-12 rounded-xl px-6 font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-100 border-none"
+              >
+                {isPending ? "กำลังลบ..." : "ยืนยันการลบ"}
+              </Button>
+          </div>
+        </div>
+      </ResponsiveDialog>
     </>
   );
 }

@@ -46,6 +46,7 @@ type Props = {
     popular_area?: string | null;
     district?: string | null;
   } | null;
+  tenantId?: string | null;
 };
 
 export interface PropertyStats {
@@ -123,7 +124,7 @@ function PriceDisplay({ item }: { item: PropertyPickItem }) {
   if (isSale && salePrice) {
     return (
       <div className="inline-flex items-center bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg border border-emerald-100 shadow-sm">
-        <span className="text-sm font-black">
+        <span className="text-sm font-semibold">
           ฿{salePrice.toLocaleString()}
         </span>
       </div>
@@ -150,7 +151,7 @@ function StatusBadge({ status }: { status: string | null }) {
   const matched = config[status] || { label: status, dot: "bg-slate-400", bg: "bg-slate-50", text: "text-slate-600" };
 
   return (
-    <div className={cn("inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border font-bold text-[10px] tracking-wide", matched.bg, matched.text, "border-current/10")}>
+    <div className={cn("inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border font-semibold text-[10px] tracking-wide", matched.bg, matched.text, "border-current/10")}>
       <div className={cn("h-1.5 w-1.5 rounded-full shadow-sm", matched.dot)} />
       {matched.label}
     </div>
@@ -163,6 +164,7 @@ export function PropertyCombobox({
   placeholder = "เลือกทรัพย์...",
   className,
   initialProperty,
+  tenantId,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -183,11 +185,12 @@ export function PropertyCombobox({
     if (!open) return;
     const handle = setTimeout(() => {
       startTransition(async () => {
-        const res = await searchPropertiesAction({ 
-          q, 
+        const res = await searchPropertiesAction({
+          q,
           listing_type: listingType || undefined,
           property_type: propertyType || undefined,
-          status: status || undefined
+          status: status || undefined,
+          tenantId: tenantId ?? undefined,
         });
         if (res.success) {
           setItems(res.data.properties || []);
@@ -314,9 +317,9 @@ export function PropertyCombobox({
       className="sm:max-w-[860px]"
       trigger={trigger}
     >
-      <div className="flex flex-col">
+      <div className="flex flex-col ">
         {/* Sticky Search bar */}
-        <div className="sticky top-0 z-30 bg-white px-4 pt-3 pb-3 border-b border-slate-100/80 shadow-sm sm:shadow-none">
+        <div className="sticky -top-3 z-30 bg-white px-4 pt-3 pb-3 border-b border-slate-100/80 shadow-sm sm:shadow-none">
           <div className="flex flex-col gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
@@ -501,8 +504,10 @@ export function PropertyCombobox({
                       {(item.popular_area ||
                         item.district ||
                         item.province) && (
-                        <p className="flex items-center gap-1 text-xs text-slate-400 mt-1.5 font-medium">
-                          <MapPin className="h-3 w-3 shrink-0" />
+                        <div className="flex items-center gap-1 text-xs text-slate-400 mt-1.5 font-medium">
+                          <span className="shrink-0 flex items-center">
+                            <MapPin className="h-3 w-3" />
+                          </span>
                         {item.status && (
                           <div className="shrink-0">
                             <StatusBadge status={item.status} />
@@ -513,7 +518,7 @@ export function PropertyCombobox({
                             item.district ||
                             item.province}
                         </span>
-                      </p>
+                      </div>
                       )}
                     </div>
                   </button>
@@ -577,7 +582,7 @@ function FilterSelector<T>({
         </Button>
       }
     >
-      <div className="grid grid-cols-1 gap-2 p-6 mb-10">
+      <div className="grid grid-cols-1 gap-2 p-6 mb-10 h-[50vh]">
         {options.map((opt) => {
           const selected = JSON.stringify(opt.id) === JSON.stringify(value);
           // Calculate sum of counts for the ids list, or use the id itself
@@ -586,16 +591,9 @@ function FilterSelector<T>({
           if (counts) {
             if (opt.id === null) {
               // "All" option: show total sum of all items in this category
-              count = (counts.total as unknown) as number;
+              count = Object.values(counts).reduce((a: number, b: number) => a + b, 0);
             } else {
-              // Map label to field name (narrowing to fields that are Records)
-              const fieldName = (label === "ประเภทประกาศ" ? "listing_type" : label === "ประเภททรัพย์" ? "property_type" : "status") as "listing_type" | "property_type" | "status";
-              const facetCounts = (counts[fieldName] as unknown) as Record<string, number> | undefined;
-              if (facetCounts) {
-                count = effectiveIds.reduce((sum, id) => sum + (facetCounts[id] || 0), 0);
-              } else {
-                count = 0;
-              }
+              count = (effectiveIds as string[]).reduce((sum: number, id: string) => sum + (counts[id] || 0), 0);
             }
           }
           

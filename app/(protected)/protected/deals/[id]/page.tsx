@@ -18,6 +18,7 @@ import { DocumentSection } from "@/features/documents/components/DocumentSection
 import { RentalContractSection } from "@/features/rental-contracts/components/RentalContractSection";
 import { DeleteDealButton } from "@/features/deals/components/DeleteDealButton";
 import { differenceInMonths } from "date-fns";
+import { requireAuthContext } from "@/lib/authz";
 
 // Components
 import { DealFinancials } from "@/features/deals/components/DealFinancials";
@@ -32,6 +33,7 @@ interface PageProps {
 
 export default async function DealDetailPage({ params }: PageProps) {
   const { id } = await params;
+  const { tenantId } = await requireAuthContext();
   const deal = await getDealById(id);
   const commissions = await getDealCommissions(id);
   const properties = await getPropertiesForSelect();
@@ -144,7 +146,7 @@ export default async function DealDetailPage({ params }: PageProps) {
           />
 
           {/* Documents Section */}
-          <DocumentSection ownerId={deal.id} ownerType="DEAL" />
+          <DocumentSection ownerId={deal.id} ownerType="DEAL" tenantId={tenantId} />
 
           {/* Rental Contract Section */}
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -162,6 +164,7 @@ export default async function DealDetailPage({ params }: PageProps) {
                 dealId={deal.id}
                 dealType={deal.deal_type}
                 dealStatus={deal.status}
+                tenantId={tenantId}
                 defaultRent={
                   isRent
                     ? deal.property?.rental_price ||

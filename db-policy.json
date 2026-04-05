@@ -166,17 +166,17 @@
     "policyname": "Deals Enterprise Access",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
-    "qual": "(is_system_admin() OR ((tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) AND (is_tenant_admin(tenant_id) OR (NOT get_isolation_setting('isolation_deals_enabled'::text)) OR (created_by = auth.uid()) OR is_manager_of(created_by))))",
+    "qual": "(is_system_admin() OR is_staff() OR ((tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) AND (is_tenant_admin(tenant_id) OR (NOT get_isolation_setting('isolation_deals_enabled'::text)) OR (created_by = auth.uid()) OR is_manager_of(created_by))))",
     "with_check": null
   },
   {
     "schemaname": "public",
     "tablename": "documents",
     "rls_enabled": true,
-    "policyname": null,
-    "permissive": null,
-    "cmd": null,
-    "qual": null,
+    "policyname": "Tenant Isolation: Documents",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "((tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) OR is_staff() OR (tenant_id IS NULL))",
     "with_check": null
   },
   {
@@ -246,7 +246,7 @@
     "policyname": "Tenant Isolation: Lead Activities",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
-    "qual": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM leads l\n  WHERE ((l.id = lead_activities.lead_id) AND (l.tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))))))",
+    "qual": "(is_system_admin() OR is_staff() OR (EXISTS ( SELECT 1\n   FROM leads l\n  WHERE ((l.id = lead_activities.lead_id) AND (l.tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))))))",
     "with_check": null
   },
   {
@@ -586,7 +586,7 @@
     "policyname": "Properties Enterprise Access",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
-    "qual": "(is_system_admin() OR ((tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) AND (is_tenant_admin(tenant_id) OR (NOT get_isolation_setting('isolation_properties_enabled'::text)) OR (created_by = auth.uid()) OR (assigned_to = auth.uid()) OR is_manager_of(created_by))))",
+    "qual": "(is_system_admin() OR is_staff() OR ((tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) AND (is_tenant_admin(tenant_id) OR (NOT get_isolation_setting('isolation_properties_enabled'::text)) OR (created_by = auth.uid()) OR (assigned_to = auth.uid()) OR is_manager_of(created_by))))",
     "with_check": null
   },
   {

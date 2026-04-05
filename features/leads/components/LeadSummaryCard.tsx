@@ -31,18 +31,18 @@ export function LeadSummaryCard({ leadId }: LeadSummaryCardProps) {
   };
 
   return (
-    <Card className="overflow-hidden border-slate-200/70 bg-white shadow-sm ring-1 ring-slate-200/50">
-      <CardHeader className="flex flex-row items-center gap-4 justify-between space-y-0 p-5 pb-3 border-b border-slate-50 bg-slate-50/30">
+    <Card className="overflow-hidden rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-100 transition-all duration-300 hover:shadow-lg hover:shadow-violet-900/5">
+      <CardHeader className="flex flex-row items-center gap-4 justify-between space-y-0 p-5 border-b border-slate-50 bg-slate-50/20">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-violet-500 to-fuchsia-500 text-white shadow-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-200">
             <Sparkles
               className={`h-5 w-5 ${isLoading ? "animate-pulse" : ""}`}
             />
           </div>
           <div>
-            <h3 className="font-bold text-slate-800">AI Intelligent Summary</h3>
-            <p className="text-xs text-slate-500">
-              สรุปความต้องการและกิจกรรมสำคัญ
+            <h3 className="font-semibold text-slate-800 tracking-tight">AI Intelligent Summary</h3>
+            <p className="text-[11px] text-slate-400 font-medium">
+              สรุปความต้องการและกิจกรรมสำคัญอัตโนมัติ
             </p>
           </div>
         </div>

@@ -105,8 +105,9 @@ export async function generateDocumentFromTemplateAction(
     if (!z.string().uuid().safeParse(templateId).success) throw new Error("ID เทมเพลตไม่ถูกต้อง");
     if (!z.string().uuid().safeParse(ownerId).success) throw new Error("ID ข้อมูลเจ้าของไม่ถูกต้อง");
 
-    const { supabase, role } = await requireAuthContext();
+    const { supabase, role, tenantId } = await requireAuthContext();
     assertStaff(role);
+    let ownerTenantId: string | null = null;
 
     // 1. Fetch Template
     const { data: template, error: tError } = await supabase
@@ -156,6 +157,7 @@ export async function generateDocumentFromTemplateAction(
         .single();
       if (lError) throw new Error(mapDbError(lError));
       if (!lead) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
+      ownerTenantId = (lead as any).tenant_id;
       contextData.lead = localizeObject(lead, lang);
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
@@ -165,6 +167,7 @@ export async function generateDocumentFromTemplateAction(
         .single();
       if (pError) throw new Error(mapDbError(pError));
       if (!property) throw new Error("ไม่พบข้อมูลทรัพย์สินที่ระบุ");
+      ownerTenantId = (property as any).tenant_id;
       contextData.property = localizeObject(property, lang);
     } else if (ownerType === "DEAL") {
       const { data: deal, error: dError } = await supabase
@@ -174,6 +177,7 @@ export async function generateDocumentFromTemplateAction(
         .single();
       if (dError) throw new Error(mapDbError(dError));
       if (!deal) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
+      ownerTenantId = (deal as any).tenant_id;
       contextData.deal = localizeObject(deal, lang);
       contextData.lead = localizeObject((deal as any)?.lead, lang);
       contextData.property = localizeObject((deal as any)?.property, lang);
@@ -224,6 +228,16 @@ export async function generateDocumentFromTemplateAction(
       // Allow templates to use deal.reservation_fee or deal.booking_amount
       contextData.deal.reservation_fee = validData.reservation_fee || "";
       contextData.deal.booking_amount = validData.booking_amount || "";
+    } else if (ownerType === "RENTAL_CONTRACT") {
+      const { data: contract, error: cError } = await supabase
+        .from("rental_contracts")
+        .select("*")
+        .eq("id", ownerId)
+        .single();
+      if (cError) throw new Error(mapDbError(cError));
+      if (!contract) throw new Error("ไม่พบข้อมูลสัญญาเช่าที่ระบุ");
+      ownerTenantId = (contract as any).tenant_id;
+      contextData.contract = localizeObject(contract, lang);
     }
 
     // Merge additional data (properly sanitized by Zod)
@@ -276,7 +290,10 @@ export async function generateDocumentFromTemplateAction(
 
     // Use an ASCII-safe string for Supabase storage key to avoid "Invalid key" errors
     const storageFileName = `generated_${template.type.toLowerCase()}_${timestamp}.html`;
-    const storagePath = `generated/${ownerType}/${ownerId}/${storageFileName}`;
+    const finalTenantId = ownerTenantId || tenantId;
+    const storagePath = finalTenantId && finalTenantId !== "ALL"
+      ? `${finalTenantId}/generated/${ownerType}/${ownerId}/${storageFileName}`
+      : `generated/${ownerType}/${ownerId}/${storageFileName}`;
 
     // Add UTF-8 meta tag and print styles for A4
     const finalHtmlContent = `
@@ -403,6 +420,7 @@ export async function generateDocumentFromTemplateAction(
       storage_path: storagePath,
       mime_type: "text/html",
       version: 1,
+      tenant_id: ownerTenantId,
     });
 
     if (!docRes.success) throw new Error(docRes.message || "บันทึกข้อมูลเข้าฐานข้อมูลไม่สำเร็จ");
@@ -429,8 +447,9 @@ export async function generateDocxDocumentFromTemplateAction(
     if (!z.string().uuid().safeParse(ownerId).success) throw new Error("ID ข้อมูลเจ้าของไม่ถูกต้อง");
     const validData = additionalDataSchema.parse(additionalData);
 
-    const { supabase, role } = await requireAuthContext();
+    const { supabase, role, tenantId } = await requireAuthContext();
     assertStaff(role);
+    let ownerTenantId: string | null = null;
 
     // 1. Fetch the DOCX template from storage
     const { data: fileData, error: fileError } = await supabase.storage
@@ -461,6 +480,7 @@ export async function generateDocxDocumentFromTemplateAction(
         .single();
       if (lError) throw new Error(mapDbError(lError));
       if (!lead) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
+      ownerTenantId = (lead as any).tenant_id;
       contextData.lead = localizeObject(lead, lang);
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
@@ -470,6 +490,7 @@ export async function generateDocxDocumentFromTemplateAction(
         .single();
       if (pError) throw new Error(mapDbError(pError));
       if (!property) throw new Error("ไม่พบข้อมูลทรัพย์สินที่ระบุ");
+      ownerTenantId = (property as any).tenant_id;
       contextData.property = localizeObject(property, lang);
     } else if (ownerType === "DEAL") {
       const { data: deal, error: dError } = await supabase
@@ -479,6 +500,7 @@ export async function generateDocxDocumentFromTemplateAction(
         .single();
       if (dError) throw new Error(mapDbError(dError));
       if (!deal) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
+      ownerTenantId = (deal as any).tenant_id;
       contextData.deal = localizeObject(deal, lang);
       contextData.lead = localizeObject((deal as any)?.lead, lang);
       contextData.property = localizeObject((deal as any)?.property, lang);
@@ -519,6 +541,16 @@ export async function generateDocxDocumentFromTemplateAction(
       }
       contextData.deal.reservation_fee = validData.reservation_fee || "";
       contextData.deal.booking_amount = validData.booking_amount || "";
+    } else if (ownerType === "RENTAL_CONTRACT") {
+      const { data: contract, error: cError } = await supabase
+        .from("rental_contracts")
+        .select("*")
+        .eq("id", ownerId)
+        .single();
+      if (cError) throw new Error(mapDbError(cError));
+      if (!contract) throw new Error("ไม่พบข้อมูลสัญญาเช่าที่ระบุ");
+      ownerTenantId = (contract as any).tenant_id;
+      contextData.contract = localizeObject(contract, lang);
     }
 
     // Merge additional data (properly sanitized)
@@ -568,7 +600,10 @@ export async function generateDocxDocumentFromTemplateAction(
     const safeTemplateName = (options?.templateName || "custom_contract").replace(/[^a-zA-Z0-9ก-๙]/g, "_");
     const displayFileName = `${safeTemplateName}_${timestamp}.docx`;
     const storageFileName = `generated_${timestamp}.docx`;
-    const finalStoragePath = `generated/${ownerType}/${ownerId}/${storageFileName}`;
+    const finalTenantId = ownerTenantId || tenantId;
+    const finalStoragePath = finalTenantId && finalTenantId !== "ALL"
+      ? `${finalTenantId}/generated/${ownerType}/${ownerId}/${storageFileName}`
+      : `generated/${ownerType}/${ownerId}/${storageFileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("documents")
@@ -589,6 +624,7 @@ export async function generateDocxDocumentFromTemplateAction(
       storage_path: finalStoragePath,
       mime_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       version: 1,
+      tenant_id: ownerTenantId,
     });
 
     if (!docRes.success) throw new Error(docRes.message || "บันทึกข้อมูลเข้าฐานข้อมูลไม่สำเร็จ");

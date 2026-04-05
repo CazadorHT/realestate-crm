@@ -109,7 +109,7 @@ export function UploadDocumentDialog({ tenantId }: UploadDocumentDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" >
+        <Button size="lg" className="gap-2 rounded-2xl font-semibold h-12 shadow-sm border-slate-200 hover:bg-slate-50! hover:text-blue-500" >
           <Upload className="mr-2 h-4 w-4" />
           อัพโหลดเอกสาร
         </Button>

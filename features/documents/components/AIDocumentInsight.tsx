@@ -28,6 +28,7 @@ interface AIDocumentInsightProps {
   initialAnalysis?: AIAnalysisResult | null;
   aiVerifiedAt?: string | null;
   aiVerifiedBy?: string | null;
+  trigger?: React.ReactNode;
 }
 
 export function AIDocumentInsight({
@@ -37,6 +38,7 @@ export function AIDocumentInsight({
   initialAnalysis,
   aiVerifiedAt,
   aiVerifiedBy,
+  trigger,
 }: AIDocumentInsightProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -102,7 +104,7 @@ export function AIDocumentInsight({
       }
       description={
         isVerified ? (
-          <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-xs">
+          <div className="flex items-center gap-1.5 text-emerald-600 font-semibold text-xs">
             <CheckCircle2 className="h-3.5 w-3.5" />
             เอกสารนี้ผ่านการตรวจสอบแล้ว
           </div>
@@ -111,32 +113,34 @@ export function AIDocumentInsight({
         )
       }
       trigger={
-        <Button
-          variant="ghost"
-          size="icon"
-          className={`h-8 w-8 rounded-lg ${
-            isVerified
-              ? "text-emerald-500 hover:text-emerald-600 bg-emerald-50/50"
-              : hasData
-                ? "text-amber-500 hover:text-amber-600 bg-amber-50/50 animate-pulse"
-                : "text-slate-400 hover:text-indigo-600 hover:bg-slate-50"
-          }`}
-          title={isVerified ? "AI Verified" : "AI Insights"}
-        >
-          {isVerified ? (
-            <CheckCircle2 className="h-4 w-4" />
-          ) : (
-            <Sparkles className={`h-4 w-4 ${loading ? "animate-pulse" : ""}`} />
-          )}
-        </Button>
+        trigger || (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-8 w-8 rounded-lg ${
+              isVerified
+                ? "text-emerald-500 hover:text-emerald-600 bg-emerald-50/50"
+                : hasData
+                  ? "text-amber-500 hover:text-amber-600 bg-amber-50/50 animate-pulse"
+                  : "text-slate-400 hover:text-indigo-600 hover:bg-slate-50"
+            }`}
+            title={isVerified ? "AI Verified" : "AI Insights"}
+          >
+            {isVerified ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <Sparkles className={`h-4 w-4 ${loading ? "animate-pulse" : ""}`} />
+            )}
+          </Button>
+        )
       }
     >
       <div className="py-2 space-y-5 text-left">
         <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl shadow-sm">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">
             Analyzing File:
           </p>
-          <p className="text-sm font-bold text-slate-700 truncate">
+          <p className="text-sm font-semibold text-slate-700 truncate">
             {documentName}
           </p>
         </div>
@@ -147,7 +151,7 @@ export function AIDocumentInsight({
               <Sparkles className="h-10 w-10 text-amber-400" />
             </div>
             <div className="max-w-[300px] px-4">
-              <h3 className="text-xl font-black text-slate-800">
+              <h3 className="text-xl font-semibold text-slate-800">
                 พร้อมวิเคราะห์ด้วย AI
               </h3>
               <p className="text-sm text-slate-500 mt-2 font-medium">
@@ -156,7 +160,7 @@ export function AIDocumentInsight({
             </div>
             <Button
               onClick={handleAnalyze}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl px-10 h-12 font-bold shadow-xl shadow-indigo-200 transition-all hover:scale-[1.02] active:scale-95"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl px-10 h-12 font-semibold shadow-xl shadow-indigo-200 transition-all hover:scale-[1.02] active:scale-95"
             >
               เริ่มวิเคราะห์เดี๋ยวนี้
             </Button>
@@ -169,7 +173,7 @@ export function AIDocumentInsight({
               <AlertTriangle className="h-10 w-10 text-red-500" />
             </div>
             <div className="max-w-[300px] px-4">
-              <h3 className="text-xl font-black text-red-800">
+              <h3 className="text-xl font-semibold text-red-800">
                 วิเคราะห์ไม่สำเร็จ
               </h3>
               <p className="text-sm text-red-600 mt-2 font-semibold">{error}</p>
@@ -177,7 +181,7 @@ export function AIDocumentInsight({
             <Button
               onClick={handleAnalyze}
               variant="outline"
-              className="border-red-200 text-red-700 hover:bg-red-50 rounded-2xl h-12 px-8 font-bold"
+              className="border-red-200 text-red-700 hover:bg-red-50 rounded-2xl h-12 px-8 font-semibold"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               ลองใหม่อีกครั้ง
@@ -192,7 +196,7 @@ export function AIDocumentInsight({
               <Sparkles className="h-6 w-6 text-amber-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
             </div>
             <div className="text-center px-6">
-              <p className="text-lg font-black text-slate-800">
+              <p className="text-lg font-semibold text-slate-800">
                 Gemini กำลังประมวลผล...
               </p>
               <p className="text-xs text-slate-400 mt-2 font-medium italic leading-relaxed">
@@ -208,7 +212,7 @@ export function AIDocumentInsight({
               <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 shadow-sm">
                 <AlertTriangle className="h-5 w-5 shrink-0 text-amber-500 mt-0.5" />
                 <div className="text-xs leading-relaxed">
-                  <p className="font-black mb-1">📢 ข้อมูลจาก AI (รอตรวจสอบ)</p>
+                  <p className="font-semibold mb-1">📢 ข้อมูลจาก AI (รอตรวจสอบ)</p>
                   <p className="font-medium opacity-90 leading-normal">
                     กรุณาตรวจทานสรุปเนื้อหาเทียบกับเอกสารจริง และกดยืนยันเพื่อบันทึกข้อมูลลงระบบ
                   </p>
@@ -219,13 +223,13 @@ export function AIDocumentInsight({
             <section className="space-y-3">
               <div className="flex items-center gap-2 px-1">
                 <FileText className="h-4 w-4 text-indigo-500" />
-                <h3 className="font-black text-slate-800 uppercase tracking-wide text-xs">สรุปเนื้อหา (Summary)</h3>
+                <h3 className="font-semibold text-slate-800 uppercase tracking-wide text-xs">สรุปเนื้อหา (Summary)</h3>
               </div>
               <div
                 className={`p-5 rounded-2xl leading-relaxed text-sm transition-all border shadow-xs ${
                   isVerified
                     ? "bg-slate-50 border-slate-100 text-slate-600 italic"
-                    : "bg-white border-blue-100 text-slate-900 font-bold focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none"
+                    : "bg-white border-blue-100 text-slate-900 font-semibold focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none"
                 }`}
                 contentEditable={!isVerified}
                 onBlur={(e) => setSummary(e.currentTarget.textContent || "")}
@@ -240,13 +244,13 @@ export function AIDocumentInsight({
                 <section className="space-y-3">
                   <div className="flex items-center gap-2 px-1">
                     <AlertTriangle className="h-4 w-4 text-red-500" />
-                    <h3 className="font-black text-slate-800 uppercase tracking-wide text-xs">จุดเสี่ยงที่พบ (Risks)</h3>
+                    <h3 className="font-semibold text-slate-800 uppercase tracking-wide text-xs">จุดเสี่ยงที่พบ (Risks)</h3>
                   </div>
                   <div className="grid gap-2">
                     {analysis.risks.map((risk: string, i: number) => (
                       <div
                         key={i}
-                        className="flex gap-3 p-4 bg-red-50/50 border border-red-100 rounded-2xl text-[12px] text-red-900 font-bold leading-relaxed"
+                        className="flex gap-3 p-4 bg-red-50/50 border border-red-100 rounded-2xl text-[12px] text-red-900 font-semibold leading-relaxed"
                       >
                         <ChevronRight className="h-4 w-4 mt-0.5 shrink-0 text-red-300" />
                         {risk}
@@ -260,7 +264,7 @@ export function AIDocumentInsight({
                 <section className="space-y-3">
                   <div className="flex items-center gap-2 px-1">
                     <Calendar className="h-4 w-4 text-indigo-600" />
-                    <h3 className="font-black text-slate-800 uppercase tracking-wide text-xs">ข้อมูลสำคัญ (Terms & Dates)</h3>
+                    <h3 className="font-semibold text-slate-800 uppercase tracking-wide text-xs">ข้อมูลสำคัญ (Terms & Dates)</h3>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {analysis.key_dates.map((item: any, i: number) => (
@@ -272,10 +276,10 @@ export function AIDocumentInsight({
                           <Clock className="h-5 w-5 text-indigo-600" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider truncate">
+                          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">
                             {item.description}
                           </p>
-                          <p className="text-[13px] font-black text-slate-800 truncate">
+                          <p className="text-[13px] font-semibold text-slate-800 truncate">
                             {item.date}
                           </p>
                         </div>
@@ -289,7 +293,7 @@ export function AIDocumentInsight({
             <Separator className="my-2 bg-slate-100" />
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-2">
-              <div className="text-[11px] text-slate-400 flex items-center gap-2 font-bold px-1">
+              <div className="text-[11px] text-slate-400 flex items-center gap-2 font-semibold px-1">
                 <CheckCircle2 className={`h-4 w-4 ${isVerified ? "text-emerald-500" : "text-slate-200"}`} />
                 {isVerified ? (
                   <span>Verified by {aiVerifiedBy || "Staff"} at {verifiedAt ? new Date(verifiedAt).toLocaleDateString("th-TH") : "N/A"}</span>
@@ -303,7 +307,7 @@ export function AIDocumentInsight({
                   <Button
                     onClick={handleVerify}
                     disabled={isVerifying}
-                    className="flex-1 sm:flex-none h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-xl shadow-emerald-100 px-8 font-black transition-all hover:scale-[1.02] active:scale-95"
+                    className="flex-1 sm:flex-none h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-xl shadow-emerald-100 px-8 font-semibold transition-all hover:scale-[1.02] active:scale-95"
                   >
                     {isVerifying ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -318,7 +322,7 @@ export function AIDocumentInsight({
                   size="sm"
                   onClick={handleAnalyze}
                   disabled={loading || isVerifying}
-                  className="h-12 text-[12px] gap-2 text-slate-400 hover:text-indigo-600 font-bold px-4 rounded-2xl"
+                  className="h-12 text-[12px] gap-2 text-slate-400 hover:text-indigo-600 font-semibold px-4 rounded-2xl"
                 >
                   <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                   ขอวิเคราะห์ใหม่

@@ -221,30 +221,39 @@ export const searchPropertiesAction = createSafeAction(
     property_type: z.string().optional(),
     popular_area: z.string().optional(),
     status: z.union([z.string(), z.array(z.string())]).optional(),
+    tenantId: z.string().uuid().optional(),
   }),
   async (
-    { q, listing_type, property_type, popular_area, status },
-    { supabase, tenantId },
+    { q, listing_type, property_type, popular_area, status, tenantId: inputTenantId },
+    { supabase, tenantId: contextTenantId },
   ) => {
     const queryTerm = (q ?? "").trim();
+    const effectiveTenantId = inputTenantId || contextTenantId;
 
     // 1. Fetch counts for ALL matching properties (ignoring facet-specific filters, but respecting search q)
     let facetSb = supabase
       .from("properties")
       .select("listing_type, property_type, status")
-      .eq("tenant_id", tenantId)
       .is("deleted_at", null);
+
+    if (effectiveTenantId) {
+      facetSb = facetSb.eq("tenant_id", effectiveTenantId);
+    }
 
     if (queryTerm) facetSb = facetSb.ilike("title", `%${queryTerm}%`);
 
-    const { data: facetData } = await facetSb;
+    const { data: facetData, error: facetError } = await facetSb;
+
     const counts = {
       listing_type: {} as Record<string, number>,
       property_type: {} as Record<string, number>,
       status: {} as Record<string, number>,
     };
 
-    if (facetData) {
+    if (facetError) {
+      console.error("Facet Error:", facetError);
+      // We still return empty counts instead of throwing to keep the UI functional
+    } else if (facetData) {
       facetData.forEach((x: { listing_type: string | null; property_type: string | null; status: string | null }) => {
         if (x.listing_type)
           counts.listing_type[x.listing_type] =
@@ -263,10 +272,13 @@ export const searchPropertiesAction = createSafeAction(
       .select(
         "id, title, price, original_price, rental_price, original_rental_price, listing_type, property_type, province, district, popular_area, status, property_images(image_url, is_cover)",
       )
-      .eq("tenant_id", tenantId) // Search only tenant's properties
-      .is("deleted_at", null)
-      .order("updated_at", { ascending: false })
-      .limit(30);
+      .is("deleted_at", null);
+
+    if (effectiveTenantId) {
+      sb = sb.eq("tenant_id", effectiveTenantId); // Search only specific tenant
+    }
+
+    sb = sb.order("updated_at", { ascending: false }).limit(30);
 
     if (queryTerm) sb = sb.ilike("title", `%${queryTerm}%`);
 

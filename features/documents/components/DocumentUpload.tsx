@@ -138,7 +138,9 @@ export function DocumentUpload({
         try {
           const { file, type } = item;
           const fileExt = file.name.split(".").pop();
-          const fileName = `${ownerType}/${ownerId}/${uuidv4()}.${fileExt}`;
+          const fileName = tenantId && tenantId !== "ALL"
+            ? `${tenantId}/${ownerType}/${ownerId}/${uuidv4()}.${fileExt}`
+            : `${ownerType}/${ownerId}/${uuidv4()}.${fileExt}`;
 
           let fileToUpload: File | Blob = file;
           let finalSize = file.size;

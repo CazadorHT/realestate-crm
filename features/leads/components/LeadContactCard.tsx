@@ -1,5 +1,13 @@
 import { leadStageLabelNullable } from "@/features/leads/labels";
 import { RiContactsBookLine } from "react-icons/ri";
+import { 
+  ShieldCheck, 
+  Phone, 
+  Mail, 
+  MessageSquare, 
+  Globe, 
+  StickyNote 
+} from "lucide-react";
 
 interface LeadContactCardProps {
   lead: {
@@ -15,92 +23,125 @@ interface LeadContactCardProps {
 
 export function LeadContactCard({ lead }: LeadContactCardProps) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col h-full overflow-hidden">
-      <div className="flex items-center gap-4 p-5 border-b border-slate-200">
-        <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center  shrink-0">
-          <RiContactsBookLine className="h-5 w-5 text-emerald-600" />
+    <div className="rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-100 flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-emerald-900/5">
+      <div className="flex items-center gap-4 p-5 border-b border-slate-50 bg-slate-50/20">
+        <div className="h-10 w-10 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-100">
+          <RiContactsBookLine className="h-5 w-5 text-white" />
         </div>
         <div>
-          <h3 className="font-bold text-lg text-slate-800">ข้อมูลติดต่อ</h3>
-          <p className="text-xs text-slate-500">รายละเอียดการติดต่อและสถานะ</p>
+          <h3 className="font-semibold text-lg text-slate-800 tracking-tight">ข้อมูลติดต่อ</h3>
+          <p className="text-[11px] text-slate-400 font-medium">รายละเอียดการติดต่อและสถานะปัจจุบัน</p>
         </div>
       </div>
-      <div className="p-5">
-        <div className="grid gap-3 text-sm">
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">สถานะลูกค้า</span>
-            <span className="font-medium bg-slate-100 px-2.5 py-1 rounded-md text-xs">
+      <div className="p-6">
+        <div className="grid gap-4">
+          {/* Status */}
+          <div className="flex items-center justify-between group/row">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-400 group-hover/row:bg-emerald-50 group-hover/row:text-emerald-600 transition-colors">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium text-slate-500">สถานะลูกค้า</span>
+            </div>
+            <span className="font-semibold bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[10px] uppercase tracking-wider ring-1 ring-emerald-100">
               {leadStageLabelNullable(lead.stage as any)}
             </span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">เบอร์โทรศัพท์</span>
-            <span className="font-medium">
+
+          {/* Phone */}
+          <div className="flex items-center justify-between group/row">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-400 group-hover/row:bg-blue-50 group-hover/row:text-blue-600 transition-colors">
+                <Phone className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium text-slate-500">เบอร์โทรศัพท์</span>
+            </div>
+            <span className="text-sm font-semibold text-slate-700">
               {lead.phone ? (
                 <a
                   href={`tel:${lead.phone}`}
-                  className="hover:underline text-blue-600"
+                  className="hover:text-blue-600 hover:underline decoration-blue-200 underline-offset-4 transition-colors"
                 >
                   {lead.phone}
                 </a>
               ) : (
-                "-"
+                <span className="text-slate-300">ไม่ระบุ</span>
               )}
             </span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">อีเมล</span>
-            <span className="font-medium truncate max-w-[200px]">
+
+          {/* Email */}
+          <div className="flex items-center justify-between group/row">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-400 group-hover/row:bg-purple-50 group-hover/row:text-purple-600 transition-colors">
+                <Mail className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium text-slate-500">อีเมล</span>
+            </div>
+            <span className="text-sm font-semibold text-slate-700 truncate max-w-[180px]">
               {lead.email ? (
                 <a
                   href={`mailto:${lead.email}`}
-                  className="hover:underline text-blue-600"
+                  className="hover:text-purple-600 hover:underline decoration-purple-200 underline-offset-4 transition-colors"
                 >
                   {lead.email}
                 </a>
               ) : (
-                "-"
+                <span className="text-slate-300">ไม่ระบุ</span>
               )}
             </span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Line ID</span>
-            <span className="font-medium">
-              {(lead.preferences as any)?.line_id ? (
-                <span className="text-emerald-600 font-bold">
-                  {(lead.preferences as any).line_id}
-                </span>
+
+          {/* Line ID */}
+          <div className="flex items-center justify-between group/row">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-400 group-hover/row:bg-emerald-50 group-hover/row:text-emerald-600 transition-colors">
+                <MessageSquare className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium text-slate-500">Line ID</span>
+            </div>
+            <span className="text-sm font-semibold text-emerald-600">
+              {(lead.preferences as any)?.line_id || <span className="text-slate-300">ไม่ระบุ</span>}
+            </span>
+          </div>
+
+          {/* Nationality */}
+          <div className="flex items-center justify-between group/row">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-400 group-hover/row:bg-amber-50 group-hover/row:text-amber-600 transition-colors">
+                <Globe className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium text-slate-500">สัญชาติ</span>
+            </div>
+            <div className="flex items-center gap-1.5 font-semibold text-sm text-slate-700">
+              {lead.nationality ? (
+                <>
+                  <span>{lead.nationality}</span>
+                  <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 font-semibold uppercase">
+                    {lead.is_foreigner ? "INTL" : "THAI"}
+                  </span>
+                </>
               ) : (
-                "-"
+                 <span className="text-slate-300">ไม่ระบุ</span>
               )}
-            </span>
+            </div>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">ติดต่อออนไลน์</span>
-            <span className="font-medium">
-              {(lead.preferences as any)?.online_contact || "-"}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">สัญชาติ</span>
-            <span className="font-medium">
-              {lead.nationality
-                ? `${lead.nationality} ${
-                    lead.is_foreigner ? "(ต่างชาติ)" : "(ไทย)"
-                  }`
-                : lead.is_foreigner
-                  ? "ต่างชาติ"
-                  : "ไทย"}
-            </span>
-          </div>
+
+          {/* Note Section */}
           {lead.note && (
-            <div className="pt-3 border-t border-slate-200 mt-2">
-              <span className="text-muted-foreground text-xs uppercase tracking-wider block mb-1.5">
-                บันทึกเพิ่มเติม
-              </span>
-              <p className="text-sm bg-slate-50 p-3 rounded-lg text-slate-600">
-                {lead.note}
-              </p>
+            <div className="mt-4 pt-4 border-t border-slate-50">
+              <div className="flex items-center gap-2 mb-3">
+                <StickyNote className="h-3.5 w-3.5 text-emerald-500" />
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+                  บันทึกเพิ่มเติม
+                </span>
+              </div>
+              <div className="relative group/note">
+                <div className="absolute -left-3 top-0 bottom-0 w-1 bg-emerald-100 rounded-full group-hover/note:bg-emerald-200 transition-colors" />
+                <p className="text-sm text-slate-600 leading-relaxed italic pl-3">
+                  "{lead.note}"
+                </p>
+              </div>
             </div>
           )}
         </div>

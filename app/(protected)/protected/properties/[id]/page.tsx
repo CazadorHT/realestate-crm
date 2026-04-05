@@ -18,6 +18,7 @@ import { PropertyStatusBadge } from "@/components/properties/PropertyStatusBadge
 import { PropertyTypeBadge } from "@/components/properties/PropertyTypeBadge";
 import { Separator } from "@/components/ui/separator";
 import { DocumentList } from "@/features/documents/components/DocumentList";
+import { requireAuthContext } from "@/lib/authz";
 import { PropertyGallery } from "@/components/public/PropertyGallery";
 import { PropertySpecs } from "@/components/public/PropertySpecs";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,7 @@ export default async function PropertyDetailsPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const { tenantId } = await requireAuthContext();
 
   // 1. Fetch Property with owner and agent info
   const { data: property, error } = await supabase
@@ -450,6 +452,7 @@ export default async function PropertyDetailsPage({
                             <DocumentList
                               ownerId={relatedContract.id}
                               ownerType="RENTAL_CONTRACT"
+                              tenantId={tenantId}
                             />
                           </div>
                         ) : (
@@ -467,6 +470,7 @@ export default async function PropertyDetailsPage({
                           <DocumentList
                             ownerId={relatedDeal.id}
                             ownerType="DEAL"
+                            tenantId={tenantId}
                           />
                         </div>
                       </div>

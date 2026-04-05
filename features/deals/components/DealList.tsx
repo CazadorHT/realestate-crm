@@ -42,7 +42,7 @@ export function DealList({ deals, properties = [] }: DealListProps) {
         <div className="h-16 w-16 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mb-4">
           <LayoutDashboard className="h-8 w-8 text-slate-300" />
         </div>
-        <h3 className="text-sm font-bold text-slate-900">ยังไม่มีข้อมูลดีล</h3>
+        <h3 className="text-sm font-semibold text-slate-900">ยังไม่มีข้อมูลดีล</h3>
         <p className="text-[11px] text-slate-400 font-medium max-w-[200px] text-center mt-1">
           เริ่มบันทึกดีลของคุณโดยเลือกทรัพย์ที่ลูกค้าสนใจ
         </p>
@@ -53,9 +53,9 @@ export function DealList({ deals, properties = [] }: DealListProps) {
   return (
     <div className="relative">
       {/* 📜 Scrollable Container: Pure vertical scroll instead of pagination */}
-      <div 
+      <div
         className="max-h-[520px] overflow-y-auto pr-3 sm:pr-4 -mr-3 sm:-mr-4  scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent hover:scrollbar-thumb-slate-300 transition-colors"
-        style={{ scrollbarWidth: 'thin' }} // 🛡️ Native thin scrollbar fallback
+        style={{ scrollbarWidth: "thin" }} // 🛡️ Native thin scrollbar fallback
       >
         <div className="grid grid-cols-1 gap-4 pb-4">
           {deals.map((deal, index) => (
@@ -70,9 +70,11 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                     const property = deal.property;
                     const images = property?.images;
                     const hasImage = images?.[0]?.image_url;
-                    
+
                     if (hasImage && images) {
-                      const coverImage = images.find((img) => img.is_cover)?.image_url || images[0].image_url;
+                      const coverImage =
+                        images.find((img) => img.is_cover)?.image_url ||
+                        images[0].image_url;
                       return (
                         <img
                           src={coverImage}
@@ -91,7 +93,7 @@ export function DealList({ deals, properties = [] }: DealListProps) {
 
                   {/* Index & Type Overlay (Mini) */}
                   <div className="absolute top-2 right-2 z-10 flex gap-1">
-                    <div className="h-6 px-2 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 text-[9px] font-bold text-white flex items-center justify-center">
+                    <div className="h-6 px-2 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 text-[9px] font-semibold text-white flex items-center justify-center">
                       #{index + 1}
                     </div>
                   </div>
@@ -99,7 +101,7 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                   <div className="absolute top-2 left-2 z-10">
                     <Badge
                       className={cn(
-                        "text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg shadow-lg border border-white/20",
+                        "text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-lg shadow-lg border border-white/20",
                         deal.deal_type === "RENT"
                           ? "bg-blue-600 text-white"
                           : "bg-orange-500 text-white",
@@ -123,7 +125,7 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                   <div className="space-y-2">
                     {/* Header: Reference */}
                     <div className="flex items-center justify-between">
-                      <button 
+                      <button
                         type="button"
                         onClick={(e) => {
                           e.preventDefault();
@@ -134,18 +136,18 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                             icon: <Copy className="h-4 w-4 text-blue-500" />,
                           });
                         }}
-                        className="text-[9px] font-bold text-blue-500 uppercase tracking-widest leading-none bg-blue-50 px-1.5 py-1 rounded-md border border-blue-100/50 hover:bg-blue-100 hover:border-blue-200 transition-all active:scale-95 flex items-center gap-1 group"
+                        className="text-[9px] font-semibold text-blue-500 uppercase tracking-widest leading-none bg-blue-50 px-1.5 py-1 rounded-md border border-blue-100/50 hover:bg-blue-100 hover:border-blue-200 transition-all active:scale-95 flex items-center gap-1 group"
                         title="คลิกเพื่อคัดลอกรหัสอ้างอิง"
                       >
                         REF: #{deal.property_id.slice(0, 8)}
                         <Copy className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </button>
                     </div>
-                    
+
                     {/* Title: Compact font */}
                     <Link
                       href={`/protected/properties/${deal.property_id}`}
-                      className="font-bold text-sm lg:text-base text-slate-800 hover:text-blue-600 transition-colors block line-clamp-1 leading-normal"
+                      className="font-semibold text-sm lg:text-base text-slate-800 hover:text-blue-600 transition-colors block line-clamp-1 leading-normal"
                       title={deal.property?.title || "Property"}
                     >
                       🔥 {deal.property?.title || "ทรัพย์ไม่ระบุชื่อ"}
@@ -154,51 +156,60 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                     {/* Metadata: Dates & Duration */}
                     <div className="flex flex-wrap items-center gap-2">
                       {(!deal.transaction_date || deal.undetermined_date) && (
-                        <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50/50 rounded-lg border border-amber-100 text-[10px] font-bold text-amber-600">
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50/50 rounded-lg border border-amber-100 text-[10px] font-semibold text-amber-600">
                           <Calendar className="h-3 w-3 text-amber-400" />
                           <span>ยังไม่ระบุวันที่</span>
                         </div>
                       )}
 
                       {deal.transaction_date && !deal.undetermined_date && (
-                        <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50/50 rounded-lg border border-slate-100 text-[10px] font-bold text-slate-500">
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50/50 rounded-lg border border-slate-100 text-[10px] font-semibold text-slate-500">
                           <Calendar className="h-3 w-3 text-slate-400" />
                           <span className="text-slate-800">
-                            {format(new Date(deal.transaction_date), "d MMM yy", {
-                              locale: th,
-                            })}
-                          </span>
-                        </div>
-                      )}
-
-                      {deal.deal_type === "RENT" && deal.transaction_end_date && (
-                        <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50/50 rounded-lg border border-slate-100 text-[10px] font-bold text-slate-500">
-                          <ArrowRight className="h-3 w-3 text-slate-300" />
-                          <span className="text-slate-800">
                             {format(
-                              new Date(deal.transaction_end_date),
+                              new Date(deal.transaction_date),
                               "d MMM yy",
-                              { locale: th },
+                              {
+                                locale: th,
+                              },
                             )}
                           </span>
                         </div>
                       )}
 
+                      {deal.deal_type === "RENT" &&
+                        deal.transaction_end_date && (
+                          <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50/50 rounded-lg border border-slate-100 text-[10px] font-semibold text-slate-500">
+                            <ArrowRight className="h-3 w-3 text-slate-300" />
+                            <span className="text-slate-800">
+                              {format(
+                                new Date(deal.transaction_end_date),
+                                "d MMM yy",
+                                { locale: th },
+                              )}
+                            </span>
+                          </div>
+                        )}
+
                       {(() => {
                         // Priority 1: Use stored duration_months
                         // Priority 2: Calculate from transaction_date and transaction_end_date
                         let duration = deal.duration_months;
-                        
-                        if (!duration && deal.transaction_date && deal.transaction_end_date) {
+
+                        if (
+                          !duration &&
+                          deal.transaction_date &&
+                          deal.transaction_end_date
+                        ) {
                           duration = differenceInMonths(
                             new Date(deal.transaction_end_date),
-                            new Date(deal.transaction_date)
+                            new Date(deal.transaction_date),
                           );
                         }
 
                         if (duration && duration > 0) {
                           return (
-                            <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50/30 rounded-lg border border-blue-100/50 text-[10px] font-bold text-blue-600">
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50/30 rounded-lg border border-blue-100/50 text-[10px] font-semibold text-blue-600">
                               <FaClock className="h-3 w-3" />
                               <span>
                                 {duration >= 12 && duration % 12 === 0
@@ -215,7 +226,6 @@ export function DealList({ deals, properties = [] }: DealListProps) {
 
                   {/* Footer: Commission & Menu */}
                   <div className="pt-2.5 border-t border-slate-50 flex items-center justify-between gap-4">
-                    
                     {/* Commission Badge */}
                     {deal.commission_amount && deal.commission_amount > 0 ? (
                       <div className="flex items-center gap-2 px-2.5 py-1 bg-emerald-50/50 rounded-xl border border-emerald-100/20">
@@ -223,7 +233,9 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                           <Wallet className="h-3 w-3" />
                         </div>
                         <div className="flex flex-col leading-none">
-                          <span className="text-xs text-emerald-600/70 uppercase font-medium mb-0.5 tracking-relaxed">ค่าคอมมิชชั่น</span>
+                          <span className="text-xs text-emerald-600/70 uppercase font-medium mb-0.5 tracking-relaxed">
+                            ค่าคอมมิชชั่น
+                          </span>
                           <span className="text-sm font-semibold text-emerald-900">
                             ฿{deal.commission_amount.toLocaleString()}
                           </span>
@@ -232,7 +244,9 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                     ) : (
                       <div className="flex items-center gap-1.5 text-slate-300 px-2 py-1">
                         <Wallet className="h-3 w-3" />
-                        <span className="text-[9px] font-bold uppercase tracking-tighter">no commission</span>
+                        <span className="text-[9px] font-semibold uppercase tracking-tighter">
+                          no commission
+                        </span>
                       </div>
                     )}
 
@@ -256,10 +270,13 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                       }
                     >
                       <div className="p-4 space-y-2">
-                        <Link href={`/protected/deals/${deal.id}`} className="block w-full">
+                        <Link
+                          href={`/protected/deals/${deal.id}`}
+                          className="block w-full"
+                        >
                           <Button
                             variant="ghost"
-                            className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
+                            className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
                           >
                             <div className="h-8 w-8 rounded-lg bg-blue-100/50 flex items-center justify-center">
                               <Eye className="h-4 w-4" />
@@ -276,7 +293,7 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                           trigger={
                             <Button
                               variant="ghost"
-                              className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-600 transition-all border border-transparent hover:border-amber-100"
+                              className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-600 transition-all border border-transparent hover:border-amber-100"
                             >
                               <div className="h-8 w-8 rounded-lg bg-amber-100/50 flex items-center justify-center">
                                 <Edit2 className="h-4 w-4" />
@@ -296,7 +313,7 @@ export function DealList({ deals, properties = [] }: DealListProps) {
                         >
                           <Button
                             variant="ghost"
-                            className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all border border-transparent hover:border-rose-100 group"
+                            className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all border border-transparent hover:border-rose-100 group"
                           >
                             <div className="h-8 w-8 rounded-lg bg-rose-100/50 flex items-center justify-center group-hover:bg-rose-100">
                               <Trash2 className="h-4 w-4" />
