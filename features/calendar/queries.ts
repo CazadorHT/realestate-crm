@@ -1,6 +1,7 @@
-import { addDays, formatISO } from "date-fns";
+import { formatISO } from "date-fns";
 import { requireAuthContext } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { cache } from "react";
 
 export type EventType =
   | "viewing"
@@ -36,18 +37,22 @@ export type CalendarEvent = {
   color?: string; // For UI
 };
 
-export async function getCalendarEvents(
+/**
+ * 🔒 SECURITY: ดึงข้อมูลนัดหมายทั้งหมดโดยกรองตาม Tenant อัตโนมัติจาก Auth Context
+ * ใช้ React cache เพื่อป้องกันการ Query ซ้ำซ้อนใน Request เดียวกัน
+ */
+export const getCalendarEvents = cache(async (
   startDate: Date,
   endDate: Date,
   propertyId?: string,
-): Promise<CalendarEvent[]> {
+): Promise<CalendarEvent[]> => {
   const { supabase, tenantId, role } = await requireAuthContext();
   const config = await getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
   const isAdmin = role === "ADMIN";
 
   const startIso = formatISO(startDate);
-  const endIso = formatISO(endDate); // Ensure we cover the full range
+  const endIso = formatISO(endDate);
 
   const events: CalendarEvent[] = [];
 
@@ -59,6 +64,7 @@ export async function getCalendarEvents(
       id,
       created_at,
       lead_id,
+      activity_type,
       note,
       leads!inner ( full_name, tenant_id ),
       property_id,
@@ -130,6 +136,7 @@ export async function getCalendarEvents(
       rent_price,
       deals!inner (
          property_id,
+         tenant_id,
          property:properties (
            title,
            images:property_images(image_url)
@@ -188,6 +195,7 @@ export async function getCalendarEvents(
       rent_price,
       deals!inner (
          property_id,
+         tenant_id,
          property:properties (
            title,
            images:property_images(image_url)
@@ -247,6 +255,7 @@ export async function getCalendarEvents(
       rent_price,
       deals!inner (
          property_id,
+         tenant_id,
          property:properties (
            title,
            images:property_images(image_url)
@@ -302,6 +311,7 @@ export async function getCalendarEvents(
       transaction_date,
       deal_type,
       property_id,
+      tenant_id,
       property:properties (
         title,
         images:property_images(image_url)
@@ -342,9 +352,9 @@ export async function getCalendarEvents(
   return events.sort(
     (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
   );
-}
+});
 
-export async function getCompactProperties() {
+export const getCompactProperties = cache(async () => {
   const { supabase, tenantId, role } = await requireAuthContext();
   const config = await getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
@@ -361,9 +371,9 @@ export async function getCompactProperties() {
 
   const { data } = await query.order("title");
   return data || [];
-}
+});
 
-export async function getCompactLeads() {
+export const getCompactLeads = cache(async () => {
   const { supabase, tenantId, role } = await requireAuthContext();
   const config = await getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
@@ -381,4 +391,4 @@ export async function getCompactLeads() {
   const { data } = await query.order("full_name");
 
   return data || [];
-}
+});

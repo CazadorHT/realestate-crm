@@ -1,20 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   format,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  startOfWeek,
-  endOfWeek,
-  isSameMonth,
-  isSameDay,
+  setMonth,
   addMonths,
   subMonths,
-  addYears,
-  subYears,
-  setMonth,
 } from "date-fns";
 import { th } from "date-fns/locale";
 import {
@@ -22,12 +13,12 @@ import {
   ChevronRight,
   Loader2,
   Calendar as CalendarIcon,
-  Grid3X3,
+  LayoutList,
+  Columns as ColumnsIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CalendarEvent } from "../queries";
-import { Badge } from "@/components/ui/badge";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Select,
@@ -36,8 +27,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { EventDetailsDialog } from "./EventDetailsDialog";
+import { CalendarGrid } from "./CalendarGrid";
 
 interface CalendarViewProps {
   initialDate: Date;
@@ -52,9 +45,23 @@ export function CalendarView({
 }: CalendarViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isMobile = useIsMobile();
   const [currentDate, setCurrentDate] = useState(initialDate);
   const [isLoading, setIsLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<"month" | "year">("month");
+  const [viewMode, setViewMode] = useState<"dayGridMonth" | "timeGridWeek" | "listMonth">(
+    (searchParams.get("view") as any) || (isMobile ? "listMonth" : "dayGridMonth")
+  );
+  const hasInitializedView = useRef(false);
+
+  // Initial mobile view detection - only run once when isMobile is determined
+  useEffect(() => {
+    if (isMobile !== undefined && !hasInitializedView.current) {
+      if (isMobile && !searchParams.get("view")) {
+        setViewMode("listMonth");
+      }
+      hasInitializedView.current = true;
+    }
+  }, [isMobile, searchParams]);
 
   // Dialog State
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
@@ -62,119 +69,80 @@ export function CalendarView({
   );
 
   // Filter State
-  const [selectedProperty, setSelectedProperty] = useState(
-    searchParams.get("propertyId") || "ALL",
-  );
-
-  // Generate calendar grid
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart);
-  const endDate = endOfWeek(monthEnd);
-
-  const calendarDays = eachDayOfInterval({
-    start: startDate,
-    end: endDate,
-  });
+  const selectedProperty = searchParams.get("propertyId") || "ALL";
 
   const navigate = (direction: "prev" | "next") => {
     setIsLoading(true);
-    let newDate = currentDate;
-
-    if (viewMode === "month") {
-      newDate =
-        direction === "prev"
-          ? subMonths(currentDate, 1)
-          : addMonths(currentDate, 1);
-    } else {
-      newDate =
-        direction === "prev"
-          ? subYears(currentDate, 1)
-          : addYears(currentDate, 1);
-    }
-
-    setCurrentDate(newDate);
-    updateUrl(newDate, selectedProperty);
+    const newDate = direction === "prev" 
+      ? subMonths(currentDate, 1) 
+      : addMonths(currentDate, 1);
+    updateUrl(newDate, selectedProperty, viewMode);
   };
 
   const handlePropertyChange = (val: string) => {
-    setSelectedProperty(val);
     setIsLoading(true);
-    updateUrl(currentDate, val);
+    updateUrl(currentDate, val, viewMode);
   };
 
-  const updateUrl = (date: Date, propId: string) => {
+  const handleViewChange = (newView: "dayGridMonth" | "timeGridWeek" | "listMonth") => {
+    setViewMode(newView);
+    updateUrl(currentDate, selectedProperty, newView);
+  };
+
+  const updateUrl = (date: Date, propId: string, view: string) => {
     const params = new URLSearchParams(searchParams);
     params.set("month", format(date, "yyyy-MM"));
+    
     if (propId && propId !== "ALL") {
       params.set("propertyId", propId);
     } else {
       params.delete("propertyId");
     }
-    router.push(`?${params.toString()}`);
+
+    if (view && view !== (isMobile ? "listMonth" : "dayGridMonth")) {
+      params.set("view", view);
+    } else {
+      params.delete("view");
+    }
+
+    router.push(`?${params.toString()}`, { scroll: false });
   };
 
-  const switchToMonth = (monthIndex: number) => {
-    const newDate = setMonth(currentDate, monthIndex);
-    setCurrentDate(newDate);
-    setViewMode("month");
-    updateUrl(newDate, selectedProperty);
-  };
-
-  const getEventsForDay = (day: Date) => {
-    return events.filter((event) => isSameDay(new Date(event.start), day));
-  };
-
-  const months = Array.from({ length: 12 }, (_, i) => i);
+  // Turn off loader when date changes
+  useEffect(() => {
+    setCurrentDate(initialDate);
+    setIsLoading(false);
+  }, [initialDate]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-in fade-in duration-700">
       {/* Header controls */}
-      <div className="flex flex-col lg:flex-row md:items-center justify-between gap-4 p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
         {/* Left: Navigation & Title */}
-        <div className="flex items-center justify-between w-full md:w-auto md:gap-4">
+        <div className="flex items-center justify-between w-full lg:w-auto lg:gap-4">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-slate-800">
-              {viewMode === "month"
-                ? format(currentDate, "MMMM yyyy", { locale: th })
-                : `ปี ${format(currentDate, "yyyy", { locale: th })}`}
+              {format(currentDate, "MMMM yyyy", { locale: th })}
             </h2>
             {isLoading && (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
             )}
           </div>
 
-          {/* Mobile Nav Buttons */}
-          <div className="flex gap-1 md:hidden">
+          <div className="flex gap-1">
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
               onClick={() => navigate("prev")}
+              className="rounded-xl border-slate-200 h-9 w-9"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
               onClick={() => navigate("next")}
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
-          </div>
-
-          {/* Desktop Nav - Hidden on mobile */}
-          <div className="hidden md:flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("prev")}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("next")}
+              className="rounded-xl border-slate-200 h-9 w-9"
             >
               <ChevronRight className="h-5 w-5" />
             </Button>
@@ -182,10 +150,10 @@ export function CalendarView({
         </div>
 
         {/* Right: Filters & View Toggle */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
           {/* Property Filter */}
           <Select value={selectedProperty} onValueChange={handlePropertyChange}>
-            <SelectTrigger className="w-full sm:w-[280px]">
+            <SelectTrigger className="w-full sm:w-[280px] rounded-xl border-slate-200 h-10">
               <span className="truncate">
                 {selectedProperty === "ALL"
                   ? "ทรัพย์สินทั้งหมด"
@@ -193,7 +161,7 @@ export function CalendarView({
                     "Select Property"}
               </span>
             </SelectTrigger>
-            <SelectContent className="max-h-[300px] overflow-y-auto">
+            <SelectContent className="max-h-[300px] overflow-y-auto rounded-xl shadow-xl border-slate-100">
               <SelectItem value="ALL">ทรัพย์สินทั้งหมด</SelectItem>
               {properties.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
@@ -205,161 +173,80 @@ export function CalendarView({
             </SelectContent>
           </Select>
 
-          <div className="hidden sm:block h-6 w-px bg-slate-200 mx-2" />
-
-          {/* View Mode Toggle */}
-          <div className="flex bg-slate-100 p-1 rounded-lg w-full sm:w-auto">
+          {/* View Mode Toggle - Only show icons on small screens to save space */}
+          <div className="flex bg-slate-100/50 p-1 rounded-xl h-10">
             <button
-              onClick={() => setViewMode("month")}
+              onClick={() => handleViewChange("dayGridMonth")}
               className={cn(
-                "flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-2",
-                viewMode === "month"
-                  ? "bg-white text-blue-600 shadow-sm"
+                "flex-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2",
+                viewMode === "dayGridMonth"
+                  ? "bg-white text-indigo-600 shadow-sm"
                   : "text-slate-500 hover:text-slate-700",
               )}
+              title="ตารางรายเดือน"
             >
-              <CalendarIcon className="h-3 w-3" />
-              เดือน
+              <CalendarIcon className="h-4 w-4" />
+              <span className="hidden lg:inline">เดือน</span>
             </button>
             <button
-              onClick={() => setViewMode("year")}
+              onClick={() => handleViewChange("timeGridWeek")}
               className={cn(
-                "flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-2",
-                viewMode === "year"
-                  ? "bg-white text-blue-600 shadow-sm"
+                "flex-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2",
+                viewMode === "timeGridWeek"
+                  ? "bg-white text-indigo-600 shadow-sm"
                   : "text-slate-500 hover:text-slate-700",
               )}
+              title="ตารางรายสัปดาห์"
             >
-              <Grid3X3 className="h-3 w-3" />
-              ปี
+              <ColumnsIcon className="h-4 w-4" />
+              <span className="hidden lg:inline">สัปดาห์</span>
+            </button>
+            <button
+              onClick={() => handleViewChange("listMonth")}
+              className={cn(
+                "flex-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2",
+                viewMode === "listMonth"
+                  ? "bg-white text-indigo-600 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700",
+              )}
+              title="มุมมองแบบรายการ"
+            >
+              <LayoutList className="h-4 w-4" />
+              <span className="hidden lg:inline">รายการ</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* View Content */}
-      {viewMode === "month" ? (
-        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-          {/* Event Legend */}
-          <div className="p-3 bg-slate-50 border-b border-slate-200 flex flex-wrap gap-3 text-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-              <span className="text-slate-600">นัดชม</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              <span className="text-slate-600">เริ่มสัญญา</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-              <span className="text-slate-600">สิ้นสุดสัญญา</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-              <span className="text-slate-600">ยุติก่อนกำหนด</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-              <span className="text-slate-600">ปิดดีล</span>
-            </div>
+      {/* Main Calendar Content */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-2 min-h-[700px]">
+        {/* Event Legend - More subtle */}
+        <div className="px-4 py-3 flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+            <span>นัดชม</span>
           </div>
-
-          {events.filter((e) => isSameMonth(new Date(e.start), currentDate))
-            .length === 0 && (
-            <div className="p-2 bg-slate-50 text-center text-sm text-muted-foreground border-b border-slate-200">
-              ไม่มีนัดหมายในเดือนนี้
-            </div>
-          )}
-
-          <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
-            {["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."].map((day) => (
-              <div
-                key={day}
-                className="py-3 text-center text-sm font-semibold text-muted-foreground"
-              >
-                {day}
-              </div>
-            ))}
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <span>สัญญาเริ่ม</span>
           </div>
-
-          <div className="grid grid-cols-7 auto-rows-fr bg-slate-100 gap-px">
-            {calendarDays.map((day) => {
-              const dayEvents = getEventsForDay(day);
-              const isCurrentMonth = isSameMonth(day, monthStart);
-
-              return (
-                <div
-                  key={day.toISOString()}
-                  className={cn(
-                    "min-h-[120px] p-2 bg-white flex flex-col gap-1 transition-colors hover:bg-slate-50",
-                    !isCurrentMonth && "bg-slate-50/50 text-muted-foreground",
-                  )}
-                >
-                  <div className="flex justify-between items-start">
-                    <span
-                      className={cn(
-                        "text-sm font-medium h-7 w-7 flex items-center justify-center rounded-full",
-                        isSameDay(day, new Date()) &&
-                          "bg-blue-600 text-white shadow-sm",
-                      )}
-                    >
-                      {format(day, "d")}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col gap-1 mt-1">
-                    {dayEvents.map((event) => (
-                      <div
-                        key={event.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedEvent(event);
-                        }}
-                        className={cn(
-                          "text-[10px] px-1.5 py-1 rounded truncate font-medium border-l-2 cursor-pointer shadow-sm hover:opacity-80 transition-opacity",
-                          event.type === "viewing" &&
-                            "bg-blue-50 text-blue-700 border-blue-500",
-                          event.type === "contract_start" &&
-                            "bg-emerald-50 text-emerald-700 border-emerald-500",
-                          event.type === "contract_end" &&
-                            "bg-red-50 text-red-700 border-red-500",
-                          event.type === "early_termination" &&
-                            "bg-orange-50 text-orange-700 border-orange-500",
-                          event.type === "deal_closing" &&
-                            "bg-purple-50 text-purple-700 border-purple-500",
-                        )}
-                        title={event.title}
-                      >
-                        {format(new Date(event.start), "HH:mm")} {event.title}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+            <span>สัญญาหมด</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+            <span>ปิดดีล</span>
           </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
-          {months.map((monthIndex) => {
-            const tempDate = setMonth(currentDate, monthIndex);
-            return (
-              <button
-                key={monthIndex}
-                onClick={() => switchToMonth(monthIndex)}
-                className="p-4 bg-white border border-slate-200 rounded-lg shadow-sm hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col gap-2 min-h-[100px]"
-              >
-                <span className="font-semibold text-lg text-slate-700">
-                  {format(tempDate, "MMMM", { locale: th })}
-                </span>
-                <div className="flex-1 border border-dashed rounded bg-slate-50 flex items-center justify-center text-xs text-muted-foreground p-2">
-                  Click to view
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
+
+        <CalendarGrid
+          events={events}
+          initialDate={currentDate}
+          onEventClick={setSelectedEvent}
+          viewMode={viewMode}
+        />
+      </div>
 
       {/* Details Dialog */}
       <EventDetailsDialog

@@ -1,0 +1,114 @@
+@reference "tailwindcss";
+
+@layer components {
+  .fc {
+    /* ใช้สีจากการลากค่าจาก globals.css และ tailwind.config.ts */
+    --fc-border-color: hsl(var(--border));
+    --fc-daygrid-event-dot-width: 8px;
+    --fc-list-event-dot-width: 10px;
+    --fc-today-bg-color: #f1f5f9; /* slate-100 */
+    --fc-event-bg-color: #4f46e5; /* indigo-600 */
+    --fc-event-border-color: #4f46e5;
+    --fc-button-bg-color: #ffffff;
+    --fc-button-border-color: hsl(var(--border));
+    --fc-button-text-color: #475569; /* slate-600 */
+    --fc-button-hover-bg-color: #f8fafc; /* slate-50 */
+    --fc-button-hover-border-color: #cbd5e1; /* slate-300 */
+    --fc-button-active-bg-color: #f1f5f9; /* slate-100 */
+    --fc-button-active-border-color: #cbd5e1;
+  }
+
+  .calendar-container {
+    @apply h-full w-full font-sans;
+  }
+
+  /* Header Styling */
+  .fc .fc-toolbar-title {
+    @apply text-lg font-bold text-slate-900;
+  }
+
+  .fc .fc-button {
+    @apply font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-sm border;
+  }
+
+  /* DayGrid Styling */
+  .fc .fc-col-header-cell {
+    @apply bg-slate-50 py-3 border-b border-slate-100;
+  }
+
+  .fc .fc-col-header-cell-cushion {
+    @apply text-[10px] font-bold uppercase tracking-wider text-slate-400 no-underline;
+  }
+
+  .fc-daygrid-day-number {
+    @apply font-bold text-xs p-2 text-slate-600 no-underline;
+  }
+
+  .fc-day-today {
+    background-color: transparent !important;
+  }
+
+  .fc-day-today .fc-daygrid-day-number {
+    @apply bg-indigo-600 text-white rounded-lg w-7 h-7 flex items-center justify-center m-1 shadow-md shadow-indigo-100;
+  }
+
+  /* Event Styling */
+  .fc-v-event, .fc-h-event {
+    @apply rounded-lg border-none px-1.5 py-0.5 shadow-sm cursor-pointer transition-transform duration-100;
+  }
+
+  .fc-event:hover {
+    @apply scale-[1.02] brightness-95;
+  }
+
+  .fc-event-title {
+    @apply font-bold text-[10px] truncate;
+  }
+
+  /* List View Styling */
+  .fc-list {
+    border: none !important;
+    border-radius: 1rem !important;
+    overflow: hidden !important;
+  }
+
+  .fc-list-day-cushion {
+    background-color: rgb(248 250 252 / 0.8) !important; /* slate-50/80 */
+    padding: 0.75rem 1rem !important;
+  }
+
+  .fc-list-day-text {
+    font-weight: 700 !important;
+    color: #0f172a !important; /* slate-900 */
+    text-decoration: none !important;
+  }
+
+  .fc-list-event {
+    @apply cursor-pointer;
+  }
+
+  .fc-list-event-title {
+    font-weight: 700 !important;
+    color: #1e293b !important; /* slate-800 */
+    font-size: 0.875rem !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  .fc-list-event-time {
+    color: #94a3b8 !important; /* slate-400 */
+    font-size: 0.75rem !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  /* Grid boundaries */
+  .fc-theme-standard td, .fc-theme-standard th {
+    @apply border-slate-100;
+  }
+
+  /* Hide license message if any */
+  .fc-license-message {
+    display: none;
+  }
+}

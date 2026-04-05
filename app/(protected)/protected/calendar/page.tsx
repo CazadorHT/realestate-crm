@@ -55,11 +55,11 @@ export default async function CalendarPage({
     }
   }
 
-  // 3. Calculate Query Range
+  // 3. Calculate Query Range (Align with FullCalendar Monday start)
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(monthStart);
-  let queryStart = startOfWeek(monthStart);
-  let queryEnd = endOfWeek(monthEnd);
+  let queryStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+  let queryEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
   // 4. Fetch Events, Properties, and Leads
   const [events, properties, leads] = await Promise.all([
