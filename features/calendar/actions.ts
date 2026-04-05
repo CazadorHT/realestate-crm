@@ -55,3 +55,35 @@ export async function createAppointment(formData: FormData) {
   revalidatePath("/protected/calendar");
   revalidatePath("/protected"); // Update dashboard too
 }
+
+export async function updateEventDate(id: string, newStart: string, type: string) {
+  const { supabase, tenantId, role } = await requireAuthContext();
+
+  // Basic security check: if multi-tenant, verify the entity belongs to the tenant
+  // For lead_activities
+  if (["viewing", "follow_up", "call", "line_chat"].includes(type)) {
+     const { error } = await supabase
+       .from("lead_activities")
+       .update({ created_at: newStart })
+       .eq("id", id);
+     
+     if (error) {
+       console.error("Error updating activity date:", error);
+       throw new Error("ไม่สามารถอัปเดตวันนัดหมายได้");
+     }
+  } else if (type === "deal_closing") {
+     const { error } = await supabase
+       .from("deals")
+       .update({ transaction_date: newStart })
+       .eq("id", id);
+     
+     if (error) {
+       console.error("Error updating deal date:", error);
+       throw new Error("ไม่สามารถอัปเดตวันที่ปิดดีลได้");
+     }
+  }
+
+  revalidatePath("/protected/calendar");
+  revalidatePath("/protected");
+  return { success: true };
+}

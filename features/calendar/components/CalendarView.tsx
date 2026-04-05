@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { CalendarEvent } from "../queries";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Search, User, Building2, Check, X } from "lucide-react";
+import { Search, User, Building2, Check, X, Users } from "lucide-react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 
@@ -36,6 +36,9 @@ interface CalendarViewProps {
   events: CalendarEvent[];
   properties: { id: string; title: string }[];
   leads: { id: string; full_name: string }[];
+  agents?: { id: string; title: string }[];
+  currentUserId?: string;
+  isAdmin?: boolean;
 }
 
 export function CalendarView({
@@ -43,6 +46,9 @@ export function CalendarView({
   events,
   properties,
   leads,
+  agents = [],
+  currentUserId,
+  isAdmin = false,
 }: CalendarViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -72,56 +78,74 @@ export function CalendarView({
   // Filter State
   const selectedProperty = searchParams.get("propertyId") || "ALL";
   const selectedLead = searchParams.get("leadId") || "ALL";
+  const selectedAgent = searchParams.get("agentId") || "ALL";
 
   const navigate = (direction: "prev" | "next") => {
     setIsLoading(true);
     const newDate = direction === "prev" 
       ? subMonths(currentDate, 1) 
       : addMonths(currentDate, 1);
-    updateUrl(newDate, selectedProperty, selectedLead, viewMode);
+    updateUrl(newDate, selectedProperty, selectedLead, selectedAgent, viewMode);
   };
 
   const handlePropertyChange = (val: string) => {
     setIsLoading(true);
-    updateUrl(currentDate, val, selectedLead, viewMode);
+    updateUrl(currentDate, val, selectedLead, selectedAgent, viewMode);
   };
 
   const handleLeadChange = (val: string) => {
     setIsLoading(true);
-    updateUrl(currentDate, selectedProperty, val, viewMode);
+    updateUrl(currentDate, selectedProperty, val, selectedAgent, viewMode);
+  };
+
+  const handleAgentChange = (val: string) => {
+    setIsLoading(true);
+    updateUrl(currentDate, selectedProperty, selectedLead, val, viewMode);
   };
 
   const handleViewChange = (newView: "dayGridMonth" | "timeGridWeek" | "listMonth") => {
     setViewMode(newView);
-    updateUrl(currentDate, selectedProperty, selectedLead, newView);
+    updateUrl(currentDate, selectedProperty, selectedLead, selectedAgent, newView);
   };
 
   const handleMonthSelect = (monthIndex: number) => {
     setIsLoading(true);
     const newDate = setMonth(currentDate, monthIndex);
-    updateUrl(newDate, selectedProperty, selectedLead, viewMode);
+    updateUrl(newDate, selectedProperty, selectedLead, selectedAgent, viewMode);
   };
 
   const handleYearChange = (delta: number) => {
     setIsLoading(true);
     const newDate = addYears(currentDate, delta);
-    updateUrl(newDate, selectedProperty, selectedLead, viewMode);
+    updateUrl(newDate, selectedProperty, selectedLead, selectedAgent, viewMode);
   };
 
-  const updateUrl = (date: Date, propId: string, lId: string, view: string) => {
-    const params = new URLSearchParams(searchParams);
+  const updateUrl = (
+    date: Date,
+    propertyId?: string,
+    leadId?: string,
+    agentId?: string,
+    view?: string
+  ) => {
+    const params = new URLSearchParams(searchParams.toString());
     params.set("month", format(date, "yyyy-MM"));
     
-    if (propId && propId !== "ALL") {
-      params.set("propertyId", propId);
+    if (propertyId && propertyId !== "ALL") {
+      params.set("propertyId", propertyId);
     } else {
       params.delete("propertyId");
     }
 
-    if (lId && lId !== "ALL") {
-      params.set("leadId", lId);
+    if (leadId && leadId !== "ALL") {
+      params.set("leadId", leadId);
     } else {
       params.delete("leadId");
+    }
+
+    if (agentId && agentId !== "ALL") {
+      params.set("agentId", agentId);
+    } else {
+      params.delete("agentId");
     }
 
     if (view && view !== (isMobile ? "listMonth" : "dayGridMonth")) {
@@ -275,6 +299,20 @@ export function CalendarView({
             indicator={(id) => events.some(e => e.meta?.leadId === id)}
           />
 
+          {/* Agent Filter (Admin Only) */}
+          {isAdmin && (
+            <FilterDialog
+              title="เลือกพนักงาน"
+              placeholder="ค้นหาชื่อพนักงาน..."
+              items={agents}
+              value={selectedAgent}
+              onSelect={handleAgentChange}
+              icon={<Users className="h-4 w-4" />}
+              allLabel="พนักงานทั้งหมด"
+              indicator={(id) => events.some(e => e.meta?.agentId === id)}
+            />
+          )}
+
           {/* View Mode Toggle */}
           <div className="flex bg-slate-100/50 gap-4 rounded-xl h-10">
             <button
@@ -347,6 +385,7 @@ export function CalendarView({
           initialDate={currentDate}
           onEventClick={setSelectedEvent}
           viewMode={viewMode}
+          editable={true}
         />
       </div>
 

@@ -3,6 +3,7 @@ import {
   getCalendarEvents,
   getCompactProperties,
   getCompactLeads,
+  getCalendarAgents,
 } from "@/features/calendar/queries";
 import { CalendarView } from "@/features/calendar/components/CalendarView";
 import { CreateEventDialog } from "@/features/calendar/components/CreateEventDialog";
@@ -25,10 +26,10 @@ export const metadata = {
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; propertyId?: string; leadId?: string; mode?: string }>;
+  searchParams: Promise<{ month?: string; propertyId?: string; leadId?: string; agentId?: string; mode?: string }>;
 }) {
   // 1. Auth Check (Protect Route)
-  const { supabase, tenantId } = await requireAuthContext();
+  const { supabase, tenantId, role, user } = await requireAuthContext();
   const config = await getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
 
@@ -48,6 +49,7 @@ export default async function CalendarPage({
   let currentMonth = now;
   const propertyId = params.propertyId;
   const leadId = params.leadId;
+  const agentId = params.agentId;
 
   if (params.month) {
     const [year, month] = params.month.split("-").map(Number);
@@ -62,11 +64,12 @@ export default async function CalendarPage({
   let queryStart = startOfWeek(yearStart, { weekStartsOn: 1 });
   let queryEnd = endOfWeek(yearEnd, { weekStartsOn: 1 });
 
-  // 4. Fetch Events, Properties, and Leads
-  const [events, properties, leads] = await Promise.all([
-    getCalendarEvents(queryStart, queryEnd, propertyId, leadId),
+  // 4. Fetch Events, Properties, Leads, and Agents (if Admin)
+  const [events, properties, leads, agents] = await Promise.all([
+    getCalendarEvents(queryStart, queryEnd, propertyId, leadId, agentId),
     getCompactProperties(),
     getCompactLeads(),
+    role === "ADMIN" ? getCalendarAgents() : Promise.resolve([]),
   ]);
 
   return (
@@ -93,7 +96,7 @@ export default async function CalendarPage({
         </div>
 
         {/* Add Appointment Button */}
-        <CreateEventDialog leads={leads} properties={properties} />
+        <CreateEventDialog leads={leads} properties={properties} events={events} />
       </div>
 
       <CalendarView
@@ -101,6 +104,9 @@ export default async function CalendarPage({
         events={events}
         properties={properties}
         leads={leads}
+        agents={agents}
+        currentUserId={user.id}
+        isAdmin={role === "ADMIN"}
       />
     </div>
   );

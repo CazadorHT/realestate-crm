@@ -7,6 +7,9 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import interactionPlugin from "@fullcalendar/interaction";
 import { CalendarEvent } from "../queries";
+import { updateEventDate } from "../actions";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import "./calendar-custom.css";
 
 interface CalendarGridProps {
@@ -14,6 +17,8 @@ interface CalendarGridProps {
   initialDate: Date;
   onEventClick: (event: CalendarEvent) => void;
   viewMode?: "dayGridMonth" | "timeGridWeek" | "listMonth";
+  editable?: boolean;
+  onEventDrop?: (event: any) => void;
 }
 
 export function CalendarGrid({
@@ -21,8 +26,11 @@ export function CalendarGrid({
   initialDate,
   onEventClick,
   viewMode = "dayGridMonth",
+  editable = false,
+  onEventDrop,
 }: CalendarGridProps) {
   const calendarRef = useRef<FullCalendar>(null);
+  const router = useRouter();
 
   // Sync viewMode when it changes from props
   useEffect(() => {
@@ -102,6 +110,28 @@ export function CalendarGrid({
         height="auto"
         stickyHeaderDates={true}
         handleWindowResize={true}
+        editable={editable}
+        eventDrop={async (info) => {
+          const { event } = info;
+          try {
+            const result = await updateEventDate(
+              event.id, 
+              event.startStr, 
+              event.extendedProps.type
+            );
+            if (result.success) {
+               toast.success("เลื่อนวันนัดหมายเรียบร้อย");
+            }
+          } catch (error) {
+            info.revert();
+            toast.error("ไม่สามารถเลื่อนวันนัดหมายได้");
+          }
+        }}
+        eventResize={async (info) => {
+           // We only support resizing for deals if they have duration, 
+           // but for simple activities we just revert.
+           info.revert();
+        }}
       />
     </div>
   );

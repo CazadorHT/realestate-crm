@@ -30,13 +30,19 @@ import { PropertyCombobox } from "@/components/PropertyCombobox";
 import { ActivityTypePicker, ActivityType } from "@/components/calendar/ActivityTypePicker";
 import { TimePicker } from "@/components/calendar/TimePicker";
 
+import { CalendarEvent } from "@/features/calendar/queries";
+import { AlertCircle } from "lucide-react";
+
 interface CreateEventDialogProps {
-  // We keep props for now but Lead/Property Combobox will also search dynamically
   leads?: { id: string; full_name: string }[];
   properties?: { id: string; title: string }[];
+  events?: CalendarEvent[];
 }
 
 export function CreateEventDialog({
+  leads = [],
+  properties = [],
+  events = [],
 }: CreateEventDialogProps) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
@@ -48,6 +54,20 @@ export function CreateEventDialog({
   const [propertyId, setPropertyId] = useState<string | null>("none");
   const [activityType, setActivityType] = useState<ActivityType>("VIEWING");
   const [time, setTime] = useState<string>("");
+
+  // Conflict Detection Logic
+  const hasConflict = events.some(e => {
+    if (!date || !time) return false;
+    const eventDate = new Date(e.start);
+    const sameDay = format(eventDate, "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
+    const sameTime = e.start.includes(time) || (e.end && e.end.includes(time));
+    
+    // Conflict if same property OR same lead at same day/time
+    const sameProperty = propertyId !== "none" && e.meta?.propertyId === propertyId;
+    const sameLead = leadId && e.meta?.leadId === leadId;
+    
+    return sameDay && sameTime && (sameProperty || sameLead);
+  });
 
   const handleSubmit = (formData: FormData) => {
     // If propertyId is "none", delete it from formData so backend doesn't try to use it as UUID
@@ -218,8 +238,17 @@ export function CreateEventDialog({
                   <Label htmlFor="time" className="flex items-center gap-2 text-slate-700 font-bold ml-1">
                     <Clock className="h-4 w-4 text-purple-500" /> เวลา <span className="text-rose-500">*</span>
                   </Label>
-                  <TimePicker name="time" value={time} onChange={setTime} required />
+                  <TimePicker value={time} onChange={setTime} />
                 </div>
+
+                {hasConflict && (
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-orange-50 border border-orange-100 text-orange-700 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-5 w-5 shrink-0" />
+                    <div className="text-xs font-semibold leading-relaxed">
+                       คำเตือน: มีนัดหมายอื่นในช่วงเวลานี้แล้วสำหรับทรัพย์สินหรือลูกค้าที่เลือก
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

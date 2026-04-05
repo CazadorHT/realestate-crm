@@ -33,6 +33,7 @@ export type CalendarEvent = {
     endDate?: string;
     leadName?: string;
     start?: string;
+    agentId?: string;
   };
   color?: string; // For UI
 };
@@ -46,6 +47,7 @@ export const getCalendarEvents = cache(async (
   endDate: Date,
   propertyId?: string,
   leadId?: string,
+  agentId?: string,
 ): Promise<CalendarEvent[]> => {
   const { supabase, tenantId, role } = await requireAuthContext();
   const config = await getSystemConfig();
@@ -67,6 +69,7 @@ export const getCalendarEvents = cache(async (
       lead_id,
       activity_type,
       note,
+      created_by,
       leads!inner ( full_name, tenant_id ),
       property_id,
       properties ( title, images:property_images(image_url) )
@@ -85,6 +88,10 @@ export const getCalendarEvents = cache(async (
 
   if (leadId && leadId !== "ALL") {
     viewingsQuery = viewingsQuery.eq("lead_id", leadId);
+  }
+
+  if (agentId && agentId !== "ALL") {
+    viewingsQuery = viewingsQuery.eq("created_by", agentId);
   }
 
   const { data: viewings } = await viewingsQuery;
@@ -123,6 +130,7 @@ export const getCalendarEvents = cache(async (
           propertyId: v.property_id,
           propertyImage: v.properties?.images?.[0]?.image_url || null,
           start: v.created_at,
+          agentId: v.created_by,
         },
       });
     });
@@ -142,6 +150,7 @@ export const getCalendarEvents = cache(async (
       deals!inner (
          property_id,
          tenant_id,
+         created_by,
          property:properties (
            title,
            images:property_images(image_url)
@@ -165,6 +174,10 @@ export const getCalendarEvents = cache(async (
     contractStartQuery = contractStartQuery.eq("deals.lead_id", leadId);
   }
 
+  if (agentId && agentId !== "ALL") {
+    contractStartQuery = contractStartQuery.eq("deals.created_by", agentId);
+  }
+
   const { data: contractStarts } = await contractStartQuery;
 
   if (contractStarts) {
@@ -186,6 +199,7 @@ export const getCalendarEvents = cache(async (
           rentPrice: c.rent_price,
           startDate: c.start_date,
           endDate: c.end_date,
+          agentId: c.deals?.created_by,
         },
       });
     });
@@ -205,6 +219,7 @@ export const getCalendarEvents = cache(async (
       deals!inner (
          property_id,
          tenant_id,
+         created_by,
          property:properties (
            title,
            images:property_images(image_url)
@@ -228,6 +243,10 @@ export const getCalendarEvents = cache(async (
     contractsQuery = contractsQuery.eq("deals.lead_id", leadId);
   }
 
+  if (agentId && agentId !== "ALL") {
+    contractsQuery = contractsQuery.eq("deals.created_by", agentId);
+  }
+
   const { data: contracts } = await contractsQuery;
 
   if (contracts) {
@@ -249,6 +268,7 @@ export const getCalendarEvents = cache(async (
           rentPrice: c.rent_price,
           startDate: c.start_date,
           endDate: c.end_date,
+          agentId: c.deals?.created_by,
         },
       });
     });
@@ -269,6 +289,7 @@ export const getCalendarEvents = cache(async (
       deals!inner (
          property_id,
          tenant_id,
+         created_by,
          property:properties (
            title,
            images:property_images(image_url)
@@ -293,6 +314,10 @@ export const getCalendarEvents = cache(async (
     terminatedQuery = terminatedQuery.eq("deals.lead_id", leadId);
   }
 
+  if (agentId && agentId !== "ALL") {
+    terminatedQuery = terminatedQuery.eq("deals.created_by", agentId);
+  }
+
   const { data: terminated } = await terminatedQuery;
 
   if (terminated) {
@@ -314,6 +339,7 @@ export const getCalendarEvents = cache(async (
           rentPrice: c.rent_price,
           startDate: c.start_date,
           endDate: c.end_date,
+          agentId: c.deals?.created_by,
         },
       });
     });
@@ -329,6 +355,7 @@ export const getCalendarEvents = cache(async (
       deal_type,
       property_id,
       tenant_id,
+      created_by,
       property:properties (
         title,
         images:property_images(image_url)
@@ -350,6 +377,10 @@ export const getCalendarEvents = cache(async (
     dealsQuery = dealsQuery.eq("lead_id", leadId);
   }
 
+  if (agentId && agentId !== "ALL") {
+    dealsQuery = dealsQuery.eq("created_by", agentId);
+  }
+
   const { data: deals } = await dealsQuery;
 
   if (deals) {
@@ -365,6 +396,7 @@ export const getCalendarEvents = cache(async (
           type: d.deal_type,
           propertyTitle: d.property?.title,
           propertyImage: d.property?.images?.[0]?.image_url || null,
+          agentId: d.created_by,
         },
       });
     });
@@ -413,3 +445,18 @@ export const getCompactLeads = cache(async () => {
 
   return data || [];
 });
+
+export async function getCalendarAgents() {
+  const { supabase } = await requireAuthContext();
+  
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .order("full_name", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching agents:", error);
+    return [];
+  }
+  return data.map(p => ({ id: p.id, title: p.full_name || "Unknown" }));
+}
