@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { format, parse, isValid } from "date-fns";
+import { th } from "date-fns/locale";
 import { Calendar as CalendarIcon, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -13,7 +14,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
-import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export interface DatePickerProps {
   value?: string; // ISO string (YYYY-MM-DD)
@@ -28,9 +28,8 @@ export function DatePicker({
   placeholder,
   className,
 }: DatePickerProps) {
-  const { t } = useLanguage();
-  const defaultPlaceholder = "dd/mm/yyyy";
-  const finalPlaceholder = placeholder || defaultPlaceholder;
+  const defaultPlaceholder = "วว/ดด/ปปปป";
+   const finalPlaceholder = placeholder || defaultPlaceholder;
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
 
@@ -101,7 +100,7 @@ export function DatePicker({
           >
             <CalendarIcon className="h-4 w-4 text-slate-400" />
             <span className="sr-only">
-              {t("common.open_calendar") || "Open calendar"}
+              เปิดปฏิทิน
             </span>
           </Button>
         </PopoverTrigger>
@@ -111,8 +110,9 @@ export function DatePicker({
             selected={date}
             onSelect={handleSelect}
             initialFocus
+            locale={th}
           />
-          <div className="flex items-center justify-between px-3 py-2 border-t bg-slate-50/50">
+          <div className="flex items-center justify-between px-3 py-2 border-t border-slate-200 bg-slate-50/50">
             <Button
               variant="ghost"
               size="sm"
@@ -122,7 +122,7 @@ export function DatePicker({
                 setOpen(false);
               }}
             >
-              {t("common.clear") || "Clear"}
+              ล้างข้อมูล
             </Button>
             <Button
               variant="ghost"
@@ -134,7 +134,7 @@ export function DatePicker({
                 setOpen(false);
               }}
             >
-              {t("common.today") || "Today"}
+              วันนี้
             </Button>
           </div>
         </PopoverContent>

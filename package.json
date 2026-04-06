@@ -90,7 +90,7 @@
     "uuid": "^11.0.5",
     "vaul": "^1.1.2",
     "xlsx": "https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz",
-    "zod": "^4.3.6"
+    "zod": "^3.23.8"
   },
   "overrides": {
     "tar": "^7.5.4",

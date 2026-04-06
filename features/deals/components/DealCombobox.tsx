@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
-type DealItem = {
+export type DealItem = {
   id: string;
   property_title: string;
   lead_name: string;
@@ -89,6 +89,7 @@ export function DealCombobox({
           x.property?.images?.[0]?.image_url,
         location:
           x.property?.popular_area || x.property?.province || "ไม่ระบุทำเล",
+        tenant_id: x.tenant_id,
       }));
 
       if (nextPage === 1) {
