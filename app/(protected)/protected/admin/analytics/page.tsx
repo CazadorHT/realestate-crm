@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { isAdmin } from "@/lib/auth-shared";
@@ -19,39 +19,73 @@ import {
   Building2,
   Eye,
   TrendingUp,
-  MapPin,
   ArrowUpRight,
-  TrendingDown,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { AnalyticsFilters } from "./components/AnalyticsFilters";
+import { ExportButton } from "./components/ExportButton";
+import { PrintReportButton } from "./components/PrintReportButton";
 import { ResetViewsButton } from "./components/ResetViewsButton";
+import { AnalyticsCharts } from "./components/AnalyticsCharts";
+import { QuickInsights } from "./components/QuickInsights";
+import { AnalyticsSkeleton } from "./components/AnalyticsSkeleton";
+import { AnalyticsTrend } from "./components/AnalyticsTrend";
+import { AreaHeatmap } from "./components/AreaHeatmap";
+import { AnalyticsFunnel } from "./components/AnalyticsFunnel";
+import { AgentPerformance } from "./components/AgentPerformance";
+import { PrintStyles } from "./components/PrintStyles";
+import { AnalyticsError } from "./components/AnalyticsError";
+import Image from "next/image";
 import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 
 export default async function AnalyticsPage(props: {
   searchParams: Promise<{ range?: string; page?: string }>;
 }) {
-  const searchParams = await props.searchParams;
   const profile = await getCurrentProfile();
   if (!profile || !isAdmin(profile.role)) {
     return redirect("/protected");
   }
 
-  const tenantId = await getActiveTenantCookie();
-  const range = searchParams.range;
-  const days = range && range !== "all" ? parseInt(range) : undefined;
-  const page = Number(searchParams.page) || 1;
-  const pageSize = 10;
+  return (
+    <Suspense fallback={<AnalyticsSkeleton />}>
+      <AnalyticsContent searchParams={props.searchParams} />
+    </Suspense>
+  );
+}
 
-  const { topProperties, topPropertiesCount, topAreas, totalViews } = 
-    await getAnalyticsStats(tenantId, days, page, pageSize);
+async function AnalyticsContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string; page?: string; listingType?: string; area?: string }>;
+}) {
+  const params = await searchParams;
+  const tenantId = await getActiveTenantCookie();
+  const range = params.range;
+  const days = range && range !== "all" ? parseInt(range) : undefined;
+  const page = Number(params.page) || 1;
+  const pageSize = 10;
+  const listingType = params.listingType === "all" ? undefined : params.listingType;
+  const area = params.area === "all" ? undefined : params.area;
+
+  const { 
+    topProperties, 
+    topPropertiesCount, 
+    topAreas, 
+    totalViews,
+    listingTypeDistribution,
+    propertyTypeDistribution,
+    viewsTrend,
+    agentPerformance,
+    funnel,
+    error
+  } = await getAnalyticsStats(tenantId, days, page, pageSize, listingType, undefined, area);
 
   return (
+    <>
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl md:text-3xl font-medium tracking-tight text-slate-900">
             ข้อมูลวิเคราะห์ (Analytics)
@@ -60,161 +94,298 @@ export default async function AnalyticsPage(props: {
             ภาพรวมการเข้าชมทรัพย์สินและแนวโน้มตลาดย่านต่างๆ
           </p>
         </div>
-        <div className="flex items-center gap-2 w-full md:w-auto self-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 items-center gap-2 w-full lg:w-auto self-end">
           <AnalyticsFilters />
+          <PrintReportButton />
+          <ExportButton 
+            topProperties={topProperties} 
+            topAreas={topAreas} 
+            totalViews={totalViews} 
+          />
           <ResetViewsButton />
         </div>
       </div>
 
+      {error && <AnalyticsError message={error} />}
+
       {/* Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        <Card className="border-none shadow-sm bg-linear-to-br from-blue-500 to-blue-600 text-white">
-          <CardHeader className="pb-2">
+        <Card className="border-none shadow-sm bg-linear-to-br from-blue-600 to-blue-700 text-white relative overflow-hidden group">
+          <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12 transition-transform group-hover:scale-110 duration-500">
+             <Eye className="h-32 w-32" />
+          </div>
+          <CardHeader className="pb-2 relative z-10">
             <CardDescription className="text-blue-100 flex items-center gap-2">
               <Eye className="h-4 w-4" />
-              ยอดเข้าชมรวม (Top-Level)
+              ยอดเข้าชมทั้งหมด
             </CardDescription>
             <CardTitle className="text-3xl md:text-4xl font-semibold text-white">
-              {totalViews.toLocaleString()} <span className="text-blue-50 text-xs font-normal tracking-normal">ยอดเข้าชมรวม</span>
+              {totalViews.toLocaleString()} <span className="text-blue-50 text-xs font-normal tracking-normal uppercase">Views</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-xs text-blue-100/80 uppercase tracking-wider">
-              อัปเดตแบบ Real-time
+          <CardContent className="relative z-10">
+            <p className="text-[10px] text-blue-100/80 uppercase tracking-widest font-bold">
+              อัปเดตแบบ Real-time • {days ? `ย้อนหลัง ${days} วัน` : "ทั้งหมด"}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-white">
+        <Card className="border-none shadow-sm bg-white overflow-hidden group">
           <CardHeader className="pb-2">
             <CardDescription className="text-slate-500 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-green-500" />
               ย่านยอดนิยม
             </CardDescription>
-            <CardTitle className="text-xl md:text-2xl font-medium truncate">
+            <CardTitle className="text-xl md:text-2xl font-medium truncate text-slate-900 group-hover:text-blue-600 transition-colors">
               {topAreas[0]?.name || "ไม่มีข้อมูล"}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-400 font-medium">
               {topAreas[0]?.view_count
-                ? `${topAreas[0].view_count.toLocaleString()} Views`
+                ? `${topAreas[0].view_count.toLocaleString()} Views (+ยอดการค้นหาสูงสุด)`
                 : "-"}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-white sm:col-span-2 lg:col-span-1">
+        <Card className="border-none shadow-sm bg-white sm:col-span-2 lg:col-span-1 group">
           <CardHeader className="pb-2">
             <CardDescription className="text-slate-500 flex items-center gap-2">
               <Building2 className="h-4 w-4 text-orange-500" />
               ทรัพย์ที่ถูกเปิดดูมากที่สุด
             </CardDescription>
-            <CardTitle className="text-lg md:text-xl font-medium line-clamp-1">
+            <CardTitle className="text-lg md:text-xl font-medium line-clamp-1 text-slate-900 group-hover:text-blue-600 transition-colors">
               {topProperties[0]?.title || "ไม่มีข้อมูล"}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-400 font-medium">
               {topProperties[0]?.view_count
-                ? `${topProperties[0].view_count.toLocaleString()} Views`
+                ? `${topProperties[0].view_count.toLocaleString()} Views (ดีลที่กำลังเป็นกระแส)`
                 : "-"}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-        {/* Top Properties Table */}
-        <Card className="border-none shadow-sm overflow-hidden flex flex-col">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4 md:p-6">
+      {/* Quick Insights Section */}
+      <QuickInsights 
+        topAreas={topAreas} 
+        listingTypeDist={listingTypeDistribution} 
+        propertyTypeDist={propertyTypeDistribution}
+        totalViews={totalViews}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AnalyticsFunnel data={funnel} />
+        <AgentPerformance data={agentPerformance} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        <AnalyticsTrend data={viewsTrend} />
+        <AnalyticsCharts 
+          topAreas={topAreas} 
+          listingTypeDist={listingTypeDistribution} 
+          propertyTypeDist={propertyTypeDistribution} 
+        />
+
+        <AreaHeatmap data={topAreas} />
+      </div>
+
+      {/* Top Properties Table */}
+      <Card className="border-none shadow-soft overflow-hidden flex flex-col bg-white">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4 md:p-6">
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle className="text-lg">
-                  ทรัพย์ที่มีการเข้าชมสูงสุด
+                <CardTitle className="text-lg font-bold text-slate-800">
+                  อันดับทรัพย์ที่มีการเข้าชมสูงสุด
                 </CardTitle>
-                <CardDescription className="text-xs md:text-sm">
-                  จัดอันดับตามจำนวนการเปิดดู (Views)
+                <CardDescription className="text-xs md:text-sm text-slate-500">
+                  วิเคราะห์ผลตอบรับรายทรัพย์สิน (Performance by Property)
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-0 flex-1 overflow-hidden">
             <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
-              <table className="w-full text-sm text-left">
+              {/* Mobile View (Card List) */}
+              <div className="xl:hidden divide-y divide-slate-100">
+                {topProperties.map((prop: PropertyAnalytics) => {
+                  const coverImage = prop.property_images?.find((img) => img.is_cover)?.image_url || prop.property_images?.[0]?.image_url;
+                  
+                  return (
+                    <div key={prop.id} className="p-4 hover:bg-slate-50/50 transition-colors flex flex-col gap-3">
+                      <div className="flex gap-4">
+                        <div className="relative h-16 w-20 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200 shadow-sm">
+                          {coverImage ? (
+                            <Image
+                              src={coverImage}
+                              alt={prop.title}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-400">
+                              <Building2 className="h-6 w-6" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 flex flex-col min-w-0">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="flex flex-col gap-0.5 min-w-0">
+                              <Link 
+                                href={`/protected/properties/${prop.id}`}
+                                className="font-bold text-sm text-slate-900 line-clamp-2 hover:text-blue-600 transition-colors"
+                              >
+                                {prop.title}
+                              </Link>
+                              <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase">
+                                ID: {prop.id.slice(0, 8)}
+                              </span>
+                            </div>
+                            <span
+                              className={cn(
+                                "px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap border",
+                                prop.listing_type === "SALE"
+                                  ? "bg-blue-50 text-blue-600 border-blue-100"
+                                  : prop.listing_type === "RENT"
+                                    ? "bg-green-50 text-green-600 border-green-100"
+                                    : "bg-amber-50 text-amber-600 border-amber-100",
+                              )}
+                            >
+                              {LISTING_TYPE_LABELS[
+                                prop.listing_type as keyof typeof LISTING_TYPE_LABELS
+                              ] || prop.listing_type}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between mt-auto pt-2">
+                            <div className="flex items-center gap-2 bg-slate-50 px-2.5 py-1 rounded-lg">
+                              <Eye className="h-3.5 w-3.5 text-blue-500" />
+                              <span className="text-sm font-bold text-slate-900">
+                                {prop.view_count.toLocaleString()}
+                              </span>
+                              <span className="text-[10px] text-slate-400 uppercase font-bold">Views</span>
+                            </div>
+                            <Link
+                              href={`/protected/properties/${prop.id}`}
+                              className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50/50 hover:bg-blue-50 px-2.5 py-1.5 rounded-lg transition-all"
+                            >
+                              จัดการ <ArrowUpRight className="h-2.5 w-2.5" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {topProperties.length === 0 && (
+                  <div className="px-6 py-10 text-center text-slate-400 text-sm italic">
+                    — ยังไม่มีข้อมูลการเข้าชมในระบบขณะนี้ —
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop Table View */}
+              <table className="hidden xl:table w-full text-sm text-left">
                 <thead className="text-[10px] md:text-xs text-slate-500 uppercase bg-slate-50/50 sticky top-0 z-10 backdrop-blur-sm">
                   <tr>
-                    <th className="px-4 md:px-6 py-3 md:py-4 font-semibold whitespace-nowrap">
+                    <th className="px-4 md:px-6 py-3 md:py-4 font-bold whitespace-nowrap">
+                      รูปภาพ
+                    </th>
+                    <th className="px-4 md:px-6 py-3 md:py-4 font-bold whitespace-nowrap">
                       ทรัพย์สิน
                     </th>
-                    <th className="hidden md:table-cell px-6 py-4 font-semibold">
+                    <th className="hidden md:table-cell px-6 py-4 font-bold">
                       ประเภท
                     </th>
-                    <th className="px-4 md:px-6 py-3 md:py-4 font-semibold text-right">
+                    <th className="px-4 md:px-6 py-3 md:py-4 font-bold text-right">
                       จำนวนวิว
                     </th>
-                    <th className="px-4 md:px-6 py-3 md:py-4 font-semibold text-right">
+                    <th className="px-4 md:px-6 py-3 md:py-4 font-bold text-right">
                       จัดการ
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {topProperties.map((prop: PropertyAnalytics) => (
-                    <tr
-                      key={prop.id}
-                      className="hover:bg-slate-50/50 transition-colors"
-                    >
-                      <td className="px-4 md:px-6 py-3 md:py-4">
-                        <div className="flex flex-col min-w-[150px] max-w-[250px]">
-                          <span className="font-normal  text-slate-900 truncate">
-                            {prop.title}
+                  {topProperties.map((prop: PropertyAnalytics) => {
+                    const coverImage = prop.property_images?.find((img) => img.is_cover)?.image_url || prop.property_images?.[0]?.image_url;
+
+                    return (
+                      <tr
+                        key={prop.id}
+                        className="hover:bg-slate-50/50 transition-colors group"
+                      >
+                        <td className="px-4 md:px-6 py-3 md:py-4">
+                          <div className="relative h-12 w-16 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shadow-sm transition-transform group-hover:scale-105">
+                            {coverImage ? (
+                              <Image
+                                src={coverImage}
+                                alt={prop.title}
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                <Building2 className="h-5 w-5" />
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 md:px-6 py-3 md:py-4">
+                          <div className="flex flex-col min-w-[150px] max-w-[250px]">
+                            <span className="font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+                              {prop.title}
+                            </span>
+                            <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">
+                              {prop.id.slice(0, 8)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="hidden md:table-cell px-6 py-4">
+                          <span
+                            className={cn(
+                              "px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap border",
+                              prop.listing_type === "SALE"
+                                ? "bg-blue-50 text-blue-600 border-blue-100"
+                                : prop.listing_type === "RENT"
+                                  ? "bg-green-50 text-green-600 border-green-100"
+                                  : "bg-amber-50 text-amber-600 border-amber-100",
+                            )}
+                          >
+                            {LISTING_TYPE_LABELS[
+                              prop.listing_type as keyof typeof LISTING_TYPE_LABELS
+                            ] || prop.listing_type}
                           </span>
-                          <span className="text-[10px] text-slate-400 uppercase tracking-tighter">
-                            {prop.id.slice(0, 8)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="hidden md:table-cell px-6 py-4">
-                        <span
-                          className={cn(
-                            "px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap",
-                            prop.listing_type === "SALE"
-                              ? "bg-blue-50 text-blue-600 border border-blue-100"
-                              : prop.listing_type === "RENT"
-                                ? "bg-green-50 text-green-600 border border-green-100"
-                                : "bg-amber-50 text-amber-600 border border-amber-100",
-                          )}
-                        >
-                          {LISTING_TYPE_LABELS[
-                            prop.listing_type as keyof typeof LISTING_TYPE_LABELS
-                          ] || prop.listing_type}
-                        </span>
-                      </td>
-                      <td className="px-4 md:px-6 py-3 md:py-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <span className="font-semibold text-slate-900">
-                            {prop.view_count.toLocaleString()}
-                          </span>
-                          <ArrowUpRight className="h-3 w-3 text-blue-500 shrink-0" />
-                        </div>
-                      </td>
-                      <td className="px-4 md:px-6 py-3 md:py-4 text-right">
-                        <Link
-                          href={`/protected/properties/${prop.id}`}
-                          className="text-blue-600 hover:text-blue-800 font-medium text-xs md:text-sm whitespace-nowrap"
-                        >
-                          แก้ไข
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="px-4 md:px-6 py-3 md:py-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <span className="font-bold text-slate-900 text-base">
+                              {prop.view_count.toLocaleString()}
+                            </span>
+                            <div className="h-5 w-px bg-slate-100 mx-1 hidden md:block" />
+                            <span className="text-[10px] text-slate-400 font-bold uppercase hidden md:inline">Views</span>
+                          </div>
+                        </td>
+                        <td className="px-4 md:px-6 py-3 md:py-4 text-right">
+                          <Link
+                            href={`/protected/properties/${prop.id}`}
+                            className="text-blue-600 hover:text-blue-800 font-bold text-xs md:text-sm whitespace-nowrap bg-blue-50/50 hover:bg-blue-50 px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1"
+                          >
+                            แก้ไข <ArrowUpRight className="h-3 w-3" />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {topProperties.length === 0 && (
                     <tr>
                       <td
-                        colSpan={4}
-                        className="px-6 py-10 text-center text-slate-400"
+                        colSpan={5}
+                        className="px-6 py-10 text-center text-slate-400 italic"
                       >
-                        ยังไม่มีข้อมูลการเข้าชม
+                        — ยังไม่มีข้อมูลการเข้าชมในระบบขณะนี้ —
                       </td>
                     </tr>
                   )}
@@ -232,65 +403,9 @@ export default async function AnalyticsPage(props: {
             </div>
           </CardContent>
         </Card>
-
-        {/* Popular Areas Section */}
-        <Card className="border-none shadow-sm flex flex-col">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4 md:p-6">
-            <CardTitle className="text-lg">
-              อันดับย่านที่คนให้ความสนใจ
-            </CardTitle>
-            <CardDescription className="text-xs md:text-sm">
-              วิเคราะห์จากจำนวนวิวทรัพย์ในย่านนั้นๆ และความต้องการของลูกค้า
-              (Leads)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 md:p-6 flex-1 overflow-hidden">
-            <div className="max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200 space-y-5 md:space-y-6">
-              {topAreas.map((area: AreaAnalytics, idx: number) => (
-                <div key={area.name} className="flex flex-col gap-2">
-                  <div className="flex justify-between items-end">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center justify-center w-5 h-5 md:w-6 md:h-6 rounded bg-slate-100 text-[9px] md:text-[10px] font-bold text-slate-500">
-                        {idx + 1}
-                      </div>
-                      <span className="font-medium text-sm md:text-base text-slate-800 truncate max-w-[120px] md:max-w-none">
-                        {area.name}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-semibold text-slate-900">
-                        {area.view_count.toLocaleString()}
-                      </span>
-                      <span className="text-[10px] text-slate-400 ml-1 whitespace-nowrap">
-                        Views
-                      </span>
-                    </div>
-                  </div>
-                  <div className="h-1.5 md:h-2 w-full bg-slate-50 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500 rounded-full"
-                      style={{
-                        width: `${(area.view_count / (topAreas[0]?.view_count || 1)) * 100}%`,
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center gap-4 text-[10px] text-slate-500">
-                    <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      {area.leads_count} Leads สนใจย่านนี้
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {topAreas.length === 0 && (
-                <div className="py-10 text-center text-slate-400">
-                  ยังไม่มีข้อมูลย่านต่างๆ
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
+
+    <PrintStyles />
+    </>
   );
 }

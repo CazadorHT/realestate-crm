@@ -1,0 +1,38 @@
+"use client";
+
+import { Printer, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { toast } from "sonner";
+
+export function PrintReportButton() {
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  const handlePrint = () => {
+    setIsPrinting(true);
+    toast.info("กำลังจัดเตรียมรายงาน PDF...", { icon: <Printer className="h-4 w-4" /> });
+    
+    // Brief delay to ensure UI handles the print state if needed
+    setTimeout(() => {
+      window.print();
+      setIsPrinting(false);
+    }, 500);
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handlePrint}
+      disabled={isPrinting}
+      className="flex items-center justify-center gap-2 w-full md:w-auto bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all font-medium py-1.5 h-9 rounded-xl shadow-sm"
+    >
+      {isPrinting ? (
+        <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+      ) : (
+        <Printer className="h-4 w-4 text-blue-500" />
+      )}
+      <span>ส่งรายงาน (PDF)</span>
+    </Button>
+  );
+}

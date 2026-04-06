@@ -2004,6 +2004,35 @@ export type Database = {
           },
         ]
       }
+      property_views_log: {
+        Row: {
+          created_at: string | null
+          id: string
+          property_id: string | null
+          tenant_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          property_id?: string | null
+          tenant_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          property_id?: string | null
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_views_log_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rent_notification_history: {
         Row: {
           error_message: string | null
@@ -2699,6 +2728,16 @@ export type Database = {
       }
     }
     Functions: {
+      get_analytics_summary_v2: {
+        Args: {
+          p_area?: string
+          p_days?: number
+          p_listing_type?: string
+          p_property_type?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       get_isolation_setting: { Args: { setting_key: string }; Returns: boolean }
       get_user_tenants: {
         Args: never
