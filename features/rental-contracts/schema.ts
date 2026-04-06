@@ -16,19 +16,26 @@ const contractBaseSchema = z.object({
     .string()
     .min(1, "กรุณาระบุวันที่สิ้นสุดสัญญา")
     .refine((val) => !isNaN(Date.parse(val)), "รูปแบบวันที่ไม่ถูกต้อง"),
-  rent_price: z.coerce
-    .number({ message: "กรุณาระบุตัวเลขที่ถูกต้อง" })
-    .min(0, "ราคาต้องไม่ต่ำกว่า 0"),
-  deposit_amount: z.coerce
-    .number({ message: "กรุณาระบุตัวเลขที่ถูกต้อง" })
-    .min(0, "เงินประกันต้องไม่ต่ำกว่า 0")
-    .optional()
-    .or(z.literal("")),
-  advance_payment_amount: z.coerce
-    .number({ message: "กรุณาระบุตัวเลขที่ถูกต้อง" })
-    .min(0, "เงินล่วงหน้าต้องไม่ต่ำกว่า 0")
-    .optional()
-    .or(z.literal("")),
+  rent_price: z.preprocess(
+    (v) => (v === "" ? 0 : v),
+    z.coerce.number({ message: "กรุณาระบุตัวเลขที่ถูกต้อง" }).min(0, "ราคาต้องไม่ต่ำกว่า 0")
+  ),
+  deposit_amount: z.preprocess(
+    (v) => (v === "" ? null : v),
+    z.coerce
+      .number({ message: "กรุณาระบุตัวเลขที่ถูกต้อง" })
+      .min(0, "เงินประกันต้องไม่ต่ำกว่า 0")
+      .optional()
+      .nullable()
+  ),
+  advance_payment_amount: z.preprocess(
+    (v) => (v === "" ? null : v),
+    z.coerce
+      .number({ message: "กรุณาระบุตัวเลขที่ถูกต้อง" })
+      .min(0, "เงินล่วงหน้าต้องไม่ต่ำกว่า 0")
+      .optional()
+      .nullable()
+  ),
   lease_term_months: z.coerce
     .number({ message: "กรุณาระบุจำนวนเดือน" })
     .min(1, "ระยะเวลาสัญญาขั้นต่ำ 1 เดือน"),
