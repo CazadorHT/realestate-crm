@@ -31,3 +31,20 @@ export function formatDateThai(date: string | Date | null | undefined): string {
   if (isNaN(d.getTime())) return "-";
   return format(d, "d MMMM yyyy", { locale: th });
 }
+
+export function formatPercent(val: number): string {
+  const sign = val >= 0 ? "+" : "";
+  return `${sign}${val.toFixed(1)}%`;
+}
+
+export function formatTimeAgo(dateString: string): string {
+  const created = new Date(dateString);
+  const diffMs = new Date().getTime() - created.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+
+  if (diffMins < 1) return "เมื่อครู่นี้";
+  if (diffMins < 60) return `${diffMins} นาทีที่แล้ว`;
+  if (diffHours < 24) return `${diffHours} ชม. ที่แล้ว`;
+  return formatDate(dateString);
+}
