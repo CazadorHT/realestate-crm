@@ -23,7 +23,7 @@ export type {
   QuickReplyItem,
   QuickReply,
 };
-import { size } from "zod";
+
 
 interface PropertyForFlex {
   id: string;
