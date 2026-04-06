@@ -1,6 +1,4 @@
-"use server";
-
-export * from "./queries/types";
+export type * from "./queries/types";
 export * from "./queries/public";
 export * from "./queries/protected";
 export * from "./queries/table";

@@ -49,12 +49,13 @@ import {
   updateRentNotificationRule,
 } from "../actions";
 import { useRouter } from "next/navigation";
+import { LINEGroup, SimpleProperty } from "../types";
 
 interface AddRuleDialogProps {
-  groups: any[];
-  properties: any[];
+  groups: LINEGroup[];
+  properties: SimpleProperty[];
   tenantId?: string | null;
-  existingRule?: any;
+  existingRule?: any; // Kept as any for now to avoid complex query-type mapping, but could be RentNotificationRule
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -149,7 +150,7 @@ export function AddRuleDialog({
         onOpenChange={updateOpen}
         trigger={
           !isEdit ? (
-            <Button className="gap-2 bg-linear-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-md rounded-xl h-11 font-bold">
+            <Button className="gap-2 bg-white text-slate-600 hover:text-blue-600 hover:bg-white! hover:scale-105! shadow-md rounded-xl h-11 font-bold">
               <Plus className="w-4 h-4" />
               สร้างการแจ้งเตือน
             </Button>
@@ -157,7 +158,7 @@ export function AddRuleDialog({
         }
         title={
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+            <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
               <Bell className="w-5 h-5" />
             </div>
             <span>{isEdit ? "แก้ไขการแจ้งเตือน" : "สร้างการแจ้งเตือนใหม่"}</span>
@@ -177,7 +178,7 @@ export function AddRuleDialog({
             <Button
               type="button"
               onClick={form.handleSubmit(onSubmit)}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-emerald-500/10 order-1 sm:order-2"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-blue-500/10 order-1 sm:order-2"
             >
               {isEdit ? "บันทึกการเปลี่ยนแปลง" : "สร้างการแจ้งเตือน"}
             </Button>
@@ -185,7 +186,7 @@ export function AddRuleDialog({
         }
       >
         <Form {...form}>
-          <form className="space-y-6 py-4">
+          <form className="space-y-6 py-4 px-6">
             {/* 1. Property Select (Combobox) */}
             <FormField
               control={form.control}
@@ -233,7 +234,7 @@ export function AddRuleDialog({
                               >
                                 <Check
                                   className={cn(
-                                    "mr-2 h-4 w-4 text-emerald-600",
+                                    "mr-2 h-4 w-4 text-blue-600",
                                     property.id === field.value
                                       ? "opacity-100"
                                       : "opacity-0"

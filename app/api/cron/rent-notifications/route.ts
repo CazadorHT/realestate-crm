@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendLineNotification } from "@/lib/line";
+import { generateRentNotificationFlex, getLocaleDateFormat } from "@/features/rent-notifications/utils";
 
 // CRON JOB Should be called daily
 // e.g. /api/cron/rent-notifications?secret=YOUR_CRON_SECRET
@@ -151,184 +152,34 @@ export async function GET(req: NextRequest) {
         };
 
         const lang = (rule.language as "th" | "en" | "cn") || "th";
-        const content = t[lang];
+        const dateFormat = getLocaleDateFormat(lang);
 
         // Format Date based on locale
-        const monthYear = today.toLocaleDateString(content.dateFormat, {
+        const monthYear = today.toLocaleDateString(dateFormat, {
           month: "long",
           year: "numeric",
         });
 
-        const contractEndDate = new Date(
-          activeContract.end_date,
-        ).toLocaleDateString(content.dateFormat, {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        });
+        const contractEndDate = activeContract.end_date
+          ? new Date(activeContract.end_date).toLocaleDateString(dateFormat, {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
+          : "-";
 
-        const message = {
-          type: "flex",
-          altText: `${content.alertTitle}: ${propertyName}`,
-          contents: {
-            type: "bubble",
-            header: {
-              type: "box",
-              layout: "vertical",
-              backgroundColor: "#2E7D32", // Green for real notifications
-              paddingAll: "lg",
-              contents: [
-                {
-                  type: "text",
-                  text: content.alertTitle,
-                  weight: "bold",
-                  color: "#FFFFFF",
-                  size: "md",
-                },
-              ],
-            },
-            hero: {
-              type: "image",
-              url: coverImageUrl,
-              size: "full",
-              aspectRatio: "20:13",
-              aspectMode: "cover",
-            },
-            body: {
-              type: "box",
-              layout: "vertical",
-              spacing: "md",
-              contents: [
-                {
-                  type: "text",
-                  text: propertyName,
-                  weight: "bold",
-                  size: "md",
-                  wrap: true,
-                  color: "#333333",
-                },
-                // Property Specs
-                {
-                  type: "box",
-                  layout: "horizontal",
-                  margin: "sm",
-                  contents: [
-                    {
-                      type: "text",
-                      text: `🛏️ ${property?.bedrooms || "-"}`,
-                      size: "xs",
-                      color: "#888888",
-                      flex: 1,
-                    },
-                    {
-                      type: "text",
-                      text: `🚿 ${property?.bathrooms || "-"}`,
-                      size: "xs",
-                      color: "#888888",
-                      flex: 1,
-                    },
-                    {
-                      type: "text",
-                      text: `📏 ${property?.size_sqm || "-"} ${content.specs.sqm}`,
-                      size: "xs",
-                      color: "#888888",
-                      flex: 2,
-                    },
-                  ],
-                },
-                {
-                  type: "separator",
-                  margin: "md",
-                },
-                {
-                  type: "box",
-                  layout: "vertical",
-                  margin: "md",
-                  spacing: "sm",
-                  contents: [
-                    {
-                      type: "box",
-                      layout: "baseline",
-                      contents: [
-                        {
-                          type: "text",
-                          text: content.amountDue,
-                          color: "#888888",
-                          size: "sm",
-                          flex: 2,
-                        },
-                        {
-                          type: "text",
-                          text: price,
-                          weight: "bold",
-                          color: "#E53935",
-                          size: "xl",
-                          flex: 4,
-                          align: "end",
-                        },
-                      ],
-                    },
-                    {
-                      type: "box",
-                      layout: "baseline",
-                      margin: "md",
-                      contents: [
-                        {
-                          type: "text",
-                          text: content.forMonth,
-                          color: "#888888",
-                          size: "sm",
-                          flex: 2,
-                        },
-                        {
-                          type: "text",
-                          text: monthYear,
-                          color: "#333333",
-                          size: "sm",
-                          flex: 4,
-                          align: "end",
-                        },
-                      ],
-                    },
-                    {
-                      type: "box",
-                      layout: "baseline",
-                      contents: [
-                        {
-                          type: "text",
-                          text: content.contractEnds,
-                          color: "#888888",
-                          size: "sm",
-                          flex: 2,
-                        },
-                        {
-                          type: "text",
-                          text: contractEndDate,
-                          color: "#333333",
-                          size: "sm",
-                          flex: 4,
-                          align: "end",
-                        },
-                      ],
-                    },
-                  ],
-                },
-                {
-                  type: "separator",
-                  margin: "md",
-                },
-                {
-                  type: "text",
-                  text: content.footer,
-                  size: "xs",
-                  color: "#999999",
-                  wrap: true,
-                  margin: "md",
-                },
-              ],
-            },
-          },
-        };
+        const message = generateRentNotificationFlex({
+          propertyName,
+          price,
+          coverImageUrl,
+          bedrooms: property?.bedrooms || "-",
+          bathrooms: property?.bathrooms || "-",
+          sizeSqm: property?.size_sqm || "-",
+          monthYear,
+          contractEndDate,
+          language: lang,
+          isTest: false,
+        });
 
         // Send to specific Group ID using existing helper logic?
         // existing `sendLineNotification` uses `push` API but default to admin or env.

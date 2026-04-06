@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { AddRuleDialog } from "@/features/rent-notifications/components/AddRuleDialog";
 
 interface RentNotificationsPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function RentNotificationsPage(
@@ -18,12 +18,14 @@ export default async function RentNotificationsPage(
   const searchParams = await props.searchParams;
   const tenantId = await getActiveTenantCookie();
   const page = Number(searchParams.page) || 1;
+  const searchTerm = searchParams.search || "";
   const pageSize = 20;
 
   const { rules, count: totalCount } = await getRentNotificationRules(
     page,
     pageSize,
     tenantId,
+    searchTerm,
   );
   const groups = await getLineGroups(tenantId);
   const properties = await getAllPropertiesSimple(tenantId);

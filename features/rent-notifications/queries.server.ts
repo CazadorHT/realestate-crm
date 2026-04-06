@@ -2,6 +2,7 @@ export async function getRentNotificationRules(
   page = 1,
   pageSize = 20,
   tenantId?: string | null,
+  search: string = "",
 ) {
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
@@ -10,7 +11,7 @@ export async function getRentNotificationRules(
   let query = supabase.from("rent_notification_rules").select(
     `
       *,
-      properties (
+      properties!inner (
         id, 
         title,
         property_images(image_url),
@@ -20,7 +21,7 @@ export async function getRentNotificationRules(
           )
         )
       ),
-      line_groups (group_id, group_name, picture_url),
+      line_groups!inner (group_id, group_name, picture_url),
       tenant:tenants (name)
     `,
     { count: "exact" },
@@ -28,6 +29,12 @@ export async function getRentNotificationRules(
 
   if (tenantId && tenantId !== "ALL") {
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  }
+
+  if (search) {
+    query = query.or(
+      `properties.title.ilike.%${search}%,line_groups.group_name.ilike.%${search}%`,
+    );
   }
 
   const { data, error, count } = await query
@@ -48,7 +55,7 @@ export async function getLineGroups(tenantId?: string | null) {
 
   let query = supabase
     .from("line_groups")
-    .select("*")
+    .select("group_id, group_name, picture_url")
     .eq("is_active", true);
 
   if (tenantId && tenantId !== "ALL") {
@@ -70,9 +77,20 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
 
-  // 1. Fetch properties with active contracts
-  let query = supabase.from("properties").select(
-    `
+  // Optimized query using NOT EXISTS to filter out properties that already have rules
+  // This is much faster than application-level filtering as the property count grows.
+  let query = (supabase as any).rpc("get_properties_without_notification_rules", {
+    p_tenant_id: tenantId === "ALL" ? null : tenantId
+  });
+
+  const { data, error } = await query;
+
+  if (error) {
+    // Fallback to manual filtering if RPC is not yet available, though we should prefer the RPC/SQL
+    console.warn("RPC get_properties_without_notification_rules failed, falling back to manual filtering:", error);
+    
+    // 1. Fetch properties with active contracts
+    let manualQuery = supabase.from("properties").select(`
       id,
       title,
       image_url:property_images(image_url),
@@ -82,58 +100,35 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
           status
         )
       )
-    `,
-  );
+    `);
 
-  if (tenantId && tenantId !== "ALL") {
-    query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+    if (tenantId && tenantId !== "ALL") {
+      manualQuery = manualQuery.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+    }
+
+    const { data: properties, error: propError } = await manualQuery
+      .eq("deals.status", "CLOSED_WIN")
+      .eq("deals.rental_contracts.status", "ACTIVE")
+      .neq("status", "ARCHIVED")
+      .order("created_at", { ascending: false });
+
+    if (propError || !properties) return [];
+
+    const { data: rules } = await supabase.from("rent_notification_rules").select("property_id");
+    const existingIds = new Set((rules || []).map(r => r.property_id));
+
+    return properties
+      .filter(p => !existingIds.has(p.id))
+      .map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        image: Array.isArray(p.image_url) && p.image_url.length > 0 ? p.image_url[0].image_url : null,
+      }));
   }
 
-  const { data: properties, error: propError } = await query
-    .eq("deals.status", "CLOSED_WIN")
-    .eq("deals.rental_contracts.status", "ACTIVE")
-    .neq("status", "ARCHIVED")
-    .order("created_at", { ascending: false });
-
-  if (propError) {
-    console.error("Error fetching properties simple:", propError);
-    return [];
-  }
-
-  // 2. Fetch existing rules to filter them out
-  let rulesQuery = supabase
-    .from("rent_notification_rules")
-    .select("property_id");
-
-  if (tenantId && tenantId !== "ALL") {
-    rulesQuery = rulesQuery.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
-  }
-
-  const { data: rules, error: rulesError } = await rulesQuery;
-
-  if (rulesError) {
-    console.error("Error fetching existing rules:", rulesError);
-    return properties.map((p: any) => ({
-      id: p.id,
-      title: p.title,
-      image:
-        Array.isArray(p.image_url) && p.image_url.length > 0
-          ? p.image_url[0].image_url
-          : null,
-    }));
-  }
-
-  const existingPropertyIds = new Set(rules.map((r) => r.property_id));
-
-  // 3. Return only properties that DON'T have a rule yet
-  return properties
-    .filter((p) => !existingPropertyIds.has(p.id))
-    .map((p: any) => ({
-      id: p.id,
-      title: p.title,
-      image:
-        Array.isArray(p.image_url) && p.image_url.length > 0
-          ? p.image_url[0].image_url
-          : null,
-    }));
+  return (data as any[] || []).map(p => ({
+    id: p.id,
+    title: p.title,
+    image: p.image_url
+  }));
 }

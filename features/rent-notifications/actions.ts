@@ -8,6 +8,7 @@ import {
 } from "./schema";
 
 import { mapDbError } from "@/lib/db-error";
+import { generateRentNotificationFlex, getLocaleDateFormat } from "./utils";
 
 export async function createRentNotificationRule(
   data: RentNotificationRuleInput,
@@ -78,6 +79,40 @@ export async function toggleRentNotificationRule(
   return updateRentNotificationRule(id, { is_active: isActive });
 }
 
+export async function deleteRentNotificationRules(ids: string[]) {
+  try {
+    const supabase = createAdminClient();
+    const { error } = await supabase
+      .from("rent_notification_rules")
+      .delete()
+      .in("id", ids);
+
+    if (error) throw error;
+    revalidatePath("/protected/rent-notifications");
+    return { success: true };
+  } catch (err: any) {
+    console.error("deleteRentNotificationRules error:", err);
+    return { success: false, message: mapDbError(err) };
+  }
+}
+
+export async function toggleRentNotificationRules(ids: string[], isActive: boolean) {
+  try {
+    const supabase = createAdminClient();
+    const { error } = await supabase
+      .from("rent_notification_rules")
+      .update({ is_active: isActive })
+      .in("id", ids);
+
+    if (error) throw error;
+    revalidatePath("/protected/rent-notifications");
+    return { success: true };
+  } catch (err: any) {
+    console.error("toggleRentNotificationRules error:", err);
+    return { success: false, message: mapDbError(err) };
+  }
+}
+
 export async function testSendRentNotification(ruleId: string) {
   // This is a manual trigger for a specific rule
   // We can reuse the logic from the cron job, or just call the LINE API directly here
@@ -94,7 +129,12 @@ export async function testSendRentNotification(ruleId: string) {
                 properties (
                   title, title_en, title_cn, rental_price, currency,
                   bedrooms, bathrooms, size_sqm,
-                  property_images (image_url, is_cover, sort_order)
+                  property_images (image_url, is_cover, sort_order),
+                  deals (
+                    rental_contracts (
+                      end_date
+                    )
+                  )
                 ),
                 line_groups (group_id)
             `,
@@ -118,180 +158,42 @@ export async function testSendRentNotification(ruleId: string) {
       ? `${property.rental_price.toLocaleString()} ${property?.currency || "THB"}`
       : "-";
 
-    // Image logic matching Inquiry notifications
     const images = property?.property_images || [];
     const coverImageUrl =
       images.find((img: any) => img.is_cover)?.image_url ||
       images[0]?.image_url ||
       "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=600";
 
-    // Localization similar to cron
-    const t = {
-      th: {
-        alertTitle: "🔔 ทดสอบแจ้งเตือน (TEST)",
-        testBody: "นี่คือข้อความทดสอบการตั้งค่าแจ้งเตือนค่าเช่า",
-        amountDue: "ยอดที่ต้องชำระ:",
-        footer: "กรุณาส่งสลิปการโอนเงินในกลุ่มนี้ได้เลยครับ 🙏",
-        specs: {
-          bed: "ห้องนอน",
-          bath: "ห้องน้ำ",
-          sqm: "ตร.ม.",
-        },
-      },
-      en: {
-        alertTitle: "🔔 Test Notification (TEST)",
-        testBody: "This is a test notification for rent payment.",
-        amountDue: "Amount Owed:",
-        footer: "Please send the transfer slip in this group. Thank you 🙏",
-        specs: {
-          bed: "Beds",
-          bath: "Baths",
-          sqm: "sqm",
-        },
-      },
-      cn: {
-        alertTitle: "🔔 测试通知 (TEST)",
-        testBody: "这是租金支付的测试通知。",
-        amountDue: "应付金额:",
-        footer: "请在此群发送转账凭证，谢谢 🙏",
-        specs: {
-          bed: "卧室",
-          bath: "浴室",
-          sqm: "平方米",
-        },
-      },
-    };
-
     const lang = (rule.language as "th" | "en" | "cn") || "th";
-    const content = t[lang];
+    const dateFormat = getLocaleDateFormat(lang);
+    
+    // Test send usually refers to the "Next" month or current month reminder
+    const monthYear = new Date().toLocaleDateString(dateFormat, {
+      month: "long",
+      year: "numeric",
+    });
 
-    const message = {
-      type: "flex",
-      altText: `${content.alertTitle}: ${propertyName}`,
-      contents: {
-        type: "bubble",
-        header: {
-          type: "box",
-          layout: "vertical",
-          backgroundColor: "#1565C0", // Darker blue for premium look
-          paddingAll: "lg",
-          contents: [
-            {
-              type: "text",
-              text: content.alertTitle,
-              weight: "bold",
-              color: "#FFFFFF",
-              size: "md",
-            },
-          ],
-        },
-        hero: {
-          type: "image",
-          url: coverImageUrl,
-          size: "full",
-          aspectRatio: "20:13",
-          aspectMode: "cover",
-        },
-        body: {
-          type: "box",
-          layout: "vertical",
-          spacing: "md",
-          contents: [
-            {
-              type: "text",
-              text: propertyName,
-              weight: "bold",
-              size: "md",
-              wrap: true,
-              color: "#333333",
-            },
-            // Property Specs
-            {
-              type: "box",
-              layout: "horizontal",
-              margin: "sm",
-              contents: [
-                {
-                  type: "text",
-                  text: `🛏️ ${property?.bedrooms || "-"}`,
-                  size: "xs",
-                  color: "#888888",
-                  flex: 1,
-                },
-                {
-                  type: "text",
-                  text: `🚿 ${property?.bathrooms || "-"}`,
-                  size: "xs",
-                  color: "#888888",
-                  flex: 1,
-                },
-                {
-                  type: "text",
-                  text: `📏 ${property?.size_sqm || "-"} ${content.specs.sqm}`,
-                  size: "xs",
-                  color: "#888888",
-                  flex: 2,
-                },
-              ],
-            },
-            {
-              type: "separator",
-              margin: "md",
-            },
-            {
-              type: "box",
-              layout: "vertical",
-              margin: "md",
-              spacing: "sm",
-              contents: [
-                {
-                  type: "text",
-                  text: content.testBody,
-                  color: "#666666",
-                  size: "xs",
-                  wrap: true,
-                },
-                {
-                  type: "box",
-                  layout: "baseline",
-                  margin: "md",
-                  contents: [
-                    {
-                      type: "text",
-                      text: content.amountDue,
-                      color: "#888888",
-                      size: "sm",
-                      flex: 2,
-                    },
-                    {
-                      type: "text",
-                      text: price,
-                      weight: "bold",
-                      color: "#E53935", // Red for amount due
-                      size: "xl",
-                      flex: 4,
-                      align: "end",
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              type: "separator",
-              margin: "md",
-            },
-            {
-              type: "text",
-              text: content.footer,
-              size: "xs",
-              color: "#999999",
-              wrap: true,
-              margin: "md",
-            },
-          ],
-        },
-      },
-    };
+    // Find a contract end date if possible
+    const contractEndDate = property?.deals?.[0]?.rental_contracts?.[0]?.end_date 
+      ? new Date(property.deals[0].rental_contracts[0].end_date).toLocaleDateString(dateFormat, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "-";
+
+    const message = generateRentNotificationFlex({
+      propertyName,
+      price,
+      coverImageUrl,
+      bedrooms: property?.bedrooms || "-",
+      bathrooms: property?.bathrooms || "-",
+      sizeSqm: property?.size_sqm || "-",
+      monthYear,
+      contractEndDate,
+      language: lang,
+      isTest: true,
+    });
 
     const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
     if (!token) throw new Error("Missing LINE Token");
