@@ -498,7 +498,7 @@ export function TemplateDialog({
 
             {ownerResults.length > 0 && !selectedOwnerId && (
               <div className="border border-slate-100 rounded-2xl bg-white max-h-[240px] overflow-y-auto shadow-xl animate-in fade-in slide-in-from-top-2">
-                <div className="p-2 border-b border-slate-50 bg-slate-50/30 sticky top-0 z-10">
+                <div className="p-2 border-b border-slate-50 bg-white sticky top-0 z-10">
                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest pl-2">
                     {ownerSearch.trim() === "" ? "รายการล่าสุด (Recent Items)" : "ผลการค้นหา (Search Results)"}
                    </p>
