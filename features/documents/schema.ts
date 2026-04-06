@@ -51,7 +51,7 @@ export const createDocumentSchema = z.object({
   document_type: DocumentTypeEnum,
   file_name: z.string().min(1),
   storage_path: z.string().min(1),
-  size_bytes: z.number().optional(),
+  size_bytes: z.coerce.number().optional(),
   mime_type: z.string().optional(),
   parent_id: z.string().uuid().optional().nullable(),
   version: z.number().optional().default(1),

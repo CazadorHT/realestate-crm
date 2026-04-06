@@ -10,7 +10,13 @@ import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
 
 interface DocumentsPageProps {
-  searchParams: Promise<{ tenant?: string; page?: string; success?: string }>;
+  searchParams: Promise<{
+    tenant?: string;
+    page?: string;
+    success?: string;
+    q?: string;
+    type?: string;
+  }>;
 }
 
 export default async function DocumentsPage(props: DocumentsPageProps) {
@@ -18,15 +24,18 @@ export default async function DocumentsPage(props: DocumentsPageProps) {
   assertStaff(role);
 
   const searchParams = await props.searchParams;
-  const tenantId = searchParams.tenant || (await getActiveTenantCookie()) || "ALL";
+  const tenantId =
+    searchParams.tenant || (await getActiveTenantCookie()) || "ALL";
   const page = Number(searchParams.page) || 1;
+  const q = searchParams.q || "";
+  const type = searchParams.type || "ALL";
   const pageSize = 50;
 
-  const { data: documents, count: totalCount } = await getAllDocuments(
-    page,
-    pageSize,
-    tenantId,
-  );
+  const {
+    data: documents,
+    count: totalCount,
+    globalTotalSize,
+  } = await getAllDocuments(page, pageSize, tenantId, q, type);
 
   const formatSize = (bytes: number) => {
     if (bytes >= 1024 * 1024 * 1024) {
@@ -52,7 +61,7 @@ export default async function DocumentsPage(props: DocumentsPageProps) {
         icon="fileText"
         gradient="blue"
         actionSlot={
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <TemplateDialog />
             <UploadDocumentDialog tenantId={tenantId} />
           </div>
@@ -74,8 +83,8 @@ export default async function DocumentsPage(props: DocumentsPageProps) {
           unitLabel="ไฟล์"
           secondaryStats={[
             {
-              label: "รวมขนาด (หน้าปัจจุบัน)",
-              value: formatSize(totalSize),
+              label: "รวมขนาด (ทั้งหมดที่เข้าข่าย)",
+              value: formatSize(globalTotalSize),
               color: "blue",
               icon: "info",
             },

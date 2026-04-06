@@ -2751,6 +2751,18 @@ export type Database = {
         }
         Returns: Json
       }
+      get_documents_stats: {
+        Args: {
+          p_owner_ids?: string[]
+          p_search?: string
+          p_tenant_id?: string
+          p_type_filter?: string
+        }
+        Returns: {
+          total_count: number
+          total_size_bytes: number
+        }[]
+      }
       get_isolation_setting: { Args: { setting_key: string }; Returns: boolean }
       get_properties_without_notification_rules: {
         Args: { p_tenant_id?: string }

@@ -40,16 +40,58 @@ export async function getDocumentsByOwner(
   return data;
 }
 
-export async function getAllDocuments(page = 1, pageSize = 50, tenantId?: string | null) {
+export async function getAllDocuments(
+  page = 1,
+  pageSize = 50,
+  tenantId?: string | null,
+  search?: string,
+  typeFilter?: string,
+) {
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
   const offset = (page - 1) * pageSize;
 
-  let query = supabase.from("documents").select("*, tenant:tenants(id, name)", { count: "exact" });
+  let searchOwnerIds: string[] = [];
+
+  if (search) {
+    const q = `%${search}%`;
+    // 1. Find matching Leads and Properties first
+    const [matchingLeads, matchingProps] = await Promise.all([
+      supabase.from("leads").select("id").ilike("full_name", q),
+      supabase.from("properties").select("id").ilike("title", q),
+    ]);
+
+    const leadIds = matchingLeads.data?.map((l) => l.id) || [];
+    const propIds = matchingProps.data?.map((p) => p.id) || [];
+    searchOwnerIds = [...leadIds, ...propIds];
+  }
+
+  let query = supabase
+    .from("documents")
+    .select("*, tenant:tenants(id, name)", { count: "exact" });
 
   if (tenantId && tenantId !== "ALL") {
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  }
+
+  if (search) {
+    const q = `%${search}%`;
+    // Deep Search condition: filename OR type OR owner_id is in matching leads/props
+    let orCondition = `file_name.ilike.${q},document_type.ilike.${q}`;
+    if (searchOwnerIds.length > 0) {
+      orCondition += `,owner_id.in.(${searchOwnerIds.join(",")})`;
+    }
+    query = query.or(orCondition);
+  }
+
+  // Server-side type filtering
+  if (typeFilter && typeFilter !== "ALL") {
+    if (typeFilter === "SLIP") {
+      query = query.eq("document_type", "SLIP");
+    } else if (typeFilter === "DOCUMENT") {
+      query = query.neq("document_type", "SLIP");
+    }
   }
 
   const { data, error, count } = await query
@@ -61,49 +103,100 @@ export async function getAllDocuments(page = 1, pageSize = 50, tenantId?: string
     throw new Error(mapDbError(error));
   }
 
-  // Manually fetch owner data for each document
-  const documentsWithOwners = await Promise.all(
-    (data || []).map(async (doc) => {
-      let ownerData = null;
-
-      try {
-        if (doc.owner_type === "PROPERTY") {
-          const { data: property } = await (tenantId && tenantId !== "ALL"
-            ? supabase.from("properties").select("id, title").eq("id", doc.owner_id).eq("tenant_id", tenantId)
-            : supabase.from("properties").select("id, title").eq("id", doc.owner_id)
-          ).single();
-          ownerData = { property };
-        } else if (doc.owner_type === "LEAD") {
-          const { data: lead } = await (tenantId && tenantId !== "ALL"
-            ? supabase.from("leads").select("id, full_name, email").eq("id", doc.owner_id).eq("tenant_id", tenantId)
-            : supabase.from("leads").select("id, full_name, email").eq("id", doc.owner_id)
-          ).single();
-          ownerData = { lead };
-        } else if (doc.owner_type === "DEAL") {
-          const { data: deal } = await (tenantId && tenantId !== "ALL"
-            ? supabase.from("deals").select("id, property:properties(title), lead:leads(id, full_name, email)").eq("id", doc.owner_id).eq("tenant_id", tenantId)
-            : supabase.from("deals").select("id, property:properties(title), lead:leads(id, full_name, email)").eq("id", doc.owner_id)
-          ).single();
-          ownerData = { deal };
-        } else if (doc.owner_type === "RENTAL_CONTRACT") {
-          const { data: contract } = await supabase
-            .from("rental_contracts")
-            .select(
-              "id, deal:deals(id, property:properties(title), lead:leads(id, full_name, email))",
-            )
-            .eq("id", doc.owner_id)
-            .single();
-          ownerData = { rental_contract: contract };
-        }
-      } catch (err) {
-        console.error(`Failed to fetch owner for document ${doc.id}:`, err);
-      }
-
-      return { ...doc, ...ownerData };
-    }),
+  // --- Optimization: Calculate Global Total Size (Enterprise Scalability via RPC) ---
+  const { data: statsData, error: statsError } = await supabase.rpc(
+    "get_documents_stats" as any,
+    {
+      p_tenant_id: tenantId && tenantId !== "ALL" ? tenantId : null,
+      p_search: search || null,
+      p_type_filter: typeFilter || "ALL",
+      p_owner_ids: searchOwnerIds.length > 0 ? searchOwnerIds : null,
+    },
   );
 
-  return { data: documentsWithOwners, count: count || 0 };
+  if (statsError) {
+    console.error("Fetch Document Stats Error (RPC failed, falling back):", statsError);
+    // Silent fallback to avoid crashing display if RPC isn't deployed yet
+  }
+
+  // Type safe extraction from RPC table result
+  const stats = (statsData as any)?.[0] || {};
+  const globalTotalSize = stats.total_size_bytes || 0;
+  const globalTotalCount = stats.total_count ?? count ?? 0;
+
+  // Use RPC count if available, otherwise fallback to standard count
+  const finalTotalCount = Number(globalTotalCount);
+
+  const rawDocs = data || [];
+
+  // --- Optimization: Batch Fetch Owners (Solve N+1) ---
+  const ownerIdsByType: Record<string, Set<string>> = {
+    PROPERTY: new Set(),
+    LEAD: new Set(),
+    DEAL: new Set(),
+    RENTAL_CONTRACT: new Set(),
+  };
+
+  rawDocs.forEach((doc) => {
+    if (doc.owner_id && ownerIdsByType[doc.owner_type]) {
+      ownerIdsByType[doc.owner_type].add(doc.owner_id);
+    }
+  });
+
+  // Batch queries for each type
+  const [properties, leads, deals, contracts] = await Promise.all([
+    ownerIdsByType.PROPERTY.size > 0
+      ? supabase
+          .from("properties")
+          .select("id, title")
+          .in("id", Array.from(ownerIdsByType.PROPERTY))
+      : Promise.resolve({ data: [] }),
+    ownerIdsByType.LEAD.size > 0
+      ? supabase
+          .from("leads")
+          .select("id, full_name, email")
+          .in("id", Array.from(ownerIdsByType.LEAD))
+      : Promise.resolve({ data: [] }),
+    ownerIdsByType.DEAL.size > 0
+      ? supabase
+          .from("deals")
+          .select("id, property:properties(title), lead:leads(id, full_name, email)")
+          .in("id", Array.from(ownerIdsByType.DEAL))
+      : Promise.resolve({ data: [] }),
+    ownerIdsByType.RENTAL_CONTRACT.size > 0
+      ? supabase
+          .from("rental_contracts")
+          .select("id, deal:deals(id, property:properties(title), lead:leads(id, full_name, email))")
+          .in("id", Array.from(ownerIdsByType.RENTAL_CONTRACT))
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  // Create lookup maps
+  const propMap = new Map(properties.data?.map((p) => [p.id, p]));
+  const leadMap = new Map(leads.data?.map((l) => [l.id, l]));
+  const dealMap = new Map(deals.data?.map((d) => [d.id, d]));
+  const contractMap = new Map(contracts.data?.map((c) => [c.id, c]));
+
+  // Map results back to docs
+  const documentsWithOwners = rawDocs.map((doc) => {
+    let ownerData = null;
+    if (doc.owner_type === "PROPERTY") {
+      ownerData = { property: propMap.get(doc.owner_id) };
+    } else if (doc.owner_type === "LEAD") {
+      ownerData = { lead: leadMap.get(doc.owner_id) };
+    } else if (doc.owner_type === "DEAL") {
+      ownerData = { deal: dealMap.get(doc.owner_id) };
+    } else if (doc.owner_type === "RENTAL_CONTRACT") {
+      ownerData = { rental_contract: contractMap.get(doc.owner_id) };
+    }
+    return { ...doc, ...ownerData };
+  });
+
+  return {
+    data: documentsWithOwners,
+    count: finalTotalCount,
+    globalTotalSize: Number(globalTotalSize),
+  };
 }
 
 // 2. Create Document Record (Metadata)
@@ -133,6 +226,7 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
       .from("documents")
       .insert({
         ...validated,
+        size_bytes: validated.size_bytes || 0,
         tenant_id: tenantId && tenantId !== "ALL" ? tenantId : validated.tenant_id,
         version: finalVersion,
         created_by: user.id,

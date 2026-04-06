@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useTransition } from "react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   FileText,
   Calendar,
-  User,
   Download,
   Trash2,
   Eye,
@@ -18,14 +17,19 @@ import {
   X,
   CreditCard,
   Image as ImageIcon,
+  MoreVertical,
+  History,
+  PenTool,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
+import { DocumentActions } from "./DocumentActions";
+import { DocumentOwnerInfo } from "./DocumentOwnerInfo";
 import { Input } from "@/components/ui/input";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteDocumentsAction } from "@/features/documents/bulk-actions";
 import { toast } from "sonner";
-import { VersionHistoryDialog } from "./VersionHistoryDialog";
-import { ESignDialog } from "./ESignDialog";
 import { AIDocumentInsight } from "./AIDocumentInsight";
 import { DocumentPreviewDialog } from "./DocumentPreviewDialog";
 import { cn } from "@/lib/utils";
@@ -37,7 +41,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DOC_TYPE_LABELS, DOC_OWNER_TYPE_LABELS } from "../schema";
+import { DOC_TYPE_LABELS } from "../schema";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DocumentsGridProps {
   documents: DocumentWithRelations[];
@@ -57,9 +70,6 @@ function formatSize(bytes: number) {
   return `${bytes} B`;
 }
 
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { PaginationControls } from "@/components/ui/pagination-controls";
-
 export function DocumentsGrid({
   documents,
   tenantId,
@@ -69,6 +79,46 @@ export function DocumentsGrid({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const debouncedSearch = useDebounce(searchQuery, 500);
+
+  const filterType = searchParams.get("type") || "ALL";
+
+  // Sync debounced search to URL
+  useEffect(() => {
+    const currentQ = searchParams.get("q") || "";
+    // 🛑 ONLY update if the search value has truly changed
+    // This prevents the infinite loop where router.push -> searchParams change -> useEffect triggers again
+    if (currentQ === debouncedSearch) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (debouncedSearch) {
+      params.set("q", debouncedSearch);
+    } else {
+      params.delete("q");
+    }
+    params.set("page", "1"); // Reset to page 1 on search
+    
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
+  }, [debouncedSearch, pathname, router, searchParams]);
+
+  const handleFilterChange = (type: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (type !== "ALL") {
+      params.set("type", type);
+    } else {
+      params.delete("type");
+    }
+    params.set("page", "1"); // Reset
+    
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
+  };
 
   const allIds = useMemo(() => documents?.map((d) => d.id) || [], [documents]);
   const {
@@ -81,36 +131,6 @@ export function DocumentsGrid({
     selectedCount,
     selectedIds,
   } = useTableSelection(allIds);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<string>("ALL");
-
-  const filteredDocuments = useMemo(() => {
-    let result = documents;
-
-    // Filter by type
-    if (filterType === "SLIP") {
-      result = result.filter((doc) => doc.document_type === "SLIP");
-    } else if (filterType === "DOCUMENT") {
-      result = result.filter((doc) => doc.document_type !== "SLIP");
-    }
-
-    if (!searchQuery.trim()) return result;
-    const query = searchQuery.toLowerCase();
-    return result.filter((doc) => {
-      return (
-        doc.file_name.toLowerCase().includes(query) ||
-        doc.document_type?.toLowerCase().includes(query) ||
-        doc.lead?.full_name?.toLowerCase().includes(query) ||
-        doc.property?.title?.toLowerCase().includes(query)
-      );
-    });
-  }, [documents, searchQuery]);
-
-  const filteredIds = useMemo(
-    () => filteredDocuments.map((d) => d.id),
-    [filteredDocuments],
-  );
 
   const handleSuccessFeedback = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -144,7 +164,17 @@ export function DocumentsGrid({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      {/* Loading Overlay */}
+      {isPending && (
+        <div className="absolute inset-0 z-50 bg-white/40 backdrop-blur-[1px] flex items-center justify-center rounded-xl transition-all">
+          <div className="bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-3 animate-in zoom-in-95 duration-200">
+            <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+            <span className="text-sm font-bold text-slate-700">กำลังโหลดข้อมูล...</span>
+          </div>
+        </div>
+      )}
+
       {/* Search & Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
         <div>
@@ -153,7 +183,7 @@ export function DocumentsGrid({
           </h2>
           <p className="text-sm text-slate-500 mt-1">
             {searchQuery
-              ? `พบ ${filteredDocuments.length} รายการจากผลการค้นหาหน้าปัจจุบัน`
+              ? `พบผลการค้นหา ${totalCount} รายการ`
               : `พบทั้งหมด ${totalCount} เอกสาร`}
           </p>
         </div>
@@ -163,7 +193,7 @@ export function DocumentsGrid({
               variant="ghost"
               size="sm"
               className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "ALL" ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
-              onClick={() => setFilterType("ALL")}
+              onClick={() => handleFilterChange("ALL")}
             >
               ทั้งหมด
             </Button>
@@ -171,7 +201,7 @@ export function DocumentsGrid({
               variant="ghost"
               size="sm"
               className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "DOCUMENT" ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
-              onClick={() => setFilterType("DOCUMENT")}
+              onClick={() => handleFilterChange("DOCUMENT")}
             >
               เอกสาร
             </Button>
@@ -179,7 +209,7 @@ export function DocumentsGrid({
               variant="ghost"
               size="sm"
               className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "SLIP" ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
-              onClick={() => setFilterType("SLIP")}
+              onClick={() => handleFilterChange("SLIP")}
             >
               สลิป
             </Button>
@@ -188,7 +218,7 @@ export function DocumentsGrid({
           <div className="relative w-full md:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="ค้นหาชื่อไฟล์, ประเภท หรือลูกค้า..."
+              placeholder="ค้นหาชื่อไฟล์..."
               className="pl-10 pr-10 bg-white"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -213,11 +243,11 @@ export function DocumentsGrid({
       />
 
       {/* Select All Header */}
-      {filteredDocuments && filteredDocuments.length > 0 && (
+      {documents && documents.length > 0 && (
         <div className="flex items-center gap-2 px-2">
           <Checkbox
-            checked={isAllSelected && filteredDocuments.length > 0}
-            onCheckedChange={() => toggleSelectAll(filteredIds)}
+            checked={isAllSelected && documents.length > 0}
+            onCheckedChange={() => toggleSelectAll(allIds)}
             aria-label="เลือกทั้งหมด"
             className={
               isPartialSelected ? "data-[state=checked]:bg-primary/50" : ""
@@ -228,8 +258,8 @@ export function DocumentsGrid({
       )}
 
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {filteredDocuments && filteredDocuments.length > 0 ? (
-          filteredDocuments.map((doc) => (
+        {documents && documents.length > 0 ? (
+          documents.map((doc) => (
             <Card
               key={doc.id}
               className={`hover:shadow-lg hover:border-blue-200 transition-all ${
@@ -281,19 +311,6 @@ export function DocumentsGrid({
                       doc.document_type ||
                       "อื่นๆ"}
                   </Badge>
-                  {tenantId === "ALL" && (
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-xs shrink-0 border",
-                        doc.tenant
-                          ? "bg-slate-50 text-slate-600 border-slate-200"
-                          : "bg-amber-50 text-amber-600 border-amber-200",
-                      )}
-                    >
-                      {doc.tenant?.name || "ยังไม่มีสาขา"}
-                    </Badge>
-                  )}
                 </div>
 
                 <div className="space-y-2 text-sm text-slate-600 border-t border-slate-100 pt-4">
@@ -303,68 +320,7 @@ export function DocumentsGrid({
                       locale: th,
                     })}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-slate-400" />
-                    <span className="text-xs">
-                      <span className="text-slate-500 mr-1">
-                        {DOC_OWNER_TYPE_LABELS[doc.owner_type] ||
-                          doc.owner_type}
-                        :
-                      </span>
-                      <span className="font-medium text-slate-700">
-                        {doc.owner_type === "PROPERTY" ? (
-                          doc.property?.title || "ไม่ระบุชื่อทรัพย์"
-                        ) : doc.owner_type === "LEAD" ? (
-                          doc.lead?.full_name ||
-                          doc.lead?.email ||
-                          "ไม่ระบุชื่อลูกค้า"
-                        ) : doc.owner_type === "DEAL" ? (
-                          doc.deal ? (
-                            <>
-                              {doc.deal.property?.title || "ไม่ระบุชื่อทรัพย์"}{" "}
-                              {doc.deal.lead ? (
-                                <span className="text-slate-400 font-normal">
-                                  (
-                                  {doc.deal.lead.full_name ||
-                                    doc.deal.lead.email}
-                                  )
-                                </span>
-                              ) : (
-                                <span className="text-slate-400 font-normal">
-                                  (ไม่ระบุลูกค้า)
-                                </span>
-                              )}
-                            </>
-                          ) : (
-                            "ไม่พบข้อมูลดีล"
-                          )
-                        ) : doc.owner_type === "RENTAL_CONTRACT" ? (
-                          doc.rental_contract?.deal ? (
-                            <>
-                              {doc.rental_contract.deal.property?.title ||
-                                "ไม่ระบุชื่อทรัพย์"}{" "}
-                              {doc.rental_contract.deal.lead ? (
-                                <span className="text-slate-400 font-normal">
-                                  (
-                                  {doc.rental_contract.deal.lead.full_name ||
-                                    doc.rental_contract.deal.lead.email}
-                                  )
-                                </span>
-                              ) : (
-                                <span className="text-slate-400 font-normal">
-                                  (ไม่ระบุลูกค้า)
-                                </span>
-                              )}
-                            </>
-                          ) : (
-                            "ไม่พบข้อมูลสัญญาเช่า"
-                          )
-                        ) : (
-                          doc.owner_id
-                        )}
-                      </span>
-                    </span>
-                  </div>
+                  <DocumentOwnerInfo document={doc} />
                 </div>
 
                 <TooltipProvider delayDuration={0}>
@@ -392,60 +348,9 @@ export function DocumentsGrid({
                       <TooltipContent>ดูพรีวิวเอกสาร</TooltipContent>
                     </Tooltip>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div>
-                          <VersionHistoryDialog
-                            documentId={doc.id}
-                            documentName={doc.file_name}
-                            ownerId={doc.owner_id}
-                            ownerType={doc.owner_type}
-                            tenantId={tenantId}
-                          />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>ประวัติเวอร์ชัน</TooltipContent>
-                    </Tooltip>
+                    <div className="flex gap-1 ml-auto items-center">
+                      <DocumentActions document={doc} tenantId={tenantId} />
 
-                    {(doc.owner_type === "LEAD" ||
-                      doc.owner_type === "DEAL" ||
-                      doc.owner_type === "RENTAL_CONTRACT") && (
-                      <>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div>
-                              <ESignDialog
-                                documentId={doc.id}
-                                documentName={doc.file_name}
-                                currentStatus={doc.esign_status}
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {doc.document_type === "LEASE_CONTRACT" ||
-                            doc.document_type === "SALE_CONTRACT" ||
-                            doc.document_type === "RESERVATION_DOCUMENT"
-                              ? "จัดการการเซ็นสัญญา (จะอัปเดตสถานะดีลให้อัตโนมัติ)"
-                              : "จัดการการเซ็น E-Signature"}
-                          </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div>
-                              <AIDocumentInsight
-                                documentId={doc.id}
-                                documentName={doc.file_name}
-                                initialSummary={doc.ai_summary}
-                                initialAnalysis={doc.ai_analysis}
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>วิเคราะห์ด้วย AI</TooltipContent>
-                        </Tooltip>
-                      </>
-                    )}
-                    <div className="flex gap-1 ml-auto">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div>
@@ -469,7 +374,7 @@ export function DocumentsGrid({
                             />
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent className="bg-red-600 text-white border-red-600 fill-red-600">
+                        <TooltipContent className="bg-red-600 text-white border-red-600">
                           ลบเอกสาร
                         </TooltipContent>
                       </Tooltip>
@@ -482,8 +387,8 @@ export function DocumentsGrid({
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center py-16 text-slate-500">
             <FileText className="h-16 w-16 text-slate-300 mb-4" />
-            <p className="font-medium text-lg">ยังไม่มีเอกสาร</p>
-            <p className="text-sm">อัพโหลดเอกสารแรกของคุณเพื่อเริ่มต้น</p>
+            <p className="font-medium text-lg">ไม่พบเอกสาร</p>
+            <p className="text-sm">ลองค้นหาด้วยคำอื่น หรืออัพโหลดเอกสารใหม่</p>
           </div>
         )}
       </div>
