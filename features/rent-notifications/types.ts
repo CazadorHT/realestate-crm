@@ -12,13 +12,13 @@ export interface SimpleProperty {
   image: string | null;
 }
 
-export interface RentNotificationRule extends Omit<RentNotificationRuleInput, "is_active" | "language"> {
+export interface RentNotificationRule extends Omit<RentNotificationRuleInput, "is_active" | "language" | "notification_hour"> {
   id: string;
-  created_at: string | null;
-  updated_at: string | null;
-  last_sent_at: string | null;
+  notification_day: number;
+  notification_hour: number | null;
   is_active: boolean | null;
   language: string | null;
+  last_sent_at: string | null;
   properties?: {
     id: string;
     title: string;

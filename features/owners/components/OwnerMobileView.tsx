@@ -247,7 +247,7 @@ export function OwnerMobileView({
             <Button
               type="button"
               onClick={nextStep}
-              className="flex-1 h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold shadow-xl shadow-slate-900/10 active:scale-95 transition-all"
+              className="flex-1 h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-xl shadow-blue-600/20 active:scale-95 transition-all"
             >
               ถัดไป
               <ChevronRight className="ml-2 h-5 w-5" />

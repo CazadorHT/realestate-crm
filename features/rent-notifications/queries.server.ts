@@ -90,27 +90,30 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
     console.warn("RPC get_properties_without_notification_rules failed, falling back to manual filtering:", error);
     
     // 1. Fetch properties with active contracts
-    let manualQuery = supabase.from("properties").select(`
-      id,
-      title,
-      image_url:property_images(image_url),
-      deals!inner(
-        status,
-        rental_contracts!inner(
-          status
+    let query = supabase
+      .from("properties")
+      .select(`
+        id, 
+        title,
+        property_images(image_url),
+        deals!inner (
+          id,
+          status,
+          rental_contracts!inner (
+            id,
+            status
+          )
         )
-      )
-    `);
-
-    if (tenantId && tenantId !== "ALL") {
-      manualQuery = manualQuery.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
-    }
-
-    const { data: properties, error: propError } = await manualQuery
+      `)
       .eq("deals.status", "CLOSED_WIN")
       .eq("deals.rental_contracts.status", "ACTIVE")
-      .neq("status", "ARCHIVED")
-      .order("created_at", { ascending: false });
+      .neq("status", "ARCHIVED");
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+    }
+
+    const { data: properties, error: propError } = await query.order("created_at", { ascending: false });
 
     if (propError || !properties) return [];
 
@@ -122,7 +125,7 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
       .map((p: any) => ({
         id: p.id,
         title: p.title,
-        image: Array.isArray(p.image_url) && p.image_url.length > 0 ? p.image_url[0].image_url : null,
+        image: p.property_images && p.property_images.length > 0 ? p.property_images[0].image_url : null,
       }));
   }
 
@@ -131,4 +134,37 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
     title: p.title,
     image: p.image_url
   }));
+}
+
+export async function getRentNotificationHistory(
+  page = 1,
+  pageSize = 20,
+  tenantId?: string | null,
+) {
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+  const offset = (page - 1) * pageSize;
+
+  let query = supabase
+    .from("rent_notification_history")
+    .select(`
+      *,
+      properties (title),
+      line_groups (group_name)
+    `, { count: "exact" });
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  const { data, error, count } = await query
+    .order("created_at", { ascending: false })
+    .range(offset, offset + pageSize - 1);
+
+  if (error) {
+    console.error("Error fetching notification history:", error);
+    return { history: [], count: 0 };
+  }
+
+  return { history: data || [], count: count || 0 };
 }

@@ -42,7 +42,8 @@ export function LeadCombobox({
   placeholder = "เลือกลูกค้า...",
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [items, setItems] = useState<LeadItem[]>([]);
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
@@ -56,6 +57,10 @@ export function LeadCombobox({
   );
 
   async function fetchPage(nextPage = 1, currentQ = q) {
+    const isInitial = nextPage === 1;
+    if (isInitial) setIsLoading(true);
+    else setIsFetchingMore(true);
+
     try {
       const params = new URLSearchParams();
       if (currentQ) params.set("q", currentQ);
@@ -85,9 +90,9 @@ export function LeadCombobox({
             (payload.count ?? 0)
       );
       setPage(nextPage);
-    } catch {
-      const { toast } = await import("sonner").catch(() => ({ toast: null } as any));
-      toast?.error("ไม่สามารถโหลดลีดได้");
+    } finally {
+      if (isInitial) setIsLoading(false);
+      else setIsFetchingMore(false);
     }
   }
 
@@ -95,14 +100,15 @@ export function LeadCombobox({
   useEffect(() => {
     if (!open) return;
     setQ("");
-    startTransition(() => fetchPage(1, ""));
+    fetchPage(1, "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // Debounced search
   useEffect(() => {
+    if (!open) return;
     const handle = setTimeout(() => {
-      startTransition(() => fetchPage(1, q));
+      fetchPage(1, q);
     }, 250);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -111,8 +117,8 @@ export function LeadCombobox({
   // Infinite scroll
   function onScroll(e: React.UIEvent<HTMLDivElement>) {
     const el = e.currentTarget;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 60 && !isPending && hasMore) {
-      startTransition(() => fetchPage(page + 1, q));
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 60 && !isLoading && !isFetchingMore && hasMore) {
+      fetchPage(page + 1, q);
     }
   }
 
@@ -190,6 +196,8 @@ export function LeadCombobox({
       description="ค้นหาลีดด้วยชื่อ เบอร์โทรศัพท์ หรืออีเมล"
       className="sm:max-w-[560px]"
       trigger={trigger}
+      isLoading={isLoading}
+      minHeight="440px"
     >
       <div className="flex flex-col h-full">
         {/* Search bar */}
@@ -220,27 +228,13 @@ export function LeadCombobox({
           )}
         </div>
 
-        {/* List */}
         <div
           ref={listRef}
           onScroll={onScroll}
-          className="flex-1 overflow-y-auto px-3 py-2"
+          className="flex-1 overflow-y-auto px-3 py-2 min-h-[440px]"
           style={{ maxHeight: "min(60vh, 440px)" }}
         >
-          {isPending && items.length === 0 ? (
-            /* Loading skeleton */
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="animate-pulse flex flex-col items-center gap-2 p-4 rounded-2xl border border-slate-100 bg-slate-50">
-                  <div className="h-12 w-12 rounded-xl bg-slate-200" />
-                  <div className="w-full space-y-1.5">
-                    <div className="h-3 bg-slate-200 rounded w-3/4 mx-auto" />
-                    <div className="h-2.5 bg-slate-100 rounded w-1/2 mx-auto" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : items.length === 0 ? (
+          {items.length === 0 && !isLoading ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <div className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center">
                 <User className="h-7 w-7 text-slate-300" />
@@ -314,11 +308,13 @@ export function LeadCombobox({
 
               {/* Load more indicator */}
               {hasMore && (
-                <div className="py-4 flex items-center justify-center">
-                  {isPending ? (
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <div className="h-3.5 w-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-                      กำลังโหลด...
+                <div className="py-6 flex items-center justify-center col-span-2 md:col-span-4">
+                  {isFetchingMore ? (
+                    <div className="flex flex-col items-center gap-2">
+                       <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                         กำลังโหลดข้อมูล...
+                       </span>
                     </div>
                   ) : (
                     <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">

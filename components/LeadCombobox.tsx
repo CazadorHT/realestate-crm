@@ -47,7 +47,7 @@ export function LeadCombobox({
   name,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState<LeadPickItem[]>([]);
   const [q, setQ] = useState("");
 
@@ -59,8 +59,9 @@ export function LeadCombobox({
   // Debounced search when query changes
   useEffect(() => {
     if (!open) return;
-    const handle = setTimeout(() => {
-      startTransition(async () => {
+    const handle = setTimeout(async () => {
+      setIsLoading(true);
+      try {
         const res = await searchLeadsAction({
           q,
           tenantId: tenantId ?? undefined,
@@ -68,25 +69,33 @@ export function LeadCombobox({
         if (res.success) {
           setItems(res.data.leads || []);
         }
-      });
-    }, 200);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
     return () => clearTimeout(handle);
-  }, [open, q, tenantId, startTransition]);
+  }, [open, q, tenantId]);
 
   // Load fresh list when dialog opens
   useEffect(() => {
     if (!open) return;
     setQ("");
-    startTransition(async () => {
-      const res = await searchLeadsAction({ 
-        q: "", 
-        tenantId: tenantId ?? undefined 
-      });
-      if (res.success) {
-        setItems(res.data.leads || []);
+    const loadInitial = async () => {
+      setIsLoading(true);
+      try {
+        const res = await searchLeadsAction({ 
+          q: "", 
+          tenantId: tenantId ?? undefined 
+        });
+        if (res.success) {
+          setItems(res.data.leads || []);
+        }
+      } finally {
+        setIsLoading(false);
       }
-    });
-  }, [open, tenantId, startTransition]);
+    };
+    loadInitial();
+  }, [open, tenantId]);
 
   const handleSelect = (item: LeadPickItem) => {
     onChange(item.id, item);
@@ -169,6 +178,8 @@ export function LeadCombobox({
       description="พิมพ์ชื่อหรือเบอร์โทรศัพท์เพื่อค้นหา"
       className="sm:max-w-[500px]"
       trigger={trigger}
+      isLoading={isLoading}
+      minHeight="400px"
     >
       <div className="flex flex-col h-full">
         {/* Search bar */}
@@ -185,15 +196,8 @@ export function LeadCombobox({
           </div>
         </div>
 
-        {/* List */}
-        <div className="flex-1 overflow-y-auto p-2 max-h-[60vh]">
-          {isPending ? (
-            <div className="space-y-2 p-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-14 bg-slate-50 animate-pulse rounded-xl" />
-              ))}
-            </div>
-          ) : items.length === 0 ? (
+        <div className="flex-1 overflow-y-auto p-2 min-h-[400px]">
+          {items.length === 0 && !isLoading ? (
             <div className="py-12 text-center text-slate-400">
               <User className="h-10 w-10 mx-auto mb-3 opacity-20" />
               <p className="text-sm">ไม่พบรายชื่อที่ต้องการ</p>
@@ -211,7 +215,7 @@ export function LeadCombobox({
                       "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left",
                       isSelected
                         ? "bg-blue-50 text-blue-700 ring-1 ring-blue-100"
-                        : "hover:bg-slate-50 text-slate-700 hover:text-slate-900"
+                        : "hover:bg-slate-200 text-slate-700 hover:text-slate-900"
                     )}
                   >
                     <div className={cn(

@@ -115,7 +115,7 @@ export function RuleList({
       ),
     );
 
-    const res = await toggleRentNotificationRule(id, !currentStatus);
+    const res = await toggleRentNotificationRule(id, !currentStatus, tenantId);
     if (!res.success) {
       toast.error("Failed to update status");
       // Revert
@@ -130,7 +130,7 @@ export function RuleList({
   const handleDelete = async () => {
     if (!isDeleting) return;
     const id = isDeleting;
-    const res = await deleteRentNotificationRule(id);
+    const res = await deleteRentNotificationRule(id, tenantId);
     if (res.success) {
       toast.success("ลบรายการแล้ว");
       setRules((prev) => prev.filter((r) => r.id !== id));
@@ -145,7 +145,7 @@ export function RuleList({
     setIsSendingTest(id);
     const toastId = toast.loading("กำลังส่งข้อความทดสอบ...");
     try {
-      const res = await testSendRentNotification(id);
+      const res = await testSendRentNotification(id, tenantId);
       if (res.success) {
         toast.success("ส่งข้อความทดสอบแล้ว", { id: toastId });
       } else {
@@ -161,7 +161,7 @@ export function RuleList({
     if (!confirm(`คุณแน่ใจว่าต้องการลบ ${selectedIds.length} รายการ?`)) return;
 
     setIsBulkActionLoading(true);
-    const res = await deleteRentNotificationRules(selectedIds);
+    const res = await deleteRentNotificationRules(selectedIds, tenantId);
     if (res.success) {
       toast.success(`ลบ ${selectedIds.length} รายการเรียบร้อยแล้ว`);
       setRules((prev) => prev.filter((r) => !selectedIds.includes(r.id)));
@@ -175,7 +175,7 @@ export function RuleList({
   const handleBulkToggle = async (active: boolean) => {
     if (selectedIds.length === 0) return;
     setIsBulkActionLoading(true);
-    const res = await toggleRentNotificationRules(selectedIds, active);
+    const res = await toggleRentNotificationRules(selectedIds, active, tenantId);
     if (res.success) {
       toast.success(`${active ? "เปิด" : "ปิด"}การใช้งาน ${selectedIds.length} รายการแล้ว`);
       setRules((prev) =>
@@ -417,7 +417,7 @@ export function RuleList({
                   <div className="flex flex-col gap-1">
                     <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
                       <Clock className="w-3 h-3 text-blue-500" />
-                      ทุกวันที่ {rule.notification_day}
+                      ทุกวันที่ {rule.notification_day} เวลา {rule.notification_hour?.toString().padStart(2, "0")}:00 น.
                     </div>
                     <div className="text-[10px] text-slate-400 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />

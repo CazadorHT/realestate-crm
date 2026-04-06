@@ -124,6 +124,9 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
         open={open}
         onOpenChange={setOpen}
         className="max-w-2xl p-0 overflow-hidden border-none sm:shadow-2xl bg-slate-50/95 backdrop-blur-xl"
+        isLoading={loading}
+        loadingText="กำลังสืบค้นข้อมูล..."
+        minHeight="400px"
       >
         <Command shouldFilter={false} className="rounded-none h-full max-h-screen w-full bg-transparent">
           <div className="flex items-center border-b border-slate-200/60 px-4 bg-white/50">
@@ -148,18 +151,7 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
           </div>
           
           <CommandList className="max-h-[70vh] sm:max-h-[480px] p-2 overflow-y-auto w-full custom-scrollbar">
-            {loading && (
-              <div className="py-20 flex flex-col items-center justify-center gap-4 text-slate-400">
-                <div className="relative h-10 w-10">
-                  <div className="absolute inset-0 border-4 border-blue-100 rounded-full" />
-                  <div className="absolute inset-0 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                </div>
-                <div className="flex flex-col items-center gap-1 text-center">
-                  <span className="text-sm font-bold text-slate-600">กำลังสืบค้นข้อมูลอย่างละเอียด</span>
-                  <span className="text-[10px] uppercase tracking-widest text-slate-400 animate-pulse">โปรดรอสักครู่...</span>
-                </div>
-              </div>
-            )}
+            {/* The ResponsiveDialog premium loader handles the loading overlay */}
             
             {!loading && results.length === 0 && query.length >= 2 && (
               <div className="py-20 flex flex-col items-center justify-center gap-4 text-slate-400">

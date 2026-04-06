@@ -112,6 +112,18 @@ export function AIDocumentInsight({
           "ระบบวิเคราะห์เนื้อหาและตรวจสอบจุดเสี่ยงอัตโนมัติ"
         )
       }
+      isLoading={loading}
+      loadingText={
+        <div className="text-center px-6">
+          <p className="text-lg font-bold text-slate-900 tracking-tight">
+            Gemini กำลังประมวลผล...
+          </p>
+          <p className="text-xs text-slate-400 mt-2 font-medium italic leading-relaxed">
+            "ระบบกำลังอ่านสรุปเนื้อหาและตรวจสอบเงื่อนไขในข้อสัญญา"
+          </p>
+        </div>
+      }
+      minHeight="300px"
       trigger={
         trigger || (
           <Button
@@ -189,22 +201,7 @@ export function AIDocumentInsight({
           </div>
         )}
 
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-16 space-y-5">
-            <div className="relative">
-              <Loader2 className="h-16 w-16 text-indigo-500 animate-spin" strokeWidth={1.5} />
-              <Sparkles className="h-6 w-6 text-amber-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-            </div>
-            <div className="text-center px-6">
-              <p className="text-lg font-semibold text-slate-800">
-                Gemini กำลังประมวลผล...
-              </p>
-              <p className="text-xs text-slate-400 mt-2 font-medium italic leading-relaxed">
-                "ระบบกำลังอ่านสรุปเนื้อหาและตรวจสอบเงื่อนไขในข้อสัญญา"
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Loading state is now handled by ResponsiveDialog isLoading prop */}
 
         {hasData && !loading && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

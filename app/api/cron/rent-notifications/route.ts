@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendLineNotification } from "@/lib/line";
-import { generateRentNotificationFlex, getLocaleDateFormat } from "@/features/rent-notifications/utils";
+import { generateRentNotificationFlex, getLocaleDateFormat, getPropertyDisplayInfo } from "@/features/rent-notifications/utils";
 
-// CRON JOB Should be called daily
-// e.g. /api/cron/rent-notifications?secret=YOUR_CRON_SECRET
+// PERFORMANCE CONFIG
+const BATCH_SIZE = 5; // Send N messages in parallel
+const MAX_RUNTIME_MS = 25000; // 25s threshold to exit before Vercel timeout (30s)
 
 export async function GET(req: NextRequest) {
-  // 1. Verify Secret
+  const startTime = performance.now();
+  
+  // 1. Verify Secret (Supports both ?secret= query and Vercel Authorization header)
   const secret = req.nextUrl.searchParams.get("secret");
+  const authHeader = req.headers.get("Authorization");
   const expectedSecret = process.env.CRON_SECRET;
 
-  if (expectedSecret && secret !== expectedSecret) {
+  const isValid = 
+    !expectedSecret || 
+    secret === expectedSecret || 
+    authHeader === `Bearer ${expectedSecret}`;
+
+  if (!isValid) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -19,221 +27,132 @@ export async function GET(req: NextRequest) {
     const supabase = createAdminClient();
     const today = new Date();
     const currentDay = today.getDate();
+    const currentHour = today.getHours();
+    const todayStr = today.toISOString().split("T")[0];
 
-    // 2. Fetch Rules that match today's day
-    // Edge case: if currentDay is 28, 29, 30, we might want to include rules for 31 etc if it's end of month?
-    // For MVP: Strict match
+    // Check if today is the last day of the month
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const isLastDayOfMonth = tomorrow.getDate() === 1;
 
-    // 2. Fetch Rules that match today's day
-    const { data: rules, error } = await supabase
+    // 2. FETCH WORK: Scheduled rules OR Rules that failed today (Auto-Retry)
+    // We fetch EVERYTHING for this hour and day first
+    let query = supabase
       .from("rent_notification_rules")
-      .select(
-        `
+      .select(`
         *,
-        properties (
-          id, title, title_en, title_cn, rental_price, currency,
-          bedrooms, bathrooms, size_sqm,
-          property_images (image_url, is_cover, sort_order)
-        ),
-        line_groups (group_id, group_name)
-      `,
-      )
-      .eq("notification_day", currentDay)
-      .eq("is_active", true);
+        properties (*, property_images (*)),
+        line_groups (group_id, group_name),
+        rent_notification_history (status, created_at, retry_count)
+      `)
+      .eq("is_active", true)
+      .eq("notification_hour", currentHour);
 
+    if (isLastDayOfMonth) {
+      query = query.gte("notification_day", currentDay);
+    } else {
+      query = query.eq("notification_day", currentDay);
+    }
+
+    const { data: rules, error } = await query;
     if (error) throw error;
-
     if (!rules || rules.length === 0) {
-      return NextResponse.json({ message: "No notifications to sent today." });
+      return NextResponse.json({ message: "No work found for this slot." });
+    }
+
+    // 3. FILTER rules: Must not have a SUCCESS today
+    // AND must either have no attempt OR (ERROR attempt AND retry_count < 3)
+    const pendingRules = rules.filter(rule => {
+      const todayHistory = rule.rent_notification_history?.filter((h: any) => 
+        h.created_at.startsWith(todayStr)
+      );
+      
+      const hasSuccess = todayHistory?.some((h: any) => h.status === "SUCCESS");
+      if (hasSuccess) return false;
+
+      const latestError = todayHistory
+        ?.filter((h: any) => h.status === "ERROR")
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+
+      if (!latestError) return true; // Never attempted today
+      return (latestError.retry_count || 0) < 3; // Attempted but failed and under limit
+    });
+
+    if (pendingRules.length === 0) {
+      return NextResponse.json({ message: "No pending or retryable tasks found." });
     }
 
     const results = [];
+    const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+    if (!token) throw new Error("Missing LINE Token");
 
-    // 3. Send Notifications
-    for (const rule of rules) {
-      try {
-        // ... (Contract check logic remains the same) ...
-        const { data: activeContract, error: contractError } = await supabase
-          .from("rental_contracts")
-          .select("*, deal:deals!inner(property_id)")
-          .eq("deal.property_id", rule.property_id)
-          .eq("status", "ACTIVE")
-          .gte("end_date", new Date().toISOString().split("T")[0])
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+    // 4. CONCURRENT PROCESSING IN CHUNKS
+    for (let i = 0; i < pendingRules.length; i += BATCH_SIZE) {
+      // Check for Timeout
+      if (performance.now() - startTime > MAX_RUNTIME_MS) {
+        console.warn(`[Cron] Exiting early due to runtime constraints. Remaining: ${pendingRules.length - i}`);
+        break;
+      }
 
-        if (contractError) {
-          console.error(
-            `Error checking contract for rule ${rule.id}:`,
-            contractError,
-          );
-          results.push({
-            ruleId: rule.id,
-            status: "skipped_error",
-            error: contractError.message,
-          });
-          continue;
-        }
-
-        if (!activeContract) {
-          console.log(
-            `Skipping rule ${rule.id} (Property: ${rule.properties?.title}): No active contract found.`,
-          );
-          results.push({
-            ruleId: rule.id,
-            status: "skipped_no_active_contract",
-          });
-          continue;
-        }
-
-        const property = rule.properties;
-        const propertyName =
-          (rule.language === "en"
-            ? property?.title_en
-            : rule.language === "cn"
-              ? property?.title_cn
-              : property?.title) ||
-          property?.title ||
-          "Property";
-
-        const price = property?.rental_price
-          ? `${property.rental_price.toLocaleString()} ${property?.currency || "THB"}`
-          : "-";
-
-        // Image logic matching Inquiry notifications
-        const images = property?.property_images || [];
-        const coverImageUrl =
-          images.find((img: any) => img.is_cover)?.image_url ||
-          images[0]?.image_url ||
-          "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600";
-
-        // Localization Dictionary
-        const t = {
-          th: {
-            alertTitle: "🔔 แจ้งเตือนชำระค่าเช่า",
-            amountDue: "ยอดที่ต้องชำระ:",
-            forMonth: "ประจำเดือน:",
-            contractEnds: "สิ้นสุดสัญญา:",
-            footer: "กรุณาส่งสลิปการโอนเงินในกลุ่มนี้ได้เลยครับ 🙏",
-            dateFormat: "th-TH",
-            specs: {
-              bed: "ห้องนอน",
-              bath: "ห้องน้ำ",
-              sqm: "ตร.ม.",
-            },
-          },
-          en: {
-            alertTitle: "🔔 Rent Payment Reminder",
-            amountDue: "Amount Owed:",
-            forMonth: "For Month:",
-            contractEnds: "Contract Ends:",
-            footer: "Please send the transfer slip in this group. Thank you 🙏",
-            dateFormat: "en-US",
-            specs: {
-              bed: "Beds",
-              bath: "Baths",
-              sqm: "sqm",
-            },
-          },
-          cn: {
-            alertTitle: "🔔 租金支付提醒",
-            amountDue: "应付金额:",
-            forMonth: "对应月份:",
-            contractEnds: "合同结束:",
-            footer: "请在此群发送转账凭证，谢谢 🙏",
-            dateFormat: "zh-CN",
-            specs: {
-              bed: "卧室",
-              bath: "浴室",
-              sqm: "平方米",
-            },
-          },
-        };
-
-        const lang = (rule.language as "th" | "en" | "cn") || "th";
-        const dateFormat = getLocaleDateFormat(lang);
-
-        // Format Date based on locale
-        const monthYear = today.toLocaleDateString(dateFormat, {
-          month: "long",
-          year: "numeric",
-        });
-
-        const contractEndDate = activeContract.end_date
-          ? new Date(activeContract.end_date).toLocaleDateString(dateFormat, {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-          : "-";
-
-        const message = generateRentNotificationFlex({
-          propertyName,
-          price,
-          coverImageUrl,
-          bedrooms: property?.bedrooms || "-",
-          bathrooms: property?.bathrooms || "-",
-          sizeSqm: property?.size_sqm || "-",
-          monthYear,
-          contractEndDate,
-          language: lang,
-          isTest: false,
-        });
-
-        // Send to specific Group ID using existing helper logic?
-        // existing `sendLineNotification` uses `push` API but default to admin or env.
-        // We need to support sending to specific target.
-        // Let's check `lib/line.ts` capabilities.
-        // It seems `lib/line.ts` `sendLineNotification` takes `message` but internally expects ENV or single user.
-        // I should probably duplicate the fetch logic here for simplicity or update lib.
-        // For safety I will implement direct fetch here using the group_id from rule.
-
-        const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-        if (!token) throw new Error("Missing LINE Token");
-
-        const response = await fetch("https://api.line.me/v2/bot/message/push", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            to: rule.line_group_id,
-            messages: [message],
-          }),
-        });
-
-        if (!response.ok) {
-          const errorBody = await response.text();
-          throw new Error(`LINE API Error: ${response.status} - ${errorBody}`);
-        }
-
-        // Log Success to History
-        await supabase.from("rent_notification_history").insert({
-          rule_id: rule.id,
-          tenant_id: rule.tenant_id,
-          property_id: rule.property_id,
-          line_group_id: rule.line_group_id,
-          status: "SUCCESS",
-        });
-
-        // Update last_sent_at
-        await supabase
-          .from("rent_notification_rules")
-          .update({ last_sent_at: new Date().toISOString() })
-          .eq("id", rule.id);
-
-        results.push({
-          ruleId: rule.id,
-          status: "sent",
-          group: rule.line_group_id,
-        });
-      } catch (err: any) {
-        console.error(`Error processing rule ${rule.id}:`, err);
-
-        // Log Error to History
+      const chunk = pendingRules.slice(i, i + BATCH_SIZE);
+      
+      const chunkPromises = chunk.map(async (rule) => {
         try {
+          // Precise Contract Check
+          const { data: activeContract } = await supabase
+            .from("rental_contracts")
+            .select("*, deal:deals!inner(property_id)")
+            .eq("deal.property_id", rule.property_id)
+            .eq("status", "ACTIVE")
+            .gte("end_date", todayStr)
+            .maybeSingle();
+
+          if (!activeContract) return { ruleId: rule.id, status: "skipped_no_active_contract" };
+
+          // Prepare Message
+          const { propertyName, price, coverImageUrl, bedrooms, bathrooms, sizeSqm } = getPropertyDisplayInfo(rule);
+          const lang = (rule.language as "th" | "en" | "cn") || "th";
+          const dateFormat = getLocaleDateFormat(lang);
+          
+          const message = generateRentNotificationFlex({
+            propertyName, price, coverImageUrl, bedrooms, bathrooms, sizeSqm,
+            monthYear: today.toLocaleDateString(dateFormat, { month: "long", year: "numeric" }),
+            contractEndDate: activeContract.end_date ? new Date(activeContract.end_date).toLocaleDateString(dateFormat, { day: "numeric", month: "short", year: "numeric" }) : "-",
+            language: lang,
+            isTest: false,
+          });
+
+          // Push to LINE
+          const response = await fetch("https://api.line.me/v2/bot/message/push", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ to: rule.line_group_id, messages: [message] }),
+          });
+
+          if (!response.ok) {
+             const errText = await response.text();
+             throw new Error(`LINE API: ${response.status} - ${errText}`);
+          }
+
+          // Log Success
+          await supabase.from("rent_notification_history").insert({
+            rule_id: rule.id,
+            tenant_id: rule.tenant_id,
+            property_id: rule.property_id,
+            line_group_id: rule.line_group_id,
+            status: "SUCCESS"
+          });
+
+          await supabase.from("rent_notification_rules").update({ last_sent_at: new Date().toISOString() }).eq("id", rule.id);
+          return { ruleId: rule.id, status: "sent" };
+
+        } catch (err: any) {
+          console.error(`[Cron] Rule ${rule.id} failed:`, err.message);
+          
+          // Increment retry_count from latest attempt
+          const todayHistory = rule.rent_notification_history?.filter((h: any) => h.created_at.startsWith(todayStr));
+          const latestCount = todayHistory?.reduce((max: number, h: any) => Math.max(max, h.retry_count || 0), 0) || 0;
+
           await supabase.from("rent_notification_history").insert({
             rule_id: rule.id,
             tenant_id: rule.tenant_id,
@@ -241,23 +160,32 @@ export async function GET(req: NextRequest) {
             line_group_id: rule.line_group_id,
             status: "ERROR",
             error_message: err.message,
+            retry_count: latestCount + 1
           });
-        } catch (logErr) {
-          console.error("Failed to log error to history:", logErr);
-        }
 
-        results.push({ ruleId: rule.id, status: "error", error: err.message });
-      }
+          return { ruleId: rule.id, status: "error", error: err.message };
+        }
+      });
+
+      const chunkResults = await Promise.all(chunkPromises);
+      results.push(...chunkResults);
     }
 
+    const duration = performance.now() - startTime;
     return NextResponse.json({
       success: true,
-      processed: results.filter((r) => r.status === "sent").length,
-      skipped: results.filter((r) => r.status.startsWith("skipped")).length,
-      details: results,
+      processed: results.length,
+      duration_ms: Math.round(duration),
+      summary: {
+        sent: results.filter(r => r.status === "sent").length,
+        error: results.filter(r => r.status === "error").length,
+        skipped: results.filter(r => r.status.startsWith("skipped")).length
+      },
+      details: results
     });
+
   } catch (error: any) {
-    console.error("Cron Job Error:", error);
+    console.error("Cron Job Execution Failure:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -208,9 +208,9 @@ export function DealFormDialog({
             <Button
               type="button"
               onClick={handleNext}
-              className="flex-1 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200 transition-all"
+              className="flex-2 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200 transition-all"
             >
-              ต่อไป
+              ถัดไป
             </Button>
           ) : (
             <Button

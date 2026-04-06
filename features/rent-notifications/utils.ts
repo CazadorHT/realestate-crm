@@ -1,6 +1,61 @@
-import { RentNotificationRule } from "./types";
+import { FlexMessage } from "@line/bot-sdk";
 
-interface FlexMessageData {
+export function getLocaleDateFormat(lang: "th" | "en" | "cn") {
+  switch (lang) {
+    case "en": return "en-US";
+    case "cn": return "zh-CN";
+    default: return "th-TH";
+  }
+}
+
+/**
+ * Extracts and localizes property information for notifications
+ */
+export function getPropertyDisplayInfo(rule: any) {
+  const property = rule.properties;
+  const lang = (rule.language as "th" | "en" | "cn") || "th";
+
+  const propertyName =
+    (lang === "en"
+      ? property?.title_en
+      : lang === "cn"
+        ? property?.title_cn
+        : property?.title) ||
+    property?.title ||
+    "Property";
+
+  const price = property?.rental_price
+    ? `${property.rental_price.toLocaleString()} ${property?.currency || "THB"}`
+    : "-";
+
+  const images = property?.property_images || [];
+  const coverImageUrl =
+    images.find((img: any) => img.is_cover)?.image_url ||
+    images[0]?.image_url ||
+    "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600";
+
+  return {
+    propertyName,
+    price,
+    coverImageUrl,
+    bedrooms: property?.bedrooms || "-",
+    bathrooms: property?.bathrooms || "-",
+    sizeSqm: property?.size_sqm || "-",
+  };
+}
+
+export function generateRentNotificationFlex({
+  propertyName,
+  price,
+  coverImageUrl,
+  bedrooms,
+  bathrooms,
+  sizeSqm,
+  monthYear,
+  contractEndDate,
+  language = "th",
+  isTest = false,
+}: {
   propertyName: string;
   price: string;
   coverImageUrl: string;
@@ -9,28 +64,12 @@ interface FlexMessageData {
   sizeSqm: string | number;
   monthYear: string;
   contractEndDate: string;
-  language: "th" | "en" | "cn";
+  language?: "th" | "en" | "cn";
   isTest?: boolean;
-}
-
-export function generateRentNotificationFlex(data: FlexMessageData) {
-  const {
-    propertyName,
-    price,
-    coverImageUrl,
-    bedrooms,
-    bathrooms,
-    sizeSqm,
-    monthYear,
-    contractEndDate,
-    language,
-    isTest = false,
-  } = data;
-
+}): FlexMessage {
   const t = {
     th: {
-      alertTitle: isTest ? "🔔 ทดสอบแจ้งเตือน (TEST)" : "🔔 แจ้งเตือนชำระค่าเช่า",
-      testBody: "นี่คือข้อความทดสอบการตั้งค่าแจ้งเตือนค่าเช่า",
+      alertTitle: "🔔 แจ้งเตือนชำระค่าเช่า",
       amountDue: "ยอดที่ต้องชำระ:",
       forMonth: "ประจำเดือน:",
       contractEnds: "สิ้นสุดสัญญา:",
@@ -38,8 +77,7 @@ export function generateRentNotificationFlex(data: FlexMessageData) {
       specs: { bed: "ห้องนอน", bath: "ห้องน้ำ", sqm: "ตร.ม." },
     },
     en: {
-      alertTitle: isTest ? "🔔 Test Notification (TEST)" : "🔔 Rent Payment Reminder",
-      testBody: "This is a test notification for rent payment.",
+      alertTitle: "🔔 Rent Payment Reminder",
       amountDue: "Amount Owed:",
       forMonth: "For Month:",
       contractEnds: "Contract Ends:",
@@ -47,8 +85,7 @@ export function generateRentNotificationFlex(data: FlexMessageData) {
       specs: { bed: "Beds", bath: "Baths", sqm: "sqm" },
     },
     cn: {
-      alertTitle: isTest ? "🔔 测试通知 (TEST)" : "🔔 租金支付提醒",
-      testBody: "这是租金支付的测试通知。",
+      alertTitle: "🔔 租金支付提醒",
       amountDue: "应付金额:",
       forMonth: "对应月份:",
       contractEnds: "合同结束:",
@@ -57,28 +94,14 @@ export function generateRentNotificationFlex(data: FlexMessageData) {
     },
   };
 
-  const content = t[language] || t.th;
+  const labels = t[language] || t.th;
 
   return {
     type: "flex",
-    altText: `${content.alertTitle}: ${propertyName}`,
+    altText: isTest ? `[TEST] ${labels.alertTitle}` : labels.alertTitle,
     contents: {
       type: "bubble",
-      header: {
-        type: "box",
-        layout: "vertical",
-        backgroundColor: isTest ? "#1565C0" : "#2E7D32", // Blue for test, Green for real
-        paddingAll: "lg",
-        contents: [
-          {
-            type: "text",
-            text: content.alertTitle,
-            weight: "bold",
-            color: "#FFFFFF",
-            size: "md",
-          },
-        ],
-      },
+      size: "mega",
       hero: {
         type: "image",
         url: coverImageUrl,
@@ -93,140 +116,84 @@ export function generateRentNotificationFlex(data: FlexMessageData) {
         contents: [
           {
             type: "text",
-            text: propertyName,
+            text: labels.alertTitle,
             weight: "bold",
+            size: "xl",
+            color: "#1a202c",
+          },
+          {
+            type: "text",
+            text: propertyName,
             size: "md",
+            color: "#4a5568",
             wrap: true,
-            color: "#333333",
+            weight: "bold",
           },
           {
             type: "box",
             layout: "horizontal",
-            margin: "sm",
+            spacing: "sm",
             contents: [
               {
                 type: "text",
-                text: `🛏️ ${bedrooms || "-"}`,
+                text: `${bedrooms} ${labels.specs.bed} | ${bathrooms} ${labels.specs.bath} | ${sizeSqm} ${labels.specs.sqm}`,
                 size: "xs",
-                color: "#888888",
-                flex: 1,
-              },
-              {
-                type: "text",
-                text: `🚿 ${bathrooms || "-"}`,
-                size: "xs",
-                color: "#888888",
-                flex: 1,
-              },
-              {
-                type: "text",
-                text: `📏 ${sizeSqm || "-"} ${content.specs.sqm}`,
-                size: "xs",
-                color: "#888888",
-                flex: 2,
+                color: "#a0aec0",
               },
             ],
           },
-          { type: "separator", margin: "md" },
+          { type: "separator", margin: "lg" },
           {
             type: "box",
             layout: "vertical",
-            margin: "md",
+            margin: "lg",
             spacing: "sm",
             contents: [
-              isTest ? {
-                type: "text",
-                text: content.testBody,
-                color: "#666666",
-                size: "xs",
-                wrap: true,
-              } : null,
               {
                 type: "box",
-                layout: "baseline",
+                layout: "horizontal",
                 contents: [
-                  {
-                    type: "text",
-                    text: content.amountDue,
-                    color: "#888888",
-                    size: "sm",
-                    flex: 2,
-                  },
-                  {
-                    type: "text",
-                    text: price,
-                    weight: "bold",
-                    color: "#E53935",
-                    size: "xl",
-                    flex: 4,
-                    align: "end",
-                  },
+                  { type: "text", text: labels.forMonth, size: "sm", color: "#718096" },
+                  { type: "text", text: monthYear, size: "sm", color: "#2d3748", align: "end", weight: "bold" },
                 ],
               },
               {
                 type: "box",
-                layout: "baseline",
-                margin: "md",
+                layout: "horizontal",
                 contents: [
-                  {
-                    type: "text",
-                    text: content.forMonth,
-                    color: "#888888",
-                    size: "sm",
-                    flex: 2,
-                  },
-                  {
-                    type: "text",
-                    text: monthYear,
-                    color: "#333333",
-                    size: "sm",
-                    flex: 4,
-                    align: "end",
-                  },
+                  { type: "text", text: labels.amountDue, size: "sm", color: "#718096" },
+                  { type: "text", text: price, size: "sm", color: "#e53e3e", align: "end", weight: "bold" },
                 ],
               },
               {
                 type: "box",
-                layout: "baseline",
+                layout: "horizontal",
                 contents: [
-                  {
-                    type: "text",
-                    text: content.contractEnds,
-                    color: "#888888",
-                    size: "sm",
-                    flex: 2,
-                  },
-                  {
-                    type: "text",
-                    text: contractEndDate,
-                    color: "#333333",
-                    size: "sm",
-                    flex: 4,
-                    align: "end",
-                  },
+                  { type: "text", text: labels.contractEnds, size: "sm", color: "#718096" },
+                  { type: "text", text: contractEndDate, size: "sm", color: "#2d3748", align: "end" },
                 ],
               },
-            ].filter(Boolean) as any[],
-          },
-          { type: "separator", margin: "md" },
-          {
-            type: "text",
-            text: content.footer,
-            size: "xs",
-            color: "#999999",
-            wrap: true,
-            margin: "md",
+            ],
           },
         ],
       },
+      footer: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: labels.footer,
+            size: "xs",
+            color: "#a0aec0",
+            align: "center",
+            wrap: true,
+          },
+        ],
+      },
+      styles: {
+        footer: { separator: true },
+      },
     },
   };
-}
-
-export function getLocaleDateFormat(lang: string) {
-  switch (lang) {
-    case "en": return "en-US";
-    case "cn": return "zh-CN";
-    default: return "th-TH";
-  }
 }

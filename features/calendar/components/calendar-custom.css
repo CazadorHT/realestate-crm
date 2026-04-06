@@ -49,7 +49,7 @@
   }
 
   .fc-day-today .fc-daygrid-day-number {
-    @apply bg-indigo-600 text-white rounded-lg w-7 h-7 flex items-center justify-center m-1 shadow-md shadow-indigo-100;
+    @apply bg-indigo-600 text-white! rounded-lg w-7 h-7 flex items-center justify-center m-1 shadow-md shadow-indigo-100;
   }
 
   /* Event Styling */

@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/rent-notifications",
-      "schedule": "0 9 * * *"
+      "schedule": "0 * * * *"
     }
   ]
 }

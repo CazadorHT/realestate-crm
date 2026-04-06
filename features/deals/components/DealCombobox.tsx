@@ -5,11 +5,7 @@ import { Check, ChevronsUpDown, X, Building2 } from "lucide-react";
 import { DealWithProperty } from "../types";
 
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
   Command,
   CommandEmpty,
@@ -47,7 +43,8 @@ export function DealCombobox({
   status,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [items, setItems] = useState<DealItem[]>([]);
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
@@ -60,6 +57,10 @@ export function DealCombobox({
   );
 
   async function fetchPage(nextPage = 1, currentQ = q) {
+    const isInitial = nextPage === 1;
+    if (isInitial) setIsLoading(true);
+    else setIsFetchingMore(true);
+
     try {
       const params = new URLSearchParams();
       if (currentQ) params.set("q", currentQ);
@@ -96,54 +97,59 @@ export function DealCombobox({
         setItems((p) => [...p, ...pageItems]);
       }
 
-      setHasMore(
-        (payload.data ?? []).length === pageSize &&
-          items.length + pageItems.length < (payload.count ?? 0),
-      );
       setPage(nextPage);
     } catch (err) {
       console.error(err);
+    } finally {
+      if (isInitial) setIsLoading(false);
+      else setIsFetchingMore(false);
     }
   }
 
   useEffect(() => {
     if (!open) return;
     setQ("");
-    startTransition(() => fetchPage(1, ""));
+    fetchPage(1, "");
   }, [open, status]);
 
   useEffect(() => {
+    if (!open) return;
     const handle = setTimeout(() => {
-      startTransition(() => fetchPage(1, q));
+      fetchPage(1, q);
     }, 250);
     return () => clearTimeout(handle);
-  }, [q, status]);
+  }, [q, status, open]);
 
   function onScroll(e: React.UIEvent<HTMLDivElement>) {
     const target = e.currentTarget;
     const nearBottom =
       target.scrollTop + target.clientHeight >= target.scrollHeight - 30;
-    if (nearBottom && !isPending && hasMore) {
-      startTransition(() => fetchPage(page + 1, q));
+    if (nearBottom && !isLoading && !isFetchingMore && hasMore) {
+      fetchPage(page + 1, q);
     }
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={true}>
-      <div className="relative flex items-center w-full group">
-        <PopoverTrigger asChild>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      title="เลือกดีล"
+      description="ค้นหาและเลือกดีลที่ปิดการขาย/เช่าแล้ว"
+      className="sm:max-w-[750px]"
+      trigger={
+        <div className="relative flex items-center w-full group">
           <Button
             type="button"
             variant="outline"
             className={cn(
-              "w-full justify-between h-auto py-2 px-3 text-left  border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-200 shadow-sm",
-              value && "pr-10 border-blue-200 bg-blue-50/20 x",
+              "w-full justify-between h-auto py-2 px-3 text-left border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-200 shadow-sm",
+              value && "pr-10 border-blue-200 bg-blue-50/20",
             )}
           >
-            <div className="flex items-center gap-3 truncate overflow-hidden  ">
+            <div className="flex items-center gap-3 truncate overflow-hidden">
               {selected ? (
                 <>
-                  <div className="h-10 w-10 shrink-0 overflow-hidden  rounded-md bg-slate-100 border border-slate-200 shadow-inner">
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-slate-100 border border-slate-200 shadow-inner">
                     {selected.cover_image_url ? (
                       <img
                         src={selected.cover_image_url}
@@ -157,7 +163,7 @@ export function DealCombobox({
                     )}
                   </div>
                   <div className="flex flex-col items-start min-w-0">
-                    <span className="font-medium text-slate-900 block line-clamp-2 text-wrap leading-tight">
+                    <span className="font-medium text-slate-900 block line-clamp-2 text-wrap leading-tight text-left">
                       {selected.property_title}
                     </span>
                     <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium truncate w-full">
@@ -184,7 +190,7 @@ export function DealCombobox({
                   </div>
                 </>
               ) : (
-                <span className="text-slate-400 font-normal ">
+                <span className="text-slate-400 font-normal">
                   {placeholder}
                 </span>
               )}
@@ -193,37 +199,43 @@ export function DealCombobox({
               <ChevronsUpDown className="h-4 w-4 opacity-40 shrink-0 ml-2 text-slate-500" />
             )}
           </Button>
-        </PopoverTrigger>
 
-        {value && (
-          <Button
-            size="icon"
-            variant="ghost"
-            className="absolute right-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-7 w-7 rounded-md transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              onChange(null, null);
-            }}
-            title="ล้างการเลือก"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-
-      <PopoverContent
-        className="w-[320px] md:w-[700px]  p-0 bg-white shadow-xl border border-slate-200"
-        align="start"
-      >
+          {value && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="absolute right-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-7 w-7 rounded-md transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange(null, null);
+              }}
+              title="ล้างการเลือก"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      }
+      isLoading={isLoading}
+      minHeight="500px"
+    >
+      <div className="flex flex-col h-full">
         <Command>
           <CommandInput
             placeholder="ค้นหาดีล (ชื่อทรัพย์, ชื่อลูกค้า)..."
             value={q}
             onValueChange={setQ}
           />
-          <CommandList onScroll={onScroll}>
-            <CommandEmpty>
-              {isPending ? "กำลังค้นหา..." : "ไม่พบดีล"}
+          <CommandList onScroll={onScroll} className="min-h-[500px]">
+            <CommandEmpty className="py-20 text-center">
+              {isLoading ? (
+                 <div className="flex flex-col items-center gap-3">
+                   {/* This is a fallback but ResponsiveDialog overlay handles most of it */}
+                   <span className="text-slate-400">กำลังค้นหา...</span>
+                 </div>
+              ) : (
+                "ไม่พบดีล"
+              )}
             </CommandEmpty>
 
             {items.map((item) => (
@@ -316,13 +328,24 @@ export function DealCombobox({
             ))}
 
             {hasMore && (
-              <div className="p-2 text-center text-sm text-muted-foreground">
-                เลื่อนเพื่อโหลดเพิ่มเติม...
+              <div className="p-6 text-center">
+                {isFetchingMore ? (
+                  <div className="flex flex-col items-center gap-2">
+                     <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                       กำลังโหลดข้อมูล...
+                     </span>
+                  </div>
+                ) : (
+                   <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+                     เลื่อนเพื่อโหลดเพิ่มเติม...
+                   </span>
+                )}
               </div>
             )}
           </CommandList>
         </Command>
-      </PopoverContent>
-    </Popover>
+      </div>
+    </ResponsiveDialog>
   );
 }

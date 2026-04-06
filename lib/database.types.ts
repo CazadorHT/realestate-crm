@@ -2035,39 +2035,49 @@ export type Database = {
       }
       rent_notification_history: {
         Row: {
+          created_at: string
           error_message: string | null
           id: string
           line_group_id: string | null
           metadata: Json | null
           property_id: string | null
+          retry_count: number | null
           rule_id: string | null
-          sent_at: string
           status: string
           tenant_id: string | null
         }
         Insert: {
+          created_at?: string
           error_message?: string | null
           id?: string
           line_group_id?: string | null
           metadata?: Json | null
           property_id?: string | null
+          retry_count?: number | null
           rule_id?: string | null
-          sent_at?: string
           status: string
           tenant_id?: string | null
         }
         Update: {
+          created_at?: string
           error_message?: string | null
           id?: string
           line_group_id?: string | null
           metadata?: Json | null
           property_id?: string | null
+          retry_count?: number | null
           rule_id?: string | null
-          sent_at?: string
           status?: string
           tenant_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "rent_notification_history_line_group_id_fkey"
+            columns: ["line_group_id"]
+            isOneToOne: false
+            referencedRelation: "line_groups"
+            referencedColumns: ["group_id"]
+          },
           {
             foreignKeyName: "rent_notification_history_property_id_fkey"
             columns: ["property_id"]
@@ -2107,6 +2117,7 @@ export type Database = {
           last_sent_at: string | null
           line_group_id: string
           notification_day: number
+          notification_hour: number | null
           property_id: string
           tenant_id: string | null
           updated_at: string | null
@@ -2119,6 +2130,7 @@ export type Database = {
           last_sent_at?: string | null
           line_group_id: string
           notification_day: number
+          notification_hour?: number | null
           property_id: string
           tenant_id?: string | null
           updated_at?: string | null
@@ -2131,6 +2143,7 @@ export type Database = {
           last_sent_at?: string | null
           line_group_id?: string
           notification_day?: number
+          notification_hour?: number | null
           property_id?: string
           tenant_id?: string | null
           updated_at?: string | null
@@ -2739,6 +2752,14 @@ export type Database = {
         Returns: Json
       }
       get_isolation_setting: { Args: { setting_key: string }; Returns: boolean }
+      get_properties_without_notification_rules: {
+        Args: { p_tenant_id?: string }
+        Returns: {
+          id: string
+          image_url: string
+          title: string
+        }[]
+      }
       get_user_tenants: {
         Args: never
         Returns: {

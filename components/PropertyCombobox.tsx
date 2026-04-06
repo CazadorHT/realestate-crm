@@ -8,6 +8,18 @@ import {
   Search,
   X,
   MapPin,
+  Home,
+  Tag,
+  Key,
+  Repeat,
+  Map,
+  Store,
+  Briefcase,
+  Box,
+  CircleEllipsis,
+  CheckCircle2,
+  Clock,
+  XCircle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -171,7 +183,7 @@ export function PropertyCombobox({
   required,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState<PropertyPickItem[]>([]);
   const [counts, setCounts] = useState<PropertyStats | null>(null);
   const [q, setQ] = useState("");
@@ -187,8 +199,9 @@ export function PropertyCombobox({
   // Debounced search when query changes
   useEffect(() => {
     if (!open) return;
-    const handle = setTimeout(() => {
-      startTransition(async () => {
+    const handle = setTimeout(async () => {
+      setIsLoading(true);
+      try {
         const res = await searchPropertiesAction({
           q,
           listing_type: listingType || undefined,
@@ -200,10 +213,12 @@ export function PropertyCombobox({
           setItems(res.data.properties || []);
           setCounts(res.data.counts || null);
         }
-      });
-    }, 200);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
     return () => clearTimeout(handle);
-  }, [open, q, listingType, propertyType, status, startTransition]);
+  }, [open, q, listingType, propertyType, status]);
 
   // Load fresh list when dialog opens
   useEffect(() => {
@@ -212,19 +227,25 @@ export function PropertyCombobox({
     setListingType(null);
     setPropertyType(null);
     setStatus(null);
-    startTransition(async () => {
-      const res = await searchPropertiesAction({ 
-        q: "", 
-        listing_type: undefined,
-        property_type: undefined,
-        status: undefined
-      });
-      if (res.success) {
-        setItems(res.data.properties || []);
-        setCounts(res.data.counts || null);
+    const loadInitial = async () => {
+      setIsLoading(true);
+      try {
+        const res = await searchPropertiesAction({ 
+          q: "", 
+          listing_type: undefined,
+          property_type: undefined,
+          status: undefined
+        });
+        if (res.success) {
+          setItems(res.data.properties || []);
+          setCounts(res.data.counts || null);
+        }
+      } finally {
+        setIsLoading(false);
       }
-    });
-  }, [open, startTransition]);
+    };
+    loadInitial();
+  }, [open]);
 
   const handleSelect = (item: PropertyPickItem) => {
     onChange(item.id, item);
@@ -321,6 +342,8 @@ export function PropertyCombobox({
       description="ค้นหาและเลือกทรัพย์ที่ต้องการสร้างดีล"
       className="sm:max-w-[860px]"
       trigger={trigger}
+      isLoading={isLoading}
+      minHeight="500px"
     >
       <div className="flex flex-col ">
         {/* Sticky Search bar */}
@@ -345,17 +368,18 @@ export function PropertyCombobox({
               )}
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar  py-1">
               {/* Listing Type Filter */}
               <FilterSelector
                 label="ประเภทประกาศ"
+                description="เลือกรูปแบบการประกาศขายหรือเช่า"
                 value={listingType}
                 counts={counts?.listing_type}
                 options={[
-                  { id: null, label: "ประกาศทั้งหมด" },
-                  { id: "SALE", label: "ขาย", ids: ["SALE", "SALE_RENT", "SALE_AND_RENT"] },
-                  { id: "RENT", label: "เช่า", ids: ["RENT", "SALE_RENT", "SALE_AND_RENT"] },
-                  { id: "SALE_AND_RENT", label: "ขาย/เช่า", ids: ["SALE_RENT", "SALE_AND_RENT"] },
+                  { id: null, label: "ประกาศทั้งหมด", icon: Search },
+                  { id: "SALE", label: "ขาย", ids: ["SALE", "SALE_RENT", "SALE_AND_RENT"], color: "bg-blue-500", icon: Tag },
+                  { id: "RENT", label: "เช่า", ids: ["RENT", "SALE_RENT", "SALE_AND_RENT"], color: "bg-emerald-500", icon: Key },
+                  { id: "SALE_AND_RENT", label: "ขาย/เช่า", ids: ["SALE_RENT", "SALE_AND_RENT"], color: "bg-indigo-500", icon: Repeat },
                 ]}
                 onSelect={setListingType}
               />
@@ -363,20 +387,21 @@ export function PropertyCombobox({
               {/* Property Type Filter */}
               <FilterSelector
                 label="ประเภททรัพย์"
+                description="ระบุประเภทอสังหาริมทรัพย์ที่ต้องการ"
                 value={propertyType}
                 counts={counts?.property_type}
                 options={[
-                  { id: null, label: "ทรัพย์ทุกประเภท" },
-                  { id: "CONDO", label: "คอนโด" },
-                  { id: "HOUSE", label: "บ้านเดี่ยว" },
-                  { id: "TOWNHOME", label: "ทาวน์โฮม" },
-                  { id: "VILLA", label: "วิลล่า" },
-                  { id: "POOL_VILLA", label: "พูลวิลล่า" },
-                  { id: "LAND", label: "ที่ดิน" },
-                  { id: "COMMERCIAL_BUILDING", label: "อาคารพาณิชย์" },
-                  { id: "OFFICE_BUILDING", label: "ออฟฟิศ" },
-                  { id: "WAREHOUSE", label: "โกดัง" },
-                  { id: "OTHER", label: "อื่นๆ" },
+                  { id: null, label: "ทรัพย์ทุกประเภท", icon: Building2 },
+                  { id: "CONDO", label: "คอนโด", icon: Building2 },
+                  { id: "HOUSE", label: "บ้านเดี่ยว", icon: Home },
+                  { id: "TOWNHOME", label: "ทาวน์โฮม", icon: Home },
+                  { id: "VILLA", label: "วิลล่า", icon: Home },
+                  { id: "POOL_VILLA", label: "พูลวิลล่า", icon: Home },
+                  { id: "LAND", label: "ที่ดิน", icon: Map },
+                  { id: "COMMERCIAL_BUILDING", label: "อาคารพาณิชย์", icon: Store },
+                  { id: "OFFICE_BUILDING", label: "ออฟฟิศ", icon: Briefcase },
+                  { id: "WAREHOUSE", label: "โกดัง", icon: Box },
+                  { id: "OTHER", label: "อื่นๆ", icon: CircleEllipsis },
                 ]}
                 onSelect={setPropertyType}
               />
@@ -384,13 +409,14 @@ export function PropertyCombobox({
               {/* Status Filter */}
               <FilterSelector
                 label="สถานะทรัพย์"
+                description="กรองรายการตามสถานะความพร้อม"
                 value={status}
                 counts={counts?.status}
                 options={[
-                  { id: null, label: "สถานะทั้งหมด" },
-                  { id: ["ACTIVE"], label: "ว่าง", color: "bg-emerald-500", ids: ["ACTIVE"] },
-                  { id: ["RESERVED", "UNDER_OFFER"], label: "จอง/มัดจำ", color: "bg-amber-500", ids: ["RESERVED", "UNDER_OFFER"] },
-                  { id: ["SOLD", "RENTED"], label: "ปิดแล้ว", color: "bg-slate-400", ids: ["SOLD", "RENTED"] },
+                  { id: null, label: "สถานะทั้งหมด", icon: Search },
+                  { id: ["ACTIVE"], label: "ว่าง", color: "bg-emerald-500", ids: ["ACTIVE"], icon: CheckCircle2 },
+                  { id: ["RESERVED", "UNDER_OFFER"], label: "จอง/มัดจำ", color: "bg-amber-500", ids: ["RESERVED", "UNDER_OFFER"], icon: Clock },
+                  { id: ["SOLD", "RENTED"], label: "ปิดแล้ว", color: "bg-slate-400", ids: ["SOLD", "RENTED"], icon: XCircle },
                 ]}
                 onSelect={setStatus}
                 renderLabel={(val) => {
@@ -405,24 +431,8 @@ export function PropertyCombobox({
         </div>
 
         {/* Card Grid */}
-        <div className="px-4 pb-4 mt-4">
-          {isPending ? (
-            /* Loading Skeleton */
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="animate-pulse rounded-2xl border border-slate-100 bg-slate-50 overflow-hidden"
-                >
-                  <div className="h-32 bg-slate-200" />
-                  <div className="p-3 space-y-2">
-                    <div className="h-3.5 bg-slate-200 rounded w-3/4" />
-                    <div className="h-3 bg-slate-100 rounded w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : items.length === 0 ? (
+        <div className="px-4 pb-4 mt-4 min-h-[500px]">
+          {items.length === 0 && !isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
               <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center">
                 <Building2 className="h-8 w-8 text-slate-300" />
@@ -543,18 +553,22 @@ export function PropertyCombobox({
  */
 function FilterSelector<T>({
   label,
+  description,
   value,
   options,
   onSelect,
   renderLabel,
   counts,
+  className,
 }: {
   label: string;
+  description?: string;
   value: T;
-  options: { id: T; label: string; color?: string; ids?: string[] }[];
+  options: { id: T; label: string; color?: string; ids?: string[]; icon?: React.ComponentType<{ className?: string }> }[];
   onSelect: (val: T) => void;
   renderLabel?: (val: T) => string;
   counts?: Record<string, number>;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -571,6 +585,8 @@ function FilterSelector<T>({
       open={open}
       onOpenChange={setOpen}
       title={label}
+      description={description}
+      className="lg:max-w-[400px]!"
       trigger={
         <Button
           variant="outline"
@@ -579,7 +595,8 @@ function FilterSelector<T>({
             "h-9 rounded-xl px-4 text-[11px] font-bold transition-all border-slate-200 shadow-xs gap-2 shrink-0",
             isActive
               ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100 hover:bg-blue-700 hover:text-white"
-              : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-700",
+              : "bg-white text-slate-600 hover:bg-slate-200 hover:text-slate-700",
+            className
           )}
         >
           <span>{currentLabel}</span>
@@ -587,7 +604,7 @@ function FilterSelector<T>({
         </Button>
       }
     >
-      <div className="grid grid-cols-1 gap-2 p-6 mb-10 h-[50vh]">
+      <div className="flex flex-col gap-2 p-6 overflow-y-auto max-h-[60vh] ">
         {options.map((opt) => {
           const selected = JSON.stringify(opt.id) === JSON.stringify(value);
           // Calculate sum of counts for the ids list, or use the id itself
@@ -614,7 +631,7 @@ function FilterSelector<T>({
                 setOpen(false);
               }}
               className={cn(
-                "w-full flex items-center justify-between p-4 rounded-2xl transition-all active:scale-[0.98] border",
+                "w-full flex h-14 items-center justify-between px-4 py-2 rounded-2xl transition-all active:scale-[0.98] border shrink-0",
                 selected
                   ? "bg-blue-50 border-blue-100 shadow-sm text-blue-700"
                   : "hover:bg-slate-50 border-transparent text-slate-700",
@@ -622,17 +639,31 @@ function FilterSelector<T>({
               )}
             >
               <div className="flex items-center gap-3">
-                {opt.color && (
-                  <div className={cn("h-2 w-2 rounded-full", opt.color)} />
-                )}
-                <div className="flex items-baseline gap-2">
+                <div className={cn(
+                  "h-10 w-10 rounded-xl flex items-center justify-center transition-all",
+                  selected ? "bg-blue-600/10" : "bg-slate-100"
+                )}>
+                  {opt.icon ? (
+                    <opt.icon className={cn(
+                      "h-5 w-5",
+                      selected ? "text-blue-600" : "text-slate-400"
+                    )} />
+                  ) : (
+                    <div className={cn(
+                      "h-2 w-2 rounded-full",
+                      opt.color || (selected ? "bg-blue-600" : "bg-slate-300")
+                    )} />
+                  )}
+                </div>
+
+                <div className="flex flex-col items-start leading-none">
                   <span className="text-sm font-bold">{opt.label}</span>
                   {count !== undefined && (
                     <span className={cn(
-                      "text-[10px] font-medium",
-                      selected ? "text-blue-500" : "text-slate-400"
+                      "text-[10px] font-bold uppercase tracking-widest mt-1",
+                      selected ? "text-blue-500" : "text-emerald-400"
                     )}>
-                      ({count})
+                      {count} รายการ
                     </span>
                   )}
                 </div>
