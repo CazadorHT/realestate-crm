@@ -602,6 +602,13 @@
     "column_default": null
   },
   {
+    "table_name": "deals",
+    "column_name": "undetermined_date",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
     "table_name": "documents",
     "column_name": "id",
     "data_type": "uuid",
@@ -3101,6 +3108,34 @@
     "column_default": "now()"
   },
   {
+    "table_name": "property_views_log",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "property_views_log",
+    "column_name": "property_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "property_views_log",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "property_views_log",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
     "table_name": "rent_notification_history",
     "column_name": "id",
     "data_type": "uuid",
@@ -3151,7 +3186,7 @@
   },
   {
     "table_name": "rent_notification_history",
-    "column_name": "sent_at",
+    "column_name": "created_at",
     "data_type": "timestamp with time zone",
     "is_nullable": "NO",
     "column_default": "now()"
@@ -3162,6 +3197,13 @@
     "data_type": "jsonb",
     "is_nullable": "YES",
     "column_default": "'{}'::jsonb"
+  },
+  {
+    "table_name": "rent_notification_history",
+    "column_name": "retry_count",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "0"
   },
   {
     "table_name": "rent_notification_rules",
@@ -3232,6 +3274,13 @@
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "rent_notification_rules",
+    "column_name": "notification_hour",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "9"
   },
   {
     "table_name": "rental_contracts",

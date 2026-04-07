@@ -12,6 +12,7 @@ import {
   HelpCircle,
   Plus,
   PlusCircle,
+  Bell,
   type LucideIcon,
 } from "lucide-react";
 import { ReactNode } from "react";
@@ -27,6 +28,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   helpCircle: HelpCircle,
   plus: Plus,
   plusCircle: PlusCircle,
+  bell: Bell,
 };
 
 interface PageHeaderProps {

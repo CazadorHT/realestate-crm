@@ -116,6 +116,10 @@
     "rls_enabled": true
   },
   {
+    "table_name": "property_views_log",
+    "rls_enabled": true
+  },
+  {
     "table_name": "rent_notification_history",
     "rls_enabled": true
   },

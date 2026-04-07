@@ -373,6 +373,26 @@
     "schemaname": "public",
     "tablename": "notifications",
     "rls_enabled": true,
+    "policyname": "Authenticated users can insert notifications",
+    "permissive": "PERMISSIVE",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notifications",
+    "rls_enabled": true,
+    "policyname": "Users can delete their own notifications",
+    "permissive": "PERMISSIVE",
+    "cmd": "DELETE",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notifications",
+    "rls_enabled": true,
     "policyname": "Users can see their own notifications",
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",
@@ -386,6 +406,16 @@
     "policyname": "Users can update their own notifications",
     "permissive": "PERMISSIVE",
     "cmd": "UPDATE",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": "(auth.uid() = user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notifications",
+    "rls_enabled": true,
+    "policyname": "Users can view their own notifications",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
     "qual": "(auth.uid() = user_id)",
     "with_check": null
   },
@@ -748,6 +778,26 @@
     "cmd": "ALL",
     "qual": "(auth.role() = 'authenticated'::text)",
     "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "property_views_log",
+    "rls_enabled": true,
+    "policyname": "Branch isolation for property views",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(is_system_admin() OR is_tenant_admin(tenant_id))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "property_views_log",
+    "rls_enabled": true,
+    "policyname": "Public can insert property views log",
+    "permissive": "PERMISSIVE",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
   },
   {
     "schemaname": "public",

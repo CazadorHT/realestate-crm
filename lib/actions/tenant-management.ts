@@ -579,4 +579,61 @@ export async function deleteTenantAction(id: string) {
 
   return { success: true };
 }
+export async function acceptInvitationAction(tenantId: string) {
+  const ctx = await requireAuthContext();
+  const adminSupabase = createAdminClient();
 
+  // 1. Find the pending invitation
+  const { data: inv, error: fError } = await adminSupabase
+    .from("tenant_invitations")
+    .select("*")
+    .eq("tenant_id", tenantId)
+    .eq("email", ctx.user.email!)
+    .eq("status", "PENDING")
+    .maybeSingle();
+
+  if (fError || !inv) {
+    return { success: false, message: "คำเชิญอาจหมดอายุหรือถูกยกเลิกไปแล้ว" };
+  }
+
+  // 2. Add to members
+  const { error: mError } = await adminSupabase.from("tenant_members").insert({
+    tenant_id: tenantId,
+    profile_id: ctx.user.id,
+    role: inv.role as any,
+  });
+
+  if (mError) {
+    console.error("Error adding member from invite:", mError);
+    return { success: false, message: "ไม่สามารถเข้าร่วมสาขาได้" };
+  }
+
+  // 3. Update invite status
+  await adminSupabase
+    .from("tenant_invitations")
+    .update({ status: "ACCEPTED" })
+    .eq("id", inv.id);
+
+  revalidatePath("/protected/settings/branches");
+  revalidatePath("/");
+  
+  return { success: true };
+}
+
+export async function declineInvitationAction(tenantId: string) {
+  const ctx = await requireAuthContext();
+  const adminSupabase = createAdminClient();
+
+  const { error } = await adminSupabase
+    .from("tenant_invitations")
+    .delete()
+    .eq("tenant_id", tenantId)
+    .eq("email", ctx.user.email!);
+
+  if (error) {
+    return { success: false, message: "เกิดข้อผิดพลาดในการยกเลิกคำเชิญ" };
+  }
+
+  revalidatePath("/");
+  return { success: true };
+}
