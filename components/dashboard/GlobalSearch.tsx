@@ -114,7 +114,7 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
             className
           )}
           onClick={() => setOpen(true)}
-          aria-label="Search"
+          aria-label="ค้นหา"
         >
           <Search className="h-5 w-5" />
         </Button>
@@ -181,7 +181,7 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
 
             {properties.length > 0 && (
               <CommandGroup 
-                heading={<span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-blue-600 mb-2 px-2 mt-4">ทัพย์สิน (Properties) <span className="h-px flex-1 bg-blue-100" /></span>}
+                heading={<span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-blue-600 mb-2 px-2 mt-4">ทรัพย์สิน (Properties) <span className="h-px flex-1 bg-blue-100" /></span>}
                 className="px-1"
               >
                 {properties.map((item) => (

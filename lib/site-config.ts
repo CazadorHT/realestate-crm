@@ -15,7 +15,7 @@ const getBaseUrl = () => {
 export const siteConfig = {
   name: "VC Connect Asset",
   company: "VC Connect Asset Co., Ltd.",
-  description: "Real Estate CRM & Listing Portal",
+  description: "ระบบจัดการอสังหาริมทรัพย์และพอร์ทัลประกาศขาย-เช่า",
   url: getBaseUrl(),
   logo: "/images/v-link-svg-png-logo.svg",
   logoDark: "/images/v-link-svg-png-dark.svg",

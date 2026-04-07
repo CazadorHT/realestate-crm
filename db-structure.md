@@ -1435,6 +1435,69 @@
     "column_default": "'{}'::jsonb"
   },
   {
+    "table_name": "maintenance_logs",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "maintenance_logs",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "maintenance_logs",
+    "column_name": "entity_type",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "maintenance_logs",
+    "column_name": "entity_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "maintenance_logs",
+    "column_name": "action",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "maintenance_logs",
+    "column_name": "details",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "maintenance_logs",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'pending'::text"
+  },
+  {
+    "table_name": "maintenance_logs",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "maintenance_logs",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
     "table_name": "notifications",
     "column_name": "id",
     "data_type": "uuid",
@@ -3465,6 +3528,55 @@
     "column_default": null
   },
   {
+    "table_name": "service_views_log",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "service_views_log",
+    "column_name": "service_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "service_views_log",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "service_views_log",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "service_views_log",
+    "column_name": "client_ip_hash",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "service_views_log",
+    "column_name": "user_agent",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "service_views_log",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
     "table_name": "services",
     "column_name": "id",
     "data_type": "uuid",
@@ -3603,6 +3715,20 @@
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "services",
+    "column_name": "deleted_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "services",
+    "column_name": "view_count",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": "0"
   },
   {
     "table_name": "site_settings",

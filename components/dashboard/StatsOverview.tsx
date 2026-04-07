@@ -72,11 +72,11 @@ export function StatsOverview({ initialStats }: StatsOverviewProps) {
       title: `รายได้${getTitleSuffix()}`,
       value: `฿${stats.revenueThisMonth.toLocaleString()}`,
       change: stats.revenueChange,
-      context: "ยอดขาย + เช่า (Sold/Rented)",
+      context: "ยอดขาย + เช่า (ปิดรายการแล้ว)",
       icon: DollarSign,
     },
     {
-      title: `Leads ${getTitleSuffix()}`,
+      title: `ลีดใหม่${getTitleSuffix()}`,
       value: stats.leadsThisMonth.toString(),
       change: stats.leadsChange,
       context: `รวม ${stats.leadsTotal} ราย`,

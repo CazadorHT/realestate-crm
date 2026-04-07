@@ -139,13 +139,13 @@ export function MobileNav({ role }: { role: UserRole }) {
 
   const publicItems: NavItem[] = [
     {
-      title: "บทความ (Blog)",
+      title: "บทความและข่าวสาร",
       href: "/protected/blogs",
       icon: LayoutTemplate,
       active: pathname?.startsWith("/protected/blogs") ?? false,
     },
     {
-      title: "บริการ (Services)",
+      title: "การบริการและโซลูชัน",
       href: "/protected/services",
       icon: Layout,
       active: pathname?.startsWith("/protected/services") ?? false,
@@ -282,7 +282,7 @@ export function MobileNav({ role }: { role: UserRole }) {
         side="left"
         className="w-[300px] p-0 overflow-y-auto border-r border-slate-200 bg-slate-50 "
       >
-        <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
+        <SheetTitle className="sr-only">เมนูหลัก</SheetTitle>
         <div className="p-6 border-b border-slate-200 bg-white/50 sticky top-0 z-20">
           <div className="flex items-center justify-between gap-3">
             <div className="flex flex-col">

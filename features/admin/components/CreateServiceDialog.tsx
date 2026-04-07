@@ -30,6 +30,7 @@ export function CreateServiceDialog() {
       open={open}
       onOpenChange={setOpen}
       title="สร้างบริการใหม่"
+      description="ระบุรายละเอียดเบื้องต้นสำหรับบริการใหม่ของคุณเพื่อเริ่มการนำเสนอ"
       className="md:max-w-6xl"
       trigger={
         <Button

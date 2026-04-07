@@ -1020,6 +1020,42 @@ export type Database = {
         }
         Relationships: []
       }
+      maintenance_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          entity_id: string
+          entity_type: string
+          id: string
+          status: string | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          status?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          status?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -2313,6 +2349,44 @@ export type Database = {
           },
         ]
       }
+      service_views_log: {
+        Row: {
+          client_ip_hash: string | null
+          created_at: string | null
+          id: string
+          service_id: string | null
+          tenant_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          client_ip_hash?: string | null
+          created_at?: string | null
+          id?: string
+          service_id?: string | null
+          tenant_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          client_ip_hash?: string | null
+          created_at?: string | null
+          id?: string
+          service_id?: string | null
+          tenant_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_views_log_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           contact_link: string | null
@@ -2321,6 +2395,7 @@ export type Database = {
           content_en: string | null
           cover_image: string | null
           created_at: string
+          deleted_at: string | null
           description: string | null
           description_cn: string | null
           description_en: string | null
@@ -2335,6 +2410,7 @@ export type Database = {
           title_cn: string | null
           title_en: string | null
           updated_at: string
+          view_count: number | null
         }
         Insert: {
           contact_link?: string | null
@@ -2343,6 +2419,7 @@ export type Database = {
           content_en?: string | null
           cover_image?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           description_cn?: string | null
           description_en?: string | null
@@ -2357,6 +2434,7 @@ export type Database = {
           title_cn?: string | null
           title_en?: string | null
           updated_at?: string
+          view_count?: number | null
         }
         Update: {
           contact_link?: string | null
@@ -2365,6 +2443,7 @@ export type Database = {
           content_en?: string | null
           cover_image?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           description_cn?: string | null
           description_en?: string | null
@@ -2379,6 +2458,7 @@ export type Database = {
           title_cn?: string | null
           title_en?: string | null
           updated_at?: string
+          view_count?: number | null
         }
         Relationships: [
           {
@@ -2827,6 +2907,15 @@ export type Database = {
       }
       increment_property_view: {
         Args: { property_id: string }
+        Returns: undefined
+      }
+      increment_service_view: {
+        Args: {
+          p_ip_hash?: string
+          p_service_id: string
+          p_user_agent?: string
+          p_user_id?: string
+        }
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }

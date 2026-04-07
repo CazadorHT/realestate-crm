@@ -152,7 +152,7 @@ export function UserNav({ profile }: UserNavProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onClick={handleSignOut}>
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+              <span>ออกจากระบบ</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

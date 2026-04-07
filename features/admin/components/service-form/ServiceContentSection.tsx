@@ -13,100 +13,55 @@ import { Textarea } from "@/components/ui/textarea";
 import { FileText, Languages } from "lucide-react";
 import dynamic from "next/dynamic";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const TiptapEditor = dynamic(() => import("@/components/blog/TiptapEditor").then(mod => mod.TiptapEditor), {
   ssr: false,
   loading: () => <div className="h-[400px] w-full bg-slate-50 animate-pulse rounded-md border border-slate-200" />
 });
 
+import { ServiceFormValues } from "../ServiceForm";
+
 interface ServiceContentSectionProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<ServiceFormValues>;
 }
 
 export function ServiceContentSection({ form }: ServiceContentSectionProps) {
+
   return (
     <div className="group bg-white rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-      <div className="px-6 py-4 bg-linear-to-r from-purple-50 to-pink-50 border-b border-slate-100">
+      <div className="px-6 py-5 border-b border-slate-100 bg-linear-to-r from-slate-50 to-white">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-100 rounded-xl">
-            <FileText className="h-5 w-5 text-purple-600" />
+          <div className="p-2 bg-emerald-100 rounded-xl">
+            <FileText className="h-5 w-5 text-emerald-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-800">เนื้อหา</h3>
-            <p className="text-xs text-slate-500">รายละเอียดและคำอธิบายบริการ</p>
+            <h3 className="font-semibold text-slate-800">
+              การรังสรรค์เนื้อหา
+            </h3>
+            <p className="text-xs text-slate-500">
+              รายละเอียดและกลยุทธ์บริการ
+            </p>
           </div>
         </div>
       </div>
-      <div className="p-6 space-y-5">
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-slate-700 font-medium">
-                คำอธิบายสั้น (ไทย)
-              </FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="อธิบายบริการแบบสั้นๆ 1-2 ประโยค..."
-                  className="resize-none h-24 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-purple-400"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="description_en"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Languages className="w-3 h-3" /> Description (EN)
-                </FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    value={field.value ?? ""}
-                    className="h-20 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm resize-none"
-                    placeholder="English description..."
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="description_cn"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Languages className="w-3 h-3" /> 服务简介 (CN)
-                </FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    value={field.value ?? ""}
-                    className="h-20 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm resize-none"
-                    placeholder="中文简介..."
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
-
+      <div className="p-6 space-y-8">
         <FormField
           control={form.control}
           name="content"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-slate-700 font-medium">
-                เนื้อหาเต็ม (ไทย)
-              </FormLabel>
+            <FormItem className="space-y-4">
+              <div className="flex items-center justify-between">
+                <FormLabel className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  เนื้อหารายละเอียดบริการ (ภาษาไทย)
+                </FormLabel>
+                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-medium">
+                  เนื้อหาหลัก
+                </Badge>
+              </div>
               <FormControl>
                 <div className="rounded-xl overflow-hidden border border-slate-200">
                   <ErrorBoundary>
@@ -122,51 +77,74 @@ export function ServiceContentSection({ form }: ServiceContentSectionProps) {
           )}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
-          <div className="space-y-4">
-            <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <Languages className="w-4 h-4" /> Content (English)
-            </FormLabel>
-            <FormField
-              control={form.control}
-              name="content_en"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="rounded-xl overflow-hidden border border-slate-200">
-                      <TiptapEditor
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <div className="space-y-6 pt-6 border-t border-slate-100">
+          <div className="flex items-center gap-2">
+            <Languages className="h-4 w-4 text-slate-400" />
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              การจัดการเนื้อหาหลายภาษา
+            </span>
           </div>
-          <div className="space-y-4">
-            <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <Languages className="w-4 h-4" /> 服务详情 (Chinese)
-            </FormLabel>
-            <FormField
-              control={form.control}
-              name="content_cn"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="rounded-xl overflow-hidden border border-slate-200">
-                      <TiptapEditor
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+
+          <Tabs defaultValue="en" className="w-full">
+            <TabsList className="bg-slate-100/50 p-1 rounded-xl w-full sm:w-auto h-auto grid grid-cols-2">
+              <TabsTrigger value="en" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">
+                English (EN)
+              </TabsTrigger>
+              <TabsTrigger value="cn" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-sm">
+                Chinese (CN)
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="en" className="mt-6 space-y-4 animate-in fade-in-50 duration-500">
+              <div className="space-y-4">
+                <FormLabel className="font-bold text-xs uppercase tracking-tight text-slate-500">
+                  รายละเอียดบริการ (English)
+                </FormLabel>
+                <FormField
+                  control={form.control}
+                  name="content_en"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="rounded-xl overflow-hidden border border-slate-200 bg-white">
+                          <TiptapEditor
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="cn" className="mt-6 space-y-4 animate-in fade-in-50 duration-500">
+              <div className="space-y-4">
+                <FormLabel className="font-bold text-xs uppercase tracking-tight text-slate-500">
+                  รายละเอียดบริการ (Chinese - 详细描述)
+                </FormLabel>
+                <FormField
+                  control={form.control}
+                  name="content_cn"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="rounded-xl overflow-hidden border border-slate-200 bg-white">
+                          <TiptapEditor
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

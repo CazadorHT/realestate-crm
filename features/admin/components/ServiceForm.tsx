@@ -20,16 +20,16 @@ import { ServiceContentSection } from "./service-form/ServiceContentSection";
 import { ServiceGallerySection } from "./service-form/ServiceGallerySection";
 import { ServiceSidebar } from "./service-form/ServiceSidebar";
 
-const formSchema = z.object({
-  title: z.string().min(1, "Title is required"),
+export const formSchema = z.object({
+  title: z.string().min(1, "กรุณากรอกชื่อบริการ"),
   title_en: z.string().optional(),
   title_cn: z.string().optional(),
   slug: z
     .string()
-    .min(1, "Slug is required")
+    .min(1, "กรุณาระบุ URL (Slug)")
     .regex(
       /^[\u0E00-\u0E7Fa-z0-9-]+$/,
-      "Slug must contain only alphanumeric characters and hyphens",
+      "SLUG ต้องประกอบด้วยตัวอักษร ตัวเลข และเครื่องหมายลบ (-) เท่านั้น",
     ),
   description: z.string().optional(),
   description_en: z.string().optional(),
@@ -45,7 +45,7 @@ const formSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
-type ServiceFormValues = z.infer<typeof formSchema>;
+export type ServiceFormValues = z.infer<typeof formSchema>;
 
 interface ServiceFormProps {
   initialData?: ServiceRow;
@@ -114,9 +114,7 @@ export function ServiceForm({
     }
 
     setIsTranslating(true);
-    const toastId = toast.loading(
-      "กำลังแปลข้อมูลบริการเป็นภาษาอังกฤษและจีน...",
-    );
+    const toastId = toast.loading("กำลังแปลข้อมูลบริการเป็นภาษาอังกฤษและจีน...");
 
     try {
       const titleRes = await translateTextAction(title, "plain");
@@ -156,7 +154,7 @@ export function ServiceForm({
         : await updateService({ id: initialData.id, ...finalValues });
 
       if (res.success) {
-        toast.success(res.message || (isNew ? "สร้างบริการสำเร็จ" : "อัปเดตข้อมูลบริการสำเร็จ"));
+        toast.success(res.message || (isNew ? "สร้างบริการใหม่เรียบร้อยแล้ว" : "อัปเดตข้อมูลบริการเรียบร้อยแล้ว"));
         
         if (onSuccess) {
           onSuccess();
@@ -168,7 +166,7 @@ export function ServiceForm({
         toast.error(res.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       }
     } catch (error: any) {
-      toast.error("เกิดข้อผิดพลาด: " + error.message);
+      toast.error("เกิดข้อผิดพลาด: " + (error.message || "กรุณาลองใหม่อีกครั้ง"));
     } finally {
       setSaving(false);
     }

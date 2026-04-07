@@ -341,6 +341,23 @@
   .prose blockquote p {
     @apply text-slate-900! opacity-100!;
   }
+
+  /* Tiptap specific content overrides for Public Detail */
+  .prose ul {
+    @apply list-disc list-outside ml-6 space-y-2 mb-4!;
+  }
+  .prose ol {
+    @apply list-decimal list-outside ml-6 space-y-2 mb-4!;
+  }
+  .prose li {
+    @apply pl-1 text-slate-600!;
+  }
+  .prose strong, .prose b {
+    @apply font-black text-slate-900!;
+  }
+  .prose h1, .prose h2, .prose h3 {
+    @apply tracking-tight mb-4 mt-8!;
+  }
 }
 
 /* Hide chatbot when any dialog is open */

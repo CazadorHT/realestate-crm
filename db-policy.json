@@ -391,6 +391,16 @@
   },
   {
     "schemaname": "public",
+    "tablename": "maintenance_logs",
+    "rls_enabled": true,
+    "policyname": "Admins can view maintenance logs",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
     "tablename": "notifications",
     "rls_enabled": true,
     "policyname": "Authenticated users can insert notifications",
@@ -851,6 +861,26 @@
   },
   {
     "schemaname": "public",
+    "tablename": "service_views_log",
+    "rls_enabled": true,
+    "policyname": "Admins can view service analytics",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "service_views_log",
+    "rls_enabled": true,
+    "policyname": "Public can insert service views log via RPC",
+    "permissive": "PERMISSIVE",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
     "tablename": "services",
     "rls_enabled": true,
     "policyname": "Public Read services",
@@ -1193,6 +1223,16 @@
     "schemaname": "storage",
     "tablename": "objects",
     "rls_enabled": true,
+    "policyname": "Public Read Access: Service Images",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(bucket_id = 'service-images'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "storage",
+    "tablename": "objects",
+    "rls_enabled": true,
     "policyname": "Public read property images",
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",
@@ -1218,6 +1258,16 @@
     "cmd": "ALL",
     "qual": "((bucket_id = 'property-images'::text) AND ((storage.foldername(name))[1] = 'properties'::text) AND is_staff())",
     "with_check": "((bucket_id = 'property-images'::text) AND ((storage.foldername(name))[1] = 'properties'::text) AND is_staff())"
+  },
+  {
+    "schemaname": "storage",
+    "tablename": "objects",
+    "rls_enabled": true,
+    "policyname": "Staff Manage: Service Images",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "((bucket_id = 'service-images'::text) AND (is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role, 'AGENT'::user_role])))))))",
+    "with_check": "((bucket_id = 'service-images'::text) AND (is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role, 'AGENT'::user_role])))))))"
   },
   {
     "schemaname": "storage",

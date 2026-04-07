@@ -168,13 +168,13 @@ export function SidebarNav({ role }: { role: UserRole }) {
   // Public Content Group
   const publicItems: NavItem[] = [
     {
-      title: "บทความ (Blog)",
+      title: "บทความและข่าวสาร",
       href: "/protected/blogs",
       icon: LayoutTemplate,
       active: pathname?.startsWith("/protected/blogs") ?? false,
     },
     {
-      title: "บริการ (Services)",
+      title: "การบริการและโซลูชัน",
       href: "/protected/services",
       icon: Layout,
       active: pathname?.startsWith("/protected/services") ?? false,
@@ -221,7 +221,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
   // Support Group
   const supportItems: NavItem[] = [
     {
-      title: "LINE Support",
+      title: "ฝ่ายสนับสนุน LINE",
       href: siteConfig.links.line,
       icon: FaLine,
       active: false,
@@ -233,7 +233,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
       active: false,
     },
     {
-      title: "SLA Agreement",
+      title: "ข้อตกลงการให้บริการ (SLA)",
       href: "/protected/support/sla",
       icon: ShieldCheck,
       active: pathname === "/protected/support/sla",
@@ -428,7 +428,7 @@ export function SidebarNav({ role }: { role: UserRole }) {
                 ? "opacity-100 translate-x-0"
                 : "opacity-70 -translate-x-1",
             )}
-            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            title={isCollapsed ? "ขยายเมนู" : "ย่อเมนู"}
           >
             {isCollapsed ? (
               <PanelLeftOpen className="h-4 w-4 transition-transform group-hover/toggle:rotate-12" />

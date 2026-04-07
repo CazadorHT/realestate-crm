@@ -12,10 +12,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tag, Sparkles, Loader2, Languages, DollarSign, Link as LinkIcon } from "lucide-react";
+import { Tag, Sparkles, Loader2, Languages, DollarSign, Link as LinkIcon, Info } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ServiceFormValues } from "../ServiceForm";
 
 interface ServiceInfoSectionProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<ServiceFormValues>;
   isTranslating: boolean;
   onTranslate: () => void;
   onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -32,11 +34,15 @@ export function ServiceInfoSection({
       <div className="px-6 py-4 bg-linear-to-r from-blue-50 to-indigo-50 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100 rounded-xl">
-            <Sparkles className="h-5 w-5 text-blue-600" />
+            <Info className="h-5 w-5 text-blue-500" />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-800">ข้อมูลบริการ</h3>
-            <p className="text-xs text-slate-500">กรอกรายละเอียดพื้นฐาน</p>
+            <h3 className="font-semibold text-slate-800">
+              ข้อมูลบริการด้านสินทรัพย์
+            </h3>
+            <p className="text-xs text-slate-500">
+              กรอกรายละเอียดสถาปัตยกรรมบริการ
+            </p>
           </div>
         </div>
       </div>
@@ -47,9 +53,9 @@ export function ServiceInfoSection({
           render={({ field }) => (
             <FormItem>
               <div className="flex items-center justify-between">
-                <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
+                <FormLabel className="text-sm font-bold text-slate-700 flex items-center gap-2">
                   <Tag className="h-4 w-4 text-slate-400" />
-                  ชื่อบริการ (ไทย)
+                  ชื่อบริการ (ภาษาไทย)
                 </FormLabel>
                 <Button
                   type="button"
@@ -64,13 +70,13 @@ export function ServiceInfoSection({
                   ) : (
                     <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                   )}
-                  AI แปลเป็น EN/CN
+                  แปลภาษาด้วย AI
                 </Button>
               </div>
               <FormControl>
                 <Input
-                  placeholder="เช่น Interior Design, บริการทำความสะอาด"
-                  className="h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400 focus:ring-blue-400/20 transition-all font-medium"
+                  placeholder="กรอกชื่อบริการ..."
+                  className="h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400 focus:ring-blue-400/20 transition-all font-medium rounded-xl"
                   {...field}
                   onChange={(e) => {
                     field.onChange(e);
@@ -90,14 +96,14 @@ export function ServiceInfoSection({
             render={({ field }) => (
               <FormItem className="space-y-2">
                 <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Languages className="w-3 h-3" /> Service Name (EN)
+                  <Languages className="w-3 h-3" /> ชื่อบริการ (English)
                 </FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     value={field.value ?? ""}
                     className="h-10 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm"
-                    placeholder="English name..."
+                    placeholder="กรุณาระบุชื่อบริการภาษาอังกฤษ..."
                   />
                 </FormControl>
               </FormItem>
@@ -109,14 +115,14 @@ export function ServiceInfoSection({
             render={({ field }) => (
               <FormItem className="space-y-2">
                 <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Languages className="w-3 h-3" /> 服务名称 (CN)
+                  <Languages className="w-3 h-3" /> 服务名称 (Chinese)
                 </FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     value={field.value ?? ""}
                     className="h-10 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm"
-                    placeholder="中文名称..."
+                    placeholder="กรุณาระบุชื่อบริการภาษาจีน..."
                   />
                 </FormControl>
               </FormItem>
@@ -130,8 +136,8 @@ export function ServiceInfoSection({
             name="slug"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-slate-700 font-medium">
-                  Slug (URL)
+                <FormLabel className="text-sm font-bold text-slate-700">
+                  Slug (URL ของบริการ)
                 </FormLabel>
                 <FormControl>
                   <div className="relative">
@@ -139,7 +145,7 @@ export function ServiceInfoSection({
                       /services/
                     </span>
                     <Input
-                      placeholder="interior-design"
+                      placeholder="ตัวอย่าง: interior-design"
                       className="h-11 pl-[76px] bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400 font-mono text-sm"
                       {...field}
                     />
@@ -155,14 +161,14 @@ export function ServiceInfoSection({
             name="price_range"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
+                <FormLabel className="text-sm font-bold text-slate-700 flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-slate-400" />
-                  ราคา / ช่วงราคา
+                  ช่วงราคา
                 </FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="เริ่มต้น 5,000 บาท"
-                    className="h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400"
+                   <Input
+                    placeholder="เช่น 5,000 - 10,000 บาท หรือ 'เริ่มต้นที่ 5,000 บาท'"
+                    className="h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400 rounded-xl"
                     {...field}
                   />
                 </FormControl>
@@ -177,25 +183,25 @@ export function ServiceInfoSection({
           name="contact_link"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
+              <FormLabel className="text-sm font-bold text-slate-700 flex items-center gap-2">
                 <LinkIcon className="h-4 w-4 text-slate-400" />
-                ลิงก์ติดต่อภายนอก (Optional)
+                ลิงก์ติดต่อช่องทางต่างๆ
               </FormLabel>
               <FormControl>
-                <Input
-                  placeholder="https://line.me/ti/p/@yourlineid"
-                  className="h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription className="text-xs">
-                ใส่ลิงก์ Line หรือช่องทางติดต่อโดยตรง
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                  <Input
+                    placeholder="https://line.me/ti/p/@yourlineid"
+                    className="h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription className="text-xs">
+                  ระบุ URL สำหรับปุ่มติดต่อ เช่น LINE@, Facebook Messenger หรือ WhatsApp
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
       </div>
-    </div>
-  );
+    );
 }

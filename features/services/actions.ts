@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { createClient } from "@/lib/supabase/server";
+import { type Json } from "@/lib/database.types";
 
 export type ServiceRow = {
   id: string;
@@ -60,6 +61,7 @@ export async function getServices(
   page = 1,
   pageSize = 10,
   includeInactive = false,
+  onlyDeleted = false,
 ) {
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
@@ -100,8 +102,14 @@ export async function getServices(
     query = query.eq("tenant_id", tenantId);
   }
 
-  if (!includeInactive) {
-    query = query.eq("is_active", true);
+  // Lifecycle Filters
+  if (onlyDeleted) {
+    query = query.not("deleted_at", "is", null);
+  } else {
+    query = query.is("deleted_at", null);
+    if (!includeInactive) {
+      query = query.eq("is_active", true);
+    }
   }
 
   const { data, error, count } = await query.range(
@@ -156,16 +164,26 @@ export async function createService(input: CreateServiceInput) {
     assertStaff(ctx.role);
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
-    const { error } = await ctx.supabase.from("services").insert({
+    const { data: service, error } = await ctx.supabase.from("services").insert({
       ...validated,
       tenant_id: ctx.tenantId,
-    });
+    }).select("id").single();
 
     if (error) throw error;
 
+    // Audit Logging
+    await ctx.supabase.from("audit_logs").insert({
+      action: "SERVICE_CREATE",
+      entity: "services",
+      entity_id: service?.id,
+      tenant_id: ctx.tenantId,
+      user_id: ctx.user.id,
+      metadata: { title: validated.title }
+    });
+
     revalidatePath("/services");
     revalidatePath("/protected/services");
-    return { success: true, message: "สร้างบริการสำเร็จ" };
+    return { success: true, message: "สร้างบริการใหม่เข้าสู่ระบบเรียบร้อย ✨" };
   } catch (err: any) {
     console.error("createService error:", err);
     return { 
@@ -186,7 +204,15 @@ export async function updateService(input: UpdateServiceInput) {
 
     const { id, ...updates } = validated;
 
-    const { error } = await ctx.supabase
+    // 1. Fetch original for Delta Audit
+    const { data: oldData } = await ctx.supabase
+      .from("services")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    // 2. Perform Update
+    const { error: updateError } = await ctx.supabase
       .from("services")
       .update({
         ...updates,
@@ -195,11 +221,29 @@ export async function updateService(input: UpdateServiceInput) {
       .eq("id", id)
       .eq("tenant_id", ctx.tenantId);
 
-    if (error) throw error;
+    if (updateError) throw updateError;
+
+    // 3. Audit Logging (Delta Only)
+    if (oldData) {
+      const changedFields = getDelta(oldData, updates);
+      if (changedFields.length > 0) {
+        await ctx.supabase.from("audit_logs").insert({
+          action: "SERVICE_UPDATE",
+          entity: "services",
+          entity_id: id,
+          tenant_id: ctx.tenantId,
+          user_id: ctx.user.id,
+          metadata: { 
+            title: updates.title,
+            changed_fields: changedFields 
+          }
+        });
+      }
+    }
 
     revalidatePath("/services");
     revalidatePath("/protected/services");
-    return { success: true, message: "แก้ไขบริการสำเร็จ" };
+    return { success: true, message: "อัปเดตข้อมูลบริการเรียบร้อย ✨" };
   } catch (err: any) {
     console.error("updateService error:", err);
     return { 
@@ -211,6 +255,30 @@ export async function updateService(input: UpdateServiceInput) {
   }
 }
 
+/**
+ * Helper to identify changed fields between two objects.
+ */
+function getDelta(oldObj: any, newObj: any): string[] {
+  const changes: string[] = [];
+  Object.keys(newObj).forEach((key) => {
+    // Basic comparison for primitive types and arrays
+    const oldVal = oldObj[key];
+    const newVal = newObj[key];
+    
+    if (Array.isArray(newVal)) {
+      if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+        changes.push(key);
+      }
+    } else if (oldVal !== newVal) {
+      changes.push(key);
+    }
+  });
+  return changes;
+}
+
+/**
+ * Soft Deletes a service (moves to Trash).
+ */
 export async function deleteService(id: string) {
   try {
     const ctx = await requireAuthContext();
@@ -219,17 +287,352 @@ export async function deleteService(id: string) {
 
     const { error } = await ctx.supabase
       .from("services")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id)
+      .eq("tenant_id", ctx.tenantId);
+
+    if (error) throw error;
+
+    // Audit Logging
+    await ctx.supabase.from("audit_logs").insert({
+      action: "SERVICE_SOFT_DELETE",
+      entity: "services",
+      entity_id: id,
+      tenant_id: ctx.tenantId,
+      user_id: ctx.user.id
+    });
+
+    revalidatePath("/services");
+    revalidatePath("/protected/services");
+    return { success: true, message: "ย้ายบริการลงถังขยะเรียบร้อย ✅" };
+  } catch (err: any) {
+    console.error("deleteService error:", err);
+    return { success: false, message: mapDbError(err) };
+  }
+}
+
+/**
+ * Restores a service from Trash.
+ */
+export async function restoreServiceAction(id: string) {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+    if (!ctx.tenantId) throw new Error("Tenant context required");
+
+    const { error } = await ctx.supabase
+      .from("services")
+      .update({ deleted_at: null })
+      .eq("id", id)
+      .eq("tenant_id", ctx.tenantId);
+
+    if (error) throw error;
+
+    // Audit Logging
+    await ctx.supabase.from("audit_logs").insert({
+      action: "SERVICE_RESTORE",
+      entity: "services",
+      entity_id: id,
+      tenant_id: ctx.tenantId,
+      user_id: ctx.user.id
+    });
+
+    revalidatePath("/protected/services");
+    return { success: true, message: "กู้คืนบริการเรียบร้อย ✨" };
+  } catch (err: any) {
+    console.error("restoreService error:", err);
+    return { success: false, message: mapDbError(err) };
+  }
+}
+
+/**
+ * Permanently Deletes a service and its media files.
+ * Implements maintenance logging for orphan prevention.
+ */
+export async function permanentDeleteServiceAction(id: string) {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+    if (!ctx.tenantId) throw new Error("Tenant context required");
+
+    // 1. Get service images to cleanup storage
+    const { data: service } = await ctx.supabase
+      .from("services")
+      .select("title, cover_image, gallery_images")
+      .eq("id", id)
+      .single();
+
+    if (service) {
+      const filesToDelete: string[] = [];
+      
+      const extractPath = (url: string) => {
+        const bucketMatch = "service-images/";
+        const parts = url.split(bucketMatch);
+        if (parts.length > 1) return parts[1];
+        return null;
+      };
+
+      if (service.cover_image) {
+        const path = extractPath(service.cover_image);
+        if (path) filesToDelete.push(path);
+      }
+      
+      if (Array.isArray(service.gallery_images)) {
+        service.gallery_images.forEach((img: any) => {
+          if (typeof img === 'string') {
+            const path = extractPath(img);
+            if (path) filesToDelete.push(path);
+          }
+        });
+      }
+
+      if (filesToDelete.length > 0) {
+        const { error: storageError } = await ctx.supabase.storage
+          .from("service-images")
+          .remove(filesToDelete);
+        
+        if (storageError) {
+          console.warn("Storage removal failed, logging to maintenance_logs:", storageError);
+          await ctx.supabase.from("maintenance_logs").insert({
+            tenant_id: ctx.tenantId,
+            entity_type: "service",
+            entity_id: id,
+            action: "delete_storage_failed",
+            details: { 
+              files: filesToDelete, 
+              storage_error: {
+                message: storageError.message,
+                name: storageError.name,
+                status: storageError.status,
+                statusCode: (storageError as any).statusCode
+              }
+            } as Json,
+            status: "pending"
+          });
+        }
+      }
+    }
+
+    // 2. Delete from Database
+    const { error } = await ctx.supabase
+      .from("services")
       .delete()
       .eq("id", id)
       .eq("tenant_id", ctx.tenantId);
 
     if (error) throw error;
 
-    revalidatePath("/services");
+    // Audit Logging
+    await ctx.supabase.from("audit_logs").insert({
+      action: "SERVICE_PERMANENT_DELETE",
+      entity: "services",
+      entity_id: id,
+      tenant_id: ctx.tenantId,
+      user_id: ctx.user.id,
+      metadata: { title: service?.title }
+    });
+
     revalidatePath("/protected/services");
-    return { success: true, message: "ลบบริการสำเร็จ" };
+    return { success: true, message: "ลบบริการและไฟล์สื่อถาวรเรียบร้อย 🗑️" };
   } catch (err: any) {
-    console.error("deleteService error:", err);
+    console.error("permanentDelete error:", err);
+    return { success: false, message: mapDbError(err) };
+  }
+}
+
+/**
+ * Advanced Analytics: Increments service view with Anti-Spam protection.
+ */
+export async function incrementServiceViewAction(
+  id: string, 
+  userId?: string, 
+  ipHash?: string, 
+  userAgent?: string
+) {
+  try {
+    const supabase = await createClient();
+    await supabase.rpc('increment_service_view', {
+      p_service_id: id,
+      p_user_id: userId,
+      p_ip_hash: ipHash,
+      p_user_agent: userAgent
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error incrementing service view:", error);
+    return { success: false };
+  }
+}
+
+/**
+ * Uploads an image to the service-images bucket.
+ */
+export async function uploadServiceImageAction(formData: FormData) {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+    
+    const file = formData.get("file") as File;
+    if (!file) throw new Error("No file provided");
+
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+    const filePath = `${ctx.tenantId}/${fileName}`;
+
+    const { error: uploadError } = await ctx.supabase.storage
+      .from("service-images")
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = ctx.supabase.storage
+      .from("service-images")
+      .getPublicUrl(filePath);
+
+    return { 
+      success: true, 
+      data: { publicUrl },
+      message: "อัปโหลดรูปภาพสำเร็จ ✨" 
+    };
+  } catch (err: any) {
+    console.error("uploadServiceImage error:", err);
+    return { success: false, message: mapDbError(err) };
+  }
+}
+
+/**
+ * Cleanup Engine: Removes orphaned files tracked in maintenance_logs.
+ */
+export async function cleanupOrphanedServiceImagesAction() {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+    if (!ctx.tenantId) throw new Error("Tenant context required");
+
+    // Get pending cleanup tasks
+    const { data: logs } = await ctx.supabase
+      .from("maintenance_logs")
+      .select("*")
+      .eq("status", "pending")
+      .eq("action", "delete_storage_failed")
+      .limit(50);
+
+    if (!logs || logs.length === 0) return { success: true, count: 0 };
+
+    let successCount = 0;
+    for (const log of logs) {
+      const details = log.details as any;
+      if (details && Array.isArray(details.files)) {
+        const { error: storageError } = await ctx.supabase.storage
+          .from("service-images")
+          .remove(details.files);
+
+        if (!storageError) {
+          await ctx.supabase
+            .from("maintenance_logs")
+            .update({ status: "completed", updated_at: new Date().toISOString() })
+            .eq("id", log.id);
+          successCount++;
+        }
+      }
+    }
+
+    return { success: true, count: successCount, message: "ดูแลรักษาพื้นที่จัดเก็บสำเร็จ (รูปภาพส่วนเกินถูกลบทิ้ง)" };
+  } catch (err: any) {
+    console.error("cleanupOrphanedImages error:", err);
+    return { success: false, message: mapDbError(err), count: 0 };
+  }
+}
+
+/**
+ * Permanently Empties the entire Service Trash for the current tenant.
+ * Includes mass storage cleanup and maintenance logging.
+ */
+export async function emptyServiceTrashAction() {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+    if (!ctx.tenantId) throw new Error("Tenant context required");
+
+    // 1. Get all services in trash for this tenant
+    const { data: services } = await ctx.supabase
+      .from("services")
+      .select("id, title, cover_image, gallery_images")
+      .not("deleted_at", "is", null)
+      .eq("tenant_id", ctx.tenantId);
+    
+    if (!services || services.length === 0) {
+      return { success: true, message: "ถังขยะว่างเปล่าอยู่แล้ว" };
+    }
+
+    // 2. Identify all media to delete
+    const filesToDelete: string[] = [];
+    const extractPath = (url: string) => {
+      const bucketMatch = "service-images/";
+      const parts = url.split(bucketMatch);
+      if (parts.length > 1) return parts[1];
+      return null;
+    };
+
+    services.forEach(s => {
+      if (s.cover_image) {
+        const p = extractPath(s.cover_image);
+        if (p) filesToDelete.push(p);
+      }
+      if (Array.isArray(s.gallery_images)) {
+        s.gallery_images.forEach((img: any) => {
+          if (typeof img === 'string') {
+            const p = extractPath(img);
+            if (p) filesToDelete.push(p);
+          }
+        });
+      }
+    });
+
+    // 3. Mass Storage Cleanup
+    if (filesToDelete.length > 0) {
+      const { error: storageError } = await ctx.supabase.storage
+        .from("service-images")
+        .remove(filesToDelete);
+      
+      if (storageError) {
+        console.warn("Bulk storage removal failed, logging to maintenance_logs for retry:", storageError);
+        await ctx.supabase.from("maintenance_logs").insert({
+          tenant_id: ctx.tenantId,
+          entity_type: "service_bulk",
+          entity_id: "BULK_OPERATION",
+          action: "delete_storage_failed",
+          details: { 
+            files: filesToDelete, 
+            storage_error: storageError.message
+          } as Json,
+          status: "pending"
+        });
+      }
+    }
+
+    // 4. Batch Delete from Database
+    const { error: deleteError } = await ctx.supabase
+      .from("services")
+      .delete()
+      .not("deleted_at", "is", null)
+      .eq("tenant_id", ctx.tenantId);
+    
+    if (deleteError) throw deleteError;
+
+    // 5. Audit Logging
+    await ctx.supabase.from("audit_logs").insert({
+      action: "SERVICE_EMPTY_TRASH",
+      entity: "services",
+      tenant_id: ctx.tenantId,
+      user_id: ctx.user.id,
+      metadata: { count: services.length }
+    });
+
+    revalidatePath("/protected/services");
+    return { success: true, message: `ล้างถังขยะเรียบร้อยแล้ว (ลบ ${services.length} รายการ)` };
+  } catch (err: any) {
+    console.error("emptyServiceTrash error:", err);
     return { success: false, message: mapDbError(err) };
   }
 }

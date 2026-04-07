@@ -13,12 +13,28 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Settings, Eye, EyeOff, SortAsc, ImagePlus, Save, Loader2 } from "lucide-react";
+import { 
+  Settings, 
+  Eye, 
+  EyeOff, 
+  SortAsc, 
+  ImagePlus, 
+  Save, 
+  Upload, 
+  X, 
+  Loader2, 
+  Image as ImageIcon, 
+  ZoomIn, 
+  ZoomOut, 
+  CheckCircle2,
+  Edit
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BlogImageUploader } from "@/components/blog/BlogImageUploader";
+import { ServiceImageUploader } from "@/components/services/ServiceImageUploader";
+import { ServiceFormValues } from "../ServiceForm";
 
 interface ServiceSidebarProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<ServiceFormValues>;
   saving: boolean;
   isNew: boolean;
   onCancel: () => void;
@@ -30,6 +46,7 @@ export function ServiceSidebar({
   isNew,
   onCancel,
 }: ServiceSidebarProps) {
+
   return (
     <div className="space-y-6">
       {/* Status Card */}
@@ -39,7 +56,9 @@ export function ServiceSidebar({
             <div className="p-2 bg-emerald-100 rounded-xl">
               <Settings className="h-5 w-5 text-emerald-600" />
             </div>
-            <h3 className="font-semibold text-slate-800">การตั้งค่า</h3>
+            <h3 className="font-semibold text-slate-800">
+              การจัดการสถานะและลำดับ
+            </h3>
           </div>
         </div>
         <div className="p-5 space-y-5">
@@ -75,10 +94,14 @@ export function ServiceSidebar({
                           field.value ? "text-emerald-700" : "text-slate-600",
                         )}
                       >
-                        {field.value ? "เผยแพร่" : "ซ่อน"}
+                        {field.value 
+                          ? "เปิดใช้งาน" 
+                          : "ซ่อนบริการ"}
                       </p>
                       <p className="text-xs text-slate-500">
-                        {field.value ? "แสดงบนเว็บไซต์" : "ไม่แสดงบนเว็บไซต์"}
+                        {field.value 
+                          ? "บริการนี้แสดงบนหน้าเว็บไซต์" 
+                          : "บริการนี้ถูกซ่อนจากหน้าเว็บไซต์"}
                       </p>
                     </div>
                   </div>
@@ -102,7 +125,7 @@ export function ServiceSidebar({
               <FormItem>
                 <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
                   <SortAsc className="h-4 w-4 text-slate-400" />
-                  ลำดับการแสดง
+                  ลำดับการแสดงผล
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -112,7 +135,7 @@ export function ServiceSidebar({
                   />
                 </FormControl>
                 <FormDescription className="text-xs text-center">
-                  ตัวเลขน้อย = แสดงก่อน
+                  ใช้สำหรับจัดลำดับการแสดงผล (ตัวเลขน้อยแสดงก่อน)
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -123,11 +146,11 @@ export function ServiceSidebar({
         {/* Cover Image */}
         <div className="px-5 pb-5 pt-0">
           <div className="pt-5 border-t border-slate-100">
-            <div className="flex items-center gap-2 mb-3">
-              <ImagePlus className="h-4 w-4 text-slate-400" />
-              <span className="text-sm font-medium text-slate-700">
-                ภาพหน้าปก
-              </span>
+            <div className="flex items-center gap-3 mb-3">
+              <Settings className="h-5 w-5 text-indigo-500" />
+              <h2 className="text-lg font-bold text-slate-800">
+                การตั้งค่าระบบและเผยแพร่
+              </h2>
             </div>
             <FormField
               control={form.control}
@@ -135,10 +158,12 @@ export function ServiceSidebar({
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <div className="rounded-xl overflow-hidden border-2 border-dashed border-slate-200 hover:border-blue-300 transition-colors">
-                      <BlogImageUploader
+                    <div className="bg-white">
+                      <ServiceImageUploader
                         value={field.value}
                         onChange={field.onChange}
+                        mode="single"
+                        aspectRatio={16 / 9}
                       />
                     </div>
                   </FormControl>
@@ -154,21 +179,26 @@ export function ServiceSidebar({
           <div className="flex flex-col gap-3 pt-5 border-t border-slate-100">
             <Button
               type="submit"
+              className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all gap-2 font-bold text-white rounded-xl"
               disabled={saving}
-              className="w-full h-12 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30"
             >
               {saving ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Save className="mr-2 h-5 w-5" />
+                <Save className="h-4 w-4" />
               )}
-              {isNew ? "สร้างบริการ" : "บันทึกการเปลี่ยนแปลง"}
+              {saving
+                ? "กำลังบันทึก..."
+                : isNew
+                  ? "เพิ่มบริการใหม่"
+                  : "บันทึกการเปลี่ยนแปลง"}
             </Button>
             <Button
-              variant="outline"
               type="button"
+              variant="outline"
+              className="w-full h-11 border-slate-200 text-slate-500 hover:bg-slate-50 rounded-xl font-medium"
               onClick={onCancel}
-              className="w-full h-11 border-slate-200 hover:bg-slate-50"
+              disabled={saving}
             >
               ยกเลิก
             </Button>
