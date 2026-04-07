@@ -1,8 +1,9 @@
 "use client";
-
-import { useMemo, useTransition } from "react";
+import { useMemo, useTransition, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
+import { th } from "date-fns/locale";
 import {
   Table,
   TableBody,
@@ -14,25 +15,38 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Pencil, Eye, Globe, EyeOff, Clock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  FileText, 
+  Eye, 
+  Pencil,
+  Globe, 
+  EyeOff, 
+  Clock, 
+  MoreVertical, 
+  Trash2, 
+  RotateCcw,
+  ShieldAlert,
+  Image as ImageIcon 
+} from "lucide-react";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteBlogsAction } from "@/features/blogs/bulk-actions";
 import { toast } from "sonner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { DeleteBlogPostButton } from "@/app/(protected)/protected/blogs/_components/DeleteBlogPostButton";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { cn } from "@/lib/utils";
+import { 
+  bulkUpdateBlogStatusAction,
+  deleteBlogPostAction,
+  restoreBlogPostAction,
+  permanentDeleteBlogPostAction
+} from "@/features/blog/actions";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
-interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  category: string | null;
-  author: unknown;
-  is_published: boolean | null;
-  published_at: string | null;
-}
+import { BlogPost } from "@/lib/services/blog";
 
 interface BlogsTableProps {
   posts: BlogPost[];
@@ -40,13 +54,149 @@ interface BlogsTableProps {
   currentPage: number;
 }
 
+/**
+ * Premium Loading Skeleton for Blogs Table
+ */
+function BlogsTableSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="hidden lg:block rounded-xl border border-slate-200 bg-white">
+        <div className="h-12 bg-slate-50 border-b border-slate-200" />
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex h-20 items-center gap-4 px-4 border-b border-slate-100 last:border-0">
+            <Skeleton className="h-5 w-5" />
+            <Skeleton className="h-12 w-20 rounded-lg aspect-video" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-3 w-1/4" />
+            </div>
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+        ))}
+      </div>
+      <div className="lg:hidden space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 space-y-4">
+            <div className="flex gap-4">
+              <Skeleton className="h-16 w-16 rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            </div>
+            <div className="flex justify-between pt-2 border-t border-slate-100">
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-8 w-20" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Mobile Action Drawer Component
+ */
+function MobileActionDrawer({ post, isTrash }: { post: BlogPost, isTrash?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [isBusy, setIsBusy] = useState(false);
+
+  const handleAction = async (action: () => Promise<any>) => {
+    setIsBusy(true);
+    const res = await action();
+    if (res.success) {
+      toast.success(res.message);
+      setOpen(false);
+    } else {
+      toast.error(res.message);
+    }
+    setIsBusy(false);
+  };
+  
+  return (
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      title={isTrash ? "จัดการถังขยะ" : "จัดการบทความ"}
+      trigger={
+        <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400">
+          <MoreVertical className="h-5 w-5" />
+        </Button>
+      }
+    >
+      <div className="grid grid-cols-2 gap-3 p-6">
+        {isTrash ? (
+          <>
+            <Button 
+              variant="outline" 
+              className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-green-600"
+              onClick={() => handleAction(() => restoreBlogPostAction(post.id))}
+              disabled={isBusy}
+            >
+              <RotateCcw className="h-5 w-5" />
+              กู้คืนบทความ
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-destructive"
+              onClick={() => handleAction(() => permanentDeleteBlogPostAction(post.id))}
+              disabled={isBusy}
+            >
+              <ShieldAlert className="h-5 w-5" />
+              ลบถาวร
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button 
+              variant="outline" 
+              className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200"
+              asChild
+              onClick={() => setOpen(false)}
+            >
+              <Link href={`/blog/${post.slug}`} target="_blank">
+                <Eye className="h-5 w-5 text-blue-500" />
+                เปิดดูหน้าเว็บ
+              </Link>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-slate-600"
+              asChild
+              onClick={() => setOpen(false)}
+            >
+              <Link href={`/protected/blogs/${post.id}`}>
+                <Pencil className="h-5 w-5 text-amber-500" />
+                แก้ไขเนื้อหา 
+              </Link>
+            </Button>
+            <div className="col-span-2 pt-2 border-t border-slate-100">
+              <DeleteBlogPostButton 
+                id={post.id} 
+                variant="full"
+                onSuccess={() => setOpen(false)}
+              />
+            </div>
+          </>
+        )}
+      </div>
+    </ResponsiveDialog>
+  );
+}
+
 export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const tab = searchParams.get("tab") || "active";
+  const isTrash = tab === "trash";
+
   const [isPending, startTransition] = useTransition();
   const now = new Date();
   const allIds = useMemo(() => posts.map((p) => p.id), [posts]);
+  
   const {
     toggleSelect,
     toggleSelectAll,
@@ -59,17 +209,40 @@ export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) 
   } = useTableSelection(allIds);
 
   const handleSuccessFeedback = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("success", "true");
-    router.push(`${pathname}?${params.toString()}`);
     router.refresh();
+  };
+
+  const setTab = (newTab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", newTab);
+    params.set("page", "1"); // Reset to page 1
+    router.push(`?${params.toString()}`);
   };
 
   const handleBulkDelete = async () => {
     return new Promise<void>((resolve) => {
       startTransition(async () => {
         const ids = Array.from(selectedIds);
-        const result = await bulkDeleteBlogsAction(ids);
+        let successCount = 0;
+        for (const id of ids) {
+          const result = await deleteBlogPostAction(id);
+          if (result.success) successCount++;
+        }
+        if (successCount > 0) {
+          toast.success(`ย้าย ${successCount} บทความลงถังขยะเรียบร้อยแล้ว`);
+          clearSelection();
+          handleSuccessFeedback();
+        }
+        resolve();
+      });
+    });
+  };
+
+  const handleBulkStatusUpdate = async (isPublished: boolean) => {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const ids = Array.from(selectedIds);
+        const result = await bulkUpdateBlogStatusAction(ids, isPublished);
         if (result.success) {
           toast.success(result.message);
           clearSelection();
@@ -82,328 +255,357 @@ export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) 
     });
   };
 
+  // World-class Empty State
+  if (posts.length === 0 && !isPending) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-slate-200 shadow-sm min-h-[400px] text-center animate-in fade-in zoom-in duration-500">
+        <div className="h-24 w-24 rounded-full bg-blue-50 flex items-center justify-center mb-6">
+          <FileText className="h-12 w-12 text-blue-500" />
+        </div>
+        <h3 className="text-xl font-extrabold text-slate-800 mb-2">ยังไม่มีบทความในระบบ</h3>
+        <p className="text-slate-500 max-w-sm mb-8 font-medium">
+          เริ่มสร้างเนื้อหาแรกของคุณ เพื่อดึงดูดผู้ใช้งานและเพิ่มประสิทธิภาพด้าน SEO ให้กับเว็บไซต์
+        </p>
+        <Button asChild className="rounded-xl h-11 px-8 font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100">
+          <Link href="/protected/blogs/new">สร้างบทความแรกของคุณ</Link>
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      {/* Tab Switching UI */}
+      <div className="flex items-center gap-2 border-b border-slate-100 pb-1">
+        <Button
+          variant="ghost"
+          onClick={() => setTab("active")}
+          className={cn(
+            "h-10 rounded-none border-b-2 px-6 font-bold transition-all",
+            !isTrash 
+              ? "border-blue-600 text-blue-600 bg-blue-50/50" 
+              : "border-transparent text-slate-400 hover:text-slate-600"
+          )}
+        >
+          บทความทั้งหมด
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => setTab("trash")}
+          className={cn(
+            "h-10 rounded-none border-b-2 px-6 font-bold transition-all",
+            isTrash 
+              ? "border-red-600 text-red-600 bg-red-50/50" 
+              : "border-transparent text-slate-400 hover:text-slate-600"
+          )}
+        >
+          ถังขยะ
+          {isTrash && posts.length > 0 && (
+             <Badge className="ml-2 bg-red-100 text-red-600 hover:bg-red-100 border-none px-1.5 h-4 text-[10px]">
+               {posts.length}
+             </Badge>
+          )}
+        </Button>
+      </div>
+
       <BulkActionToolbar
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
         entityName="บทความ"
+        onDeleteLabel={isTrash ? "ลบถาวร" : "ย้ายลงถังขยะ"}
         className={isPending ? "opacity-50 pointer-events-none" : ""}
+        extraActions={
+          !isTrash && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkStatusUpdate(true)}
+                className="h-8 rounded-lg border-slate-200 text-xs font-bold gap-1.5"
+              >
+                <Globe className="h-3.5 w-3.5 text-green-500" />
+                Publish
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkStatusUpdate(false)}
+                className="h-8 rounded-lg border-slate-200 text-xs font-bold gap-1.5"
+              >
+                <EyeOff className="h-3.5 w-3.5 text-slate-400" />
+                Draft
+              </Button>
+            </div>
+          )
+        }
       />
 
-      {/* Desktop Table View */}
-      <div className="hidden lg:block rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader className="bg-slate-50">
-            <TableRow>
-              <TableHead className="w-[50px]">
-                <Checkbox
-                  checked={isAllSelected}
-                  onCheckedChange={() => toggleSelectAll(allIds)}
-                  aria-label="เลือกทั้งหมด"
-                  className={
-                    isPartialSelected
-                      ? "data-[state=checked]:bg-primary/50"
-                      : ""
-                  }
-                />
-              </TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Author</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Published Date</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {posts.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="h-32 text-center text-muted-foreground"
-                >
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <FileText className="h-12 w-12 text-slate-300" />
-                    <p className="text-sm font-medium">ยังไม่มีบทความ</p>
-                    <p className="text-xs text-slate-400">
-                      สร้างบทความแรกของคุณเพื่อเริ่มต้น
-                    </p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              posts.map((post) => {
-                const isScheduled =
-                  post.published_at && new Date(post.published_at) > now;
-                const publishedDate = post.published_at
-                  ? new Date(post.published_at)
-                  : null;
+      {isPending && <BlogsTableSkeleton />}
 
-                return (
-                  <TableRow
-                    key={post.id}
-                    className={`hover:bg-slate-50/50 ${
-                      isSelected(post.id) ? "bg-blue-50/50" : ""
-                    }`}
-                  >
-                    <TableCell className="w-[50px]">
-                      <Checkbox
-                        checked={isSelected(post.id)}
-                        onCheckedChange={() => toggleSelect(post.id)}
-                        aria-label={`เลือก ${post.title}`}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        <Link href={`/protected/blogs/${post.id}`}>
-                          <span className="line-clamp-1 text-blue-600 underline">
-                            {post.title}
-                          </span>
-                        </Link>
-                        <span className="text-xs text-slate-500 font-mono">
-                          URL : /{post.slug}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {post.category ? (
-                        <Badge
-                          variant="outline"
-                          className="bg-blue-50 text-blue-700 border-blue-200"
-                        >
-                          {post.category}
-                        </Badge>
-                      ) : (
-                        <span className="text-slate-400">-</span>
+      {!isPending && (
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden lg:block rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden animate-in fade-in duration-500">
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-[50px] pl-6">
+                    <Checkbox
+                      checked={isAllSelected}
+                      onCheckedChange={() => toggleSelectAll(allIds)}
+                      className={cn(
+                        "rounded-md border-slate-300",
+                        isPartialSelected && "data-[state=checked]:bg-blue-500/50"
                       )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm text-slate-600">
-                        {post.author ? (
-                          <span>Admin</span>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {isScheduled ? (
-                        <Badge
-                          variant="outline"
-                          className="gap-1 bg-blue-50 text-blue-700 border-blue-200"
-                        >
-                          <Clock className="h-3 w-3" />
-                          Scheduled
-                        </Badge>
-                      ) : post.is_published ? (
-                        <Badge
-                          variant="outline"
-                          className="gap-1 bg-green-50 text-green-700 border-green-200"
-                        >
-                          <Globe className="h-3 w-3" />
-                          Published
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="gap-1 bg-orange-50 text-orange-700 border-orange-200"
-                        >
-                          <EyeOff className="h-3 w-3" />
-                          Draft
-                        </Badge>
+                    />
+                  </TableHead>
+                  <TableHead className="w-[120px] font-bold text-slate-500 uppercase tracking-wider text-[10px]">Preview</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Article Details</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Category</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Author</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{isTrash ? "Deleted At" : "Status"}</TableHead>
+                  <TableHead className="text-right pr-6 font-bold text-slate-500 uppercase tracking-wider text-[10px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {posts.map((post) => {
+                  const isScheduled = post.published_at && new Date(post.published_at) > now;
+                  const publishedDate = post.published_at ? new Date(post.published_at) : null;
+                  const selected = isSelected(post.id);
+
+                  return (
+                    <TableRow
+                      key={post.id}
+                      className={cn(
+                        "group transition-colors duration-200",
+                        selected ? "bg-blue-50/40" : "hover:bg-slate-50/50"
                       )}
-                    </TableCell>
-                    <TableCell>
-                      {publishedDate ? (
-                        <div className="flex flex-col">
-                          <span className="text-sm">
-                            {format(publishedDate, "dd MMM yyyy")}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {format(publishedDate, "HH:mm")}
+                    >
+                      <TableCell className="pl-6">
+                        <Checkbox
+                          checked={selected}
+                          onCheckedChange={() => toggleSelect(post.id)}
+                          className="rounded-md border-slate-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="relative aspect-video w-24 rounded-lg overflow-hidden border border-slate-200 bg-slate-100/50 group-hover:scale-105 transition-transform duration-300 shadow-sm">
+                          {post.cover_image ? (
+                            <Image
+                              src={post.cover_image}
+                              alt={post.title}
+                              fill
+                              className="object-cover"
+                              sizes="100px"
+                            />
+                          ) : (
+                            <div className="absolute inset-0 bg-linear-to-br from-slate-50 to-slate-200 flex items-center justify-center">
+                              <ImageIcon className="h-6 w-6 text-slate-300" />
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="max-w-[300px]">
+                        <div className="flex flex-col gap-0.5">
+                          <Link href={`/protected/blogs/${post.id}`}>
+                            <span className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                              {post.title}
+                            </span>
+                          </Link>
+                          <span className="text-[10px] font-mono text-slate-400 tracking-tight truncate">
+                            /{post.slug}
                           </span>
                         </div>
-                      ) : (
-                        <span className="text-slate-400">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          asChild
-                          title="View Public Page"
-                        >
-                          <Link href={`/blog/${post.slug}`} target="_blank">
-                            <Eye className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          asChild
-                          title="Edit"
-                        >
-                          <Link href={`/protected/blogs/${post.id}`}>
-                            <Pencil className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        <DeleteBlogPostButton id={post.id} />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Mobile Card View */}
-      <div className="lg:hidden space-y-4">
-        {posts.length === 0 ? (
-          <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-            <div className="flex flex-col items-center justify-center gap-2">
-              <FileText className="h-12 w-12 text-slate-300" />
-              <p className="text-sm font-medium">ยังไม่มีบทความ</p>
-              <p className="text-xs text-slate-400">
-                สร้างบทความแรกของคุณเพื่อเริ่มต้น
-              </p>
-            </div>
+                      </TableCell>
+                      <TableCell>
+                        {post.category ? (
+                          <Badge variant="outline" className="bg-blue-50/50 text-blue-700 border-blue-100 rounded-lg px-2.5 py-0.5 font-bold text-[10px]">
+                            {post.category}
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-300 italic text-xs">Uncategorized</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden border border-slate-200">
+                            {post.profiles?.avatar_url ? (
+                              <Image src={post.profiles.avatar_url} alt={post.profiles.full_name || "Author"} width={24} height={24} className="object-cover" />
+                            ) : (
+                              (post.profiles?.full_name?.charAt(0) || "A").toUpperCase()
+                            )}
+                          </div>
+                          <span className="text-sm font-medium text-slate-600 truncate max-w-[100px]">
+                            {post.profiles?.full_name || "Admin"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {isTrash ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] font-bold text-red-600">Deleted On</span>
+                            <span className="text-[10px] text-slate-400">
+                              {post.deleted_at ? format(new Date(post.deleted_at), "dd MMM yyyy", { locale: th }) : "-"}
+                            </span>
+                          </div>
+                        ) : isScheduled ? (
+                          <Badge variant="outline" className="gap-1.5 bg-blue-50 text-blue-700 border-blue-200 font-bold px-2 rounded-full text-[10px]">
+                            <Clock className="h-3 w-3" /> Scheduled
+                          </Badge>
+                        ) : post.is_published ? (
+                          <Badge variant="outline" className="gap-1.5 bg-green-50 text-green-700 border-green-200 font-bold px-2 rounded-full text-[10px]">
+                            <Globe className="h-3.5 w-3.5" /> Published
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="gap-1.5 bg-orange-50 text-orange-700 border-orange-200 font-bold px-2 rounded-full text-[10px]">
+                            <EyeOff className="h-3.5 w-3.5" /> Draft
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        <div className="flex justify-end gap-1 opacity-10 sm:group-hover:opacity-100 transition-opacity duration-300">
+                          {isTrash ? (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-green-600 hover:bg-green-50 rounded-lg"
+                                onClick={() => startTransition(async () => {
+                                  const res = await restoreBlogPostAction(post.id);
+                                  if (res.success) { toast.success(res.message); router.refresh(); }
+                                })}
+                                title="Restore"
+                              >
+                                <RotateCcw className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg"
+                                onClick={() => startTransition(async () => {
+                                  if (confirm("คุณแน่ใจหรือไม่ว่าต้องการลบบทความนี้ถาวร? การดำเนินการนี้ไม่สามารถย้อนกลับได้")) {
+                                    const res = await permanentDeleteBlogPostAction(post.id);
+                                    if (res.success) { toast.success(res.message); router.refresh(); }
+                                  }
+                                })}
+                                title="Delete Permanently"
+                              >
+                                <ShieldAlert className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" asChild title="Public Preview">
+                                <Link href={`/blog/${post.slug}`} target="_blank"><Eye className="h-4 w-4" /></Link>
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg" asChild title="Edit Content">
+                                <Link href={`/protected/blogs/${post.id}`}><Pencil className="h-4 w-4" /></Link>
+                              </Button>
+                              <DeleteBlogPostButton id={post.id} />
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
-        ) : (
-          posts.map((post) => {
-            const isScheduled =
-              post.published_at && new Date(post.published_at) > now;
-            const publishedDate = post.published_at
-              ? new Date(post.published_at)
-              : null;
-            const selected = isSelected(post.id);
 
-            return (
-              <div
-                key={post.id}
-                className={`rounded-xl border shadow-sm p-4 bg-white transition-all space-y-3 ${
-                  selected
-                    ? "border-blue-500 ring-1 ring-blue-500"
-                    : "border-slate-200"
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      checked={selected}
-                      onCheckedChange={() => toggleSelect(post.id)}
-                      aria-label={`เลือก ${post.title}`}
-                      className="mt-1"
-                    />
-                    <div className="space-y-1">
-                      <Link
-                        href={`/protected/blogs/${post.id}`}
-                        className="block"
-                      >
-                        <span className="font-semibold text-slate-900 line-clamp-2 hover:text-blue-600 transition-colors">
-                          {post.title}
-                        </span>
-                      </Link>
-                      <div className="flex items-center gap-2">
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-4">
+            {posts.map((post) => {
+              const isScheduled = post.published_at && new Date(post.published_at) > now;
+              const publishedDate = post.published_at ? new Date(post.published_at) : null;
+              const selected = isSelected(post.id);
+
+              return (
+                <div
+                  key={post.id}
+                  className={cn(
+                    "relative group rounded-2xl border bg-white p-4 transition-all duration-300 shadow-sm overflow-hidden",
+                    selected ? "ring-2 ring-blue-500 border-transparent" : "border-slate-200 hover:border-slate-300"
+                  )}
+                >
+                  {/* Actions - Absolute Top Far Right */}
+                  <div className="absolute top-2 right-2">
+                    <MobileActionDrawer post={post} isTrash={isTrash} />
+                  </div>
+
+                  <div className="flex gap-4">
+                    {/* Thumbnail */}
+                    <div className="relative aspect-square h-20 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 shrink-0 shadow-sm">
+                      {post.cover_image ? (
+                        <Image src={post.cover_image} alt={post.title} fill className="object-cover" sizes="100px" />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100">
+                          <ImageIcon className="h-5 w-5 text-slate-300" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0 pr-4">
+                      <div className="flex items-start gap-2 mb-1">
+                        <Checkbox
+                          checked={selected}
+                          onCheckedChange={() => toggleSelect(post.id)}
+                          className="mt-1 rounded-md border-slate-300 shadow-none"
+                        />
+                        <Link href={`/protected/blogs/${post.id}`} className="block">
+                          <h4 className="font-extrabold text-slate-900 line-clamp-2 leading-tight">
+                            {post.title}
+                          </h4>
+                        </Link>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        {/* Status Badge - Now in Flow */}
+                        {isScheduled ? (
+                          <Badge className="bg-blue-50 text-blue-700 border-blue-100 text-[9px] h-5 px-1.5 font-bold rounded-full shadow-none">Scheduled</Badge>
+                        ) : post.is_published ? (
+                          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[9px] h-5 px-1.5 font-bold rounded-full shadow-none tracking-tight">Published</Badge>
+                        ) : (
+                          <Badge className="bg-orange-50 text-orange-700 border-orange-100 text-[9px] h-5 px-1.5 font-bold rounded-full shadow-none ml-1">Draft</Badge>
+                        )}
+
                         {post.category && (
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] bg-blue-50 text-blue-700 border-blue-200"
-                          >
+                          <Badge variant="outline" className="text-[9px] bg-slate-50 text-slate-500 border-slate-200 px-1.5 h-5 font-bold uppercase tracking-wider">
                             {post.category}
                           </Badge>
                         )}
-                        <span className="text-[10px] font-mono text-slate-500 truncate max-w-[120px]">
-                          /{post.slug}
-                        </span>
+                        <span className="text-[10px] font-mono text-slate-400">/{post.slug}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      asChild
-                    >
-                      <Link href={`/blog/${post.slug}`} target="_blank">
-                        <Eye className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      asChild
-                    >
-                      <Link href={`/protected/blogs/${post.id}`}>
-                        <Pencil className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <DeleteBlogPostButton id={post.id} />
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-                  <div className="space-y-1">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
-                      สถานะ
-                    </span>
-                    <div className="flex">
-                      {isScheduled ? (
-                        <Badge
-                          variant="outline"
-                          className="gap-1 bg-blue-50 text-blue-700 border-blue-200 text-[10px]"
-                        >
-                          <Clock className="h-3 w-3" /> Scheduled
-                        </Badge>
-                      ) : post.is_published ? (
-                        <Badge
-                          variant="outline"
-                          className="gap-1 bg-green-50 text-green-700 border-green-200 text-[10px]"
-                        >
-                          <Globe className="h-3 w-3" /> Published
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="gap-1 bg-orange-50 text-orange-700 border-orange-200 text-[10px]"
-                        >
-                          <EyeOff className="h-3 w-3" /> Draft
-                        </Badge>
-                      )}
+                  {/* Footer Meta */}
+                  <div className="mt-4 pt-3 flex items-center justify-between border-t border-slate-100">
+                    <div className="flex items-center gap-1.5 text-slate-400">
+                      <Clock className="h-3 w-3" />
+                      <span className="text-[11px] font-bold">
+                        {publishedDate ? format(publishedDate, "dd MMM yyyy", { locale: th }) : "ยังไม่ได้กำหนด"}
+                      </span>
                     </div>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
-                      วันที่เผยแพร่
-                    </span>
-                    <div className="flex flex-col">
-                      {publishedDate ? (
-                        <>
-                          <span className="text-xs font-medium text-slate-700">
-                            {format(publishedDate, "dd MMM yyyy")}
-                          </span>
-                          <span className="text-[10px] text-slate-500">
-                            {format(publishedDate, "HH:mm")}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-xs text-slate-400">-</span>
-                      )}
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400 overflow-hidden border border-slate-100">
+                        {post.profiles?.avatar_url ? (
+                          <Image src={post.profiles.avatar_url} alt={post.profiles.full_name || "Author"} width={20} height={20} className="object-cover" />
+                        ) : (
+                          (post.profiles?.full_name?.charAt(0) || "A").toUpperCase()
+                        )}
+                      </div>
+                      <span className="text-[11px] font-medium text-slate-500">
+                        {post.profiles?.full_name || "Admin"}
+                      </span>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       {/* Standardized Pagination Controls */}
       <div className="pt-2">

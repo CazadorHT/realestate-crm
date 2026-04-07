@@ -91,6 +91,26 @@
   },
   {
     "schemaname": "public",
+    "tablename": "blog_post_views_log",
+    "rls_enabled": true,
+    "policyname": "Admins can view blog analytics",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "blog_post_views_log",
+    "rls_enabled": true,
+    "policyname": "Public can insert blog views log",
+    "permissive": "PERMISSIVE",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
     "tablename": "blog_posts",
     "rls_enabled": true,
     "policyname": "Public View Published Blogs",
@@ -1153,6 +1173,16 @@
     "schemaname": "storage",
     "tablename": "objects",
     "rls_enabled": true,
+    "policyname": "Public Read Access: Blog Images",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(bucket_id = 'blog-images'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "storage",
+    "tablename": "objects",
+    "rls_enabled": true,
     "policyname": "Public Read Access: Property Images",
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",
@@ -1168,6 +1198,16 @@
     "cmd": "SELECT",
     "qual": "(bucket_id = 'property-images'::text)",
     "with_check": null
+  },
+  {
+    "schemaname": "storage",
+    "tablename": "objects",
+    "rls_enabled": true,
+    "policyname": "Staff Manage: Blog Images",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "((bucket_id = 'blog-images'::text) AND (is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role, 'AGENT'::user_role])))))))",
+    "with_check": "((bucket_id = 'blog-images'::text) AND (is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role, 'AGENT'::user_role])))))))"
   },
   {
     "schemaname": "storage",

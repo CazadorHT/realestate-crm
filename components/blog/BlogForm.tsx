@@ -77,6 +77,7 @@ import {
 } from "@/features/blog/actions";
 import dynamic from "next/dynamic";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { generateBlogSlug } from "@/features/blog/blog-utils";
 
 const TiptapEditor = dynamic(() => import("./TiptapEditor").then(mod => mod.TiptapEditor), {
   ssr: false,
@@ -171,11 +172,17 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     const title = e.target.value;
     setValue("title", title);
     if (!initialData) {
-      const slug = title
-        .toLowerCase()
-        .replace(/ /g, "-")
-        .replace(/[^\w-]+/g, "");
+      const slug = generateBlogSlug(title);
       setValue("slug", slug);
+    }
+  };
+
+  const regenerateSlug = () => {
+    const title = watch("title");
+    if (title) {
+      const slug = generateBlogSlug(title);
+      setValue("slug", slug, { shouldDirty: true });
+      toast.success("เจนเนอเรต URL ใหม่เรียบร้อย ✨");
     }
   };
 
@@ -203,22 +210,6 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     } catch (e) {
       toast.error("รูปแบบ JSON ไม่ถูกต้อง");
     }
-  };
-
-  const generateJsonLd = () => {
-    const jsonLd = {
-      "@context": "https://schema.org",
-      "@type": "Article",
-      headline: watchedTitle,
-      description: watchedExcerpt,
-      datePublished: new Date().toISOString(),
-      author: {
-        "@type": "Person",
-        name: "Admin",
-      },
-    };
-    setValue("structured_data", JSON.stringify(jsonLd, null, 2));
-    toast.success("สร้าง JSON-LD สำเร็จ");
   };
 
   const handleAiGenerated = (data: any) => {
@@ -365,6 +356,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
               isTranslating={isTranslating}
               onTranslate={handleTranslateBlog}
               onTitleChange={handleTitleChange}
+              onRegenerateSlug={regenerateSlug}
             />
           </TabsContent>
 
@@ -373,7 +365,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
           </TabsContent>
 
           <TabsContent value="seo">
-            <BlogSeoTab form={form} onGenerateJsonLd={generateJsonLd} />
+            <BlogSeoTab form={form} postId={initialData?.id} />
           </TabsContent>
         </Tabs>
 

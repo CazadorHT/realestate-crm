@@ -23,6 +23,7 @@ import { BlogDetailHero } from "@/components/public/blog/BlogDetailHero";
 import { BlogDetailContent } from "@/components/public/blog/BlogDetailContent";
 import { BlogDetailSidebar } from "@/components/public/blog/BlogDetailSidebar";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
+import { BlogViewCounter } from "@/components/public/blog/BlogViewCounter";
 import { siteConfig } from "@/lib/site-config";
 
 interface BlogPostPageProps {
@@ -146,6 +147,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <article className="min-h-screen bg-slate-50 pb-20 pt-16 md:pt-16">
+      {/* Analytics: Silent View Tracking */}
+      <BlogViewCounter id={post.id} />
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"

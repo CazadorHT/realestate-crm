@@ -18,7 +18,7 @@ export default async function EditBlogPostPage({
 }: EditBlogPostPageProps) {
   const { id } = await params;
   const supabase = await createClient();
-  const { categories } = await getCategoriesAction();
+  const { data: categories } = await getCategoriesAction();
 
   const { data: post } = await supabase
     .from("blog_posts")

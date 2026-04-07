@@ -128,15 +128,43 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_post_views_log: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_views_log_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           author: Json | null
+          author_id: string | null
           category: string | null
           content: string | null
           content_cn: string | null
           content_en: string | null
           cover_image: string | null
           created_at: string | null
+          deleted_at: string | null
           excerpt: string | null
           excerpt_cn: string | null
           excerpt_en: string | null
@@ -151,15 +179,18 @@ export type Database = {
           title_cn: string | null
           title_en: string | null
           updated_at: string | null
+          view_count: number | null
         }
         Insert: {
           author?: Json | null
+          author_id?: string | null
           category?: string | null
           content?: string | null
           content_cn?: string | null
           content_en?: string | null
           cover_image?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           excerpt?: string | null
           excerpt_cn?: string | null
           excerpt_en?: string | null
@@ -174,15 +205,18 @@ export type Database = {
           title_cn?: string | null
           title_en?: string | null
           updated_at?: string | null
+          view_count?: number | null
         }
         Update: {
           author?: Json | null
+          author_id?: string | null
           category?: string | null
           content?: string | null
           content_cn?: string | null
           content_en?: string | null
           cover_image?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           excerpt?: string | null
           excerpt_cn?: string | null
           excerpt_en?: string | null
@@ -197,8 +231,17 @@ export type Database = {
           title_cn?: string | null
           title_en?: string | null
           updated_at?: string | null
+          view_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contract_templates: {
         Row: {
@@ -2777,6 +2820,10 @@ export type Database = {
         Returns: {
           tenant_id: string
         }[]
+      }
+      increment_blog_post_view: {
+        Args: { post_id: string }
+        Returns: undefined
       }
       increment_property_view: {
         Args: { property_id: string }

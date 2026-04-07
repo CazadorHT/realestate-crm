@@ -12,7 +12,7 @@ import {
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export default async function CategoriesPage() {
-  const { categories } = await getCategoriesAction();
+  const { data: categories } = await getCategoriesAction();
   const posts = await getAllBlogPosts();
 
   return (

@@ -1,13 +1,28 @@
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/database.types";
 
-export type BlogPost = Database["public"]["Tables"]["blog_posts"]["Row"];
+export type BlogPost = Database["public"]["Tables"]["blog_posts"]["Row"] & {
+  profiles?: {
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null
+};
 
-export async function getBlogPosts(category?: string, limit = 10, offset = 0) {
+/**
+ * Get published blog posts with author info for public site
+ */
+export async function getBlogPosts(category?: string, limit = 10, offset = 0): Promise<BlogPost[]> {
   const supabase = createClient();
   let query = supabase
     .from("blog_posts")
-    .select("*")
+    .select(`
+      *,
+      profiles:author_id (
+        full_name,
+        avatar_url
+      )
+    `)
+    .is("deleted_at", null) // Filter out Trash
     .eq("is_published", true)
     .order("published_at", { ascending: false })
     .range(offset, offset + limit - 1);
@@ -23,16 +38,26 @@ export async function getBlogPosts(category?: string, limit = 10, offset = 0) {
     return [];
   }
 
-  return data;
+  return data as BlogPost[];
 }
 
-export async function getAllBlogPosts(page = 1, pageSize = 10) {
+/**
+ * Get all blog posts with author info for admin dashboard
+ */
+export async function getAllBlogPosts(page = 1, pageSize = 10): Promise<{ posts: BlogPost[]; count: number }> {
   const supabase = createClient();
   const offset = (page - 1) * pageSize;
   
   const { data, error, count } = await supabase
     .from("blog_posts")
-    .select("*", { count: "exact" })
+    .select(`
+      *,
+      profiles:author_id (
+        full_name,
+        avatar_url
+      )
+    `, { count: "exact" })
+    .is("deleted_at", null) // Filter out Trash
     .order("created_at", { ascending: false })
     .range(offset, offset + pageSize - 1);
 
@@ -41,14 +66,24 @@ export async function getAllBlogPosts(page = 1, pageSize = 10) {
     throw new Error(require("@/lib/db-error").mapDbError(error));
   }
 
-  return { posts: data || [], count: count || 0 };
+  return { posts: (data as BlogPost[]) || [], count: count || 0 };
 }
 
-export async function getBlogPostBySlug(slug: string) {
+/**
+ * Get single blog post by slug with author info
+ */
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("blog_posts")
-    .select("*")
+    .select(`
+      *,
+      profiles:author_id (
+        full_name,
+        avatar_url
+      )
+    `)
+    .is("deleted_at", null)
     .eq("slug", slug)
     .eq("is_published", true)
     .single();
@@ -57,18 +92,28 @@ export async function getBlogPostBySlug(slug: string) {
     return null;
   }
 
-  return data;
+  return data as BlogPost;
 }
 
+/**
+ * Get related posts with author info
+ */
 export async function getRelatedPosts(
   currentSlug: string,
   category: string,
   limit: number = 3,
-) {
+): Promise<BlogPost[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("blog_posts")
-    .select("*")
+    .select(`
+      *,
+      profiles:author_id (
+        full_name,
+        avatar_url
+      )
+    `)
+    .is("deleted_at", null)
     .eq("is_published", true)
     .eq("category", category)
     .neq("slug", currentSlug)
@@ -79,5 +124,5 @@ export async function getRelatedPosts(
     return [];
   }
 
-  return data;
+  return data as BlogPost[];
 }

@@ -5,7 +5,7 @@ import { FileText } from "lucide-react";
 import Link from "next/link";
 
 export default async function NewBlogPostPage() {
-  const { categories } = await getCategoriesAction();
+  const { data: categories } = await getCategoriesAction();
 
   return (
     <div className="space-y-6">

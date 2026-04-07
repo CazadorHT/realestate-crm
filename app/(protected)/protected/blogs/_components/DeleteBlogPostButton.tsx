@@ -19,7 +19,15 @@ import {
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
-export function DeleteBlogPostButton({ id }: { id: string }) {
+import { cn } from "@/lib/utils";
+
+interface DeleteBlogPostButtonProps {
+  id: string;
+  variant?: "icon" | "full";
+  onSuccess?: () => void;
+}
+
+export function DeleteBlogPostButton({ id, variant = "icon", onSuccess }: DeleteBlogPostButtonProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -30,9 +38,11 @@ export function DeleteBlogPostButton({ id }: { id: string }) {
     params.set("success", "true");
     router.push(`${pathname}?${params.toString()}`);
     router.refresh();
+    onSuccess?.();
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsDeleting(true);
     try {
       const res = await deleteBlogPostAction(id);
@@ -52,34 +62,48 @@ export function DeleteBlogPostButton({ id }: { id: string }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-          title="ลบ"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        {variant === "icon" ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 rounded-lg"
+            title="ลบ"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            className="h-12 w-full rounded-xl justify-start font-bold gap-3 border-slate-200 text-destructive hover:text-destructive hover:bg-destructive/5"
+          >
+            <Trash2 className="h-5 w-5" />
+            ย้ายลงถังขยะ
+          </Button>
+        )}
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="rounded-2xl sm:rounded-2xl border-slate-200 shadow-xl">
         <AlertDialogHeader>
-          <AlertDialogTitle>ยืนยันการลบ?</AlertDialogTitle>
-          <AlertDialogDescription>
-            การดำเนินการนี้ไม่สามารถย้อนกลับได้
-            บทความนี้จะถูกลบออกจากระบบอย่างถาวร
+          <AlertDialogTitle className="font-extrabold text-xl text-slate-900 border-b border-slate-100 pb-3 mb-2 flex items-center gap-2">
+            <Trash2 className="h-6 w-6 text-destructive" />
+            ย้ายบทความลงถังขยะ?
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-slate-500 font-medium leading-relaxed">
+            บทความนี้จะถูกย้ายจากหน้าหลักไปเก็บไว้ในถังขยะ 
+            <br />
+            โดยคุณสามารถ <span className="text-slate-900 font-bold underline">กู้คืน (Restore)</span> ได้ในภายหลัง
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+        <AlertDialogFooter className="gap-2 sm:gap-0 pt-4 mt-2">
+          <AlertDialogCancel className="rounded-xl h-11 font-bold border-slate-200">ยกเลิก</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            className="bg-destructive hover:bg-destructive/90 text-white"
+            className="bg-destructive hover:bg-destructive/90 text-white rounded-xl h-11 font-bold shadow-lg shadow-red-100 transition-all active:scale-95"
             disabled={isDeleting}
           >
             {isDeleting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
-            ลบบทความ
+            ย้ายลงถังขยะ
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

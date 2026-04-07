@@ -168,6 +168,27 @@
     "column_default": null
   },
   {
+    "table_name": "blog_post_views_log",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "blog_post_views_log",
+    "column_name": "post_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "blog_post_views_log",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
     "table_name": "blog_posts",
     "column_name": "id",
     "data_type": "uuid",
@@ -313,6 +334,27 @@
     "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "blog_posts",
+    "column_name": "author_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "blog_posts",
+    "column_name": "deleted_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "blog_posts",
+    "column_name": "view_count",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": "0"
   },
   {
     "table_name": "contract_templates",

@@ -26,6 +26,7 @@ interface BulkActionToolbarProps {
   confirmMessage?: React.ReactNode;
   actionableCount?: number;
   onDeleteLabel?: string;
+  extraActions?: React.ReactNode;
 }
 
 export function BulkActionToolbar({
@@ -42,6 +43,7 @@ export function BulkActionToolbar({
   confirmMessage,
   actionableCount,
   onDeleteLabel,
+  extraActions,
 }: BulkActionToolbarProps) {
   const [isExporting, setIsExporting] = useState(false);
 
@@ -160,6 +162,8 @@ export function BulkActionToolbar({
               โอนย้าย {entityName}
             </Button>
           )}
+
+          {extraActions}
 
           <Button
             variant="outline"

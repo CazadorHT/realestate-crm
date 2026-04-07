@@ -20,6 +20,7 @@ interface BlogContentTabProps {
   isTranslating: boolean;
   onTranslate: () => void;
   onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onRegenerateSlug: () => void;
 }
 
 export function BlogContentTab({
@@ -27,6 +28,7 @@ export function BlogContentTab({
   isTranslating,
   onTranslate,
   onTitleChange,
+  onRegenerateSlug,
 }: BlogContentTabProps) {
   return (
     <div className="space-y-6">
@@ -129,10 +131,22 @@ export function BlogContentTab({
           name="slug"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
-                <Link2 className="h-4 w-4" />
-                URL Slug
-              </FormLabel>
+              <div className="flex items-center justify-between">
+                <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
+                  <Link2 className="h-4 w-4" />
+                  URL Slug <span className="text-red-500">*</span>
+                </FormLabel>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onRegenerateSlug}
+                  className="h-7 text-amber-600 hover:text-amber-700 hover:bg-amber-50 gap-1 text-[10px] font-bold"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  Magic Slug
+                </Button>
+              </div>
               <FormControl>
                 <div className="flex">
                   <span className="inline-flex items-center px-4 rounded-l-lg border border-r-0 border-slate-200 bg-slate-50 text-slate-500 text-sm">
@@ -145,8 +159,8 @@ export function BlogContentTab({
                   />
                 </div>
               </FormControl>
-              <FormDescription className="text-slate-500">
-                URL จะถูกสร้างอัตโนมัติจากหัวข้อ
+              <FormDescription className="text-xs text-slate-500">
+                URL จะถูกสร้างอัตโนมัติจากหัวข้อ หรือกดปุ่ม <b>Magic Slug</b> เพื่อให้ AI ช่วยปรับแต่งให้สวยงาม
               </FormDescription>
               <FormMessage />
             </FormItem>

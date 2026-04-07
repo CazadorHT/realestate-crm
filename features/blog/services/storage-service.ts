@@ -38,7 +38,7 @@ export async function uploadBlogImage(
   const path = `blog/${year}/${month}/${randomId}-${safeName}`;
 
   const { error: uploadError } = await supabase.storage
-    .from("property-images")
+    .from("blog-images")
     .upload(path, file, {
       contentType: fileType,
       cacheControl: "3600",
@@ -51,7 +51,7 @@ export async function uploadBlogImage(
   }
 
   const { data: publicUrlData } = supabase.storage
-    .from("property-images")
+    .from("blog-images")
     .getPublicUrl(path);
 
   return {

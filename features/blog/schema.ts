@@ -28,3 +28,12 @@ export const blogPostSchema = z.object({
   published_at: z.string().optional(),
   structured_data: z.string().optional(),
 });
+
+export const blogCategorySchema = z.object({
+  name: z
+    .string()
+    .min(1, "กรุณากรอกชื่อหมวดหมู่")
+    .max(50, "ชื่อหมวดหมู่ต้องไม่เกิน 50 ตัวอักษร"),
+  name_en: z.string().max(50, "English name too long").optional(),
+  name_cn: z.string().max(50, "Chinese name too long").optional(),
+});

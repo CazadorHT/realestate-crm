@@ -65,10 +65,10 @@ export function BlogContentRefiner({
 
       if (result.success && result.refinedContent) {
         onRefined(result.refinedContent);
-        toast.success("ปรับปรุงเนื้อหาเรียบร้อยแล้ว! ✨", { id: toastId });
+        toast.success("ปรับปรุงเนื้อหาสำเร็จ ✨", { id: toastId });
         setIsOpen(false);
       } else {
-        toast.error(result.error || "เกิดข้อผิดพลาดในการปรับปรุงเนื้อหา", {
+        toast.error(result.message || "เกิดข้อผิดพลาดในการปรับปรุงเนื้อหา", {
           id: toastId,
           duration: 5000,
         });

@@ -50,18 +50,18 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
         newCategoryNameEn,
         newCategoryNameCn,
       );
-      if (result.success && result.category) {
-        setCategories((prev) => [...prev, result.category!]);
+      if (result.success && result.data) {
+        setCategories((prev) => [...prev, result.data as Category]);
         setNewCategoryName("");
         setNewCategoryNameEn("");
         setNewCategoryNameCn("");
-        toast.success("สร้างหมวดหมู่สำเร็จ");
+        toast.success(result.message || "สร้างหมวดหมู่สำเร็จ");
         const url = new URL(window.location.href);
         url.searchParams.set("success", "true");
         router.push(url.pathname + url.search);
         router.refresh();
       } else {
-        toast.error(result.error || "สร้างหมวดหมู่ไม่สำเร็จ");
+        toast.error(result.message || "สร้างหมวดหมู่ไม่สำเร็จ");
       }
     });
   };
@@ -73,13 +73,13 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
       const result = await deleteCategoryAction(id);
       if (result.success) {
         setCategories((prev) => prev.filter((c) => c.id !== id));
-        toast.success("ลบหมวดหมู่สำเร็จ");
+        toast.success(result.message || "ลบหมวดหมู่สำเร็จ");
         const url = new URL(window.location.href);
         url.searchParams.set("success", "true");
         router.push(url.pathname + url.search);
         router.refresh();
       } else {
-        toast.error(result.error || "ลบหมวดหมู่ไม่สำเร็จ");
+        toast.error(result.message || "ลบหมวดหมู่ไม่สำเร็จ");
       }
     });
   };
