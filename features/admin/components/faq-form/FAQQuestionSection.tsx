@@ -34,7 +34,7 @@ export function FAQQuestionSection({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 px-1">
                 <MessageCircle className="h-4 w-4 text-blue-600" />
-                <FormLabel className="text-base font-black text-slate-900">
+                <FormLabel className="text-base font-semibold text-slate-900">
                   คำถามหลัก (ภาษาไทย)
                 </FormLabel>
               </div>
@@ -44,7 +44,7 @@ export function FAQQuestionSection({
                 size="sm"
                 onClick={onTranslate}
                 disabled={isTranslating}
-                className="h-9 text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-2 transition-all text-xs font-bold rounded-xl border border-transparent hover:border-blue-100 px-4"
+                className="h-9 text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-2 transition-all text-xs font-semibold rounded-xl border border-transparent hover:border-blue-100 px-4"
               >
                 {isTranslating ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -57,11 +57,11 @@ export function FAQQuestionSection({
             <FormControl>
               <Input
                 placeholder="ระบุคำถามหลักที่ลูกค้ามักจะถามบ่อยๆ..."
-                className="h-16 text-lg border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-bold placeholder:font-normal rounded-2xl bg-slate-50/50"
+                className="h-12 text-base border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all font-medium placeholder:font-normal rounded-2xl bg-slate-50/50"
                 {...field}
               />
             </FormControl>
-            <FormMessage className="font-bold text-xs ml-1" />
+            <FormMessage className="font-semibold text-xs ml-1" />
           </FormItem>
         )}
       />
@@ -72,7 +72,7 @@ export function FAQQuestionSection({
           name="question_en"
           render={({ field }) => (
             <FormItem className="space-y-2">
-              <FormLabel className="font-black text-[10px] uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-2">
+              <FormLabel className="font-semibold text-[10px] uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-2">
                 <Languages className="w-3 h-3" /> Question (English)
               </FormLabel>
               <FormControl>
@@ -91,7 +91,7 @@ export function FAQQuestionSection({
           name="question_cn"
           render={({ field }) => (
             <FormItem className="space-y-2">
-              <FormLabel className="font-black text-[10px] uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-2">
+              <FormLabel className="font-semibold text-[10px] uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-2">
                 <Languages className="w-3 h-3" /> 常见问题 (Chinese)
               </FormLabel>
               <FormControl>

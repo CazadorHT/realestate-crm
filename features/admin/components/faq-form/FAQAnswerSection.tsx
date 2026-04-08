@@ -7,7 +7,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
+import { TipTapEditor } from "@/components/ui/tiptap-editor";
 import { FileText, Languages } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { FAQFormValues } from "../FAQForm";
@@ -26,18 +26,19 @@ export function FAQAnswerSection({ form }: FAQAnswerSectionProps) {
           <FormItem className="space-y-4 pt-2">
             <div className="flex items-center gap-2 px-1">
               <FileText className="h-4 w-4 text-blue-600" />
-              <FormLabel className="text-base font-black text-slate-900">
+              <FormLabel className="text-base font-semibold text-slate-900">
                 สรุปคำตอบ (ภาษาไทย)
               </FormLabel>
             </div>
             <FormControl>
-              <Textarea
+              <TipTapEditor
+                value={field.value || ""}
+                onChange={field.onChange}
                 placeholder="อธิบายคำตอบอย่างละเอียดเพื่อให้ลูกค้าเข้าใจง่าย..."
-                className="min-h-[200px] text-lg border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all resize-none rounded-2xl bg-slate-50/50 p-6 leading-relaxed font-medium"
-                {...field}
+                className="min-h-[220px]"
               />
             </FormControl>
-            <FormMessage className="font-bold text-xs ml-1" />
+            <FormMessage className="font-semibold text-xs ml-1" />
           </FormItem>
         )}
       />
@@ -47,16 +48,16 @@ export function FAQAnswerSection({ form }: FAQAnswerSectionProps) {
           control={form.control}
           name="answer_en"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel className="font-black text-[10px] uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-2">
+            <FormItem className="space-y-4">
+              <FormLabel className="font-semibold text-[10px] uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-2">
                 <Languages className="w-3 h-3" /> Answer (English)
               </FormLabel>
               <FormControl>
-                <Textarea
-                  {...field}
-                  value={field.value ?? ""}
-                  className="min-h-[140px] rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-400/5 transition-all text-sm resize-none font-medium p-5 leading-relaxed"
+                <TipTapEditor
+                  value={field.value || ""}
+                  onChange={field.onChange}
                   placeholder="Summary in English..."
+                  className="min-h-[160px]"
                 />
               </FormControl>
             </FormItem>
@@ -66,16 +67,16 @@ export function FAQAnswerSection({ form }: FAQAnswerSectionProps) {
           control={form.control}
           name="answer_cn"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel className="font-black text-[10px] uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-2">
+            <FormItem className="space-y-4">
+              <FormLabel className="font-semibold text-[10px] uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-2">
                 <Languages className="w-3 h-3" /> 回答 (Chinese)
               </FormLabel>
               <FormControl>
-                <Textarea
-                  {...field}
-                  value={field.value ?? ""}
-                  className="min-h-[140px] rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-400/5 transition-all text-sm resize-none font-medium p-5 leading-relaxed"
+                <TipTapEditor
+                  value={field.value || ""}
+                  onChange={field.onChange}
                   placeholder="中文回答总结..."
+                  className="min-h-[160px]"
                 />
               </FormControl>
             </FormItem>

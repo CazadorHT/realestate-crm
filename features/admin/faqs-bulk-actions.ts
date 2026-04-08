@@ -101,3 +101,39 @@ export async function emptyFaqTrashAction(): Promise<BulkDeleteResult> {
     };
   }
 }
+
+/**
+ * Permanently delete FAQs trashed more than 30 days ago
+ */
+export async function purgeOldTrashAction(): Promise<BulkDeleteResult> {
+  try {
+    const { supabase, role } = await requireAuthContext();
+    assertStaff(role);
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const { error, count } = await supabase
+      .from("faqs")
+      .delete({ count: "exact" })
+      .not("deleted_at", "is", null)
+      .lt("deleted_at", thirtyDaysAgo.toISOString());
+
+    if (error) throw error;
+
+    revalidatePath("/protected/faqs");
+
+    return {
+      success: true,
+      deletedCount: count ?? 0,
+      message: `ล้างข้อมูลเก่าสำเร็จทั้งหมด ${count ?? 0} รายการ`,
+    };
+  } catch (error: unknown) {
+    console.error("purgeOldTrashAction error:", error);
+    return {
+      success: false,
+      deletedCount: 0,
+      message: mapDbError(error),
+    };
+  }
+}

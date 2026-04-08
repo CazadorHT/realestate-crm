@@ -1,12 +1,25 @@
 "use client";
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import { ShieldAlert, Home, MessageCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function BlockingPage() {
-  const [countdown, setCountdown] = useState(10);
+function BlockingContent() {
+  const searchParams = useSearchParams();
+  const retryParam = searchParams.get("retry");
+  const initialRetry = retryParam ? parseInt(retryParam, 10) : 10;
+  
+  const [countdown, setCountdown] = useState(initialRetry);
+
+  useEffect(() => {
+    if (retryParam) {
+      const val = parseInt(retryParam, 10);
+      if (!isNaN(val)) setCountdown(val);
+    }
+  }, [retryParam]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -77,7 +90,7 @@ export default function BlockingPage() {
         </div>
 
         <p className="mt-8 text-xs text-slate-400 font-medium">
-          Error 429: Too Many Requests | Security Layer v2.3
+          Error 429: Too Many Requests | Security Layer v2.5
         </p>
       </motion.div>
 
@@ -88,5 +101,17 @@ export default function BlockingPage() {
         </span>
       </div>
     </div>
+  );
+}
+
+export default function BlockingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans">
+        <div className="animate-pulse text-slate-400 font-medium">กำลังตรวจสอบความปลอดภัย...</div>
+      </div>
+    }>
+      <BlockingContent />
+    </Suspense>
   );
 }

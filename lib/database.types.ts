@@ -590,6 +590,7 @@ export type Database = {
           category: string | null
           created_at: string
           deleted_at: string | null
+          fts_vector: unknown
           id: string
           is_active: boolean | null
           question: string
@@ -606,6 +607,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           deleted_at?: string | null
+          fts_vector?: unknown
           id?: string
           is_active?: boolean | null
           question: string
@@ -622,6 +624,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           deleted_at?: string | null
+          fts_vector?: unknown
           id?: string
           is_active?: boolean | null
           question?: string

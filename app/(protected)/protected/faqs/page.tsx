@@ -7,27 +7,28 @@ import { CreateFAQDialog } from "@/features/admin/components/CreateFAQDialog";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
 interface FAQsPageProps {
-  searchParams: Promise<{ page?: string; success?: string; view?: string }>;
+  searchParams: Promise<{ page?: string; success?: string; view?: string; q?: string }>;
 }
 
 export default async function FAQsPage(props: FAQsPageProps) {
   const searchParams = await props.searchParams;
   const page = Number(searchParams.page) || 1;
   const currentView = searchParams.view || "active";
+  const search = searchParams.q || "";
   const isTrash = currentView === "trash";
   const pageSize = 10;
 
   // Parallel fetching for counts and data
   const [activeData, trashData] = await Promise.all([
-    getFaqs(1, 1, false),
-    getFaqs(1, 1, true),
+    getFaqs(1, 1, false, search),
+    getFaqs(1, 1, true, search),
   ]);
 
   const activeCount = activeData.count;
   const trashCount = trashData.count;
 
   // Fetch current page data
-  const { faqs, count: currentCount } = await getFaqs(page, pageSize, isTrash);
+  const { faqs, count: currentCount } = await getFaqs(page, pageSize, isTrash, search);
 
   return (
     <div className=" space-y-6 animate-fade-in">

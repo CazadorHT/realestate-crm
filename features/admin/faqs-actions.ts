@@ -27,7 +27,7 @@ const updateFaqSchema = faqSchema.partial().extend({
 export type CreateFaqInput = z.infer<typeof faqSchema>;
 export type UpdateFaqInput = z.infer<typeof updateFaqSchema>;
 
-export async function getFaqs(page = 1, pageSize = 10, isTrash = false) {
+export async function getFaqs(page = 1, pageSize = 10, isTrash = false, search = "") {
   const supabase = await createClient();
   const offset = (page - 1) * pageSize;
 
@@ -39,6 +39,15 @@ export async function getFaqs(page = 1, pageSize = 10, isTrash = false) {
     query = query.not("deleted_at", "is", null);
   } else {
     query = query.is("deleted_at", null);
+  }
+
+  if (search) {
+    // Use Full-Text Search against the fts_vector column
+    // 'plain' config handles multiple words naturally
+    query = query.textSearch("fts_vector", search, {
+      config: "simple",
+      type: "plain",
+    });
   }
 
   const { data, error, count } = await query

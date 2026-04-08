@@ -24,6 +24,7 @@ type FAQ = {
   answer_en?: string;
   answer_cn?: string;
   category: string;
+  view_count?: number;
 };
 
 export function FAQSection() {
@@ -52,18 +53,26 @@ export function FAQSection() {
   // if (loading) return null; // Removed to prevent layout shift
   if (!loading && faqs.length === 0) return null;
 
+  const stripHtml = (html: string) => {
+    return html.replace(/<[^>]*>?/gm, "");
+  };
+
   // Schema.org FAQPage Structure
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
-      "@type": "Question",
-      name: getLocalizedField(faq, "question", language),
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: getLocalizedField(faq, "answer", language),
-      },
-    })),
+    mainEntity: faqs.map((faq) => {
+      const question = getLocalizedField<string>(faq, "question", language) || "";
+      const answer = getLocalizedField<string>(faq, "answer", language) || "";
+      return {
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: stripHtml(answer),
+        },
+      };
+    }),
   };
 
   return (
@@ -162,9 +171,16 @@ export function FAQSection() {
                             <CircleHelp className="w-4 h-4 md:w-5 md:h-5 text-white" />
                           </div>
                           <div className="flex-1">
-                            <p className="text-base md:text-lg font-medium text-white leading-snug">
-                              {question}
-                            </p>
+                            <div className="flex items-center gap-3">
+                              <p className="text-base md:text-lg font-medium text-white leading-snug">
+                                {question}
+                              </p>
+                              {faq.view_count !== undefined && faq.view_count > 100 && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-[10px] font-bold text-blue-400 uppercase tracking-tight animate-pulse shrink-0">
+                                  {t("common.popular")}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </AccordionTrigger>
@@ -175,9 +191,10 @@ export function FAQSection() {
                       <div className="flex justify-end pl-8 md:pl-12 lg:pl-24">
                         <div className="flex items-start gap-3 md:gap-4 p-4 md:p-6 rounded-xl md:rounded-2xl rounded-tr-sm bg-linear-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/10 max-w-2xl backdrop-blur-md">
                           <div className="flex-1 text-right">
-                            <p className="text-slate-300 leading-relaxed text-sm md:text-base">
-                              {answer}
-                            </p>
+                            <div 
+                              className="text-slate-300 leading-relaxed text-sm md:text-base rich-text-content"
+                              dangerouslySetInnerHTML={{ __html: answer }}
+                            />
                           </div>
                           <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 mt-0.5">
                             <MessageCircle className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />

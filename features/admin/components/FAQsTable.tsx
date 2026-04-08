@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from "react";
 import {
   Table,
@@ -11,19 +13,22 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Edit, Trash2, HelpCircle, RotateCcw, Trash, AlertTriangle, Eye } from "lucide-react";
+import { Edit, Trash2, HelpCircle, RotateCcw, Trash, AlertTriangle, Eye, Search, X } from "lucide-react";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkMoveToTrashAction, emptyFaqTrashAction } from "@/features/admin/faqs-bulk-actions";
 import { moveToTrashAction, restoreFaqAction, permanentDeleteFaqAction } from "@/features/admin/faqs-actions";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState  } from "react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Loader2 } from "lucide-react";
 import { EditFAQDialog } from "./EditFAQDialog";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { useDebounce } from "use-debounce";
+import { useEffect } from "react";
 import { Database } from "@/lib/database.types";
 
 type FAQ = Database["public"]["Tables"]["faqs"]["Row"];
@@ -54,6 +59,8 @@ export function FAQsTable({
   const [isEmptyTrashConfirm, setIsEmptyTrashConfirm] = useState(false);
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchValue, setSearchValue] = useState(searchParams.get("q") || "");
+  const [debouncedSearchValue] = useDebounce(searchValue, 500);
   
   const isTrash = activeTab === "trash";
   const allIds = useMemo(() => faqs?.map((f) => f.id) || [], [faqs]);
@@ -80,6 +87,20 @@ export function FAQsTable({
     router.push(`${pathname}?${params.toString()}`);
     clearSelection();
   };
+
+  useEffect(() => {
+    const currentQ = searchParams.get("q") || "";
+    if (debouncedSearchValue === currentQ) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (debouncedSearchValue) {
+      params.set("q", debouncedSearchValue);
+      params.set("page", "1");
+    } else {
+      params.delete("q");
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  }, [debouncedSearchValue, pathname, router, searchParams]);
 
   const handleBulkTrash = async () => {
     const ids = Array.from(selectedIds);
@@ -185,17 +206,37 @@ export function FAQsTable({
           </TabsList>
         </Tabs>
 
-        {isTrash && trashCount > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsEmptyTrashConfirm(true)}
-            className="h-10 px-4 text-rose-600 border-rose-200 bg-rose-50/50 hover:bg-rose-50 rounded-xl font-bold transition-all"
-          >
-            <Trash className="w-4 h-4 mr-2" />
-            ล้างถังขยะทั้งหมด
-          </Button>
-        )}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64 group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+            <Input
+              placeholder="ค้นหาคำถามหรือคำตอบ..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="pl-10 pr-10 h-11 bg-slate-100 border-none rounded-xl focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:bg-white transition-all font-medium"
+            />
+            {searchValue && (
+              <button 
+                onClick={() => setSearchValue("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-full transition-colors"
+              >
+                <X className="h-3 w-3 text-slate-500" />
+              </button>
+            )}
+          </div>
+
+          {isTrash && trashCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEmptyTrashConfirm(true)}
+              className="h-11 px-4 text-rose-600 border-rose-200 bg-rose-50/50 hover:bg-rose-50 rounded-xl font-bold transition-all"
+            >
+              <Trash className="w-4 h-4 mr-2" />
+              ล้างถังขยะ
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="relative">
@@ -220,19 +261,19 @@ export function FAQsTable({
                     className="rounded-md border-slate-300"
                   />
                 </TableHead>
-                <TableHead className="w-[80px] font-black text-[11px] uppercase tracking-wider text-slate-500 px-6">
+                <TableHead className="w-[80px] font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
                   ลำดับ
                 </TableHead>
-                <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 px-6">
+                <TableHead className="font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
                   คำถามสำคัญ
                 </TableHead>
-                <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 px-6">
+                <TableHead className="font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
                    หมวดหมู่คำถาม
                 </TableHead>
-                <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 px-6">
+                <TableHead className="font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
                   {isTrash ? "ลบเมื่อ" : "สถานะ"}
                 </TableHead>
-                <TableHead className="text-right font-black text-[11px] uppercase tracking-wider text-slate-500 px-6">
+                <TableHead className="text-right font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
                   จัดการข้อมูล
                 </TableHead>
               </TableRow>
@@ -403,7 +444,7 @@ export function FAQsTable({
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-2">
-                           <span className="text-[10px] font-mono font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                           <span className="text-[10px] font-mono font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
                              #{faq.sort_order ?? "-"}
                            </span>
                            {!isTrash ? (
@@ -422,7 +463,7 @@ export function FAQsTable({
                              </Badge>
                            )}
                         </div>
-                        <h4 className="font-black text-slate-900 leading-tight">
+                        <h4 className="font-bold text-slate-900 leading-tight">
                           {faq.question}
                         </h4>
                         <div className="flex items-center gap-2 mt-1 opacity-60">
@@ -435,7 +476,7 @@ export function FAQsTable({
 
                   <div className="flex items-center justify-between pt-4 border-t border-slate-50 gap-4">
                     <div className="min-w-0">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
                         หมวดหมู่
                       </span>
                       <Badge
@@ -520,7 +561,7 @@ export function FAQsTable({
               <p className="text-slate-600">คุณแน่ใจหรือไม่ว่าต้องการย้ายคำถามนี้ลงถังขยะ? คุณสามารถกู้คืนข้อมูลได้ในภายหลัง</p>
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
                 <p className="text-slate-900 font-bold mb-1 italic">"{deleteConfirmFaq.question}"</p>
-                <Badge variant="outline" className="text-[10px] uppercase font-black text-slate-400 bg-white">
+                <Badge variant="outline" className="text-[10px] uppercase font-bold text-slate-400 bg-white">
                    ID: {deleteConfirmFaq.id.slice(0, 8)}...
                 </Badge>
               </div>

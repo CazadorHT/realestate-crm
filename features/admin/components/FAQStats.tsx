@@ -30,7 +30,7 @@ export function FAQStats({ faqs, activeCount, trashCount, isTrash }: FAQStatsPro
           )}
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="text-2xl font-black text-slate-900">
+          <div className="text-2xl font-bold text-slate-900">
             {isTrash ? trashCount : activeCount}
           </div>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
@@ -45,7 +45,7 @@ export function FAQStats({ faqs, activeCount, trashCount, isTrash }: FAQStatsPro
           <Eye className="h-4 w-4 text-emerald-500" />
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="text-2xl font-black text-emerald-600">
+          <div className="text-2xl font-bold text-emerald-600">
             {totalViews.toLocaleString()}
           </div>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
@@ -60,7 +60,7 @@ export function FAQStats({ faqs, activeCount, trashCount, isTrash }: FAQStatsPro
           <FolderOpen className="h-4 w-4 text-blue-500" />
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="text-2xl font-black text-blue-600">
+          <div className="text-2xl font-bold text-blue-600">
             {totalCategories}
           </div>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
@@ -75,7 +75,7 @@ export function FAQStats({ faqs, activeCount, trashCount, isTrash }: FAQStatsPro
           <CheckCircle className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="text-2xl font-black text-amber-600">
+          <div className="text-2xl font-bold text-amber-600">
              100%
           </div>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">

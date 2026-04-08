@@ -34,7 +34,7 @@ export function EditFAQDialog({
             <FaQuestion className="h-5 w-5 text-blue-500" />
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-black text-slate-800 tracking-tight leading-tight">แก้ไขข้อมูลคำถาม (FAQs)</span>
+            <span className="text-xl font-bold text-slate-800 tracking-tight leading-tight">แก้ไขข้อมูลคำถาม (FAQs)</span>
             <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-0.5 ml-0.5">Edit FAQ Intelligence</span>
           </div>
         </div>

@@ -6,22 +6,28 @@ import { useRouter } from "next/navigation";
 import {
   HelpCircle,
   Settings,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle2,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { toast } from "sonner";
-import { useForm, UseFormReturn, Resolver } from "react-hook-form";
+import { useForm, Resolver } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Database } from "@/lib/database.types";
+import { Button } from "@/components/ui/button";
 
 // Modular Components
 import { FAQQuestionSection } from "./faq-form/FAQQuestionSection";
 import { FAQAnswerSection } from "./faq-form/FAQAnswerSection";
-import { FAQSidebar } from "./faq-form/FAQSidebar";
+import { FAQSettingsSection } from "./faq-form/FAQSettingsSection";
 
 export type FAQRow = Database["public"]["Tables"]["faqs"]["Row"];
 
@@ -57,6 +63,7 @@ export function FAQForm({
   isStandalone = false,
 }: FAQFormProps) {
   const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
 
@@ -75,6 +82,24 @@ export function FAQForm({
       is_active: initialData?.is_active ?? true,
     },
   });
+
+  const nextStep = async () => {
+    let fieldsToValidate: (keyof FAQFormValues)[] = [];
+    if (currentStep === 1) {
+      fieldsToValidate = ["question"];
+    } else if (currentStep === 2) {
+      fieldsToValidate = ["answer"];
+    }
+
+    const isValid = await form.trigger(fieldsToValidate);
+    if (isValid) {
+      setCurrentStep((prev) => Math.min(prev + 1, 3));
+    } else {
+      toast.error("กรุณาระบุข้อมูลที่จำเป็นให้ครบถ้วนก่อนไปขั้นตอนถัดไปนะครับ");
+    }
+  };
+
+  const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   async function onSubmit(values: FAQFormValues) {
     setSaving(true);
@@ -117,9 +142,7 @@ export function FAQForm({
     }
 
     setIsTranslating(true);
-    const toastId = toast.loading(
-      "AI กำลังแปลข้อมูลเป็นภาษาอังกฤษและจีน...",
-    );
+    const toastId = toast.loading("AI กำลังแปลข้อมูลเป็นภาษาอังกฤษและจีน...");
 
     try {
       const questionRes = await translateTextAction(question, "plain");
@@ -141,6 +164,12 @@ export function FAQForm({
     }
   };
 
+  const steps = [
+    { id: 1, title: "ตั้งคำถาม", description: "เนื้อหาหลักและภาษา" },
+    { id: 2, title: "สรุปคำตอบ", description: "รายละเอียดเชิงลึก" },
+    { id: 3, title: "ตั้งค่าระบบ", description: "หมวดหมู่และสถานะ" },
+  ];
+
   return (
     <div className={cn("container mx-auto px-4 md:px-0 pb-10", !isStandalone && "max-w-7xl")}>
       {!isStandalone && (
@@ -157,66 +186,149 @@ export function FAQForm({
               <HelpCircle className="h-7 w-7" />
             </div>
             <div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-none">
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-900 leading-none">
                 {isNew ? "สร้างคำถามใหม่" : "แก้ไขคำถาม"}
               </h1>
               <p className="text-slate-500 mt-2 text-sm font-medium">
-                {isNew
-                  ? "สร้างคลังความรู้เพื่อให้ลูกค้าช่วยเหลือตนเองได้สะดวกรวดเร็วขึ้น"
-                  : "ปรับปรุงรายละเอียดคำถามเพื่อให้ข้อมูลที่แม่นยำที่สุดสำหรับลูกค้า"}
+                ขั้นตอนที่ {currentStep} จาก 3: {steps[currentStep - 1].title}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      <div
-        className={cn(
-          "bg-white border border-slate-200 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl rounded-3xl",
-          isStandalone && "border-0 shadow-none hover:shadow-none bg-transparent rounded-none",
-        )}
-      >
-        {!isStandalone && (
-          <div className="bg-linear-to-r from-slate-800 to-slate-900 px-8 py-6">
-            <div className="flex items-center gap-3">
-              <Settings className="h-5 w-5 text-blue-400" />
-              <h2 className="text-lg font-bold text-white uppercase tracking-wide">
-                ตั้งค่าข้อมูลคำถาม
-              </h2>
+      {/* 🧙 Progress Stepper */}
+      <div className="grid grid-cols-3 gap-2 mb-8 max-w-2xl mx-auto">
+        {steps.map((step) => (
+          <div key={step.id} className="relative">
+            <div className={cn(
+              "h-1.5 rounded-full transition-all duration-500",
+              currentStep >= step.id ? "bg-blue-600" : "bg-slate-200"
+            )} />
+            <div className="mt-3 text-center md:text-left flex flex-col md:flex-row md:items-center gap-1">
+              <span className={cn(
+                "text-[10px] md:text-xs font-semibold uppercase tracking-widest",
+                currentStep >= step.id ? "text-blue-600" : "text-slate-400"
+              )}>
+                Step {step.id}
+              </span>
+              <span className={cn(
+                "hidden md:block text-[11px] font-medium text-slate-400",
+              )}>
+                — {step.title}
+              </span>
             </div>
-            <p className="text-slate-400 text-sm mt-1 ml-8 italic font-medium">
-              ตรวจสอบความถูกต้องและลำดับการแสดงผลก่อนทำการบันทึก
-            </p>
           </div>
-        )}
+        ))}
+      </div>
 
+      <div className={cn(
+        "bg-white border border-slate-200 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl rounded-3xl",
+        isStandalone && "border-0 shadow-none hover:shadow-none bg-transparent rounded-none",
+      )}>
         <div className={cn("p-8 md:p-10", isStandalone && "p-0")}>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                {/* Left Column: Content Section */}
-                <div className="lg:col-span-2 space-y-10">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+              
+              {/* STEP 1: Question Content */}
+              {currentStep === 1 && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+                      <HelpCircle size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">เนื้อหาคำถาม</h3>
+                      <p className="text-xs text-slate-500">กำหนดคำถามหลักและคำแปลภาษาต่างๆ</p>
+                    </div>
+                  </div>
                   <FAQQuestionSection 
                     form={form} 
                     isTranslating={isTranslating} 
                     onTranslate={handleTranslateFaq} 
                   />
-                  
-                  <Separator className="bg-slate-100" />
-                  
+                </div>
+              )}
+
+              {/* STEP 2: Answer Content */}
+              {currentStep === 2 && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+                      <Sparkles size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">สรุปคำตอบ</h3>
+                      <p className="text-xs text-slate-500">ใส่รายละเอียดคำตอบแบบ Rich Text เพื่อประกอบความเข้าใจ</p>
+                    </div>
+                  </div>
                   <FAQAnswerSection form={form} />
                 </div>
+              )}
 
-                {/* Right Column: Settings & Sidebar */}
-                <div className="lg:col-span-1">
-                  <FAQSidebar
-                    form={form}
-                    saving={saving}
-                    isNew={isNew}
-                    onCancel={onCancel || (() => router.push("/protected/faqs"))}
-                  />
+              {/* STEP 3: Settings & Metadata */}
+              {currentStep === 3 && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+                      <Settings size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">การตั้งค่าระบบ</h3>
+                      <p className="text-xs text-slate-500">กำหนดหมวดหมู่ ลำดับ และการแสดงผลบนหน้าเว็บไซต์</p>
+                    </div>
+                  </div>
+                  <div className="max-w-2xl mx-auto">
+                    <FAQSettingsSection
+                      form={form}
+                      saving={saving}
+                      isNew={isNew}
+                      onCancel={onCancel || (() => router.push("/protected/faqs"))}
+                      isWizard={true}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* 🔘 Wizard Controls */}
+              <div className="flex w-full items-center justify-between pt-6 border-t border-slate-100 mt-10">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={currentStep === 1 ? (onCancel || (() => router.push("/protected/faqs"))) : prevStep}
+                  className="flex flex-1 h-12 px-6 rounded-xl font-semibold gap-2 text-slate-500 hover:text-slate-900 transition-all"
+                >
+                  <ArrowLeft size={18} />
+                  {currentStep === 1 ? "ยกเลิก" : "ย้อนกลับ"}
+                </Button>
+
+                <div className="flex flex-2 items-center gap-3">
+                  {currentStep < 3 ? (
+                    <Button
+                      type="button"
+                      onClick={nextStep}
+                      className="h-12 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold gap-2 shadow-lg shadow-slate-200"
+                    >
+                      ถัดไป
+                      <ArrowRight size={18} />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      disabled={saving || !form.formState.isValid}
+                      className="h-12 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold gap-2 shadow-lg shadow-blue-200 disabled:opacity-50"
+                    >
+                      {saving ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 size={18} />
+                      )}
+                      {saving ? "กำลังบันทึก..." : isNew ? "สร้างคำถามเลย" : "บันทึกการแก้ไข"}
+                    </Button>
+                  )}
                 </div>
               </div>
+
             </form>
           </Form>
         </div>

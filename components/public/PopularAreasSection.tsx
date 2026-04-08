@@ -421,14 +421,14 @@ export function PopularAreasSection() {
             </div>
           ) : hasError ? (
             <div
-              className="rounded-[2.5rem] border-2 border-dashed border-red-200 bg-red-50/50 p-12 md:p-16 text-center"
+              className="rounded-[2.5rem] border-2 border-dashed border-red-200 bg-red-50/50 p-12 md:p-16 md:mb-10 text-center"
               data-aos="fade-up"
             >
               <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-red-500">
                 <RefreshCw className="h-8 w-8" />
               </div>
               <h3 className="text-slate-900 font-bold text-xl mb-2">
-                {t("common.error_subject_required") || "Error Loading Data"}
+                {t("common.error_loading") || "Error Loading Data"}
               </h3>
               <p className="text-slate-500 font-medium mb-6">
                 {t("common.search_error") || "Something went wrong. Please try again."}
@@ -441,7 +441,7 @@ export function PopularAreasSection() {
                 }}
                 className="px-8 py-3 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 transition-all active:scale-95"
               >
-                {t("search.search_again") || "Retry"}
+                {t("common.retry") || "Retry"}
               </button>
             </div>
           ) : !items.length ? (

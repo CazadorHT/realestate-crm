@@ -107,19 +107,19 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
                       {/* Condensed Meta Info */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Action</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Action</span>
                           <span className="text-sm font-bold text-slate-700">{log.action}</span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Entity</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Entity</span>
                           <span className="text-sm font-bold text-slate-700">{log.entity}</span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">User</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">User</span>
                           <span className="text-sm font-bold text-slate-700">{log.user?.full_name} ({log.user?.role})</span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Timestamp</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Timestamp</span>
                           <span className="text-sm font-bold text-slate-700">
                             {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss")}
                           </span>
@@ -129,7 +129,7 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
                       {/* Technical Raw Data */}
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 px-1">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Raw Metadata</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Raw Metadata</span>
                           <div className="h-px flex-1 bg-slate-100" />
                         </div>
                         <div className="rounded-2xl bg-slate-950 p-5 shadow-inner overflow-hidden">

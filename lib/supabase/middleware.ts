@@ -1,6 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+/**
+ * 🔑 Auth MiddleWare Wrapper: Refreshes session and returns User context
+ * Returns { response, user } to avoid redundant calls in main middleware.
+ */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -38,8 +42,11 @@ export async function updateSession(request: NextRequest) {
 
   // Protected routes logic
   if (request.nextUrl.pathname.startsWith("/protected") && !user) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    return { 
+      response: NextResponse.redirect(new URL("/auth/login", request.url)), 
+      user: null 
+    };
   }
 
-  return response;
+  return { response, user };
 }
