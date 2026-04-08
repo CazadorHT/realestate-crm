@@ -896,6 +896,20 @@
     "column_default": null
   },
   {
+    "table_name": "faqs",
+    "column_name": "deleted_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "faqs",
+    "column_name": "view_count",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
     "table_name": "features",
     "column_name": "id",
     "data_type": "uuid",

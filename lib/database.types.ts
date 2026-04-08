@@ -589,6 +589,7 @@ export type Database = {
           answer_en: string | null
           category: string | null
           created_at: string
+          deleted_at: string | null
           id: string
           is_active: boolean | null
           question: string
@@ -596,6 +597,7 @@ export type Database = {
           question_en: string | null
           sort_order: number | null
           updated_at: string
+          view_count: number | null
         }
         Insert: {
           answer: string
@@ -603,6 +605,7 @@ export type Database = {
           answer_en?: string | null
           category?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           is_active?: boolean | null
           question: string
@@ -610,6 +613,7 @@ export type Database = {
           question_en?: string | null
           sort_order?: number | null
           updated_at?: string
+          view_count?: number | null
         }
         Update: {
           answer?: string
@@ -617,6 +621,7 @@ export type Database = {
           answer_en?: string | null
           category?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           is_active?: boolean | null
           question?: string
@@ -624,6 +629,7 @@ export type Database = {
           question_en?: string | null
           sort_order?: number | null
           updated_at?: string
+          view_count?: number | null
         }
         Relationships: []
       }
@@ -2905,6 +2911,7 @@ export type Database = {
         Args: { post_id: string }
         Returns: undefined
       }
+      increment_faq_view: { Args: { faq_id: string }; Returns: undefined }
       increment_property_view: {
         Args: { property_id: string }
         Returns: undefined

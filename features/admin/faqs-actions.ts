@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
 
 import { z } from "zod";
@@ -26,14 +27,23 @@ const updateFaqSchema = faqSchema.partial().extend({
 export type CreateFaqInput = z.infer<typeof faqSchema>;
 export type UpdateFaqInput = z.infer<typeof updateFaqSchema>;
 
-export async function getFaqs(page = 1, pageSize = 10) {
+export async function getFaqs(page = 1, pageSize = 10, isTrash = false) {
   const supabase = await createClient();
   const offset = (page - 1) * pageSize;
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from("faqs")
-    .select("*", { count: "exact" })
+    .select("*", { count: "exact" });
+
+  if (isTrash) {
+    query = query.not("deleted_at", "is", null);
+  } else {
+    query = query.is("deleted_at", null);
+  }
+
+  const { data, error, count } = await query
     .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false })
     .range(offset, offset + pageSize - 1);
 
   if (error) {
@@ -59,29 +69,39 @@ export async function getFaq(id: string) {
 export async function createFaq(input: CreateFaqInput) {
   try {
     const validated = faqSchema.parse(input);
-    const { role, tenantId } = await requireAuthContext();
+    const { role, user, supabase } = await requireAuthContext();
     assertStaff(role);
-    if (!tenantId) throw new Error("Tenant context required");
 
-    const supabase = await createClient();
-    const { error } = await supabase.from("faqs").insert([{
-      ...validated,
-      tenant_id: tenantId
-    }]);
+    const { data: faq, error } = await supabase
+      .from("faqs")
+      .insert([validated])
+      .select()
+      .single();
 
     if (error) throw error;
     
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "faq.create",
+        entity: "faqs",
+        entityId: faq.id,
+        metadata: { question: faq.question },
+      }
+    );
+
     revalidatePath("/admin/faqs");
     revalidatePath("/protected/faqs");
-    revalidatePath("/"); // Update public page
+    revalidatePath("/");
     return { success: true, message: "สร้างคำถามสำเร็จ" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("createFaq error:", error);
+    if (error instanceof z.ZodError) {
+      return { success: false, message: error.issues[0].message };
+    }
     return { 
       success: false, 
-      message: error instanceof z.ZodError 
-        ? error.issues[0].message 
-        : mapDbError(error) 
+      message: mapDbError(error) 
     };
   }
 }
@@ -89,56 +109,144 @@ export async function createFaq(input: CreateFaqInput) {
 export async function updateFaq(input: UpdateFaqInput) {
   try {
     const validated = updateFaqSchema.parse(input);
-    const { role, tenantId } = await requireAuthContext();
+    const { role, user, supabase } = await requireAuthContext();
     assertStaff(role);
-    if (!tenantId) throw new Error("Tenant context required");
 
-    const supabase = await createClient();
     const { id, ...updates } = validated;
     const { error } = await supabase
       .from("faqs")
       .update(updates)
-      .eq("id", id)
-      .eq("tenant_id", tenantId);
+      .eq("id", id);
 
     if (error) throw error;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "faq.update",
+        entity: "faqs",
+        entityId: id,
+        metadata: { question: updates.question },
+      }
+    );
 
     revalidatePath("/admin/faqs");
     revalidatePath("/protected/faqs");
     revalidatePath("/");
     return { success: true, message: "แก้ไขคำถามสำเร็จ" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("updateFaq error:", error);
+    if (error instanceof z.ZodError) {
+      return { success: false, message: error.issues[0].message };
+    }
     return { 
       success: false, 
-      message: error instanceof z.ZodError 
-        ? error.issues[0].message 
-        : mapDbError(error) 
+      message: mapDbError(error) 
     };
   }
 }
 
-export async function deleteFaq(id: string) {
+export async function moveToTrashAction(id: string) {
   try {
-    const { role, tenantId } = await requireAuthContext();
+    const { role, user, supabase } = await requireAuthContext();
     assertStaff(role);
-    if (!tenantId) throw new Error("Tenant context required");
 
-    const supabase = await createClient();
     const { error } = await supabase
       .from("faqs")
-      .delete()
-      .eq("id", id)
-      .eq("tenant_id", tenantId);
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
 
     if (error) throw error;
 
-    revalidatePath("/admin/faqs");
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "faq.trash",
+        entity: "faqs",
+        entityId: id,
+      }
+    );
+
     revalidatePath("/protected/faqs");
-    revalidatePath("/");
-    return { success: true, message: "ลบคำถามสำเร็จ" };
-  } catch (error: any) {
-    console.error("deleteFaq error:", error);
+    return { success: true, message: "ย้ายลงถังขยะเรียบร้อย" };
+  } catch (error: unknown) {
+    console.error("moveToTrash error:", error);
     return { success: false, message: mapDbError(error) };
+  }
+}
+
+export async function restoreFaqAction(id: string) {
+  try {
+    const { role, user, supabase } = await requireAuthContext();
+    assertStaff(role);
+
+    const { error } = await supabase
+      .from("faqs")
+      .update({ deleted_at: null })
+      .eq("id", id);
+
+    if (error) throw error;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "faq.restore",
+        entity: "faqs",
+        entityId: id,
+      }
+    );
+
+    revalidatePath("/protected/faqs");
+    return { success: true, message: "กู้คืนข้อมูลสำเร็จ" };
+  } catch (error: unknown) {
+    console.error("restoreFaq error:", error);
+    return { success: false, message: mapDbError(error) };
+  }
+}
+
+export async function permanentDeleteFaqAction(id: string) {
+  try {
+    const { role, user, supabase } = await requireAuthContext();
+    assertStaff(role);
+
+    const { error } = await supabase
+      .from("faqs")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "faq.permanent_delete",
+        entity: "faqs",
+        entityId: id,
+      }
+    );
+
+    revalidatePath("/protected/faqs");
+    return { success: true, message: "ลบข้อมูลถาวรเรียบร้อย" };
+  } catch (error: unknown) {
+    console.error("permanentDelete error:", error);
+    return { success: false, message: mapDbError(error) };
+  }
+}
+
+export async function incrementFaqViewAction(id: string) {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("increment_faq_view", { faq_id: id });
+    
+    // Fallback if RPC doesn't exist yet
+    if (error) {
+      const { data: faq } = await supabase.from("faqs").select("view_count").eq("id", id).single();
+      await supabase.from("faqs").update({ view_count: (faq?.view_count || 0) + 1 }).eq("id", id);
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error("incrementFaqView error:", error);
+    return { success: false };
   }
 }

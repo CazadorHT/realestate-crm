@@ -223,11 +223,21 @@
     "schemaname": "public",
     "tablename": "faqs",
     "rls_enabled": true,
-    "policyname": "System Admin Manage faqs",
+    "policyname": "Public: FAQ Read",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "((is_active = true) AND (deleted_at IS NULL))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "faqs",
+    "rls_enabled": true,
+    "policyname": "Staff Manage Global FAQs",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
-    "qual": "is_system_admin()",
-    "with_check": null
+    "qual": "(is_system_admin() OR (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role])))",
+    "with_check": "(is_system_admin() OR (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role])))"
   },
   {
     "schemaname": "public",

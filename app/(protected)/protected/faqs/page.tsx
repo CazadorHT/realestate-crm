@@ -7,50 +7,68 @@ import { CreateFAQDialog } from "@/features/admin/components/CreateFAQDialog";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
 interface FAQsPageProps {
-  searchParams: Promise<{ page?: string; success?: string }>;
+  searchParams: Promise<{ page?: string; success?: string; view?: string }>;
 }
 
 export default async function FAQsPage(props: FAQsPageProps) {
   const searchParams = await props.searchParams;
   const page = Number(searchParams.page) || 1;
+  const currentView = searchParams.view || "active";
+  const isTrash = currentView === "trash";
   const pageSize = 10;
 
-  const { faqs, count: totalFaqs } = await getFaqs(page, pageSize);
+  // Parallel fetching for counts and data
+  const [activeData, trashData] = await Promise.all([
+    getFaqs(1, 1, false),
+    getFaqs(1, 1, true),
+  ]);
 
-  const activeFaqs = faqs?.filter((f) => f.is_active).length || 0;
+  const activeCount = activeData.count;
+  const trashCount = trashData.count;
+
+  // Fetch current page data
+  const { faqs, count: currentCount } = await getFaqs(page, pageSize, isTrash);
 
   return (
     <div className=" space-y-6 animate-fade-in">
       {searchParams.success === "true" && <SuccessAnimation />}
       
       <PageHeader
-        title="คำถามที่พบบ่อย (FAQs)"
-        subtitle="จัดการคำถามและคำตอบสำหรับลูกค้า"
-        count={totalFaqs}
-        icon="helpCircle"
-        actionSlot={<CreateFAQDialog />}
-        gradient="blue"
+        title={isTrash ? "ถังขยะและประวัติการลบ (FAQs)" : "คำถามที่พบบ่อย (FAQs)"}
+        subtitle={isTrash ? "จัดการข้อมูลคำถามที่ถูกลบชั่วคราว คุณสามารถกู้คืนหรือลบทิ้งถาวรได้" : "จัดการคำถามและคำตอบสำหรับลูกค้า"}
+        count={isTrash ? trashCount : activeCount}
+        icon={isTrash ? "history" : "helpCircle"}
+        actionSlot={!isTrash && <CreateFAQDialog />}
+        gradient={isTrash ? "rose" : "blue"}
       />
 
-      <FAQStats faqs={faqs ?? []} />
+      <FAQStats 
+        faqs={faqs ?? []} 
+        activeCount={activeCount}
+        trashCount={trashCount}
+        isTrash={isTrash}
+      />
 
       <FAQsTable
         faqs={faqs ?? []}
-        totalCount={totalFaqs}
+        totalCount={currentCount}
         currentPage={page}
+        activeTab={currentView}
+        activeCount={activeCount}
+        trashCount={trashCount}
       />
 
-      {totalFaqs > 0 && (
+      {currentCount > 0 && (
         <TableFooterStats
-          totalCount={totalFaqs}
+          totalCount={currentCount}
           unitLabel="คำถาม"
           secondaryStats={
-            activeFaqs > 0
+            activeCount > 0
               ? [
                   {
-                    label: "ใช้งาน (หน้าปัจจุบัน)",
-                    value: activeFaqs,
-                    color: "green" as const,
+                    label: isTrash ? "ในถังขยะ" : "ใช้งานปกติ",
+                    value: isTrash ? trashCount : activeCount,
+                    color: isTrash ? "red" : ("green" as const),
                   },
                 ]
               : []
