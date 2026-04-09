@@ -45,16 +45,19 @@ export function LoginForm({
         email,
         password,
       });
-      if (error) throw error;
+      if (error) {
+        // Log failed login attempt
+        await logActivityAction("LOGIN_FAILURE", "user", undefined, { email, error: error.message });
+        throw error;
+      }
 
       // Log successful login
       await logActivityAction("LOGIN", "user", undefined, { email });
 
       router.push("/protected");
     } catch (error: unknown) {
-      setError(
-        error instanceof Error ? error.message : t("auth.errors.generic_error"),
-      );
+      const errorMessage = error instanceof Error ? error.message : t("auth.errors.generic_error");
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

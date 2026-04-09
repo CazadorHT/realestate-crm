@@ -21,29 +21,42 @@ export async function logActivityAction(
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) return; // Only log for authenticated users
+    // 🌐 Capture IP and User Agent from headers
+    const reqHeaders = await headers();
+    const ip = reqHeaders.get("x-forwarded-for")?.split(",")[0] || reqHeaders.get("x-real-ip") || "unknown";
+    const userAgent = reqHeaders.get("user-agent") || "unknown";
+
+    // Prepare metadata with system info
+    const enrichedMetadata = {
+      ...(typeof metadata === "object" ? metadata : {}),
+      ip,
+      userAgent: parseUserAgent(userAgent),
+    };
+
+    // [SECURITY] Allow anonymous logging ONLY for login failures or specific public actions
+    if (!user && action !== "LOGIN_FAILURE") return;
 
     const adminClient = createAdminClient();
     await adminClient.from("audit_logs").insert({
-      user_id: user.id,
+      user_id: user?.id || null, // No longer needs 'as any' since types are regenerated
       action,
       entity,
       entity_id: entityId || null,
-      metadata: (metadata || {}) as Json,
+      metadata: enrichedMetadata as Json,
     });
 
     if (action === "LOGIN") {
       const email =
         metadata && typeof metadata === "object" && "email" in metadata
-          ? metadata.email
-          : user.email;
+          ? (metadata as Record<string, any>).email
+          : user?.email || "anonymous";
 
-      // Fetch Profile for Role and Avatar
-      const { data: profile } = await adminClient
+      // Fetch Profile for Role and Avatar (Only if user exists)
+      const { data: profile } = user ? await adminClient
         .from("profiles")
         .select("role, avatar_url")
         .eq("id", user.id)
-        .single();
+        .single() : { data: null };
 
       const templateConfig = await getTemplateConfig("LOGIN");
       const headerIcon = "🔐";

@@ -87,7 +87,7 @@
     "table_name": "audit_logs",
     "column_name": "user_id",
     "data_type": "uuid",
-    "is_nullable": "NO",
+    "is_nullable": "YES",
     "column_default": null
   },
   {
@@ -908,6 +908,13 @@
     "data_type": "bigint",
     "is_nullable": "YES",
     "column_default": "0"
+  },
+  {
+    "table_name": "faqs",
+    "column_name": "fts_vector",
+    "data_type": "tsvector",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "features",
