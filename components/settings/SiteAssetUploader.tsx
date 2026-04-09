@@ -22,6 +22,11 @@ interface SiteAssetUploaderProps {
   aspectRatio?: "square" | "video" | "auto";
   folder?: string;
   className?: string;
+  uploadAction?: (formData: FormData, folder: string) => Promise<{
+    success: boolean;
+    message: string;
+    data?: { publicUrl: string };
+  }>;
 }
 
 export function SiteAssetUploader({
@@ -32,6 +37,7 @@ export function SiteAssetUploader({
   aspectRatio = "auto",
   folder = "branding",
   className,
+  uploadAction,
 }: SiteAssetUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState(value || "");
@@ -63,7 +69,9 @@ export function SiteAssetUploader({
         const formData = new FormData();
         formData.append("file", file);
 
-        const result = await uploadSiteAssetAction(formData, folder);
+        const result = uploadAction 
+          ? await uploadAction(formData, folder)
+          : await uploadSiteAssetAction(formData, folder);
 
         if (result.success && result.data?.publicUrl) {
           onChange(result.data.publicUrl);

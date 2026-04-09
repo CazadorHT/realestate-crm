@@ -2,38 +2,57 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { getPartners } from "@/features/admin/partners-actions";
-import { Plus, Handshake, CheckCircle, XCircle } from "lucide-react";
+import { Handshake, Plus, Handshake as HandshakeIcon, CheckCircle, XCircle, Search, X, Loader2 } from "lucide-react";
 import { PartnersTable } from "@/features/admin/components/PartnersTable";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SectionTitle } from "@/components/dashboard/SectionTitle";
 import { EmptyState } from "@/components/dashboard/EmptyState";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { PartnerForm } from "@/features/admin/components/PartnerForm";
-import { useSearchParams, useRouter } from "next/navigation";
+import { CreatePartnerDialog } from "@/features/admin/components/CreatePartnerDialog";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
+import { Database } from "@/lib/database.types";
+import { Input } from "@/components/ui/input";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
+
+type Partner = Database["public"]["Tables"]["partners"]["Row"];
 
 function PartnersContent() {
-  const [partners, setPartners] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  
+  // URL Params state
   const currentPage = parseInt(searchParams.get("page") || "1");
+  const searchQuery = searchParams.get("q") || "";
   const pageSize = 10;
 
-  const fetchPartners = async () => {
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState(searchQuery);
+
+  const fetchPartners = async (page: number, q: string) => {
+    setLoading(true);
     try {
-      const data = await getPartners();
-      setPartners(data || []);
+      const result = await getPartners({
+        page,
+        pageSize,
+        search: q,
+      });
+      
+      if (result.success) {
+        setPartners(result.data);
+        setTotalCount(result.totalCount);
+        
+        // Handle out-of-bounds page
+        const maxPage = Math.ceil(result.totalCount / pageSize);
+        if (page > 1 && page > maxPage && maxPage > 0) {
+          updateUrl({ page: maxPage });
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch partners:", error);
     } finally {
@@ -41,25 +60,47 @@ function PartnersContent() {
     }
   };
 
+  // Sync fetch with search params
   useEffect(() => {
-    fetchPartners();
-  }, []);
+    fetchPartners(currentPage, searchQuery);
+  }, [currentPage, searchQuery]);
+
+  // Debounced Search logic
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== searchQuery) {
+        updateUrl({ q: searchInput, page: 1 });
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const updateUrl = (updates: Record<string, string | number | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, String(value));
+      }
+    });
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   const handleSuccess = () => {
     setOpen(false);
-    fetchPartners();
+    fetchPartners(currentPage, searchQuery);
     
-    // Trigger animation
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(searchParams.toString());
     params.set("success", "true");
-    router.push(`?${params.toString()}`);
+    router.push(`${pathname}?${params.toString()}`);
   };
 
-  const totalCount = partners.length;
-  const paginatedPartners = partners.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const clearSearch = () => {
+    setSearchInput("");
+    updateUrl({ q: null, page: 1 });
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -67,31 +108,10 @@ function PartnersContent() {
       <PageHeader
         title="พาร์ทเนอร์ (Partners)"
         subtitle="จัดการพาร์ทเนอร์และบริษัทที่ร่วมงาน"
-        count={partners?.length || 0}
+        count={totalCount}
         icon="handshake"
         actionSlot={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button
-                size="lg"
-                className="bg-white text-slate-800 hover:bg-white/90 shadow-lg font-semibold"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                เพิ่มพาร์ทเนอร์
-              </Button>
-            </DialogTrigger>
-            <DialogContent > 
-              <DialogHeader>
-                <DialogTitle>เพิ่มพาร์ทเนอร์ใหม่</DialogTitle>
-              </DialogHeader>
-              <div className="pt-4">
-                <PartnerForm
-                  onSuccess={handleSuccess}
-                  onCancel={() => setOpen(false)}
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
+          <CreatePartnerDialog onSuccess={handleSuccess} />
         }
         gradient="rose"
       />
@@ -106,7 +126,7 @@ function PartnersContent() {
               ทั้งหมด
             </p>
             <h3 className="text-2xl font-bold text-slate-900">
-              {partners.length}
+              {totalCount}
             </h3>
           </div>
         </div>
@@ -120,7 +140,8 @@ function PartnersContent() {
               เปิดใช้งาน
             </p>
             <h3 className="text-2xl font-bold text-slate-900">
-              {partners.filter((p) => p.is_active).length}
+              {partners.filter((p) => p.is_active).length}{" "}
+              <span className="text-xs font-normal text-slate-400"> (ในหน้านี้)</span>
             </h3>
           </div>
         </div>
@@ -134,30 +155,44 @@ function PartnersContent() {
               ปิดใช้งาน
             </p>
             <h3 className="text-2xl font-bold text-slate-900">
-              {partners.filter((p) => !p.is_active).length}
+              {partners.filter((p) => !p.is_active).length}{" "}
+              <span className="text-xs font-normal text-slate-400"> (ในหน้านี้)</span>
             </h3>
           </div>
         </div>
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <SectionTitle
             title="รายการพาร์ทเนอร์"
             subtitle="แสดงรายชื่อบริษัทพาร์ทเนอร์และลำดับการแสดงผล"
           />
+          
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="ค้นหาชื่อพาร์ทเนอร์..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-9 pr-9 bg-white border-slate-200 rounded-xl focus-visible:ring-rose-500"
+            />
+            {searchInput && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {loading ? (
-          <div className="h-64 flex items-center justify-center bg-white rounded-2xl border border-dashed border-slate-200">
-            <div className="flex flex-col items-center gap-2">
-              <div className="h-8 w-8 border-4 border-rose-600 border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-slate-500">กำลังโหลดข้อมูล...</p>
-            </div>
-          </div>
+          <TableSkeleton rowCount={pageSize} columnCount={5} />
         ) : partners.length > 0 ? (
           <div className="space-y-4">
-            <PartnersTable partners={paginatedPartners} />
+            <PartnersTable partners={partners} />
             <PaginationControls
               totalCount={totalCount}
               pageSize={pageSize}
@@ -166,11 +201,11 @@ function PartnersContent() {
           </div>
         ) : (
           <EmptyState
-            title="ยังไม่มีข้อมูลพาร์ทเนอร์"
-            description="เริ่มเพิ่มพาร์ทเนอร์รายแรกเพื่อแสดงบนหน้าเว็บไซต์ของคุณ"
+            title={searchQuery ? "ไม่พบข้อมูลที่ค้นหา" : "ยังไม่มีข้อมูลพาร์ทเนอร์"}
+            description={searchQuery ? `ไม่พบพาร์ทเนอร์ที่ตรงกับ "${searchQuery}"` : "เริ่มเพิ่มพาร์ทเนอร์รายแรกเพื่อแสดงบนหน้าเว็บไซต์ของคุณ"}
             icon="handshake"
-            actionLabel="เพิ่มพาร์ทเนอร์"
-            onAction={() => setOpen(true)}
+            actionLabel={searchQuery ? "ล้างการค้นหา" : "เพิ่มพาร์ทเนอร์"}
+            onAction={searchQuery ? clearSearch : () => setOpen(true)}
           />
         )}
       </div>
@@ -180,7 +215,7 @@ function PartnersContent() {
 
 export default function PartnersPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<TableSkeleton rowCount={10} columnCount={5} />}>
       <PartnersContent />
     </Suspense>
   );

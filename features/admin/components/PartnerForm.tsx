@@ -15,6 +15,7 @@ import {
   Globe,
   Hash,
   Check,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -29,9 +30,12 @@ import {
 import {
   createPartner,
   updatePartner,
+  uploadPartnerLogoAction,
 } from "@/features/admin/partners-actions";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { SiteAssetUploader } from "@/components/settings/SiteAssetUploader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const formSchema = z.object({
   name: z.string().min(1, "กรุณาระบุชื่อพาร์ทเนอร์"),
@@ -50,12 +54,14 @@ interface PartnerFormProps {
   initialData?: any;
   onSuccess?: () => void;
   onCancel?: () => void;
+  showFooter?: boolean;
 }
 
 export function PartnerForm({
   initialData,
   onSuccess,
   onCancel,
+  showFooter = true,
 }: PartnerFormProps) {
   const router = useRouter();
   const isNew = !initialData;
@@ -105,7 +111,7 @@ export function PartnerForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6 sm:space-y-8 p-1 h-[calc(100vh-200px)] overflow-y-auto"
+        className="space-y-6 sm:space-y-8 p-1"
       >
         <div className="space-y-4 sm:space-y-6">
           {/* Main Info Section */}
@@ -164,7 +170,7 @@ export function PartnerForm({
           </div>
 
           {/* Identity Section (Logo) */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-6 p-4 sm:p-6 rounded-2xl border border-slate-100 bg-white">
+          <div className="p-4 sm:p-6 rounded-2xl border border-slate-100 bg-white">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="h-8 w-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
@@ -180,56 +186,59 @@ export function PartnerForm({
                 name="logo_url"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-600">URL โลโก้</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="https://..."
-                        className="bg-slate-50/50 border-slate-200 focus:border-blue-500 transition-all h-11 rounded-xl"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription className="text-[11px] text-slate-400 leading-tight">
-                      ควรเป็นไฟล์โปร่งใส PNG หรือ SVG เพื่อการแสดงผลที่สวยงาม
+                    <Tabs defaultValue="upload" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2 mb-4 bg-slate-100/50 p-1 h-11 rounded-xl">
+                        <TabsTrigger 
+                          value="upload" 
+                          className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm font-bold text-xs transition-all"
+                        >
+                          <Upload className="w-3.5 h-3.5 mr-2" />
+                          อัปโหลดไฟล์
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="url"
+                          className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm font-bold text-xs transition-all"
+                        >
+                          <LinkIcon className="w-3.5 h-3.5 mr-2" />
+                          ระบุ URL
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="upload" className="mt-0 focus-visible:ring-0">
+                        <FormControl>
+                          <SiteAssetUploader
+                            value={field.value}
+                            onChange={field.onChange}
+                            uploadAction={uploadPartnerLogoAction}
+                            folder="partners"
+                            className="bg-slate-50/50"
+                          />
+                        </FormControl>
+                      </TabsContent>
+                      
+                      <TabsContent value="url" className="mt-0 focus-visible:ring-0">
+                        <div className="relative group">
+                          <FormControl>
+                            <Input
+                              placeholder="https://example.com/logo.png"
+                              className="bg-slate-50/50 border-slate-200 focus:border-blue-500 transition-all h-14 rounded-xl pl-11 font-medium"
+                              {...field}
+                            />
+                          </FormControl>
+                          <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-2 px-1">
+                          วางลิงก์รูปภาพโดยตรง เช่นไฟล์ .png, .jpg หรือ .svg จากแหล่งภายนอก
+                        </p>
+                      </TabsContent>
+                    </Tabs>
+                    <FormDescription className="text-[11px] text-slate-400 leading-tight mt-3">
+                      แนะนำไฟล์โปร่งใส PNG หรือ SVG เพื่อความสวยงาม (ขนาดแนะนำ: สี่เหลี่ยมจัตุรัส หรือ แนวนอน 2:1)
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-
-            <div className="flex flex-col items-center justify-center">
-              <div
-                className={cn(
-                  "w-full aspect-video lg:h-32 border-2 border-dashed rounded-xl flex items-center justify-center bg-white overflow-hidden relative transition-all duration-300 shadow-xs",
-                  logoUrl
-                    ? "border-blue-200 bg-blue-50/20"
-                    : "border-slate-200 bg-slate-50",
-                )}
-              >
-                {logoUrl ? (
-                  <div className="relative group w-full h-full p-4">
-                    <img
-                      src={logoUrl}
-                      alt="Preview"
-                      className="w-full h-full object-contain transition-transform group-hover:scale-105"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "https://placehold.co/400x200?text=Invalid+URL";
-                      }}
-                    />
-                    <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm animate-in zoom-in">
-                      <Check className="h-3 w-3" />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center text-slate-400 space-y-2 p-4">
-                    <ImageIcon className="w-8 h-8 mx-auto opacity-20" />
-                    <p className="text-[10px] uppercase font-bold tracking-widest opacity-40">
-                      Preview
-                    </p>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
@@ -294,32 +303,34 @@ export function PartnerForm({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-100 mt-6 overflow-hidden">
-          {onCancel && (
-            <Button
-              variant="outline"
-              type="button"
-              onClick={onCancel}
-              className="w-full sm:w-auto border-slate-200 hover:bg-slate-50 text-slate-600 h-11 px-6 rounded-xl transition-all"
-            >
-              ยกเลิก
-            </Button>
-          )}
-          <Button
-            type="submit"
-            disabled={
-              saving || !form.formState.isValid || !form.formState.isDirty
-            }
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 h-11 px-10 rounded-xl transition-all active:scale-95 flex items-center font-semibold disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
-          >
-            {saving ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
+        {showFooter && (
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-100 mt-6 overflow-hidden">
+            {onCancel && (
+              <Button
+                variant="outline"
+                type="button"
+                onClick={onCancel}
+                className="w-full sm:w-auto border-slate-200 hover:bg-slate-50 text-slate-600 h-11 px-6 rounded-xl transition-all"
+              >
+                ยกเลิก
+              </Button>
             )}
-            {isNew ? "สร้างพาร์ทเนอร์ใหม่" : "บันทึกการแก้ไข"}
-          </Button>
-        </div>
+            <Button
+              type="submit"
+              disabled={
+                saving || !form.formState.isValid || !form.formState.isDirty
+              }
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 h-11 px-10 rounded-xl transition-all active:scale-95 flex items-center font-semibold disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+            >
+              {saving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              {isNew ? "สร้างพาร์ทเนอร์ใหม่" : "บันทึกการแก้ไข"}
+            </Button>
+          </div>
+        )}
       </form>
     </Form>
   );
