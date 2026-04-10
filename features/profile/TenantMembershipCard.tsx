@@ -2,13 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Building2, ShieldCheck } from "lucide-react";
 
-interface TenantMembership {
-  role: string;
-  tenant: {
-    id: string;
-    name: string;
-  } | null;
-}
+import { type TenantMembership } from "./types";
 
 export function TenantMembershipCard({ memberships }: { memberships: TenantMembership[] }) {
   if (!memberships || memberships.length === 0) return null;

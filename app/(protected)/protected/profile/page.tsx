@@ -15,6 +15,8 @@ import { TenantMembershipCard } from "@/features/profile/TenantMembershipCard";
 import { RolePermissionsNote } from "@/features/profile/RolePermissionsNote";
 import { AdminTeamCard } from "@/features/profile/AdminTeamCard";
 import { ProfileCompleteness } from "@/features/profile/ProfileCompleteness";
+import { calculateProfileScore } from "@/lib/profile-utils";
+import { type TenantMembership } from "@/features/profile/types";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle2, LayoutDashboard, Trophy, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -40,22 +42,16 @@ export default async function ProfilePage() {
     );
   }
 
-  // Fetch branch memberships
+  // Fetch branch memberships with strict typing
   const { data: memberships } = await supabase
     .from("tenant_members")
     .select("role, tenant:tenants(id, name)")
     .eq("profile_id", profile.id);
+
   const isAdmin = profile.role === "ADMIN";
-  // Calculate completeness score
-  let score = 0;
-  if (profile.avatar_url) score += 25;
-  if (profile.full_name) score += 25;
-  if (profile.phone) score += 20;
-  if (profile.line_id) score += 10;
-  if (profile.facebook_url) score += 10;
-  if (profile.whatsapp_id || profile.wechat_id) score += 10;
   
-  const scoreClamped = Math.min(score, 100);
+  // Calculate completeness score using the centralized engine
+  const scoreClamped = calculateProfileScore(profile);
 
   return (
     <div className="relative min-h-[calc(100vh-12rem)] pb-20">
@@ -126,7 +122,7 @@ export default async function ProfilePage() {
                   <div className="grid grid-cols-2 gap-2 pt-2">
                      <div className="p-3 rounded-2xl bg-white/50 border border-slate-100">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Status</p>
-                        <p className="text-xs font-black text-emerald-600 uppercase">Online</p>
+                        <p className="text-xs font-black text-blue-600 uppercase">Verified Account</p>
                      </div>
                      <div className="p-3 rounded-2xl bg-white/50 border border-slate-100">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Access</p>
@@ -141,7 +137,7 @@ export default async function ProfilePage() {
             <AccountSecurityCard />
 
             {/* Branch Memberships */}
-            <TenantMembershipCard memberships={memberships as any || []} />
+            <TenantMembershipCard memberships={(memberships as TenantMembership[]) || []} />
 
             {/* Role Permissions Note */}
             <RolePermissionsNote />

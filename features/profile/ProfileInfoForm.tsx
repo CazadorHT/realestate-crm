@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { profileSchema, type ProfileFormValues } from "@/lib/profile-schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,17 +31,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-const profileSchema = z.object({
-  full_name: z.string().min(1, "กรุณากรอกชื่อ-นามสกุล"),
-  phone: z.string().optional(),
-  line_id: z.string().optional(),
-  line_user_id: z.string().optional(),
-  facebook_url: z.string().optional(),
-  whatsapp_id: z.string().optional(),
-  wechat_id: z.string().optional(),
-});
-
-type ProfileFormValues = z.infer<typeof profileSchema>;
 
 interface ProfileInfoFormProps {
   fullName: string | null;
@@ -105,7 +94,7 @@ export function ProfileInfoForm({
 
       if (result.success) {
         toast.success("บันทึกข้อมูลโปรไฟล์สำเร็จ");
-        router.push("/protected");
+        router.refresh(); // Update server component data without leaving page
       } else {
         toast.error(result.message || "เกิดข้อผิดพลาด");
       }
