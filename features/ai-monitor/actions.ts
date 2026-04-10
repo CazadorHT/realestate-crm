@@ -158,6 +158,9 @@ export type AiLogRecord = {
   feature: string;
   status: "success" | "error";
   error_message: string | null;
+  prompt_tokens: number;
+  completion_tokens: number;
+  cost_thb: number;
   user?: {
     full_name: string | null;
     email: string | null;
@@ -179,6 +182,9 @@ export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
       feature,
       status,
       error_message,
+      prompt_tokens,
+      completion_tokens,
+      cost_thb,
       user_id
     `);
 

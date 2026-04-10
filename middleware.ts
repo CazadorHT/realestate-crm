@@ -17,17 +17,24 @@ import {
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const path = pathname.toLowerCase();
 
-  // 1. 🛡️ Check Path Exclusion (Static files, fonts, public)
-  const isStaticFile = 
-    pathname.startsWith("/_next") || 
-    pathname.includes("/favicon.ico") ||
-    pathname.includes(".") || 
-    pathname.startsWith("/fonts") ||
-    pathname.includes("/blocking");
+  // 1. 🛡️ Check Path Exclusion (Static files & System paths)
+  // [PERFORMANCE] Whitelist known static extensions to skip heavy session checks
+  const STATIC_EXTENSIONS = [
+    ".js", ".css", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", 
+    ".woff", ".woff2", ".ttf", ".eot", ".json", ".webp", ".mp4",
+    ".map", ".txt", ".pdf", ".csv", ".mjs"
+  ];
+  const isStaticExtension = STATIC_EXTENSIONS.some(ext => path.endsWith(ext));
+  
+  const isExcludedPath = 
+    path.startsWith("/_next") || 
+    path.startsWith("/fonts") ||
+    path.includes("/blocking") ||
+    isStaticExtension;
 
-
-  if (isStaticFile) {
+  if (isExcludedPath) {
     return NextResponse.next();
   }
 
@@ -47,36 +54,64 @@ export async function middleware(request: NextRequest) {
   const isBypassed = isInternalBypass(request);
   
   // [SAFETY] Critical Webhooks/Callbacks should NEVER be blocked by Rate Limit
-  const isWebhook = pathname.includes("/webhook") || pathname.includes("/callback");
+  const isWebhook = 
+    path.startsWith("/api/webhook") || 
+    path.startsWith("/api/callback") || 
+    path.startsWith("/auth/callback") ||
+    path.startsWith("/api/line-webhook");
 
-  // 4. 🚦 Rate Limiting Check (Internal or Whitelisted Skip)
+  // 4. 🚦 Rate Limiting Check
+  const HEAVY_RESOURCE_KEYWORDS = ["analytics", "audit-logs", "executive", "inventory"];
+  const PUBLIC_API_PREFIX = "/api/public";
+
   if (!isWhitelistedIp && !isBypassed && !isWebhook) {
     // A. Select Identifier and Limiter
     let identifier = user?.id || ip || getFingerprint(request);
     let limiter = ratelimitGeneral;
     let limiterName = "general";
 
-    if (pathname.startsWith("/auth")) {
+    const isHeavyResource = HEAVY_RESOURCE_KEYWORDS.some(key => path.includes(key));
+    const isPublicAPI = path.startsWith(PUBLIC_API_PREFIX);
+
+    // Narrowing AI check to avoid False Positives (e.g., detail, maintenance, available)
+    const isAiTarget = (path.includes("/ai-") || path.startsWith("/api/ai") || path.includes("/translate")) && 
+                      !path.includes("-monitor") && 
+                      !path.includes("-config") &&
+                      !path.includes("smart-match");
+
+    if (path.startsWith("/auth")) {
+      // Priority 1: Auth (Brute-force protection)
       limiter = ratelimitAuth;
       limiterName = "auth";
-      identifier = ip || getFingerprint(request); // Auth is always IP-bound to prevent broad user blocks
-    } else if (pathname.includes("ai") || pathname.includes("translate")) {
+      identifier = ip || getFingerprint(request); 
+    } else if (isAiTarget) {
+      // Priority 2: AI Generation (Cost Control) - Monitoring paths are exempted
       limiter = ratelimitAI;
       limiterName = "ai";
-    } else if (pathname.includes("/actions") || pathname.startsWith("/api/protected")) {
+    } else if (isHeavyResource || isPublicAPI) {
+      // Priority 3: Heavy Resources & Public API (Scraping & DB Load Protection)
+      limiter = ratelimitActions;
+      limiterName = isHeavyResource ? "heavy-resource" : "public-api";
+    } else if (path.includes("/actions") || path.startsWith("/api/protected") || path.includes("-config") || path.includes("smart-match")) {
+      // Priority 4: Protected Actions & Admin Configs
       limiter = ratelimitActions;
       limiterName = "actions";
     } else {
-      // General Limit: Use Compound Identifier (ID/IP + Path) to avoid false positives
+      // Priority 5: General Navigation (Compound Identifier)
       limiter = ratelimitGeneral;
       limiterName = "general";
-      identifier = `${identifier}:${pathname}`;
+      identifier = `${identifier}:${path}`;
     }
 
     // B. Hit Redis
     if (limiter) {
       try {
         const { success, limit, reset, remaining } = await limiter.limit(identifier);
+
+        // [ELITE] Always attach rate limit headers even on success
+        response.headers.set("X-RateLimit-Limit", limit.toString());
+        response.headers.set("X-RateLimit-Remaining", remaining.toString());
+        response.headers.set("X-RateLimit-Reset", reset.toString());
 
         if (!success) {
           const retryAfterSeconds = Math.ceil((reset - Date.now()) / 1000);
@@ -96,16 +131,16 @@ export async function middleware(request: NextRequest) {
           // [PREMIUM UX] Pass the retry time to the blocking page for the countdown
           url.searchParams.set("retry", retryAfterSeconds.toString());
           
-          return NextResponse.rewrite(url, {
+          const blockingResponse = NextResponse.rewrite(url, {
             status: 429,
-            headers: {
-              "Retry-After": retryAfterSeconds.toString(),
-              "X-RateLimit-Limit": limit.toString(),
-              "X-RateLimit-Remaining": remaining.toString(),
-              "X-RateLimit-Reset": reset.toString(),
-              "Cache-Control": "no-store",
-            }
+            headers: response.headers // Carry over the rate limit headers
           });
+          
+          blockingResponse.headers.set("Retry-After", retryAfterSeconds.toString());
+          blockingResponse.headers.set("Cache-Control", "no-store");
+
+          // 🛡️ [ELITE HARDENING] Apply Security Headers even to the blocking response
+          return applySecurityHeaders(request, blockingResponse);
         }
       } catch (redisError) {
         console.error("[SECURITY] Redis Rate Limit Error (Fail-open):", redisError);

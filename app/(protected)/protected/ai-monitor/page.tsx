@@ -14,12 +14,12 @@ import {
   Zap,
   BarChart3,
   Search,
-  Languages,
-  Users,
   PenTool,
   ClipboardList,
   MapPin,
 } from "lucide-react";
+import { SettingsHeader } from "@/components/settings/SettingsHeader";
+import { CopyErrorButton } from "@/components/ai-monitor/CopyErrorButton";
 
 export const dynamic = "force-dynamic";
 
@@ -28,35 +28,22 @@ export default async function AiDashboardPage() {
   const logs = await getAiLogs(50);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 relative">
-      {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-[500px] bg-linear-to-b from-blue-50/80 to-transparent pointer-events-none -z-10" />
-      <div className="absolute top-20 right-20 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute top-40 left-20 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
-
-      <div className=" max-w-7xl mx-auto space-y-10">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-indigo-600 font-semibold text-sm uppercase tracking-wider">
-              <Sparkles className="w-4 h-4" />
-              <span>Intelligence Center</span>
-            </div>
-            <h1 className="text-4xl font-semibold text-slate-900 tracking-tight">
-              AI Monitor & Analytics
-            </h1>
-            <p className="text-slate-500 text-md max-w-2xl">
-              ติดตามประสิทธิภาพการทำงานของ AI ทั้งระบบ Chatbot และ Content
-              Generator แบบ Real-time
-            </p>
+    <div className="min-h-screen relative space-y-10 max-w-screen-2xl mx-auto py-8">
+      <SettingsHeader 
+        title={<>ศูนย์เฝ้าระวัง <span className="bg-linear-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">AI Monitor & Analytics</span></>}
+        description="ติดตามประสิทธิภาพการทำงานของ AI ทั้งระบบ Chatbot และ Content Generator แบบ Real-time"
+        subPath={[
+          { label: "System Control", href: "/protected/settings?tab=ai" },
+          { label: "AI Monitor (ศูนย์เฝ้าระวัง)" }
+        ]}
+        actions={
+          <div className="bg-white/80 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-slate-200/60">
+            <AiUsageMonitor className="w-full shadow-none bg-transparent border-0" />
           </div>
-          <div className="shrink-0">
-            <div className="bg-white/80 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-slate-200/60">
-              <AiUsageMonitor className="w-full shadow-none bg-transparent border-0" />
-            </div>
-          </div>
-        </div>
+        }
+      />
 
+      <div className="space-y-10">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <StatsCard
@@ -174,15 +161,46 @@ export default async function AiDashboardPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-500 max-w-xs truncate font-mono bg-slate-50/30 rounded-r-lg group-hover:bg-slate-100/50 transition-colors">
-                        {log.error_message ? (
-                          <span className="text-red-500 flex items-center gap-1.5">
-                            <AlertCircle className="w-3.5 h-3.5" />
-                            {log.error_message}
-                          </span>
-                        ) : (
-                          <span className="text-slate-400 opacity-50">-</span>
-                        )}
+                      <td className="px-6 py-4">
+                        <div className="max-w-xs transition-all duration-300">
+                          {log.status === "error" ? (
+                            <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-right-2 duration-300">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-red-500/80 italic">
+                                  System Exception
+                                </span>
+                                {log.error_message && (
+                                  <CopyErrorButton text={log.error_message} />
+                                )}
+                              </div>
+                              <div className="flex items-start gap-2 p-2 rounded-xl bg-red-50/50 border border-red-100 group-hover:bg-red-100/50 transition-colors">
+                                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                                <span className="text-[12px] font-mono font-medium text-red-700 break-all line-clamp-2" title={log.error_message || ""}>
+                                  {log.error_message || "Unknown error occurred"}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-2 group/msg">
+                              <div className="flex items-center gap-2">
+                                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                <span className="text-[11px] font-bold text-slate-400 group-hover/msg:text-emerald-600 transition-colors">
+                                  Task successfully completed
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50/80 border border-slate-100 text-[11px] font-mono text-slate-500 group-hover/msg:bg-white group-hover/msg:border-emerald-100 group-hover/msg:text-emerald-700 transition-all">
+                                <div className="flex items-center gap-1.5">
+                                  <Zap className="w-3 h-3 text-amber-500" />
+                                  <span>{log.prompt_tokens + log.completion_tokens} tokens</span>
+                                </div>
+                                <span className="text-slate-200">|</span>
+                                <div className="font-bold">
+                                  ฿{log.cost_thb.toFixed(4)}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

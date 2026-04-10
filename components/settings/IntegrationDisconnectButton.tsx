@@ -8,6 +8,7 @@ import {
 } from "@/features/site-settings/integration-actions";
 import { toast } from "sonner";
 import { Loader2, Link2Off, AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,12 +31,14 @@ interface IntegrationDisconnectButtonProps {
     | "ghost"
     | "link";
   className?: string;
+  showLabel?: boolean;
 }
 
 export function IntegrationDisconnectButton({
   provider,
   variant = "ghost",
   className = "",
+  showLabel = true,
 }: IntegrationDisconnectButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -73,8 +76,8 @@ export function IntegrationDisconnectButton({
           className={`gap-2 ${className} hover:bg-slate-200/60 font-semibold duration-300 transition-all`}
           disabled={isLoading}
         >
-          <Link2Off className="h-4 w-4" />
-          ยกเลิกการเชื่อมต่อ
+          <Link2Off className={cn("h-4 w-4", showLabel && "mr-1")} />
+          {showLabel && "ยกเลิกการเชื่อมต่อ"}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent className="max-w-[400px]">

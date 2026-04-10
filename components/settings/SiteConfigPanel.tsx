@@ -56,6 +56,7 @@ import {
 import { SiteAssetUploader } from "./SiteAssetUploader";
 import { cn } from "@/lib/utils";
 import { FaLine } from "react-icons/fa";
+import { Eye, EyeOff } from "lucide-react";
 
 type BrandingSettings = z.infer<typeof siteSettingsSchema>;
 
@@ -63,6 +64,7 @@ export function SiteConfigPanel() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [initialData, setInitialData] = useState<SiteSettings | null>(null);
+  const [showGtm, setShowGtm] = useState(false);
 
   const form = useForm<BrandingSettings>({
     resolver: zodResolver(siteSettingsSchema),
@@ -97,8 +99,7 @@ export function SiteConfigPanel() {
       try {
         const data = await getSiteSettings();
         setInitialData(data);
-        // data contains full SiteSettings, but reset will only pick keys that match BrandingSettings if we are careful
-        form.reset(data as any);
+        form.reset(data as BrandingSettings);
       } catch (error) {
         toast.error("ไม่สามารถโหลดการตั้งค่าได้");
       } finally {
@@ -131,7 +132,7 @@ export function SiteConfigPanel() {
           if (initialData) {
             const newData = { ...initialData, ...values } as SiteSettings;
             setInitialData(newData);
-            form.reset(newData as any);
+            form.reset(newData as BrandingSettings);
           }
         } else {
           toast.error(result.message || "เกิดข้อผิดพลาดในการบันทึก");
@@ -212,12 +213,17 @@ export function SiteConfigPanel() {
               type="submit"
               disabled={isPending || !isDirty || !isValid}
               className={cn(
-                "rounded-xl px-6 font-bold shadow-md transition-all",
+                "rounded-xl px-6 font-bold shadow-md transition-all relative overflow-hidden",
                 isDirty && isValid
                   ? "bg-blue-600 hover:bg-blue-700 hover:shadow-blue-200"
                   : "bg-slate-100 text-slate-400",
+                isDirty && "ring-2 ring-amber-400 ring-offset-2 animate-pulse",
               )}
             >
+              <div className={cn(
+                "absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full transition-transform duration-1000",
+                isDirty && "animate-[shimmer_2s_infinite]"
+              )} />
               {isPending ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
@@ -336,11 +342,27 @@ export function SiteConfigPanel() {
                             <Info className="h-4 w-4 text-slate-400" />
                           </FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="GTM-XXXXXXX"
-                              className="rounded-xl font-mono"
-                              {...field}
-                            />
+                            <div className="relative">
+                              <Input
+                                placeholder="GTM-XXXXXXX"
+                                type={showGtm ? "text" : "password"}
+                                className="rounded-xl font-mono pr-10"
+                                {...field}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-0 top-0 h-full w-10 hover:bg-transparent text-slate-400"
+                                onClick={() => setShowGtm(!showGtm)}
+                              >
+                                {showGtm ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
                           </FormControl>
                           <p className="text-[10px] text-slate-400">
                             ระบุ ID เพื่อให้ระบบเริ่มเก็บสถิติและ Marketing Attribution

@@ -63,3 +63,26 @@ export async function getSystemStatus() {
 
   return status;
 }
+
+/**
+ * 📊 getSettingsSummaryAction:
+ * Fetches aggregated counts for the Settings Admin tab.
+ * Uses Promise.all for maximum performance.
+ */
+export async function getSettingsSummaryAction() {
+  // Use createAdminClient for counts if needed, or standard server client
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+
+  const [usersCount, branchesCount, teamsCount] = await Promise.all([
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("tenants").select("*", { count: "exact", head: true }).or("is_deleted.is.null,is_deleted.eq.false"),
+    supabase.from("teams").select("*", { count: "exact", head: true }),
+  ]);
+
+  return {
+    users: usersCount.count || 0,
+    branches: branchesCount.count || 0,
+    teams: teamsCount.count || 0,
+  };
+}

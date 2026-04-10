@@ -1,5 +1,5 @@
 import { SmartMatchConfigPanel } from "@/components/settings/SmartMatchConfigPanel";
-import { Sparkles } from "lucide-react";
+import { SettingsHeader } from "@/components/settings/SettingsHeader";
 
 export const metadata = {
   title: "SmartMatch Config | CRM",
@@ -7,18 +7,15 @@ export const metadata = {
 
 export default function SmartMatchSettingsPage() {
   return (
-    <div className="container max-w-5xl py-8 space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-linear-to-br from-blue-500 to-purple-600 rounded-lg">
-          <Sparkles className="h-6 w-6 text-white" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">ตั้งค่า SmartMatch Wizard</h1>
-          <p className="text-muted-foreground">
-            จัดการช่วงงบประมาณ ประเภททรัพย์ และการตั้งค่าต่างๆ ของ Wizard
-          </p>
-        </div>
-      </div>
+    <div className="container max-w-screen-2xl py-8 space-y-6">
+      <SettingsHeader 
+        title={<>ตั้งค่า <span className="bg-linear-to-r from-amber-500 to-orange-600 bg-clip-text text-transparent">SmartMatch Wizard</span></>}
+        description="จัดการช่วงงบประมาณ ประเภททรัพย์ และการตั้งค่าต่างๆ เพื่อการแนะนำทรัพย์ที่แม่นยำที่สุด"
+        subPath={[
+          { label: "System Control", href: "/protected/settings?tab=ai" },
+          { label: "SmartMatch (ตั้งค่าแนะนำทรัพย์)" }
+        ]}
+      />
 
       <SmartMatchConfigPanel />
     </div>

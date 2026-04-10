@@ -97,7 +97,7 @@ export function SmartMatchConfigPanel() {
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 border-b pb-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 border-b border-slate-200 pb-4">
         <Button
           variant={activeTab === "budget" ? "default" : "ghost"}
           onClick={() => setActiveTab("budget")}

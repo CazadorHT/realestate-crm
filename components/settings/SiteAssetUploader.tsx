@@ -64,6 +64,10 @@ export function SiteAssetUploader({
         return;
       }
 
+      // Optimistic UI Preview
+      const objectUrl = URL.createObjectURL(file);
+      setPreview(objectUrl);
+      
       setIsUploading(true);
       try {
         const formData = new FormData();
@@ -83,11 +87,15 @@ export function SiteAssetUploader({
       } catch (error) {
         console.error("Upload error:", error);
         toast.error("อัปโหลดไม่สำเร็จ");
+        // Revert to original value on error
+        setPreview(value || "");
       } finally {
         setIsUploading(false);
+        // Clean up object URL
+        URL.revokeObjectURL(objectUrl);
       }
     },
-    [disabled, folder, onChange],
+    [disabled, folder, onChange, uploadAction, value],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

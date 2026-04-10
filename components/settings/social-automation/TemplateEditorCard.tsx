@@ -229,7 +229,9 @@ export function TemplateEditorCard({
                   "h-2 w-2 rounded-full animate-pulse mr-1",
                   metaConnected ? "bg-green-500" : "bg-red-500"
                 )} />
-                <span className="text-[11px] font-bold text-slate-600">
+                <span className={cn("text-[11px] font-semibold px-2 py-0.5 rounded-full",
+                  metaConnected ? "text-green-500 bg-green-100" : "text-red-500 bg-red-100"
+                )}>
                   {metaConnected ? "Meta Connected" : "Meta Not Connected"}
                 </span>
                 {metaConnected && metaPageName && (
@@ -262,7 +264,9 @@ export function TemplateEditorCard({
                   "h-2 w-2 rounded-full animate-pulse mr-1",
                   tiktokConnected ? "bg-green-500" : "bg-red-500"
                 )} />
-                <span className="text-[11px] font-bold text-slate-600">
+                <span className={cn("text-[11px] font-semibold px-2 py-0.5 rounded-full",
+                  tiktokConnected ? "text-green-500 bg-green-100" : "text-red-500 bg-red-100"
+                )}>
                   {tiktokConnected ? "TikTok Connected" : "TikTok Not Connected"}
                 </span>
                 {tiktokConnected && tiktokMetadata?.display_name && (
@@ -296,8 +300,10 @@ export function TemplateEditorCard({
             <div className="mt-4 flex items-center justify-between p-3 bg-white/50 border border-slate-200 rounded-xl shadow-sm">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse mr-1" />
-                <span className="text-[11px] font-bold text-slate-600">
-                  LINE Integrated
+                <span className={cn("text-[11px] font-semibold px-2 py-0.5 rounded-full",
+                  lineBotInfo?.displayName ? "text-green-500 bg-green-100" : "text-red-500 bg-red-100"
+                )}>
+                  {lineBotInfo?.displayName ? "LINE Connected" : "LINE Not Connected"}
                 </span>
                 {lineBotInfo?.displayName && (
                   <div className="flex items-center gap-1.5 ml-3 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold border border-emerald-500 shadow-sm">

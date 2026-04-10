@@ -12,18 +12,12 @@ import {
   type AiModelConfig,
 } from "@/features/ai-settings/constants";
 import {
-  Brain,
-  MessageSquare,
-  Globe,
   FileText,
-  User,
-  Layout,
   Save,
   CheckCircle2,
   AlertCircle,
   Info,
   Loader2,
-  Cpu,
   Bot,
   Languages,
   Zap,
@@ -39,15 +33,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { SettingsHeader } from "@/components/settings/SettingsHeader";
 
 export default function AiConfigPage() {
   const [loading, setLoading] = useState(true);
@@ -111,35 +99,29 @@ export default function AiConfigPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-screen-2xl mx-auto space-y-6 md:space-y-10">
-      {/* Header Section */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-indigo-600 font-semibold text-sm uppercase tracking-wider">
-            <Cpu className="w-4 h-4" />
-            <span>AI Infrastructure</span>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 tracking-tight">
-            AI Model Configuration
-          </h1>
-          <p className="text-slate-500 text-base md:text-lg max-w-2xl leading-relaxed">
-            เลือกโมเดล AI ที่เหมาะสมที่สุดสำหรับแต่ละฟีเจอร์
-            เพื่อความคุ้มค่าและประสิทธิภาพสูงสุด
-          </p>
-        </div>
-        <Button
-          size="lg"
-          className="w-full lg:w-auto bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed h-12 md:h-14 font-bold text-base"
-          onClick={handleSave}
-          disabled={saving || !hasChanged}
-        >
-          {saving ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-          ) : (
-            <Save className="w-5 h-5 mr-2" />
-          )}
-          บันทึกการตั้งค่า
-        </Button>
-      </div>
+      <SettingsHeader 
+        title={<>จัดการโมเดล <span className="bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">AI Infrastructure</span></>}
+        description="เลือกโมเดล AI ที่เหมาะสมที่สุดสำหรับแต่ละฟีเจอร์ เพื่อความคุ้มค่าและประสิทธิภาพสูงสุด"
+        subPath={[
+          { label: "System Control", href: "/protected/settings?tab=ai" },
+          { label: "AI Model Config (จัดการโมเดล AI)" }
+        ]}
+        actions={
+          <Button
+            size="lg"
+            className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed h-12 px-8 font-bold text-base rounded-2xl transition-all active:scale-95"
+            onClick={handleSave}
+            disabled={saving || !hasChanged}
+          >
+            {saving ? (
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            ) : (
+              <Save className="w-5 h-5 mr-2" />
+            )}
+            บันทึกการตั้งค่า
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         {/* Chatbot Config */}
