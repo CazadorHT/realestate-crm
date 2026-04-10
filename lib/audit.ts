@@ -57,6 +57,7 @@ export type AuditAction =
   | "service.bulk_delete"
   | "partner.bulk_delete"
   | "popular_area.bulk_delete"
+  | "popular_area.bulk_translate"
   | "lead.pdpa_update"
   | "property.syndication.update"
   | "property.social_post"

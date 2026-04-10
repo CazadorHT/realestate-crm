@@ -19,52 +19,44 @@ export async function getPopularAreas({
   page = 1,
   pageSize = 10,
   search = "",
+  sortBy = "sort_order",
+  sortOrder = "asc",
 }: {
   page?: number;
   pageSize?: number;
   search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }) {
   try {
     const supabase = await createClient();
     const offset = (page - 1) * pageSize;
 
+    // Use the View for reading to support property_count sorting
     let query = supabase
-      .from("popular_areas")
+      .from("popular_areas_with_counts")
       .select("*", { count: "exact" });
 
     if (search) {
       query = query.or(`name.ilike.%${search}%,name_en.ilike.%${search}%,name_cn.ilike.%${search}%`);
     }
 
+    // Defensive check: Only sort by columns that exist in the view
+    const validColumns = ["id", "name", "sort_order", "created_at", "property_count"];
+    const actualSortBy = validColumns.includes(sortBy) ? sortBy : "sort_order";
+
+    // Default primary sort
+    query = query.order(actualSortBy as any, { ascending: sortOrder === "asc" });
+    
+    // Fallback secondary sort for consistency
+    if (actualSortBy !== "sort_order") {
+      query = query.order("sort_order", { ascending: true });
+    }
+
     const { data: areas, count, error } = await query
-      .order("sort_order", { ascending: true })
       .range(offset, offset + pageSize - 1);
 
     if (error) throw error;
-
-    // Get property counts efficiently for the returned areas using the new RPC
-    if (areas && areas.length > 0) {
-      const areaNames = areas.map((a) => a.name);
-      
-      const { data: counts, error: countErr } = await supabase.rpc(
-        "get_property_counts_by_area",
-        { area_names: areaNames }
-      );
-
-      if (!countErr && Array.isArray(counts)) {
-        const countMap = new Map();
-        counts.forEach((c) => {
-          if (c.area_name) {
-            countMap.set(c.area_name, Number(c.property_count) || 0);
-          }
-        });
-        
-        areas.forEach((area) => {
-          const areaWithExtra = area as any;
-          areaWithExtra.property_count = countMap.get(area.name) || 0;
-        });
-      }
-    }
 
     return {
       success: true,
@@ -245,36 +237,50 @@ export async function uploadPopularAreaImageAction(formData: FormData) {
 /**
  * Bulk translation action with AI Protection & Robust Guarding
  */
-export async function bulkTranslatePopularAreasAction(selectedIds?: string[]) {
-  const { role } = await requireAuthContext();
+export async function bulkTranslatePopularAreasAction(
+  ids?: string[],
+  selectAll?: boolean,
+  search?: string,
+) {
+  const { supabase, user, role } = await requireAuthContext();
   assertStaff(role);
 
   try {
-    const supabase = await createClient();
     let query = supabase.from("popular_areas").select("*");
     
-    if (selectedIds && selectedIds.length > 0) {
-      query = query.in("id", selectedIds);
+    if (selectAll) {
+      if (search) {
+        query = query.or(`name.ilike.%${search}%,name_en.ilike.%${search}%,name_cn.ilike.%${search}%`);
+      }
+    } else if (ids && ids.length > 0) {
+      query = query.in("id", ids);
+    } else {
+      return { success: true, message: "ไม่มีข้อมูลให้แปล" };
     }
 
     const { data: areas, error } = await query;
     if (error) throw error;
     if (!areas || areas.length === 0) return { success: true, message: "ไม่มีข้อมูลให้แปล" };
 
+    // Limit to items that actually need translation or are outdated
     const toTranslate = areas.filter(
       (a) => !a.name_en || !a.name_cn || a.name_en === a.name || a.name_cn === a.name,
     );
 
-    if (toTranslate.length === 0) return { success: true, message: "ข้อมูลทุกรายการมีคำแปลแล้ว" };
+    if (toTranslate.length === 0) return { success: true, message: "ข้อมูลทุกรายการมีคำแปลที่มีคุณภาพแล้ว" };
+
+    // AI Guard: Limit to 100 items per request to protect context window and costs
+    const limitedItems = toTranslate.slice(0, 100);
 
     const { getAiModelConfig } = await import("@/features/ai-settings/actions");
     const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    const { logAudit } = await import("@/lib/audit");
     const aiConfig = await getAiModelConfig();
     const modelName = aiConfig.blog_generator_model || "gemini-2.0-flash";
 
     const prompt = `
       Translate location names in Thailand from Thai to English and Chinese.
-      Names: ${JSON.stringify(toTranslate.map((a) => ({ id: a.id, name: a.name })))}
+      Names: ${JSON.stringify(limitedItems.map((a) => ({ id: a.id, name: a.name })))}
       Return strict JSON Array of objects: [{ "id": "uuid", "name_en": "...", "name_cn": "..." }]
       Do not include any markers or explanation.
     `;
@@ -300,8 +306,8 @@ export async function bulkTranslatePopularAreasAction(selectedIds?: string[]) {
       .filter(item => item.id && (item.name_en || item.name_cn))
       .map(item => ({
         id: item.id,
-        name_en: item.name_en || null,
-        name_cn: item.name_cn || null
+        name_en: (item.name_en || "").trim() || null,
+        name_cn: (item.name_cn || "").trim() || null
       }));
 
     if (validUpdates.length === 0) {
@@ -311,7 +317,17 @@ export async function bulkTranslatePopularAreasAction(selectedIds?: string[]) {
     const { error: upsertErr } = await supabase.from("popular_areas").upsert(validUpdates as any);
     if (upsertErr) throw upsertErr;
 
+    // Log AI Usage & Audit Trail
     await logAiUsage({ model: modelName, feature: "popular_areas_translator", status: "success" });
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "popular_area.bulk_translate",
+        entity: "popular_areas",
+        entityId: selectAll ? "all" : (ids?.join(",") || ""),
+        metadata: { translatedCount: validUpdates.length, model: modelName, selectAll, search }
+      }
+    );
 
     revalidatePath("/protected/admin/popular-areas");
     return { success: true, message: `แปลภาษาสำเร็จ ${validUpdates.length} รายการ` };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback, useTransition } from "react";
+import { useState, useMemo, useEffect, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   Table,
@@ -11,7 +11,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import {
@@ -19,10 +18,12 @@ import {
   Trash2,
   Loader2,
   MapPin,
-  Search,
   Languages,
   GripVertical,
   TriangleAlert,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -46,7 +47,6 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-  defaultAnnouncements,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -58,14 +58,14 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
-type PopularArea = {
+export type PopularArea = {
   id: string;
   name: string;
-  province: string | null;
+  province?: string | null;
   name_en?: string | null;
   name_cn?: string | null;
-  created_at: string;
-  property_count?: number;
+  created_at?: string | null;
+  property_count?: number | null;
   featured?: boolean | null;
   is_active?: boolean | null;
   slug?: string | null;
@@ -153,7 +153,7 @@ function SortableRow({
             </div>
           )}
           <div className="flex flex-col">
-            <span className="font-bold text-slate-900 leading-none">{item.name}</span>
+            <span className="font-bold text-slate-900 leading-none truncate max-w-[150px]">{item.name}</span>
             <span className="text-[10px] text-blue-600 font-bold mt-1 uppercase tracking-tight">{item.province}</span>
           </div>
         </div>
@@ -214,6 +214,8 @@ export function PopularAreasTable({
   // URL-driven state
   const search = searchParams.get("search") || "";
   const page = Number(searchParams.get("page")) || 1;
+  const sortBy = searchParams.get("sort") || "sort_order";
+  const sortOrder = searchParams.get("order") || "asc";
   const pageSize = 10;
 
   const [data, setData] = useState(initialData);
@@ -225,28 +227,15 @@ export function PopularAreasTable({
     setTotalCount(initialTotal);
   }, [initialData, initialTotal]);
 
-  // Dialog states
+  // Dialog & Active states
   const [editingItem, setEditingItem] = useState<PopularArea | null>(null);
   const [deleteConfirmItem, setDeleteConfirmItem] = useState<PopularArea | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isAllAcrossSelected, setIsAllAcrossSelected] = useState(false);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
-  // Search handling
-  const [searchValue, setSearchValue] = useState(search);
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchValue !== search) {
-        const params = new URLSearchParams(searchParams);
-        if (searchValue) params.set("search", searchValue);
-        else params.delete("search");
-        params.set("page", "1");
-        router.push(`${pathname}?${params.toString()}`);
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchValue, search, searchParams, pathname, router]);
-
-  // Bulk selection
+  // Selection
   const allIds = useMemo(() => data.map((item) => item.id), [data]);
   const {
     toggleSelect,
@@ -259,12 +248,36 @@ export function PopularAreasTable({
     selectedIds,
   } = useTableSelection(allIds);
 
-  // Reordering (DnD)
+  useEffect(() => {
+    if (!isAllSelected) setIsAllAcrossSelected(false);
+  }, [isAllSelected, page, search]);
+
+  // Sorting
+  const toggleSort = (column: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (sortBy === column) {
+      params.set("order", sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      params.set("sort", column);
+      params.set("order", "asc");
+    }
+    params.set("page", "1");
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const SortIcon = ({ column }: { column: string }) => {
+    if (sortBy !== column) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30" />;
+    return sortOrder === "asc" ? (
+      <ChevronUp className="ml-2 h-3 w-3 text-indigo-600" />
+    ) : (
+      <ChevronDown className="ml-2 h-3 w-3 text-indigo-600" />
+    );
+  };
+
+  // Drag & Drop
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -272,24 +285,21 @@ export function PopularAreasTable({
     if (active.id !== over?.id) {
       const oldIndex = data.findIndex((item) => item.id === active.id);
       const newIndex = data.findIndex((item) => item.id === over?.id);
-
       const newData = arrayMove(data, oldIndex, newIndex);
       setData(newData);
 
-      // Persist reorder (Atomic Upsert)
       const offset = (page - 1) * pageSize;
       const ids = newData.map((item) => item.id);
-      
       const res = await reorderPopularAreasAction(ids, offset);
-      if (res.success) {
-        toast.success(res.message);
-      } else {
+      if (res.success) toast.success(res.message);
+      else {
         toast.error(res.message);
-        setData(initialData); // Rollback on error
+        setData(initialData);
       }
     }
   };
 
+  // Action Handlers
   const handleDelete = async () => {
     if (!deleteConfirmItem) return;
     setIsDeleting(true);
@@ -299,37 +309,45 @@ export function PopularAreasTable({
       toast.success(res.message);
       setDeleteConfirmItem(null);
       router.refresh();
-    } else {
-      toast.error(res.message);
-    }
+    } else toast.error(res.message);
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = async () => setIsBulkDeleteOpen(true);
+
+  const executeBulkDelete = async () => {
     const ids = Array.from(selectedIds);
-    toast.promise(bulkDeletePopularAreasAction(ids), {
-      loading: "กำลังลบข้อมูล...",
+    setIsDeleting(true);
+    toast.promise(bulkDeletePopularAreasAction(ids, isAllAcrossSelected, search), {
+      loading: "กำลังลบข้อมูลหลายรายการ...",
       success: (res) => {
+        setIsDeleting(false);
+        setIsBulkDeleteOpen(false);
         if (res.success) {
           clearSelection();
+          setIsAllAcrossSelected(false);
           router.refresh();
           return res.message;
         }
         throw new Error(res.message);
       },
-      error: (err) => err.message,
+      error: (err) => {
+        setIsDeleting(false);
+        return err.message;
+      },
     });
   };
 
   const handleBulkTranslate = async () => {
     setIsTranslating(true);
-    const ids = selectedCount > 0 ? Array.from(selectedIds) : undefined;
-    toast.promise(bulkTranslatePopularAreasAction(ids), {
+    const ids = isAllAcrossSelected ? undefined : Array.from(selectedIds);
+    toast.promise(bulkTranslatePopularAreasAction(ids, isAllAcrossSelected, search), {
       loading: "กำลังใช้ AI แปลข้อมูล...",
       success: (res) => {
         setIsTranslating(false);
         if (res.success) {
-          router.refresh();
+          setIsAllAcrossSelected(false);
           clearSelection();
+          router.refresh();
           return res.message;
         }
         throw new Error(res.message);
@@ -342,101 +360,82 @@ export function PopularAreasTable({
   };
 
   const start = (page - 1) * pageSize;
+  const isDraggingEnabled = !search && sortBy === "sort_order";
 
   return (
     <div className="space-y-4">
+      {/* Selection Toolbar */}
       <BulkActionToolbar
-        selectedCount={selectedCount}
+        selectedCount={isAllAcrossSelected ? totalCount : selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
         entityName="ทำเล"
         extraActions={
-           <Button
+          <Button
             variant="outline"
-            className="h-10 px-4 border-indigo-100 bg-white text-indigo-600 hover:bg-indigo-50 font-bold rounded-xl gap-2 text-xs"
+            className="h-10 px-4 border-indigo-100 bg-white hover:text-indigo-600 text-indigo-600 hover:bg-indigo-50 font-bold rounded-xl gap-2 text-xs"
             onClick={handleBulkTranslate}
             disabled={isTranslating}
           >
             <Languages className="h-4 w-4" />
-            แปลภาษา ({selectedCount})
+            แปล ({isAllAcrossSelected ? totalCount : selectedCount})
           </Button>
         }
       />
 
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-5 border border-slate-200 shadow-sm rounded-2xl animate-in fade-in duration-500">
-        <div className="flex items-center gap-4 text-left">
-          <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0 border border-indigo-100">
-            <MapPin className="h-6 w-6" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-slate-900 leading-tight">
-              ทำเลยอดนิยม ({totalCount})
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              จัดการลำดับและข้อมูลสำคัญสำหรับหน้าบ้าน
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          {!search && selectedCount === 0 && (
-            <Button
-              variant="outline"
-              className="hidden md:flex h-11 px-5 border-indigo-100 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-50 cursor-pointer rounded-xl transition-all shadow-sm items-center gap-2 group font-bold"
-              onClick={handleBulkTranslate}
-              disabled={isTranslating || data.length === 0}
-            >
-              <Languages className="h-4 w-4" />
-              แปลภาษาทั้งหมด
-            </Button>
-          )}
+     
 
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="ค้นหาทำเล..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all rounded-xl"
-            />
-          </div>
-        </div>
-      </div>
-
+      {/* Desktop Table */}
       <div className="hidden lg:block rounded-xl bg-white overflow-hidden shadow-sm border border-slate-200 animate-in fade-in duration-500">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-          modifiers={[restrictToVerticalAxis]}
-        >
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
           <Table>
             <TableHeader className="bg-slate-50/50">
               <TableRow>
-                <TableHead className="w-[100px] px-6">
+                <TableHead className={cn("px-6", isDraggingEnabled ? "w-[120px]" : "w-[60px]")}>
                   <div className="flex items-center gap-3">
-                    <div className="w-8 shrink-0" /> {/* Grip spacer */}
+                    {isDraggingEnabled && <div className="w-8 shrink-0" />}
                     <Checkbox
                       checked={isAllSelected}
-                      onCheckedChange={() => toggleSelectAll(allIds)}
+                      onCheckedChange={(checked) => {
+                        toggleSelectAll(allIds);
+                        if (!checked) setIsAllAcrossSelected(false);
+                      }}
                       className={isPartialSelected ? "data-[state=checked]:bg-primary/50" : "rounded-md"}
                     />
                   </div>
                 </TableHead>
-                <TableHead className="w-[80px] font-bold text-slate-900 px-6">ลำดับ</TableHead>
-                <TableHead className="font-bold text-slate-900 px-6">ชื่อพื้นที่ / จังหวัด</TableHead>
+                <TableHead className="w-[80px] font-bold text-slate-900 px-6 cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => toggleSort("sort_order")}>
+                  <div className="flex items-center">ลำดับ <SortIcon column="sort_order" /></div>
+                </TableHead>
+                <TableHead className="font-bold text-slate-900 px-6 cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => toggleSort("name")}>
+                  <div className="flex items-center">ชื่อพื้นที่ / จังหวัด <SortIcon column="name" /></div>
+                </TableHead>
                 <TableHead className="font-bold text-slate-900 px-6 text-sm">English (EN)</TableHead>
                 <TableHead className="font-bold text-slate-900 px-6 text-sm">中文 (CN)</TableHead>
-                <TableHead className="font-bold text-slate-900 px-6 text-center">จำนวนทรัพย์</TableHead>
+                <TableHead className="font-bold text-slate-900 px-6 text-center cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => toggleSort("property_count")}>
+                  <div className="flex items-center justify-center">จำนวนทรัพย์ <SortIcon column="property_count" /></div>
+                </TableHead>
                 <TableHead className="text-right font-bold text-slate-900 px-6">จัดการ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-20 text-slate-400 bg-white">
-                    ไม่พบข้อมูลที่ต้องการ
+              {isAllSelected && totalCount > data.length && (
+                <TableRow className="bg-indigo-50/50 border-b border-indigo-100 hover:bg-indigo-50/80 transition-colors">
+                  <TableCell colSpan={8} className="py-3 px-6 text-center">
+                    <div className="flex items-center justify-center gap-2 text-sm">
+                      <span className="text-slate-600 font-medium">เลือกทำเล {data.length} รายการในหน้านี้แล้ว</span>
+                      <button 
+                        onClick={() => setIsAllAcrossSelected(!isAllAcrossSelected)}
+                        className="text-indigo-600 hover:text-indigo-700 font-bold underline underline-offset-4 cursor-pointer"
+                      >
+                        {isAllAcrossSelected ? "ยกเลิกการเลือกทั้งหมด" : `เลือกทำเลทั้งหมด ${totalCount} รายการ`}
+                      </button>
+                    </div>
                   </TableCell>
                 </TableRow>
+              )}
+              {data.length === 0 ? (
+                <TableRow><TableCell colSpan={8} className="text-center py-20 text-slate-400 bg-white font-medium">ไม่พบข้อมูลที่ต้องการ</TableCell></TableRow>
               ) : (
                 <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
                   {data.map((item, index) => (
@@ -444,12 +443,12 @@ export function PopularAreasTable({
                       key={item.id}
                       item={item}
                       index={index}
-                      start={start}
                       isSelected={isSelected(item.id)}
                       onSelect={toggleSelect}
                       onEdit={setEditingItem}
                       onDelete={setDeleteConfirmItem}
-                      isDraggingEnabled={!search}
+                      isDraggingEnabled={!search && sortBy === "sort_order"}
+                      start={start}
                     />
                   ))}
                 </SortableContext>
@@ -460,103 +459,64 @@ export function PopularAreasTable({
       </div>
 
       {/* Mobile Card View */}
-      <div className="lg:hidden space-y-4 animate-in fade-in duration-500">
+      <div className="lg:hidden space-y-3 animate-in fade-in duration-500">
         {data.map((item, index) => (
-          <div
-            key={item.id}
-            className={cn(
-              "p-5 bg-white rounded-2xl border transition-all shadow-sm",
-              isSelected(item.id) ? "border-indigo-200 bg-indigo-50/30" : "border-slate-200"
-            )}
-            onClick={() => toggleSelect(item.id)}
-          >
+          <div key={item.id} className={cn("p-4 bg-white rounded-2xl border transition-all shadow-sm", isSelected(item.id) ? "border-indigo-200 bg-indigo-50/30" : "border-slate-200")} onClick={() => toggleSelect(item.id)}>
             <div className="flex items-start justify-between gap-4">
-               <div className="flex gap-4 min-w-0">
-                  <div className="pt-1">
-                    <Checkbox checked={isSelected(item.id)} className="rounded-md" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-mono text-slate-400">#{start + index + 1}</span>
-                    <h4 className="font-bold text-slate-900 truncate">{item.name}</h4>
-                    <p className="text-xs text-blue-600 font-bold">{item.province}</p>
-                    <div className="flex gap-2 mt-2">
-                       <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">
-                        {item.property_count || 0} ทรัพย์
-                       </span>
-                    </div>
-                  </div>
-               </div>
-               <div className="flex gap-1">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 text-blue-600 border-blue-50"
-                    onClick={(e) => { e.stopPropagation(); setEditingItem(item); }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 text-rose-600 border-rose-50"
-                    onClick={(e) => { e.stopPropagation(); setDeleteConfirmItem(item); }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-               </div>
+              <div className="flex gap-3 min-w-0">
+                <Checkbox checked={isSelected(item.id)} className="rounded-md mt-1" />
+                <div className="min-w-0">
+                   <div className="flex items-center gap-2">
+                     <span className="text-[10px] font-mono text-slate-400">#{start + index + 1}</span>
+                     <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">{item.property_count || 0} ทรัพย์</span>
+                   </div>
+                   <h4 className="font-bold text-slate-900 truncate mt-1">{item.name}</h4>
+                   <p className="text-xs text-blue-600 font-bold">{item.province}</p>
+                </div>
+              </div>
+              <div className="flex gap-1 shrink-0">
+                <Button variant="outline" size="icon" className="h-8 w-8 text-blue-600 border-blue-50" onClick={(e) => { e.stopPropagation(); setEditingItem(item); }}><Pencil className="h-3 w-3" /></Button>
+                <Button variant="outline" size="icon" className="h-8 w-8 text-rose-600 border-rose-50" onClick={(e) => { e.stopPropagation(); setDeleteConfirmItem(item); }}><Trash2 className="h-3 w-3" /></Button>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
       {totalCount > pageSize && (
-        <div className="pt-4 border-t border-slate-100">
-          <PaginationControls
-            currentPage={page}
-            totalCount={totalCount}
-            pageSize={pageSize}
-          />
-        </div>
+        <div className="pt-4"><PaginationControls currentPage={page} totalCount={totalCount} pageSize={pageSize} /></div>
       )}
 
-      {/* Dialogs */}
-      <EditPopularAreaDialog
-        area={editingItem}
-        open={!!editingItem}
-        onOpenChange={(open) => !open && setEditingItem(null)}
-        onSuccess={() => router.refresh()}
-      />
+      {/* Advanced Dialogs */}
+      <EditPopularAreaDialog area={editingItem} open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)} onSuccess={() => router.refresh()} />
 
-      <ResponsiveDialog
-        open={!!deleteConfirmItem}
-        onOpenChange={(open) => !open && setDeleteConfirmItem(null)}
-        title="ยืนยันการลบทำเล"
-        className="md:max-w-md"
-      >
+      <ResponsiveDialog open={!!deleteConfirmItem} onOpenChange={(open) => !open && setDeleteConfirmItem(null)} title="ยืนยันการลบทำเล" className="md:max-w-md">
         <div className="p-6 text-center space-y-4">
-          <div className="mx-auto w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 mb-2">
-            <TriangleAlert className="h-6 w-6" />
-          </div>
+          <div className="mx-auto w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 mb-2"><TriangleAlert className="h-6 w-6" /></div>
           <div>
             <h3 className="text-lg font-bold text-slate-900">คุณแน่ใจหรือไม่?</h3>
-            <p className="text-sm text-slate-500 mt-1">
-              กำลังจะลบทำเล "<span className="font-bold text-slate-900">{deleteConfirmItem?.name}</span>" ข้อมูลนี้จะไม่สามารถกู้คืนได้
-            </p>
+            <p className="text-sm text-slate-500 mt-1">กำลังจะลบทำเล "<span className="font-bold text-slate-900">{deleteConfirmItem?.name}</span>" ข้อมูลนี้จะไม่สามารถกู้คืนได้</p>
           </div>
           <div className="flex gap-3 pt-2">
-            <Button
-              variant="outline"
-              className="flex-1 rounded-xl h-11 font-bold"
-              onClick={() => setDeleteConfirmItem(null)}
-              disabled={isDeleting}
-            >
-              ยกเลิก
+            <Button variant="outline" className="flex-1 rounded-xl h-11 font-bold" onClick={() => setDeleteConfirmItem(null)}>ยกเลิก</Button>
+            <Button className="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-xl h-11 font-bold" onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "ยืนยันการลบ"}
             </Button>
-            <Button
-              className="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-xl h-11 font-bold"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
+          </div>
+        </div>
+      </ResponsiveDialog>
+
+      <ResponsiveDialog open={isBulkDeleteOpen} onOpenChange={(open) => !open && !isDeleting && setIsBulkDeleteOpen(false)} title={isAllAcrossSelected ? "⚠️ ยืนยันการลบข้อมูลทั้งหมด" : "ยืนยันการลบหลายรายการ"} className="md:max-w-md">
+        <div className="p-6 text-center space-y-4">
+          <div className={cn("mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-2 animate-pulse", isAllAcrossSelected ? "bg-rose-100 text-rose-600" : "bg-amber-100 text-amber-600")}><TriangleAlert className="h-8 w-8" /></div>
+          <div>
+            <h3 className="text-xl font-extrabold text-slate-900">{isAllAcrossSelected ? "ลบข้อมูลทั้งหมดในระบบ!" : "ยืนยันการลบที่เลือก"}</h3>
+            <p className="text-sm text-slate-500 mt-2">คุณกำลังจะลบทำเลจำนวน <span className="font-bold text-rose-600 text-lg">{isAllAcrossSelected ? totalCount : selectedCount}</span> รายการ {isAllAcrossSelected && "จากทุกหน้าเพจ"} ข้อมูลเบสนี้จะถูกลบออกถาวรและไม่สามารถกู้คืนได้</p>
+            {isAllAcrossSelected && <div className="mt-4 p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 text-xs font-bold font-mono uppercase tracking-widest">High Risk Action Required</div>}
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button variant="outline" className="flex-1 rounded-xl h-12 font-bold" onClick={() => setIsBulkDeleteOpen(false)} disabled={isDeleting}>ยกเลิก</Button>
+            <Button className={cn("flex-1 text-white rounded-xl h-12 font-bold shadow-lg shadow-rose-200 transition-all", isAllAcrossSelected ? "bg-rose-600 hover:bg-rose-700" : "bg-slate-900 hover:bg-black")} onClick={executeBulkDelete} disabled={isDeleting}>
               {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "ยืนยันการลบ"}
             </Button>
           </div>

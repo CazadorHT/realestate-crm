@@ -7,6 +7,7 @@ import { CreatePopularAreaDialog } from "@/features/admin/components/CreatePopul
 import { PopularAreasStats } from "@/features/admin/components/PopularAreasStats";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 import { revalidatePath } from "next/cache";
+import { PopularAreaSearchHeader } from "@/features/admin/components/PopularAreaSearchHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,8 @@ interface PageProps {
   searchParams: Promise<{
     search?: string;
     page?: string;
+    sort?: string;
+    order?: "asc" | "desc";
   }>;
 }
 
@@ -24,12 +27,25 @@ export default async function AdminPopularAreasPage({ searchParams }: PageProps)
   const params = await searchParams;
   const search = params.search || "";
   const page = Number(params.page) || 1;
+  const sortBy = params.sort || "sort_order";
+  const sortOrder = params.order || "asc";
 
   const { data: areas, totalCount, success } = await getPopularAreas({
     search,
     page,
     pageSize: 10,
+    sortBy,
+    sortOrder,
   });
+
+  // Elite Type Safety: Map DB view results to strict PopularArea type
+  const mappedAreas = (areas || []).map((area) => ({
+    ...area,
+    id: area.id ?? "", 
+    name: area.name ?? "ไม่มีชื่อ", 
+    sort_order: Number(area.sort_order) || 0,
+    property_count: Number(area.property_count) || 0,
+  }));
 
   // Get total property count for all popular areas
   const supabase = await createClient();
@@ -78,9 +94,15 @@ export default async function AdminPopularAreasPage({ searchParams }: PageProps)
         totalProperties={totalProperties}
       />
 
-      {/* Popular Areas Table */}
-      <div className="rounded-xl lg:border lg:border-slate-200 lg:bg-white shadow-sm overflow-hidden">
-        <PopularAreasTable initialData={areas || []} totalCount={totalCount} />
+      {/* Modern Search & Stats Header */}
+      <PopularAreaSearchHeader totalCount={totalCount} />
+
+      <div className="rounded-xl  overflow-hidden">
+        <PopularAreasTable 
+          initialData={mappedAreas as any} 
+          totalCount={totalCount} 
+        />
+        
       </div>
 
       {/* Footer Stats */}

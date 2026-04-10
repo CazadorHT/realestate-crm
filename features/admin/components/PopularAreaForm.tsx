@@ -16,7 +16,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SiteAssetUploader } from "@/components/settings/SiteAssetUploader";
 import { uploadPopularAreaImageAction } from "../popular-areas-actions";
-import { Loader2, Check, Globe, MapPin, Image as ImageIcon } from "lucide-react";
+import {
+  Loader2,
+  Check,
+  Globe,
+  MapPin,
+  Image as ImageIcon,
+} from "lucide-react";
 import { ProvinceSelector } from "./ProvinceSelector";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -71,7 +77,7 @@ export function PopularAreaForm({
     if (errors.name) setActiveTab("th");
     else if (errors.name_en) setActiveTab("en");
     else if (errors.name_cn) setActiveTab("cn");
-    
+
     toast.error("กรุณาตรวจสอบข้อมูลในแท็บที่ระบุ");
   };
 
@@ -82,15 +88,20 @@ export function PopularAreaForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+        className="space-y-6"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Main Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">
-               <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
-                  <MapPin className="h-4 w-4" />
-               </div>
-               <h3 className="text-sm font-bold text-slate-700">ข้อมูลพื้นฐาน</h3>
+              <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+                <MapPin className="h-4 w-4" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-700">
+                ข้อมูลพื้นฐาน
+              </h3>
             </div>
 
             <FormField
@@ -100,7 +111,10 @@ export function PopularAreaForm({
                 <FormItem>
                   <FormLabel className="font-bold">จังหวัด</FormLabel>
                   <FormControl>
-                    <ProvinceSelector value={field.value} onChange={field.onChange} />
+                    <ProvinceSelector
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -134,48 +148,71 @@ export function PopularAreaForm({
 
           {/* Multilingual Names */}
           <div className="space-y-4">
-             <div className="flex items-center gap-2 mb-2">
-               <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
-                  <Globe className="h-4 w-4" />
-               </div>
-               <h3 className="text-sm font-bold text-slate-700">ชื่อทำเล (Multilingual)</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                <Globe className="h-4 w-4" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-700">
+                ชื่อทำเล (Multilingual)
+              </h3>
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
               <TabsList className="grid grid-cols-3 bg-slate-100/50 p-1 rounded-xl">
-                <TabsTrigger value="th" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm relative">
+                <TabsTrigger
+                  value="th"
+                  className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm relative flex items-center gap-2"
+                >
+                  <span className="fi fi-th h-3 w-4 rounded-sm shadow-sm shrink-0" />
                   Thai
                   {hasThError && (
                     <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 border-2 border-white animate-pulse" />
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="en" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm relative">
+                <TabsTrigger
+                  value="en"
+                  className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm relative flex items-center gap-2"
+                >
+                  <span className="fi fi-us h-3 w-4 rounded-sm shadow-sm shrink-0" />
                   English
                   {hasEnError && (
                     <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 border-2 border-white animate-pulse" />
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="cn" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm relative">
+                <TabsTrigger
+                  value="cn"
+                  className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm relative flex items-center gap-2"
+                >
+                  <span className="fi fi-cn h-3 w-4 rounded-sm shadow-sm shrink-0" />
                   Chinese
                   {hasCnError && (
                     <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 border-2 border-white animate-pulse" />
                   )}
                 </TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="th" className="pt-4 animate-in fade-in slide-in-from-top-1 duration-300">
+
+              <TabsContent
+                value="th"
+                className="pt-4 animate-in fade-in slide-in-from-top-1 duration-300"
+              >
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-wider">ชื่อภาษาไทย *</FormLabel>
+                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        ชื่อภาษาไทย *
+                      </FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="เช่น สุขุมวิท, ทองหล่อ" 
-                          {...field} 
+                        <Input
+                          placeholder="เช่น สุขุมวิท, ทองหล่อ"
+                          {...field}
                           value={field.value ?? ""}
-                          className="h-11 rounded-xl border-slate-200" 
+                          className="h-11 rounded-xl border-slate-200"
                         />
                       </FormControl>
                       <FormMessage />
@@ -184,19 +221,24 @@ export function PopularAreaForm({
                 />
               </TabsContent>
 
-              <TabsContent value="en" className="pt-4 animate-in fade-in slide-in-from-top-1 duration-300">
+              <TabsContent
+                value="en"
+                className="pt-4 animate-in fade-in slide-in-from-top-1 duration-300"
+              >
                 <FormField
                   control={form.control}
                   name="name_en"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-wider">English Name</FormLabel>
+                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        English Name
+                      </FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Sukhumvit, Thong Lo" 
-                          {...field} 
+                        <Input
+                          placeholder="Sukhumvit, Thong Lo"
+                          {...field}
                           value={field.value ?? ""}
-                          className="h-11 rounded-xl border-slate-200" 
+                          className="h-11 rounded-xl border-slate-200"
                         />
                       </FormControl>
                       <FormMessage />
@@ -205,19 +247,24 @@ export function PopularAreaForm({
                 />
               </TabsContent>
 
-              <TabsContent value="cn" className="pt-4 animate-in fade-in slide-in-from-top-1 duration-300">
+              <TabsContent
+                value="cn"
+                className="pt-4 animate-in fade-in slide-in-from-top-1 duration-300"
+              >
                 <FormField
                   control={form.control}
                   name="name_cn"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-wider">名称 (Chinese)</FormLabel>
+                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        名称 (Chinese)
+                      </FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="素坤逸, 通罗" 
-                          {...field} 
+                        <Input
+                          placeholder="素坤逸, 通罗"
+                          {...field}
                           value={field.value ?? ""}
-                          className="h-11 rounded-xl border-slate-200" 
+                          className="h-11 rounded-xl border-slate-200"
                         />
                       </FormControl>
                       <FormMessage />
@@ -229,7 +276,7 @@ export function PopularAreaForm({
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100">
+        <div className="flex flex-row gap-3 pt-4 border-t border-slate-100">
           <Button
             type="button"
             variant="ghost"
@@ -242,7 +289,7 @@ export function PopularAreaForm({
           <Button
             type="submit"
             disabled={isPending}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 transition-all active:scale-95 rounded-xl h-11 font-bold"
+            className="flex-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 transition-all active:scale-95 rounded-xl h-11 font-bold"
           >
             {isPending ? (
               <>

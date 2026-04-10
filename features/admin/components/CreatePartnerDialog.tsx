@@ -48,7 +48,7 @@ export function CreatePartnerDialog({ onSuccess }: CreatePartnerDialogProps) {
         </Button>
       }
     >
-      <div className="p-4 sm:p-6 bg-white rounded-b-2xl">
+      <div className="p-6  bg-white rounded-b-2xl">
         <PartnerForm
           onSuccess={handleSuccess}
           onCancel={() => setOpen(false)}

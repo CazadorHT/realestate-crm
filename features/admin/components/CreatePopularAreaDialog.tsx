@@ -11,7 +11,9 @@ interface CreatePopularAreaDialogProps {
   onSuccess: () => void;
 }
 
-export function CreatePopularAreaDialog({ onSuccess }: CreatePopularAreaDialogProps) {
+export function CreatePopularAreaDialog({
+  onSuccess,
+}: CreatePopularAreaDialogProps) {
   const [open, setOpen] = useState(false);
 
   const handleSuccess = () => {
@@ -49,7 +51,7 @@ export function CreatePopularAreaDialog({ onSuccess }: CreatePopularAreaDialogPr
         </Button>
       }
     >
-      <div className="p-4 sm:p-6 bg-white rounded-b-2xl">
+      <div className="p-6  bg-white rounded-b-2xl">
         <PopularAreaForm
           onSuccess={handleSuccess}
           onCancel={() => setOpen(false)}

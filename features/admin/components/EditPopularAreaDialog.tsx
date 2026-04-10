@@ -40,17 +40,17 @@ export function EditPopularAreaDialog({
       }
       description={
         <div className="px-5 mt-1 flex items-center gap-2">
-           <span className="text-[11px] font-bold text-slate-400 bg-white border border-slate-100 px-2 py-0.5 rounded shadow-sm">
+          <span className="text-[11px] font-bold text-slate-400 bg-white border border-slate-100 px-2 py-0.5 rounded shadow-sm">
             ID: {area?.id?.substring(0, 8)}...
-           </span>
-           <MapPin className="h-3 w-3 text-slate-300" />
-           <span className="text-[11px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded">
+          </span>
+          <MapPin className="h-3 w-3 text-slate-300" />
+          <span className="text-[11px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded">
             {area?.name}
-           </span>
+          </span>
         </div>
       }
     >
-      <div className="p-4 sm:p-6 bg-white rounded-b-2xl">
+      <div className="p-6  bg-white rounded-b-2xl">
         {area && (
           <PopularAreaForm
             initialData={area}

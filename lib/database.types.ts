@@ -2838,6 +2838,23 @@ export type Database = {
       }
     }
     Views: {
+      popular_areas_with_counts: {
+        Row: {
+          created_at: string | null
+          featured: boolean | null
+          id: string | null
+          image_url: string | null
+          is_active: boolean | null
+          name: string | null
+          name_cn: string | null
+          name_en: string | null
+          property_count: number | null
+          province: string | null
+          slug: string | null
+          sort_order: number | null
+        }
+        Relationships: []
+      }
       tenant_branding: {
         Row: {
           favicon_url: string | null

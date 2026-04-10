@@ -100,7 +100,10 @@ export function ResponsiveDialog({
 
   const renderContent = () => {
     return (
-      <div className="relative w-full h-full" style={{ minHeight: isLoading ? minHeight : undefined }}>
+      <div
+        className="relative w-full h-full"
+        style={{ minHeight: isLoading ? minHeight : undefined }}
+      >
         <AnimatePresence>
           {isLoading && (
             <motion.div
@@ -113,26 +116,42 @@ export function ResponsiveDialog({
                 {/* Outer pulsing ring */}
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 2,
+                    ease: "easeInOut",
+                  }}
                   className="absolute -inset-4 bg-blue-500/5 rounded-full blur-xl"
                 />
-                
+
                 {/* Spinner inside a ring */}
                 <div className="relative h-12 w-12">
-                  <motion.div 
+                  <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 1,
+                      ease: "linear",
+                    }}
                     className="absolute inset-0 border-3 border-slate-100 rounded-full"
                   />
-                  <motion.div 
+                  <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 1.5,
+                      ease: "linear",
+                    }}
                     className="absolute inset-0 border-3 border-t-blue-600 border-r-transparent border-b-transparent border-l-transparent rounded-full"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <motion.div
                       animate={{ scale: [0.8, 1, 0.8] }}
-                      transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 2,
+                        ease: "easeInOut",
+                      }}
                     >
                       <Loader2 className="h-5 w-5 text-blue-600" />
                     </motion.div>
@@ -151,7 +170,11 @@ export function ResponsiveDialog({
             </motion.div>
           )}
         </AnimatePresence>
-        <div className={cn(isLoading && "opacity-40 grayscale pointer-events-none")}>
+        <div
+          className={cn(
+            isLoading && "opacity-40 grayscale pointer-events-none",
+          )}
+        >
           {children}
         </div>
       </div>
@@ -171,7 +194,10 @@ export function ResponsiveDialog({
       >
         {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
         <DrawerContent
-          className={cn("max-h-[96vh] flex flex-col overflow-hidden pointer-events-auto", className)}
+          className={cn(
+            "max-h-[96vh] flex flex-col overflow-hidden pointer-events-auto",
+            className,
+          )}
           onOpenAutoFocus={onOpenAutoFocus}
           onCloseAutoFocus={onCloseAutoFocus}
         >
@@ -180,17 +206,32 @@ export function ResponsiveDialog({
               <>
                 <DrawerTitle>{title}</DrawerTitle>
                 {description && (
-                  <DrawerDescription className="mt-1 text-[13px] leading-relaxed" asChild>
+                  <DrawerDescription
+                    className="mt-1 text-[13px] leading-relaxed"
+                    asChild
+                  >
                     <div>{description}</div>
                   </DrawerDescription>
                 )}
               </>
             ) : (
-              <VisuallyHidden>
-                <DrawerTitle>Dialog</DrawerTitle>
-              </VisuallyHidden>
+              <>
+                <VisuallyHidden>
+                  <DrawerTitle>Dialog</DrawerTitle>
+                  <DrawerDescription>
+                    Dialog description for accessibility
+                  </DrawerDescription>
+                </VisuallyHidden>
+              </>
             )}
           </DrawerHeader>
+          {!description && title && (
+            <VisuallyHidden>
+              <DrawerDescription>
+                Dialog description for accessibility
+              </DrawerDescription>
+            </VisuallyHidden>
+          )}
           <div className="flex-1 min-h-0 overflow-y-auto bg-white w-full relative z-10 transition-all duration-300">
             <ResponsiveDialogContext.Provider value={true}>
               {renderContent()}
@@ -210,7 +251,10 @@ export function ResponsiveDialog({
     <Dialog open={open} onOpenChange={onOpenChange} modal={finalModal}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
-        className={cn("max-w-lg flex flex-col max-h-[85vh] overflow-hidden pointer-events-auto", className)}
+        className={cn(
+          "max-w-lg flex flex-col max-h-[85vh] overflow-hidden pointer-events-auto",
+          className,
+        )}
         onOpenAutoFocus={onOpenAutoFocus}
         onCloseAutoFocus={onCloseAutoFocus}
       >
@@ -221,23 +265,42 @@ export function ResponsiveDialog({
                 {title}
               </DialogTitle>
               {description && (
-                <DialogDescription className="mt-1 text-[13px] text-slate-500 font-medium leading-relaxed" asChild>
+                <DialogDescription
+                  className="mt-1 text-[13px] text-slate-500 font-medium leading-relaxed"
+                  asChild
+                >
                   <div>{description}</div>
                 </DialogDescription>
               )}
             </>
           ) : (
-            <VisuallyHidden>
-              <DialogTitle>Dialog</DialogTitle>
-            </VisuallyHidden>
+            <>
+              <VisuallyHidden>
+                <DialogTitle>Dialog</DialogTitle>
+                <DialogDescription>
+                  Dialog description for accessibility
+                </DialogDescription>
+              </VisuallyHidden>
+            </>
           )}
         </DialogHeader>
+        {!description && title && (
+          <VisuallyHidden>
+            <DialogDescription>
+              Dialog description for accessibility
+            </DialogDescription>
+          </VisuallyHidden>
+        )}
         <div className="flex-1 min-h-0 overflow-y-auto w-full relative z-10 transition-all duration-300">
           <ResponsiveDialogContext.Provider value={true}>
             {renderContent()}
           </ResponsiveDialogContext.Provider>
         </div>
-        {footer && <DialogFooter className="shrink-0 pt-4 border-t border-slate-50 mt-2">{footer}</DialogFooter>}
+        {footer && (
+          <DialogFooter className="shrink-0 pt-4 border-t border-slate-50 mt-2">
+            {footer}
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

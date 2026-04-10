@@ -3,6 +3,7 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { mapDbError } from "@/lib/db-error";
 
 export type BulkDeleteResult = {
   success: boolean;
@@ -14,13 +15,15 @@ export type BulkDeleteResult = {
  * Bulk delete popular areas
  */
 export async function bulkDeletePopularAreasAction(
-  ids: string[]
+  ids?: string[],
+  selectAll?: boolean,
+  search?: string,
 ): Promise<BulkDeleteResult> {
   try {
     const { supabase, user, role } = await requireAuthContext();
     assertStaff(role);
 
-    if (!ids || ids.length === 0) {
+    if (!selectAll && (!ids || ids.length === 0)) {
       return {
         success: false,
         deletedCount: 0,
@@ -28,10 +31,21 @@ export async function bulkDeletePopularAreasAction(
       };
     }
 
-    const { error, count } = await supabase
+    let query = supabase
       .from("popular_areas")
-      .delete({ count: "exact" })
-      .in("id", ids);
+      .delete({ count: "exact" });
+
+    if (selectAll) {
+      // If selectAll is true, we apply the same filters as the list view
+      if (search) {
+        query = query.or(`name.ilike.%${search}%,name_en.ilike.%${search}%,name_cn.ilike.%${search}%`);
+      }
+      // Note: We don't limit because we want to delete ALL matching items
+    } else if (ids && ids.length > 0) {
+      query = query.in("id", ids);
+    }
+
+    const { error, count } = await query;
 
     if (error) throw error;
 
@@ -40,24 +54,25 @@ export async function bulkDeletePopularAreasAction(
       {
         action: "popular_area.bulk_delete",
         entity: "popular_areas",
-        entityId: ids.join(","),
-        metadata: { deletedCount: count },
-      }
+        entityId: selectAll ? "all" : (ids?.join(",") || ""),
+        metadata: { deletedCount: count, selectAll, search },
+      },
     );
 
     revalidatePath("/protected/admin/popular-areas");
 
+    const finalCount = count ?? 0;
     return {
       success: true,
-      deletedCount: count ?? ids.length,
-      message: `ลบทำเลยอดนิยมสำเร็จ ${count ?? ids.length} รายการ`,
+      deletedCount: finalCount,
+      message: `ลบทำเลยอดนิยมสำเร็จ ${finalCount} รายการ`,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("bulkDeletePopularAreasAction error:", error);
     return {
       success: false,
       deletedCount: 0,
-      message: error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+      message: mapDbError(error),
     };
   }
 }
