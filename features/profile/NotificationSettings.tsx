@@ -15,6 +15,8 @@ import { Bell, Mail, MessageSquare, UserPlus, Clock } from "lucide-react";
 import { updateNotificationSettings } from "./actions";
 import { toast } from "sonner";
 import type { Json } from "@/lib/database.types";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface NotificationSettingsProps {
   initialSettings: Json | null;
@@ -43,48 +45,64 @@ export function NotificationSettings({
 
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const definition = [
+  const groups = [
     {
-      id: "new_lead",
-      label: "Lead ใหม่",
-      description: "แจ้งเตือนเมื่อมี Lead ใหม่เข้ามา",
-      icon: <UserPlus className="h-5 w-5" />,
+      title: "การขายและลีด (Sales & Leads)",
+      items: [
+        {
+          id: "new_lead",
+          label: "Lead ใหม่",
+          description: "แจ้งเตือนเมื่อมีลูกค้าใหม่เข้ามาในระบบ",
+          icon: <UserPlus className="h-4 w-4" />,
+          color: "bg-blue-500",
+        },
+        {
+          id: "assignment",
+          label: "มอบหมายงาน",
+          description: "เมื่อคุณได้รับมอบหมายทรัพย์หรือลูกค้าใหม่",
+          icon: <Bell className="h-4 w-4" />,
+          color: "bg-indigo-500",
+        },
+        {
+          id: "status_update",
+          label: "การเคลื่อนไหว",
+          description: "เมื่อมีการเปลี่ยนสถานะของทรัพย์หรือลูกค้า",
+          icon: <MessageSquare className="h-4 w-4" />,
+          color: "bg-emerald-500",
+        },
+        {
+          id: "activity",
+          label: "บันทึกกิจกรรม",
+          description: "เมื่อทีมงานบันทึกกิจกรรมใหม่ในเคสของคุณ",
+          icon: <Mail className="h-4 w-4" />,
+          color: "bg-amber-500",
+        },
+      ]
     },
     {
-      id: "assignment",
-      label: "มอบหมายงาน",
-      description: "แจ้งเตือนเมื่อได้รับมอบหมายทรัพย์หรือ Lead ใหม่",
-      icon: <Bell className="h-5 w-5" />,
-    },
-    {
-      id: "status_update",
-      label: "อัปเดตสถานะ",
-      description: "แจ้งเตือนเมื่อมีการเปลี่ยนสถานะทรัพย์หรือ Lead",
-      icon: <MessageSquare className="h-5 w-5" />,
-    },
-    {
-      id: "activity",
-      label: "กิจกรรมใหม่",
-      description: "แจ้งเตือนกิจกรรมใหม่ใน Lead ของคุณ",
-      icon: <Mail className="h-5 w-5" />,
-    },
-    {
-      id: "price_drop",
-      label: "ทรัพย์ลดราคา",
-      description: "แจ้งเตือนเมื่อมีการลดราคาทรัพย์ในระบบ",
-      icon: <Bell className="h-5 w-5" />,
-    },
-    {
-      id: "contract_expiry",
-      label: "สัญญาใกล้หมดอายุ",
-      description: "แจ้งเตือนเมื่อสัญญาฝากขาย/เช่าใกล้ครบกำหนด",
-      icon: <Clock className="h-5 w-5" />,
-    },
+      title: "ตลาดและสัญญา (Market & Contracts)",
+      items: [
+        {
+          id: "price_drop",
+          label: "ทรัพย์ลดราคา",
+          description: "อัปเดตเมื่อมีทรัพย์ในทำเลของคุณลดราคาลง",
+          icon: <Bell className="h-4 w-4" />,
+          color: "bg-rose-500",
+        },
+        {
+          id: "contract_expiry",
+          label: "เตือนต่อสัญญา",
+          description: "แจ้งเตือนล่วงหน้าเมื่อสัญญาฝากขายใกล้หมดอายุ",
+          icon: <Clock className="h-4 w-4" />,
+          color: "bg-orange-500",
+        },
+      ]
+    }
   ];
 
   const handleToggle = async (id: string, current: boolean) => {
     // Find the label for toast
-    const item = definition.find((d) => d.id === id);
+    const item = groups.flatMap((g) => g.items).find((d) => d.id === id);
     const label = item?.label || id;
 
     // Optimistic Update
@@ -110,52 +128,80 @@ export function NotificationSettings({
   };
 
   return (
-    <Card className={isUpdating ? "opacity-70 transition-opacity" : ""}>
-      <CardHeader>
-        <CardTitle>การแจ้งเตือน</CardTitle>
+    <Card className={cn(
+      "border-slate-200 shadow-sm transition-opacity duration-300",
+      isUpdating && "opacity-60 pointer-events-none"
+    )}>
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-2">
+           <Bell className="h-5 w-5 text-slate-900" />
+           <CardTitle className="text-lg font-bold">ศูนย์การแจ้งเตือน</CardTitle>
+        </div>
         <CardDescription>
-          เลือกประเภทการแจ้งเตือนที่คุณต้องการรับ
+          ตั้งค่าการรับข่าวสารและการอัปเดตที่สำคัญจากระบบ
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {definition.map((item, index) => {
-          const isEnabled = settings[item.id] ?? false; // Default false if missing
-          return (
-            <div key={item.id}>
-              {index > 0 && <Separator className="my-4" />}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 flex-1">
-                  <div
-                    className={`p-2 rounded-full ${
-                      isEnabled
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground"
-                    }`}
+      <CardContent className="space-y-8 px-6 pb-8">
+        {groups.map((group, gIndex) => (
+          <div key={gIndex} className="space-y-4">
+            <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest pl-1">
+              {group.title}
+            </h4>
+            <div className="grid gap-2">
+              {group.items.map((item) => {
+                const isEnabled = settings[item.id] ?? false;
+                return (
+                  <motion.div 
+                    key={item.id}
+                    layout
+                    className={cn(
+                      "flex items-center justify-between p-4 rounded-xl border transition-all duration-300",
+                      isEnabled 
+                        ? "bg-white border-slate-100 shadow-sm" 
+                        : "bg-slate-50/50 border-transparent grayscale-[0.5] opacity-80"
+                    )}
                   >
-                    {item.icon}
-                  </div>
-                  <div className="flex-1">
-                    <Label
-                      htmlFor={item.id}
-                      className="font-medium cursor-pointer"
-                    >
-                      {item.label}
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  id={item.id}
-                  checked={isEnabled}
-                  onCheckedChange={() => handleToggle(item.id, isEnabled)}
-                  disabled={isUpdating}
-                />
-              </div>
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "p-2.5 rounded-xl text-white shadow-lg",
+                        isEnabled ? item.color : "bg-slate-300"
+                      )}>
+                        {item.icon}
+                      </div>
+                      <div className="flex flex-col">
+                        <Label
+                          htmlFor={item.id}
+                          className={cn(
+                            "text-sm font-bold cursor-pointer transition-colors",
+                            isEnabled ? "text-slate-900" : "text-slate-500"
+                          )}
+                        >
+                          {item.label}
+                        </Label>
+                        <p className="text-[11px] text-slate-400 leading-tight mt-0.5">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id={item.id}
+                      checked={isEnabled}
+                      onCheckedChange={() => handleToggle(item.id, isEnabled)}
+                      disabled={isUpdating}
+                      className="data-[state=checked]:bg-slate-900"
+                    />
+                  </motion.div>
+                );
+              })}
             </div>
-          );
-        })}
+          </div>
+        ))}
+        
+        <div className="pt-2">
+           <p className="text-[10px] text-center text-slate-300 font-medium">
+             ระบบจะส่งการแจ้งเตือนผ่านหน้าเว็บ และ LINE หากมีการเปิดใช้งาน
+           </p>
+        </div>
       </CardContent>
     </Card>
   );

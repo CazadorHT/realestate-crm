@@ -9,10 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { KeyRound, LogOut } from "lucide-react";
+import { KeyRound, LogOut, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export function AccountSecurityCard() {
   const router = useRouter();
@@ -31,47 +32,65 @@ export function AccountSecurityCard() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>บัญชีและความปลอดภัย</CardTitle>
+    <Card className="border-slate-200 shadow-sm overflow-hidden">
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-2">
+           <ShieldCheck className="h-5 w-5 text-slate-900" />
+           <CardTitle className="text-lg font-bold">บัญชีและความปลอดภัย</CardTitle>
+        </div>
         <CardDescription>
           จัดการการเข้าสู่ระบบและความปลอดภัยของบัญชี
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex gap-4 items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-muted/50 transition-colors">
+      <CardContent className="space-y-4 px-6 pb-6 pt-2">
+        <motion.div 
+          whileHover={{ x: 4 }}
+          className="flex gap-4 items-center justify-between p-4 border border-slate-100 rounded-xl bg-slate-50/30 hover:bg-white hover:border-blue-100 hover:shadow-md hover:shadow-blue-500/5 transition-all duration-300"
+        >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-primary/10">
-              <KeyRound className="h-5 w-5 text-primary" />
+            <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+              <KeyRound className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-medium">รหัสผ่าน</p>
-              <p className="text-sm text-muted-foreground">
-                เปลี่ยนรหัสผ่านของคุณ
+              <p className="font-bold text-slate-800">รหัสผ่าน</p>
+              <p className="text-xs text-slate-500">
+                เปลี่ยนรหัสผ่านเพื่อความปลอดภัย
               </p>
             </div>
           </div>
-          <Button variant="outline" asChild>
-            <a href="/auth/update-password">เปลี่ยนรหัสผ่าน</a>
+          <Button variant="outline" size="sm" className="rounded-lg h-9 border-slate-200 hover:bg-slate-900 hover:text-white transition-colors" asChild>
+            <a href="/auth/update-password">แก้ไข</a>
           </Button>
+        </motion.div>
+
+        <div className="flex items-center gap-4 py-2">
+          <Separator className="flex-1 opacity-50" />
+          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Logout Zone</span>
+          <Separator className="flex-1 opacity-50" />
         </div>
 
-        <Separator />
-
-        <div className="flex gap-4 items-center justify-between p-4 border rounded-lg border-destructive/20 bg-destructive/5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-destructive/10">
-              <LogOut className="h-5 w-5 text-destructive" />
+        <motion.div 
+          whileHover={{ x: 4 }}
+          className="flex gap-4 items-center justify-between p-4 border border-transparent rounded-xl hover:bg-rose-50/30 transition-all duration-300"
+        >
+          <div className="flex items-center gap-3 opacity-60 group-hover:opacity-100">
+            <div className="p-2.5 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-rose-50 group-hover:text-rose-400 transition-colors">
+              <LogOut className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-medium">ออกจากระบบ</p>
-              <p className="text-sm text-muted-foreground">ออกจากบัญชีของคุณ</p>
+              <p className="font-bold text-slate-800">ออกจากระบบ</p>
+              <p className="text-xs text-slate-400">ออกจากบัญชีบนอุปกรณ์นี้</p>
             </div>
           </div>
-          <Button variant="destructive" onClick={handleSignOut} className="">
-            ออกจากระบบ
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleSignOut} 
+            className="rounded-lg h-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+          >
+            Sign Out
           </Button>
-        </div>
+        </motion.div>
       </CardContent>
     </Card>
   );

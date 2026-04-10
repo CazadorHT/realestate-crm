@@ -45,9 +45,9 @@ export function AdminTeamCard({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 ">
         <div className="p-4 border border-primary/20 rounded-lg bg-background">
-          <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+          <div className="flex flex-col items-start justify-between gap-4">
             <div className="flex  items-start gap-3">
               <div className="p-2 rounded-full bg-blue-500/10">
                 <Users className="h-5 w-5 text-blue-500" />
@@ -59,11 +59,13 @@ export function AdminTeamCard({
                 </p>
               </div>
             </div>
-            <Button variant="outline" asChild>
-              <Link href="/protected/settings/users">
-                ไปยังหน้าจัดการผู้ใช้
-              </Link>
-            </Button>
+            <div className="flex-1 w-full">
+              <Button variant="outline" asChild className="w-full h-11">
+                <Link href="/protected/settings/users">
+                  ไปยังหน้าจัดการผู้ใช้
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
 

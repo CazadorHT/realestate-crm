@@ -14,14 +14,11 @@ import { NotificationSettings } from "@/features/profile/NotificationSettings";
 import { TenantMembershipCard } from "@/features/profile/TenantMembershipCard";
 import { RolePermissionsNote } from "@/features/profile/RolePermissionsNote";
 import { AdminTeamCard } from "@/features/profile/AdminTeamCard";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { ProfileCompleteness } from "@/features/profile/ProfileCompleteness";
 import { Separator } from "@/components/ui/separator";
+import { CheckCircle2, LayoutDashboard, Trophy, Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
+
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -48,96 +45,152 @@ export default async function ProfilePage() {
     .from("tenant_members")
     .select("role, tenant:tenants(id, name)")
     .eq("profile_id", profile.id);
-
   const isAdmin = profile.role === "ADMIN";
+  // Calculate completeness score
+  let score = 0;
+  if (profile.avatar_url) score += 25;
+  if (profile.full_name) score += 25;
+  if (profile.phone) score += 20;
+  if (profile.line_id) score += 10;
+  if (profile.facebook_url) score += 10;
+  if (profile.whatsapp_id || profile.wechat_id) score += 10;
+  
+  const scoreClamped = Math.min(score, 100);
 
   return (
-    <div className="mx-auto  space-y-6">
-      {/* Header */}
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-          โปรไฟล์ของฉัน
-        </h1>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          จัดการข้อมูลส่วนตัว ความปลอดภัย และการตั้งค่าบัญชี
-        </p>
+    <div className="relative min-h-[calc(100vh-12rem)] pb-20">
+      {/* Immersive Background Layer */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-400/10 rounded-full blur-3xl" />
       </div>
 
-      <Separator className="my-6" />
+      <div className="mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* Elite Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white/40 backdrop-blur-xl border border-white/40 p-8 rounded-3xl shadow-xl shadow-slate-200/50">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+               <div className="p-2.5 rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/20">
+                  <LayoutDashboard className="h-6 w-6" />
+               </div>
+               <div className="h-10 w-[2px] bg-slate-200 rounded-full mx-1" />
+               <div className="space-y-0.5">
+                  <h1 className="text-3xl font-black tracking-tighter text-slate-900 italic">
+                    MY PROFILE
+                  </h1>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] pl-0.5">
+                    Workspace Identity
+                  </p>
+               </div>
+            </div>
+            <p className="text-slate-500 font-medium max-w-md leading-relaxed">
+              ยินดีต้อนรับคุณ <span className="text-slate-900 font-bold underline underline-offset-4 decoration-blue-500/30">{profile.full_name || "Agent"}</span> จัดการข้อมูลตัวตน ความปลอดภัย และการแจ้งเตือนสิทธิ์การใช้งานของคุณได้ที่นี่
+            </p>
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column - Identity & Settings (4 cols) */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* Identity Card */}
-          <Card className="overflow-hidden border-slate-200 shadow-sm">
-            <div className="h-24 bg-linear-to-r from-blue-600 to-indigo-600 opacity-90"></div>
-            <CardContent className="pt-0 relative px-6 pb-6">
-              <div className="-mt-12 mb-4 flex justify-center">
-                <ProfileAvatar
-                  avatarUrl={profile.avatar_url}
-                  fullName={profile.full_name}
-                />
-              </div>
-              <div className="text-center mb-4">
-                <h2 className="text-xl font-bold text-slate-900">
-                  {profile.full_name || "ไม่ระบุชื่อ"}
-                </h2>
-                <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">
-                  {profile.role || "USER"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Account Security */}
-          <AccountSecurityCard />
-
-          {/* Branch Memberships */}
-          <TenantMembershipCard memberships={memberships as any || []} />
-
-          {/* Role Permissions Guide */}
-          <RolePermissionsNote />
-
-          {/* Admin Team (If Admin) */}
-          {isAdmin && (
-            <AdminTeamCard
-              currentRole={profile.role || "AGENT"}
-              isViewingOwnProfile={true}
-            />
-          )}
+          {/* Completeness Gimmick (Client Component) */}
+          <ProfileCompleteness score={scoreClamped} />
         </div>
 
-        {/* Right Column - Forms (8 cols) */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* Section 1: Profile Information */}
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">
-                ข้อมูลส่วนตัว
-              </CardTitle>
-              <CardDescription>
-                อัปเดตข้อมูลรายละเอียดของคุณเพื่อใช้ในการติดต่อ
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ProfileInfoForm
-                fullName={profile.full_name}
-                phone={profile.phone}
-                line_id={profile.line_id}
-                line_user_id={profile.line_user_id}
-                facebook_url={profile.facebook_url}
-                whatsapp_id={profile.whatsapp_id}
-                wechat_id={profile.wechat_id}
-                email={profile.email}
-                role={profile.role}
-              />
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
+          {/* Left Column - Presence & Identity (4 cols) */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Elite Profile Card */}
+            <div className="relative group rounded-3xl overflow-hidden bg-white/70 backdrop-blur-md border border-white/40 shadow-2xl shadow-slate-200/50">
+              <div className="h-32 bg-linear-to-br from-slate-900 via-slate-800 to-indigo-950 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                   <Zap className="h-24 w-24 text-white" />
+                </div>
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
+              </div>
+              
+              <div className="px-6 pb-8 text-center relative">
+                <div className="-mt-20 mb-6 inline-block">
+                  <ProfileAvatar
+                    avatarUrl={profile.avatar_url}
+                    fullName={profile.full_name}
+                  />
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900 tracking-wider">
+                      {profile.full_name || "ไม่ระบุชื่อ"}
+                    </h2>
+                    <div className="flex items-center justify-center gap-2 mt-1">
+                       <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                       <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em]">Verified {profile.role || "USER"}</span>
+                    </div>
+                  </div>
 
-          {/* Section 3: Notification Preferences */}
-          <NotificationSettings
-            initialSettings={profile.notification_preferences}
-          />
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                     <div className="p-3 rounded-2xl bg-white/50 border border-slate-100">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Status</p>
+                        <p className="text-xs font-black text-emerald-600 uppercase">Online</p>
+                     </div>
+                     <div className="p-3 rounded-2xl bg-white/50 border border-slate-100">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Access</p>
+                        <p className="text-xs font-black text-blue-600 uppercase">{profile.role}</p>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Security - Premium Redesign */}
+            <AccountSecurityCard />
+
+            {/* Branch Memberships */}
+            <TenantMembershipCard memberships={memberships as any || []} />
+
+            {/* Role Permissions Note */}
+            <RolePermissionsNote />
+            
+            {/* Admin Team (If Admin) */}
+            {isAdmin && (
+              <AdminTeamCard
+                currentRole={profile.role || "AGENT"}
+                isViewingOwnProfile={true}
+              />
+            )}
+          </div>
+
+          {/* Right Column - High Performance Forms (8 cols) */}
+          <div className="lg:col-span-8 space-y-8">
+            {/* Section 1: Profile Information */}
+            <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 overflow-hidden">
+              <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">ข้อมูลส่วนตัวเชิงธุรกิจ</h3>
+                  <p className="text-sm text-slate-500 font-medium">Business Identity & Contact Details</p>
+                </div>
+                {scoreClamped === 100 && (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100 animate-bounce">
+                     <CheckCircle2 className="h-4 w-4" />
+                     <span className="text-[10px] font-semibold uppercase tracking-widest">Complete</span>
+                  </div>
+                )}
+              </div>
+              <div className="p-8">
+                <ProfileInfoForm
+                  fullName={profile.full_name}
+                  phone={profile.phone}
+                  line_id={profile.line_id}
+                  line_user_id={profile.line_user_id}
+                  facebook_url={profile.facebook_url}
+                  whatsapp_id={profile.whatsapp_id}
+                  wechat_id={profile.wechat_id}
+                  email={profile.email}
+                  role={profile.role}
+                />
+              </div>
+            </div>
+
+            {/* Section 3: Notification Preferences */}
+            <NotificationSettings
+              initialSettings={profile.notification_preferences}
+            />
+          </div>
         </div>
       </div>
     </div>

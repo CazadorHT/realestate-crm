@@ -7,12 +7,14 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Info } from "lucide-react";
 import { updateProfileAction } from "./actions";
-import { toast } from "sonner";
+import {cn} from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/providers/LanguageProvider";
-import { Info } from "lucide-react";
+import { toast } from "sonner";
+import { Loader2, User, Phone, MessageCircle, Facebook, MessageSquare, Globe, AtSign, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Tooltip,
   TooltipContent,
@@ -118,35 +120,56 @@ export function ProfileInfoForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="full_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>ชื่อ-นามสกุล</FormLabel>
-              <FormControl>
-                <Input placeholder="กรอกชื่อ-นามสกุล" {...field} />
-              </FormControl>
-              <FormDescription className="text-[11px]">ชื่อที่จะแสดงในระบบและใช้ในฐานข้อมูลเอกสาร</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Section 1: Basic Information */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+            <User className="h-4 w-4 text-blue-500" />
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">ข้อมูลพื้นฐาน</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="full_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ชื่อ-นามสกุล</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input placeholder="กรอกชื่อ-นามสกุล" className="pl-9" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>เบอร์โทรศัพท์ (เริ่มต้นด้วย 0)</FormLabel>
-              <FormControl>
-                <Input placeholder="0xx-xxx-xxxx" {...field} />
-              </FormControl>
-              <FormDescription className="text-[11px]">เบอร์โทรศัพท์หลักสำหรับใช้ในการติดต่อลูกค้าและทีมงาน</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>เบอร์โทรศัพท์</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input placeholder="0xx-xxx-xxxx" className="pl-9" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Section 2: Social Media & Communication */}
+        <div className="space-y-4 pt-4">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+            <Globe className="h-4 w-4 text-indigo-500" />
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">ช่องทางการติดต่อโซเชียล</h3>
+          </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -154,16 +177,17 @@ export function ProfileInfoForm({
             name="line_id"
             render={({ field }) => (
               <FormItem>
-                <div className="flex items-center gap-2">
-                  <FormLabel>{t("profile.line_id_label")}</FormLabel>
-                </div>
+                <FormLabel>{t("profile.line_id_label")}</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder={t("profile.line_id_placeholder")}
-                    {...field}
-                  />
+                  <div className="relative">
+                    <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
+                    <Input
+                      placeholder={t("profile.line_id_placeholder")}
+                      className="pl-9 border-emerald-100 focus-visible:ring-emerald-500/20"
+                      {...field}
+                    />
+                  </div>
                 </FormControl>
-                <FormDescription className="text-[11px]">ไอดี LINE (แบบ ID ลำลอง) สำหรับแชร์ให้ลูกค้า</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -174,26 +198,29 @@ export function ProfileInfoForm({
             name="line_user_id"
             render={({ field }) => (
               <FormItem>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <FormLabel>{t("profile.line_user_id_label")}</FormLabel>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Info className="w-4 h-4 text-slate-400 cursor-help" />
+                        <Info className="w-3.5 h-3.5 text-slate-400 cursor-help" />
                       </TooltipTrigger>
-                      <TooltipContent className="max-w-xs">
-                        <p>{t("profile.line_user_id_help")}</p>
+                      <TooltipContent className="max-w-xs p-3">
+                        <p className="text-xs leading-relaxed">{t("profile.line_user_id_help")}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>
                 <FormControl>
-                  <Input
-                    placeholder={t("profile.line_user_id_placeholder")}
-                    {...field}
-                  />
+                  <div className="relative">
+                    <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500" />
+                    <Input
+                      placeholder={t("profile.line_user_id_placeholder")}
+                      className="pl-9"
+                      {...field}
+                    />
+                  </div>
                 </FormControl>
-                <FormDescription className="text-[11px]">รหัส LINE ภายใน (ใช้รับการแจ้งเตือนจากระบบ)</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -204,96 +231,146 @@ export function ProfileInfoForm({
             name="facebook_url"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Facebook Link</FormLabel>
-                <FormControl>
+              <FormLabel>Facebook Profile</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-600" />
                   <Input
-                    placeholder="https://facebook.com/username"
+                    placeholder="https://facebook.com/..."
+                    className="pl-9 border-blue-100 focus-visible:ring-blue-500/20"
                     {...field}
                   />
-                </FormControl>
-                <FormDescription className="text-[11px]">ลิงก์ URL ไปยังหน้าโปรไฟล์ Facebook ของคุณ</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="whatsapp_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>WhatsApp (เบอร์โทร)</FormLabel>
-                <FormControl>
-                  <Input placeholder="66xxxxxxxxx" {...field} />
-                </FormControl>
-                <FormDescription className="text-[11px]">เบอร์โทรศัพท์ที่ใช้ผูกกับ WhatsApp โดยเริ่มด้วยรหัสประเทศ (เช่น 66...)</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="wechat_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>WeChat ID</FormLabel>
-                <FormControl>
-                  <Input placeholder="WeChatID" {...field} />
-                </FormControl>
-                <FormDescription className="text-[11px]">ไอดี WeChat สำหรับการติดต่อลูกค้าชาวจีน</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-muted-foreground">
-            อีเมล
-          </Label>
-          <Input
-            id="email"
-            value={email || ""}
-            disabled
-            className="bg-muted cursor-not-allowed"
-          />
-          <p className="text-xs text-muted-foreground">
-            ไม่สามารถแก้ไขอีเมลได้
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="role" className="text-muted-foreground">
-            บทบาท
-          </Label>
-          <Input
-            id="role"
-            value={role || "AGENT"}
-            disabled
-            className="bg-muted cursor-not-allowed uppercase"
-          />
-          <p className="text-xs text-muted-foreground">
-            ติดต่อผู้ดูแลระบบเพื่อเปลี่ยนบทบาท
-          </p>
-        </div>
-
-        <Button
-          type="submit"
-          className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed font-semibold text-lg"
-          disabled={
-            isLoading || !form.formState.isValid || !form.formState.isDirty
-          }
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              กำลังบันทึก...
-            </>
-          ) : (
-            "บันทึกการเปลี่ยนแปลง"
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </Button>
+        />
+
+        <FormField
+          control={form.control}
+          name="whatsapp_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>WhatsApp (International Format)</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                  <Input 
+                    placeholder="66xxxxxxxxx" 
+                    className="pl-9 border-emerald-100 focus-visible:ring-emerald-500/20"
+                    {...field} 
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="wechat_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>WeChat ID</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
+                  <Input 
+                    placeholder="WeChatID" 
+                    className="pl-9 border-emerald-50"
+                    {...field} 
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
+          <div className="space-y-2 group">
+            <Label htmlFor="email" className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">
+              อีเมลล็อกอิน
+            </Label>
+            <div className="relative">
+              <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+              <Input
+                id="email"
+                value={email || ""}
+                disabled
+                className="pl-9 bg-slate-50/50 border-slate-100 text-slate-500 cursor-not-allowed font-medium"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="role" className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">
+              บทบาทปัจจุบัน
+            </Label>
+            <div className="relative">
+              <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+              <Input
+                id="role"
+                value={role || "AGENT"}
+                disabled
+                className="pl-9 bg-slate-50/50 border-slate-100 text-slate-500 cursor-not-allowed uppercase font-bold"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-4">
+          <Button
+            type="submit"
+            className={cn(
+              "w-full h-12 transition-all duration-300 font-bold text-base rounded-xl relative overflow-hidden group",
+              form.formState.isDirty 
+                ? "bg-slate-900 hover:bg-black text-white shadow-xl shadow-slate-200" 
+                : "bg-slate-100 text-slate-400 cursor-not-allowed"
+            )}
+            disabled={isLoading || !form.formState.isValid || !form.formState.isDirty}
+          >
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex items-center gap-2"
+                >
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>กำลังบันทึกข้อมูล...</span>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="idle"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex items-center gap-2"
+                >
+                  <CheckCircle2 className={cn("h-5 w-5", form.formState.isDirty ? "text-emerald-400" : "text-slate-300")} />
+                  <span>บันทึกการเปลี่ยนแปลง</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Button>
+          
+          {form.formState.isDirty && !isLoading && (
+            <motion.p
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-[10px] text-center mt-2 text-amber-600 font-bold uppercase tracking-wider animate-pulse"
+            >
+              คุณมีการแก้ไขที่ยังไม่ได้บันทึก
+            </motion.p>
+          )}
+        </div>
       </form>
     </Form>
   );
