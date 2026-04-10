@@ -6,6 +6,11 @@ import { UsersPageHeader } from "@/features/users/UsersPageHeader";
 import { UsersStatsSummary } from "@/features/users/UsersStatsSummary";
 import { UsersTable } from "@/features/users/UsersTable";
 import { Separator } from "@/components/ui/separator";
+import { calculateUsersStats, type EliteUser } from "@/lib/users-utils";
+import { getSystemConfig } from "@/lib/actions/system-config";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function UsersManagementPage() {
   const supabase = await createClient();
@@ -56,6 +61,24 @@ export default async function UsersManagementPage() {
   // ดึงข้อมูลทีมทั้งหมด
   const { data: teams } = await supabase.from("teams").select("id, name");
 
+  // ดึงข้อมูลการสังกัดสาขา (Tenant Memberships) ทั้งหมด
+  const { data: allMemberships } = await supabase
+    .from("tenant_members")
+    .select("profile_id, tenant:tenants(id, name)");
+
+  // ดึง Config ของระบบ
+  const config = await getSystemConfig();
+
+  // สร้าง Map: profileId → tenants[]
+  const membershipMap = new Map<string, { id: string; name: string }[]>();
+  for (const item of allMemberships || []) {
+    const tenants = membershipMap.get(item.profile_id) || [];
+    if (item.tenant) {
+      tenants.push(item.tenant as { id: string; name: string });
+    }
+    membershipMap.set(item.profile_id, tenants);
+  }
+
   if (usersError) {
     console.error("Error fetching users:", usersError);
     return (
@@ -65,42 +88,54 @@ export default async function UsersManagementPage() {
     );
   }
 
-  // คำนวณสถิติ
-  const totalUsers = users?.length || 0;
-  const totalAdmins = users?.filter((u) => u.role === "ADMIN").length || 0;
-  const totalAgents = users?.filter((u) => u.role === "AGENT").length || 0;
-  const totalUsersWaiting =
-    users?.filter((u) => u.role === "USER" || !u.role).length || 0;
+  // Transform to EliteUser type
+  const eliteUsers: EliteUser[] = (users || []).map((u) => ({
+    ...u,
+    auth_provider: providerMap.get(u.id) ?? "email",
+    tenants: membershipMap.get(u.id) || [],
+  })) as EliteUser[];
+
+  // คำนวณสถิติผ่าน Utils (Centralized Engine)
+  const stats = calculateUsersStats(eliteUsers);
 
   return (
-    <div className="max-w-screen-2xl mx-auto p-4 md:p-8 space-y-10">
-      {/* Header */}
-      <UsersPageHeader />
+    <div className="relative min-h-[calc(100vh-12rem)] pb-20 overflow-visible">
+      {/* Immersive Background Layer */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-slate-200/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-blue-100/20 rounded-full blur-3xl" />
+      </div>
 
-      {/* Statistics Summary */}
-      <UsersStatsSummary
-        totalUsers={totalUsers}
-        totalAdmins={totalAdmins}
-        totalAgents={totalAgents}
-        totalUsersWaiting={totalUsersWaiting}
-      />
+      <div className="max-w-screen-2xl mx-auto p-4 md:p-8 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* Elite Header */}
+        <UsersPageHeader />
 
-      {/* Table Section with title */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 px-1">
-          <div className="h-4 w-1 bg-blue-600 rounded-full" />
-          <h2 className="text-lg font-semibold text-slate-800">
-            รายชื่อสมาชิกทีมทั้งหมด
-          </h2>
-        </div>
-        <UsersTable
-          users={(users || []).map((u) => ({
-            ...u,
-            auth_provider: providerMap.get(u.id) ?? "email",
-          }))}
-          currentUserId={user.id}
-          teams={teams || []}
+        {/* Statistics Summary - Elite Glassmorphism */}
+        <UsersStatsSummary
+          totalUsers={stats.totalUsers}
+          totalAdmins={stats.totalAdmins}
+          totalAgents={stats.totalAgents}
+          totalUsersWaiting={stats.totalUsersWaiting}
         />
+
+        {/* Table Section with Elite title and Glass Table */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-3">
+              <div className="h-5 w-1.5 bg-slate-900 rounded-full" />
+              <h2 className="text-xl font-semibold text-slate-800 tracking-tight">
+                รายชื่อสมาชิกทีมทั้งหมด
+              </h2>
+            </div>
+          </div>
+          
+          <UsersTable
+            users={eliteUsers}
+            currentUserId={user.id}
+            teams={teams || []}
+            isMultiTenant={config.multi_tenant_enabled}
+          />
+        </div>
       </div>
     </div>
   );

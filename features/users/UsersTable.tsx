@@ -28,6 +28,21 @@ import { UserTeamSelect } from "./UserTeamSelect";
 import { UserDeleteDialog } from "./UserDeleteDialog";
 import { type UserRole } from "@/lib/auth-shared";
 import { formatDate } from "@/lib/utils";
+import { type EliteUser, maskSensitiveData } from "@/lib/users-utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { 
+  Shield, 
+  Users, 
+  UserCheck, 
+  User as UserIcon, 
+  ListFilter, 
+  Check,
+  Filter
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 // ── Auth Provider Badge ───────────────────────────────────────────────────────
 function AuthProviderBadge({ provider }: { provider: string }) {
@@ -80,27 +95,27 @@ function AuthProviderBadge({ provider }: { provider: string }) {
   );
 }
 
-interface Profile {
-  id: string;
-  full_name: string | null;
-  email: string | null;
-  avatar_url: string | null;
-  phone: string | null;
-  role: UserRole;
-  created_at: string;
-  team_id: string | null;
-  auth_provider?: string;
-}
-
 interface UsersTableProps {
-  users: Profile[];
+  users: EliteUser[];
   currentUserId: string;
   teams: { id: string; name: string }[];
+  isMultiTenant?: boolean;
 }
 
-export function UsersTable({ users, currentUserId, teams }: UsersTableProps) {
+export function UsersTable({ users, currentUserId, teams, isMultiTenant = true }: UsersTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+
+  const roleOptions = [
+    { value: "ALL", label: "ทุกบทบาท", icon: ListFilter, color: "text-slate-600", bgColor: "bg-slate-50", borderColor: "border-slate-200" },
+    { value: "ADMIN", label: "ผู้ดูแลระบบ (Admin)", icon: Shield, color: "text-indigo-600", bgColor: "bg-indigo-50", borderColor: "border-indigo-100" },
+    { value: "MANAGER", label: "หัวหน้าทีม (Manager)", icon: Users, color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-100" },
+    { value: "AGENT", label: "เอเจนท์ (Agent)", icon: UserCheck, color: "text-emerald-600", bgColor: "bg-emerald-50", borderColor: "border-emerald-100" },
+    { value: "USER", label: "ผู้ใช้งาน (User)", icon: UserIcon, color: "text-amber-600", bgColor: "bg-amber-50", borderColor: "border-amber-100" },
+  ];
+
+  const activeRole = roleOptions.find(opt => opt.value === roleFilter) || roleOptions[0];
 
   // Filter users based on search and role
   const filteredUsers = useMemo(() => {
@@ -132,34 +147,82 @@ export function UsersTable({ users, currentUserId, teams }: UsersTableProps) {
   return (
     <div className="space-y-4">
       {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center bg-white p-5 rounded-2xl border border-slate-200 shadow-sm animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row gap-4 items-center bg-white/40 backdrop-blur-xl p-5 rounded-3xl border border-white/40 shadow-xl shadow-slate-200/40 animate-in fade-in duration-500">
         <div className="relative flex-1 w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             type="search"
             placeholder="ค้นหาสมาชิกทีมด้วยชื่อ หรือเบอร์โทร..."
-            className="pl-10 w-full bg-slate-50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500/10 h-11 rounded-xl transition-all"
+            className="pl-10 w-full bg-white/50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-500/10 h-11 rounded-xl transition-all font-medium"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:block">
-            บทบาท:
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] hidden md:block">
+            ตัวกรองบทบาท:
           </span>
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-full sm:w-48 bg-white border-slate-200 h-11 rounded-xl focus:ring-blue-500/10">
-              <SelectValue placeholder="เลือกบทบาท" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-slate-200">
-              <SelectItem value="ALL">ทุกบทบาท</SelectItem>
-              <SelectItem value="ADMIN">ผู้ดูแลระบบ (Admin)</SelectItem>
-              <SelectItem value="MANAGER">หัวหน้าทีม (Manager)</SelectItem>
-              <SelectItem value="AGENT">เอเจนท์ (Agent)</SelectItem>
-              <SelectItem value="USER">ผู้ใช้งาน (User)</SelectItem>
-            </SelectContent>
-          </Select>
+          
+          <ResponsiveDialog
+            open={isRoleDialogOpen}
+            onOpenChange={setIsRoleDialogOpen}
+            title="เลือกตัวกรองบทบาท"
+            description="แสดงผลสมาชิกเฉพาะตามบทบาทที่คุณเลือก"
+            trigger={
+              <Button
+                variant="outline"
+                className="w-full sm:w-60 bg-white/50 border-slate-200 h-11 rounded-xl focus:ring-4 focus:ring-blue-500/10 font-semibold flex items-center justify-between px-4 group hover:bg-white hover:border-slate-300 transition-all shadow-sm"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className={cn("p-1.5 rounded-lg transition-colors", activeRole.bgColor)}>
+                    <activeRole.icon className={cn("h-3.5 w-3.5", activeRole.color)} />
+                  </div>
+                  <span className="text-slate-700">{activeRole.label}</span>
+                </div>
+                <Filter className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+              </Button>
+            }
+          >
+            <div className="grid grid-cols-3 gap-2 p-4">
+              {roleOptions.map((option) => {
+                const isActive = roleFilter === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setRoleFilter(option.value);
+                      setIsRoleDialogOpen(false);
+                    }}
+                    className={cn(
+                      "flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 group active:scale-[0.98]",
+                      isActive
+                        ? "bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/10"
+                        : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "p-2 rounded-xl transition-colors",
+                        isActive ? "bg-white/20" : option.bgColor
+                      )}>
+                        <option.icon className={cn("h-4 w-4", isActive ? "text-white" : option.color)} />
+                      </div>
+                      <span className="font-semibold">{option.label}</span>
+                    </div>
+                    {isActive && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                      >
+                        <Check className="h-4 w-4 text-white" />
+                      </motion.div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </ResponsiveDialog>
         </div>
       </div>
 
@@ -168,28 +231,33 @@ export function UsersTable({ users, currentUserId, teams }: UsersTableProps) {
         <Card className="rounded-2xl border-slate-200 overflow-hidden shadow-sm animate-in fade-in duration-500">
           <CardContent className="p-0">
             <Table>
-              <TableHeader className="bg-slate-50/50">
-                <TableRow>
-                  <TableHead className="py-4 px-6 font-semibold text-slate-900">
-                    ชื่อ-นามสกุล
+              <TableHeader className="sticky top-0 z-20 bg-slate-50/80 backdrop-blur-md border-b">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
+                    ชื่อ-นามสกุล / อีเมล
                   </TableHead>
-                  <TableHead className="py-4 px-6 font-semibold text-slate-900">
+                  <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
                     เบอร์โทร
                   </TableHead>
-                  <TableHead className="py-4 px-6 font-semibold text-slate-900">
+                  <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
                     บทบาท
                   </TableHead>
-                  <TableHead className="py-4 px-6 font-semibold text-slate-900">
+                  {isMultiTenant && (
+                    <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
+                      สาขาที่สังกัด
+                    </TableHead>
+                  )}
+                  <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
                     ช่องทางสมัคร
                   </TableHead>
-                  <TableHead className="py-4 px-6 font-semibold text-slate-900">
-                    ทีม
+                  <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
+                    ทีมสมาชิก
                   </TableHead>
-                  <TableHead className="py-4 px-6 font-semibold text-slate-900">
-                    วันที่สร้าง
+                  <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
+                    วันที่เข้าร่วม
                   </TableHead>
-                  <TableHead className="py-4 px-6 text-right font-semibold text-slate-900">
-                    การจัดการ
+                  <TableHead className="py-5 px-6 text-right font-bold text-[11px] uppercase tracking-widest text-slate-500">
+                    จัดการ
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -197,7 +265,7 @@ export function UsersTable({ users, currentUserId, teams }: UsersTableProps) {
                 {filteredUsers.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={isMultiTenant ? 8 : 7}
                       className="text-center py-24 text-slate-400"
                     >
                       <div className="flex flex-col items-center gap-3">
@@ -240,28 +308,65 @@ export function UsersTable({ users, currentUserId, teams }: UsersTableProps) {
                               <span className="font-semibold text-slate-800 flex items-center gap-2 truncate">
                                 {user.full_name || "ไม่มีชื่อ"}
                                 {isCurrentUser && (
-                                  <span className="shrink-0 text-[10px] bg-blue-500 text-white py-0.5 px-2 rounded-full font-bold uppercase tracking-wider">
-                                    ตัวคุณ
+                                  <span className="shrink-0 text-[9px] bg-blue-600 text-white py-0.5 px-2 rounded-full font-bold uppercase tracking-widest shadow-sm">
+                                    YOU
                                   </span>
                                 )}
                               </span>
-                              <span className="text-xs text-slate-500 truncate">
-                                {user.email || "-"}
-                              </span>
-                              <span className="text-[10px] text-slate-400 font-mono">
-                                ID: {user.id.slice(0, 8)}...
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="text-xs text-slate-500 truncate cursor-help group-hover:text-blue-600 transition-colors">
+                                      {maskSensitiveData(user.email, "email")}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="right" className="rounded-xl border-slate-200">
+                                    <p className="text-xs font-semibold">{user.email}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <span className="text-[10px] text-slate-400 font-bold opacity-60">
+                                #{user.id.slice(0, 8)}
                               </span>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="px-6 text-slate-600 font-medium">
-                          {user.phone || (
-                            <span className="text-slate-300">-</span>
-                          )}
+                        <TableCell className="px-6">
+                           <TooltipProvider>
+                             <Tooltip>
+                               <TooltipTrigger asChild>
+                                 <span className="text-xs font-semibold text-slate-600 cursor-help">
+                                   {maskSensitiveData(user.phone, "phone")}
+                                 </span>
+                               </TooltipTrigger>
+                               <TooltipContent className="rounded-xl border-slate-200">
+                                 <p className="text-xs font-semibold">{user.phone || "-"}</p>
+                               </TooltipContent>
+                             </Tooltip>
+                           </TooltipProvider>
                         </TableCell>
                         <TableCell className="px-6">
                           <UserRoleBadge role={user.role} />
                         </TableCell>
+                        {isMultiTenant && (
+                          <TableCell className="px-6">
+                            <div className="flex flex-wrap gap-1 max-w-[150px]">
+                              {user.tenants.length > 0 ? (
+                                user.tenants.map(t => (
+                                  <Badge 
+                                    key={t.id} 
+                                    variant="outline" 
+                                    className="bg-slate-50 text-[10px] border-slate-200 text-slate-600 font-semibold px-2 py-0"
+                                  >
+                                    {t.name}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <span className="text-slate-300">—</span>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
                         <TableCell className="px-6">
                           <AuthProviderBadge
                             provider={user.auth_provider ?? "email"}

@@ -22,11 +22,21 @@ import {
   Globe,
   MapPin,
   UserCheck,
+  Building2,
+  Zap,
+  Activity,
+  ShieldAlert,
+  Settings,
 } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import { UserRoleBadge } from "@/features/users/UserRoleBadge";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { getSystemConfig } from "@/lib/actions/system-config";
+import { TenantMembershipCard } from "@/features/profile/TenantMembershipCard";
+import { type TenantMembership } from "@/features/profile/types";
+import { calculateProfileScore } from "@/lib/profile-utils";
+import { ProfileCompleteness } from "@/features/profile/ProfileCompleteness";
 
 export default async function UserDetailPage({
   params,
@@ -42,16 +52,21 @@ export default async function UserDetailPage({
     return redirect("/protected");
   }
 
-  // 2. Fetch User Data
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", id)
-    .single();
+  // 2. Fetch User Data, Memberships, and Config
+  const [profileRes, membershipsRes, config] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", id).single(),
+    supabase.from("tenant_members").select("role, tenant:tenants(id, name)").eq("profile_id", id),
+    getSystemConfig(),
+  ]);
 
-  if (error || !profile) {
+  if (profileRes.error || !profileRes.data) {
     return notFound();
   }
+
+  const profile = profileRes.data;
+  const memberships = (membershipsRes.data as unknown as TenantMembership[]) || [];
+  const isMultiTenant = config.multi_tenant_enabled;
+  const score = calculateProfileScore(profile);
 
   // 3. User initials for fallback
   const initials = profile.full_name
@@ -64,215 +79,247 @@ export default async function UserDetailPage({
     : "??";
 
   return (
-    <div className="max-w-7xl mx-auto p-4  space-y-8">
-      {/* Back Button & Header */}
-      <div className="flex flex-col gap-4">
-         <Breadcrumb
-        backHref={`/protected/settings/users`}
-        items={[
-          { label: "ผู้ใช้งาน", href: "/protected/settings/users" },
-          {
-            label: `รายละเอียดผู้ใช้งาน ${profile.full_name}`,
-            href: `/protected/settings/users/${id}`,
-          },
-        ]}
-        className="mb-4"
-      />
-        <div className="flex flex-col items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-              ข้อมูลผู้ใช้งาน
-            </h1>
-            <p className="text-slate-500">
-              รายละเอียดและข้อมูลการติดต่อของสมาชิทีม
-            </p>
-          </div>
-          <UserRoleBadge role={profile.role} />
-        </div>
+    <div className="relative min-h-[calc(100vh-12rem)] pb-20 overflow-visible">
+      {/* Immersive Background Layer */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-indigo-100/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-100/20 rounded-full blur-3xl" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Profile Sidebar */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="overflow-hidden border-none shadow-xl bg-white ring-1 ring-slate-200">
-            <div className="h-32 bg-linear-to-br from-blue-600 via-indigo-600 to-purple-600" />
-            <CardContent className="pt-0 relative px-8 pb-8">
-              <div className="-mt-16 mb-6 flex justify-center">
-                <div className="relative">
-                  <Avatar className="h-32 w-32 border-4 border-white shadow-2xl">
-                    <AvatarImage
-                      src={profile.avatar_url || ""}
-                      alt={profile.full_name || ""}
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="bg-blue-50 text-blue-600 text-3xl font-medium">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="absolute bottom-1 right-1 h-6 w-6 rounded-full bg-emerald-500 border-2 border-white shadow-sm" />
-                </div>
+      <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* Breadcrumb & Command Header */}
+        <div className="flex flex-col gap-6">
+          <Breadcrumb
+            backHref={`/protected/settings/users`}
+            items={[
+              { label: "จัดการผู้ใช้", href: "/protected/settings/users" },
+              {
+                label: `โปรไฟล์: ${profile.full_name}`,
+                href: `/protected/settings/users/${id}`,
+              },
+            ]}
+          />
+          
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white/40 backdrop-blur-xl border border-white/40 p-8 rounded-3xl shadow-xl shadow-slate-200/50">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                 <div className="p-2.5 rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/20">
+                    <Shield className="h-6 w-6" />
+                 </div>
+                 <div className="h-10 w-[2px] bg-slate-200 rounded-full mx-1" />
+                 <div className="space-y-0.5">
+                    <h1 className="text-3xl font-semibold tracking-tight bg-linear-to-br from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                      USER COMMAND CENTER
+                    </h1>
+                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] pl-0.5">
+                      Identity & Access Management
+                    </p>
+                 </div>
               </div>
+              <p className="text-slate-500 font-medium max-w-xl leading-relaxed italic">
+                กำลังตรวจสอบข้อมูลของ <span className="text-slate-900 font-bold not-italic">{profile.full_name || "ไม่ทราบชื่อ"}</span> คุณสามารถจัดการสิทธิ์และความปลอดภัยได้จากหน้านี้
+              </p>
+            </div>
 
-              <div className="text-center space-y-4">
-                <div>
-                  <h2 className="text-2xl font-medium text-slate-900">
-                    {profile.full_name || "ไม่ระบุชื่อ"}
-                  </h2>
-                  <p className="text-sm text-slate-400 font-medium">
-                    #{profile.id.slice(0, 8)}
-                  </p>
-                </div>
-
-                <Separator className="bg-slate-100" />
-
-                <div className="grid grid-cols-1 gap-3 text-left">
-                  <div className="flex items-center gap-3 text-slate-600">
-                    <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                      <Mail className="h-4 w-4" />
-                    </div>
-                    <span className="text-sm font-medium">
-                      {profile.email || "ไม่มีข้อมูลอีเมล"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-600">
-                    <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                      <Phone className="h-4 w-4" />
-                    </div>
-                    <span className="text-sm font-medium">
-                      {profile.phone || "ไม่มีข้อมูลเบอร์โทร"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-600">
-                    <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                      <Calendar className="h-4 w-4" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 leading-none mb-1">
-                        เข้าร่วมระบบเมื่อ
-                      </span>
-                      <span className="text-sm font-medium italic">
-                        {formatDate(profile.created_at)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <div className="flex items-center gap-3">
+               <ProfileCompleteness score={score} />
+            </div>
+          </div>
         </div>
 
-        {/* Profile Content */}
-        <div className="lg:col-span-8 space-y-8">
-          {/* Social Information */}
-          <Card className="border-none shadow-sm bg-slate-50/50">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-blue-600" />
-                <CardTitle className="text-xl">
-                  ข้อมูลการติดต่อ (Social)
-                </CardTitle>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Profile Sidebar */}
+          <div className="lg:col-span-4 space-y-6">
+            <Card className="relative group rounded-3xl overflow-hidden bg-white/70 backdrop-blur-md border border-white/40 shadow-2xl shadow-slate-200/50">
+              <div className="h-32 bg-linear-to-br from-slate-900 via-slate-800 to-indigo-950 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                   <Zap className="h-24 w-24 text-white" />
+                </div>
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
               </div>
-              <CardDescription>
-                ช่องทางสำหรับการสื่อสารและการประสานงาน
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {[
-                  { label: "Line ID", value: profile.line_id, icon: "LINE" },
-                  {
-                    label: "Facebook",
-                    value: profile.facebook_url,
-                    icon: "FB",
-                  },
-                  { label: "WhatsApp", value: profile.whatsapp_id, icon: "WA" },
-                  { label: "WeChat", value: profile.wechat_id, icon: "WC" },
-                ].map((social) => (
-                  <div
-                    key={social.label}
-                    className="bg-white p-3 rounded-xl border border-slate-200/60 shadow-xs flex flex-col gap-1"
-                  >
-                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
-                      {social.label}
-                    </span>
-                    <span className="font-medium text-slate-700 text-sm">
-                      {social.value || "ไม่ได้ระบุ"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* System Info */}
-          <Card className="border-none shadow-sm bg-white">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-indigo-600" />
-                <CardTitle className="text-xl">
-                  ข้อมูลการเข้าใช้งานระบบ
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-indigo-600">
-                    <Shield className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-slate-800">
-                      บทบาทในปัจจุบัน
-                    </h4>
-                    <p className="text-xs text-slate-400">
-                      กำหนดสิทธิ์การเข้าถึงข้อมูลและเครื่องมือต่างๆ
-                    </p>
+              
+              <CardContent className="px-6 pb-8 text-center relative">
+                <div className="-mt-16 mb-6 flex justify-center">
+                  <div className="relative">
+                    <Avatar className="h-32 w-32 border-4 border-white shadow-2xl ring-1 ring-slate-100">
+                      <AvatarImage
+                        src={profile.avatar_url || ""}
+                        alt={profile.full_name || ""}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-slate-50 text-slate-300 text-3xl font-semibold">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute bottom-1 right-1 h-6 w-6 rounded-full bg-emerald-500 border-4 border-white shadow-lg animate-pulse" />
                   </div>
                 </div>
-                <UserRoleBadge role={profile.role} />
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="group relative flex flex-col gap-3 p-5 rounded-2xl bg-emerald-50/50 border border-emerald-100 hover:bg-emerald-50 transition-all duration-300">
-                  <div className="flex items-center justify-between pointer-events-none">
-                    <span className="text-[10px] font-medium text-emerald-600 uppercase tracking-widest px-2 py-0.5 bg-emerald-100/50 rounded-full">
-                      สถานะบัญชี
-                    </span>
-                    <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-emerald-600 transform group-hover:scale-110 transition-transform">
-                      <UserCheck className="h-6 w-6" />
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900 tracking-wider">
+                      {profile.full_name || "ไม่ระบุชื่อ"}
+                    </h2>
+                    <div className="flex items-center justify-center gap-2 mt-1">
+                       <UserRoleBadge role={profile.role} />
+                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                         ID: {profile.id.slice(0, 8)}
+                       </span>
                     </div>
                   </div>
-                  <div>
-                    <h4 className="text-xl font-medium text-emerald-900 leading-tight">
-                      เปิดใช้งาน (Active)
-                    </h4>
-                    <p className="text-xs text-emerald-600/70 font-medium">
-                      สมาชิทีมของคุณพร้อมทำงานแล้ว
-                    </p>
-                  </div>
-                </div>
 
-                <div className="group relative flex flex-col gap-3 p-5 rounded-2xl bg-blue-50/50 border border-blue-100 hover:bg-blue-50 transition-all duration-300">
-                  <div className="flex items-center justify-between pointer-events-none">
-                    <span className="text-[10px] font-medium text-blue-600 uppercase tracking-widest px-2 py-0.5 bg-blue-100/50 rounded-full">
-                      การยืนยันตัวตน
-                    </span>
-                    <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-blue-600 transform group-hover:scale-110 transition-transform">
-                      <Shield className="h-6 w-6" />
+                  <div className="grid grid-cols-1 gap-4 text-left p-4 bg-white/50 rounded-2xl border border-slate-100">
+                    <div className="flex items-center gap-3 text-slate-600">
+                      <div className="h-8 w-8 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-400 border border-slate-100">
+                        <Mail className="h-4 w-4" />
+                      </div>
+                      <span className="text-xs font-semibold truncate">
+                        {profile.email || "ไม่มีข้อมูลอีเมล"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-600">
+                      <div className="h-8 w-8 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-400 border border-slate-100">
+                        <Phone className="h-4 w-4" />
+                      </div>
+                      <span className="text-xs font-semibold">
+                        {profile.phone || "ไม่มีข้อมูลเบอร์โทร"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-600">
+                      <div className="h-8 w-8 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-400 border border-slate-100">
+                        <Calendar className="h-4 w-4" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[9px] uppercase font-bold text-slate-400 leading-none mb-1 tracking-widest">
+                          Joined System
+                        </span>
+                        <span className="text-xs font-bold text-slate-700">
+                          {formatDate(profile.created_at)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <h4 className="text-xl font-medium text-blue-900 leading-tight">
-                      อีเมลยืนยันแล้ว
-                    </h4>
-                    <p className="text-xs text-blue-600/70 font-medium font-mono">
-                      Verified Account
-                    </p>
-                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Admin Quick Actions */}
+            <Card className="rounded-3xl border border-white/40 bg-white/60 backdrop-blur-md shadow-xl shadow-slate-200/40 overflow-hidden">
+               <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50">
+                  <div className="flex items-center gap-2">
+                     <Settings className="h-4 w-4 text-slate-600" />
+                     <CardTitle className="text-sm font-bold text-slate-900">แผงควบคุมแอดมิน</CardTitle>
+                  </div>
+               </CardHeader>
+               <CardContent className="p-4 space-y-3">
+                  <Button className="w-full h-11 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold flex items-center gap-2 shadow-lg shadow-slate-900/20 transition-all active:scale-95">
+                     <Activity className="h-4 w-4" />
+                     <span>ปรับปรุงข้อมูลเชิงลึก</span>
+                  </Button>
+                  <Button variant="outline" className="w-full h-11 rounded-xl border-slate-200 font-semibold text-rose-600 hover:bg-rose-50 hover:border-rose-100 transition-all active:scale-95">
+                     <ShieldAlert className="h-4 w-4 mr-2" />
+                     ระงับการใช้งานชั่วคราว
+                  </Button>
+               </CardContent>
+            </Card>
+          </div>
+
+          {/* Profile Content */}
+          <div className="lg:col-span-8 space-y-8">
+            {/* Branch Management Section */}
+            <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 overflow-hidden">
+               <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                     <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
+                        <Building2 className="h-5 w-5" />
+                     </div>
+                     <div>
+                        <h3 className="text-xl font-bold text-slate-900 tracking-tight">การสังกัดสาขาและทีม</h3>
+                        <p className="text-sm text-slate-500 font-medium">Branch Membership & Assignments</p>
+                     </div>
+                  </div>
+                  {!isMultiTenant && (
+                     <div className="px-4 py-2 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100 flex items-center gap-2">
+                        <ShieldAlert className="h-4 w-4" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">ระบบสาขาปิดอยู่</span>
+                     </div>
+                  )}
+               </div>
+               <div className="p-8">
+                  {isMultiTenant ? (
+                     <TenantMembershipCard memberships={memberships} />
+                  ) : (
+                     <div className="flex flex-col items-center justify-center p-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
+                        <Building2 className="h-12 w-12 text-slate-200 mb-4" />
+                        <h4 className="font-semibold text-slate-500">ปิดระบบสาขาอยู่</h4>
+                        <p className="text-sm text-slate-400 max-w-xs mt-1">
+                           ขณะนี้ระบบทำงานในโหมดสาขาเดียว จึงไม่มีการจัดการข้อมูลสาขาแยกส่วน
+                        </p>
+                     </div>
+                  )}
+               </div>
+            </div>
+
+            {/* Social Information - Elite Refinement */}
+            <Card className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur-md shadow-xl shadow-slate-200/40 overflow-hidden">
+              <CardHeader className="p-8 border-b border-slate-50 bg-slate-50/30">
+                <div className="flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-blue-600" />
+                  <CardTitle className="text-xl font-bold">ข้อมูลการติดต่อ (Social)</CardTitle>
+                </div>
+                <CardDescription className="font-medium">ช่องทางสำหรับการสื่อสารและการประสานงานทีม</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { label: "Line ID", value: profile.line_id, icon: "LINE" },
+                    { label: "Facebook", value: profile.facebook_url, icon: "FB" },
+                    { label: "WhatsApp", value: profile.whatsapp_id, icon: "WA" },
+                    { label: "WeChat", value: profile.wechat_id, icon: "WC" },
+                  ].map((social) => (
+                    <div
+                      key={social.label}
+                      className="group bg-white/50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-white hover:shadow-md transition-all duration-300"
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                          {social.label}
+                        </span>
+                        <span className="font-bold text-slate-700">
+                          {social.value || "—"}
+                        </span>
+                      </div>
+                      <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                        <Activity className="h-4 w-4" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Account Status Footer */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div className="p-6 rounded-3xl bg-emerald-50/50 border border-emerald-100 flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-emerald-600">
+                     <UserCheck className="h-6 w-6" />
+                  </div>
+                  <div>
+                     <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest leading-none mb-1">Account Status</p>
+                     <p className="text-xl font-bold text-emerald-900">Active & Ready</p>
+                  </div>
+               </div>
+               <div className="p-6 rounded-3xl bg-blue-50/50 border border-blue-100 flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-blue-600">
+                     <Shield className="h-6 w-6" />
+                  </div>
+                  <div>
+                     <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest leading-none mb-1">Verification</p>
+                     <p className="text-xl font-bold text-blue-900">Verified Identity</p>
+                  </div>
+               </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
