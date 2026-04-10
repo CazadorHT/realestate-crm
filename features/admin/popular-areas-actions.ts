@@ -46,21 +46,22 @@ export async function getPopularAreas({
     if (areas && areas.length > 0) {
       const areaNames = areas.map((a) => a.name);
       
-      const { data: counts, error: countErr } = await (supabase.rpc as any)(
+      const { data: counts, error: countErr } = await supabase.rpc(
         "get_property_counts_by_area",
         { area_names: areaNames }
       );
 
       if (!countErr && Array.isArray(counts)) {
         const countMap = new Map();
-        counts.forEach((c: any) => {
+        counts.forEach((c) => {
           if (c.area_name) {
             countMap.set(c.area_name, Number(c.property_count) || 0);
           }
         });
         
         areas.forEach((area) => {
-          (area as any).property_count = countMap.get(area.name) || 0;
+          const areaWithExtra = area as any;
+          areaWithExtra.property_count = countMap.get(area.name) || 0;
         });
       }
     }
