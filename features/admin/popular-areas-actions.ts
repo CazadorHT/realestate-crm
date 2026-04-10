@@ -8,6 +8,7 @@ import { generateText } from "@/lib/ai/gemini";
 import { popularAreaSchema } from "./popular-areas-validation";
 import { mapDbError } from "@/lib/db-error";
 import { Database } from "@/lib/database.types";
+import { logAudit } from "@/lib/audit";
 
 type PopularAreaInsert = Database["public"]["Tables"]["popular_areas"]["Insert"];
 type PopularAreaUpdate = Database["public"]["Tables"]["popular_areas"]["Update"];
@@ -74,8 +75,8 @@ export async function getPopularAreas({
  */
 export async function createPopularArea(values: z.infer<typeof popularAreaSchema>) {
   try {
-    const { role } = await requireAuthContext();
-    assertStaff(role);
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     const parsed = popularAreaSchema.parse(values);
     const supabase = await createClient();
@@ -94,8 +95,17 @@ export async function createPopularArea(values: z.infer<typeof popularAreaSchema
       sort_order: nextOrder,
     };
 
-    const { error } = await supabase.from("popular_areas").insert(insertData);
+    const { error } = await supabase.from("popular_areas").insert(insertData).select().single();
     if (error) throw error;
+
+    await logAudit(
+      { supabase, user: ctx.user, role: ctx.role, tenantId: ctx.tenantId },
+      {
+        action: "popular_area.create",
+        entity: "popular_areas",
+        metadata: { name: parsed.name, province: parsed.province },
+      }
+    );
 
     revalidatePath("/protected/admin/popular-areas");
     return { success: true, message: "สร้างทำเลยอดนิยมสำเร็จ" };
@@ -110,8 +120,8 @@ export async function createPopularArea(values: z.infer<typeof popularAreaSchema
  */
 export async function updatePopularArea(id: string, values: z.infer<typeof popularAreaSchema>) {
   try {
-    const { role } = await requireAuthContext();
-    assertStaff(role);
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     const parsed = popularAreaSchema.parse(values);
     const supabase = await createClient();
@@ -124,6 +134,16 @@ export async function updatePopularArea(id: string, values: z.infer<typeof popul
       .eq("id", id);
 
     if (error) throw error;
+
+    await logAudit(
+      { supabase, user: ctx.user, role: ctx.role, tenantId: ctx.tenantId },
+      {
+        action: "popular_area.update",
+        entity: "popular_areas",
+        entityId: id,
+        metadata: { name: parsed.name, province: parsed.province },
+      }
+    );
 
     revalidatePath("/protected/admin/popular-areas");
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ" };
@@ -138,12 +158,21 @@ export async function updatePopularArea(id: string, values: z.infer<typeof popul
  */
 export async function deletePopularArea(id: string) {
   try {
-    const { role } = await requireAuthContext();
-    assertStaff(role);
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     const supabase = await createClient();
     const { error } = await supabase.from("popular_areas").delete().eq("id", id);
     if (error) throw error;
+
+    await logAudit(
+      { supabase, user: ctx.user, role: ctx.role, tenantId: ctx.tenantId },
+      {
+        action: "popular_area.delete",
+        entity: "popular_areas",
+        entityId: id,
+      }
+    );
 
     await resequencePopularAreas();
 
@@ -189,8 +218,8 @@ export async function resequencePopularAreas() {
  */
 export async function reorderPopularAreasAction(ids: string[], offset: number = 0) {
   try {
-    const { role } = await requireAuthContext();
-    assertStaff(role);
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     const supabase = await createClient();
 
@@ -205,6 +234,15 @@ export async function reorderPopularAreasAction(ids: string[], offset: number = 
 
     if (error) throw error;
 
+    await logAudit(
+      { supabase, user: ctx.user, role: ctx.role, tenantId: ctx.tenantId },
+      {
+        action: "popular_area.reorder",
+        entity: "popular_areas",
+        metadata: { count: ids.length, offset },
+      }
+    );
+
     revalidatePath("/protected/admin/popular-areas");
     return { success: true, message: "ปรับลำดับทำเลสำเร็จ" };
   } catch (error: any) {
@@ -218,14 +256,25 @@ export async function reorderPopularAreasAction(ids: string[], offset: number = 
  */
 export async function uploadPopularAreaImageAction(formData: FormData) {
   try {
-    const { role } = await requireAuthContext();
-    assertStaff(role);
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
 
     const file = formData.get("file") as File | null;
     if (!file) return { success: false, message: "ไม่พบไฟล์ที่อัปโหลด" };
 
     const { uploadSiteAsset } = await import("@/features/site-settings/storage");
     const result = await uploadSiteAsset(file, file.name, file.type, "popular-areas");
+
+    if (result.success) {
+      await logAudit(
+        { supabase: ctx.supabase, user: ctx.user, role: ctx.role, tenantId: ctx.tenantId },
+        {
+          action: "popular_area.upload_image",
+          entity: "popular_areas",
+          metadata: { fileName: file.name, fileSize: file.size, type: file.type },
+        }
+      );
+    }
 
     return result;
   } catch (error: any) {

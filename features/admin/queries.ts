@@ -8,7 +8,7 @@ export type AuditLogWithUser = {
   entity_id: string | null;
   metadata: any;
   created_at: string;
-  user_id: string;
+  user_id: string | null;
   user: {
     id: string;
     full_name: string | null;
@@ -120,8 +120,8 @@ export async function getAuditLogs({
     return { data: [], count: 0 };
   }
 
-  // 3. Extract User IDs
-  const userIds = Array.from(new Set(logs.map((log) => log.user_id)));
+  // 3. Extract User IDs (Filtering out nulls)
+  const userIds = Array.from(new Set(logs.map((log) => log.user_id).filter(Boolean))) as string[];
 
   // 4. Fetch Profiles manually
   const { data: profiles, error: profilesError } = await supabase
@@ -142,7 +142,7 @@ export async function getAuditLogs({
 
   const formattedData: AuditLogWithUser[] = logs.map((log) => ({
     ...log,
-    user: profileMap.get(log.user_id) || null,
+    user: log.user_id ? (profileMap.get(log.user_id) || null) : null,
   }));
 
   return {
