@@ -1,30 +1,49 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
-import { getPopularAreasAction } from "@/features/admin/popular-areas-actions";
+import { getPopularAreas } from "@/features/admin/popular-areas-actions";
 import { PopularAreasTable } from "@/features/admin/components/PopularAreasTable";
 import { MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { CreatePopularAreaButton } from "@/features/admin/components/CreatePopularAreaButton";
+import { CreatePopularAreaDialog } from "@/features/admin/components/CreatePopularAreaDialog";
 import { PopularAreasStats } from "@/features/admin/components/PopularAreasStats";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
+import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPopularAreasPage() {
+interface PageProps {
+  searchParams: Promise<{
+    search?: string;
+    page?: string;
+  }>;
+}
+
+export default async function AdminPopularAreasPage({ searchParams }: PageProps) {
   const { role } = await requireAuthContext();
   assertStaff(role);
 
-  const areas = await getPopularAreasAction();
+  const params = await searchParams;
+  const search = params.search || "";
+  const page = Number(params.page) || 1;
 
-  // Get property count for areas
+  const { data: areas, totalCount, success } = await getPopularAreas({
+    search,
+    page,
+    pageSize: 10,
+  });
+
+  // Get total property count for all popular areas
   const supabase = await createClient();
   const { count: propertiesCount } = await supabase
     .from("properties")
     .select("*", { count: "exact", head: true })
     .not("popular_area", "is", null);
 
-  // Calculate stats
-  const totalAreas = areas?.length || 0;
   const totalProperties = propertiesCount || 0;
+
+  async function handleRefresh() {
+    "use server";
+    revalidatePath("/protected/admin/popular-areas");
+  }
 
   return (
     <div className="space-y-6">
@@ -35,39 +54,39 @@ export default async function AdminPopularAreasPage() {
 
         <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-2">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 text-left">
               <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
                 <MapPin className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white">
+              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                 จัดการทำเลยอดนิยม
               </h1>
             </div>
-            <p className="text-white/80 text-sm md:text-base max-w-md">
+            <p className="text-white/80 text-sm md:text-base max-w-md text-left">
               เพิ่ม ลบ แก้ไข รายชื่อทำเลยอดนิยมที่ใช้ในระบบ • มีทั้งหมด{" "}
-              <span className="font-bold text-white">{totalAreas}</span> ทำเล
+              <span className="font-bold text-white">{totalCount}</span> ทำเล
             </p>
           </div>
 
-          <CreatePopularAreaButton />
+          <CreatePopularAreaDialog onSuccess={handleRefresh} />
         </div>
       </div>
 
       {/* Statistics Cards */}
       <PopularAreasStats
-        totalAreas={totalAreas}
+        totalAreas={totalCount}
         totalProperties={totalProperties}
       />
 
       {/* Popular Areas Table */}
       <div className="rounded-xl lg:border lg:border-slate-200 lg:bg-white shadow-sm overflow-hidden">
-        <PopularAreasTable initialData={areas || []} />
+        <PopularAreasTable initialData={areas || []} totalCount={totalCount} />
       </div>
 
       {/* Footer Stats */}
-      {totalAreas > 0 && (
+      {totalCount > 0 && (
         <TableFooterStats
-          totalCount={totalAreas}
+          totalCount={totalCount}
           unitLabel="ทำเล"
           secondaryStats={[
             {

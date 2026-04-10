@@ -2904,6 +2904,13 @@ export type Database = {
           title: string
         }[]
       }
+      get_property_counts_by_area: {
+        Args: { area_names: string[] }
+        Returns: {
+          area_name: string
+          property_count: number
+        }[]
+      }
       get_user_tenants: {
         Args: never
         Returns: {
