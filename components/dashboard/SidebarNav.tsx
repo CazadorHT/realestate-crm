@@ -51,24 +51,34 @@ import {
 } from "@/components/ui/tooltip";
 import { isFeatureEnabled } from "@/lib/features";
 
-export function SidebarNav({ role }: { role: UserRole }) {
+export function SidebarNav({ 
+  role, 
+  initialCollapsed = false 
+}: { 
+  role: UserRole;
+  initialCollapsed?: boolean;
+}) {
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState<string[]>(["crm"]);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
   const [isHovered, setIsHovered] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
-  // Initialize collapse state from localStorage
+  // setCookie helper function
+  const setSidebarCookie = (collapsed: boolean) => {
+    // เก็บไว้ 1 ปี (31536000 วินาที) และระบุ path=/ เพื่อให้เข้าถึงได้ทั้งเว็บ
+    document.cookie = `sidebar-collapsed=${collapsed}; path=/; max-age=31536000; SameSite=Lax`;
+  };
+
+  // Sync state with prop if it changes (optional but good for consistency)
   useEffect(() => {
-    const saved = localStorage.getItem("sidebar-collapsed");
-    if (saved !== null) {
-      setIsCollapsed(saved === "true");
-    }
+    setHasMounted(true);
   }, []);
 
   const toggleCollapse = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
-    localStorage.setItem("sidebar-collapsed", String(newState));
+    setSidebarCookie(newState);
   };
 
   const toggleGroup = (groupId: string) => {
@@ -390,7 +400,8 @@ export function SidebarNav({ role }: { role: UserRole }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "hidden flex-col border-r border-slate-100 bg-white sm:flex shadow-sm z-40 h-screen sticky top-0 transition-all duration-300 ease-in-out",
+          "hidden flex-col border-r border-slate-100 bg-white sm:flex shadow-sm z-40 h-screen sticky top-0",
+          hasMounted ? "transition-all duration-300 ease-in-out" : "transition-none",
           isCollapsed ? "w-24" : "w-72",
         )}
       >

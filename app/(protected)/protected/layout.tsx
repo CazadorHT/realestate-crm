@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { SidebarNav } from "@/components/dashboard/SidebarNav";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { isStaff } from "@/lib/auth-shared";
@@ -43,10 +44,14 @@ export default async function ProtectedLayout({
 
   // Note: Notifications are fetched client-side inside NotificationBell
 
+  // อ่านสถานะ Sidebar จาก Cookie (เพื่อให้ตอน Refresh หน้าเว็บ ไม่เกิดอาการกางแล้วหุบ)
+  const cookieStore = await cookies();
+  const initialCollapsed = cookieStore.get("sidebar-collapsed")?.value === "true";
+
   return (
     <TenantProvider>
       <div className="flex min-h-screen w-full bg-slate-50/50">
-        <SidebarNav role={profile.role} />
+        <SidebarNav role={profile.role} initialCollapsed={initialCollapsed} />
 
         <div className="flex flex-1 flex-col min-w-0">
           <header className="sticky top-0 z-50 flex h-16 items-center gap-1 sm:gap-4 bg-white px-4 md:px-6 backdrop-blur-md border-b border-slate-100 shadow-sm">
