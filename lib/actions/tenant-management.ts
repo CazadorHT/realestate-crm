@@ -637,3 +637,47 @@ export async function declineInvitationAction(tenantId: string) {
   revalidatePath("/");
   return { success: true };
 }
+
+export async function getBranchStatsAction(tenantId: string) {
+  const { role } = await requireAuthContext();
+  assertAdmin(role);
+
+  const adminSupabase = createAdminClient();
+
+  try {
+    // 1. Members count
+    const { count: memberCount, error: mError } = await adminSupabase
+      .from("tenant_members")
+      .select("*", { count: "exact", head: true })
+      .eq("tenant_id", tenantId);
+
+    if (mError) throw mError;
+
+    // 2. Pending invitations count
+    const { count: inviteCount, error: iError } = await adminSupabase
+      .from("tenant_invitations")
+      .select("*", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .eq("status", "PENDING");
+
+    if (iError) throw iError;
+
+    // 3. Properties count
+    const { count: propertyCount, error: pError } = await adminSupabase
+      .from("properties")
+      .select("*", { count: "exact", head: true })
+      .eq("tenant_id", tenantId);
+
+    if (pError) throw pError;
+
+    return {
+      data: {
+        memberCount: memberCount || 0,
+        inviteCount: inviteCount || 0,
+        propertyCount: propertyCount || 0,
+      },
+    };
+  } catch (err: any) {
+    return { error: mapDbError(err) };
+  }
+}
