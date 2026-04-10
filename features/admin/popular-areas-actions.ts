@@ -30,13 +30,13 @@ export async function getPopularAreas({
   sortOrder?: "asc" | "desc";
 }) {
   try {
-    const supabase = await createClient();
+    const { supabase, tenantId } = await requireAuthContext();
     const offset = (page - 1) * pageSize;
 
-    // Use the View for reading to support property_count sorting
+    // Use the Dynamic RPC for reading to support branch-specific property counting
     let query = supabase
-      .from("popular_areas_with_counts")
-      .select("*", { count: "exact" });
+      .rpc("get_popular_areas_with_counts", { target_tenant_id: tenantId ?? undefined }, { count: "exact" })
+      .select("*");
 
     if (search) {
       query = query.or(`name.ilike.%${search}%,name_en.ilike.%${search}%,name_cn.ilike.%${search}%`);

@@ -2913,6 +2913,23 @@ export type Database = {
         }[]
       }
       get_isolation_setting: { Args: { setting_key: string }; Returns: boolean }
+      get_popular_areas_with_counts: {
+        Args: { target_tenant_id?: string }
+        Returns: {
+          created_at: string
+          featured: boolean
+          id: string
+          image_url: string
+          is_active: boolean
+          name: string
+          name_cn: string
+          name_en: string
+          property_count: number
+          province: string
+          slug: string
+          sort_order: number
+        }[]
+      }
       get_properties_without_notification_rules: {
         Args: { p_tenant_id?: string }
         Returns: {

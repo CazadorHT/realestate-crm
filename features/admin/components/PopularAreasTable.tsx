@@ -37,6 +37,9 @@ import { bulkDeletePopularAreasAction } from "@/features/admin/popular-areas-bul
 import { cn } from "@/lib/utils";
 import { EditPopularAreaDialog } from "./EditPopularAreaDialog";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { PopularAreaPropertiesDialog } from "./PopularAreaPropertiesDialog";
+import { useTenant } from "@/components/providers/TenantProvider";
+import { Info } from "lucide-react";
 
 // DnD Kit imports
 import {
@@ -80,6 +83,7 @@ interface SortableRowProps {
   onSelect: (id: string) => void;
   onEdit: (item: PopularArea) => void;
   onDelete: (item: PopularArea) => void;
+  onViewProperties: (item: PopularArea) => void;
   isDraggingEnabled: boolean;
   start: number;
 }
@@ -91,6 +95,7 @@ function SortableRow({
   onSelect,
   onEdit,
   onDelete,
+  onViewProperties,
   isDraggingEnabled,
   start,
 }: SortableRowProps) {
@@ -165,16 +170,22 @@ function SortableRow({
         {item.name_cn || <span className="text-slate-300">-</span>}
       </TableCell>
       <TableCell className="px-6 text-center">
-        <span
+        <button
+          type="button"
+          disabled={(item.property_count || 0) === 0}
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewProperties(item);
+          }}
           className={cn(
-            "inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-inset",
+            "inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-inset transition-all duration-200",
             (item.property_count || 0) > 0
-              ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20"
-              : "bg-slate-50 text-slate-500 ring-slate-400/20",
+              ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20 cursor-pointer hover:scale-110 hover:shadow-sm active:scale-95"
+              : "bg-slate-50 text-slate-500 ring-slate-400/20 cursor-not-allowed opacity-60",
           )}
         >
           {item.property_count || 0}
-        </span>
+        </button>
       </TableCell>
       <TableCell className="text-right px-6">
         <div className="flex justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
@@ -210,6 +221,8 @@ export function PopularAreasTable({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { activeTenant, isMultiTenantEnabled } = useTenant();
+  const isGlobalMode = activeTenant?.id === "ALL";
 
   // URL-driven state
   const search = searchParams.get("search") || "";
@@ -234,6 +247,7 @@ export function PopularAreasTable({
   const [isTranslating, setIsTranslating] = useState(false);
   const [isAllAcrossSelected, setIsAllAcrossSelected] = useState(false);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [viewingAreaProperties, setViewingAreaProperties] = useState<PopularArea | null>(null);
 
   // Selection
   const allIds = useMemo(() => data.map((item) => item.id), [data]);
@@ -383,6 +397,25 @@ export function PopularAreasTable({
         }
       />
 
+      {/* Mode Indicator */}
+      {isMultiTenantEnabled && (
+        <div className={cn(
+          "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border animate-in slide-in-from-top-2 duration-500",
+          isGlobalMode 
+            ? "bg-indigo-50 border-indigo-100 text-indigo-700" 
+            : "bg-emerald-50 border-emerald-100 text-emerald-700"
+        )}>
+          <Info className="h-3.5 w-3.5" />
+          <span>
+            กำลังแสดงยอดทรัพย์แบบ 
+            <span className="font-bold underline underline-offset-2 mx-1">
+              {isGlobalMode ? "ภาพรวมทุกสาขา (Global)" : `เฉพาะสาขา ${activeTenant?.name || "ปัจจุบัน"}`}
+            </span>
+            {isGlobalMode ? " • ตัวเลขรวมจากทรัพย์ที่มีอยู่ในทุกสาขา" : " • ตัวเลขเฉพาะทรัพย์ที่สังกัดสาขานี้เท่านั้น"}
+          </span>
+        </div>
+      )}
+
      
 
       {/* Desktop Table */}
@@ -447,6 +480,7 @@ export function PopularAreasTable({
                       onSelect={toggleSelect}
                       onEdit={setEditingItem}
                       onDelete={setDeleteConfirmItem}
+                      onViewProperties={setViewingAreaProperties}
                       isDraggingEnabled={!search && sortBy === "sort_order"}
                       start={start}
                     />
@@ -466,10 +500,25 @@ export function PopularAreasTable({
               <div className="flex gap-3 min-w-0">
                 <Checkbox checked={isSelected(item.id)} className="rounded-md mt-1" />
                 <div className="min-w-0">
-                   <div className="flex items-center gap-2">
-                     <span className="text-[10px] font-mono text-slate-400">#{start + index + 1}</span>
-                     <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">{item.property_count || 0} ทรัพย์</span>
-                   </div>
+                    <div className="flex items-center gap-2">
+                       <span className="text-[10px] font-mono text-slate-400">#{start + index + 1}</span>
+                       <button
+                         type="button"
+                         disabled={(item.property_count || 0) === 0}
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           setViewingAreaProperties(item);
+                         }}
+                         className={cn(
+                           "text-[10px] px-2 py-0.5 rounded-full font-bold transition-all",
+                           (item.property_count || 0) > 0
+                             ? "bg-emerald-50 text-emerald-700 cursor-pointer active:scale-95"
+                             : "bg-slate-50 text-slate-400 cursor-not-allowed"
+                         )}
+                       >
+                         {item.property_count || 0} ทรัพย์
+                       </button>
+                    </div>
                    <h4 className="font-bold text-slate-900 truncate mt-1">{item.name}</h4>
                    <p className="text-xs text-blue-600 font-bold">{item.province}</p>
                 </div>
@@ -488,6 +537,12 @@ export function PopularAreasTable({
       )}
 
       {/* Advanced Dialogs */}
+      <PopularAreaPropertiesDialog
+        area={viewingAreaProperties}
+        open={!!viewingAreaProperties}
+        onOpenChange={(open) => !open && setViewingAreaProperties(null)}
+      />
+
       <EditPopularAreaDialog area={editingItem} open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)} onSuccess={() => router.refresh()} />
 
       <ResponsiveDialog open={!!deleteConfirmItem} onOpenChange={(open) => !open && setDeleteConfirmItem(null)} title="ยืนยันการลบทำเล" className="md:max-w-md">
